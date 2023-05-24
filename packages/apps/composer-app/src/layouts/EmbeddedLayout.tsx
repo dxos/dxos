@@ -3,13 +3,14 @@
 //
 import '../embedded.css';
 
-import { ArrowSquareOut } from '@phosphor-icons/react';
-import React, { useCallback, useContext } from 'react';
+import { ArrowSquareOut, CaretDown, Eye } from '@phosphor-icons/react';
+import React, { useCallback, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Button, ButtonGroup, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, ButtonGroup, DensityProvider, Toggle, useTranslation } from '@dxos/aurora';
+import { defaultDescription, getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
+import { DropdownMenu, DropdownMenuItem } from '@dxos/react-appkit';
 import { useShell } from '@dxos/react-shell';
 
 import {
@@ -18,10 +19,11 @@ import {
   DocumentResolverProvider,
   SpaceResolverContext,
   SpaceResolverProvider,
+  OctokitProvider,
 } from '../components';
 import { EmbeddedFirstRunPage } from '../pages';
 import { abbreviateKey } from '../router';
-import type { OutletContext } from './OutletContext';
+import type { EditorViewState, OutletContext } from './OutletContext';
 
 const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation('composer');
@@ -41,8 +43,10 @@ const EmbeddedLayoutImpl = () => {
     void shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key });
   }, [shell, space]);
 
+  const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+
   return (
-    <>
+    <DensityProvider density='fine'>
       <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
         <Button disabled={!space} onClick={handleInvite}>
           {t('create invitation label', { ns: 'appkit' })}
@@ -57,30 +61,58 @@ const EmbeddedLayoutImpl = () => {
             <ArrowSquareOut className={getSize(5)} />
           </a>
         </Button>
+        <Toggle
+          disabled={!(space && document)}
+          pressed={editorViewState === 'preview'}
+          onPressedChange={(nextPressed) => setEditorViewState(nextPressed ? 'preview' : 'editor')}
+        >
+          <span className='sr-only'>{t('open in composer label')}</span>
+          <Eye className={getSize(5)} />
+        </Toggle>
         <ButtonGroup>
-          <Button onClick={handleCloseEmbed}>{t('close label', { ns: 'appkit' })}</Button>
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
           </Button>
+          <DropdownMenu
+            slots={{ content: { collisionPadding: 8 } }}
+            trigger={
+              <Button>
+                <CaretDown />
+              </Button>
+            }
+          >
+            <DropdownMenuItem onClick={handleSaveAndCloseEmbed} className='block'>
+              <p>{t('save and close label')}</p>
+              <p className={defaultDescription}>{t('save and close description')}</p>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleCloseEmbed} className='block'>
+              <p>{t('close label', { ns: 'appkit' })}</p>
+              <p className={defaultDescription}>{t('close embed description')}</p>
+            </DropdownMenuItem>
+          </DropdownMenu>
         </ButtonGroup>
       </div>
       {space && document ? (
-        <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
+        <Outlet
+          context={{ space, document, layout: 'embedded', editorViewState, setEditorViewState } as OutletContext}
+        />
       ) : source && id && identityHex ? (
         <ResolverDialog />
       ) : (
         <EmbeddedFirstRunPage />
       )}
-    </>
+    </DensityProvider>
   );
 };
 
 export const EmbeddedLayout = () => {
   return (
-    <SpaceResolverProvider>
-      <DocumentResolverProvider>
-        <EmbeddedLayoutImpl />
-      </DocumentResolverProvider>
-    </SpaceResolverProvider>
+    <OctokitProvider>
+      <SpaceResolverProvider>
+        <DocumentResolverProvider>
+          <EmbeddedLayoutImpl />
+        </DocumentResolverProvider>
+      </SpaceResolverProvider>
+    </OctokitProvider>
   );
 };

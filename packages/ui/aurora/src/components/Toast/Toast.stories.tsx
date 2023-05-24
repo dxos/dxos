@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { ReactNode, useState } from 'react';
 
-import { Button } from '../Button';
+import { Button } from '../Buttons';
 import {
   ToastAction,
   ToastActions,
