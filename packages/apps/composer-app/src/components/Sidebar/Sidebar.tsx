@@ -3,7 +3,7 @@
 //
 
 import { ArrowLineLeft, GearSix, Intersect, Planet, Sidebar } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
@@ -17,12 +17,12 @@ import {
   useSidebar,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { Tooltip, Avatar, Dialog, Input } from '@dxos/react-appkit';
+import { Tooltip, Avatar } from '@dxos/react-appkit';
 import { ShellLayout, useClient, useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
 import { getPath } from '../../router';
-import { useOctokitContext } from '../OctokitProvider';
+import { PatDialog } from '../OctokitProvider';
 import { Separator } from '../Separator';
 import { SidebarTree } from './SidebarTree';
 
@@ -36,13 +36,7 @@ const SidebarContent = () => {
   const { sidebarOpen, closeSidebar } = useSidebar(SIDEBAR_CONTENT_NAME);
   const identity = useIdentity();
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const { pat, setPat } = useOctokitContext();
-  const [patValue, setPatValue] = useState(pat);
   const themeContext = useThemeContext();
-
-  useEffect(() => {
-    setPatValue(pat);
-  }, [pat]);
 
   const handleCreateSpace = async () => {
     const space = await client.createSpace();
@@ -57,32 +51,7 @@ const SidebarContent = () => {
   return (
     <ElevationProvider elevation='chrome'>
       <DensityProvider density='fine'>
-        <Dialog
-          title={t('profile settings label')}
-          open={settingsDialogOpen}
-          onOpenChange={(nextOpen) => {
-            setSettingsDialogOpen(nextOpen);
-            if (!nextOpen) {
-              void setPat(patValue);
-            }
-          }}
-          closeTriggers={[
-            <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
-              {t('done label', { ns: 'os' })}
-            </Button>,
-          ]}
-        >
-          <Input
-            label={t('github pat label')}
-            value={patValue}
-            data-testid='composer.githubPat'
-            onChange={({ target: { value } }) => setPatValue(value)}
-            slots={{
-              root: { className: 'mlb-2' },
-              input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
-            }}
-          />
-        </Dialog>
+        <PatDialog open={settingsDialogOpen} setOpen={setSettingsDialogOpen} />
         <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div role='none' className='flex flex-col bs-full'>
             <div role='none' className='shrink-0 flex items-center pli-1.5 plb-1.5'>

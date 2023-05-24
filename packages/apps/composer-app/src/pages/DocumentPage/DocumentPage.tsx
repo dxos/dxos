@@ -89,15 +89,12 @@ const RichTextDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-type EditorViewState = 'editor' | 'preview';
-
 const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
-  const { layout } = useOutletContext<OutletContext>();
-  const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+  const { layout, editorViewState, setEditorViewState } = useOutletContext<OutletContext>();
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);

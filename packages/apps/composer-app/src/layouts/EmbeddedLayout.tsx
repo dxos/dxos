@@ -3,11 +3,11 @@
 //
 import '../embedded.css';
 
-import { ArrowSquareOut, CaretDown } from '@phosphor-icons/react';
-import React, { useCallback, useContext } from 'react';
+import { ArrowSquareOut, CaretDown, Eye } from '@phosphor-icons/react';
+import React, { useCallback, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Button, ButtonGroup, DensityProvider, useTranslation } from '@dxos/aurora';
+import { Button, ButtonGroup, DensityProvider, Toggle, useTranslation } from '@dxos/aurora';
 import { defaultDescription, getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { DropdownMenu, DropdownMenuItem } from '@dxos/react-appkit';
@@ -19,10 +19,11 @@ import {
   DocumentResolverProvider,
   SpaceResolverContext,
   SpaceResolverProvider,
+  OctokitProvider,
 } from '../components';
 import { EmbeddedFirstRunPage } from '../pages';
 import { abbreviateKey } from '../router';
-import type { OutletContext } from './OutletContext';
+import type { EditorViewState, OutletContext } from './OutletContext';
 
 const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation('composer');
@@ -42,6 +43,8 @@ const EmbeddedLayoutImpl = () => {
     void shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key });
   }, [shell, space]);
 
+  const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+
   return (
     <DensityProvider density='fine'>
       <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
@@ -58,6 +61,14 @@ const EmbeddedLayoutImpl = () => {
             <ArrowSquareOut className={getSize(5)} />
           </a>
         </Button>
+        <Toggle
+          disabled={!(space && document)}
+          pressed={editorViewState === 'preview'}
+          onPressedChange={(nextPressed) => setEditorViewState(nextPressed ? 'preview' : 'editor')}
+        >
+          <span className='sr-only'>{t('open in composer label')}</span>
+          <Eye className={getSize(5)} />
+        </Toggle>
         <ButtonGroup>
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
@@ -82,7 +93,9 @@ const EmbeddedLayoutImpl = () => {
         </ButtonGroup>
       </div>
       {space && document ? (
-        <Outlet context={{ space, document, layout: 'embedded' } as OutletContext} />
+        <Outlet
+          context={{ space, document, layout: 'embedded', editorViewState, setEditorViewState } as OutletContext}
+        />
       ) : source && id && identityHex ? (
         <ResolverDialog />
       ) : (
@@ -94,10 +107,12 @@ const EmbeddedLayoutImpl = () => {
 
 export const EmbeddedLayout = () => {
   return (
-    <SpaceResolverProvider>
-      <DocumentResolverProvider>
-        <EmbeddedLayoutImpl />
-      </DocumentResolverProvider>
-    </SpaceResolverProvider>
+    <OctokitProvider>
+      <SpaceResolverProvider>
+        <DocumentResolverProvider>
+          <EmbeddedLayoutImpl />
+        </DocumentResolverProvider>
+      </SpaceResolverProvider>
+    </OctokitProvider>
   );
 };

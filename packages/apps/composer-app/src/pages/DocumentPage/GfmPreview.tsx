@@ -6,12 +6,12 @@ import 'github-markdown-css/github-markdown.css';
 import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
 import { Loading } from '@dxos/react-appkit';
 
-import { useOctokitContext } from '../../components';
+import { useOctokitContext, PatDialog } from '../../components';
 
-const defaultOptions = {
+const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
   ALLOWED_TAGS: [
     'span',
     'div',
@@ -64,7 +64,7 @@ const defaultOptions = {
 };
 
 const sanitize = (dirty: string, options: Partial<Parameters<typeof DOMPurify.sanitize>[1]>) => ({
-  __html: DOMPurify.sanitize(dirty, { ...defaultOptions, ...options }),
+  __html: DOMPurify.sanitize(dirty, { ...defaultOptions, ...options }) as string,
 });
 
 export type GfmPreviewProps = {
@@ -77,6 +77,8 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   const [html, setHtml] = useState('');
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   useEffect(() => {
     if (octokit && markdown) {
       void octokit
@@ -90,12 +92,24 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
         );
     }
   }, [markdown, octokit]);
+
   return html ? (
-    <article
-      className='markdown-body max-is-[980px] mli-auto p-[15px] sm:pli-[45px] sm:plb-[30px]'
-      dangerouslySetInnerHTML={sanitize(html, {})}
-    />
+    <>
+      <style>{'.markdown-body ol, .markdown-body ul {list-style-type: disc; list-style-position: outside;}'}</style>
+      <article
+        className='markdown-body grow max-is-[980px] mli-auto p-[15px] sm:pli-[45px] sm:plb-[30px]'
+        dangerouslySetInnerHTML={sanitize(html, {})}
+      />
+    </>
   ) : (
-    <Loading label={t('loading preview message')} />
+    <div role='none' className='mli-auto max-bs-[300px] text-center'>
+      <PatDialog open={dialogOpen} setOpen={setDialogOpen} />
+      {!octokit && <p className='mlb-4'>{t('empty github pat message')}</p>}
+      {octokit ? (
+        <Loading label={t('loading preview message')} />
+      ) : (
+        <Button onClick={() => setDialogOpen(true)}>{t('set github pat label')}</Button>
+      )}
+    </div>
   );
 };

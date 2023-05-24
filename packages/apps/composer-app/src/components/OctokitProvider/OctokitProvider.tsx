@@ -36,7 +36,7 @@ export const OctokitProvider = ({ children }: PropsWithChildren<{}>) => {
   const setPat = async (nextPat: string) => {
     setKey(GhPatKey, nextPat);
     if (nextPat) {
-      const nextOctokit = new Octokit({ auth: pat });
+      const nextOctokit = new Octokit({ auth: nextPat });
       return nextOctokit.rest.users.getAuthenticated().then(
         () => {
           setPatError(null);

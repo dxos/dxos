@@ -32,6 +32,7 @@ export const composer = {
   'profile settings label': 'Profile settings',
   'github pat label': 'Github personal access token',
   'empty github pat message': 'Set a Github personal access token to continue',
+  'set github pat label': 'Set Github token',
   'error github pat message': 'There was a problem authenticating with Github using the personal access token provided',
   'bind to file in github label': 'Connect to a file in Github',
   'unbind to file in github label': 'Disconnect from Github',
