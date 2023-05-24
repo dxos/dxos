@@ -5,7 +5,7 @@
 import { ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
@@ -55,9 +55,6 @@ export default class Share extends BaseCommand {
         ux.action.start('Waiting for peer to connect');
         await done.wait();
         ux.action.stop();
-
-        // TODO(egorgripasov): Wait to replicate?
-        await sleep(15_000);
       }
     });
   }

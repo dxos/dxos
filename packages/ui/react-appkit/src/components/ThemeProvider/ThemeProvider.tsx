@@ -2,12 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Provider as ToastProvider,
-  ToastProviderProps,
-  Viewport as ToastViewport,
-  ToastViewportProps,
-} from '@radix-ui/react-toast';
 import React, { PropsWithChildren } from 'react';
 
 import {
@@ -15,8 +9,12 @@ import {
   ThemeProviderProps as AuroraThemeProviderProps,
   TooltipProvider,
   TooltipProviderProps,
+  ToastProvider,
+  ToastProviderProps,
+  ToastViewport,
+  ToastViewportProps,
 } from '@dxos/aurora';
-import { mx, osTx, appTx } from '@dxos/aurora-theme';
+import { osTx, appTx } from '@dxos/aurora-theme';
 
 export type ThemeProviderProps = AuroraThemeProviderProps &
   PropsWithChildren<{
@@ -40,13 +38,7 @@ export const ThemeProvider = ({
         <TooltipProvider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}
         </TooltipProvider>
-        <ToastViewport
-          {...toastViewportProps}
-          className={mx(
-            'z-[70] fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
-            toastViewportProps?.className,
-          )}
-        />
+        <ToastViewport {...toastViewportProps} classNames={toastViewportProps?.classNames} />
       </ToastProvider>
     </AuroraThemeProvider>
   );

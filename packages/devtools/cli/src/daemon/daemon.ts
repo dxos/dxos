@@ -67,6 +67,15 @@ export class Daemon {
     return promisify(this._pm2.stop.bind(this._pm2))(profile);
   }
 
+  async restart(profile = DEFAULT_PROFILE) {
+    assert(this._pm2);
+    if (await this.isRunning(profile)) {
+      return promisify(this._pm2.restart.bind(this._pm2))(profile);
+    }
+
+    return this.start(profile);
+  }
+
   async list() {
     assert(this._pm2);
     const list = await promisify(this._pm2.list.bind(this._pm2))();

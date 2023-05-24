@@ -5,6 +5,7 @@
 //
 
 import { Flags } from '@oclif/core';
+import assert from 'node:assert';
 
 import { BaseCommand } from '../../base-command';
 import { runServices } from '../../daemon';
@@ -29,7 +30,8 @@ export default class Run extends BaseCommand {
     const {
       flags: { listen, profile },
     } = await this.parse(Run);
-    await runServices({ listen, profile });
+    assert(this.clientConfig);
+    await runServices({ listen, profile, config: this.clientConfig });
 
     this.log('daemon started');
   }

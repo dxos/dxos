@@ -15,25 +15,11 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 export type RunServicesParams = {
   profile: string;
   listen: string;
+  config: Config;
 };
 
 export const runServices = async (params: RunServicesParams) => {
-  const config = new Config({
-    runtime: {
-      services: {
-        signaling: [
-          {
-            server: 'wss://kube.dxos.org/.well-known/dx/signal',
-          },
-          {
-            server: 'wss://dev.kube.dxos.org/.well-known/dx/signal',
-          },
-        ],
-      },
-    },
-  });
-
-  const services = fromHost(config);
+  const services = fromHost(params.config);
 
   await services.open();
   log.info('open');
