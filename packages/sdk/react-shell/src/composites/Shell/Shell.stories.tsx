@@ -27,7 +27,7 @@ const ShellControls = () => {
   const shell = useShell();
 
   const controls = (
-    <ButtonGroup className='mbe-4'>
+    <ButtonGroup classNames='mbe-4'>
       <TooltipRoot>
         <TooltipContent>Devices</TooltipContent>
         <TooltipTrigger asChild>

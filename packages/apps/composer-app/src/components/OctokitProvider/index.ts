@@ -3,3 +3,4 @@
 //
 
 export * from './OctokitProvider';
+export * from './PatDialog';

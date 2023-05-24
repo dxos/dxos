@@ -2,7 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DownloadSimple, FileArrowDown, FileArrowUp, Link, LinkBreak, UploadSimple } from '@phosphor-icons/react';
+import {
+  DownloadSimple,
+  Eye,
+  FileArrowDown,
+  FileArrowUp,
+  Link,
+  LinkBreak,
+  PencilSimpleLine,
+  UploadSimple,
+} from '@phosphor-icons/react';
 import React, { HTMLAttributes, useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 // TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
@@ -19,6 +28,7 @@ import { observer, useIdentity } from '@dxos/react-client';
 import { useOctokitContext } from '../../components';
 import type { OutletContext } from '../../layouts';
 import { EmbeddedDocumentPage } from './EmbeddedDocumentPage';
+import { GfmPreview } from './GfmPreview';
 import { StandaloneDocumentPage } from './StandaloneDocumentPage';
 import { useRichTextFile } from './useRichTextFile';
 import { useTextFile } from './useTextFile';
@@ -84,7 +94,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
   const identity = useIdentity();
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
-  const { layout } = useOutletContext<OutletContext>();
+  const { layout, editorViewState, setEditorViewState } = useOutletContext<OutletContext>();
 
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
@@ -292,6 +302,24 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const dropdownMenuContent = (
     <>
+      {octokit && (
+        <DropdownMenuItem
+          className='flex items-center gap-2'
+          onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
+        >
+          {editorViewState === 'preview' ? (
+            <>
+              <PencilSimpleLine className={getSize(4)} />
+              <span>{t('exit gfm preview label')}</span>
+            </>
+          ) : (
+            <>
+              <Eye className={getSize(4)} />
+              <span>{t('preview gfm label')}</span>
+            </>
+          )}
+        </DropdownMenuItem>
+      )}
       <DropdownMenuItem className='flex items-center gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
@@ -349,26 +377,38 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           dropdownMenuContent,
         }}
       >
-        <Composer
-          ref={editorRef}
-          identity={identity}
-          space={space}
-          text={document?.content}
-          slots={{
-            root: {
-              role: 'none',
-              className: mx(defaultFocus, 'shrink-0 grow flex flex-col'),
-              'data-testid': 'composer.markdownRoot',
-            } as HTMLAttributes<HTMLDivElement>,
-            editor: {
-              markdownTheme: {
-                '&, & .cm-scroller': { display: 'flex', flexDirection: 'column', flex: '1 0 auto', inlineSize: '100%' },
-                '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-                '& .cm-line': { paddingInline: '1.5rem' },
+        {editorViewState === 'preview' ? (
+          <GfmPreview
+            markdown={content?.toString() ?? ''}
+            {...(docGhId && { owner: docGhId.owner, repo: docGhId.repo })}
+          />
+        ) : (
+          <Composer
+            ref={editorRef}
+            identity={identity}
+            space={space}
+            text={document?.content}
+            slots={{
+              root: {
+                role: 'none',
+                className: mx(defaultFocus, 'shrink-0 grow flex flex-col'),
+                'data-testid': 'composer.markdownRoot',
+              } as HTMLAttributes<HTMLDivElement>,
+              editor: {
+                markdownTheme: {
+                  '&, & .cm-scroller': {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: '1 0 auto',
+                    inlineSize: '100%',
+                  },
+                  '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
+                  '& .cm-line': { paddingInline: '1.5rem' },
+                },
               },
-            },
-          }}
-        />
+            }}
+          />
+        )}
       </Root>
       <Dialog
         title={t('bind to file in github label')}

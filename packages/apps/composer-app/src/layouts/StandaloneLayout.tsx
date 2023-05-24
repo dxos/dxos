@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
@@ -28,6 +28,7 @@ import { ShellProvider, useShell } from '@dxos/react-shell';
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../components';
 import { namespace, abbreviateKey, getPath } from '../router';
 import type { OutletContext } from './OutletContext';
+import { EditorViewState } from './OutletContext';
 
 const InvitationToast = ({
   invitation,
@@ -72,6 +73,8 @@ export const StandaloneLayout = () => {
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
 
+  const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+
   return (
     <ShellProvider
       space={space}
@@ -90,7 +93,9 @@ export const StandaloneLayout = () => {
           </Sidebar>
           <Main classNames='min-bs-full'>
             <SidebarToggle />
-            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
+            <Outlet
+              context={{ space, document, layout: 'standalone', editorViewState, setEditorViewState } as OutletContext}
+            />
           </Main>
         </MainRoot>
       </OctokitProvider>
