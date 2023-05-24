@@ -5,10 +5,19 @@
 import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useTranslation, Button, useTranslationsContext } from '@dxos/aurora';
+import {
+  useTranslation,
+  Button,
+  useTranslationsContext,
+  ToastRoot,
+  ToastTitle,
+  ToastDescription,
+  ToastBody,
+  ToastActions,
+  ToastClose,
+  ToastAction,
+} from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-
-import { Toast } from '../Toast';
 
 export interface NeedRefreshToastProps {
   variant: 'needRefresh';
@@ -27,36 +36,36 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
   const { t } = useTranslation('appkit');
   const { appNs } = useTranslationsContext();
   const { variant } = props;
+  const needRefresh = isNeedRefreshToast(props);
   return (
-    <Toast
-      initiallyOpen
-      title={
-        variant === 'needRefresh' ? (
-          <>
-            <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
-            <span>{t('need refresh label')}</span>
-          </>
-        ) : (
-          t('offline ready label', { appName: t('current app name', { ns: appNs }) })
-        )
-      }
-      {...(isNeedRefreshToast(props) && {
-        slots: { root: { duration: 240e3 } },
-        description: t('need refresh description'),
-        actionTriggers: [
-          {
-            altText: t('refresh alt'),
-            trigger: (
-              <Button variant='primary' onClick={() => props.updateServiceWorker()}>
-                {t('refresh label')}
-              </Button>
-            ),
-          },
-        ],
-      })}
-      {...(variant === 'offlineReady' && {
-        closeTrigger: <Button>{t('confirm label', { ns: 'appkit' })}</Button>,
-      })}
-    />
+    <ToastRoot defaultOpen {...(needRefresh && { duration: 240e3 })}>
+      <ToastBody>
+        <ToastTitle>
+          {variant === 'needRefresh' ? (
+            <>
+              <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
+              <span>{t('need refresh label')}</span>
+            </>
+          ) : (
+            t('offline ready label', { appName: t('current app name', { ns: appNs }) })
+          )}
+        </ToastTitle>
+        <ToastDescription>{t('need refresh description')}</ToastDescription>
+      </ToastBody>
+      <ToastActions>
+        {needRefresh && (
+          <ToastAction altText={t('refresh alt')} asChild>
+            <Button variant='primary' onClick={() => props.updateServiceWorker()}>
+              {t('refresh label')}
+            </Button>
+          </ToastAction>
+        )}
+        {variant === 'offlineReady' && (
+          <ToastClose asChild>
+            <Button>{t('confirm label', { ns: 'appkit' })}</Button>
+          </ToastClose>
+        )}
+      </ToastActions>
+    </ToastRoot>
   );
 };

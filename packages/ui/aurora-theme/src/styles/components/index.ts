@@ -11,4 +11,5 @@ export * from './list';
 export * from './main';
 export * from './message';
 export * from './tag';
+export * from './toast';
 export * from './tooltip';
