@@ -6,9 +6,9 @@ import { Flags } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Stop extends BaseCommand {
+export default class Restart extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'Stop daemon process.';
+  static override description = 'Restart daemon process.';
 
   static override flags = {
     ...BaseCommand.flags,
@@ -20,10 +20,9 @@ export default class Stop extends BaseCommand {
 
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
-      const params = await this.parse(Stop);
-      await daemon.stop(params.flags.profile);
-
-      this.log('Stopped');
+      const params = await this.parse(Restart);
+      await daemon.restart(params.flags.profile);
+      this.log('Restarted');
     });
   }
 }

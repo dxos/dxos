@@ -5,7 +5,6 @@
 import pm2 from 'pm2';
 
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
 
 type Pm2Params = {
   cwd?: string; // * @param {String}  [opts.cwd=<current>]         override pm2 cwd for starting scripts
@@ -35,9 +34,7 @@ export const getPm2 = async () => {
     }
   });
 
-  log.info('Waiting for PM2 to connect...');
   await connected;
-  log.info('PM2 connected.');
 
   return instance;
 };
