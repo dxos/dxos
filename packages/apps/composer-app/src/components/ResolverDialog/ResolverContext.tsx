@@ -3,7 +3,7 @@
 //
 
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
@@ -14,7 +14,8 @@ import { displayName, matchSpace } from '../../util';
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 
 const useLocationIdentifier = () => {
-  const { '*': location } = useParams();
+  const [searchParams] = useSearchParams();
+  const location = searchParams.get('location');
   let source, id;
   try {
     const url = location ? new URL(location) : undefined;

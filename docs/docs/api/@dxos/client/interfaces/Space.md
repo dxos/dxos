@@ -4,8 +4,8 @@
 
 
 ## Properties
-### [listen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L71)
+### [listen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L74)
 Type: <code>function</code>
 
-### [postMessage](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L70)
+### [postMessage](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L73)
 Type: <code>function</code>

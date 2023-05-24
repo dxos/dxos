@@ -19,20 +19,10 @@ Arguments:
 
 ## Properties
 ### [networkStatus]()
-Type: <code>MulticastObservable&lt;object&gt;</code>
+Type: <code>MulticastObservable&lt;NetworkStatus&gt;</code>
 
 
 ## Methods
-### [setConnectionState(state)]()
-
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: 
-
-`state`: <code>ConnectionState</code>
-
 ### [toJSON()]()
 
 
@@ -40,3 +30,13 @@ Arguments:
 Returns: <code>object</code>
 
 Arguments: none
+
+### [updateConfig(swarm)]()
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`swarm`: <code>ConnectionState</code>
