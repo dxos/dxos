@@ -7,21 +7,15 @@ import waitForExpect from 'wait-for-expect';
 
 import { describe, test } from '@dxos/test';
 
-import { DatabaseRouter } from './router';
-import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { createSubscription } from './access-observer';
+import { createStore } from './observable-object';
 
-describe('Router', () => {
+describe('access observer', () => {
   test('updates are propagated', async () => {
-    const router = new DatabaseRouter();
-    const db = await createDatabase(router);
-
-    const task = new TypedObject();
-    db.add(task);
-    await db.flush();
+    const task = createStore<{ title: string }>();
 
     let counter = 0;
-    const selection = router.createSubscription(() => {
+    const selection = createSubscription(() => {
       counter++;
     });
     selection.update([task]);
@@ -29,26 +23,15 @@ describe('Router', () => {
     task.title = 'Test title';
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
 
-    task.assignee = new TypedObject({ name: 'user-1' });
+    task.title = 'Test title revision';
     await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
-
-    task.assignee.name = 'user-2';
-    selection.update([task, task.assignee]);
-
-    task.assignee.name = 'user-3';
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(3));
   });
 
   test('updates are synchronous', async () => {
-    const router = new DatabaseRouter();
-    const db = await createDatabase(router);
-
-    const task = new TypedObject();
-    db.add(task);
-    await db.flush();
+    const task = createStore<{ title: string }>();
 
     const actions: string[] = [];
-    const selection = router.createSubscription(() => {
+    const selection = createSubscription(() => {
       actions.push('update');
     });
     selection.update([task]);
@@ -61,5 +44,10 @@ describe('Router', () => {
 
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
     expect(actions).toEqual(['update', 'before', 'update', 'after']);
+  });
+
+  test('accepts arbitrary selection', async () => {
+    const selection = createSubscription(() => {});
+    selection.update(['example', null, -1]);
   });
 });

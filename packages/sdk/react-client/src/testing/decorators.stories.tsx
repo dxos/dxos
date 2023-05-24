@@ -6,9 +6,10 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { observer } from '@dxos/observable-object/react';
 
 import { useClient } from '../client';
-import { observer, useSpace } from '../echo';
+import { useSpace } from '../echo';
 import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
 
