@@ -13,11 +13,14 @@ import { useOctokitContext } from '../../components';
 
 const defaultOptions = {
   ALLOWED_TAGS: [
+    'span',
+    'div',
     'b',
     'i',
     'em',
     'strong',
     'a',
+    'p',
     'h1',
     'h2',
     'h3',
@@ -28,7 +31,6 @@ const defaultOptions = {
     'td',
     'th',
     'tr',
-    'span',
     'blockquote',
     'ul',
     'ol',
@@ -58,7 +60,7 @@ const defaultOptions = {
     'g-emoji',
     'label',
   ],
-  ALLOWED_ATTR: ['href', 'target'],
+  ALLOWED_ATTR: ['class', 'href', 'target', 'hidden', 'title', 'type', 'role', 'align', 'data-footnote-ref'],
 };
 
 const sanitize = (dirty: string, options: Partial<Parameters<typeof DOMPurify.sanitize>[1]>) => ({
