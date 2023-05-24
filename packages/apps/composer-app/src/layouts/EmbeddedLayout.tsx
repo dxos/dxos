@@ -58,7 +58,7 @@ const EmbeddedLayoutImpl = () => {
             <ArrowSquareOut className={getSize(5)} />
           </a>
         </Button>
-        <ButtonGroup className='flex'>
+        <ButtonGroup>
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
           </Button>
