@@ -32,11 +32,16 @@
     "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
+    "@testing-library/dom": "^8.17.1",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "optionalDependencies": {
-    "react": "^18.2.0"
+    "react": "*"
   },
   "publishConfig": {
     "access": "public"

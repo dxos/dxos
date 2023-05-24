@@ -3,3 +3,4 @@
 //
 
 export * from './observer';
+export * from './useSubscription';

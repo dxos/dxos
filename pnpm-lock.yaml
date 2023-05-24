@@ -65,6 +65,7 @@ importers:
       '@swc/core': 1.3.21
       '@types/chai': ^4.2.15
       '@types/chai-as-promised': ^7.1.5
+      '@types/chai-dom': ^1.11.0
       '@types/glob': ~7.1.3
       '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': ^4.4.7
@@ -80,6 +81,7 @@ importers:
       '@vuepress/client': 2.0.0-beta.61
       chai: ^4.3.4
       chai-as-promised: ^7.1.1
+      chai-dom: ^1.11.0
       chalk: ^4.1.0
       esbuild: ^0.16.14
       esbuild-node-externals: ^1.6.0
@@ -169,6 +171,7 @@ importers:
       '@swc/core': 1.3.21
       '@types/chai': 4.3.3
       '@types/chai-as-promised': 7.1.5
+      '@types/chai-dom': 1.11.0
       '@types/glob': 7.1.4
       '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': 4.4.7
@@ -184,6 +187,7 @@ importers:
       '@vuepress/client': 2.0.0-beta.61
       chai: 4.3.6
       chai-as-promised: 7.1.1_chai@4.3.6
+      chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
       esbuild-node-externals: 1.6.0_esbuild@0.16.14
@@ -1117,7 +1121,12 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/keys': workspace:*
-      react: ^18.2.0
+      '@testing-library/dom': ^8.17.1
+      '@testing-library/react': ^13.4.0
+      '@testing-library/user-event': ^14.4.3
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: '*'
       react-dom: ^18.2.0
     dependencies:
       '@dxos/async': link:../async
@@ -1125,6 +1134,11 @@ importers:
     optionalDependencies:
       react: 18.2.0
     devDependencies:
+      '@testing-library/dom': 8.19.0
+      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
       react-dom: 18.2.0_react@18.2.0
 
   packages/common/plate:
@@ -15152,6 +15166,12 @@ packages:
       '@types/chai': 4.3.3
     dev: true
 
+  /@types/chai-dom/1.11.0:
+    resolution: {integrity: sha512-Aja99Mmnny+Sz+T2hBK3oEsrcy18yabplT0pGX/QwIke9jMJHdvHlV2f4Tmq5SqxTMYwt1Zjbisv/4r83EUIHw==}
+    dependencies:
+      '@types/chai': 4.3.3
+    dev: true
+
   /@types/chai/4.3.3:
     resolution: {integrity: sha512-hC7OMnszpxhZPduX+m+nrx+uFoLkWOMiR4oa/AZF3MuSETYTZmFfJAHqZEM8MVlvfG7BEUcgvtwoCTxBp6hm3g==}
     dev: true
@@ -19484,6 +19504,17 @@ packages:
     dependencies:
       chai: 4.3.6
       check-error: 1.0.2
+    dev: true
+
+  /chai-dom/1.11.0_chai@4.3.6+mocha@8.4.0:
+    resolution: {integrity: sha512-ZzGlEfk1UhHH5+N0t9bDqstOxPEXmn3EyXvtsok5rfXVDOFDJbHVy12rED6ZwkJAUDs2w7/Da4Hlq2LB63kltg==}
+    engines: {node: '>= 0.12.0'}
+    peerDependencies:
+      chai: '>= 3'
+      mocha: '>= 2'
+    dependencies:
+      chai: 4.3.6
+      mocha: 8.4.0
     dev: true
 
   /chai/4.3.6:

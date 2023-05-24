@@ -63,7 +63,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
     const state = stateRef.current!;
     if (!state.handle) {
       // First render or component was not committed.
-      state.handle = createSubscription(accessObserver, () => {
+      state.handle = createSubscription(() => {
         // Observable has changed, meaning we want to re-render
         // BUT if we're a component that hasn't yet got to the useEffect()
         // stage, we might be a component that _started_ to render, but
@@ -104,7 +104,7 @@ export const observer = <P,>(baseComponent: FunctionComponent<P>): FunctionCompo
         // and our reaction got cleaned up.
 
         // Re-create the reaction.
-        state.handle = createSubscription(accessObserver, () => {
+        state.handle = createSubscription(() => {
           // We've definitely already been mounted at this point.
           forceUpdate();
         });

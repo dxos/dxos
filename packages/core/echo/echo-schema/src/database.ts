@@ -17,6 +17,7 @@ import { Filter, Query, TypeFilter } from './query';
 import { DatabaseRouter } from './router';
 import { Text } from './text-object';
 import { TypedObject } from './typed-object';
+import { logObjectAccess } from '@dxos/observable-object';
 
 /**
  * Database wrapper.
@@ -164,7 +165,7 @@ export class EchoDatabase {
    * @internal
    */
   _logObjectAccess(obj: EchoObject) {
-    this._router._logObjectAccess(obj);
+    logObjectAccess(obj);
   }
 
   private _update(changed: Item[]) {

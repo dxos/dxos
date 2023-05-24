@@ -3,7 +3,6 @@
 //
 
 import { UnsubscribeCallback } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 
 import { logObjectAccess } from './access-observer';
 
@@ -11,16 +10,10 @@ export const subscribe = Symbol.for('dxos.observable-object.subscribe');
 
 export interface ObservableObject {
   [subscribe]: (callback: (value: any) => void) => UnsubscribeCallback;
-  _id: string;
 }
 
 class ObservableObjectImpl<T> implements ObservableObject {
-  /**
-   * @internal
-   */
-  _id = PublicKey.random().toHex();
-
-  private _callbacks = new Set<(value: any) => void>();
+  private _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
 
   constructor(initialData?: T) {
     if (initialData) {
@@ -43,24 +36,22 @@ class ObservableObjectImpl<T> implements ObservableObject {
   }
 
   [subscribe](callback: (value: any) => void) {
-    this._callbacks.add(callback);
-    return () => this._callbacks.delete(callback);
+    this._subscriptions.add(callback);
+    return () => this._subscriptions.delete(callback);
   }
 
   _emitUpdate() {
-    for (const callback of this._callbacks) {
+    for (const callback of this._subscriptions) {
       callback(this);
     }
   }
 }
 
-export type TypedObservableObject<T extends Record<string, any> = Record<string, any>> = ObservableObjectImpl<T> & T;
-
-export const createStore = <T extends object | any[]>(data?: T): TypedObservableObject<T> => {
+export const createStore = <T extends object | any[]>(data?: T): T => {
   if (Array.isArray(data)) {
     // TODO(wittjosiah): Implement array as well.
     throw new Error('Not implemented');
   } else {
-    return new ObservableObjectImpl(data) as TypedObservableObject<T>;
+    return new ObservableObjectImpl(data) as T;
   }
 };

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EventSubscriptions } from '@dxos/async';
+import { UnsubscribeCallback } from '@dxos/async';
 
 import { ObservableObject, subscribe } from './observable-object';
 
@@ -11,14 +11,15 @@ export const ACCESS_OBSERVER_STACK: AccessObserver[] = [];
 // TODO(burdon): Document or remove. Generic filter function?
 export type SelectionFn = never;
 
-export type Selection = ObservableObject | SelectionFn | Selection[] | undefined | null | false;
+export type SelectionBase = ObservableObject | SelectionFn | undefined | null | false;
+export type Selection = SelectionBase | Selection[];
 
 // TODO(dmaretskyi): Convert to class.
 export interface SubscriptionHandle {
   update: (selection: Selection) => SubscriptionHandle;
   subscribed: boolean;
   unsubscribe: () => void;
-  selectedIds: Set<string>;
+  selected: Set<SelectionBase>;
 }
 
 export type UpdateInfo = {
@@ -56,35 +57,38 @@ export const logObjectAccess = (obj: ObservableObject) => {
  */
 // TODO(burdon): Add filter?
 // TODO(burdon): Immediately trigger callback.
-export const createSubscription = (
-  observer: AccessObserver,
-  onUpdate: (info: UpdateInfo) => void,
-): SubscriptionHandle => {
+export const createSubscription = (onUpdate: (info: UpdateInfo) => void): SubscriptionHandle => {
   let subscribed = true;
-
-  const subscriptions = Array.from(observer.accessed.values()).reduce((acc, obj) => {
-    acc.add(obj[subscribe](onUpdate));
-
-    return acc;
-  }, new EventSubscriptions());
-
   let firstUpdate = true;
+  const subscriptions = new Map<SelectionBase, UnsubscribeCallback>();
 
   const handle = {
     update: (selection: Selection) => {
-      const newIds = new Set(getIdsFromSelection(selection));
-
-      const changed = !areSetsEqual(newIds, handle.selectedIds);
-      handle.selectedIds = newIds;
-      if (changed || firstUpdate) {
+      const newSelected = getSetFromSelection(selection);
+      const removed = [...handle.selected].filter((item) => !newSelected.has(item));
+      const added = [...newSelected].filter((item) => !handle.selected.has(item));
+      handle.selected = newSelected;
+      if (removed.length > 0 || added.length > 0 || firstUpdate) {
         firstUpdate = false;
+
+        removed.forEach((obj) => {
+          subscriptions.get(obj)?.();
+          subscriptions.delete(obj);
+        });
+
+        added.forEach((obj) => {
+          if (obj && subscribe in obj) {
+            subscriptions.set(obj, obj[subscribe](onUpdate));
+          }
+        });
+
         onUpdate({});
       }
 
       return handle;
     },
     subscribed,
-    selectedIds: new Set<string>(),
+    selected: new Set<SelectionBase>(),
     unsubscribe: () => {
       subscriptions.clear();
       subscribed = false;
@@ -102,26 +106,14 @@ export class AccessObserver {
   constructor(public pop: () => void) {}
 }
 
-const getIdsFromSelection = (selection: Selection): string[] => {
+const getSetFromSelection = (selection: Selection): Set<SelectionBase> => {
   if (!selection) {
-    return [];
+    return new Set();
   } else if (typeof selection === 'function') {
-    return []; // TODO(burdon): Traverse function?
-  } else if ('_id' in selection) {
-    return [selection._id];
+    return new Set(); // TODO(burdon): Traverse function?
+  } else if (Array.isArray(selection)) {
+    return selection.flatMap(getSetFromSelection).reduce((acc, item) => new Set([...acc, ...item]));
   } else {
-    return selection.flatMap(getIdsFromSelection);
+    return new Set([selection]);
   }
-};
-
-const areSetsEqual = <T>(a: Set<T>, b: Set<T>) => {
-  if (a.size !== b.size) {
-    return false;
-  }
-  for (const item of a) {
-    if (!b.has(item)) {
-      return false;
-    }
-  }
-  return true;
 };

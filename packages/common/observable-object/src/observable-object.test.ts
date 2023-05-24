@@ -24,7 +24,9 @@ describe('createStore', () => {
   test('subscribe', async () => {
     const store = createStore<{ example: string }>();
     const trigger = new Trigger();
-    store[subscribe](() => trigger.wake());
+    if (subscribe in store && typeof store[subscribe] === 'function') {
+      store[subscribe](() => trigger.wake());
+    }
     store.example = 'test';
     await trigger.wait();
     expect(store.example).to.equal('test');

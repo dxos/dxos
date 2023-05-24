@@ -42,10 +42,11 @@
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/common/observable-object",
+        "domRequired": true,
         "outputPath": "tmp/mocha/packages/common/observable-object",
         "resultsPath": "test-results/packages/common/observable-object",
         "testPatterns": [
-          "packages/common/observable-object/src/**/*.test.{ts,js}"
+          "packages/common/observable-object/src/**/*.test.{ts,js,tsx,jsx}"
         ],
         "watchPatterns": [
           "packages/common/observable-object/src/**/*"
