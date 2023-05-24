@@ -2,34 +2,83 @@
 // Copyright 2023 DXOS.org
 //
 
+import forever from 'forever';
+import path from 'node:path';
+
 import { Daemon, ProcessDescription } from '../daemon';
 
+const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
+
 export class ForeverDaemon implements Daemon {
-  connect(): Promise<void> {
-    throw new Error('not implemented');
+  async connect(): Promise<void> {
+    initForever();
   }
 
-  disconnect(): Promise<void> {
-    throw new Error('not implemented');
+  async disconnect() {
+    // no-op.
   }
 
-  isRunning(profile?: string): Promise<boolean> {
-    throw new Error('not implemented');
+  async isRunning(profile = 'default'): Promise<boolean> {
+    return (await this.list()).some((process) => process.profile === profile && process.isRunning);
   }
 
-  start(profile?: string | undefined): Promise<ProcessDescription> {
-    throw new Error('not implemented');
+  async start(profile = 'default'): Promise<ProcessDescription> {
+    if (!(await this.isRunning(profile))) {
+      forever.startDaemon(path.join(__dirname, 'run.js'), {
+        uid: profile,
+        logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
+        outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
+        errFile: path.join(FOREVER_ROOT, `${profile}-err.log`), // Path to log output from child stderr
+      });
+    }
+
+    return this._getProcess(profile);
   }
 
-  stop(profile?: string | undefined): Promise<ProcessDescription> {
-    throw new Error('not implemented');
+  async stop(profile = 'default'): Promise<ProcessDescription> {
+    forever.stop(profile);
+    return this._getProcess(profile);
   }
 
-  restart(profile?: string | undefined): Promise<ProcessDescription> {
-    throw new Error('not implemented');
+  async restart(profile = 'default'): Promise<ProcessDescription> {
+    if ((await this._getProcess(profile)).profile === profile) {
+      forever.restart(profile);
+    } else {
+      await this.start(profile);
+    }
+
+    return await this._getProcess(profile);
   }
 
-  list(): Promise<ProcessDescription[]> {
-    throw new Error('not implemented');
+  async list(): Promise<ProcessDescription[]> {
+    const result = await new Promise<ForeverDetails[]>((resolve, reject) => {
+      forever.list(false, (err: Error, processes: ForeverDetails[]) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(processes ?? []);
+      });
+    });
+    return result.map((details) => foreverToProcessDescription(details));
+  }
+
+  async _getProcess(profile = 'default') {
+    return (await this.list()).find((process) => process.profile === profile) ?? {};
   }
 }
+
+type ForeverDetails = {
+  foreverPid: number;
+  uid: string;
+  running: boolean;
+};
+
+const foreverToProcessDescription = (details: ForeverDetails): ProcessDescription => ({
+  profile: details?.uid,
+  isRunning: details?.running,
+  pid: details?.foreverPid,
+});
+
+const initForever = () => {
+  forever.load({ root: FOREVER_ROOT });
+};

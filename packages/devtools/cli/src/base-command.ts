@@ -17,7 +17,8 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { Daemon, Pm2Daemon } from './daemon';
+import { Daemon } from './daemon';
+import { ForeverDaemon } from './daemon/forever';
 import {
   disableTelemetry,
   getTelemetryContext,
@@ -230,7 +231,7 @@ export abstract class BaseCommand extends Command {
 
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      const daemon = new Pm2Daemon();
+      const daemon = new ForeverDaemon();
       await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');
