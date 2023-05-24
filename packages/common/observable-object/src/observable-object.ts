@@ -22,6 +22,8 @@ class ObservableObjectImpl<T> implements ObservableObject {
       });
     }
 
+    // TODO(wittjosiah): Implement other proxy methods here: enuming properties, instanceof, etc.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
     return new Proxy(this, {
       get: (_target, property, receiver) => {
         logObjectAccess(this);

@@ -45,4 +45,9 @@ describe('access observer', () => {
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
     expect(actions).toEqual(['update', 'before', 'update', 'after']);
   });
+
+  test('accepts arbitrary selection', async () => {
+    const selection = createSubscription(() => {});
+    selection.update(['example', null, -1]);
+  });
 });

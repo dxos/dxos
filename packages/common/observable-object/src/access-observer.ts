@@ -60,7 +60,9 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = getSetFromSelection(selection);
+      const newSelected = new Set(
+        selection.filter((item): item is ObservableObject => item && typeof item === 'object' && subscribe in item),
+      );
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;
@@ -73,9 +75,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
         });
 
         added.forEach((obj) => {
-          if (obj && subscribe in obj) {
-            subscriptions.set(obj, obj[subscribe](onUpdate));
-          }
+          subscriptions.set(obj, obj[subscribe](onUpdate));
         });
 
         onUpdate({});
@@ -86,6 +86,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
     subscribed,
     selected: new Set<any>(),
     unsubscribe: () => {
+      Array.from(subscriptions.values()).forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
       subscribed = false;
     },
@@ -101,15 +102,3 @@ export class AccessObserver {
   accessed: Set<ObservableObject> = new Set();
   constructor(public pop: () => void) {}
 }
-
-const getSetFromSelection = (selection: Selection): Set<any> => {
-  if (!selection) {
-    return new Set();
-  } else if (typeof selection === 'function') {
-    return new Set(); // TODO(burdon): Traverse function?
-  } else if (Array.isArray(selection)) {
-    return selection.flatMap(getSetFromSelection).reduce((acc, item) => new Set([...acc, ...item]), new Set());
-  } else {
-    return new Set([selection]);
-  }
-};
