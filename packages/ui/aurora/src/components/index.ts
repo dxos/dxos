@@ -10,6 +10,7 @@ export * from './Lists';
 export * from './Main';
 export * from './Message';
 export * from './Tag';
+export * from './Toast';
 export * from './Tooltip';
 
 export * from './DensityProvider';

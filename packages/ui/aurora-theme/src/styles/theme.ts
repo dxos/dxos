@@ -18,6 +18,7 @@ import {
   listOsTheme,
   mainTheme,
   messageTheme,
+  toastTheme,
   tooltipTheme,
   tagTheme,
 } from './components';
@@ -34,6 +35,7 @@ export const theme: Theme<Record<string, any>> = {
   main: mainTheme,
   message: messageTheme,
   tag: tagTheme,
+  toast: toastTheme,
   tooltip: tooltipTheme,
 };
 
