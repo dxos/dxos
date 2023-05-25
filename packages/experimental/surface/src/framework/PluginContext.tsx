@@ -29,7 +29,10 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
       setPlugins(plugins);
     });
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      void Promise.all(definitions.map((definition) => definition.unload?.()));
+    };
   }, []);
 
   // TODO(wittjosiah): Fallback.
