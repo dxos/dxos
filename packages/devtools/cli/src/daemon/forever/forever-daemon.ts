@@ -24,7 +24,8 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile = 'default'): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
-      forever.startDaemon(path.join(__dirname, '../../../bin/daemon.js'), {
+      forever.startDaemon(process.argv[1], {
+        args: ['daemon', 'run', `--listen=unix://${process.env.HOME}/.dx/run/${profile}.sock`, '--profile=' + profile],
         uid: profile,
         logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
         outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
