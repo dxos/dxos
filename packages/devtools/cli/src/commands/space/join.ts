@@ -4,6 +4,7 @@
 
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
+import assert from 'node:assert';
 
 import { Client, InvitationEncoder } from '@dxos/client';
 
@@ -36,7 +37,7 @@ export default class Join extends BaseCommand {
         encoded = searchParams.get('spaceInvitationCode') ?? encoded;
       }
 
-      const invitation = InvitationEncoder.decode(encoded!);
+      let invitation = InvitationEncoder.decode(encoded!);
 
       const observable = client.acceptInvitation(invitation);
       ux.action.start('Waiting for peer to connect');
@@ -48,10 +49,11 @@ export default class Join extends BaseCommand {
       });
 
       ux.action.start('Waiting for peer to finish invitation');
-      await invitationSuccess;
+      invitation = await invitationSuccess;
       ux.action.stop();
 
-      const space = client.getSpace(invitation.spaceKey!)!;
+      assert(invitation.spaceKey);
+      const space = client.getSpace(invitation.spaceKey)!;
       const members = space.members.get();
       if (!json) {
         printMembers(members);
