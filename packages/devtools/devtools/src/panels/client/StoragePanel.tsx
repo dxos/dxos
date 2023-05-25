@@ -78,20 +78,22 @@ const StoragePanel = () => {
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
-    <ButtonGroup>
-      <Button onClick={refresh}>Refresh</Button>
-    </ButtonGroup>
-    <div className='flex h-full overflow-hidden'>
-      <TreeView
-        items={getInfoTree(storageInfo, feeds)}
-        expanded={['origin', 'storage']}
-        slots={{
-          value: {
-            className: 'overflow-hidden text-gray-400 truncate pl-2'
-          }
-        }}
-        />
-    </div>
+      <div className='flex items-end gap-2 w-[600px]'>
+        <ButtonGroup>
+          <Button onClick={refresh}>Refresh</Button>
+        </ButtonGroup>
+      </div>
+      <div className='flex h-full overflow-hidden'>
+        <TreeView
+          items={getInfoTree(storageInfo, feeds)}
+          expanded={['origin', 'storage']}
+          slots={{
+            value: {
+              className: 'overflow-hidden text-gray-400 truncate pl-2'
+            }
+          }}
+          />
+      </div>
     </div>
   );
 };
