@@ -27,6 +27,7 @@ export default class Join extends BaseCommand {
     return await this.execWithClient(async (client: Client) => {
       const { flags } = await this.parse(Join);
       let { invitation: encoded, secret, json } = flags;
+
       if (!encoded) {
         encoded = await ux.prompt(chalk`\n{blue Invitation}`);
       }
@@ -35,22 +36,22 @@ export default class Join extends BaseCommand {
         encoded = searchParams.get('spaceInvitationCode') ?? encoded;
       }
 
-      ux.action.start('Waiting for peer to connect');
-      const observable = client.acceptInvitation(InvitationEncoder.decode(encoded!));
+      const invitation = InvitationEncoder.decode(encoded!);
 
+      const observable = client.acceptInvitation(invitation);
+      ux.action.start('Waiting for peer to connect');
       const invitationSuccess = acceptInvitation(observable, {
         onConnecting: async () => {
-          this.log('Waiting for peer to connect...');
+          ux.action.stop();
         },
         onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
       });
 
       ux.action.start('Waiting for peer to finish invitation');
-      const invitation = await invitationSuccess;
+      await invitationSuccess;
       ux.action.stop();
 
       const space = client.getSpace(invitation.spaceKey!)!;
-
       const members = space.members.get();
       if (!json) {
         printMembers(members);

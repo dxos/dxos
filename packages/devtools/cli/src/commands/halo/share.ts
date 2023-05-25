@@ -19,22 +19,21 @@ export default class Share extends BaseCommand {
       if (!client.halo.identity.get()) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
-      } else {
-        const invitation = await client.halo.createInvitation();
-
-        const invitationSuccess = hostInvitation(invitation, {
-          onConnecting: async () => {
-            const invitationCode = InvitationEncoder.encode(invitation.get());
-
-            this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-            this.log(chalk`\n{red Secret}: ${invitation.get().authCode}\n`);
-          },
-        });
-
-        ux.action.start('Waiting for peer to connect');
-        await invitationSuccess;
-        ux.action.stop();
       }
+
+      const observable = client.halo.createInvitation();
+      const invitationSuccess = hostInvitation(observable, {
+        onConnecting: async () => {
+          const invitationCode = InvitationEncoder.encode(observable.get());
+
+          this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+          this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+        },
+      });
+
+      ux.action.start('Waiting for peer to connect');
+      await invitationSuccess;
+      ux.action.stop();
     });
   }
 }
