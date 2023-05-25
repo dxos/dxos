@@ -5,13 +5,16 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client, Space, SpaceProxy } from '@dxos/client';
+import { Space } from '@dxos/client-protocol';
+import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { performInvitation, TestBuilder, testSpace } from '../testing';
+import { Client } from '../client';
+import { SpaceProxy } from '../proxies';
+import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {

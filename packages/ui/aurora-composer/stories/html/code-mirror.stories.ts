@@ -11,7 +11,7 @@ import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
 import { Client, Identity, PublicKey, Space, Text } from '@dxos/client';
-import { joinCommonSpace, TestBuilder } from '@dxos/client-services/testing';
+import { joinCommonSpace, TestBuilder } from '@dxos/client/testing';
 import { textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
@@ -20,7 +20,7 @@ import { ComposerDocument, schema } from '../../src/testing';
 import { cursorColor, SpaceAwarenessProvider } from '../../src/yjs';
 
 export default {
-  title: 'CodeMirror'
+  title: 'CodeMirror',
 };
 
 const testBuilder = new TestBuilder();
@@ -39,12 +39,12 @@ const updateEditor = async (id: number, editor: HTMLDivElement, identity: Identi
     name: identity.profile?.displayName ?? humanize(identity.identityKey),
     // TODO(wittjosiah): Pick colours from theme based on identity key.
     color: cursorColor.color,
-    colorLight: cursorColor.light
+    colorLight: cursorColor.light,
   });
 
   const state = EditorState.create({
     doc: ytext.toString(),
-    extensions: [basicSetup, markdown({ base: markdownLanguage }), yCollab(ytext, awareness)]
+    extensions: [basicSetup, markdown({ base: markdownLanguage }), yCollab(ytext, awareness)],
   });
 
   const view = views[id];
@@ -107,6 +107,6 @@ export const Default: StoryObj<{ id: number; client: Client; spaceKey: PublicKey
         });
       });
       return container;
-    }
-  ]
+    },
+  ],
 };

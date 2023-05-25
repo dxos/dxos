@@ -11,7 +11,7 @@ import {
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY,
-} from '@dxos/client';
+} from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { InvalidInvitationExtensionRoleError } from '@dxos/errors';

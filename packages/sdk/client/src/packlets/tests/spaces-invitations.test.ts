@@ -4,11 +4,14 @@
 
 import { expect } from 'chai';
 
-import { Client, Invitation, SpaceProxy } from '@dxos/client';
+import { performInvitation } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { performInvitation, TestBuilder, testSpace } from '../testing';
+import { Client } from '../client';
+import { SpaceProxy } from '../proxies';
+import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
