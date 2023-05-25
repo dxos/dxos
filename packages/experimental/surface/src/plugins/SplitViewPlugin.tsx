@@ -10,7 +10,7 @@ import { RouterPluginProvides } from './RoutesPlugin';
 export type SplitViewProps = {};
 
 const Context = createContext({
-  sidebarOpen: false
+  sidebarOpen: false,
 });
 
 export const useSplitViewContext = () => useContext(Context);
@@ -27,7 +27,7 @@ export const SplitView = (props: SplitViewProps) => {
 
 export const SplitViewPlugin = definePlugin<RouterPluginProvides>({
   meta: {
-    id: 'dxos:SplitViewPlugin'
+    id: 'dxos:SplitViewPlugin',
   },
   provides: {
     router: {
@@ -39,13 +39,13 @@ export const SplitViewPlugin = definePlugin<RouterPluginProvides>({
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{ sidebar: { component: 'dxos:ListViewPlugin/ListView' } }}
             />
-          )
-        }
-      ]
+          ),
+        },
+      ],
     },
     context: (props: PropsWithChildren) => (
       <Context.Provider value={{ sidebarOpen: true }}>{props.children}</Context.Provider>
     ),
-    components: { SplitView }
-  }
+    components: { SplitView },
+  },
 });

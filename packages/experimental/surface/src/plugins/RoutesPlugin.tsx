@@ -27,7 +27,7 @@ const routerPlugins = (plugins: Plugin[]): RouterPlugin[] => {
 
 export const RoutesPlugin = definePlugin({
   meta: {
-    id: 'RoutesPlugin'
+    id: 'RoutesPlugin',
   },
   provides: {
     context: ({ children }) => <HashRouter>{children}</HashRouter>,
@@ -38,7 +38,7 @@ export const RoutesPlugin = definePlugin({
           .map((plugin) => plugin.provides.router.routes())
           .flat();
         return useRoutes(routes);
-      }
-    }
-  }
+      },
+    },
+  },
 });

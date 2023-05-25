@@ -9,8 +9,8 @@ import { TestApp } from './TestApp';
 export default {
   component: TestApp,
   parameters: {
-    layout: 'fullscreen'
-  }
+    layout: 'fullscreen',
+  },
 };
 
 export const Default = () => (

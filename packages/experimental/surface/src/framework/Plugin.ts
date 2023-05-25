@@ -19,11 +19,11 @@ export type Plugin<TProvides = {}> = {
 
 export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 'provides'> & {
   provides?: Plugin<TProvides>['provides'];
-  init?: () => Promise<PluginProvides<TInitProvides>>;
+  init?: (plugins: Plugin[]) => Promise<PluginProvides<TInitProvides>>;
 };
 
 export const definePlugin = <TProvides = {}, TInitProvides = {}>(
-  plugin: PluginDefinition<TProvides, TInitProvides>
+  plugin: PluginDefinition<TProvides, TInitProvides>,
 ) => {
   return plugin;
 };

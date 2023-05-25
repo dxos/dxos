@@ -3858,6 +3858,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/kai-frames': workspace:*
       '@dxos/kai-types': workspace:*
+      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -3897,6 +3898,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/kai-frames': link:../kai-frames
       '@dxos/kai-types': link:../kai-types
+      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client

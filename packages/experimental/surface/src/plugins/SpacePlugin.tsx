@@ -4,12 +4,12 @@
 
 import React, { useParams } from 'react-router';
 
-import { MulticastObservable } from '@dxos/async';
+import { createStore } from '@dxos/observable-object';
 import { useSpace } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
-import { GraphPluginProvides } from './ListViewPlugin';
+import { GraphNode, GraphPluginProvides } from './ListViewPlugin';
 import { RouterPluginProvides } from './RoutesPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
@@ -20,9 +20,25 @@ export const SpaceContainer = () => {
   return <pre>{JSON.stringify(space?.properties)}</pre>;
 };
 
+const nodes = createStore<GraphNode[]>([]);
+
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
-    id: 'dxos:SpacePlugin'
+    id: 'dxos:SpacePlugin',
+  },
+  init: async (plugins) => {
+    const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
+    if (clientPlugin) {
+      clientPlugin.provides.client.spaces.subscribe((spaces) => {
+        nodes.splice(
+          0,
+          nodes.length,
+          ...spaces.map((space) => ({ id: space.key.toHex(), label: space.properties.name ?? 'Untitled space' })),
+        );
+      });
+    }
+
+    return {};
   },
   provides: {
     router: {
@@ -34,55 +50,45 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
                 sidebar: { component: 'dxos:ListViewPlugin/ListView' },
-                main: { component: 'dxos:SpacePlugin/SpaceContainer' }
+                main: { component: 'dxos:SpacePlugin/SpaceContainer' },
               }}
             />
-          )
-        }
-      ]
+          ),
+        },
+      ],
     },
     components: {
-      SpaceContainer
+      SpaceContainer,
     },
     graph: {
       nodes: (plugins, parent) => {
-        const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-        if (!clientPlugin) {
-          return MulticastObservable.of([]);
-        }
-
         if (parent) {
-          return MulticastObservable.of([]);
+          return [];
         }
 
-        return clientPlugin.provides.client.spaces.map((spaces) =>
-          spaces.map((space) => ({
-            id: space.key.toHex(),
-            label: space.properties.name ?? 'Untitled space'
-          }))
-        );
+        return nodes;
       },
       actions: (plugins, parent) => {
         const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
         if (!clientPlugin) {
-          return MulticastObservable.of([]);
+          return [];
         }
 
         if (parent) {
-          return MulticastObservable.of([]);
+          return [];
         }
 
         // TODO(wittjosiah): Disable if no identity.
-        return MulticastObservable.of([
+        return [
           {
             id: 'dxos:CreateSpace',
             label: 'Create space',
             invoke: async () => {
               await clientPlugin.provides.client.createSpace();
-            }
-          }
-        ]);
-      }
-    }
-  }
+            },
+          },
+        ];
+      },
+    },
+  },
 });

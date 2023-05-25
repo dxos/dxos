@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { MulticastObservable } from '@dxos/async';
 import { Client, ClientProvider } from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
@@ -16,7 +15,7 @@ export type ClientPluginProvides = GraphPluginProvides & {
 
 export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
   meta: {
-    id: 'dxos:ClientPlugin'
+    id: 'dxos:ClientPlugin',
   },
   init: async () => {
     const client = new Client();
@@ -28,21 +27,21 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
       graph: {
         actions: (_, parent) => {
           if (parent) {
-            return MulticastObservable.of([]);
+            return [];
           }
           // TODO(wittjosiah): This is probably not a graph node action, just to expose it in the story for the moment.
-          return MulticastObservable.of([
+          return [
             {
               id: 'dxos:CreateIdentity',
               label: 'Create identity',
               invoke: async () => {
                 const identity = await client.halo.createIdentity();
                 console.log(identity);
-              }
-            }
-          ]);
-        }
-      }
+              },
+            },
+          ];
+        },
+      },
     };
-  }
+  },
 });

@@ -5,8 +5,7 @@
 import React, { UIEvent, FC, createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import { MulticastObservable } from '@dxos/async';
-import { useMulticastObservable } from '@dxos/react-async';
+import { observer } from '@dxos/observable-object/react';
 
 import { definePlugin, usePluginContext, Plugin } from '../framework';
 
@@ -37,7 +36,7 @@ export const ListView = (props: ListViewProps) => {
   );
 };
 
-type GraphNode<TDatum = any> = {
+export type GraphNode<TDatum = any> = {
   id: string;
   label: string;
   description?: string;
@@ -48,7 +47,7 @@ type GraphNode<TDatum = any> = {
   parent?: GraphNode;
 };
 
-type GraphNodeAction = {
+export type GraphNodeAction = {
   id: string;
   label: string;
   icon?: FC;
@@ -57,8 +56,8 @@ type GraphNodeAction = {
 
 export type GraphPluginProvides = {
   graph: {
-    nodes?: (plugins: Plugin[], parent?: GraphNode) => MulticastObservable<GraphNode[]>;
-    actions?: (plugins: Plugin[], parent?: GraphNode) => MulticastObservable<GraphNodeAction[]>;
+    nodes?: (plugins: Plugin[], parent?: GraphNode) => GraphNode[];
+    actions?: (plugins: Plugin[], parent?: GraphNode) => GraphNodeAction[];
   };
 };
 
@@ -75,7 +74,7 @@ const Context = createContext<ListViewContextValue>({
   items: [],
   actions: [],
   selected: null,
-  setSelected: () => {}
+  setSelected: () => {},
 });
 
 export const useListViewContext = () => useContext(Context);
@@ -114,38 +113,30 @@ const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
 
 export const ListViewPlugin = definePlugin({
   meta: {
-    id: 'dxos:ListViewPlugin'
+    id: 'dxos:ListViewPlugin',
   },
   provides: {
-    context: ({ children }) => {
+    context: observer(({ children }) => {
       const { plugins } = usePluginContext();
       const [selected, setSelected] = useState<GraphNode | null>(null);
 
-      const items = useMulticastObservable(
-        graphPlugins(plugins)
-          .map((plugin) => plugin.provides.graph.nodes?.(plugins))
-          .filter((nodes): nodes is MulticastObservable<GraphNode[]> => Boolean(nodes))
-          .reduce((acc, observable) => acc.losslessConcat((a, b) => a.concat(...b), observable))
-          .reduce((acc, actions) => acc.concat(...actions))
-      );
+      const items = graphPlugins(plugins)
+        .flatMap((plugin) => plugin.provides.graph.nodes?.(plugins))
+        .filter((node): node is GraphNode => Boolean(node));
 
-      const actions = useMulticastObservable(
-        graphPlugins(plugins)
-          .map((plugin) => plugin.provides.graph.actions?.(plugins))
-          .filter((nodes): nodes is MulticastObservable<GraphNodeAction[]> => Boolean(nodes))
-          .reduce((acc, observable) => acc.losslessConcat((a, b) => a.concat(...b), observable))
-          .reduce((acc, actions) => acc.concat(...actions))
-      );
+      const actions = graphPlugins(plugins)
+        .flatMap((plugin) => plugin.provides.graph.actions?.(plugins))
+        .filter((node): node is GraphNodeAction => Boolean(node));
 
       const context: ListViewContextValue = {
         items,
         actions,
         selected,
-        setSelected
+        setSelected,
       };
 
       return <Context.Provider value={context}>{children}</Context.Provider>;
-    },
-    components: { ListView: ListViewContainer }
-  }
+    }),
+    components: { ListView: ListViewContainer },
+  },
 });

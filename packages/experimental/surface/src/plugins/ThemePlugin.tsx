@@ -12,9 +12,9 @@ import '@dxosTheme';
 
 export const ThemePlugin = definePlugin({
   meta: {
-    id: 'dxos:ThemePlugin'
+    id: 'dxos:ThemePlugin',
   },
   provides: {
-    context: ({ children }) => <ThemeProvider>{children}</ThemeProvider>
-  }
+    context: ({ children }) => <ThemeProvider>{children}</ThemeProvider>,
+  },
 });
