@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router';
 import { observer } from '@dxos/observable-object/react';
 
 import { definePlugin, usePluginContext, Plugin } from '../framework';
+import { hasGraphInterface } from './interfaces/graph';
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -74,7 +75,7 @@ const Context = createContext<ListViewContextValue>({
   items: [],
   actions: [],
   selected: null,
-  setSelected: () => {},
+  setSelected: () => {}
 });
 
 export const useListViewContext = () => useContext(Context);
@@ -108,12 +109,11 @@ export const ListViewContainer = () => {
 };
 
 const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
-  return (plugins as GraphPlugin[]).filter((p) => p.provides?.graph);
+  return (plugins as GraphPlugin[]).filter(hasGraphInterface);
 };
-
 export const ListViewPlugin = definePlugin({
   meta: {
-    id: 'dxos:ListViewPlugin',
+    id: 'dxos:ListViewPlugin'
   },
   provides: {
     context: observer(({ children }) => {
@@ -132,11 +132,11 @@ export const ListViewPlugin = definePlugin({
         items,
         actions,
         selected,
-        setSelected,
+        setSelected
       };
 
       return <Context.Provider value={context}>{children}</Context.Provider>;
     }),
-    components: { ListView: ListViewContainer },
-  },
+    components: { ListView: ListViewContainer }
+  }
 });
