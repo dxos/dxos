@@ -24,7 +24,10 @@ export const SpaceListItem = forwardRef(
             size: 9,
             fallbackValue: space.key.toHex(),
             label: <p className='text-sm truncate'>{space.properties.name ?? humanize(space.key)}</p>,
-            slots: { labels: { className: 'block shrink overflow-hidden' }, root: { classNames: 'shrink-0' } } satisfies AvatarSlots,
+            slots: {
+              labels: { className: 'block shrink overflow-hidden' },
+              root: { classNames: 'shrink-0' },
+            } satisfies AvatarSlots,
           }}
         />
       </li>
