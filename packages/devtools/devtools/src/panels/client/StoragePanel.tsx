@@ -12,6 +12,7 @@ import { StorageInfo, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxo
 import { useAsyncEffect } from '@dxos/react-async';
 import bytes from 'bytes';
 import { humanize } from '@dxos/util';
+import { Button, ButtonGroup } from '@dxos/aurora';
 
 const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsResponse): TreeViewItem[] => [
   {
@@ -65,15 +66,21 @@ const StoragePanel = () => {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
 
-  useAsyncEffect(async () => {
+  const refresh = async () => {
     setStorageInfo(await devtoolsHost.getStorageInfo());
-  }, []);
+  };
+
+  useAsyncEffect(refresh, []);
 
   if(!storageInfo) {
     return <div>Loading...</div>;
   }
 
   return (
+    <div className='flex flex-1 flex-col overflow-hidden'>
+    <ButtonGroup>
+      <Button onClick={refresh}>Refresh</Button>
+    </ButtonGroup>
     <div className='flex h-full overflow-hidden'>
       <TreeView
         items={getInfoTree(storageInfo, feeds)}
@@ -83,7 +90,8 @@ const StoragePanel = () => {
             className: 'overflow-hidden text-gray-400 truncate pl-2'
           }
         }}
-      />
+        />
+    </div>
     </div>
   );
 };
