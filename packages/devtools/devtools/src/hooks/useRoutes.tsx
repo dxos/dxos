@@ -17,6 +17,7 @@ import {
   MembersPanel,
   SignalPanel,
   SpacesPanel,
+  StoragePanel,
   SwarmPanel
 } from '../panels';
 
@@ -40,9 +41,13 @@ export const useRoutes = () => {
               element: <ConfigPanel />
             },
             {
+              path: '/client/storage',
+              element: <StoragePanel />
+            },
+            {
               path: '/client/logs',
               element: <LoggingPanel />
-            }
+            },
           ]
         },
         {
