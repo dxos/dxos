@@ -58,14 +58,14 @@ export const Actions = () => {
   const handleGenerateData: React.MouseEventHandler = async (e) => {
     let count = 1;
 
-    if(e.shiftKey) {
+    if (e.shiftKey) {
       count *= 10;
-    } 
-    if(e.altKey) {
+    }
+    if (e.altKey) {
       count *= 10;
     }
 
-    for(let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       await generator?.generate();
     }
   };
