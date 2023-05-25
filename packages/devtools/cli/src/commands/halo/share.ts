@@ -23,7 +23,7 @@ export default class Share extends BaseCommand {
         const invitation = await client.halo.createInvitation();
 
         const invitationSuccess = hostInvitation(invitation, {
-          onConnecting: () => {
+          onConnecting: async () => {
             const invitationCode = InvitationEncoder.encode(invitation.get());
 
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);

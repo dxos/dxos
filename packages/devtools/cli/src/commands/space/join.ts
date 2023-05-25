@@ -5,10 +5,10 @@
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationEncoder, wrapObservable } from '@dxos/client';
+import { Client, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { mapMembers, printMembers } from '../../util';
+import { acceptInvitation, mapMembers, printMembers } from '../../util';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;
@@ -24,22 +24,32 @@ export default class Join extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Join);
-    let { invitation: encoded, secret, json } = flags;
-    if (!encoded) {
-      encoded = await ux.prompt(chalk`\n{blue Invitation}`);
-    }
-    if (!secret) {
-      secret = await ux.prompt(chalk`\n{red Secret}`);
-    }
-
     return await this.execWithClient(async (client: Client) => {
+      const { flags } = await this.parse(Join);
+      let { invitation: encoded, secret, json } = flags;
+      if (!encoded) {
+        encoded = await ux.prompt(chalk`\n{blue Invitation}`);
+      }
+      if (encoded.startsWith('http')) {
+        const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+        encoded = searchParams.get('spaceInvitationCode') ?? encoded;
+      }
+
       ux.action.start('Waiting for peer to connect');
-      const observable = await client.acceptInvitation(InvitationEncoder.decode(encoded!));
-      // TODO(burdon): Don't use wrapper since doesn't handle auth.
-      const invitation = await wrapObservable(observable);
-      const space = client.getSpace(invitation.spaceKey!)!;
+      const observable = client.acceptInvitation(InvitationEncoder.decode(encoded!));
+
+      const invitationSuccess = acceptInvitation(observable, {
+        onConnecting: async () => {
+          this.log('Waiting for peer to connect...');
+        },
+        onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+      });
+
+      ux.action.start('Waiting for peer to finish invitation');
+      const invitation = await invitationSuccess;
       ux.action.stop();
+
+      const space = client.getSpace(invitation.spaceKey!)!;
 
       const members = space.members.get();
       if (!json) {

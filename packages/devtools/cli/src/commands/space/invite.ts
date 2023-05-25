@@ -34,7 +34,7 @@ export default class Invite extends BaseCommand {
 
       const invitation = space.createInvitation();
       const invitationSuccess = hostInvitation(invitation, {
-        onConnecting: () => {
+        onConnecting: async () => {
           const invitationCode = InvitationEncoder.encode(invitation.get());
 
           this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
