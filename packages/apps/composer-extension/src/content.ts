@@ -90,6 +90,11 @@ const setupComposer = () => {
           break;
         }
 
+        case 'close-embed-after-api': {
+          location.reload();
+          break;
+        }
+
         case 'save-data': {
           if (body) {
             body.value = event.data.content;
