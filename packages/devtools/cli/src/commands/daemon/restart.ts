@@ -21,8 +21,8 @@ export default class Restart extends BaseCommand {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const params = await this.parse(Restart);
-      await daemon.restart(params.flags.profile);
-      this.log('Restarted');
+      const process = await daemon.restart(params.flags.profile);
+      this.log('Restarted: ', process);
     });
   }
 }
