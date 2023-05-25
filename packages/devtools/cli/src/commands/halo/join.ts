@@ -37,15 +37,13 @@ export default class Join extends BaseCommand {
 
         if (encoded.startsWith('http')) {
           const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-          encoded = searchParams.get('invitation') ?? searchParams.get('haloInvitationCode') ?? encoded;
+          encoded = searchParams.get('haloInvitationCode') ?? encoded;
         }
         const invitation = InvitationEncoder.decode(encoded!);
-        this.log('Invitation', invitation);
         const observable = client.halo.acceptInvitation(invitation);
 
         const connecting = new Trigger<Invitation>();
         const done = new Trigger<Invitation>();
-
         observable.subscribe(
           async (invitation) => {
             switch (invitation.state) {
@@ -54,7 +52,7 @@ export default class Join extends BaseCommand {
                 break;
               }
 
-              case Invitation.State.AUTHENTICATING: {
+              case Invitation.State.READY_FOR_AUTHENTICATION: {
                 const code = invitation.authCode ?? (await ux.prompt('Invitation code'));
                 await observable.authenticate(code);
                 break;
@@ -75,7 +73,7 @@ export default class Join extends BaseCommand {
         await connecting.wait();
         ux.action.stop();
 
-        ux.action.start('Waiting for invitation to proceed');
+        ux.action.start('Waiting for peer to finish invitation');
         await done.wait();
         ux.action.stop();
       }
