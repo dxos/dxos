@@ -3,12 +3,13 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { Daemon, ProcessDescription } from '../daemon';
+import { addrFromSocket, getUnixSocket, waitForDaemon } from '../util';
 
 const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
-
 export class ForeverDaemon implements Daemon {
   async connect(): Promise<void> {
     initForever();
@@ -24,8 +25,9 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile = 'default'): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
+      const socket = getUnixSocket(profile);
       forever.startDaemon(process.argv[1], {
-        args: ['daemon', 'run', `--listen=unix://${process.env.HOME}/.dx/run/${profile}.sock`, '--profile=' + profile],
+        args: ['daemon', 'run', `--listen=${socket}`, '--profile=' + profile],
         uid: profile,
         logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
         outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
@@ -33,11 +35,17 @@ export class ForeverDaemon implements Daemon {
       });
     }
 
+    await waitForDaemon(profile);
+
     return this._getProcess(profile);
   }
 
   async stop(profile = 'default'): Promise<ProcessDescription> {
-    forever.stop(profile);
+    if (await this.isRunning()) {
+      forever.stop(profile);
+    }
+    const socketAddr = addrFromSocket(getUnixSocket(profile));
+    fs.rmSync(socketAddr, { force: true });
     return this._getProcess(profile);
   }
 
