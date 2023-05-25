@@ -21,6 +21,7 @@ export const SpaceContainer = () => {
 };
 
 const nodes = createStore<GraphNode[]>([]);
+let subscription: ZenObservable.Subscription | undefined;
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
@@ -29,7 +30,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   init: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     if (clientPlugin) {
-      clientPlugin.provides.client.spaces.subscribe((spaces) => {
+      subscription = clientPlugin.provides.client.spaces.subscribe((spaces) => {
         nodes.splice(
           0,
           nodes.length,
@@ -39,6 +40,9 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     }
 
     return {};
+  },
+  unload: async () => {
+    subscription?.unsubscribe();
   },
   provides: {
     router: {

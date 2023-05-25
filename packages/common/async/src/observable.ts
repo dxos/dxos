@@ -82,14 +82,14 @@ export class MulticastObservable<T> extends Observable<T> {
   override filter(callback: (value: T) => boolean): MulticastObservable<T> {
     return new MulticastObservable(
       this._observable.filter(callback),
-      this._value && callback(this._value) ? this._value : undefined
+      this._value && callback(this._value) ? this._value : undefined,
     );
   }
 
   override reduce<R = T>(callback: (previousValue: R, currentValue: T) => R, initialValue?: R): MulticastObservable<R> {
     return new MulticastObservable(
       initialValue ? this._observable.reduce(callback, initialValue) : this._observable.reduce(callback),
-      initialValue ?? (this._value as R)
+      initialValue ?? (this._value as R),
     );
   }
 
@@ -112,11 +112,11 @@ export class MulticastObservable<T> extends Observable<T> {
     ...observables: Array<Observable<R>>
   ): MulticastObservable<R> {
     const multicast = observables.filter(
-      (observable): observable is MulticastObservable<R> => observable instanceof MulticastObservable
+      (observable): observable is MulticastObservable<R> => observable instanceof MulticastObservable,
     );
     const value = reducer(
       this._value as R,
-      multicast.map((observable) => observable.get())
+      multicast.map((observable) => observable.get()),
     );
     return new MulticastObservable(this._observable.concat(...observables), value);
   }

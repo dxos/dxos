@@ -70,10 +70,6 @@ class ObservableArray<T> extends Array<T> implements ObservableObject {
     });
   }
 
-  [Symbol.iterator](): IterableIterator<T> {
-    return this.values();
-  }
-
   [subscribe](callback: (value: any) => void) {
     this._subscriptions.add(callback);
     return () => this._subscriptions.delete(callback);
