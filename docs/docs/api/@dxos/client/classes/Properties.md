@@ -83,6 +83,16 @@ Arguments:
 
 `inspect_`: <code>function</code>
 
+### [\[subscribe\](callback)]()
+
+
+
+Returns: <code>function</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
+
 ### [_beforeBind()]()
 
 

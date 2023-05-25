@@ -95,7 +95,7 @@ Arguments:
 
 `object`: <code>unknown</code>
 
-### [observer(baseComponent)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/observer.tsx#L33)
+### [observer(baseComponent)]()
 
 
 
@@ -366,22 +366,21 @@ Arguments:
 
 `deps`: <code>DependencyList</code>
 
-### [useSubscription(cb, selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSubscription.ts#L16)
+### [useSubscription(cb, selection)]()
 
 
 
 Create reactive selection.
-Calls the callback when any object from the selection changes.
-Also calls the callback when the selection changes and during the first render.
+Calls the callback when the selection changes and during the first render.
 
 
-Returns: <code>undefined | [SubscriptionHandle](/api/@dxos/react-client/interfaces/SubscriptionHandle)</code>
+Returns: <code>undefined | SubscriptionHandle</code>
 
 Arguments: 
 
 `cb`: <code>function</code>
 
-`selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
+`selection`: <code>Selection</code>
 
 ### [wrapObservable(observable)]()
 
