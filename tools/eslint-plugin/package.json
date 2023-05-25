@@ -11,8 +11,8 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@rushstack/eslint-plugin-packlets": "^0.4.1",
     "@stayradiated/eslint-plugin-prefer-arrow-functions": "^4.4.0",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
     "eslint-config-semistandard": "^16.0.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
@@ -26,7 +26,7 @@
     "prettier": "^2.7.1"
   },
   "devDependencies": {
-    "eslint": "^8.24.0",
+    "eslint": "^8.41.0",
     "typescript": "^5.0.4"
   }
 }
