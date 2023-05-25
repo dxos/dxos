@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import forever from 'forever';
+import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
 
 import { Daemon, ProcessDescription } from '../daemon';
@@ -24,7 +24,7 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile = 'default'): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
-      forever.startDaemon(path.join(__dirname, 'run.js'), {
+      forever.startDaemon(path.join(__dirname, '../../../bin/daemon.js'), {
         uid: profile,
         logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
         outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
@@ -51,8 +51,8 @@ export class ForeverDaemon implements Daemon {
   }
 
   async list(): Promise<ProcessDescription[]> {
-    const result = await new Promise<ForeverDetails[]>((resolve, reject) => {
-      forever.list(false, (err: Error, processes: ForeverDetails[]) => {
+    const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
+      forever.list(false, (err, processes) => {
         if (err) {
           reject(err);
         }
@@ -66,14 +66,7 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).find((process) => process.profile === profile) ?? {};
   }
 }
-
-type ForeverDetails = {
-  foreverPid: number;
-  uid: string;
-  running: boolean;
-};
-
-const foreverToProcessDescription = (details: ForeverDetails): ProcessDescription => ({
+const foreverToProcessDescription = (details: ForeverProcess): ProcessDescription => ({
   profile: details?.uid,
   isRunning: details?.running,
   pid: details?.foreverPid,

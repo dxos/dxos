@@ -4,4 +4,4 @@
 
 export * from './daemon';
 export * from './pm2';
-export * from './run';
+export * from './run-services';
