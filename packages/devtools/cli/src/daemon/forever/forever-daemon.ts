@@ -9,6 +9,7 @@ import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
 const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
+
 export class ForeverDaemon implements Daemon {
   async connect(): Promise<void> {
     initForever();
