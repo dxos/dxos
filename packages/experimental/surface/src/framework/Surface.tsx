@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { PropsWithChildren, createContext, useContext } from 'react';
+import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
 
 import { Plugin } from './Plugin';
 import { usePluginContext } from './PluginContext';
@@ -27,26 +27,35 @@ const SurfaceContext = createContext<SurfaceContextValue | null>(null);
 
 export const useSurfaceContext = () => useContext(SurfaceContext);
 
+// If component is specified in props or context, grab a component by name.
+// Otherwise iterate through plugins where plugin.provides.component(datum) returns something.
 const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
-  // if specified in options.component, grab a component by name
-  // otherwise iterate through plugins where plugin.provides.component(datum) returns something
-  // pass children down to the components via plugin.provides.component(data, { children }) or just render any children otherwise
-
-  // TODO(wittjosiah): Handle lists.
-  if (typeof props.component === 'string') {
-    const [pluginId, componentId] = props.component.split('/');
-    const Component = plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
-    return Component ? [<Component key={props.component} />] : [];
+  const componentName = props.component || (props.name && context?.surfaces?.[props.name]?.component);
+  if (typeof componentName === 'string') {
+    const Component = findComponent(plugins, componentName);
+    return Component ? [<Component key={componentName}>{props.children ?? null}</Component>] : [];
+  } else if (Array.isArray(componentName)) {
+    const components = componentName
+      .map((name) => {
+        const Component = findComponent(plugins, name);
+        return Component && <Component key={name}>{props.children ?? null}</Component>;
+      })
+      .filter((Component): Component is JSX.Element => Boolean(Component));
+    return props.limit ? components.slice(0, props.limit) : components;
+  } else {
+    const components = plugins
+      .map((plugin) => {
+        const Component = plugin.provides.component?.(props.data);
+        return Component && <Component key={plugin.meta.id}>{props.children ?? null}</Component>;
+      })
+      .filter((Component): Component is JSX.Element => Boolean(Component));
+    return props.limit ? components.slice(0, props.limit) : components;
   }
+};
 
-  const contextComponent = props.name && context?.surfaces?.[props.name]?.component;
-  if (typeof contextComponent === 'string') {
-    const [pluginId, componentId] = contextComponent.split('/');
-    const Component = plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
-    return Component ? [<Component key={contextComponent} />] : [];
-  }
-
-  return [];
+const findComponent = (plugins: Plugin[], name: string): FC<PropsWithChildren<any>> | undefined => {
+  const [pluginId, componentId] = name.split('/');
+  return plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
 };
 
 export const Surface = (props: SurfaceProps) => {
