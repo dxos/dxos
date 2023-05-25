@@ -2244,12 +2244,14 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@types/bytes': ^3.1.1
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
+      bytes: ^3.1.2
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -2290,6 +2292,8 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/bytes': 3.1.1
+      bytes: 3.1.2
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -15168,6 +15172,10 @@ packages:
 
   /@types/btoa-lite/1.0.0:
     resolution: {integrity: sha512-wJsiX1tosQ+J5+bY5LrSahHxr2wT+uME5UDwdN1kg4frt40euqA+wzECkmq4t5QbveHiJepfdThgQrPw6KiSlg==}
+    dev: false
+
+  /@types/bytes/3.1.1:
+    resolution: {integrity: sha512-lOGyCnw+2JVPKU3wIV0srU0NyALwTBJlVSx5DfMQOFuuohA8y9S8orImpuIQikZ0uIQ8gehrRjxgQC1rLRi11w==}
     dev: false
 
   /@types/cacheable-request/6.0.3:
