@@ -26,8 +26,7 @@ export default class Join extends BaseCommand {
     let { invitation: encoded } = flags;
 
     return await this.execWithClient(async (client: Client) => {
-      const identity = client.halo.identity.get();
-      if (identity) {
+      if (client.halo.identity.get()) {
         this.log(chalk`{red Profile already initialized.}`);
         return {};
       } else {
