@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:49]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:50]()</sub>
 
 
 
@@ -50,7 +50,7 @@ Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
 Current state of space pipeline.
 
 ### [properties]()
-Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
 
 Properties object.
 

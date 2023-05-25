@@ -33,9 +33,12 @@ export const StandaloneDocumentPage = observer(
       <>
         <div
           role='none'
-          className='mli-auto max-is-[50rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
+          className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
         >
-          <div role='none' className='flex items-center gap-2 bg-neutral-500/20 pis-0 pointer-fine:pis-8 lg:pis-0'>
+          <div
+            role='none'
+            className='flex items-center gap-2 bg-neutral-500/20 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'
+          >
             <Input
               key={document.id}
               variant='subdued'
@@ -72,7 +75,7 @@ export const StandaloneDocumentPage = observer(
               open={fileImportDialogOpen}
               onOpenChange={setFileImportDialogOpen}
               title={t('confirm import title')}
-              slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+              slots={{ overlay: { classNames: 'backdrop-blur-sm' } }}
             >
               <p className='mlb-4'>{t('confirm import body')}</p>
               <FileUploader

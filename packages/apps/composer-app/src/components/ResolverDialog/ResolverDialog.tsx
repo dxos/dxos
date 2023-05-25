@@ -4,38 +4,51 @@
 
 import React, { useContext } from 'react';
 
-import { Button, DensityProvider, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
-import { mx, osTx } from '@dxos/aurora-theme';
+import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
+import { osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
-import { defaultDialogContent, defaultOverlay, useShell } from '@dxos/react-shell';
+import { useClient } from '@dxos/react-client';
+import { useShell } from '@dxos/react-shell';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { ResolverTree } from './ResolverTree';
 
 export const ResolverDialog = () => {
-  const themeContext = useThemeContext();
   const { space } = useContext(SpaceResolverContext);
   const { t } = useTranslation('composer');
+  const client = useClient();
   const shell = useShell();
+
   const handleJoinSpace = () => {
     void shell.setLayout(ShellLayout.JOIN_SPACE);
   };
+
+  const handleCreateSpace = () => {
+    void client.createSpace();
+  };
+
   return (
-    <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-      <DensityProvider density='fine'>
-        <div role='none' className={mx(defaultOverlay, 'static bs-full')}>
-          <div role='none' className={mx(defaultDialogContent, 'p-2 bs-64 shadow-none bg-transparent')}>
-            {!space ? (
-              <ResolverTree />
-            ) : (
-              <h1 className='text-lg font-system-normal'>{t('resolver init document message')}</h1>
-            )}
-            <Button classNames='is-full' onClick={handleJoinSpace}>
+    <DensityProvider density='fine'>
+      <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+        <div
+          role='none'
+          className={osTx('dialog.content', 'dialog--resolver__content', {}, 'p-2 bs-64 shadow-none bg-transparent')}
+        >
+          {!space ? (
+            <ResolverTree />
+          ) : (
+            <h1 className='text-lg font-system-normal'>{t('resolver init document message')}</h1>
+          )}
+          <div role='group' className='flex is-full gap-2'>
+            <Button classNames='grow' onClick={handleCreateSpace}>
+              {t('create space label', { ns: 'appkit' })}
+            </Button>
+            <Button classNames='grow' onClick={handleJoinSpace}>
               {t('join space label', { ns: 'appkit' })}
             </Button>
           </div>
         </div>
-      </DensityProvider>
-    </ThemeContext.Provider>
+      </div>
+    </DensityProvider>
   );
 };

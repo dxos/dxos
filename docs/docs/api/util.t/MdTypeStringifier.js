@@ -131,7 +131,7 @@ export class MdTypeStringifier {
             head,
             ...tail.map(([type, text]) => {
                 return '${' + this.type(type) + '}' + text;
-            })
+            }),
         ].join('');
     }
     'named-tuple-member'(node) {

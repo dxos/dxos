@@ -2,20 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { Button, useTranslation, MainRoot, Main, Sidebar, MainOverlay } from '@dxos/aurora';
+import {
+  Button,
+  useTranslation,
+  MainRoot,
+  Main,
+  Sidebar,
+  MainOverlay,
+  ToastRoot,
+  ToastTitle,
+  ToastBody,
+  ToastAction,
+  ToastActions,
+} from '@dxos/aurora';
 import { defaultOsButtonColors } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout } from '@dxos/client';
-import { useTelemetry, Toast } from '@dxos/react-appkit';
+import { useTelemetry } from '@dxos/react-appkit';
 import { SpaceState, useIdentity, useInvitationStatus, useSpaceInvitations, useSpaces } from '@dxos/react-client';
 import { ShellProvider, useShell } from '@dxos/react-shell';
 
 import { SidebarContent, SidebarToggle, OctokitProvider } from '../components';
 import { namespace, abbreviateKey, getPath } from '../router';
 import type { OutletContext } from './OutletContext';
+import { EditorViewState } from './OutletContext';
 
 const InvitationToast = ({
   invitation,
@@ -29,16 +42,16 @@ const InvitationToast = ({
   const { t } = useTranslation('composer');
   const handleViewInvitations = async () => shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
   return status === Invitation.State.READY_FOR_AUTHENTICATION ? (
-    <Toast
-      title={t('invitation ready for auth code message')}
-      initiallyOpen
-      actionTriggers={[
-        {
-          altText: 'View',
-          trigger: <Button onClick={handleViewInvitations}>{t('view invitations label')}</Button>,
-        },
-      ]}
-    />
+    <ToastRoot defaultOpen>
+      <ToastBody>
+        <ToastTitle>{t('invitation ready for auth code message')}</ToastTitle>
+      </ToastBody>
+      <ToastActions>
+        <ToastAction altText='View' asChild>
+          <Button onClick={handleViewInvitations}>{t('view invitations label')}</Button>
+        </ToastAction>
+      </ToastActions>
+    </ToastRoot>
   ) : null;
 };
 
@@ -60,6 +73,8 @@ export const StandaloneLayout = () => {
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
   const haloInvitationCode = searchParams.get('haloInvitationCode');
 
+  const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+
   return (
     <ShellProvider
       space={space}
@@ -78,7 +93,9 @@ export const StandaloneLayout = () => {
           </Sidebar>
           <Main classNames='min-bs-full'>
             <SidebarToggle />
-            <Outlet context={{ space, document, layout: 'standalone' } as OutletContext} />
+            <Outlet
+              context={{ space, document, layout: 'standalone', editorViewState, setEditorViewState } as OutletContext}
+            />
           </Main>
         </MainRoot>
       </OctokitProvider>

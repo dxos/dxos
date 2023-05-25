@@ -1,5 +1,5 @@
 # Class `EchoObject`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:8]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object.d.ts:10]()</sub>
 
 
 Base class for all echo objects.
@@ -36,3 +36,12 @@ ID accessor.
 
 
 ## Methods
+### [\[subscribe\](callback)]()
+
+
+
+Returns: <code>function</code>
+
+Arguments: 
+
+`callback`: <code>function</code>

@@ -60,7 +60,7 @@ export const ResetDialog = ({
   return (
     <Dialog
       title={t(errors.length > 0 ? 'fatal error label' : 'reset dialog label', { count: errors.length })}
-      slots={{ content: { className: 'block' } }}
+      slots={{ content: { classNames: 'block' } }}
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}

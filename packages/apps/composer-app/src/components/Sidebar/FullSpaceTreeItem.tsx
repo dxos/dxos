@@ -18,7 +18,16 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { Button, useSidebar, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  useSidebar,
+  useTranslation,
+  TreeBranch,
+  TreeItem,
+  TreeItemBody,
+  TreeItemHeading,
+  TreeItemOpenTrigger,
+} from '@dxos/aurora';
 import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
 import {
@@ -31,11 +40,6 @@ import {
   TooltipContent,
   TooltipRoot,
   TooltipTrigger,
-  TreeBranch,
-  TreeItem,
-  TreeItemBody,
-  TreeItemHeading,
-  TreeItemOpenTrigger,
 } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
@@ -100,20 +104,24 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   return (
     <TreeItem
       collapsible
-      open={open}
-      onOpenChange={setOpen}
-      classNames={['mbe-1 block', disabled && defaultDisabled]}
+      open={!disabled && open}
+      onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
+      classNames={['mbe-1', disabled && defaultDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
+        <TreeItemOpenTrigger disabled={disabled} {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon
             {...(hasActiveDocument && !open && { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' })}
           />
         </TreeItemOpenTrigger>
         <TreeItemHeading
-          classNames='grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium'
+          classNames={[
+            'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+            !disabled && 'cursor-pointer',
+          ]}
           data-testid='composer.spaceTreeItemHeading'
+          onClick={() => setOpen(!open)}
         >
           {spaceDisplayName}
         </TreeItemHeading>
@@ -208,7 +216,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         {documents.length > 0 ? (
           <TreeBranch>
             {documents.map((document) => (
-              <DocumentLinkTreeItem key={document.id} document={document} linkTo={getPath(space.key, document.id)} />
+              <DocumentLinkTreeItem
+                key={document.id}
+                document={document}
+                space={space}
+                linkTo={getPath(space.key, document.id)}
+              />
             ))}
           </TreeBranch>
         ) : (
@@ -227,7 +240,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         open={restoreDialogOpen}
         onOpenChange={setRestoreDialogOpen}
         title={t('confirm restore title')}
-        slots={{ overlay: { className: 'backdrop-blur-sm' } }}
+        slots={{ overlay: { classNames: 'backdrop-blur-sm' } }}
       >
         <p className='mlb-4'>{t('confirm restore body')}</p>
         <FileUploader

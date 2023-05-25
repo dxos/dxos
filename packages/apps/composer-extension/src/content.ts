@@ -52,7 +52,7 @@ const setupComposer = () => {
     const composer = document.createElement('iframe');
     const baseUrl = new URL(import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
     composer.setAttribute('id', composerId);
-    composer.setAttribute('src', `${baseUrl.href}embedded/${window.location.href}`);
+    composer.setAttribute('src', `${baseUrl.href}embedded?location=${window.location.href}`);
     composer.setAttribute('style', composerStyles);
     composer.setAttribute('allow', 'clipboard-write *');
     Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
@@ -95,6 +95,9 @@ const setupComposer = () => {
             body.value = event.data.content;
           }
           updateButton?.click();
+          if (stale) {
+            composer.contentWindow?.postMessage({ type: 'comment-stale' }, baseUrl.origin);
+          }
           break;
         }
       }

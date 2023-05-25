@@ -46,7 +46,7 @@ const LockPage = () => {
             label={identity.profile?.displayName ?? humanize(identity.identityKey)}
             slots={{
               root: {
-                className: mx(group({ elevation: 'group' }), 'p-1 rounded-full'),
+                classNames: [group({ elevation: 'group' }), 'p-1 rounded-full'],
                 // NOTE: This is for testing Sentry hookup.
                 onClick: (event) => {
                   if (event.detail === 3) {

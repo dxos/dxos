@@ -6,9 +6,13 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
+    "outDir": "dist/src",
     "rootDirs": [
       "./src"
+    ],
+    "types": [
+      "@dxos/typings",
+      "node"
     ]
   },
   "ts-node": {

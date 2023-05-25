@@ -9,11 +9,13 @@ import { defaultFocus, densityBlockSize, getSize, osFocus } from '../fragments';
 
 export type ListStyleProps = Partial<{
   density: Density;
+  collapsible: boolean;
 }>;
 
 export const listRoot: ComponentFunction<ListStyleProps> = (_, ...etc) => mx(...etc);
 
-export const listItem: ComponentFunction<ListStyleProps> = (_, ...etc) => mx('flex', ...etc);
+export const listItem: ComponentFunction<ListStyleProps> = ({ collapsible }, ...etc) =>
+  mx(!collapsible && 'flex', ...etc);
 
 export const listItemEndcap: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-start justify-center', ...etc);

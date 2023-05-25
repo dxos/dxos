@@ -3,6 +3,7 @@
 //
 
 export * from '@dxos/client';
+export * from '@dxos/observable-object/react';
 
 export * from './client';
 export * from './echo';

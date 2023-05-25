@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import React, { ComponentProps, ForwardedRef, forwardRef, PropsWithChildren, ReactHTMLElement, ReactNode } from 'react';
 
 import {
@@ -14,13 +13,15 @@ import {
   useJdenticonHref,
   AvatarLabel,
   AvatarDescription,
+  AvatarProps as NaturalAvatarProps,
+  AvatarFallbackProps,
 } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 export interface AvatarSlots {
-  root?: Omit<ComponentProps<typeof AvatarPrimitive.Root>, 'children'>;
+  root?: Omit<NaturalAvatarProps, 'children'>;
   image?: ComponentProps<'image'>;
-  fallback?: Omit<ComponentProps<typeof AvatarPrimitive.Fallback>, 'children'>;
+  fallback?: Omit<AvatarFallbackProps, 'children'>;
   labels?: Omit<ComponentProps<'div'>, 'children' | 'ref'>;
 }
 
