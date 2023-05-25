@@ -15,11 +15,15 @@ import {
   TooltipPortal,
   TooltipRoot,
   TooltipTrigger,
+  TreeBranch,
+  TreeItem,
+  TreeItemBody,
+  TreeItemHeading,
+  TreeItemOpenTrigger,
   useTranslation,
 } from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
-import { TreeBranch, TreeItem, TreeItemBody, TreeItemHeading, TreeItemOpenTrigger } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, useQuery } from '@dxos/react-client';
 

@@ -1,5 +1,5 @@
 # Class `DatabaseRouter`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/router.d.ts:19]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/router.d.ts:9]()</sub>
 
 
 Manages cross-space databases.
@@ -31,30 +31,6 @@ Returns: <code>void</code>
 Arguments: 
 
 `schema`: <code>[EchoSchema](/api/@dxos/client/classes/EchoSchema)</code>
-
-### [createAccessObserver()]()
-
-
-
-Returns: <code>[AccessObserver](/api/@dxos/client/classes/AccessObserver)</code>
-
-Arguments: none
-
-### [createSubscription(onUpdate)]()
-
-
-
-Subscribe to database updates.
-Calls the callback when any object from the selection changes.
-Calls the callback when the selection changes.
-Always calls the callback on the first  `selection.update`  call.
-
-
-Returns: <code>[SubscriptionHandle](/api/@dxos/client/interfaces/SubscriptionHandle)</code>
-
-Arguments: 
-
-`onUpdate`: <code>function</code>
 
 ### [register(spaceKey, database)]()
 
