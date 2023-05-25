@@ -71,13 +71,13 @@ const JoinStep1 = ({
         inputLabel: t('invitation code label', { ns: 'appkit' }),
         inputPlaceholder: t('invitation code placeholder', { ns: 'appkit' }),
         inputProps: {
-          initialValue: invitationCode,
+          initialValue: invitationCode, // TODO(dmaretskyi): defaultValue?.
           slots: { input: { autoFocus: true, className: 'text-center' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const,
           }),
-        },
+        } as any,
         onChange: ({ target: { value } }) => setInvitationCode(value),
         onNext: onConnectNext,
         onCancelPending: cancel,
@@ -112,13 +112,13 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
         inputProps: {
           size: 'pin',
           length: pinLength,
-          initialValue: '',
-          slots: { input: { autoFocus: true, inputMode: 'numeric', pattern: '\\d*' } },
+          initialValue: '', // TODO(dmaretskyi): defaultValue?.
+          slots: { input: { autoFocus: true, inputMode: 'numeric', pattern: '\ \d*' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const,
           }),
-        },
+        } as any,
         onChange,
         onNext: () => onAuthenticateNext(invitationSecret),
         onCancelPending: cancel,
