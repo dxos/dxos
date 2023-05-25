@@ -18,6 +18,7 @@ import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
 import { Daemon } from './daemon';
+import { ForeverDaemon } from './daemon/forever';
 import {
   disableTelemetry,
   getTelemetryContext,
@@ -230,11 +231,11 @@ export abstract class BaseCommand extends Command {
 
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      const daemon = new Daemon();
-      await daemon.init();
+      const daemon = new ForeverDaemon();
+      await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');
-      daemon.disconnect();
+      await daemon.disconnect();
 
       log('Done');
       return value;
