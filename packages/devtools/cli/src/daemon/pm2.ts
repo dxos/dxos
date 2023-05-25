@@ -5,7 +5,6 @@
 import pm2 from 'pm2';
 
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
 
 type Pm2Params = {
   cwd?: string; // * @param {String}  [opts.cwd=<current>]         override pm2 cwd for starting scripts
@@ -17,7 +16,9 @@ type Pm2Params = {
   machine_name?: string; // * @param {String}  [opts.machine_name=null]     pm2 plus instance name
 };
 
-const Pm2Api: new (params?: Pm2Params) => typeof pm2 = (pm2 as any).custom;
+export type Pm2 = typeof pm2;
+
+const Pm2Api: new (params?: Pm2Params) => Pm2 = (pm2 as any).custom;
 
 export const getPm2 = async () => {
   const instance = new Pm2Api({
@@ -33,9 +34,7 @@ export const getPm2 = async () => {
     }
   });
 
-  log.info('Waiting for PM2 to connect...');
   await connected;
-  log.info('PM2 connected.');
 
   return instance;
 };

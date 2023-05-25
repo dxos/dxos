@@ -18,11 +18,12 @@ import {
 } from '../fragments';
 
 export const primaryAppButtonColors =
-  'bg-primary-550 dark:bg-primary-550 text-white hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
-export const defaultAppButtonColors = 'bg-white text-neutral-800 dark:bg-neutral-800 dark:text-neutral-50';
+  'bg-primary-550 dark:bg-primary-550 data-[state=on]:bg-primary-500 dark:data-[state=on]:bg-primary-500 text-white data-[state=on]:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
+export const defaultAppButtonColors =
+  'bg-white data-[state=on]:bg-primary-50 text-neutral-800 data-[state=on]:text-primary-800 dark:bg-neutral-800 dark:data-[state=on]:bg-primary-800 dark:text-neutral-50 dark:data-[state=on]:text-primary-50';
 export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
 export const ghostButtonColors =
-  'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300';
+  'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300 data-[state=on]:text-primary-800 dark:data-[state=on]:text-primary-50';
 
 export type AppButtonStyleProps = Partial<{
   inGroup?: boolean;
@@ -90,7 +91,7 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx(
-    'rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
+    'inline-flex rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
     contentElevation({ elevation: props.elevation }),
     ...etc,
   );

@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useId, useTranslation } from '@dxos/aurora';
-import { TreeRoot } from '@dxos/react-appkit';
+import { useId, useTranslation, TreeRoot } from '@dxos/aurora';
 import { observer, useIdentity, useSpaces } from '@dxos/react-client';
 
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';

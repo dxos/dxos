@@ -5,7 +5,7 @@
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
@@ -26,7 +26,7 @@ export default class Join extends BaseCommand {
     let { invitation: encoded } = flags;
 
     return await this.execWithClient(async (client: Client) => {
-      const identity = client.halo.identity;
+      const identity = client.halo.identity.get();
       if (identity) {
         this.log(chalk`{red Profile already initialized.}`);
         return {};
@@ -40,6 +40,7 @@ export default class Join extends BaseCommand {
           encoded = searchParams.get('invitation') ?? searchParams.get('haloInvitationCode') ?? encoded;
         }
         const invitation = InvitationEncoder.decode(encoded!);
+        this.log('Invitation', invitation);
         const observable = client.halo.acceptInvitation(invitation);
 
         const connecting = new Trigger<Invitation>();
@@ -74,10 +75,9 @@ export default class Join extends BaseCommand {
         await connecting.wait();
         ux.action.stop();
 
+        ux.action.start('Waiting for invitation to proceed');
         await done.wait();
-
-        // TODO(egorgripasov): Wait to replicate?
-        await sleep(5_000);
+        ux.action.stop();
       }
     });
   }
