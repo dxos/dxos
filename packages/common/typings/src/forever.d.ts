@@ -91,6 +91,7 @@ declare module 'forever' {
    */
   export const restart: (target: string, format?: boolean) => void;
 
+  // TODO(mykola): Get full ForeverProcess type.
   export type ForeverProcess = {
     foreverPid: number;
     uid: string;
