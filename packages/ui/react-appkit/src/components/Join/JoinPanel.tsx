@@ -113,7 +113,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           size: 'pin',
           length: pinLength,
           initialValue: '', // TODO(dmaretskyi): defaultValue?.
-          slots: { input: { autoFocus: true, inputMode: 'numeric', pattern: '\ \d*' } },
+          slots: { input: { autoFocus: true, inputMode: 'numeric', pattern: ' d*' } },
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const,

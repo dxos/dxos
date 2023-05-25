@@ -110,7 +110,9 @@ export class WorkerSession {
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
-    this.lockKey && this._afterLockReleases(this.lockKey, () => this.close());
+    if (this.lockKey) {
+      void this._afterLockReleases(this.lockKey, () => this.close());
+    }
   }
 
   async close() {
