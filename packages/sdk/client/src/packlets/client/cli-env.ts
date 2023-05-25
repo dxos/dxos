@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import { ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -43,6 +44,10 @@ export class CliEnvClientServiceProvider implements ClientServicesProvider {
   }
 
   async close(): Promise<void> {
-    await this._client?.close();
+    try {
+      await this._client?.close();
+    } catch (err) {
+      log.warn('Failed to close', err);
+    }
   }
 }
