@@ -21,11 +21,8 @@ export default class Start extends BaseCommand {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const params = await this.parse(Start);
-      const proc = await daemon.start(params.flags.profile);
-      if (proc.length === 0) {
-        throw new Error('Daemon is not started');
-      }
-      this.log('Started:', { id: proc[0].pm_id, name: proc[0].name });
+      const process = await daemon.start(params.flags.profile);
+      this.log('Started:', process);
     });
   }
 }

@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
+import React, { ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Density, Elevation } from '@dxos/aurora-types';
 
@@ -62,15 +62,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = BUTTON_NAME;
 
-type ButtonGroupProps = ComponentPropsWithoutRef<'div'> & { elevation?: Elevation };
+type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  elevation?: Elevation;
+  asChild?: boolean;
+};
 
-const ButtonGroup = ({ children, elevation: propsElevation, ...divProps }: ButtonGroupProps) => {
+const ButtonGroup = ({ children, elevation: propsElevation, classNames, asChild, ...props }: ButtonGroupProps) => {
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
+  const Root = asChild ? Slot : Primitive.div;
   return (
-    <div role='none' {...divProps} className={tx('button.group', 'button-group', { elevation }, divProps.className)}>
+    <Root role='none' {...props} className={tx('button.group', 'button-group', { elevation }, classNames)}>
       <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-    </div>
+    </Root>
   );
 };
 

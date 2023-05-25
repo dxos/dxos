@@ -57,6 +57,16 @@ Returns the text content of the object.
 
 
 ## Methods
+### [\[subscribe\](callback)]()
+
+
+
+Returns: <code>function</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
+
 ### [_afterBind()]()
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.43](https://github.com/dxos/dxos/compare/v0.1.42...v0.1.43) (2023-05-25)
+
+
+### Features
+
+* **composer-app:** GFM Preview ([#3242](https://github.com/dxos/dxos/issues/3242)) ([beaee1a](https://github.com/dxos/dxos/commit/beaee1a0fb60319e1d9658575f24cab8c6670dbc))
+* **composer-app:** Open in Github ([#3244](https://github.com/dxos/dxos/issues/3244)) ([5844710](https://github.com/dxos/dxos/commit/5844710233c6be3ef7fccf1feed2b7ec913709da))
+* observable object ([#3228](https://github.com/dxos/dxos/issues/3228)) ([15f8522](https://github.com/dxos/dxos/commit/15f8522ed5d9bdb218439a6a5ec27d5dc88832a5))
+
+
+### Bug Fixes
+
+* **composer-app,composer-extension:** Improvements ([#3230](https://github.com/dxos/dxos/issues/3230)) ([ceb3aa8](https://github.com/dxos/dxos/commit/ceb3aa823799d76dcb6419848e0bc9cbb389a9c0))
+
 ## [0.1.42](https://github.com/dxos/dxos/compare/v0.1.41...v0.1.42) (2023-05-23)
 
 

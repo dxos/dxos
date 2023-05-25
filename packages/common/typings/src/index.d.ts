@@ -3,6 +3,7 @@
 //
 
 import './dxos';
+import './forever';
 import './hypercore';
 import './hypercore-crypto';
 import './hypercore-protocol';
