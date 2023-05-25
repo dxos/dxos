@@ -67,6 +67,7 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).find((process) => process.profile === profile) ?? {};
   }
 }
+
 const foreverToProcessDescription = (details: ForeverProcess): ProcessDescription => ({
   profile: details?.uid,
   isRunning: details?.running,
