@@ -13,9 +13,8 @@ import {
   PencilSimpleLine,
   UploadSimple,
 } from '@phosphor-icons/react';
-import React, { HTMLAttributes, useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-// TODO(thure): `showdown` is capable of converting HTML to Markdown, but wasn’t converting the styled elements as provided by TipTap’s `getHTML`
 
 import { Document } from '@braneframe/types';
 import { Button, useTranslation, Trans } from '@dxos/aurora';
@@ -26,7 +25,7 @@ import { log } from '@dxos/log';
 import { Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
-import { useOctokitContext } from '../../components';
+import { PatDialog, useOctokitContext } from '../../components';
 import type { OutletContext } from '../../layouts';
 import { EmbeddedDocumentPage } from './EmbeddedDocumentPage';
 import { GfmPreview } from './GfmPreview';
@@ -97,6 +96,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
   const { t } = useTranslation('composer');
   const { layout, editorViewState, setEditorViewState } = useOutletContext<OutletContext>();
 
+  const [staleDialogOpen, setStaleDialogOpen] = useState(false);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(null);
   const [ghBindOpen, setGhBindOpen] = useState(false);
@@ -264,19 +264,23 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
     }
   }, [octokit, docGhId, content, ghBranchValue, ghMessageValue, t]);
 
+  const updateIssueContent = useCallback(() => {
+    const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
+    return octokit!.rest.issues.update({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: content!.toString(),
+    });
+  }, [octokit, docGhId, content]);
+
   const exportGhIssueContent = useCallback(async () => {
     if (octokit && docGhId && 'issueNumber' in docGhId && content) {
       setExportViewState(null);
       try {
-        const { owner, repo, issueNumber } = docGhId as GhIssueIdentifier;
         const {
           data: { html_url: issueUrl },
-        } = await octokit.rest.issues.update({
-          owner,
-          repo,
-          issue_number: issueNumber,
-          body: content.toString(),
-        });
+        } = await updateIssueContent();
         setGhResponseUrl(issueUrl);
         setExportViewState('response');
       } catch (err) {
@@ -295,11 +299,41 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
     );
   }, [exportGhIssueContent, exportGhFileContent, docGhId]);
 
+  const handleGhSave = useCallback(() => {
+    // todo(thure): Adjust if creating a PR should have a different flow for embedded experiences.
+    return (
+      docGhId &&
+      ('issueNumber' in docGhId ? updateIssueContent() : 'path' in docGhId ? setExportViewState('create-pr') : null)
+    );
+  }, [updateIssueContent, exportGhFileContent, docGhId]);
+
   const handleGhImport = useCallback(() => {
     return (
       docGhId && ('issueNumber' in docGhId ? importGhIssueContent() : 'path' in docGhId ? importGhFileContent() : null)
     );
   }, [importGhIssueContent, importGhFileContent, docGhId]);
+
+  useEffect(() => {
+    const handler = async (event: MessageEvent) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      if (event.data.type === 'comment-stale') {
+        if (octokit) {
+          await handleGhSave();
+          window.parent.postMessage({ type: 'close-embed-after-api' }, 'https://github.com');
+        } else {
+          setStaleDialogOpen(true);
+        }
+      }
+    };
+
+    if (layout === 'embedded') {
+      window.addEventListener('message', handler);
+      return () => window.removeEventListener('message', handler);
+    }
+  }, [octokit, handleGhSave, layout]);
 
   const dropdownMenuContent = (
     <>
@@ -415,6 +449,12 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           />
         )}
       </Root>
+      <PatDialog
+        open={staleDialogOpen}
+        setOpen={setStaleDialogOpen}
+        title={t('stale rescue title')}
+        description={t('stale rescue description')}
+      />
       <Dialog
         title={t('bind to file in github label')}
         open={ghBindOpen}
@@ -533,41 +573,9 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
 export const DocumentPage = observer(() => {
   const { t } = useTranslation('composer');
-  const { space, document, layout } = useOutletContext<OutletContext>();
-  const embedded = layout === 'embedded';
-  const [staleDialogOpen, setStaleDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = (event: MessageEvent) => {
-      if (event.source !== window.parent) {
-        return;
-      }
-
-      if (event.data.type === 'comment-stale') {
-        setStaleDialogOpen(true);
-      }
-    };
-
-    if (embedded) {
-      window.addEventListener('message', handler);
-      return () => window.removeEventListener('message', handler);
-    }
-  }, [embedded]);
-
+  const { space, document } = useOutletContext<OutletContext>();
   return (
     <div role='none'>
-      <Dialog
-        open={staleDialogOpen}
-        onOpenChange={setStaleDialogOpen}
-        title={t('comment stale title')}
-        closeTriggers={[
-          <Button key='c1' variant='primary'>
-            {t('confirm label', { ns: 'appkit' })}
-          </Button>,
-        ]}
-      >
-        <p className='plb-2'>{t('comment stale body')}</p>
-      </Dialog>
       {document && space ? (
         document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />
