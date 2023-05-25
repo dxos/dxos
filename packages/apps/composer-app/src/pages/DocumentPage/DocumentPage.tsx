@@ -3,6 +3,7 @@
 //
 
 import {
+  ArrowSquareOut,
   DownloadSimple,
   Eye,
   FileArrowDown,
@@ -302,24 +303,6 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const dropdownMenuContent = (
     <>
-      {octokit && (
-        <DropdownMenuItem
-          className='flex items-center gap-2'
-          onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
-        >
-          {editorViewState === 'preview' ? (
-            <>
-              <PencilSimpleLine className={getSize(4)} />
-              <span>{t('exit gfm preview label')}</span>
-            </>
-          ) : (
-            <>
-              <Eye className={getSize(4)} />
-              <span>{t('preview gfm label')}</span>
-            </>
-          )}
-        </DropdownMenuItem>
-      )}
       <DropdownMenuItem className='flex items-center gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
@@ -331,6 +314,22 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
       {octokit && (
         <>
           <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
+          <DropdownMenuItem
+            className='flex items-center gap-2'
+            onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
+          >
+            {editorViewState === 'preview' ? (
+              <>
+                <PencilSimpleLine className={getSize(4)} />
+                <span>{t('exit gfm preview label')}</span>
+              </>
+            ) : (
+              <>
+                <Eye className={getSize(4)} />
+                <span>{t('preview gfm label')}</span>
+              </>
+            )}
+          </DropdownMenuItem>
           {docGhId ? (
             <>
               <DropdownMenuItem
@@ -351,6 +350,12 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
               <DropdownMenuItem className='flex items-center gap-2' onClick={handleGhExport}>
                 <FileArrowUp className={getSize(4)} />
                 <span>{t('export to github label')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className='flex items-center gap-2'>
+                <a href={`https://github.com/${ghId}`} target='_blank' rel='noreferrer'>
+                  <ArrowSquareOut className={getSize(4)} />
+                  <span>{t('open in github label')}</span>
+                </a>
               </DropdownMenuItem>
             </>
           ) : (

@@ -73,4 +73,5 @@ export const composer = {
   'loading preview message': 'Loading preview…',
   'preview gfm label': 'Preview Markdown',
   'exit gfm preview label': 'Edit Markdown',
+  'open in github label': 'Open in Github',
 };
