@@ -18,14 +18,14 @@ export type DiskInfo = {
   /**
    * Bytes.
    */
-  used: number
-}
+  used: number;
+};
 
 export interface Storage {
   readonly type: StorageType;
   readonly size: number;
 
-  getDiskInfo?(): Promise<DiskInfo>
+  getDiskInfo?(): Promise<DiskInfo>;
 
   // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory;
