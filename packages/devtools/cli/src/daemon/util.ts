@@ -29,3 +29,8 @@ export const waitForDaemon = async (profile: string) => {
     }
   }
 };
+
+export const removeSocketFile = (profile: string) => {
+  const socketAddr = addrFromSocket(getUnixSocket(profile));
+  fs.rmSync(socketAddr, { force: true });
+};

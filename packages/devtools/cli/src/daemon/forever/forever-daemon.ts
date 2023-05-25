@@ -3,11 +3,10 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { Daemon, ProcessDescription } from '../daemon';
-import { addrFromSocket, getUnixSocket, waitForDaemon } from '../util';
+import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
 const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
 export class ForeverDaemon implements Daemon {
@@ -44,13 +43,13 @@ export class ForeverDaemon implements Daemon {
     if (await this.isRunning()) {
       forever.stop(profile);
     }
-    const socketAddr = addrFromSocket(getUnixSocket(profile));
-    fs.rmSync(socketAddr, { force: true });
+    removeSocketFile(profile);
     return this._getProcess(profile);
   }
 
   async restart(profile = 'default'): Promise<ProcessDescription> {
     if ((await this._getProcess(profile)).profile === profile) {
+      removeSocketFile(profile);
       forever.restart(profile);
     } else {
       await this.start(profile);
