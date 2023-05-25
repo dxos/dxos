@@ -9,6 +9,7 @@ import pm2, { Proc } from 'pm2';
 import { Trigger } from '@dxos/async';
 
 import { Daemon, ProcessDescription } from '../daemon';
+import { getUnixSocket } from '../util';
 
 const DEFAULT_PROFILE = 'default';
 
@@ -49,12 +50,7 @@ export class Pm2Daemon implements Daemon {
       this._pm2.start(
         {
           script: process.argv[1],
-          args: [
-            'daemon',
-            'run',
-            `--listen=unix://${process.env.HOME}/.dx/run/${profile}.sock`,
-            '--profile=' + profile,
-          ],
+          args: ['daemon', 'run', `--listen=${getUnixSocket(profile)}`, '--profile=' + profile],
           name: profile,
         },
         (err, proc) => {
