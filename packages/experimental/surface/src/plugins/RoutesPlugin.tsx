@@ -2,16 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import { RouteObject, useRoutes } from 'react-router';
 import { HashRouter } from 'react-router-dom';
 
 import { definePlugin, Plugin, usePluginContext } from '../framework';
-
-export type ListViewContextValue = {
-  routes: RouteObject[];
-  setRoutes: Dispatch<SetStateAction<RouteObject[]>>;
-};
 
 export type RouterPluginProvides = {
   router: {

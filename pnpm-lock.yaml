@@ -3851,88 +3851,28 @@ importers:
 
   packages/experimental/surface:
     specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/kai-frames': workspace:*
-      '@dxos/kai-types': workspace:*
       '@dxos/observable-object': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addons': ^7.0.6
-      '@storybook/api': ^7.0.6
-      '@storybook/components': ^7.0.6
-      '@storybook/core-events': ^7.0.6
-      '@storybook/theming': ^7.0.6
-      '@swc-node/register': 1.5.4
-      '@swc/core': 1.3.21
-      '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      assert: ^2.0.0
-      postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-is: ^18.2.0
       react-router: ^6.4.0
       react-router-dom: ^6.4.0
-      storybook-addon-react-router-v6: ^0.3.2
-      tailwindcss: ~3.2.7
-      typescript: ^4.8.4
-      vite: ^4.3.0
-      vite-plugin-fonts: ^0.7.0
-      vite-plugin-inspect: ^0.7.15
-      vite-plugin-mkcert: ^1.13.4
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
     dependencies:
-      '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/debug': link:../../common/debug
-      '@dxos/kai-frames': link:../kai-frames
-      '@dxos/kai-types': link:../kai-types
       '@dxos/observable-object': link:../../common/observable-object
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      assert: 2.0.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-is: 18.2.0
+      react-router: 6.4.2_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@babel/core': 7.21.3
-      '@storybook/addons': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/api': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/components': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/core-events': 7.0.7
-      '@storybook/theming': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@swc-node/register': 1.5.4_t5bz7ib2vv7p43rtlq7oodtmyi
-      '@swc/core': 1.3.21
-      '@types/faker': 5.5.9
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.1.0_vite@4.3.1
-      postcss: 8.4.21
-      react-router: 6.4.2_react@18.2.0
-      storybook-addon-react-router-v6: 0.3.2_aeibqh7zhbg3w5q6bov6r5kdaq
-      tailwindcss: 3.2.7_postcss@8.4.21
-      typescript: 4.8.4
-      vite: 4.3.1
-      vite-plugin-fonts: 0.7.0_vite@4.3.1
-      vite-plugin-inspect: 0.7.15_vite@4.3.1
-      vite-plugin-mkcert: 1.13.4_vite@4.3.1
-      vite-plugin-pwa: 0.14.1_fsot53mdcl7oczeoetyqvo3nfq
-      workbox-window: 6.5.4
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
 
   packages/gravity/gravity-agent:
     specifiers:

@@ -39,8 +39,6 @@ export type SidebarProps = {
   className?: ClassNameValue;
 };
 
-const SIDEBAR_NAME = 'KaiFrameworkSidebar';
-
 // TODO(burdon): Convert into Frame.
 // TODO(burdon): Remove observer?
 export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
