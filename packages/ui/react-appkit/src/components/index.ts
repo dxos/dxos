@@ -36,7 +36,6 @@ export * from './SpacesPage';
 export * from './StatusIndicator';
 export * from './ThemeProvider';
 export * from './Tile';
-export * from './Toast';
 export * from './Tooltip';
-export * from './Tree';
+export * from './JsonTree';
 export * from './TreeView';

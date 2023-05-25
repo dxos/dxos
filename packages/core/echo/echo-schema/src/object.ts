@@ -8,6 +8,7 @@ import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
@@ -17,7 +18,7 @@ import { base, db } from './defs';
  * Base class for all echo objects.
  * Can carry different models.
  */
-export abstract class EchoObject<T extends Model = any> {
+export abstract class EchoObject<T extends Model = any> implements ObservableObject {
   /**
    * @internal
    */
@@ -50,6 +51,8 @@ export abstract class EchoObject<T extends Model = any> {
    * @internal
    */
   _modelConstructor: ModelConstructor<T>;
+
+  private _callbacks = new Set<(value: any) => void>();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
@@ -104,7 +107,16 @@ export abstract class EchoObject<T extends Model = any> {
    * Called before object is bound to database.
    * `_database` is guaranteed to be set.
    */
-  _itemUpdate(): void {}
+  _itemUpdate(): void {
+    for (const callback of this._callbacks) {
+      callback(this);
+    }
+  }
+
+  [subscribe](callback: (value: any) => void) {
+    this._callbacks.add(callback);
+    return () => this._callbacks.delete(callback);
+  }
 
   /**
    * @internal

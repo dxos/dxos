@@ -90,7 +90,7 @@ export const CompactQrCode = ({
   }, [value]);
   return (
     <>
-      <ButtonGroup className='inline-flex grow md:hidden'>
+      <ButtonGroup classNames='inline-flex grow md:hidden'>
         {displayQrLabel && (
           <span className='sr-only' id={labelId}>
             {displayQrLabel}
@@ -136,7 +136,7 @@ export const CompactQrCode = ({
           </TooltipTrigger>
         </TooltipRoot>
       </ButtonGroup>
-      <ButtonGroup className='hidden md:inline-flex'>
+      <ButtonGroup classNames='hidden md:inline-flex'>
         <Popover
           openTrigger={
             <Button
