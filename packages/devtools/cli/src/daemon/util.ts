@@ -12,10 +12,10 @@ export const getUnixSocket = (profile: string) => `unix://${process.env.HOME}/.d
 
 export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
 
+/**
+ * Waits till unix socket file is created.
+ */
 export const waitForDaemon = async (profile: string) => {
-  //
-  // Wait for daemon to start.
-  //
   let slept = 0;
   const inc = 100;
   const sockAddr = addrFromSocket(getUnixSocket(profile));
