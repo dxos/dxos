@@ -5,3 +5,4 @@
 export * from './daemon';
 export * from './pm2';
 export * from './run-services';
+export * from './util';
