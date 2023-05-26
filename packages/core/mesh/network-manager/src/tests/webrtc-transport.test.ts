@@ -27,4 +27,4 @@ describe.skip('test with signal server', () => {
     const testBuilder = new TestBuilder({ signalHosts: TEST_SIGNAL_HOSTS, bridge: true });
     basicTestSuite(testBuilder);
   }).timeout(10_000);
-})
+});
