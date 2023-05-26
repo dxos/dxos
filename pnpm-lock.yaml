@@ -2119,7 +2119,6 @@ importers:
       '@types/cli-progress': ^3.11.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/forever-monitor': ^1.7.6
       '@types/fs-extra': ^9.0.4
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -2131,7 +2130,6 @@ importers:
       do-wrapper: ^4.5.1
       faker: ^5.5.3
       forever: ^4.0.3
-      forever-monitor: ^3.0.3
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
       globby: ^11.1.0
@@ -2177,7 +2175,6 @@ importers:
       do-wrapper: 4.5.1
       faker: 5.5.3
       forever: 4.0.3
-      forever-monitor: 3.0.3
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
       inquirer: 8.2.4
@@ -2197,7 +2194,6 @@ importers:
       '@types/cli-progress': 3.11.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/forever-monitor': 1.7.6
       '@types/fs-extra': 9.0.13
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
@@ -15539,12 +15535,6 @@ packages:
 
   /@types/find-cache-dir/3.2.1:
     resolution: {integrity: sha512-frsJrz2t/CeGifcu/6uRo4b+SzAwT4NYCVPu1GN8IB9XTzrpPkGuV0tmh9mN+/L0PklAlsC3u5Fxt0ju00LXIw==}
-    dev: true
-
-  /@types/forever-monitor/1.7.6:
-    resolution: {integrity: sha512-QrEuaA2FwV/EKII3ZFy12LtZ1qyjwXYmTd9u4jTZBeF3CaVsjLlk1vmlLdfSL3TXdSdFt8BsGyLcsRQ9QP6e5Q==}
-    dependencies:
-      '@types/node': 18.11.9
     dev: true
 
   /@types/fs-extra/11.0.1:
