@@ -29,26 +29,24 @@ export const SplitView = observer(() => {
 
   return (
     <MainRoot sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      {sidebarOpen ? (
-        <Sidebar swipeToDismiss>
-          <Surface name='sidebar' />
-        </Sidebar>
-      ) : null}
-      <Main>
-        <div
-          role='none'
-          className={mx(
-            'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
-            sidebarOpen && 'opacity-0 pointer-events-none',
-          )}
+      <Sidebar swipeToDismiss>
+        <Surface name='sidebar' />
+      </Sidebar>
+      <div
+        role='none'
+        className={mx(
+          'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          sidebarOpen && 'opacity-0 pointer-events-none',
+        )}
+      >
+        <Button
+          onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
+          classNames={mx(fineBlockSize, 'aspect-square p-0')}
         >
-          <Button
-            onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-            classNames={mx(fineBlockSize, 'aspect-square p-0')}
-          >
-            <SidebarIcon weight='light' className={getSize(5)} />
-          </Button>
-        </div>
+          <SidebarIcon weight='light' className={getSize(5)} />
+        </Button>
+      </div>
+      <Main>
         <Surface name='main' />
       </Main>
     </MainRoot>
