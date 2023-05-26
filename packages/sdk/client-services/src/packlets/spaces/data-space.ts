@@ -171,7 +171,7 @@ export class DataSpace {
         }
 
         log.error('Error initializing data pipeline', err);
-        this._state = SpaceState.READY;
+        this._state = SpaceState.ERROR;
         this.error = err as Error;
         this.stateUpdate.emit();
       }

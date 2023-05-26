@@ -22,6 +22,7 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ClientServicesProvider } from '../client';
 import { CancellableInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
+import { decodeError } from '@dxos/protocols';
 
 interface Internal {
   get db(): DatabaseProxy;
@@ -124,6 +125,8 @@ export class SpaceProxy implements Space {
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private _error: Error | undefined = undefined;
+
   private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
@@ -150,8 +153,10 @@ export class SpaceProxy implements Space {
       createEpoch: this._createEpoch.bind(this),
     };
 
-    databaseRouter.register(this.key, this._db);
+    this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
+    databaseRouter.register(this.key, this._db);
+    
     // Update observables
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
@@ -230,6 +235,10 @@ export class SpaceProxy implements Space {
     return this._internal;
   }
 
+  get error(): Error | undefined {
+    return this._error;
+  }
+
   /**
    * Called by EchoProxy to update this space instance.
    * Called once on initial creation.
@@ -246,6 +255,9 @@ export class SpaceProxy implements Space {
 
     if (space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
       await this._initialize();
+    }
+    if(space.error) {
+      this._error = decodeError(space.error);
     }
 
     if (emitEvent) {

@@ -21,8 +21,9 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { humanize, Provider } from '@dxos/util';
+import { Provider, humanize } from '@dxos/util';
 
+import { encodeError } from '@dxos/protocols';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
@@ -153,6 +154,7 @@ export class SpacesServiceImpl implements SpacesService {
     return {
       spaceKey: space.key,
       state: space.state,
+      error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
