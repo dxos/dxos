@@ -6,7 +6,7 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { fromHost } from '@dxos/client-services';
+import { fromHost } from '@dxos/client';
 import { Defaults, Envs } from '@dxos/config';
 import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider, Config } from '@dxos/react-client';

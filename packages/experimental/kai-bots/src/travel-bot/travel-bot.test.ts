@@ -7,8 +7,7 @@ import fs from 'fs';
 import { dirname } from 'path';
 
 import { debounce, Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { TravelProfile, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';

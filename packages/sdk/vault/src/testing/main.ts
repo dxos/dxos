@@ -3,14 +3,13 @@
 //
 
 import { Client, Config, fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 void (async () => {
   const config = new Config({ runtime: { client: { remoteSource: 'http://localhost:3967/vault.html' } } });
   const client = new Client({
     config,
-    services: fromIFrame(config, {}, fromHost),
+    services: fromIFrame(config),
   });
   await client.initialize();
 

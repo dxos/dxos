@@ -7,8 +7,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { ClientServices, Config, PublicKey } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { ClientServices, Config, PublicKey, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 

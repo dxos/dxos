@@ -8,21 +8,21 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout } from '@dxos/async';
-import { Client, InvitationsProxy, Space, SpaceProxy } from '@dxos/client';
-import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { afterTest, describe, test } from '@dxos/test';
-
-import { InvitationsServiceImpl } from '../invitations';
-import { LocalClientServices, ServiceContext } from '../services';
-import { DataSpace } from '../spaces';
+import { Space } from '@dxos/client-protocol';
+import { DataSpace, InvitationsServiceImpl, ServiceContext } from '@dxos/client-services';
 import {
+  PerformInvitationParams,
+  Result,
   createIdentity,
   createPeers,
   performInvitation,
-  PerformInvitationParams,
-  Result,
-  TestBuilder,
-} from '../testing';
+} from '@dxos/client-services/testing';
+import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { afterTest, describe, test } from '@dxos/test';
+
+import { Client } from '../client';
+import { InvitationsProxy } from '../proxies';
+import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);
 
@@ -355,10 +355,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [
-        (host.services as LocalClientServices).host._serviceContext,
-        (guest.services as LocalClientServices).host._serviceContext,
-      ],
+      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });
 
@@ -383,11 +380,8 @@ describe('Invitations', () => {
     });
 
     testSuite(
-      () => ({ host: space as SpaceProxy, guest }),
-      () => [
-        (host.services as LocalClientServices).host._serviceContext,
-        (guest.services as LocalClientServices).host._serviceContext,
-      ],
+      () => ({ host: space, guest }),
+      () => [(host.services as any).host._serviceContext, (guest.services as any).host._serviceContext],
     );
   });
 });
