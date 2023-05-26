@@ -11,7 +11,7 @@ import {
   IFrameHostRuntime,
   IFrameProxyRuntime,
   ShellRuntime,
-  ShellRuntimeImpl
+  ShellRuntimeImpl,
 } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';

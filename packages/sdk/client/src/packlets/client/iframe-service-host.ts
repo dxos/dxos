@@ -37,7 +37,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     host,
     source = DEFAULT_CLIENT_ORIGIN,
     vault = DEFAULT_INTERNAL_CHANNEL,
-    timeout = DEFAULT_TIMEOUT
+    timeout = DEFAULT_TIMEOUT,
   }: IFrameClientServicesHostOptions) {
     this._host = host;
     this._source = source;
@@ -84,9 +84,9 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
         this._iframeController.iframe?.contentWindow?.postMessage(
           {
             channel: this._vault,
-            payload: 'init'
+            payload: 'init',
           },
-          this._iframeController.source.origin
+          this._iframeController.source.origin,
         );
       },
       onMessage: (event) => {
@@ -101,7 +101,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
           const server = createBundledRpcServer({
             services: this._host.descriptors,
             handlers: this._host.services,
-            port: createWorkerPort({ port: messageChannel.port1 })
+            port: createWorkerPort({ port: messageChannel.port1 }),
           });
 
           this._iframeController.iframe?.contentWindow?.postMessage(
@@ -109,16 +109,16 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
               channel: this._vault,
               payload: {
                 command: 'port',
-                port: messageChannel.port2
-              }
+                port: messageChannel.port2,
+              },
             },
             this._iframeController.source.origin,
-            [messageChannel.port2]
+            [messageChannel.port2],
           );
 
           void server.open();
         }
-      }
+      },
     });
     this._shellController = new ShellController(this._iframeController, this.joinedSpace);
     await this._shellController.open();

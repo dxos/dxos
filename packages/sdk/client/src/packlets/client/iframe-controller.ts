@@ -15,7 +15,7 @@ export class IFrameController {
   constructor({
     source,
     onOpen,
-    onMessage
+    onMessage,
   }: {
     source: URL;
     onOpen: () => MaybePromise<void>;

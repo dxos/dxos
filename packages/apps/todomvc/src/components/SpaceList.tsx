@@ -12,7 +12,7 @@ import {
   ShellLayout,
   Space,
   useClient,
-  useSpaces
+  useSpaces,
 } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
