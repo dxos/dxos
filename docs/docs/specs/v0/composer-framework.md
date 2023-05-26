@@ -124,6 +124,7 @@ export const Plugin = {
 ### ECHO vs ephemeral state
 - When state is local, ephemeral, per-session: it is managed by in-memory reactive containers (stores) and backed by local or session storage as appropriate. i.e. the selection state in a List or Tree is ephemeral and not shared between windows or devices, but may be shared among components and plugins in the application.
 - When state is stable across devices, permanent: it is managed by ECHO objects.
+
 ### Ephemeral state management solution
 - The default state management opinion for 1P plugins is `@dxos/observable-object`. The same package powers the reactive ECHO objects API.
 - The `GraphNode extends ObservableObject` and a mutable, observable tree of these represents the "state of the UI" to which React components are bound reactively.
