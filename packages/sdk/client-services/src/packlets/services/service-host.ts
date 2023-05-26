@@ -94,7 +94,9 @@ export class ClientServicesHost {
       ? new VaultResourceLock({
           lockKey,
           onAcquire: () => {
-            this._opening || this.open();
+            if (!this._opening) {
+              void this.open();
+            }
           },
           onRelease: () => this.close(),
         })

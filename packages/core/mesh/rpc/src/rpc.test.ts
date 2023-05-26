@@ -95,7 +95,9 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {
-            portOpen && alicePort.send(msg);
+            if (portOpen) {
+              void alicePort.send(msg);
+            }
           },
           subscribe: alicePort.subscribe,
         },
@@ -105,7 +107,9 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {
-            portOpen && bobPort.send(msg);
+            if (portOpen) {
+              void bobPort.send(msg);
+            }
           },
           subscribe: bobPort.subscribe,
         },
