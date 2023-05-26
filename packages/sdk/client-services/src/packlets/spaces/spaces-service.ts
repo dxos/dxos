@@ -7,6 +7,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { encodeError } from '@dxos/protocols';
 import {
   CreateEpochRequest,
   PostMessageRequest,
@@ -23,7 +24,6 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Provider, humanize } from '@dxos/util';
 
-import { encodeError } from '@dxos/protocols';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
