@@ -8,7 +8,6 @@ import { useNavigate, useParams } from 'react-router';
 import { observer } from '@dxos/observable-object/react';
 
 import { definePlugin, usePluginContext, Plugin } from '../framework';
-import { hasGraphInterface } from './interfaces/graph';
 
 export type MaybePromise<T> = T | Promise<T>;
 
