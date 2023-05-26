@@ -102,7 +102,7 @@ export const Plugin = {
   - `context` - `PluginContext` uses this to construct a nesting of all contexts from all plugins for wrapping the entire application with.
   - `components` - `Surface` uses this to select components by name.
   - `component` - `Surface` uses this when presented with a datum, and no specific desired component by name.
-  - `routes` - `RoutesPlugin` defines this and uses it to
+  - `routes` - `RoutesPlugin` defines a router via `provides.context` and collects `routes` from other plugins for display.
   - `graph` - `TreePlugin` and any others can use this interface to build up the application's main navigation tree.
 
 ## Routing
