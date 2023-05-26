@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { GitCommit, HardDrive, LinkSimple, ShareNetwork } from '@phosphor-icons/react';
+import { GitCommit, HardDrive, LinkSimple, ShareNetwork, Queue, Rows, Bookmarks, Bookmark } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
@@ -13,66 +13,37 @@ import { useAsyncEffect } from '@dxos/react-async';
 import bytes from 'bytes';
 import { humanize } from '@dxos/util';
 import { Button, ButtonGroup, DensityProvider } from '@dxos/aurora';
+import { TreeItemText } from '../../components/TreeItemText';
 
 const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsResponse, snapshots: StoredSnapshotInfo[]): TreeViewItem[] => [
   {
     id: 'origin',
     Icon: GitCommit,
-    Element: (
-      <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-        <span>origin</span>
-        <span className='text-gray-400'>{bytes.format(storageInfo.originUsage)} / {bytes.format(storageInfo.usageQuota)} {formatPercent(storageInfo.originUsage / storageInfo.usageQuota)}</span>
-      </div>
-    ),
+    Element: <TreeItemText primary='origin' secondary={`${bytes.format(storageInfo.originUsage)} / ${bytes.format(storageInfo.usageQuota)} ${formatPercent(storageInfo.originUsage / storageInfo.usageQuota)}`} />,
     items: [
       {
         id: 'storage',
         Icon: HardDrive,
-        Element: (
-          <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-            <span>{storageInfo.type}</span>
-            <span className='text-gray-400'>{bytes.format(storageInfo.storageUsage)}</span>
-          </div>   
-        ),
+        Element: <TreeItemText primary={storageInfo.type} secondary={bytes.format(storageInfo.storageUsage)} />,
         items: [
           {
             id: 'feeds',
-            Icon: ShareNetwork,
-            Element: (
-              <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-                <span>feeds</span>
-                <span className='text-gray-400'>{feedInfo.feeds?.length ?? 0}</span>
-              </div>   
-            ),
+            Icon: Queue,
+            Element: <TreeItemText primary='feeds' secondary={feedInfo.feeds?.length ?? 0} />,
             items: feedInfo.feeds?.map(feed => ({
               id: feed.feedKey.toHex(),
-              Icon: LinkSimple,
-              Element: (
-                <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-                  <span>{humanize(feed.feedKey)}</span>
-                  <span className='text-gray-400'>{bytes.format(feed.diskUsage)}</span>
-                </div>
-              ),
+              Icon: Rows,
+              Element: <TreeItemText primary={humanize(feed.feedKey)} secondary={bytes.format(feed.diskUsage)} />,
             }))
           },
           {
             id: 'snapshots',
-            Icon: ShareNetwork,
-            Element: (
-              <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-                <span>snapshots</span>
-                <span className='text-gray-400'>{snapshots.length}</span>
-              </div>   
-            ),
+            Icon: Bookmarks,
+            Element: <TreeItemText primary='snapshots' secondary={snapshots.length} />,
             items: snapshots.map(snapshot => ({
               id: snapshot.key,
-              Icon: LinkSimple,
-              Element: (
-                <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-                  <span>{snapshot.key}</span>
-                  <span className='text-gray-400'>{bytes.format(snapshot.size)}</span>
-                </div>
-              ),
+              Icon: Bookmark,
+              Element: <TreeItemText primary={snapshot.key} secondary={bytes.format(snapshot.size)} />,
             }))
           }
         ]
@@ -90,16 +61,16 @@ const StoragePanel = () => {
   const refresh = async () => {
     let storageInfo: StorageInfo | undefined = undefined;
     let snapshotInfo: GetSnapshotsResponse | undefined = undefined;
-    
+
     try {
       storageInfo = await devtoolsHost.getStorageInfo();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
 
     try {
       snapshotInfo = await devtoolsHost.getSnapshots();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
 
@@ -109,7 +80,7 @@ const StoragePanel = () => {
 
   useAsyncEffect(refresh, []);
 
-  if(!storageInfo) {
+  if (!storageInfo) {
     return <div>Loading...</div>;
   }
 
@@ -129,7 +100,7 @@ const StoragePanel = () => {
               className: 'overflow-hidden text-gray-400 truncate pl-2'
             }
           }}
-          />
+        />
       </div>
     </div>
   );
