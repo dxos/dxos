@@ -36,7 +36,7 @@ export default class Join extends BaseCommand {
       }
       if (encoded.startsWith('http')) {
         const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-        encoded = searchParams.get('haloInvitationCode') ?? encoded;
+        encoded = searchParams.get('deviceInvitationCode') ?? encoded;
       }
       const invitation = InvitationEncoder.decode(encoded!);
 

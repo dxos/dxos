@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Config } from '@dxos/client';
+import { Client, Config, fromIFrame } from '@dxos/client';
+import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 void (async () => {
+  const config = new Config({ runtime: { client: { remoteSource: 'http://localhost:3967/vault.html' } } });
   const client = new Client({
-    config: new Config({ runtime: { client: { remoteSource: 'http://localhost:3967/vault.html' } } }),
+    config,
+    services: fromIFrame(config, {}, fromHost),
   });
   await client.initialize();
 
