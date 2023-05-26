@@ -5,14 +5,14 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { Stream, Any } from '@dxos/codec-protobuf';
+import { Any, Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
 import { Request, Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { decodeError, encodeError, RpcClosedError, RpcNotOpenError } from './errors';
+import { decodeRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
 
@@ -291,7 +291,7 @@ export class RpcPeer {
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
-      throw decodeError(response.error, method);
+      throw decodeRpcError(response.error, method);
     } else {
       throw new Error('Malformed response.');
     }
@@ -317,7 +317,7 @@ export class RpcPeer {
           close();
         } else if (response.error) {
           // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(decodeError(response.error, method));
+          close(decodeRpcError(response.error, method));
         } else if (response.payload) {
           next(response.payload);
         } else {
