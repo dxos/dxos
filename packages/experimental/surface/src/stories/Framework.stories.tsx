@@ -13,8 +13,4 @@ export default {
   },
 };
 
-export const Default = () => (
-  <div className='absolute inset-0 overflow-hidden'>
-    <TestApp />
-  </div>
-);
+export const Default = () => <TestApp />;

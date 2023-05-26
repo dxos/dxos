@@ -2,19 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
 import React from 'react';
 
-import { ThemeProvider } from '@dxos/aurora';
+import { ThemeMode, ThemeProvider } from '@dxos/aurora';
+import { appTx } from '@dxos/aurora-theme';
+import { createStore } from '@dxos/observable-object';
 
 import { definePlugin } from '../framework';
 
-import '@dxosTheme';
+const themeStore = createStore<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+
+const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+  document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+  themeStore.themeMode = prefersDark ? 'dark' : 'light';
+};
+
+let modeQuery: MediaQueryList | undefined;
 
 export const ThemePlugin = definePlugin({
   meta: {
     id: 'dxos:ThemePlugin',
   },
+  init: async () => {
+    modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme({ matches: modeQuery.matches });
+    modeQuery.addEventListener('change', setTheme);
+    return {};
+  },
+  unload: async () => {
+    return modeQuery?.removeEventListener('change', setTheme);
+  },
   provides: {
-    context: ({ children }) => <ThemeProvider>{children}</ThemeProvider>,
+    context: ({ children }) => (
+      <ThemeProvider {...{ tx: appTx, themeMode: themeStore.themeMode }}>{children}</ThemeProvider>
+    ),
   },
 });

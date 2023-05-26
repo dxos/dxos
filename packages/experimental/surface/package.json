@@ -13,14 +13,15 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
-    "@dxos/aurora": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "react-router": "^6.4.0",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -28,6 +29,9 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-dom": "*"
+    "react-dom": "*",
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5"
   }
 }
