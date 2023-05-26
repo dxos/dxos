@@ -110,16 +110,24 @@ export const Plugin = {
 - Routing is left up to plugins, and entire groups of plugins are expected to form around the handful of specific routing plugins suitable for them.
 - The default approach is a plugin `RoutingPlugin` using ReactRouter which uses `plugin.provides.context` to create the wrapping router element, and `plugin.provides.components.default` to collect `routes` from other plugins and thus create the entire DOM for that route.
 
-## Application State and Actions
+## Application State and Mutations
 
+### Cross plugin state sharing
 - There is no central application state. Each plugin is free to declare it's own application state container.
+- State containers are generally expected to be "granularly reactive" with supporting hooks and wrappers for react.
 - Plugins are free to provide that state container to their components however they want. Plugins can expose a `Plugin.provides.context` which allows them to wrap the application with a custom context provider or any other DOM.
 - Plugins are free to depend on each other's state by importing their state hooks directly.
   - the assumption is that the developer has instantiated the app with the right plugins in the right order.
-- Plugins are free to affect each other's state by acquiring handles to each other's state containers and performing writes to them (conventionally through a functional API on top of that store, but that's up to the store / plugin declaring that store).
+- Plugins are free to affect each other's state by acquiring handles to each other's state containers and performing writes to them (conventionally through a functional API on top of that store, but that's up to the store / plugin owner of that store).
   - the assumption is that each plugin's state store exposes a reactive mutation (action handlers or similar) API and store mutations cause components to re-render automatically.
+
+### ECHO vs ephemeral state
 - When state is local, ephemeral, per-session: it is managed by in-memory reactive containers (stores) and backed by local or session storage as appropriate. i.e. the selection state in a List or Tree is ephemeral and not shared between windows or devices, but may be shared among components and plugins in the application.
 - When state is stable across devices, permanent: it is managed by ECHO objects.
+### Ephemeral state management solution
+- The default state management opinion for 1P plugins is `@dxos/observable-object`. The same package powers the reactive ECHO objects API.
+- The `GraphNode extends ObservableObject` and a mutable, observable tree of these represents the "state of the UI" to which React components are bound reactively.
+- Because the granularity of observable updates is important, a utility exists on `ObservableObject` to perform a `deepMerge` with any incoming tree-ish object. This allows plugin code to declare GraphNodes as "pure functions of state" and for the `deepMerge` generic diffing process to carefully apply a minimum number of operations to the mutable state store.
 
 ## Stacks
 
