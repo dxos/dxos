@@ -11,12 +11,10 @@ import { Trigger } from '@dxos/async';
 import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket } from '../util';
 
-const DEFAULT_PROFILE = 'default';
-
 /**
  * Manager of daemon processes started with PM2.
  *
- * @deprecated because stalls process after command finishes
+ * @deprecated because stalls process after command finishes.
  */
 export class Pm2Daemon implements Daemon {
   private _pm2?: Pm2;
@@ -30,7 +28,7 @@ export class Pm2Daemon implements Daemon {
     this._pm2.disconnect();
   }
 
-  async isRunning(profile = DEFAULT_PROFILE) {
+  async isRunning(profile: string) {
     assert(this._pm2);
     const description = await promisify(this._pm2.describe.bind(this._pm2))(profile);
     if (
@@ -44,7 +42,7 @@ export class Pm2Daemon implements Daemon {
     return true;
   }
 
-  async start(profile = DEFAULT_PROFILE) {
+  async start(profile: string) {
     const result = await new Promise<Proc[]>((resolve, reject) => {
       assert(this._pm2);
       this._pm2.start(
@@ -71,13 +69,13 @@ export class Pm2Daemon implements Daemon {
     return procToProcessDescription(result[0]);
   }
 
-  async stop(profile = DEFAULT_PROFILE) {
+  async stop(profile: string) {
     assert(this._pm2);
     const result = await promisify(this._pm2.stop.bind(this._pm2))(profile);
     return procToProcessDescription(result);
   }
 
-  async restart(profile = DEFAULT_PROFILE) {
+  async restart(profile: string) {
     assert(this._pm2);
     if (await this.isRunning(profile)) {
       return procToProcessDescription(await promisify(this._pm2.restart.bind(this._pm2))(profile));

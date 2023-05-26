@@ -15,7 +15,6 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 import { addrFromSocket } from './util';
 
 export type RunServicesParams = {
-  profile: string;
   listen: string;
   config: Config;
 };

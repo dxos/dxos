@@ -31,6 +31,7 @@ import {
 } from './util';
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
+const DEFAULT_DX_PROFILE = 'DXOS_DEFAULT';
 
 // TODO(wittjosiah): Factor out.
 const exists = async (...args: string[]): Promise<boolean> => {
@@ -67,6 +68,12 @@ export abstract class BaseCommand extends Command {
       description: 'Timeout in seconds',
       default: 30,
       aliases: ['t'],
+    }),
+
+    profile: Flags.string({
+      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
+      default: DEFAULT_DX_PROFILE,
+      env: 'DX_PROFILE',
     }),
 
     // TODO(mykola): Implement JSON args.
