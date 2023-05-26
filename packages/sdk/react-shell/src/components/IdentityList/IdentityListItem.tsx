@@ -42,7 +42,7 @@ export const IdentityListItem = ({
             ),
           }),
           ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
-          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { className: 'shrink-0' } },
+          slots: { labels: { className: 'block shrink overflow-hidden' }, root: { classNames: 'shrink-0' } },
         }}
       />
     </li>

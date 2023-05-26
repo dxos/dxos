@@ -23,7 +23,6 @@ export const createSerializerDefinition = (
 
   const schemaImport = f.createImportDeclaration(
     [],
-    [],
     f.createImportClause(
       false,
       undefined,

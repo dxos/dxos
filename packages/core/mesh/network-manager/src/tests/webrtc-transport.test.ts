@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { describe } from '@dxos/test';
+
 import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
 import { basicTestSuite } from './basic-test-suite';
 

@@ -5,16 +5,16 @@
 import React, { ComponentProps, ForwardedRef, forwardRef, PropsWithChildren, ReactHTMLElement, ReactNode } from 'react';
 
 import {
-  Size,
+  AvatarDescription,
+  AvatarFallback,
+  AvatarFallbackProps,
+  AvatarImage,
+  AvatarLabel,
   AvatarRoot,
   Avatar as NaturalAvatar,
-  AvatarFallback,
-  AvatarImage,
-  useJdenticonHref,
-  AvatarLabel,
-  AvatarDescription,
   AvatarProps as NaturalAvatarProps,
-  AvatarFallbackProps,
+  Size,
+  useJdenticonHref,
 } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
@@ -27,7 +27,7 @@ export interface AvatarSlots {
 
 interface SharedAvatarProps {
   fallbackValue: string;
-  label?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  label?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'> | JSX.Element;
   description?: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   labelId?: string;
   descriptionId?: string;
@@ -41,11 +41,11 @@ interface SharedAvatarProps {
 }
 
 interface DirectlyLabeledAvatarProps extends Omit<SharedAvatarProps, 'label'> {
-  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'> | JSX.Element;
 }
 
 interface IdLabeledAvatarProps extends Omit<SharedAvatarProps, 'labelId'> {
-  labelId: string;
+  labelId?: string; // TODO(dmaretskyi): Fix typing.
 }
 
 export type AvatarProps = DirectlyLabeledAvatarProps | IdLabeledAvatarProps;
