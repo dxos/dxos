@@ -4,12 +4,6 @@ The App: A developer-first, peer-to-peer knowledge management system (KMS).
 The Component: A real-time, collaborative code and text editor.
 The Framework: The extensibility model upon which Composer and Kai are be built.
 
-## Iteration history
-
-- `zhenya-0` proposed a static (v1) vs dynamic (v2) chrome paradigm.
-- `rich-0` proposed Surfaces, ECHO-bound Frames and embraced the dynamic chrome paradigm, getting ahead of `zhenya-0` in terms of flexibility.
-- `zhenya-1` (this version) embraces Surfaces, is ahead of `rich-0` in terms of flexibility, but behind `rich-0` in terms of dynamic discovery, loading, installation, and isolation of modular code. This version also decouples from ECHO and replaces `Frames` with regular `React.Component`.
-
 ## Scenarios
 
 #### Composer scenarios (production)
