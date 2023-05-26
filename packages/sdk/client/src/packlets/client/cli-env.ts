@@ -12,10 +12,14 @@ export type FromCliEnvOptions = {
   profile?: string;
 };
 
+export const DEFAULT_DX_PROFILE = 'DXOS_DEFAULT';
+
 /**
  * Connects to locally running CLI daemon.
  */
-export const fromCliEnv = ({ profile = 'default' }: FromCliEnvOptions = {}): ClientServicesProvider => {
+export const fromCliEnv = ({
+  profile = process.env.DX_PROFILE ?? DEFAULT_DX_PROFILE,
+}: FromCliEnvOptions = {}): ClientServicesProvider => {
   return new CliEnvClientServiceProvider(profile);
 };
 

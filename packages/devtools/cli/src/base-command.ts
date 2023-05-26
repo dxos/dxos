@@ -9,9 +9,10 @@ import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import path, { join } from 'node:path';
 
-import { Client, Config, fromCliEnv } from '@dxos/client';
+import { Client, Config, DEFAULT_DX_PROFILE, fromCliEnv } from '@dxos/client';
+import { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -31,7 +32,6 @@ import {
 } from './util';
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
-const DEFAULT_DX_PROFILE = 'DXOS_DEFAULT';
 
 // TODO(wittjosiah): Factor out.
 const exists = async (...args: string[]): Promise<boolean> => {
@@ -168,6 +168,11 @@ export abstract class BaseCommand extends Command {
     }
 
     try {
+      const yamlConfig = yaml.load(configContent) as ConfigProto;
+      if (yamlConfig.runtime?.client?.storage?.path) {
+        // Isolate DX_PROFILE storages.
+        yamlConfig.runtime.client.storage.path = path.join(yamlConfig.runtime.client.storage.path, flags.profile);
+      }
       this._clientConfig = new Config(yaml.load(configContent) as any);
     } catch (err) {
       Sentry.captureException(err);
@@ -202,8 +207,9 @@ export abstract class BaseCommand extends Command {
    */
   async getClient() {
     await this.execWithDaemon(async (daemon) => {
-      if (!(await daemon.isRunning(process.env.DX_PROFILE))) {
-        await daemon.start(process.env.DX_PROFILE);
+      const { flags } = await this.parse(this.constructor as any);
+      if (!(await daemon.isRunning(flags.profile))) {
+        await daemon.start(flags.profile);
       }
     });
 
