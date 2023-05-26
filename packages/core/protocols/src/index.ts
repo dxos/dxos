@@ -6,3 +6,4 @@ export * from './proto';
 export * from './testing';
 export * from './types';
 export * from './tracing';
+export * from './errors';

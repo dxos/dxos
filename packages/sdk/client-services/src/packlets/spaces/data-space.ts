@@ -66,6 +66,11 @@ export class DataSpace {
 
   private _state = SpaceState.CLOSED;
 
+  /**
+   * Error for _state === SpaceState.ERROR.
+   */
+  public error: Error | undefined = undefined;
+
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 
@@ -166,6 +171,9 @@ export class DataSpace {
         }
 
         log.error('Error initializing data pipeline', err);
+        this._state = SpaceState.READY;
+        this.error = err as Error;
+        this.stateUpdate.emit();
       }
     });
   }
