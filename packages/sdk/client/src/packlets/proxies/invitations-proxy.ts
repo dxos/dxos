@@ -5,13 +5,16 @@
 import assert from 'node:assert';
 
 import { Event, MulticastObservable, Observable, PushStream } from '@dxos/async';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitations,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Invitation, InvitationsService, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
-
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
 
 /**
  * Create an observable from an RPC stream.
@@ -36,7 +39,7 @@ const createObservable = <T>(rpcStream: Stream<T>): Observable<T> => {
   return pushStream.observable;
 };
 
-export class InvitationsProxy {
+export class InvitationsProxy implements Invitations {
   private _ctx!: Context;
   private _createdUpdate = new Event<CancellableInvitationObservable[]>();
   private _acceptedUpdate = new Event<AuthenticatingInvitationObservable[]>();

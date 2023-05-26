@@ -21,6 +21,7 @@ export {
 
 // TODO(burdon): Tighten export.
 export * from '@dxos/echo-schema';
+export * from '@dxos/client-protocol';
 
 export { PublicKey } from '@dxos/keys';
 
@@ -44,8 +45,6 @@ export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 export * from './packlets/client';
 
 export { Properties, PropertiesProps } from './packlets/proto';
-
-export * from './packlets/invitations';
 
 // TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';

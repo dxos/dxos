@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/sdk/client/src/index.ts"
+          "packages/sdk/client/src/index.ts",
+          "packages/sdk/client/src/packlets/testing/index.ts"
         ],
         "outputPath": "packages/sdk/client/dist/lib"
       },

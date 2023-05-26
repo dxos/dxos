@@ -3,6 +3,12 @@
 //
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
+import {
+  ClientServices,
+  ClientServicesProvider,
+  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_INTERNAL_CHANNEL,
+} from '@dxos/client-protocol';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
@@ -12,9 +18,7 @@ import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
-import { DEFAULT_CLIENT_ORIGIN, DEFAULT_INTERNAL_CHANNEL } from './config';
 import { IFrameController } from './iframe-controller';
-import { ClientServices, ClientServicesProvider } from './service-definitions';
 
 export type IFrameClientServicesHostOptions = {
   host: ClientServicesProvider;

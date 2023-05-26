@@ -8,7 +8,7 @@ import { StoryContext, StoryFn } from '@storybook/react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
-import { TestBuilder } from '@dxos/client-services/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
