@@ -21,6 +21,7 @@ import {
   ShellDisplay,
   ShellLayout,
   type Space,
+  IFrameClientServicesHost,
 } from '@dxos/client';
 import { MemoryShellRuntime } from '@dxos/client-services';
 import { useClient, useIdentity } from '@dxos/react-client';
@@ -51,7 +52,7 @@ export const useShell = (): {
       runtime.setLayout(layout, options);
     }
 
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       await client.services.setLayout(layout, options);
     }
   };
@@ -62,8 +63,7 @@ export const useShell = (): {
 };
 export type ShellProviderProps = PropsWithChildren<{
   space?: Space;
-  // TODO(wittjosiah): `deviceInvitationCode`.
-  haloInvitationCode?: string | null;
+  deviceInvitationCode?: string | null;
   spaceInvitationCode?: string | null;
   onJoinedSpace?: (spaceKey?: PublicKey) => void;
 }>;
@@ -73,23 +73,28 @@ export type ShellProviderProps = PropsWithChildren<{
  */
 export const ShellProvider = ({
   space,
-  haloInvitationCode,
+  deviceInvitationCode,
   spaceInvitationCode,
   onJoinedSpace,
   children,
 }: ShellProviderProps) => {
+  const client = useClient();
+
   //
   // IFrame Shell
   //
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy && onJoinedSpace) {
+    if (
+      (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) &&
+      onJoinedSpace
+    ) {
       return client.services.joinedSpace.on(onJoinedSpace);
     }
   }, []);
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       client.services.setSpaceProvider(() => space?.key);
     }
   }, [space]);
@@ -98,10 +103,9 @@ export const ShellProvider = ({
   // Component Shell
   //
 
-  const client = useClient();
   const identity = useIdentity();
   const [display, setDisplay] = useState(
-    !identity || spaceInvitationCode || haloInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE,
+    !identity || spaceInvitationCode || deviceInvitationCode ? ShellDisplay.FULLSCREEN : ShellDisplay.NONE,
   );
 
   const shellRuntime = useMemo(() => {
@@ -116,15 +120,15 @@ export const ShellProvider = ({
       });
     }
 
-    if (haloInvitationCode) {
+    if (deviceInvitationCode) {
       return new MemoryShellRuntime({
         layout: ShellLayout.INITIALIZE_IDENTITY,
-        invitationCode: haloInvitationCode,
+        invitationCode: deviceInvitationCode,
       });
     }
 
     return new MemoryShellRuntime({ layout: identity ? ShellLayout.DEFAULT : ShellLayout.INITIALIZE_IDENTITY });
-  }, [client, identity, spaceInvitationCode, haloInvitationCode]);
+  }, [client, identity, spaceInvitationCode, deviceInvitationCode]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {

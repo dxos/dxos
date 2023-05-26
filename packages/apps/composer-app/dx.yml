@@ -13,8 +13,6 @@ package:
 
 runtime:
   client:
-    log:
-      filter: client:debug,warn
     storage:
       persistent: true
 

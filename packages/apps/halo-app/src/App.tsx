@@ -42,8 +42,8 @@ const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-const serviceProvider = (config?: Config) =>
-  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
+const serviceProvider = async (config?: Config) =>
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config, {}, fromHost);
 
 const Routes = () => {
   useTelemetry({ namespace });
