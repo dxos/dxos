@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { DEFAULT_SHELL_CHANNEL, ShellServiceBundle, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
@@ -10,13 +11,7 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { Provider } from '@dxos/util';
 
-import {
-  appServiceBundle,
-  DEFAULT_SHELL_CHANNEL,
-  IFrameController,
-  shellServiceBundle,
-  ShellServiceBundle,
-} from '../client';
+import { IFrameController } from '../client';
 
 const shellStyles = Object.entries({
   display: 'none',

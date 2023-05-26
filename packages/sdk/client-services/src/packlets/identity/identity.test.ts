@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { createDefaultModelFactory } from '@dxos/client';
+import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MetadataStore,

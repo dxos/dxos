@@ -3,10 +3,9 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { clientServiceBundle, ClientServices, ClientServicesProvider } from '@dxos/client-protocol';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-
-import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 
 /**
  * Implements services that are not local to the app.

@@ -4,4 +4,3 @@
 
 export * from './encoder';
 export * from './invitations';
-export * from './invitations-proxy';

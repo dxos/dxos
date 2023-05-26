@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncChain } from '@dxos/async';
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
