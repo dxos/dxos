@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Error as ErrorResponse } from '@dxos/protocols/proto/dxos/rpc';
+import { Error as ErrorResponse } from '@dxos/protocols/proto/dxos/error';
 
 /**
  * Error that is reconstructed after being sent over the RPC boundary.

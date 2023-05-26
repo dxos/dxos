@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
+import "error.proto";
 
 // TODO(burdon): Move to `dxos.mesh.rpc` (reconcile with @dxos/kube repo).
 package dxos.rpc;
@@ -53,12 +54,6 @@ message Response {
 // Sent by client to end the streaming response.
 message StreamClose {
   int32 id = 1;
-}
-
-message Error {
-  optional string name = 1;
-  optional string message = 2;
-  optional string stack = 3;
 }
 
 // TODO(burdon): Rename Trace.
