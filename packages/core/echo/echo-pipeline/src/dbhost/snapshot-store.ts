@@ -4,8 +4,8 @@
 
 import { subtleCrypto } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
-import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 
 export class SnapshotStore {
@@ -47,12 +47,14 @@ export class SnapshotStore {
   async listSnapshots(): Promise<StoredSnapshotInfo[]> {
     const entries = await this._directory.list();
 
-    return await Promise.all(entries.map(async key => {
-      const { size } = await this._directory.getOrCreateFile(key).stat();
-      return {
-        key,
-        size,
-      }
-    }));
+    return await Promise.all(
+      entries.map(async (key) => {
+        const { size } = await this._directory.getOrCreateFile(key).stat();
+        return {
+          key,
+          size,
+        };
+      }),
+    );
   }
 }

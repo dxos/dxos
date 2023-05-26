@@ -86,12 +86,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     };
   }
 
-  async getSnapshots (): Promise<GetSnapshotsResponse> {
+  async getSnapshots(): Promise<GetSnapshotsResponse> {
     return {
       snapshots: await this.params.context.snapshotStore.listSnapshots(),
-    }
-  };
-
+    };
+  }
 
   resetStorage(request: ResetStorageRequest): Promise<void> {
     throw new Error();
