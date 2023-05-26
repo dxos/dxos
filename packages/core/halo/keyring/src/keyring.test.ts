@@ -72,7 +72,7 @@ describe('Keyring', () => {
     for (let i = 0; i < count; i++) {
       hexKeys.push((await keyring.createKey()).toHex());
     }
-    expect(keyring.list().every((key) => hexKeys.includes(PublicKey.from(key.publicKey).toHex()))).toBeTruthy();
+    expect((await keyring.list()).every((key) => hexKeys.includes(PublicKey.from(key.publicKey).toHex()))).toBeTruthy();
   });
 
   test('event emits', async () => {

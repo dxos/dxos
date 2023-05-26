@@ -8,13 +8,13 @@ import React, { useState } from 'react';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { StorageInfo, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { GetSnapshotsResponse, StorageInfo, StoredSnapshotInfo, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useAsyncEffect } from '@dxos/react-async';
 import bytes from 'bytes';
 import { humanize } from '@dxos/util';
-import { Button, ButtonGroup } from '@dxos/aurora';
+import { Button, ButtonGroup, DensityProvider } from '@dxos/aurora';
 
-const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsResponse): TreeViewItem[] => [
+const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsResponse, snapshots: StoredSnapshotInfo[]): TreeViewItem[] => [
   {
     id: 'origin',
     Icon: GitCommit,
@@ -54,6 +54,26 @@ const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsRespons
                 </div>
               ),
             }))
+          },
+          {
+            id: 'snapshots',
+            Icon: ShareNetwork,
+            Element: (
+              <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
+                <span>snapshots</span>
+                <span className='text-gray-400'>{snapshots.length}</span>
+              </div>   
+            ),
+            items: snapshots.map(snapshot => ({
+              id: snapshot.key,
+              Icon: LinkSimple,
+              Element: (
+                <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
+                  <span>{snapshot.key}</span>
+                  <span className='text-gray-400'>{bytes.format(snapshot.size)}</span>
+                </div>
+              ),
+            }))
           }
         ]
       }
@@ -64,10 +84,27 @@ const getInfoTree = (storageInfo: StorageInfo, feedInfo: SubscribeToFeedsRespons
 const StoragePanel = () => {
   const devtoolsHost = useDevtools();
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
+  const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
 
   const refresh = async () => {
-    setStorageInfo(await devtoolsHost.getStorageInfo());
+    let storageInfo: StorageInfo | undefined = undefined;
+    let snapshotInfo: GetSnapshotsResponse | undefined = undefined;
+    
+    try {
+      storageInfo = await devtoolsHost.getStorageInfo();
+    } catch(err) {
+      console.error(err);
+    }
+
+    try {
+      snapshotInfo = await devtoolsHost.getSnapshots();
+    } catch(err) {
+      console.error(err);
+    }
+
+    setStorageInfo(storageInfo);
+    setSnapshotInfo(snapshotInfo);
   };
 
   useAsyncEffect(refresh, []);
@@ -78,14 +115,14 @@ const StoragePanel = () => {
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex items-end gap-2 w-[600px]'>
+      <div className='flex items-end m-2 gap-2 w-[600px]'>
         <ButtonGroup>
           <Button onClick={refresh}>Refresh</Button>
         </ButtonGroup>
       </div>
       <div className='flex h-full overflow-hidden'>
         <TreeView
-          items={getInfoTree(storageInfo, feeds)}
+          items={getInfoTree(storageInfo, feeds, snapshotInfo?.snapshots ?? [])}
           expanded={['origin', 'storage']}
           slots={{
             value: {

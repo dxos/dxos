@@ -36,6 +36,7 @@ import {
   SignalResponse,
   SubscribeToSwarmInfoResponse,
   StorageInfo,
+  GetSnapshotsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
@@ -84,6 +85,13 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
       usageQuota: navigatorInfo?.quota ?? 0,
     };
   }
+
+  async getSnapshots (): Promise<GetSnapshotsResponse> {
+    return {
+      snapshots: await this.params.context.snapshotStore.listSnapshots(),
+    }
+  };
+
 
   resetStorage(request: ResetStorageRequest): Promise<void> {
     throw new Error();

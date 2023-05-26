@@ -39,7 +39,9 @@ export const decodeError = (err: SerializedErrorProto, { appendStack }: DecodeOp
       error = new SerializedError(err.name ?? 'Error', err.message ?? 'Unknown Error');
   }
   if (appendStack) {
-    error.stack = (err.stack ?? '') + appendStack;
+    error.stack = (err.stack ?? `${error.message}\n`) + appendStack;
+  } else {
+    error.stack = err.stack;
   }
 
   return error;
