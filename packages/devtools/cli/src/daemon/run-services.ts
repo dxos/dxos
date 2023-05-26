@@ -12,8 +12,9 @@ import { fromHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { addrFromSocket } from './util';
+
 export type RunServicesParams = {
-  profile: string;
   listen: string;
   config: Config;
 };
@@ -27,7 +28,7 @@ export const runServices = async (params: RunServicesParams) => {
   const httpServer = http.createServer();
 
   assert(params.listen.startsWith('unix://'), 'Invalid listen address.');
-  const socketAddr = params.listen.slice('unix://'.length);
+  const socketAddr = addrFromSocket(params.listen);
   mkdirSync(dirname(socketAddr), { recursive: true });
   rmSync(socketAddr, { force: true });
   httpServer.listen(socketAddr);

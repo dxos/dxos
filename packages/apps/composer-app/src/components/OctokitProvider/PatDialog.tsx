@@ -9,7 +9,14 @@ import { Dialog, Input } from '@dxos/react-appkit';
 
 import { useOctokitContext } from './OctokitProvider';
 
-export const PatDialog = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<SetStateAction<boolean>> }) => {
+export type PatDialogProps = {
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  title?: string;
+  description?: string;
+};
+
+export const PatDialog = ({ open, setOpen, title, description }: PatDialogProps) => {
   const { t } = useTranslation('composer');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
@@ -20,7 +27,8 @@ export const PatDialog = ({ open, setOpen }: { open: boolean; setOpen: Dispatch<
 
   return (
     <Dialog
-      title={t('profile settings label')}
+      title={title ?? t('profile settings label')}
+      {...(description && { description })}
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);

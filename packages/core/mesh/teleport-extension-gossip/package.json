@@ -33,7 +33,7 @@
     "assert": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "publishConfig": {
     "access": "public",

@@ -3,6 +3,7 @@
 //
 
 import { Args, ux } from '@oclif/core';
+import assert from 'node:assert';
 
 import { Client } from '@dxos/client';
 
@@ -17,19 +18,21 @@ export default class Members extends BaseCommand {
     ...ux.table.flags(),
   };
 
-  static override args = { key: Args.string({ required: true }) };
+  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
     const { args, flags } = await this.parse(Members);
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await client.spaces.get();
+      const spaces = client.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }
 
-      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      assert(key);
+
+      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
         this.log('Invalid key');
         return;

@@ -2,21 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
 import fs from 'fs';
 
 import { BaseCommand } from '../../base-command';
 
 export default class Reset extends BaseCommand {
   static override description = 'Reset all data.';
-
-  static override flags = {
-    ...BaseCommand.flags,
-    profile: Flags.string({
-      description: 'Profile name.',
-      env: 'DX_PROFILE',
-    }),
-  };
 
   async run(): Promise<any> {
     const params = await this.parse(Reset);
