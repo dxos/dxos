@@ -10,9 +10,9 @@ import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { CreateChannelOpts, Muxer, RpcPort } from './muxing';

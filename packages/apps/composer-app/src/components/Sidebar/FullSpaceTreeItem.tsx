@@ -62,6 +62,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
+  const error = spaceSate === SpaceState.ERROR;
   const { sidebarOpen } = useSidebar();
 
   const handleCreate = useCallback(async () => {
@@ -120,6 +121,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
             !disabled && 'cursor-pointer',
           ]}
+          style={{ color: error ? 'red' : undefined }}
           data-testid='composer.spaceTreeItemHeading'
           onClick={() => setOpen(!open)}
         >

@@ -11,6 +11,7 @@ import "dxos/halo/credentials.proto";
 import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
 import "dxos/echo/metadata.proto";
+import "dxos/error.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -152,6 +153,9 @@ enum SpaceState {
 
   /// Data pipeline is ready.
   READY = 3;
+
+  /// Space errored.
+  ERROR = 5;
 }
 
 message Space {
@@ -194,6 +198,8 @@ message Space {
   dxos.keys.PublicKey space_key = 1;
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
+
+  optional Error error = 4;
 
   repeated SpaceMember members = 10;
 
@@ -428,7 +434,7 @@ message LogEntry {
   string message = 2;
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
-  optional dxos.rpc.Error error = 5;
+  optional Error error = 5;
 }
 
 service LoggingService {

@@ -6,11 +6,10 @@ import { expect } from 'earljs';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { schema } from '@dxos/protocols';
+import { SerializedError, schema } from '@dxos/protocols';
 import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { describe, test } from '@dxos/test';
 
-import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testing';
 
@@ -91,7 +90,7 @@ describe('Protobuf service', () => {
       error = err;
     }
 
-    expect(error).toBeA(SerializedRpcError);
+    expect(error).toBeA(SerializedError);
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);
