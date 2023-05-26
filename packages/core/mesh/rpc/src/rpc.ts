@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
 import { Request, Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
+
 import { decodeRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;

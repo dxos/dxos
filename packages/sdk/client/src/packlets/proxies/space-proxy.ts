@@ -15,6 +15,7 @@ import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { decodeError } from '@dxos/protocols';
 import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -22,7 +23,6 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ClientServicesProvider } from '../client';
 import { CancellableInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
-import { decodeError } from '@dxos/protocols';
 
 interface Internal {
   get db(): DatabaseProxy;
@@ -156,7 +156,7 @@ export class SpaceProxy implements Space {
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
 
     databaseRouter.register(this.key, this._db);
-    
+
     // Update observables
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
@@ -256,7 +256,7 @@ export class SpaceProxy implements Space {
     if (space.state === SpaceState.READY && !(this._initialized || this._initializing)) {
       await this._initialize();
     }
-    if(space.error) {
+    if (space.error) {
       this._error = decodeError(space.error);
     }
 

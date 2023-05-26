@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { Error as SerializedErrorProto } from './proto/gen/dxos/error';
 
 export const encodeError = (err: any): SerializedErrorProto => {
@@ -20,7 +24,7 @@ export const encodeError = (err: any): SerializedErrorProto => {
 
 export type DecodeOptions = {
   appendStack?: string;
-}
+};
 
 export const decodeError = (err: SerializedErrorProto, { appendStack }: DecodeOptions = {}): Error => {
   let error: Error;
@@ -34,9 +38,9 @@ export const decodeError = (err: SerializedErrorProto, { appendStack }: DecodeOp
     default:
       error = new SerializedError(err.name ?? 'Error', err.message ?? 'Unknown Error');
   }
-  if(appendStack) {
+  if (appendStack) {
     error.stack = (err.stack ?? '') + appendStack;
-  } 
+  }
 
   return error;
 };
