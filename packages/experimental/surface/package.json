@@ -2,7 +2,7 @@
   "name": "@dxos/surface",
   "version": "0.1.41",
   "private": true,
-  "description": "Surface framework.",
+  "description": "A react framework for making extensible interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

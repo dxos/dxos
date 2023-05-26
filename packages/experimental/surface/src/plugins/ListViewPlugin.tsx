@@ -42,7 +42,7 @@ export type GraphNode<TDatum = any> = {
   label: string;
   description?: string;
   icon?: FC;
-  data?: TDatum;
+  data?: TDatum; // nit about naming this
   actions?: GraphNodeAction[];
   children?: GraphNode[];
   parent?: GraphNode;
@@ -109,7 +109,7 @@ export const ListViewContainer = () => {
 };
 
 const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
-  return (plugins as GraphPlugin[]).filter(hasGraphInterface);
+  return (plugins as GraphPlugin[]).filter((p) => p.provides?.graph);
 };
 export const ListViewPlugin = definePlugin({
   meta: {

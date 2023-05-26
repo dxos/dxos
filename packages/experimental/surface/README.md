@@ -1,14 +1,29 @@
-# Surface Framework
+# @dxos/surface
 
-# Zhenya's notes
-- strongly typed actions (AppAction)
-- actions by key instead of switch
-- back out of "router adapter"
-- extra key name mapping in Plugin.components and AppContextType.plugins
-- plugin.deps?
-- graph? nodes?
-- not git scenarios at the top?
+A react framework for making extensible interfaces.
 
-- route mapping? a way of changing nav state without calling navigate / route sets the app state (may incl. async loading)
-- config of surfaces (?) / what component of what plugin should be rendered (overall at the app level?) / and how does plugin get state? stack plugin needs to know what object of what space is being rendered.
-- what do plugins have in common? what contract? such that stacks can embed other plugins? 
+## Installation
+
+```bash
+pnpm i @dxos/surface
+```
+
+## Usage
+
+Run with
+
+```bash
+pnpm nx storybook surface
+```
+
+## DXOS Resources
+
+- [Website](https://dxos.org)
+- [Developer Documentation](https://docs.dxos.org)
+- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+
+## Contributions
+
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
+
+License: [MIT](./LICENSE) Copyright 2022 © DXOS

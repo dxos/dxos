@@ -1,10 +1,8 @@
 # Composer
 
-A developer-first, peer-to-peer knowledge management system (KMS).
-
-## Composer Framework
-
-The extensibility model upon which Composer and Kai are be built.
+The App: A developer-first, peer-to-peer knowledge management system (KMS).
+The Component: A real-time, collaborative code and text editor.
+The Framework: The extensibility model upon which Composer and Kai are be built.
 
 ## Iteration history
 
@@ -35,6 +33,7 @@ The extensibility model upon which Composer and Kai are be built.
 13. Users can collaborate over post-boards of notes
 14. Users can interact with LLM based agents
 15. Users can chat and message with other users
+16. Users can inspect the state of ECHO spaces and objects (devtools)
 
 ## Goals
 
@@ -52,14 +51,14 @@ The extensibility model upon which Composer and Kai are be built.
 
 ## Definitions
 
-- **Application**: An application built with this framework which can use Surfaces to render components "dynamically" and provides a specific context to all nested components allowing them to access `application state` and list of `loaded plugins`.
-- **Component**: A regular react component which can rely on a specific application context while inside the application. Components are free to nest as many Surfaces within them as necessary.
-- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface accepts a data context, a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. stacking them horizontally or vertically).
-- **Plugin**: A unit of containment, modularization, and distribution of external/modular functionality that can be dynamically installed into an application (at build time, and later at runtime). Plugins provide things like components and other data to the application.
-- **Shell**: The HALO button and generic UI for join and space management flows that appear in popups overtop the main application and hosted in the vault iframe. A subset of the vault UI surface that is restricted to the calling application that saves developers the cost of implementing boilerplate UI flows for space and identity management.
-- **Chrome**: All the UI of an application that is not (but surrounds) the user generated content itself. (e.g.: buttons, toolbars, sidebar affordances, dividers, drag handles, ... etc.)
-- **Vault**: HALO universal PWA which stores identity and data
-- **Stack**: A user experience paradigm (component) which enables editing columns of mixed content with arbitrary (extensible) content types. A key feature is the draggability of stack elements to re-order them.
+- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface is a React component which accepts a data context (datum), a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. arranging them horizontally or vertically).
+- **Component**: A regular react component. Components are free to nest as many Surfaces within them as necessary.
+- **Application**: A component which can assume it owns the whole screen.
+- **Plugin**: A unit of containment of modular functionality that can be statically compiled into an application (in later versions, loaded dynamically). Plugins provide things like components and other data to the Application.
+- **Shell**: The HALO button and generic UI for join flows and space management that appear in popups overtop the main application and hosted in the vault iframe. It is a subset of the vault UI surface that is restricted to the calling application.
+- **Chrome**: All the UI of an application that is not user-generated content. (e.g.: buttons, toolbars, sidebar affordances, dividers, drag handles, ... etc.).
+- **Vault**: HALO universal PWA which stores identity and data.
+- **Stack**: A component which enables editing columns of mixed content with arbitrary (extensible) content types. A key feature is the draggability of stack elements to re-order them.
 
 ## Non-definitions
 
@@ -71,11 +70,11 @@ The extensibility model upon which Composer and Kai are be built.
 
 ## Applications are made of Surfaces and Components
 
-- The application is a component `<App />`.
+- The application is just a component `<App />`.
 - A component can have any number of `<Surface />` as children inside it.
-- A Surface figures out what Component(s) to render given a set of `loaded plugins`, a `data context`, and `other control props`. It can be understood as the the developer intention to render/visualize the given `data context` (datum) using whatever appropriate component as provided by Plugins and configured by the the end user and/or the developer.
+- A Surface figures out what Component(s) to render given a set of `loaded plugins`, a `data context`, and `other control props`. It can be understood as the the developer intention to render/visualize the given `data context` (datum) using whatever appropriate component(s) as provided by Plugins and configured by the the end user and/or the developer.
 - The main `<App />` component defines a single, full-screen `<Surface />` for rendering "anything". i.e.: does not opine about what it is, delegates that to plugins and initial configuration entirely.
-- The main `<App />` component also wraps the main `Surface` with an `AppContext` provider representing the total and entire state of the application which becomes available through a hook to any nested component.
+- The main `<App />` component also wraps the main `Surface` with an `PluginContext` provider which gives all nested components access to the list of plugins.
 
 ## Example Structure
 
@@ -86,109 +85,103 @@ Below is a diagram illustrating how:
 
 ![Composer Structural Diagram](./composer.drawio.svg)
 
-## Stacks
+## Plugin Provides
 
-- Stacks are just components which rely on the same `<Surface />` concept to delegate the concrete rendering of stack elements to components provided by plugins.
+- Plugins declare their capabilities with a namespace-less interface name (for now). Deeper interop, strong types, and smaller versioning overhead are advantages of this approach, similar to how GraphQL schemas are "version-less" and "namespace-less".
+
+Example:
+
+```ts
+export const Plugin = {
+  meta: { id: '...' },
+  provides: {
+    someCapability: {
+      /* some capability API fulfillment provided here */
+    }
+  }
+};
+```
+
+- Plugins are free to provide any kind of interface they want, while being mindful of the names of those capabilities. As long as all plugins are compiled and named statically, this is okay. When it's time to make plugins dynamic, their capabilities can be namespaced by `plugin.meta.id` or other declared namespaces within the framework.
+
+- Several interfaces are to be established by the first few plugins:
+  - `context` - `PluginContext` uses this to construct a nesting of all contexts from all plugins for wrapping the entire application with.
+  - `components` - `Surface` uses this to select components by name when presenting a datum.
+  - `component` - `Surface` uses this when presented with a datum, and no specific desired component by name.
+  - `routes` - `RoutesPlugin` defines this and uses it to
+  - `graph` - `TreePlugin` and any others can use this interface to build up the application's main navigation tree.
 
 ## Routing
 
-- Routing (the main router and top level routes) are declared outside (around) the `<App />` component and allow the `App` to pass route information as state in the total `AppState` context for all descendants.
-- Nested components inside `<App />` are equally free to use `<Route />` elements if necessary as well.
-- Nested components are encouraged to perform navigation by submitting `Actions` as opposed to calling `navigate()` directly, although situations like `<Button to="/some/route"/>` should also be supported.
+- Routing is left up to plugins, and entire groups of plugins are expected to form around the handful of specific routing plugins suitable for them.
+- The default approach is a plugin `RoutingPlugin` using ReactRouter which uses `plugin.provides.context` to create the wrapping router element, and `plugin.provides.components.default` to collect `routes` from other plugins and thus create the entire DOM for that route.
 
 ## Application State and Actions
 
-- The App provides a global `AppState` (in the `AppContext`) to all nested components which is composed of some concrete and other dynamic sections to be filled by plugins
-- State is updated via a `dispatch(...actions)` API in the `AppContext` which enables Plugins to subscribe to each other's actions and update state accordingly
-- Plugins (and their provided Components) are free to extend/add more fields to the `AppState` as necessary, when it is desirable to share certain state application-wide.
-- State can be composed of `@preact/signals` (or similar reactive state solution) and can contain any other objects including `ECHO` objects.
-- When state is:
-  - local, ephemeral, per-session: it is managed by signals (and backed by local or session storage as appropriate). i.e. the selection state in a List or Tree is ephemeral and not shared between windows or devices, but may be shared among components and plugins in the application.
-  - peer-to-peer, permanent: it is managed by ECHO objects.
-- `AppState` includes current route and params in convenient form.
-- Actions are handled by functions that resemble `reducers` who should return new state reflecting the action committing, and possibly a list of side-effects which may result in more actions or state updates at a later time. (i.e. performing writes to echo objects in a batch is a side-effect, invoking a github API is a side-effect, etc. whereas the indicator that the app is loading something is a purely new state returned from the reducer)
+- There is no central application state. Each plugin is free to declare it's own application state container.
+- Plugins are free to provide that state container to their components however they want. Plugins can expose a `Plugin.provides.context` which allows them to wrap the application with a custom context provider or any other DOM.
+- Plugins are free to depend on each other's state by importing their state hooks directly.
+  - the assumption is that the developer has instantiated the app with the right plugins in the right order.
+- Plugins are free to affect each other's state by acquiring handles to each other's state containers and performing writes to them (conventionally through a functional API on top of that store, but that's up to the store / plugin declaring that store).
+  - the assumption is that each plugin's state store exposes a reactive mutation (action handlers or similar) API and store mutations cause components to re-render automatically.
+- When state is local, ephemeral, per-session: it is managed by in-memory reactive containers (stores) and backed by local or session storage as appropriate. i.e. the selection state in a List or Tree is ephemeral and not shared between windows or devices, but may be shared among components and plugins in the application.
+- When state is stable across devices, permanent: it is managed by ECHO objects.
 
-## Plugins, Components, Actions, and other `provides`
+## Stacks
 
-- The application framework consumes a list of plugins (statically compiled-in for now).
-- Plugins can provide Components in response to a specific data context: i.e `plugin.provides.component(data: any): React.FC`
-- Components provided by plugins can assume they have access to the `AppContext` context and hooks, and may submit actions via `AppContext.dispatch(...actions)`.
-- Plugins can provide action handlers such as `plugin.handlers.[<action-type>](state, action): { state, effects }` and can react to actions coming from other plugins this way.
-- Plugins may provide any number of other data types and APIs which are specific to certain components which may be present in the Application tree at runtime. If a certain component does not exist, then it will not ask for the relevant `provides` from plugins, and they will therefore be inert. (i.e. Plugins provide a `graph` which can be consumed by any number of UI components including the `Tree` which itself is provided by the `TreePlugin` and may represent the entire and total graph built up by all the plugins loaded).
+- Stacks are just components which rely on the same `<Surface />` concept to delegate the concrete rendering of stack elements to components provided by plugins.
 
 ## Example
 
 Below is an example of how the App in the diagram above would be instantiated illustrating how every surface and component comes from a plugin (none are statically defined by the App).
 
 ```tsx
-import { RouteComponentProps, useNavigate } from 'react-router';
-
-<Route path="/:spaceKey/:objectId" element={AppContainer} />;
-
-const AppContainer = (props: RouteComponentProps) => {
-  const { spaceKey, objectId } = props.params;
-  const navigate = useNavigate();
-  return (
-    <App
-      plugins={[
-        new SplitViewPlugin(), // provides SplitView with sidebar, main, tools surfaces
-        new TreePlugin(), // provides Tree and Selection which visualize the graph
-        new SpacesPlugin(), // provides graph nodes that represent ECHO spaces and their contents
-        new StackPlugin(), // provides Stack
-        new ComposerPlugin(), // provides Composer
-        new ImagePlugin(), // provides Image
-        new HaloPlugin(), // provides the HALO button and shell in the tools surface
-        new SearchPlugin() // provides the Search element in the tools surface
-      ]}
-      initialState={{
-        // a special area of state declaring the way surfaces are to be given props
-        surfaces: {
-          // the props to be passed to the main surface
-          main: {
-            component: 'SplitViewPlugin.SplitView',
-            surfaces: {
-              sidebar: { component: 'TreePlugin.Tree' },
-              tools: {
-                component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search']
-              },
-              main: { component: 'TreePlugin.Selection' }
-            }
-          }
+<PluginProvider
+  plugins={[
+    new SplitViewPlugin(), // provides SplitView with sidebar, main, tools surfaces
+    new TreePlugin(), // provides Tree and Selection which visualize the graph
+    new SpacesPlugin(), // provides graph nodes that represent ECHO spaces and their contents
+    new StackPlugin(), // provides Stack
+    new ComposerPlugin(), // provides Composer
+    new ImagePlugin(), // provides Image
+    new HaloPlugin(), // provides the HALO button and shell in the tools surface
+    new SearchPlugin() // provides the Search element in the tools surface
+  ]}
+>
+  <Surface
+    nestedSurfaces={{
+      main: {
+        component: 'SplitViewPlugin.SplitView',
+        nestedSurfaces: {
+          sidebar: { component: 'TreePlugin.Tree' },
+          tools: {
+            component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search']
+          },
+          main: { component: 'TreePlugin.Selection' }
         }
-      }}
-      state={{
-        // initial state with which the application state context will be created
-        // (or amended during a re-render)
-        // e.g.: parsed route and params information from a parent route element goes here
-        spaceKey: PublicKey.parse(spaceKey),
-        entityId: objectId
-      }}
-      handlers={{
-        ['selection-changed'](state, action) {
-          const { selection } = action;
-          navigate(constructPath(action.entity));
-        }
-      }}
-    />
-  );
-};
+      }
+    }}
+  />
+</PluginProvider>
 ```
 
-It should be clear that the entire application structure is constructed based on what is passed in to `state.surfaces` and can therefore be serialized, stored in ECHO, modified by users, or otherwise altered dynamically at runtime.
+The entire application chrome is constructed (in this case) based on what is passed in to `Surface.nestedSurfaces` and can therefore be serialized, stored in ECHO, modified by users, or otherwise altered dynamically at runtime. It's a declaration of which component (by name) goes in which of the surfaces (to start, later this can change at runtime).
 
-It's possible for the app to enter a mode where the surface-to-component binding is itself visualized in the `Tree` therefore becoming inspectable and modifiable in-app. It's possible to locate this behavior within yet another plugin (`AppInspectorPlugin` or something).
-
-`Tree` is responsible for rendering all `GraphNodes` provided by plugins, and provides a state to the global `AppState` reflecting the currently selected node(s).
+`Tree` is responsible for rendering all `GraphNodes` provided by plugins, and provides a state store via `provides.context` reflecting the currently selected node(s) and the total tree presented in the UI.
 
 In order to populate the `Tree`, plugins are first asked to present their lists of children with no `parent` node. This generates the first level items in the Tree. Then, for each node ad-nauseum, plugins are asked to return more children until the tree reaches a steady state. This allows plugins to add nodes to each other's nodes.
 
+::: Note
+This behavior runs only one level deep (for now). If a plugin produces nodes [X] in response to a node it doesn't own, no other plugins will be asked to produce more nodes (or actions) for any nodes in [X].
+:::
+
 `SpacesPlugin` provides the entire graph in this example, starting with nodes for each ECHO space, followed by subnodes representing queries or specific types, followed by objects of each type.
 
-`Selection` is responsible for sensing what nodes are selected by reading the relevant area in `AppState`, obtaining a reference to the selected `GraphNodes` and the nested ECHO objects they represent, and passing them to a `<Surface />` which knows how to choose the right component to render that ECHO object with.
+`Selection` is responsible for sensing what nodes are selected in the Tree by reading the relevant area in `TreeState`, obtaining a reference to the selected `GraphNodes` and the nested ECHO objects they represent, and passing them to a `<Surface />` which knows how to choose the right component to render those objects with.
 
-`StackPlugin` provides a Component that knows how to visualize a given ECHO object of type `stack`, and fulfills the `main` surface of `Selection` dynamically as a result of a `Tree` selection change.
+`StackPlugin` provides a Component that knows how to visualize a given ECHO object of type `stack` (by using it's `children` to render draggable items with `<Surfaces>` for each item inside), and fulfills the `main` surface of `Selection` dynamically as a result of a `Tree` selection change.
 
-`Stack` components also use `Surfaces` to obtain components from `ComposerPlugin` and `ImagePlugin` which know how to render ECHO objects of type `text` and `image` respectively.
+`Stack` components use `Surfaces` to obtain components from `ComposerPlugin` and `ImagePlugin` which know how to render ECHO objects of type `text` and `image` respectively.
 
 `SearchPlugin` knows how to alter the `surfaces` section of the state such that a different control is presented instead of the `Tree` with flat search results whenever a search term is present in the input box. Alternatively, the `Tree` can equally respond to changes in the search term (global state) and filter itself down accordingly.
 
@@ -199,195 +192,10 @@ Other plugins possible:
 3. the **github** plugin - which provides nodes representing github issues and assets
 
 ## Example Plugins
-
-### Tree Plugin
-
-```tsx
-import { HaloButton } from '@dxos/react-shell';
-import { Tree } from './Tree';
-import { Selection } from './Selection';
-import { Plugin } from '@dxos/app-model';
-
-export const TreePlugin: Plugin = {
-  meta: {
-    id: 'TreePlugin'
-  },
-  provides: {
-    components: {
-      HaloButton,
-      Tree, // uses AppContext.plugins to grab graph nodes from all plugins
-      Selection // uses AppContext.tree.selection to grab ECHO objects in GraphNode.data and <Surface /> them
-    }
-  }
-};
-```
-
-```tsx
-import { TreeView } from '@dxos/aurora';
-import { useAppContext } from '@dxos/app-framework';
-
-const Tree = () => {
-  const { plugins, dispatch, state } = useAppContext();
-  // obtain graph nodes from all plugins ad-nauseum
-  const nodes: GraphNode[] = [];
-  // grab selection from state
-  const selection = state.TreePlugin.tree.selection;
-  return (
-    <TreeView
-      nodes={nodes}
-      selection={selection}
-      onSelectionChanged={(selection: GraphNode[]) => {
-        dispatch({ type: 'selection-changed', selection });
-      }}
-    />
-  );
-};
-```
-
-### Spaces Plugin
-
-```tsx
-import { Plugin } from '@dxos/app-model';
-
-export const SpacesPlugin: Plugin = {
-  meta: {
-    id: 'SpacesPlugin'
-  },
-  provides: {
-    graph: {
-      getNodes(parent, context) {
-        // return a GraphNode with label and lazy children
-        const { client } = context;
-        return client.getSpaces().transform((space) => ({
-          label: humanize(space.key),
-          children() {
-            return space.query().transform((object) => ({
-              /* ... */
-            }));
-          }
-        })); // transformed observable
-      }
-    }
-  }
-};
-```
-
-## Separation from ECHO
-
-### Non-ECHO graph nodes
-
-Graph nodes are not restricted to being ECHO objects. Examples:
-
-- nodes that represent the default surface-to-component bindings and allow users to configure or swap e.g.: the root `SplitView` for something else with the same (or different) surfaces.
-- nodes that represent the filesystem
-- nodes that represent entities in GitHub (which are not also represented in ECHO)
-
-### Non-Frame components
-
-Some of the components in the example above can be considered `Frames` because they bind directly to ECHO objects. Examples:
-
-- Composer
-- Image
-- Stack
-
-Others are not binding directly to ECHO objects, but observe other things, e.g.: only ephemeral elements of `AppState`:
-
-- `Search` binds to `AppState.search.term` or similar
-- `HaloButton` binds to nothing (no explicit data context) and invokes the shell when clicked.
-
-n.b.: One could say `HaloButton` binds to a HALO Identity, but that would be the case for an `Avatar` orb component or similar, the `HaloButton` component is parameterless and always calls `useIdentity` internally without requiring data context from the parent, making it trivial to use in any application.
+See `/packages/experimental/surface`.
 
 ## Things to think about:
 
 - how to do paging of large result sets
 - how to detect circular / infinite trees and deal with them
 - how to expand `getNodes` lazily / in a timely manner without losing too much fidelity in the Tree
-
-## Appendix - other types
-
-```ts
-type MaybePromise<T> = T | Promise<T>;
-
-type Plugin = {
-  meta: {
-    // serializable, could be stored in a space.
-    id: string;
-    name: string;
-    description: string;
-    icon: string | React.FC; // can be a URL or base64 encoded data: URL?
-    // dependencies: string[];
-  };
-  provides: {
-    graph: {
-      getNodes(parent: GraphNode, context: AppContext): Observable<GraphNode[]>;
-      getActions(parent: GraphNode, context: AppContext): Observable<Action[]>;
-    };
-    components: {
-      [name: string]:
-        | React.FC
-        | ((
-            selection: GraphNode[],
-            context: AppContext
-          ) => MaybePromise<React.FC>);
-    };
-  };
-};
-
-type Effect = (state: AppState) => MaybePromise<AppState>;
-
-// a structure describing how to render an action button in the UI
-// and what internal action object should be dispatched when clicked
-// i.e. the Action needs an icon to display it, when clicked it should
-// tell the store to { type: 'refresh-everything' } which is handled
-// by action handlers in every plugin
-type Action<TStoreAction extends { type: string }> = {
-  id: string;
-  label: string;
-  icon?: React.FC;
-  invoke(state: AppState, context: AppContext): MaybePromise<TStoreAction>;
-};
-
-type GraphNode<TDatum = any> = {
-  id: string;
-  data?: TDatum;
-  label: string;
-  description?: string;
-  icon?: React.FC;
-  loading?: boolean;
-  disabled?: boolean;
-  actions?: Action[];
-  children?: GraphNode[];
-  parent?: GraphNode;
-  labelEditable?: boolean;
-  onLabelChanged?(value: string, context: AppContext): any;
-};
-
-type AppState = {
-  route: string; // the route URL
-  spaceKey: PublicKey; // from router
-  entityId: string; // from router
-  plugins: {
-    TreePlugin: {
-      plugin: Plugin;
-      state: {
-        tree: {
-          selection: GraphNode[];
-          nodes: GraphNode[];
-        };
-      };
-    };
-    SidebarPlugin: {
-      plugin: Plugin;
-      state: {
-        sidebar: {
-          isOpen: boolean; // is the sidebar currently open
-          isPinned: boolean; // whether the sidebar will autohide
-        };
-      };
-    };
-  };
-  plugins: Plugin[]; // all plugins for convenience?
-  client: Client;
-  // etc
-};
-```

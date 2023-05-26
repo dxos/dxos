@@ -17,7 +17,7 @@ type InterfaceDef<T> = {
   impl: T;
 };
 
-export const provide = <T,>(key: Interface<T>, impl: T): InterfaceDef<T> => ({ key, impl });
+export const provide = <T>(key: Interface<T>, impl: T): InterfaceDef<T> => ({ key, impl });
 
 export type PluginProps = {
   provides?: InterfaceDef<any>[];
@@ -29,20 +29,11 @@ export class Plugin {
     provides?.forEach(({ key, impl }) => this._interfaces.set(key.key, impl));
   }
 
-  getInterface = <T,>(key: Interface<T>): T | undefined => this._interfaces.get(key.key);
+  getInterface = <T>(key: Interface<T>): T | undefined => this._interfaces.get(key.key);
 }
 
-const getInterfaces = <T,>(plugins: Plugin[], key: Interface<T>): T[] =>
+const getInterfaces = <T>(plugins: Plugin[], key: Interface<T>): T[] =>
   plugins.map((plugin) => plugin.getInterface(key)).filter(Boolean) as any;
-
-
-  const foo = plugin.provides['fully qualified name'];
-if (foo) {
-  // we ok here
-
-}
-
-
 
 //
 // Interfaces allow shared typesafe contracts between plugins.
@@ -56,7 +47,6 @@ export interface Printable {
 }
 
 export const Printable: Interface<Printable> = { key: 'printable' };
-
 
 export interface Selectable {
   selection: () => string | undefined;
