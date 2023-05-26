@@ -16,7 +16,7 @@ export const hostInvitation = async (
 ): Promise<Invitation> => {
   const done = new Trigger<Invitation>();
 
-  observable.subscribe(
+  const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
       switch (invitation.state) {
         case Invitation.State.CONNECTING: {
@@ -36,7 +36,10 @@ export const hostInvitation = async (
     },
   );
 
-  return done.wait();
+  const invitation = await done.wait();
+  unsubscribeHandle.unsubscribe();
+
+  return invitation;
 };
 
 export const acceptInvitation = async (
@@ -48,7 +51,8 @@ export const acceptInvitation = async (
   },
 ): Promise<Invitation> => {
   const done = new Trigger<Invitation>();
-  observable.subscribe(
+
+  const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
       switch (invitation.state) {
         case Invitation.State.CONNECTING: {
@@ -76,5 +80,9 @@ export const acceptInvitation = async (
       throw err;
     },
   );
-  return done.wait();
+
+  const invitation = await done.wait();
+  unsubscribeHandle.unsubscribe();
+
+  return invitation;
 };
