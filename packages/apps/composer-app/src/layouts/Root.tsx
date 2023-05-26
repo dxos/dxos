@@ -28,8 +28,8 @@ import { captureException } from '@dxos/sentry';
 import composerTranslations from '../translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-const servicesProvider = (config?: Config) =>
-  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
+const servicesProvider = async (config?: Config) =>
+  config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config, {}, fromHost);
 
 export const Root = () => {
   const {
