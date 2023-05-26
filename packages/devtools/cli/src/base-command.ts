@@ -206,8 +206,8 @@ export abstract class BaseCommand extends Command {
    * Lazily create the client.
    */
   async getClient() {
+    const { flags } = await this.parse(this.constructor as any);
     await this.execWithDaemon(async (daemon) => {
-      const { flags } = await this.parse(this.constructor as any);
       if (!(await daemon.isRunning(flags.profile))) {
         await daemon.start(flags.profile);
       }
@@ -216,7 +216,7 @@ export abstract class BaseCommand extends Command {
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromCliEnv() });
+      this._client = new Client({ config: this._clientConfig, services: fromCliEnv(flags.profile) });
       await this._client.initialize();
       log('Initialized');
     }
