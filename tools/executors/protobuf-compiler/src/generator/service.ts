@@ -36,14 +36,13 @@ const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Serv
 
   return f.createFunctionTypeNode(
     undefined,
-    [f.createParameterDeclaration(undefined, undefined, undefined, 'request', undefined, requestType)],
+    [f.createParameterDeclaration(undefined, undefined, 'request', undefined, requestType)],
     f.createTypeReferenceNode(outputTypeMonad, [responseType]),
   );
 };
 
 export const createServiceDeclaration = (type: protobufjs.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,
@@ -87,7 +86,6 @@ function* getServices(root: protobufjs.NamespaceBase): Generator<protobufjs.Serv
 
 export const createServicesDictionary = (root: protobufjs.NamespaceBase) =>
   f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     'SERVICES',
     undefined,
