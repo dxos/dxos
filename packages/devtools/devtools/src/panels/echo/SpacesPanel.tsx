@@ -15,12 +15,15 @@ import { ComplexSet, humanize, range } from '@dxos/util';
 
 import { DetailsTable } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsState } from '../../hooks';
+import { useDevtoolsState, useSpacesInfo } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
 const SpacesPanel = () => {
   // TODO(dmaretskyi): We dont need SpaceInfo anymore.
-  const { spaceInfo: metadata, space } = useDevtoolsState();
+  const { space } = useDevtoolsState();
+  const spacesInfo = useSpacesInfo();
+
+  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 

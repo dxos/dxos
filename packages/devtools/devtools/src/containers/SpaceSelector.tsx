@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
+import React, { FC, ReactNode, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
@@ -25,12 +25,25 @@ export const SpaceSelector = () => {
       spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
       feedKey: undefined
     }));
+    
+    if(spaceKey) {
+      localStorage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+    }
   };
+
+  useEffect(() => {
+    const spaceKeyHex = localStorage.getItem('dxos.devtools.spaceKey')
+    if(spaceKeyHex) {
+      console.log({ spaceKeyHex, spaces })
+      handleSelect(PublicKey.fromHex(spaceKeyHex));
+    }
+  }, []);
 
   return (
     <Select
       defaultValue={space?.key?.toHex()}
       placeholder='Select space'
+      value={space?.key.toHex()}
       onValueChange={(id) => handleSelect(PublicKey.fromHex(id))}
     >
       {spaces.map(space => (
