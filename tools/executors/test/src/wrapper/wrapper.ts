@@ -56,7 +56,9 @@ class TestBuilder {
 }
 
 interface TestFunction {
-  (name: string, body: Func | AsyncFunc): Test;
+  (name: string, body: Func): Test;
+  (name: string, body: AsyncFunc): Test;
+
   only: TestFunction;
   skip: TestFunction;
 
