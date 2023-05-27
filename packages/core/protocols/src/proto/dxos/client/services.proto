@@ -199,7 +199,7 @@ message Space {
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
 
-  optional Error error = 4;
+  optional dxos.error.Error error = 4;
 
   repeated SpaceMember members = 10;
 
