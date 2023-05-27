@@ -14,6 +14,13 @@ export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 // TODO(burdon): Don't close until RPC has complete (bug).
 export const ON_CLOSE_DELAY = 1000;
 
+export interface Invitations {
+  created: MulticastObservable<CancellableInvitationObservable[]>;
+  accepted: MulticastObservable<AuthenticatingInvitationObservable[]>;
+  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+}
+
 /**
  * Base class for all invitation observables and providers.
  */

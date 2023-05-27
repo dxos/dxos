@@ -4,10 +4,11 @@
 
 import { expect } from 'chai';
 
-import { Client } from '@dxos/client';
+import { performInvitation } from '@dxos/client-services/testing';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { performInvitation, TestBuilder } from '../testing';
+import { Client } from '../client';
+import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('creates a identity', async () => {

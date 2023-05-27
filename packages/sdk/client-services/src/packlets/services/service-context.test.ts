@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Invitation } from '@dxos/client';
 import { MemorySignalManagerContext } from '@dxos/messaging';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test } from '@dxos/test';
 
 import { createServiceContext, syncItemsLocal } from '../testing';

@@ -6,13 +6,13 @@ import isEqual from 'lodash.isequal';
 import isEqualWith from 'lodash.isequalwith';
 import assert from 'node:assert';
 
-import { Event, MulticastObservable, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
@@ -20,64 +20,8 @@ import { Invitation, Space as SpaceData, SpaceMember, SpaceState } from '@dxos/p
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
-import { ClientServicesProvider } from '../client';
-import { CancellableInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties } from '../proto';
-
-interface Internal {
-  get db(): DatabaseProxy;
-
-  // TODO(dmaretskyi): Return epoch info.
-  createEpoch(): Promise<void>;
-}
-
-// TODO(burdon): Separate public API form implementation (move comments here).
-export interface Space {
-  get key(): PublicKey;
-  get isOpen(): boolean;
-
-  /**
-   * Echo database.
-   */
-  get db(): EchoDatabase;
-
-  /**
-   * Properties object.
-   */
-  get properties(): TypedObject;
-
-  /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
-   */
-  get state(): MulticastObservable<SpaceState>;
-
-  /**
-   * Current state of space pipeline.
-   */
-  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
-
-  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
-  get members(): MulticastObservable<SpaceMember[]>;
-
-  get internal(): Internal;
-
-  open(): Promise<void>;
-  close(): Promise<void>;
-
-  /**
-   * Waits until the space is in the ready state, with database initialized.
-   */
-  waitUntilReady(): Promise<this>;
-
-  postMessage: (channel: string, message: any) => Promise<void>;
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
-
-  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
-
-  createSnapshot(): Promise<SpaceSnapshot>;
-}
+import { InvitationsProxy } from './invitations-proxy';
 
 const META_LOAD_TIMEOUT = 3000;
 
@@ -116,7 +60,7 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
 
   private readonly _db!: EchoDatabase;
-  private readonly _internal!: Internal;
+  private readonly _internal!: SpaceInternal;
   private readonly _dbBackend?: DatabaseProxy;
   private readonly _itemManager?: ItemManager;
   private readonly _invitationProxy: InvitationsProxy;
@@ -231,7 +175,7 @@ export class SpaceProxy implements Space {
    * @inheritdoc
    */
   // TODO(burdon): Remove?
-  get internal(): Internal {
+  get internal(): SpaceInternal {
     return this._internal;
   }
 

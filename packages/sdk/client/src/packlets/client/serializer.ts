@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Space } from '@dxos/client-protocol';
 import { schema } from '@dxos/protocols';
 
-import { EchoProxy, Space } from '../proxies';
+import { EchoProxy } from '../proxies';
 
 const spaceCodec = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 

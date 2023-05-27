@@ -1,191 +1,157 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
-import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client, ClientServices, ClientServicesProxy, createDefaultModelFactory, Invitation } from '@dxos/client';
+import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
-import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, MemoryTransportFactory } from '@dxos/network-manager';
-import { Storage } from '@dxos/random-access-storage';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
+import { SnapshotStore, DataPipeline, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 
-import { ClientServicesHost, LocalClientServices } from '../services';
+import { ClientServicesHost, ServiceContext } from '../services';
+import { SigningContext } from '../spaces';
 
-export const testConfigWithLocalSignal = new Config({
-  version: 1,
-  runtime: {
-    services: {
-      signaling: [
-        {
-          // TODO(burdon): Port numbers and global consts?
-          server: 'ws://localhost:4000/.well-known/dx/signal',
-        },
-      ],
-    },
-  },
-});
+//
+// TODO(burdon): Replace with test builder.
+//
 
-/**
- * Client builder supports different configurations, incl. signaling, transports, storage.
- */
+export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
+  return new ClientServicesHost({
+    config,
+    signalManager: new MemorySignalManager(signalManagerContext),
+    transportFactory: MemoryTransportFactory,
+  });
+};
+
+export const createServiceContext = ({
+  signalContext = new MemorySignalManagerContext(),
+  storage = createStorage({ type: StorageType.RAM }),
+}: {
+  signalContext?: MemorySignalManagerContext;
+  storage?: Storage;
+} = {}) => {
+  const signalManager = new MemorySignalManager(signalContext);
+  const networkManager = new NetworkManager({
+    signalManager,
+    transportFactory: MemoryTransportFactory,
+  });
+
+  const modelFactory = createDefaultModelFactory();
+  return new ServiceContext(storage, networkManager, signalManager, modelFactory);
+};
+
+export const createPeers = async (numPeers: number) => {
+  const signalContext = new MemorySignalManagerContext();
+
+  return await Promise.all(
+    Array.from(Array(numPeers)).map(async () => {
+      const peer = createServiceContext({ signalContext });
+      await peer.open();
+      return peer;
+    }),
+  );
+};
+
+export const createIdentity = async (peer: ServiceContext) => {
+  await peer.createIdentity();
+  return peer;
+};
+
+// TODO(burdon): Remove @dxos/client-testing.
+// TODO(burdon): Create builder and make configurable.
+export const syncItemsLocal = async (db1: DataPipeline, db2: DataPipeline) => {
+  await testLocalDatabase(db1, db2);
+  await testLocalDatabase(db2, db1);
+};
+
 export class TestBuilder {
-  private readonly _config: Config;
+  public readonly signalContext = new MemorySignalManagerContext();
 
-  public storage?: Storage;
-
-  // prettier-ignore
-  constructor (
-    config?: Config,
-    private readonly _modelFactory = createDefaultModelFactory(),
-    private readonly _signalManagerContext = new MemorySignalManagerContext()
-  ) {
-    this._config = config ?? new Config();
-  }
-
-  get config(): Config {
-    return this._config;
-  }
-
-  /**
-   * Get network manager using local shared memory or remote signal manager.
-   */
-  private get networking() {
-    const signals = this._config.get('runtime.services.signaling');
-    if (signals) {
-      return {
-        signalManager: new WebsocketSignalManager(signals),
-        transportFactory: createWebRTCTransportFactory({
-          iceServers: this._config.get('runtime.services.ice'),
-        }),
-      };
-    }
-
-    // Memory transport with shared context.
-    return {
-      signalManager: new MemorySignalManager(this._signalManagerContext),
-      transportFactory: MemoryTransportFactory,
-    };
-  }
-
-  /**
-   * Create backend service handlers.
-   */
-  createClientServicesHost() {
-    return new ClientServicesHost({
-      config: this._config,
-      modelFactory: this._modelFactory,
-      storage: this.storage,
-      ...this.networking,
-    });
-  }
-
-  /**
-   * Create local services host.
-   */
-  createLocal() {
-    return new LocalClientServices({
-      config: this._config,
-      modelFactory: this._modelFactory,
-      storage: this.storage,
-      ...this.networking,
-    });
-  }
-
-  /**
-   * Create client/server.
-   */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
-    const [proxyPort, hostPort] = createLinkedPorts();
-    const server = createProtoRpcPeer({
-      exposed: host.descriptors,
-      handlers: host.services as ClientServices,
-      port: hostPort,
-    });
-    // TODO(dmaretskyi): Refactor.
-
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
-    return [client, server];
+  createPeer(): TestPeer {
+    return new TestPeer(this.signalContext);
   }
 }
 
-export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
-  const objectId = PublicKey.random().toHex();
-
-  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
-
-  await result.batch.getReceipt();
-  // TODO(dmaretskiy): await result.waitToBeProcessed()
-  assert(create._itemManager.entities.has(result.objectsUpdated[0].id));
-
-  await asyncTimeout(
-    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000,
-  );
-
-  return result;
+export type TestPeerProps = {
+  storage?: Storage;
+  feedStore?: FeedStore<any>;
+  metadataStore?: MetadataStore;
+  keyring?: Keyring;
+  networkManager?: NetworkManager;
+  spaceManager?: SpaceManager;
+  snapshotStore?: SnapshotStore;
 };
 
-export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
-  // Check item replicated from 1 => 2.
-  await testSpace(db1, db2);
+export class TestPeer {
+  private _props: TestPeerProps = {};
 
-  // Check item replicated from 2 => 1.
-  await testSpace(db2, db1);
-};
+  constructor(private readonly signalContext: MemorySignalManagerContext) {}
 
-export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
-  const rootSpace = spaceKey ? initialPeer.getSpace(spaceKey) : await initialPeer.createSpace();
-  assert(rootSpace, 'Space not found.');
+  get storage() {
+    return (this._props.storage ??= createStorage({ type: StorageType.RAM }));
+  }
 
-  await Promise.all(
-    peers.map(async (peer) => {
-      const hostDone = new Trigger<Invitation>();
-      const guestDone = new Trigger<Invitation>();
+  get keyring() {
+    return (this._props.keyring ??= new Keyring(this.storage.createDirectory('keyring')));
+  }
 
-      const hostObservable = rootSpace.createInvitation({ authMethod: Invitation.AuthMethod.NONE });
-      log('invitation created');
-      hostObservable.subscribe(
-        (hostInvitation) => {
-          switch (hostInvitation.state) {
-            case Invitation.State.CONNECTING: {
-              const guestObservable = peer.acceptInvitation(hostInvitation);
-              log('invitation accepted');
-
-              guestObservable.subscribe(
-                (guestInvitation) => {
-                  switch (guestInvitation.state) {
-                    case Invitation.State.SUCCESS: {
-                      guestDone.wake(guestInvitation);
-                      log('invitation guestDone');
-                      break;
-                    }
-                  }
-                },
-                (err) => raise(err),
-              );
-              break;
-            }
-
-            case Invitation.State.SUCCESS: {
-              hostDone.wake(hostInvitation);
-              log('invitation hostDone');
-            }
-          }
+  get feedStore() {
+    return (this._props.feedStore ??= new FeedStore({
+      factory: new FeedFactory({
+        root: this.storage.createDirectory('feeds'),
+        signer: this.keyring,
+        hypercore: {
+          valueEncoding,
         },
-        (err) => raise(err),
-      );
+      }),
+    }));
+  }
 
-      await Promise.all([hostDone.wait(), guestDone.wait()]);
-    }),
-  );
+  get metadataStore() {
+    return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
+  }
 
-  return rootSpace.key;
+  get snapshotStore() {
+    return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
+  }
+
+  get networkManager() {
+    return (this._props.networkManager ??= new NetworkManager({
+      signalManager: new MemorySignalManager(this.signalContext),
+      transportFactory: MemoryTransportFactory,
+    }));
+  }
+
+  get spaceManager() {
+    return (this._props.spaceManager ??= new SpaceManager({
+      feedStore: this.feedStore,
+      networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: createDefaultModelFactory(),
+      snapshotStore: this.snapshotStore,
+    }));
+  }
+}
+
+export const createSigningContext = async (keyring: Keyring): Promise<SigningContext> => {
+  const identityKey = await keyring.createKey();
+  const deviceKey = await keyring.createKey();
+
+  return {
+    identityKey,
+    deviceKey,
+    credentialSigner: createCredentialSignerWithChain(
+      keyring,
+      {
+        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey),
+      },
+      deviceKey,
+    ),
+    recordCredential: async () => {}, // No-op.
+  };
 };

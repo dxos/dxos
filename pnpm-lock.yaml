@@ -4008,6 +4008,8 @@ importers:
   packages/sdk/client:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client-protocol': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
@@ -4038,11 +4040,14 @@ importers:
       '@types/node': ^18.11.9
       base-x: ~3.0.9
       debug: ^4.3.3
+      fast-check: ~3.3.0
       lodash.isequal: ^4.5.0
       lodash.isequalwith: ^4.4.0
       source-map-support: ^0.5.12
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/client-protocol': link:../client-protocol
+      '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
@@ -4076,12 +4081,41 @@ importers:
       '@types/lodash.isequal': 4.5.6
       '@types/lodash.isequalwith': 4.4.7
       '@types/node': 18.11.9
+      fast-check: 3.3.0
       source-map-support: 0.5.21
+
+  packages/sdk/client-protocol:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/document-model': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/text-model': workspace:*
+      base-x: ~3.0.9
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/config': link:../config
+      '@dxos/document-model': link:../../core/echo/document-model
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/keys': link:../../common/keys
+      '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/text-model': link:../../core/echo/text-model
+      base-x: 3.0.9
 
   packages/sdk/client-services:
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
@@ -4110,10 +4144,9 @@ importers:
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/readable-stream': ^2.3.9
-      fast-check: ~3.3.0
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/client': link:../client
+      '@dxos/client-protocol': link:../client-protocol
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/context': link:../../common/context
@@ -4143,7 +4176,6 @@ importers:
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
       '@types/readable-stream': 2.3.14
-      fast-check: 3.3.0
 
   packages/sdk/config:
     specifiers:

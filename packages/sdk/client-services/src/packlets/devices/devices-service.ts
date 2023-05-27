@@ -7,7 +7,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Device, DeviceKind, DevicesService, QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { IdentityManager } from '../identity/identity-manager';
+import { IdentityManager } from '../identity';
 
 export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { createDefaultModelFactory } from '@dxos/client';
+import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
