@@ -23,6 +23,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/beast': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/conform': workspace:^0.1.0
       '@dxos/esbuild': workspace:*
       '@dxos/esbuild-plugins': workspace:*
@@ -130,6 +131,7 @@ importers:
     devDependencies:
       '@dxos/async': link:packages/common/async
       '@dxos/beast': link:tools/beast
+      '@dxos/client': link:packages/sdk/client
       '@dxos/esbuild': link:tools/executors/esbuild
       '@dxos/esbuild-plugins': link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin': link:tools/eslint-plugin
