@@ -20,6 +20,10 @@ export type RunServicesParams = {
 export const runServices = async (params: RunServicesParams) => {
   const services = fromHost(params.config);
 
+  // Global hook for debuggers;
+  ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
+
+
   await services.open();
   log.info('open');
 

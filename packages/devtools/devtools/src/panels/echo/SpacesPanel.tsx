@@ -24,6 +24,8 @@ const SpacesPanel = () => {
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
+  console.log(space)
+
   const object = useMemo(() => {
     if (!metadata) {
       return undefined;
@@ -36,7 +38,9 @@ const SpacesPanel = () => {
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
       genesisFeed: humanize(metadata?.genesisFeed),
       controlFeed: humanize(metadata?.controlFeed),
-      dataFeed: humanize(metadata?.dataFeed)
+      dataFeed: humanize(metadata?.dataFeed),
+      startupTime: space?.internal.data?.metrics.open && space?.internal.data?.metrics.ready && (space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime()),
+      // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
 

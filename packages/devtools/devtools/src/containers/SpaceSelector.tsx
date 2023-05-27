@@ -27,8 +27,6 @@ export const SpaceSelector = () => {
     }));
   };
 
-  console.log(spaces)
-
   return (
     <Select
       defaultValue={space?.key?.toHex()}
