@@ -22,7 +22,6 @@ const SpacesPanel = () => {
   // TODO(dmaretskyi): We dont need SpaceInfo anymore.
   const { space } = useDevtoolsState();
   const spacesInfo = useSpacesInfo();
-
   const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
