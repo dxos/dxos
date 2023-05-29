@@ -19,19 +19,26 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "octokit": "^2.0.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5"
+    "react": "*",
+    "react-dom": "*"
+  },
+  "optionalDependencies": {
+    "@braneframe/types": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "octokit": "^2.0.14"
   }
 }

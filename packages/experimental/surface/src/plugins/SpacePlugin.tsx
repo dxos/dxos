@@ -5,7 +5,7 @@
 import React, { useParams } from 'react-router';
 
 import { createStore } from '@dxos/observable-object';
-import { useSpace } from '@dxos/react-client';
+import { Space, useSpace } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
@@ -14,10 +14,12 @@ import { RouterPluginProvides } from './RoutesPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
 
-export const SpaceContainer = () => {
+export const isSpace = (datum: any): datum is Space => 'key' in datum && 'db' in datum;
+
+export const SpaceMain = () => {
   const { spaceId } = useParams();
   const space = useSpace(spaceId);
-  return <pre>{JSON.stringify(space?.properties)}</pre>;
+  return space ? <Surface data={[space, 'main']} /> : <p>…</p>;
 };
 
 const nodes = createStore<GraphNode[]>([]);
@@ -52,7 +54,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
                 sidebar: { component: 'dxos:ListViewPlugin/ListView' },
-                main: { component: 'dxos:SpacePlugin/SpaceContainer' },
+                main: { component: 'dxos:SpacePlugin/SpaceMain' },
               }}
             />
           ),
@@ -60,7 +62,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
       ],
     },
     components: {
-      SpaceContainer,
+      SpaceMain,
     },
     graph: {
       nodes: (plugins, parent) => {
