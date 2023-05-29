@@ -16,7 +16,7 @@ export default class Share extends BaseCommand {
 
   static override flags = {
     ...super.flags,
-    no2fa: Flags.boolean({
+    noCode: Flags.boolean({
       description: 'Flag that specifies if secret auth code is not required',
       default: false,
     }),
@@ -32,14 +32,14 @@ export default class Share extends BaseCommand {
       const { flags } = await this.parse(Share);
 
       const observable = client.halo.createInvitation({
-        authMethod: flags.no2fa ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
+        authMethod: flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
       });
       const invitationSuccess = hostInvitation(observable, {
         onConnecting: async () => {
           const invitationCode = InvitationEncoder.encode(observable.get());
 
           this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-          !flags.no2fa && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+          !flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
         },
       });
 
