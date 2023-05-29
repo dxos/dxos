@@ -58,20 +58,20 @@ export default class Open extends BaseCommand {
         });
 
         const invitationSuccess = hostInvitation(
-          observable,
           {
-            onConnecting: async () => {
-              const invitationCode = InvitationEncoder.encode(observable.get());
-              pages.forEach(async (page) => {
-                const url = new URL(args.url);
-                url.searchParams.append('deviceInvitationCode', invitationCode);
-                await page.goto(url.href);
-              });
+            observable, callbacks: {
+              onConnecting: async () => {
+                const invitationCode = InvitationEncoder.encode(observable.get());
+                pages.forEach(async (page) => {
+                  const url = new URL(args.url);
+                  url.searchParams.append('deviceInvitationCode', invitationCode);
+                  await page.goto(url.href);
+                });
 
-              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-            },
+                this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+              },
+            }, peersNumber: flags.instances
           },
-          flags.instances,
         );
         ux.action.start('Waiting for peer to connect');
         await invitationSuccess;

@@ -33,14 +33,16 @@ export default class Invite extends BaseCommand {
       }
 
       const observable = space.createInvitation();
-      const invitationSuccess = hostInvitation(observable, {
-        onConnecting: async () => {
-          const invitationCode = InvitationEncoder.encode(observable.get());
+      const invitationSuccess = hostInvitation({
+          observable, callbacks: {
+            onConnecting: async () => {
+              const invitationCode = InvitationEncoder.encode(observable.get());
 
-          this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-          this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
-        },
-      });
+              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+            },
+          }
+        });
 
       ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
