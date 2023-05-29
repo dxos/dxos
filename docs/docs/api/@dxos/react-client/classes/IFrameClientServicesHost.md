@@ -1,32 +1,37 @@
-# Class `ShellController`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/shell-controller.d.ts:9]()</sub>
+# Class `IFrameClientServicesHost`
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-host.d.ts:14]()</sub>
 
 
-Provide access to the shell via RPC connection.
+Provide access to client services definitions and service handler.
 
 
 ## Constructors
-### [constructor(_iframeController, _joinedSpace, \[_channel\])]()
+### [constructor(options)]()
 
 
 
-Returns: <code>[ShellController](/api/@dxos/react-client/classes/ShellController)</code>
+Returns: <code>[IFrameClientServicesHost](/api/@dxos/react-client/classes/IFrameClientServicesHost)</code>
 
 Arguments: 
 
-`_iframeController`: <code>[IFrameController](/api/@dxos/react-client/classes/IFrameController)</code>
-
-`_joinedSpace`: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
-
-`_channel`: <code>string</code>
+`options`: <code>[IFrameClientServicesHostOptions](/api/@dxos/react-client/types/IFrameClientServicesHostOptions)</code>
 
 
 ## Properties
+### [joinedSpace]()
+Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
+
 ### [contextUpdate]()
 Type: <code>Event&lt;AppContextRequest&gt;</code>
 
+### [descriptors]()
+Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
+
 ### [display]()
 Type: <code>[ShellDisplay](/api/@dxos/react-client/enums#ShellDisplay)</code>
+
+### [services]()
+Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
 
 ## Methods

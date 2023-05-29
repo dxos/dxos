@@ -1,5 +1,5 @@
 # Class `InvitationEncoder`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/encoder.ts:18](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/encoder.ts#L18)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/encoder.d.ts:5]()</sub>
 
 
 Encodes and decodes an invitation proto into/from alphanumeric chars.
@@ -19,7 +19,7 @@ Arguments: none
 
 
 ## Methods
-### [decode(text)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/encoder.ts#L19)
+### [decode(text)]()
 
 
 
@@ -29,7 +29,7 @@ Arguments:
 
 `text`: <code>string</code>
 
-### [encode(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/encoder.ts#L23)
+### [encode(invitation)]()
 
 
 
