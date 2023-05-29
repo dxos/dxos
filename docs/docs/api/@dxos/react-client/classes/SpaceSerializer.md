@@ -1,5 +1,5 @@
 # Class `SpaceSerializer`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/serializer.d.ts:6]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/serializer.d.ts:7]()</sub>
 
 
 Import/export space.

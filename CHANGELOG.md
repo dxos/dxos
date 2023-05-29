@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.44](https://github.com/dxos/dxos/compare/v0.1.43...v0.1.44) (2023-05-29)
+
+
+### Features
+
+* Add ability to open browser apps with CLI identity ([#3271](https://github.com/dxos/dxos/issues/3271)) ([3437853](https://github.com/dxos/dxos/commit/343785344513c02b0e8636ae7c3c6214e58ac53c))
+* **composer-extension:** Add continuous deployment ([#3260](https://github.com/dxos/dxos/issues/3260)) ([a21716a](https://github.com/dxos/dxos/commit/a21716a99f92c4f52a165cead801f093166ca936))
+* **composer-extension:** Rescue stale Github updates  ([#3254](https://github.com/dxos/dxos/issues/3254)) ([1320718](https://github.com/dxos/dxos/commit/13207184543ef546e8bd63c6b2152ebc6d8eeef4))
+* Devtools storage panel ([#3252](https://github.com/dxos/dxos/issues/3252)) ([1b208e4](https://github.com/dxos/dxos/commit/1b208e4b9018bb064d174181864fddbe1677c629))
+* Error state for spaces ([#3262](https://github.com/dxos/dxos/issues/3262)) ([4654662](https://github.com/dxos/dxos/commit/465466237abe042021a5fdd7124df832a9e08169))
+* List snapshots ([#3263](https://github.com/dxos/dxos/issues/3263)) ([11603ad](https://github.com/dxos/dxos/commit/11603ad91b1ab5021cb07c6a3572db7524fe9032))
+
+
+### Bug Fixes
+
+* **client:** grab inivitation codes in iframe service host ([#3273](https://github.com/dxos/dxos/issues/3273)) ([13323c6](https://github.com/dxos/dxos/commit/13323c69d74afd5316a9875555b2d4809e78f1a0))
+* Disable flaky signal tests ([#3261](https://github.com/dxos/dxos/issues/3261)) ([710f33b](https://github.com/dxos/dxos/commit/710f33bea0df359c6e9a0c30b14a970e00732898))
+* Fix CLI invitations flows ([#3251](https://github.com/dxos/dxos/issues/3251)) ([5712000](https://github.com/dxos/dxos/commit/57120003465ce57404cd8f78bebffe351bf32129))
+
 ## [0.1.43](https://github.com/dxos/dxos/compare/v0.1.42...v0.1.43) (2023-05-25)
 
 

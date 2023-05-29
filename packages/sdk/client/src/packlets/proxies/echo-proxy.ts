@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
+import { ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
@@ -19,26 +20,10 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { ClientServicesProvider, ClientServicesProxy } from '../client';
-import { AuthenticatingInvitationObservable, InvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
-import { Space, SpaceProxy } from './space-proxy';
-
-/**
- * TODO(burdon): Public API (move comments here).
- */
-export interface Echo {
-  get spaces(): MulticastObservable<Space[]>;
-
-  createSpace(): Promise<Space>;
-  // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
-  getSpace(spaceKey: PublicKey): Space | undefined;
-
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
-
-  // TODO(burdon): Rename.
-  dbRouter: DatabaseRouter;
-}
+import { InvitationsProxy } from './invitations-proxy';
+import { ClientServicesProxy } from './service-proxy';
+import { SpaceProxy } from './space-proxy';
 
 export class EchoProxy implements Echo {
   private _ctx!: Context;

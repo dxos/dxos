@@ -4,8 +4,7 @@
 
 import { useState } from 'react';
 
-import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContextProps } from '@dxos/react-client';
@@ -31,9 +30,9 @@ const createClientContext = async (): Promise<ClientContextProps> => {
       ? {
           runtime: {
             client: {
-              remoteSource
-            }
-          }
+              remoteSource,
+            },
+          },
         }
       : {};
 
@@ -52,7 +51,7 @@ const createClientContext = async (): Promise<ClientContextProps> => {
         throw new Error('Vault URL is required target=vault:<vault URL>');
       }
       return fromRemoteSource(remoteSource);
-    }
+    },
   };
 
   const searchParams = new URLSearchParams(window.location.search);

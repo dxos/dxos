@@ -10,7 +10,7 @@ import { RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { Directory, File, Storage, StorageType, getFullPath } from '../common';
+import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 
 /**
  * Web file systems.
@@ -34,6 +34,29 @@ export class WebFS implements Storage {
     );
   }
 
+  private async _list(path: string): Promise<string[]> {
+    const fullName = this._getFullFilename(path);
+
+    const root = await this._initialize();
+
+    // TODO(dmaretskyi): While we're storing all files in flat namespace we just iterate the root.
+    // console.log({ path, fullName })
+    // let dir: FileSystemDirectoryHandle;
+    // if (path === '') {
+    //   dir = root;
+    // } else {
+    //   dir = await root.getDirectoryHandle(fullName, { create: true });
+    // }
+    const entries: string[] = [];
+
+    for await (const entry of (root as any).keys()) {
+      if (entry.startsWith(fullName + '_')) {
+        entries.push(entry.slice(fullName.length + 1));
+      }
+    }
+    return entries;
+  }
+
   @synchronized
   private async _initialize() {
     if (this._root) {
@@ -48,7 +71,7 @@ export class WebFS implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      () => this._getFiles(sub),
+      (path) => this._list(path),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
     );
@@ -101,6 +124,36 @@ export class WebFS implements Storage {
     } else {
       return path.split('/').join('_');
     }
+  }
+
+  async getDiskInfo(): Promise<DiskInfo> {
+    let used = 0;
+
+    const recurse = async (handle: FileSystemDirectoryHandle) => {
+      const promises = [];
+
+      for await (const entry of (handle as any).values()) {
+        promises.push(
+          (async () => {
+            switch (entry.kind) {
+              case 'file':
+                used += await (entry as FileSystemFileHandle).getFile().then((f) => (used += f.size));
+                break;
+              case 'directory':
+                await recurse(entry as FileSystemDirectoryHandle);
+                break;
+            }
+          })(),
+        );
+      }
+      await Promise.all(promises);
+    };
+
+    await recurse(this._root!);
+
+    return {
+      used,
+    };
   }
 }
 

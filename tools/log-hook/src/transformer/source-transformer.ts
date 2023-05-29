@@ -16,7 +16,7 @@ const LOG_FN = 'log';
  * TypeScript transformer that augments every log function with metadata.
  * Executed during the package build process.
  */
-export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.TransformationContext) => {
+export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.TransformationContext): ts.SourceFile => {
   // console.log('-', sourceFile.fileName);
   let enabled = false;
 
@@ -42,7 +42,7 @@ export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.Trans
     return ts.visitEachChild(node, visitor, context);
   };
 
-  return ts.visitNode(sourceFile, visitor);
+  return ts.visitNode(sourceFile, visitor) as ts.SourceFile;
 };
 /**
  * `import * from '@dxos/log'`

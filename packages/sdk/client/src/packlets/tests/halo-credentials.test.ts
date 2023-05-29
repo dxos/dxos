@@ -7,13 +7,13 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { describe, test, afterTest } from '@dxos/test';
 
+import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', () => {

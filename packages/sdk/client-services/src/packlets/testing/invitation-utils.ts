@@ -5,15 +5,7 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import {
-  AuthenticatingInvitationObservable,
-  CancellableInvitationObservable,
-  Client,
-  EchoProxy,
-  HaloProxy,
-  InvitationsProxy,
-  SpaceProxy,
-} from '@dxos/client';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ServiceContext } from '../services';
@@ -33,6 +25,14 @@ export const sanitizeInvitation = (invitation: Invitation): Invitation => {
   };
 };
 
+export type InvitationHost = {
+  createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
+};
+
+export type InvitationGuest = {
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+};
+
 export type PerformInvitationCallbacks<T> = {
   onConnecting?: (value: T) => boolean | void;
   onConnected?: (value: T) => boolean | void;
@@ -45,8 +45,8 @@ export type PerformInvitationCallbacks<T> = {
 };
 
 export type PerformInvitationParams = {
-  host: ServiceContext | InvitationsProxy | HaloProxy | SpaceProxy;
-  guest: ServiceContext | InvitationsProxy | HaloProxy | EchoProxy | Client;
+  host: ServiceContext | InvitationHost;
+  guest: ServiceContext | InvitationGuest;
   options?: Partial<Invitation>;
   hooks?: {
     host?: PerformInvitationCallbacks<CancellableInvitationObservable>;
@@ -195,7 +195,7 @@ export const performInvitation = ({
 };
 
 const createInvitation = (
-  host: ServiceContext | InvitationsProxy | HaloProxy | SpaceProxy,
+  host: ServiceContext | InvitationHost,
   options?: Partial<Invitation>,
 ): CancellableInvitationObservable => {
   options ??= {
@@ -203,29 +203,24 @@ const createInvitation = (
     ...(options ?? {}),
   };
 
-  if (host instanceof InvitationsProxy || host instanceof HaloProxy || host instanceof SpaceProxy) {
-    return host.createInvitation(options);
+  if (host instanceof ServiceContext) {
+    const hostHandler = host.getInvitationHandler({ kind: Invitation.Kind.SPACE, ...options });
+    return host.invitations.createInvitation(hostHandler, options);
   }
 
-  const hostHandler = host.getInvitationHandler({ kind: Invitation.Kind.SPACE, ...options });
-  return host.invitations.createInvitation(hostHandler, options);
+  return host.createInvitation(options);
 };
 
 const acceptInvitation = (
-  guest: ServiceContext | InvitationsProxy | HaloProxy | EchoProxy | Client,
+  guest: ServiceContext | InvitationGuest,
   invitation: Invitation,
 ): AuthenticatingInvitationObservable => {
   invitation = sanitizeInvitation(invitation);
 
-  if (
-    guest instanceof InvitationsProxy ||
-    guest instanceof HaloProxy ||
-    guest instanceof EchoProxy ||
-    guest instanceof Client
-  ) {
-    return guest.acceptInvitation(invitation);
+  if (guest instanceof ServiceContext) {
+    const guestHandler = guest.getInvitationHandler({ kind: invitation.kind });
+    return guest.invitations.acceptInvitation(guestHandler, invitation);
   }
 
-  const guestHandler = guest.getInvitationHandler({ kind: invitation.kind });
-  return guest.invitations.acceptInvitation(guestHandler, invitation);
+  return guest.acceptInvitation(invitation);
 };

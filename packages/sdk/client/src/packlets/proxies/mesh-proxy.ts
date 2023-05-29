@@ -5,14 +5,12 @@
 import assert from 'node:assert';
 
 import { Event, MulticastObservable } from '@dxos/async';
+import { ClientServicesProvider } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-
-import { ClientServicesProvider } from '../client';
-
 /**
  * Public API for MESH services.
  */

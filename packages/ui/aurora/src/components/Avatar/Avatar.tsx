@@ -57,7 +57,7 @@ const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, classNames,
   const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
   const { tx } = useThemeContext();
   const imageSizeNumber = size === 'px' ? 1 : size * 4;
-  const statusIconSize = size > 9 ? 4 : size < 6 ? 2 : 3;
+  const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
   const maskSize = statusIconSize * 4 + 2;
   const maskCenter = imageSizeNumber - (statusIconSize * 4) / 2;
   return (

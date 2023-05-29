@@ -1,11 +1,11 @@
 # Interface `Space`
-> Declared in [`packages/sdk/client/src/packlets/proxies/space-proxy.ts`]()
+> Declared in [`packages/sdk/client-protocol/dist/types/src/space.d.ts`]()
 
 
 
 ## Properties
-### [listen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L74)
+### [listen]()
 Type: <code>function</code>
 
-### [postMessage](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L73)
+### [postMessage]()
 Type: <code>function</code>

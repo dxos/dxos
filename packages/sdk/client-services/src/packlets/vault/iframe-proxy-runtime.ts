@@ -3,7 +3,8 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Config, iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client';
+import { iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
+import { Config } from '@dxos/config';
 import { RemoteServiceConnectionError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { WebRTCTransportService } from '@dxos/network-manager';

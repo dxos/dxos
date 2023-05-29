@@ -12,9 +12,9 @@ import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
