@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { hostInvitation } from '../../util/invitation';
+import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand {
   static override enableJsonFlag = true;

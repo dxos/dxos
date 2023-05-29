@@ -10,7 +10,7 @@ import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
 import { selectSpace } from '../../util';
-import { hostInvitation } from '../../util/invitation';
+import { hostInvitation } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
