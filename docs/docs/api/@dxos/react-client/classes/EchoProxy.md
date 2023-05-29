@@ -1,5 +1,5 @@
 # Class `EchoProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:23]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/echo-proxy.d.ts:11]()</sub>
 
 
 TODO(burdon): Public API (move comments here).

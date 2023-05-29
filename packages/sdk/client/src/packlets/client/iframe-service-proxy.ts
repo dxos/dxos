@@ -3,46 +3,37 @@
 //
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
+import {
+  ClientServices,
+  ClientServicesProvider,
+  DEFAULT_CLIENT_ORIGIN,
+  DEFAULT_INTERNAL_CHANNEL,
+  DEFAULT_SHELL_CHANNEL,
+} from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { log, parseFilter } from '@dxos/log';
+import { log, LogFilter, parseFilter } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-import { RpcPort } from '@dxos/rpc';
-import { createIFrame, createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
+import { LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { RpcPort, ServiceBundle } from '@dxos/rpc';
+import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
-import {
-  DEFAULT_CLIENT_CHANNEL,
-  DEFAULT_CLIENT_ORIGIN,
-  DEFAULT_INTERNAL_CHANNEL,
-  DEFAULT_SHELL_CHANNEL,
-} from './config';
-import { ClientServicesProvider } from './service-definitions';
-import { ClientServicesProxy } from './service-proxy';
-
-const shellStyles = Object.entries({
-  display: 'none',
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100vw',
-  height: '100vh',
-  border: 0,
-  'z-index': 60,
-}).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
+import { ClientServicesProxy } from '../proxies/service-proxy';
+import { Client } from './client';
+import { IFrameController } from './iframe-controller';
 
 export type IFrameClientServicesProxyOptions = {
-  source: string;
-  channel: string;
-  shell: boolean | string;
-  vault: string;
-  logFilter: string;
-  timeout: number;
+  source?: string;
+  client?: Client;
+  shell?: boolean | string;
+  vault?: string;
+  logFilter?: string;
+  timeout?: number;
 };
 
 /**
@@ -51,14 +42,17 @@ export type IFrameClientServicesProxyOptions = {
 export class IFrameClientServicesProxy implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
 
-  private readonly _options: IFrameClientServicesProxyOptions;
   private _iframe?: HTMLIFrameElement;
   private _appPort!: RpcPort;
-  private _shellPort?: RpcPort;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
+  private _iframeController!: IFrameController;
   private _shellController?: ShellController;
-  private _spaceProvider?: Provider<PublicKey | undefined>;
+  private readonly _source: string;
+  private readonly _shell: string | boolean;
+  private readonly _vault: string;
+  private readonly _logFilter: LogFilter[];
+  private readonly _timeout: number;
 
   /**
    * Unique id.
@@ -67,25 +61,27 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   constructor({
     source = DEFAULT_CLIENT_ORIGIN,
-    channel = DEFAULT_CLIENT_CHANNEL,
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     logFilter = 'error,warn',
     timeout = DEFAULT_TIMEOUT,
-  }: Partial<IFrameClientServicesProxyOptions> = {}) {
-    this._handleKeyDown = this._handleKeyDown.bind(this);
-    this._options = { source, channel, shell, vault, logFilter, timeout };
+  }: IFrameClientServicesProxyOptions = {}) {
+    this._source = source;
+    this._shell = shell;
+    this._vault = vault;
+    this._logFilter = parseFilter(logFilter);
+    this._timeout = timeout;
   }
 
   get proxy() {
     return this._clientServicesProxy!.proxy;
   }
 
-  get descriptors() {
+  get descriptors(): ServiceBundle<ClientServices> {
     return this._clientServicesProxy!.descriptors;
   }
 
-  get services() {
+  get services(): Partial<ClientServices> {
     return this._clientServicesProxy!.services;
   }
 
@@ -98,7 +94,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
   }
 
   setSpaceProvider(provider: Provider<PublicKey | undefined>) {
-    this._spaceProvider = provider;
+    this._shellController?.setSpaceProvider(provider);
   }
 
   async setLayout(layout: ShellLayout, options: Omit<LayoutRequest, 'layout'> = {}) {
@@ -112,28 +108,56 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
 
-    await this._initializePorts();
+    // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
+    //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
+    const source = new URL(
+      typeof this._shell === 'string' ? this._source : `${this._source}#disableshell`,
+      window.location.origin,
+    );
+    const loaded = new Trigger();
+    const ready = new Trigger<MessagePort>();
+    this._iframeController = new IFrameController({
+      source,
+      onOpen: async () => {
+        await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
 
-    if (this._shellPort) {
-      this._shellController = new ShellController(this._shellPort);
-      this._iframe!.setAttribute('style', shellStyles);
-      this._iframe!.setAttribute('data-testid', 'dxos-shell');
-      this._shellController.contextUpdate.on(({ display, spaceKey }) => {
-        this._iframe!.style.display = display === ShellDisplay.NONE ? 'none' : '';
-        if (display === ShellDisplay.NONE) {
-          this._iframe!.blur();
+        this._iframeController.iframe?.contentWindow?.postMessage(
+          {
+            channel: this._vault,
+            payload: 'init',
+          },
+          this._iframeController.source.origin,
+        );
+
+        const port = await asyncTimeout(
+          ready.wait(),
+          this._timeout,
+          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort'),
+        );
+
+        this._appPort = createWorkerPort({ port });
+      },
+      onMessage: async (event) => {
+        const { channel, payload } = event.data;
+        if (channel !== this._vault) {
+          return;
         }
-        spaceKey && this.joinedSpace.emit(spaceKey);
-      });
 
-      window.addEventListener('keydown', this._handleKeyDown);
-    }
+        if (payload === 'loaded') {
+          loaded.wake();
+        } else if (payload?.command === 'init') {
+          ready.wake(payload.port);
+        }
+      },
+    });
+
+    await this._iframeController.open();
 
     this._clientServicesProxy = new ClientServicesProxy(this._appPort);
     await this._clientServicesProxy.open();
 
     this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs({
-      filters: parseFilter(this._options.logFilter),
+      filters: this._logFilter,
     });
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
@@ -152,10 +176,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       }
     });
 
-    if (!this._shellController) {
+    if (typeof this._shell !== 'string') {
       return;
     }
 
+    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
     await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.
@@ -166,16 +191,15 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    const haloInvitationCode = searchParams.get('haloInvitationCode');
-    if (haloInvitationCode) {
+    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    if (deviceInvitationCode) {
       await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
-        invitationCode: haloInvitationCode ?? undefined,
+        invitationCode: deviceInvitationCode ?? undefined,
       });
     }
   }
 
   async close() {
-    window.removeEventListener('keydown', this._handleKeyDown);
     await this._shellController?.close();
     await this._loggingStream?.close();
     await this._clientServicesProxy?.close();
@@ -186,91 +210,5 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       this._iframe = undefined;
     }
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.end({ id: this._instanceId }));
-  }
-
-  private async _initializePorts() {
-    // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
-    //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
-    const source = new URL(
-      typeof this._options.shell === 'string' ? this._options.source : `${this._options.source}#disableshell`,
-      window.location.origin,
-    );
-
-    if (!this._iframe) {
-      // TODO(wittjosiah): This doesn't work with generated service worker when offline. Remove?
-      //   Is there an easy way to respond to this without a lot of custom work inside the service worker?
-      //   Is getting an http response here helpful information or just overhead?
-      // const res = await fetch(source);
-      // if (res.status >= 400) {
-      //   throw new RemoteServiceConnectionError(`Failed to fetch ${source}`, { source, status: res.status });
-      // }
-
-      let interval: NodeJS.Timer | undefined;
-      const loaded = new Trigger();
-      const ready = new Trigger<MessagePort>();
-
-      // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
-      const handler = (event: MessageEvent) => {
-        const { channel, payload } = event.data;
-        if (channel !== this._options.vault) {
-          return;
-        }
-
-        if (payload === 'loaded') {
-          loaded.wake();
-        } else if (payload?.command === 'init') {
-          ready.wake(payload.port);
-        }
-      };
-
-      try {
-        window.addEventListener('message', handler);
-
-        const iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
-        this._iframe = createIFrame(source.toString(), iframeId, { allow: 'clipboard-read; clipboard-write' });
-
-        await asyncTimeout(
-          loaded.wait(),
-          this._options.timeout,
-          new RemoteServiceConnectionTimeout('Vault failed to load'),
-        );
-
-        interval = setInterval(() => {
-          this._iframe?.contentWindow?.postMessage({ channel: this._options.vault, payload: 'init' }, '*');
-        }, 50);
-
-        const port = await asyncTimeout(
-          ready.wait(),
-          this._options.timeout,
-          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort'),
-        );
-
-        this._appPort = createWorkerPort({ port });
-        if (typeof this._options.shell === 'string') {
-          this._shellPort = createIFramePort({
-            origin: source.origin,
-            channel: this._options.shell,
-            iframe: this._iframe,
-          });
-        }
-      } finally {
-        interval && clearInterval(interval);
-        window.removeEventListener('message', handler);
-      }
-    }
-  }
-
-  private async _handleKeyDown(event: KeyboardEvent) {
-    if (!this._shellController) {
-      return;
-    }
-
-    const modifier = event.ctrlKey || event.metaKey;
-    if (event.key === '>' && event.shiftKey && modifier) {
-      await this._shellController.setLayout(ShellLayout.DEVICE_INVITATIONS);
-    } else if (event.key === '.' && modifier) {
-      const spaceKey = await this._spaceProvider?.();
-      await this._shellController.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
-    }
   }
 }

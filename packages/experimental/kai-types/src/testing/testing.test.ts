@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Client } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, fromHost } from '@dxos/client';
 import { afterTest, test } from '@dxos/test';
 
 import { Generator } from './testing';

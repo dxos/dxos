@@ -71,7 +71,7 @@ export const StandaloneLayout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const haloInvitationCode = searchParams.get('haloInvitationCode');
+  const deviceInvitationCode = searchParams.get('deviceInvitationCode');
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
 
@@ -79,7 +79,7 @@ export const StandaloneLayout = () => {
     <ShellProvider
       space={space}
       spaceInvitationCode={spaceInvitationCode}
-      haloInvitationCode={haloInvitationCode}
+      deviceInvitationCode={deviceInvitationCode}
       onJoinedSpace={(nextSpaceKey) => {
         navigate(getPath(nextSpaceKey));
       }}

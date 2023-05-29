@@ -8,7 +8,7 @@ import process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { TestBuilder } from '@dxos/client-services/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';

@@ -51,7 +51,9 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
             void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
             // TODO(wittjosiah): Support this first-class inside client?
-            spaces.length > 0 || client.createSpace();
+            if (spaces.length === 0) {
+              void client.createSpace();
+            }
           }}
         />
       );
@@ -59,7 +61,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
     case ShellLayout.DEVICE_INVITATIONS:
       return (
         <DevicesDialog
-          createInvitationUrl={(invitationCode) => `${origin}?haloInvitationCode=${invitationCode}`}
+          createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);

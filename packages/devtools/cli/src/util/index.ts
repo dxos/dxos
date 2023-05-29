@@ -3,6 +3,7 @@
 //
 
 export * from './credential';
+export * from './invitation';
 export * from './print';
 export * from './publish';
 export * from './supervisor';

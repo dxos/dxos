@@ -124,6 +124,8 @@ Defined in:
 Values:
 - `CLOSED`
 
+- `ERROR`
+
 - `INACTIVE`
 
 - `INITIALIZING`

@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@dxos/client';
+import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -110,7 +110,9 @@ export class WorkerSession {
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: 3_000 });
-    this.lockKey && this._afterLockReleases(this.lockKey, () => this.close());
+    if (this.lockKey) {
+      void this._afterLockReleases(this.lockKey, () => this.close());
+    }
   }
 
   async close() {

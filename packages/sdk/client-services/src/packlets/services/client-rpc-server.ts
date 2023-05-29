@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices } from '@dxos/client';
+import { ClientServices } from '@dxos/client-protocol';
 import { Any, ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { parseMethodName, RpcPeer, RpcPeerOptions } from '@dxos/rpc';

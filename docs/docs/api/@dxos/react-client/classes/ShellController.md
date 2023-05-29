@@ -1,12 +1,12 @@
 # Class `ShellController`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/shell-controller.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/shell-controller.d.ts:9]()</sub>
 
 
 Provide access to the shell via RPC connection.
 
 
 ## Constructors
-### [constructor(_port)]()
+### [constructor(_iframeController, _joinedSpace, \[_channel\])]()
 
 
 
@@ -14,7 +14,11 @@ Returns: <code>[ShellController](/api/@dxos/react-client/classes/ShellController
 
 Arguments: 
 
-`_port`: <code>RpcPort</code>
+`_iframeController`: <code>[IFrameController](/api/@dxos/react-client/classes/IFrameController)</code>
+
+`_joinedSpace`: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
+
+`_channel`: <code>string</code>
 
 
 ## Properties
@@ -53,3 +57,13 @@ Arguments:
 `layout`: <code>[ShellLayout](/api/@dxos/react-client/enums#ShellLayout)</code>
 
 `options`: <code>Omit&lt;LayoutRequest, "layout"&gt;</code>
+
+### [setSpaceProvider(provider)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`provider`: <code>Provider&lt;undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>

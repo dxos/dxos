@@ -35,6 +35,8 @@ import {
   SubscribeToSignalStatusResponse,
   SignalResponse,
   SubscribeToSwarmInfoResponse,
+  StorageInfo,
+  GetSnapshotsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
@@ -69,6 +71,25 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   getConfig(request: void): Promise<GetConfigResponse> {
     throw new Error();
+  }
+
+  async getStorageInfo(): Promise<StorageInfo> {
+    const storageUsage = (await this.params.context.storage.getDiskInfo?.()) ?? { used: 0 };
+
+    const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
+
+    return {
+      type: this.params.context.storage.type,
+      storageUsage: storageUsage.used,
+      originUsage: navigatorInfo?.usage ?? 0,
+      usageQuota: navigatorInfo?.quota ?? 0,
+    };
+  }
+
+  async getSnapshots(): Promise<GetSnapshotsResponse> {
+    return {
+      snapshots: await this.params.context.snapshotStore.listSnapshots(),
+    };
   }
 
   resetStorage(request: ResetStorageRequest): Promise<void> {

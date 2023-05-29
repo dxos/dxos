@@ -3,7 +3,6 @@
 //
 
 import { Event, scheduleTask, trackLeaks } from '@dxos/async';
-import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
@@ -13,6 +12,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -65,6 +65,11 @@ export class DataSpace {
   private readonly _cache?: SpaceCache;
 
   private _state = SpaceState.CLOSED;
+
+  /**
+   * Error for _state === SpaceState.ERROR.
+   */
+  public error: Error | undefined = undefined;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
@@ -166,6 +171,9 @@ export class DataSpace {
         }
 
         log.error('Error initializing data pipeline', err);
+        this._state = SpaceState.ERROR;
+        this.error = err as Error;
+        this.stateUpdate.emit();
       }
     });
   }

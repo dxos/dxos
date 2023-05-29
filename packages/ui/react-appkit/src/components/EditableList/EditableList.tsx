@@ -80,7 +80,7 @@ const focusAndSetCaretPosition = (prevEl: HTMLInputElement, nextEl: HTMLInputEle
     nextEl.focus();
     nextEl.setSelectionRange(pos, pos);
   } else {
-    nextEl.focus();
+    (nextEl as HTMLInputElement).focus();
   }
 };
 

@@ -5,8 +5,7 @@
 import { useCallback } from 'react';
 
 import { schema as chessSchema } from '@dxos/chess-app';
-import { Client, fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { schema as sandboxSchema } from '@dxos/kai-sandbox';
 import { schema } from '@dxos/kai-types';

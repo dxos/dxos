@@ -15,6 +15,9 @@ Type: "dxos:app"
 ### [`DEFAULT_CLIENT_ORIGIN`]()
 Type: "https://halo.dxos.org/vault.html"
 
+### [`DEFAULT_DX_PROFILE`]()
+Type: "DXOS_DEFAULT"
+
 ### [`DEFAULT_INTERNAL_CHANNEL`]()
 Type: "dxos:vault"
 

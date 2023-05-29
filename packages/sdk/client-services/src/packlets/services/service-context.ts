@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Trigger } from '@dxos/async';
-import { Invitation } from '@dxos/client';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -23,6 +22,7 @@ import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';

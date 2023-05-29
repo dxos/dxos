@@ -34,7 +34,7 @@ Type: <code>undefined | [EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</
 Database reference if bound.
 
 ### [content]()
-Type: <code>undefined | YXmlFragment | YText</code>
+Type: <code>undefined | YText | YXmlFragment</code>
 
 ### [doc]()
 Type: <code>undefined | Doc</code>

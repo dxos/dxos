@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 import { generatePath, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
 
-import { IFrameClientServicesProxy, PublicKey } from '@dxos/client';
+import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey } from '@dxos/client';
 import { useClient, useIdentity, useSpace, useSpaces } from '@dxos/react-client';
 
 import { SpaceList } from './SpaceList';
@@ -20,7 +20,7 @@ export const Main = () => {
   const spaces = useSpaces();
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       return client.services.joinedSpace.on((spaceKey) =>
         navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() })),
       );
@@ -28,7 +28,7 @@ export const Main = () => {
   }, []);
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       client.services.setSpaceProvider(() => space?.key);
     }
   }, [space]);
