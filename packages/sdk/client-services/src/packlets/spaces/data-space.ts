@@ -4,8 +4,8 @@
 
 import { Event, scheduleTask, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
-import { CredentialConsumer, createCredential } from '@dxos/credentials';
-import { timed, todo } from '@dxos/debug';
+import { CredentialConsumer } from '@dxos/credentials';
+import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
 import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
@@ -298,9 +298,9 @@ export class DataSpace {
       },
     });
 
-    for(const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
+    for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
       const indexBeforeEpoch = epoch.timeframe.get(feed.key);
-      if(indexBeforeEpoch) {
+      if (indexBeforeEpoch) {
         await feed.clear(0, indexBeforeEpoch + 1);
       }
     }

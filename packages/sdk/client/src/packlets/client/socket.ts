@@ -1,5 +1,9 @@
-import { ClientServices, ClientServicesProvider, clientServiceBundle } from "@dxos/client-protocol";
-import type { WebsocketRpcClient } from "@dxos/websocket-rpc";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 /**
  * Access to remote client via a socket.

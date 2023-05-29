@@ -96,7 +96,7 @@ export class SpaceProxy implements Space {
     const self = this;
     this._internal = {
       db: this._dbBackend,
-      get data() { 
+      get data() {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),

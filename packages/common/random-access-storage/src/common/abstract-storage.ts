@@ -45,7 +45,7 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      this._list.bind(this), 
+      this._list.bind(this),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
     );
@@ -68,9 +68,9 @@ export abstract class AbstractStorage implements Storage {
 
   protected async _list(path: string): Promise<string[]> {
     // TODO(dmaretskyi): Fix me.
-    return Array.from(this._getFiles(path).keys()).map(filename => {
+    return Array.from(this._getFiles(path).keys()).map((filename) => {
       let name = filename.replace(path, '');
-      if(name.startsWith('/')) {
+      if (name.startsWith('/')) {
         name = name.substring(1);
       }
       return name;

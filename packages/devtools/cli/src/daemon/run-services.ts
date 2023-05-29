@@ -23,7 +23,6 @@ export const runServices = async (params: RunServicesParams) => {
   // Global hook for debuggers;
   ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
 
-
   await services.open();
   log.info('open');
 

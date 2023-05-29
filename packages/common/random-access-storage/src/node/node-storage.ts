@@ -3,12 +3,12 @@
 //
 
 import del from 'del';
+import { readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 import raf from 'random-access-file';
 import { RandomAccessStorage } from 'random-access-storage';
 
 import { AbstractStorage, DiskInfo, Storage, StorageType } from '../common';
-import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
 
 /**
  * Storage interface implementation for Node.
@@ -37,16 +37,16 @@ export class NodeStorage extends AbstractStorage implements Storage {
 
       used += pathStats.size;
 
-      if(pathStats.isDirectory()) {
+      if (pathStats.isDirectory()) {
         const entries = await readdir(path);
-        await Promise.all(entries.map(entry => recurse(join(path, entry))))
+        await Promise.all(entries.map((entry) => recurse(join(path, entry))));
       }
-    }
+    };
 
     await recurse(this.path);
 
     return {
       used,
-    }
+    };
   }
 }
