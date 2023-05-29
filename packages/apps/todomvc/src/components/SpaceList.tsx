@@ -6,7 +6,14 @@ import cx from 'classnames';
 import React, { useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import { IFrameClientServicesProxy, ShellLayout, Space, useClient, useSpaces } from '@dxos/react-client';
+import {
+  IFrameClientServicesHost,
+  IFrameClientServicesProxy,
+  ShellLayout,
+  Space,
+  useClient,
+  useSpaces,
+} from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 import { TodoList } from '../proto';
@@ -17,13 +24,13 @@ export const SpaceList = ({ current }: { current?: Space }) => {
   const navigate = useNavigate();
 
   const handleOpen = () => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       void client.services.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: current?.key });
     }
   };
 
   const handleJoin = () => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       void client.services.setLayout(ShellLayout.JOIN_SPACE);
     }
   };

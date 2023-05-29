@@ -8,8 +8,7 @@ import { Outlet } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useMediaQuery } from '@dxos/aurora';
-import { fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
@@ -28,7 +27,7 @@ import { captureException } from '@dxos/sentry';
 import composerTranslations from '../translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-const servicesProvider = (config?: Config) =>
+const servicesProvider = async (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 export const Root = () => {

@@ -6,14 +6,15 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { sleep } from '@dxos/async';
-import { Client, ClientServicesProxy, fromIFrame } from '@dxos/client';
+import { IFrameProxyRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { describe, test, afterTest } from '@dxos/test';
 import { MaybePromise, Provider } from '@dxos/util';
 
+import { Client, fromIFrame } from '../client';
+import { ClientServicesProxy } from '../proxies';
 import { TestBuilder } from '../testing';
-import { IFrameProxyRuntime, WorkerRuntime } from '../vault';
 
 chai.use(chaiAsPromised);
 

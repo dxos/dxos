@@ -2,19 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ClientServices, ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
+import { log } from '@dxos/log';
 import { ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
-
-import { clientServiceBundle, ClientServices, ClientServicesProvider } from './service-definitions';
 
 export type FromCliEnvOptions = {
   profile?: string;
 };
 
+export const DEFAULT_DX_PROFILE = 'DXOS_DEFAULT';
+
 /**
  * Connects to locally running CLI daemon.
  */
-export const fromCliEnv = ({ profile = 'default' }: FromCliEnvOptions = {}): ClientServicesProvider => {
+export const fromCliEnv = ({
+  profile = process.env.DX_PROFILE ?? DEFAULT_DX_PROFILE,
+}: FromCliEnvOptions = {}): ClientServicesProvider => {
   return new CliEnvClientServiceProvider(profile);
 };
 
@@ -43,6 +47,10 @@ export class CliEnvClientServiceProvider implements ClientServicesProvider {
   }
 
   async close(): Promise<void> {
-    await this._client?.close();
+    try {
+      await this._client?.close();
+    } catch (err) {
+      log.warn('Failed to close', err);
+    }
   }
 }

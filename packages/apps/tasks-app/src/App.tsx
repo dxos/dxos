@@ -7,8 +7,7 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import {

@@ -35,7 +35,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
 export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const haloInvitationCode = searchParams.get('haloInvitationCode');
+  const deviceInvitationCode = searchParams.get('deviceInvitationCode');
   const identity = useIdentity({ login: true });
   const identityHex = identity?.identityKey.toHex();
   const [source, id] = useLocationIdentifier();
@@ -53,7 +53,7 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
     <ShellProvider
       space={space || undefined}
       spaceInvitationCode={spaceInvitationCode}
-      haloInvitationCode={haloInvitationCode}
+      deviceInvitationCode={deviceInvitationCode}
       onJoinedSpace={(nextSpaceKey) => {
         console.warn('TODO: onJoinedSpace', nextSpaceKey);
       }}

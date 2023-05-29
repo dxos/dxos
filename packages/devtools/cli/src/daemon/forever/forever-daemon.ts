@@ -6,9 +6,13 @@ import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
 
 import { Daemon, ProcessDescription } from '../daemon';
+import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
 const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
 
+/**
+ * Manager of daemon processes started with Forever.
+ */
 export class ForeverDaemon implements Daemon {
   async connect(): Promise<void> {
     initForever();
@@ -18,14 +22,15 @@ export class ForeverDaemon implements Daemon {
     // no-op.
   }
 
-  async isRunning(profile = 'default'): Promise<boolean> {
+  async isRunning(profile: string): Promise<boolean> {
     return (await this.list()).some((process) => process.profile === profile && process.isRunning);
   }
 
-  async start(profile = 'default'): Promise<ProcessDescription> {
+  async start(profile: string): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
+      const socket = getUnixSocket(profile);
       forever.startDaemon(process.argv[1], {
-        args: ['daemon', 'run', `--listen=unix://${process.env.HOME}/.dx/run/${profile}.sock`, '--profile=' + profile],
+        args: ['daemon', 'run', `--listen=${socket}`, '--profile=' + profile],
         uid: profile,
         logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
         outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
@@ -33,16 +38,22 @@ export class ForeverDaemon implements Daemon {
       });
     }
 
+    await waitForDaemon(profile);
+
     return this._getProcess(profile);
   }
 
-  async stop(profile = 'default'): Promise<ProcessDescription> {
-    forever.stop(profile);
+  async stop(profile: string): Promise<ProcessDescription> {
+    if (await this.isRunning(profile)) {
+      forever.stop(profile);
+    }
+    removeSocketFile(profile);
     return this._getProcess(profile);
   }
 
-  async restart(profile = 'default'): Promise<ProcessDescription> {
+  async restart(profile: string): Promise<ProcessDescription> {
     if ((await this._getProcess(profile)).profile === profile) {
+      removeSocketFile(profile);
       forever.restart(profile);
     } else {
       await this.start(profile);
@@ -63,7 +74,7 @@ export class ForeverDaemon implements Daemon {
     return result.map((details) => foreverToProcessDescription(details));
   }
 
-  async _getProcess(profile = 'default') {
+  async _getProcess(profile: string) {
     return (await this.list()).find((process) => process.profile === profile) ?? {};
   }
 }

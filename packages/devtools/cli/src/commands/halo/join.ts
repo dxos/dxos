@@ -5,10 +5,10 @@
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Trigger } from '@dxos/async';
-import { Client, Invitation, InvitationEncoder } from '@dxos/client';
+import { Client, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;
@@ -26,59 +26,32 @@ export default class Join extends BaseCommand {
     let { invitation: encoded } = flags;
 
     return await this.execWithClient(async (client: Client) => {
-      const identity = client.halo.identity.get();
-      if (identity) {
+      if (client.halo.identity.get()) {
         this.log(chalk`{red Profile already initialized.}`);
         return {};
-      } else {
-        if (!encoded) {
-          encoded = await ux.prompt('Invitation');
-        }
-
-        if (encoded.startsWith('http')) {
-          const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-          encoded = searchParams.get('invitation') ?? searchParams.get('haloInvitationCode') ?? encoded;
-        }
-        const invitation = InvitationEncoder.decode(encoded!);
-        this.log('Invitation', invitation);
-        const observable = client.halo.acceptInvitation(invitation);
-
-        const connecting = new Trigger<Invitation>();
-        const done = new Trigger<Invitation>();
-
-        observable.subscribe(
-          async (invitation) => {
-            switch (invitation.state) {
-              case Invitation.State.CONNECTING: {
-                connecting.wake(invitation);
-                break;
-              }
-
-              case Invitation.State.AUTHENTICATING: {
-                const code = invitation.authCode ?? (await ux.prompt('Invitation code'));
-                await observable.authenticate(code);
-                break;
-              }
-
-              case Invitation.State.SUCCESS: {
-                done.wake(invitation);
-                break;
-              }
-            }
-          },
-          (err) => {
-            throw err;
-          },
-        );
-
-        ux.action.start('Waiting for peer to connect');
-        await connecting.wait();
-        ux.action.stop();
-
-        ux.action.start('Waiting for invitation to proceed');
-        await done.wait();
-        ux.action.stop();
       }
+
+      if (!encoded) {
+        encoded = await ux.prompt('Invitation');
+      }
+      if (encoded.startsWith('http')) {
+        const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+        encoded = searchParams.get('deviceInvitationCode') ?? encoded;
+      }
+      const invitation = InvitationEncoder.decode(encoded!);
+
+      const observable = client.halo.acceptInvitation(invitation);
+      ux.action.start('Waiting for peer to connect');
+      const invitationSuccess = acceptInvitation(observable, {
+        onConnecting: async () => {
+          ux.action.stop();
+        },
+        onReadyForAuth: () => ux.prompt('Invitation code'),
+      });
+
+      ux.action.start('Waiting for peer to finish invitation');
+      await invitationSuccess;
+      ux.action.stop();
     });
   }
 }

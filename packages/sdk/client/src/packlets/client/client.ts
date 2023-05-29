@@ -6,10 +6,15 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import {
+  AuthenticatingInvitationObservable,
+  ClientServicesProvider,
+  createDefaultModelFactory,
+  Space,
+} from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -17,24 +22,16 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { TextModel } from '@dxos/text-model';
+import { isNode } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { AuthenticatingInvitationObservable } from '../invitations';
 import { PropertiesProps } from '../proto';
-import { EchoProxy, HaloProxy, MeshProxy, Space } from '../proxies';
+import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
-import { ClientServicesProvider } from './service-definitions';
-import { fromIFrame } from './utils';
+import { fromHost, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
-
-// TODO(burdon): Factor out to spaces.
-// TODO(burdon): Defaults (with TextModel).
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
 
 /**
  * This options object configures the DXOS Client
@@ -91,8 +88,7 @@ export class Client {
     }
 
     this._config = config ?? new Config();
-    // TODO(wittjosiah): Useful default when not in browser?
-    this._services = services ?? fromIFrame(this._config);
+    this._services = services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config));
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();

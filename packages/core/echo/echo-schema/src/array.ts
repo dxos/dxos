@@ -38,15 +38,7 @@ export class EchoArray<T> implements Array<T> {
     return this.values();
   }
 
-  [Symbol.unscopables](): {
-    copyWithin: boolean;
-    entries: boolean;
-    fill: boolean;
-    find: boolean;
-    findIndex: boolean;
-    keys: boolean;
-    values: boolean;
-  } {
+  get [Symbol.unscopables](): any {
     throw new Error('Method not implemented.');
   }
 
@@ -227,6 +219,16 @@ export class EchoArray<T> implements Array<T> {
 
   findIndex(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): number {
     return Array.from(this.values()).findIndex(predicate, thisArg);
+  }
+
+  findLast<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S | undefined;
+  findLast(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T | undefined;
+  findLast(predicate: any, thisArg?: any): T | undefined {
+    return Array.from(this.values()).findLast(predicate, thisArg);
+  }
+
+  findLastIndex(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): number {
+    return Array.from(this.values()).findLastIndex(predicate, thisArg);
   }
 
   fill(value: T, start?: number | undefined, end?: number | undefined): this {

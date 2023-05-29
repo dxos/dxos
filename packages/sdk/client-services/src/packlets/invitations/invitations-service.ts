@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import {

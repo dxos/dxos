@@ -17,7 +17,6 @@ const f = ts.factory;
  */
 export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorContext) => {
   const declaration = f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,
