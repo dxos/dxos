@@ -9,8 +9,7 @@ import { Client, InvitationEncoder } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace } from '../../util';
-import { hostInvitation } from '../../util';
+import { selectSpace, hostInvitation } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
@@ -34,15 +33,16 @@ export default class Invite extends BaseCommand {
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({
-          observable, callbacks: {
-            onConnecting: async () => {
-              const invitationCode = InvitationEncoder.encode(observable.get());
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            const invitationCode = InvitationEncoder.encode(observable.get());
 
-              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
-            },
-          }
-        });
+            this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+          },
+        },
+      });
 
       ux.action.start('Waiting for peer to connect');
       await invitationSuccess;

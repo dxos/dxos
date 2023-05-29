@@ -42,13 +42,14 @@ export default class Join extends BaseCommand {
       const observable = client.acceptInvitation(invitation);
       ux.action.start('Waiting for peer to connect');
       const invitationSuccess = acceptInvitation({
-          observable, callbacks: {
-            onConnecting: async () => {
-              ux.action.stop();
-            },
-            onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
-          }
-        });
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            ux.action.stop();
+          },
+          onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+        },
+      });
 
       ux.action.start('Waiting for peer to finish invitation');
       invitation = await invitationSuccess;

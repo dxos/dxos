@@ -43,13 +43,14 @@ export default class Join extends BaseCommand {
       const observable = client.halo.acceptInvitation(invitation);
       ux.action.start('Waiting for peer to connect');
       const invitationSuccess = acceptInvitation({
-          observable, callbacks: {
-            onConnecting: async () => {
-              ux.action.stop();
-            },
-            onReadyForAuth: () => ux.prompt('Invitation code'),
-          }
-        });
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            ux.action.stop();
+          },
+          onReadyForAuth: () => ux.prompt('Invitation code'),
+        },
+      });
 
       ux.action.start('Waiting for peer to finish invitation');
       await invitationSuccess;
