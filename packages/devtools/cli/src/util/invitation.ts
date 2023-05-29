@@ -61,8 +61,9 @@ export const acceptInvitation = async (
         }
 
         case Invitation.State.READY_FOR_AUTHENTICATION: {
+          const callbackResult = await callbacks?.onReadyForAuth?.(invitation);
           if (invitation.authMethod === Invitation.AuthMethod.SHARED_SECRET) {
-            const code = invitation.authCode ?? (await callbacks?.onReadyForAuth?.(invitation));
+            const code = invitation.authCode ?? callbackResult;
             assert(code, 'No code provided');
             await observable.authenticate(code);
           }
