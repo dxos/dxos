@@ -74,7 +74,7 @@ export default class Open extends BaseCommand {
           },
           peersNumber: flags.instances,
         });
-        ux.action.start('Waiting for peer to connect');
+        ux.action.start('Waiting for peers to connect');
         await invitationSuccess;
         ux.action.stop();
       } else {
