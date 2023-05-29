@@ -45,7 +45,7 @@ export default class Open extends BaseCommand {
       const { args, flags } = await this.parse(Open);
 
       const pages = await Promise.all(
-        range(5).map(async () => {
+        range(flags.instances).map(async () => {
           const browser = await chromium.launch({ headless: false });
           return await browser.newPage();
         }),
@@ -57,22 +57,23 @@ export default class Open extends BaseCommand {
           authMethod: Invitation.AuthMethod.NONE,
         });
 
-        const invitationSuccess = hostInvitation(
-          {
-            observable, callbacks: {
-              onConnecting: async () => {
-                const invitationCode = InvitationEncoder.encode(observable.get());
-                pages.forEach(async (page) => {
-                  const url = new URL(args.url);
-                  url.searchParams.append('deviceInvitationCode', invitationCode);
-                  await page.goto(url.href);
-                });
+        const invitationSuccess = hostInvitation({
+          observable,
 
-                this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-              },
-            }, peersNumber: flags.instances
+          callbacks: {
+            onConnecting: async () => {
+              const invitationCode = InvitationEncoder.encode(observable.get());
+              pages.forEach(async (page) => {
+                const url = new URL(args.url);
+                url.searchParams.append('deviceInvitationCode', invitationCode);
+                await page.goto(url.href);
+              });
+
+              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            },
           },
-        );
+          peersNumber: flags.instances,
+        });
         ux.action.start('Waiting for peer to connect');
         await invitationSuccess;
         ux.action.stop();
