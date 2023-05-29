@@ -11,12 +11,12 @@ import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { createSigningContext, HostTestBuilder, syncItemsLocal } from '../testing';
+import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
-    const builder = new HostTestBuilder();
+    const builder = new TestBuilder();
 
     const peer = builder.createPeer();
     const identity = await createSigningContext(peer.keyring);
@@ -42,7 +42,7 @@ describe('DataSpaceManager', () => {
   });
 
   test('sync between peers', async () => {
-    const builder = new HostTestBuilder();
+    const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
     const identity1 = await createSigningContext(peer1.keyring);
@@ -130,7 +130,7 @@ describe('DataSpaceManager', () => {
   });
 
   test('pub/sub API', async () => {
-    const builder = new HostTestBuilder();
+    const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
     const identity1 = await createSigningContext(peer1.keyring);

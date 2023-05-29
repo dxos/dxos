@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Client, ClientProvider } from '@dxos/react-client';
+import { Client, ClientProvider, Config } from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
 import { GraphPluginProvides } from './ListViewPlugin';
@@ -18,7 +18,9 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
     id: 'dxos:ClientPlugin',
   },
   init: async () => {
-    const client = new Client();
+    const client = new Client({
+      config: new Config({ runtime: { client: { remoteSource: 'https://halo.dev.dxos.org/vault.html' } } }),
+    });
     await client.initialize();
 
     return {

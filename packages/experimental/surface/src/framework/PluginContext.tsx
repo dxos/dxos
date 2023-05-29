@@ -21,11 +21,8 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
   const [plugins, setPlugins] = useState<Plugin[]>();
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const plugins = await definitions.reduce<Promise<Plugin[]>>(async (acc, definition) => {
-        const plugins = await acc;
-        const plugin = await initializePlugin(definition, plugins);
-        return [...plugins, plugin];
-      }, Promise.resolve([]));
+      const plugins = await Promise.all(definitions.map(initializePlugin));
+      await Promise.all(definitions.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
       setPlugins(plugins);
     });
 
@@ -49,8 +46,8 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
   );
 };
 
-const initializePlugin = async (pluginDefinition: PluginDefinition, plugins: Plugin[]): Promise<Plugin> => {
-  const provides = await pluginDefinition.init?.(plugins);
+const initializePlugin = async (pluginDefinition: PluginDefinition): Promise<Plugin> => {
+  const provides = await pluginDefinition.init?.();
   return {
     ...pluginDefinition,
 

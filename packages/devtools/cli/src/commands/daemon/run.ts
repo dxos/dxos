@@ -20,18 +20,14 @@ export default class Run extends BaseCommand {
       description: 'Expose services.',
       required: true,
     }),
-    profile: Flags.string({
-      description: 'Profile to use.',
-      required: true,
-    }),
   };
 
   async run(): Promise<any> {
     const {
-      flags: { listen, profile },
+      flags: { listen },
     } = await this.parse(Run);
     assert(this.clientConfig);
-    await runServices({ listen, profile, config: this.clientConfig });
+    await runServices({ listen, config: this.clientConfig });
 
     this.log('daemon started');
   }

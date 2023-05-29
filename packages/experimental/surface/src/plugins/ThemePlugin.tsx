@@ -24,11 +24,10 @@ export const ThemePlugin = definePlugin({
   meta: {
     id: 'dxos:ThemePlugin',
   },
-  init: async () => {
+  ready: async () => {
     modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
     setTheme({ matches: modeQuery.matches });
     modeQuery.addEventListener('change', setTheme);
-    return {};
   },
   unload: async () => {
     return modeQuery?.removeEventListener('change', setTheme);

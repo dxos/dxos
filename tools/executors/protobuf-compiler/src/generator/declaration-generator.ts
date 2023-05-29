@@ -29,7 +29,6 @@ export function* createDeclarations(
       const nested = Array.from(createDeclarations(obj.nestedArray, ctx));
       if (nested.length > 0) {
         yield f.createModuleDeclaration(
-          undefined,
           [f.createToken(ts.SyntaxKind.ExportKeyword)],
           f.createIdentifier(obj.name),
           f.createModuleBlock(nested),
@@ -57,7 +56,6 @@ function* getRegisteredTypes(root: protobufjs.NamespaceBase): Generator<protobuf
 
 export const createTypeDictionary = (root: protobufjs.NamespaceBase) =>
   f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     'TYPES',
     undefined,

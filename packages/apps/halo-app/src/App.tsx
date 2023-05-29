@@ -7,8 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import {
   appkitTranslations,
@@ -42,7 +41,7 @@ const SpacePage = React.lazy(() => import('./pages/SpacePage'));
 const SpacesPage = React.lazy(() => import('./pages/SpacesPage'));
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-const serviceProvider = (config?: Config) =>
+const serviceProvider = async (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
 const Routes = () => {

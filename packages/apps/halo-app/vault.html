@@ -11,6 +11,22 @@
       }
     </style>
     <script>
+      const handler = (event) => {
+        if (event.source !== window.parent) {
+          return;
+        }
+
+        const { channel, payload } = event.data;
+        if (channel !== 'dxos:vault') {
+          return;
+        }
+
+        if (payload === 'init') {
+          window.__DXOS_APP_ORIGIN__ = event.origin;
+          window.removeEventListener('message', handler);
+        }
+      };
+      window.addEventListener('message', handler);
       window.parent.postMessage({ channel: 'dxos:vault', payload: 'loaded' }, '*');
     </script>
   </head>

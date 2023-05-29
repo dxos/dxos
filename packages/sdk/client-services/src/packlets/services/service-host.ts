@@ -5,9 +5,10 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory, PublicKey } from '@dxos/client';
+import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
@@ -65,9 +66,6 @@ export class ClientServicesHost {
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
 
-  /**
-   * @internal
-   */
   _serviceContext!: ServiceContext;
   private _opening = false;
   private _open = false;
@@ -94,7 +92,9 @@ export class ClientServicesHost {
       ? new VaultResourceLock({
           lockKey,
           onAcquire: () => {
-            this._opening || this.open();
+            if (!this._opening) {
+              void this.open();
+            }
           },
           onRelease: () => this.close(),
         })

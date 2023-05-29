@@ -29,7 +29,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
     id: 'dxos:SpacePlugin',
   },
-  init: async (plugins) => {
+  ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     if (clientPlugin) {
       subscription = clientPlugin.provides.client.spaces.subscribe((spaces) => {
@@ -40,8 +40,6 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         );
       });
     }
-
-    return {};
   },
   unload: async () => {
     subscription?.unsubscribe();

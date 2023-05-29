@@ -20,7 +20,6 @@ const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context
   substitutionsModule &&
   ts.factory.createImportDeclaration(
     [],
-    [],
     ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
     ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context)),
   );
@@ -98,7 +97,6 @@ const createNamespaceImports = (namespaces: string[], outDirPath: string, contex
     .map((ns) =>
       f.createImportDeclaration(
         [],
-        [],
         f.createImportClause(
           false,
           undefined,
@@ -117,7 +115,6 @@ export const getFileNameForNamespace = (namespace: string) => {
 
 const createStreamImport = () =>
   f.createImportDeclaration(
-    [],
     [],
     f.createImportClause(
       true,
