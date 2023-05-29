@@ -1,12 +1,12 @@
 # Class `AuthenticatingInvitationObservable`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L44)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:27]()</sub>
 
 
 Cancelable observer that relays authentication requests.
 
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L47)
+### [constructor(options)]()
 
 
 
@@ -29,7 +29,7 @@ Returns: <code>Observable&lt;[Invitation](/api/@dxos/client/interfaces/Invitatio
 
 Arguments: none
 
-### [authenticate(authCode)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L62)
+### [authenticate(authCode)]()
 
 
 
@@ -39,7 +39,7 @@ Arguments:
 
 `authCode`: <code>string</code>
 
-### [cancel()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L36)
+### [cancel()]()
 
 
 

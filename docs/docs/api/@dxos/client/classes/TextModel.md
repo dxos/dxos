@@ -14,7 +14,7 @@ Returns: <code>[TextModel](/api/@dxos/client/classes/TextModel)</code>
 
 Arguments: 
 
-`meta`: <code>ModelMeta&lt;any, any, any&gt;</code>
+`meta`: <code>ModelMeta</code>
 
 `itemId`: <code>string</code>
 
@@ -28,10 +28,10 @@ Arguments:
 Type: <code>function</code>
 
 ### [meta]()
-Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>ModelMeta</code>
 
 ### [content]()
-Type: <code>YXmlFragment | YText</code>
+Type: <code>YText | YXmlFragment</code>
 
 ### [doc]()
 Type: <code>Doc</code>
@@ -46,7 +46,7 @@ Type: <code>string</code>
 Type: <code>TextKind</code>
 
 ### [modelMeta]()
-Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>ModelMeta</code>
 
 ### [readOnly]()
 Type: <code>boolean</code>

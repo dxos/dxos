@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L35)
+### [createDefaultModelFactory()]()
 
 
 
@@ -10,7 +10,7 @@ Returns: <code>ModelFactory</code>
 
 Arguments: none
 
-### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L47)
+### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L48)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L17)
+### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L19)
 
 
 
@@ -35,7 +35,20 @@ Arguments:
 
 `options`: <code>[FromCliEnvOptions](/api/@dxos/client/types/FromCliEnvOptions)</code>
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L14)
+### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
+
+
+
+Creates stand-alone services without rpc.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
+
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L20)
 
 
 
@@ -93,7 +106,7 @@ Arguments:
 
 `snapshot`: <code>ObjectSnapshot</code>
 
-### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L73)
+### [wrapObservable(observable)]()
 
 
 

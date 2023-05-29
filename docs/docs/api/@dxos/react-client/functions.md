@@ -49,6 +49,19 @@ Arguments:
 
 `options`: <code>[FromCliEnvOptions](/api/@dxos/react-client/types/FromCliEnvOptions)</code>
 
+### [fromHost(\[config\])]()
+
+
+
+Creates stand-alone services without rpc.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
 ### [fromIFrame(\[config\], \[options\])]()
 
 
@@ -264,7 +277,7 @@ Arguments: none
 Create subscription.
 
 
-Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)[]</code>
 
 Arguments: 
 

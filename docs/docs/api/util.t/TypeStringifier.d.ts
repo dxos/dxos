@@ -1,5 +1,5 @@
 import { JSONOutput as Schema } from 'typedoc';
-export declare type AllStringifiers = {
+export type AllStringifiers = {
     [K in keyof Schema.TypeKindMap]: (node: Schema.TypeKindMap[K]) => string;
 };
 export declare class TypeStringifier implements AllStringifiers {
