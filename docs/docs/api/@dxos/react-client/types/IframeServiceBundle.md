@@ -1,5 +1,5 @@
 # Type `IframeServiceBundle`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/service-definitions.d.ts:31]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:31]()</sub>
 
 
 
