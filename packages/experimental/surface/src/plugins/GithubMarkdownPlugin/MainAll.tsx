@@ -28,7 +28,7 @@ export const MainAll = observer(({ data }: { data?: any }) => {
       <List>
         {documents.map((document) => {
           return (
-            <ListItem key={document.id} asChild>
+            <ListItem key={document.id}>
               <Link to={`/document/${spaceSlug}/${document.id}`}>
                 <ListItemHeading>{document.title ?? 'Untitled'}</ListItemHeading>
               </Link>
