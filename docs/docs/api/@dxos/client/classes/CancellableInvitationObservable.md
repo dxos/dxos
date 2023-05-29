@@ -1,12 +1,12 @@
 # Class `CancellableInvitationObservable`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations.ts:20](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L20)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:15]()</sub>
 
 
 Base class for all invitation observables and providers.
 
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L23)
+### [constructor(options)]()
 
 
 
@@ -29,7 +29,7 @@ Returns: <code>Observable&lt;[Invitation](/api/@dxos/client/interfaces/Invitatio
 
 Arguments: none
 
-### [cancel()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L36)
+### [cancel()]()
 
 
 
