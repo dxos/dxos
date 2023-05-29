@@ -196,12 +196,58 @@
                 {
                     "items": [
                         {
-                            "mime": "application/vnd.code.notebook.error",
-                            "value": {
-                                "name": "Error",
-                                "message": "Timeout [3000ms]",
-                                "stack": "    at asyncTimeout (/Users/dmaretskyi/Projects/protocols/packages/common/async/src/timeout.ts:38:70)\n    at RpcPeer.call (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:276:23)\n    at Object.call (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:127:39)\n    at Service.createEpoch (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/service.ts:85:42)\n    at SpaceProxy._createEpoch (/Users/dmaretskyi/Projects/protocols/packages/sdk/client/src/packlets/proxies/space-proxy.ts:357:56)\n    at <Cell 7> [3, 6]\n    at <Cell 7> [5, 46]\n    at Script.runInContext (node:vm:141:12)\n    at Script.runInNewContext (node:vm:146:17)\n    at Object.runInNewContext (node:vm:306:38)"
-                            }
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "database-proxy.ts:126 WARN Connection closed {",
+                                "  error: \u001b[32m'Error: Request was terminated because the RPC endpoint is closed.\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:140:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at ProtoRpcPeer.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:43:22)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebsocketRpcClient.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/websocket-rpc/src/client.ts:88:24)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket._socket.onclose (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/websocket-rpc/src/client.ts:73:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.onClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/event-target.js:136:16)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:domain:489:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emitClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:246:10)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.socketOnClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:1148:15)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'\\n'\u001b[39m +",
+                                "    \u001b[32m'Error happened in the stream at:\\n'\u001b[39m +",
+                                "    \u001b[32m'    at producer (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:328:21)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at new Stream (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/stream.ts:168:31)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.callStream (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:312:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Object.callStream (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:128:45)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Service.subscribe (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/service.ts:76:34)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at DatabaseProxy.open (/Users/dmaretskyi/Projects/protocols/packages/core/echo/echo-db/src/packlets/database/database-proxy.ts:85:36)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at SpaceProxy._initialize (/Users/dmaretskyi/Projects/protocols/packages/sdk/client/src/packlets/proxies/space-proxy.ts:234:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at runNextTicks (node:internal/process/task_queues:60:5)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at listOnTimeout (node:internal/timers:533:9)'\u001b[39m",
+                                "}",
+                                "database-proxy.ts:126 WARN Connection closed {",
+                                "  error: \u001b[32m'Error: Request was terminated because the RPC endpoint is closed.\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:140:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at ProtoRpcPeer.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:43:22)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebsocketRpcClient.close (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/websocket-rpc/src/client.ts:88:24)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket._socket.onclose (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/websocket-rpc/src/client.ts:73:18)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.onClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/event-target.js:136:16)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emit (node:domain:489:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at WebSocket.emitClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:246:10)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.socketOnClose (/Users/dmaretskyi/Projects/protocols/node_modules/.pnpm/ws@7.5.9/node_modules/ws/lib/websocket.js:1148:15)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Socket.emit (node:events:513:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'\\n'\u001b[39m +",
+                                "    \u001b[32m'Error happened in the stream at:\\n'\u001b[39m +",
+                                "    \u001b[32m'    at producer (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:328:21)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at new Stream (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/stream.ts:168:31)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at RpcPeer.callStream (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:312:12)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Object.callStream (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:128:45)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at Service.subscribe (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/service.ts:76:34)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at DatabaseProxy.open (/Users/dmaretskyi/Projects/protocols/packages/core/echo/echo-db/src/packlets/database/database-proxy.ts:85:36)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at SpaceProxy._initialize (/Users/dmaretskyi/Projects/protocols/packages/sdk/client/src/packlets/proxies/space-proxy.ts:234:28)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at async SpaceProxy._processSpaceUpdate (/Users/dmaretskyi/Projects/protocols/packages/sdk/client/src/packlets/proxies/space-proxy.ts:206:7)\\n'\u001b[39m +",
+                                "    \u001b[32m'    at async SpaceProxy._processSpaceUpdate$synchronized (/Users/dmaretskyi/Projects/protocols/packages/common/async/src/lock.ts:99:14)'\u001b[39m",
+                                "}",
+                                ""
+                            ]
                         }
                     ]
                 }
