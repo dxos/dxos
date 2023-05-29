@@ -298,6 +298,11 @@ export class DataSpace {
       },
     });
 
-    // TODO(dmaretskyi): Trim feeds.
+    for(const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
+      const indexBeforeEpoch = epoch.timeframe.get(feed.key);
+      if(indexBeforeEpoch) {
+        await feed.clear(0, indexBeforeEpoch + 1);
+      }
+    }
   }
 }

@@ -180,7 +180,7 @@
                         {
                             "mime": "text/plain",
                             "value": [
-                                "\u001b[33m32300\u001b[39m"
+                                "\u001b[33m67300\u001b[39m"
                             ]
                         }
                     ]
@@ -190,9 +190,22 @@
         {
             "language": "typescript",
             "source": [
-                "export {}; declare var client: import('@dxos/client').Client;"
+                "export {}; declare var client: import('@dxos/client').Client;\n\nawait client.spaces.get()[0].internal.createEpoch();"
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.error",
+                            "value": {
+                                "name": "Error",
+                                "message": "Timeout [3000ms]",
+                                "stack": "    at asyncTimeout (/Users/dmaretskyi/Projects/protocols/packages/common/async/src/timeout.ts:38:70)\n    at RpcPeer.call (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/rpc.ts:276:23)\n    at Object.call (/Users/dmaretskyi/Projects/protocols/packages/core/mesh/rpc/src/service.ts:127:39)\n    at Service.createEpoch (/Users/dmaretskyi/Projects/protocols/packages/common/codec-protobuf/src/service.ts:85:42)\n    at SpaceProxy._createEpoch (/Users/dmaretskyi/Projects/protocols/packages/sdk/client/src/packlets/proxies/space-proxy.ts:357:56)\n    at <Cell 7> [3, 6]\n    at <Cell 7> [5, 46]\n    at Script.runInContext (node:vm:141:12)\n    at Script.runInNewContext (node:vm:146:17)\n    at Object.runInNewContext (node:vm:306:38)"
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

@@ -155,4 +155,5 @@ export class FeedWrapper<T extends {}> {
   append = this._binder.async(this._hypercore.append);
   download = this._binder.async(this._hypercore.download);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
+  clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number ) => Promise<void>;
 }
