@@ -126,6 +126,21 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
     });
     this._shellController = new ShellController(this._iframeController, this.joinedSpace);
     await this._shellController.open();
+
+    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
+    const searchParams = new URLSearchParams(window.location.search);
+    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+    if (spaceInvitationCode) {
+      await this._shellController.setLayout(ShellLayout.JOIN_SPACE, { invitationCode: spaceInvitationCode });
+      return;
+    }
+
+    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    if (deviceInvitationCode) {
+      await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
+        invitationCode: deviceInvitationCode ?? undefined,
+      });
+    }
   }
 
   async close() {
