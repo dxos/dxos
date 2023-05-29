@@ -44,7 +44,6 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   private _iframe?: HTMLIFrameElement;
   private _appPort!: RpcPort;
-  private _shellPort?: RpcPort;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
   private _iframeController!: IFrameController;
