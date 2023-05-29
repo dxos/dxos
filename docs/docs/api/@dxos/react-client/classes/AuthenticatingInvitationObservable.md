@@ -1,5 +1,5 @@
 # Class `AuthenticatingInvitationObservable`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/invitations/invitations.d.ts:21]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:27]()</sub>
 
 
 Cancelable observer that relays authentication requests.

@@ -70,7 +70,7 @@ Arguments:
 
 
 
-Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;&gt;</code>
+Returns: <code>[Query](/api/@dxos/react-client/classes/Query)&lt;[TypedObject](/api/@dxos/react-client/values#TypedObject)&gt;</code>
 
 Arguments: 
 
