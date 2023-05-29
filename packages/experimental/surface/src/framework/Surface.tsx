@@ -46,7 +46,13 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
     const components = plugins
       .map((plugin) => {
         const Component = plugin.provides.component?.(props.data);
-        return Component && <Component key={plugin.meta.id}>{props.children ?? null}</Component>;
+        return (
+          Component && (
+            <Component data={props.data} key={plugin.meta.id}>
+              {props.children ?? null}
+            </Component>
+          )
+        );
       })
       .filter((Component): Component is JSX.Element => Boolean(Component));
     return props.limit ? components.slice(0, props.limit) : components;
