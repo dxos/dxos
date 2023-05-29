@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, Event } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable, Invitation } from '@dxos/client';
 
 export const hostInvitation = async (
@@ -13,8 +13,11 @@ export const hostInvitation = async (
     onConnecting?: (invitation: Invitation) => Promise<void>;
     onSuccess?: (invitation: Invitation) => Promise<void>;
   },
+  peersNumber = 1,
 ): Promise<Invitation> => {
-  const done = new Trigger<Invitation>();
+  const invitationEvent = new Event<Invitation>();
+
+  const done = invitationEvent.waitForCount(peersNumber);
 
   const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
@@ -26,7 +29,7 @@ export const hostInvitation = async (
 
         case Invitation.State.SUCCESS: {
           await callbacks?.onSuccess?.(invitation);
-          done.wake(invitation);
+          invitationEvent.emit(invitation);
           break;
         }
       }
@@ -36,7 +39,7 @@ export const hostInvitation = async (
     },
   );
 
-  const invitation = await done.wait();
+  const invitation = await done;
   unsubscribeHandle.unsubscribe();
 
   return invitation;

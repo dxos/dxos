@@ -56,24 +56,25 @@ export default class Open extends BaseCommand {
           type: Invitation.Type.MULTIUSE,
           authMethod: Invitation.AuthMethod.NONE,
         });
-        const successfulInvitations: Promise<Invitation>[] = [];
 
-        for (const page of pages) {
-          successfulInvitations.push(
-            hostInvitation(observable, {
-              onConnecting: async () => {
-                const invitationCode = InvitationEncoder.encode(observable.get());
+        const invitationSuccess = hostInvitation(
+          observable,
+          {
+            onConnecting: async () => {
+              const invitationCode = InvitationEncoder.encode(observable.get());
+              pages.forEach(async (page) => {
                 const url = new URL(args.url);
                 url.searchParams.append('deviceInvitationCode', invitationCode);
                 await page.goto(url.href);
+              });
 
-                this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-              },
-            }),
-          );
-        }
+              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            },
+          },
+          flags.instances,
+        );
         ux.action.start('Waiting for peer to connect');
-        await Promise.all(successfulInvitations);
+        await invitationSuccess;
         ux.action.stop();
       } else {
         pages.forEach(async (page) => await page.goto(args.url));
