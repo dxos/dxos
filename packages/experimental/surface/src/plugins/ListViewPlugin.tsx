@@ -74,7 +74,7 @@ const Context = createContext<ListViewContextValue>({
   items: [],
   actions: [],
   selected: null,
-  setSelected: () => {}
+  setSelected: () => {},
 });
 
 export const useListViewContext = () => useContext(Context);
@@ -112,7 +112,7 @@ const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
 };
 export const ListViewPlugin = definePlugin({
   meta: {
-    id: 'dxos:ListViewPlugin'
+    id: 'dxos:ListViewPlugin',
   },
   provides: {
     context: observer(({ children }) => {
@@ -131,11 +131,11 @@ export const ListViewPlugin = definePlugin({
         items,
         actions,
         selected,
-        setSelected
+        setSelected,
       };
 
       return <Context.Provider value={context}>{children}</Context.Provider>;
     }),
-    components: { ListView: ListViewContainer }
-  }
+    components: { ListView: ListViewContainer },
+  },
 });
