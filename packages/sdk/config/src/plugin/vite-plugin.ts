@@ -5,8 +5,6 @@
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
-import { log } from '@dxos/log';
-
 import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
@@ -24,8 +22,6 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
       },
       {} as { [key: string]: string },
     );
-
-    log.info('Open this app from DX CLI:\n   $ dx app open <app url here>');
 
     return { define };
   },
