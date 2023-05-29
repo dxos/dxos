@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ClientServicesProvider } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
-import { Client, ClientServicesProvider } from '../client';
+import { Client } from '../client';
 
 /**
  * A hook bound to window.__DXOS__.

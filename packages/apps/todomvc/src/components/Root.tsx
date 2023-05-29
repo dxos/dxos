@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { fromIFrame } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { fromIFrame, fromHost } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 

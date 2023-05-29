@@ -8,6 +8,7 @@ import {
   Gear,
   Graph,
   HardDrive,
+  HardDrives,
   IdentificationBadge,
   Key,
   PaperPlane,
@@ -41,15 +42,15 @@ export const useSections = (): SectionItem[] => {
           Icon: Gear
         },
         {
+          id: '/client/storage',
+          title: 'Storage',
+          Icon: HardDrives,
+        },
+        {
           id: '/client/logs',
           title: 'Logs',
           Icon: Receipt
         }
-        // {
-        //   id: '/client/storage',
-        //   title: 'Storage',
-        //   Icon: <StorageIcon />
-        // }
       ]
     },
     {

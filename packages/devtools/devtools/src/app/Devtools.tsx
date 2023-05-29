@@ -11,6 +11,7 @@ import { Client, ClientContext } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
+import { DensityProvider } from '@dxos/aurora';
 
 const Routes = () => {
   return useRoutes();
@@ -37,16 +38,18 @@ export const Devtools = ({
 
   return (
     <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
-      <ErrorBoundary>
-        <ClientContext.Provider value={context}>
-          <DevtoolsContextProvider>
-            <HashRouter>
-              <Telemetry namespace={namespace} />
-              <Routes />
-            </HashRouter>
-          </DevtoolsContextProvider>
-        </ClientContext.Provider>
-      </ErrorBoundary>
+      <DensityProvider density='fine'>
+        <ErrorBoundary>
+          <ClientContext.Provider value={context}>
+            <DevtoolsContextProvider>
+              <HashRouter>
+                <Telemetry namespace={namespace} />
+                <Routes />
+              </HashRouter>
+            </DevtoolsContextProvider>
+          </ClientContext.Provider>
+        </ErrorBoundary>
+      </DensityProvider>
     </ThemeProvider>
   );
 };

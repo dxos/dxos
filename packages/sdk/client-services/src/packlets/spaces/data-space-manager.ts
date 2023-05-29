@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { SpaceState } from '@dxos/client';
 import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
 import { DataServiceSubscriptions, MetadataStore, Space, SpaceManager } from '@dxos/echo-pipeline';
@@ -14,6 +13,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Credential, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';

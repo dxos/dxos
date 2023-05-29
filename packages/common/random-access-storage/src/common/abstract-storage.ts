@@ -45,7 +45,7 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      () => this._getFiles(sub),
+      async () => Array.from(this._getFiles(sub).keys()), // TODO(dmaretskyi): Fix me.
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
     );

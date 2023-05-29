@@ -17,13 +17,13 @@ export const ShellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const haloInvitationCode = searchParams.get('haloInvitationCode');
+  const deviceInvitationCode = searchParams.get('deviceInvitationCode');
 
   return (
     // TODO(wittjosiah): Make this easier to use directly in Root. Need access to space/frame.
     <NaturalShellProvider
       space={space}
-      haloInvitationCode={haloInvitationCode}
+      deviceInvitationCode={deviceInvitationCode}
       spaceInvitationCode={spaceInvitationCode}
       onJoinedSpace={(spaceKey) =>
         spaceKey && navigate(createPath({ spaceKey, frame: frame?.module.id ?? defaultFrameId, objectId }))

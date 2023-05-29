@@ -47,7 +47,7 @@ export interface ClientProviderProps {
    *
    * Most apps won't need this.
    */
-  services?: (config?: Config) => ClientServicesProvider;
+  services?: (config?: Config) => MaybePromise<ClientServicesProvider>;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
@@ -101,9 +101,10 @@ export const ClientProvider = ({
 
   useEffect(() => {
     const done = async (client: Client) => {
-      log('client ready');
       await client.initialize().catch(setError);
+      log('client ready');
       await onInitialized?.(client);
+      log('initialization complete');
       setClient(client);
       setStatus(client.status.get() ?? SystemStatus.ACTIVE);
       printBanner(client);
@@ -118,7 +119,7 @@ export const ClientProvider = ({
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
         log('resolved config', { config });
-        const services = createServices?.(config);
+        const services = await createServices?.(config);
         log('created services', { services });
         const client = new Client({ config, services });
         log('created client');

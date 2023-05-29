@@ -9,15 +9,17 @@ import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import path, { join } from 'node:path';
 
-import { Client, Config, fromCliEnv } from '@dxos/client';
+import { Client, Config, DEFAULT_DX_PROFILE, fromCliEnv } from '@dxos/client';
+import { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
 import { Daemon } from './daemon';
+import { ForeverDaemon } from './daemon/forever';
 import {
   disableTelemetry,
   getTelemetryContext,
@@ -66,6 +68,12 @@ export abstract class BaseCommand extends Command {
       description: 'Timeout in seconds',
       default: 30,
       aliases: ['t'],
+    }),
+
+    profile: Flags.string({
+      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
+      default: DEFAULT_DX_PROFILE,
+      env: 'DX_PROFILE',
     }),
 
     // TODO(mykola): Implement JSON args.
@@ -160,6 +168,11 @@ export abstract class BaseCommand extends Command {
     }
 
     try {
+      const yamlConfig = yaml.load(configContent) as ConfigProto;
+      if (yamlConfig.runtime?.client?.storage?.path) {
+        // Isolate DX_PROFILE storages.
+        yamlConfig.runtime.client.storage.path = path.join(yamlConfig.runtime.client.storage.path, flags.profile);
+      }
       this._clientConfig = new Config(yaml.load(configContent) as any);
     } catch (err) {
       Sentry.captureException(err);
@@ -193,16 +206,17 @@ export abstract class BaseCommand extends Command {
    * Lazily create the client.
    */
   async getClient() {
+    const { flags } = await this.parse(this.constructor as any);
     await this.execWithDaemon(async (daemon) => {
-      if (!(await daemon.isRunning(process.env.DX_PROFILE))) {
-        await daemon.start(process.env.DX_PROFILE);
+      if (!(await daemon.isRunning(flags.profile))) {
+        await daemon.start(flags.profile);
       }
     });
 
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromCliEnv() });
+      this._client = new Client({ config: this._clientConfig, services: fromCliEnv(flags.profile) });
       await this._client.initialize();
       log('Initialized');
     }
@@ -230,11 +244,11 @@ export abstract class BaseCommand extends Command {
 
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      const daemon = new Daemon();
-      await daemon.init();
+      const daemon = new ForeverDaemon();
+      await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');
-      daemon.disconnect();
+      await daemon.disconnect();
 
       log('Done');
       return value;
