@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",

@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, ux } from '@oclif/core';
+import { Args, Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import { chromium } from 'playwright';
 
 import { Client, Invitation, InvitationEncoder } from '@dxos/client';
+import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base-command';
 import { hostInvitation } from '../../util';
@@ -25,8 +26,15 @@ export default class Open extends BaseCommand {
 
   static override flags = {
     ...super.flags,
-    
-  }
+    instances: Flags.integer({
+      description: 'Amount of test instances.',
+      default: 1,
+    }),
+    invite: Flags.boolean({
+      description: 'If `true` proceed device invitation for all instances.',
+      default: true,
+    }),
+  };
 
   async run(): Promise<any> {
     await this.execWithClient(async (client: Client) => {
@@ -34,27 +42,42 @@ export default class Open extends BaseCommand {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
       }
-      const { args } = await this.parse(Open);
-      const url = new URL(args.url);
-      const browser = await chromium.launch({ headless: false });
-      const page = await browser.newPage();
+      const { args, flags } = await this.parse(Open);
 
-      const observable = client.halo.createInvitation({
-        authMethod: Invitation.AuthMethod.NONE,
-      });
-      const invitationSuccess = hostInvitation(observable, {
-        onConnecting: async () => {
-          const invitationCode = InvitationEncoder.encode(observable.get());
-          url.searchParams.append('deviceInvitationCode', invitationCode);
-          await page.goto(url.href);
+      const pages = await Promise.all(
+        range(5).map(async () => {
+          const browser = await chromium.launch({ headless: false });
+          return await browser.newPage();
+        }),
+      );
 
-          this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-        },
-      });
+      if (flags.invite) {
+        const observable = client.halo.createInvitation({
+          type: Invitation.Type.MULTIUSE,
+          authMethod: Invitation.AuthMethod.NONE,
+        });
+        const successfulInvitations: Promise<Invitation>[] = [];
 
-      ux.action.start('Waiting for peer to connect');
-      await invitationSuccess;
-      ux.action.stop();
+        for (const page of pages) {
+          successfulInvitations.push(
+            hostInvitation(observable, {
+              onConnecting: async () => {
+                const invitationCode = InvitationEncoder.encode(observable.get());
+                const url = new URL(args.url);
+                url.searchParams.append('deviceInvitationCode', invitationCode);
+                await page.goto(url.href);
+
+                this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+              },
+            }),
+          );
+        }
+        ux.action.start('Waiting for peer to connect');
+        await Promise.all(successfulInvitations);
+        ux.action.stop();
+      } else {
+        pages.forEach(async (page) => await page.goto(args.url));
+      }
     });
   }
 }
