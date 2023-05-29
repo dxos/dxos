@@ -1,5 +1,5 @@
 # Class `InvitationsProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/invitations/invitations-proxy.d.ts:4]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/invitations-proxy.d.ts:4]()</sub>
 
 
 

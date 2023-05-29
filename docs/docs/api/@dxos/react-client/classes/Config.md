@@ -38,13 +38,13 @@ Returns an immutable config JSON object.
 Returns the given config property.
 
 
-Returns: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;, undefined&gt;</code>
+Returns: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;</code>
 
 Arguments: 
 
 `key`: <code>K</code>
 
-`defaultValue`: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;, undefined&gt;</code>
+`defaultValue`: <code>DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;</code>
 
 ### [getOrThrow(key)]()
 
@@ -53,7 +53,7 @@ Arguments:
 Returns the given config property or throw if it doesn't exist.
 
 
-Returns: <code>Exclude&lt;DeepIndex&lt;Config, ParseKey&lt;K&gt;, undefined&gt;, undefined&gt;</code>
+Returns: <code>Exclude&lt;DeepIndex&lt;Config, ParseKey&lt;K&gt;&gt;, undefined&gt;</code>
 
 Arguments: 
 

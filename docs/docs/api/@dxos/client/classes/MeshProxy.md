@@ -1,12 +1,12 @@
 # Class `MeshProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/mesh-proxy.ts:19](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L19)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/mesh-proxy.ts:17](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L17)</sub>
 
 
 Public API for MESH services.
 
 
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L35)
+### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L33)
 
 
 
@@ -18,12 +18,12 @@ Arguments:
 
 
 ## Properties
-### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L45)
+### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L43)
 Type: <code>MulticastObservable&lt;NetworkStatus&gt;</code>
 
 
 ## Methods
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L39)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L37)
 
 
 
@@ -31,7 +31,7 @@ Returns: <code>object</code>
 
 Arguments: none
 
-### [updateConfig(swarm)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L49)
+### [updateConfig(swarm)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L47)
 
 
 

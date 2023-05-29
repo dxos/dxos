@@ -1,42 +1,42 @@
 # Type `ClientServices`
-<sub>Declared in [packages/sdk/client/src/packlets/client/service-definitions.ts:25](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L25)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:7]()</sub>
 
 
 
 
 
 ## Properties
-### [DataService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L32)
+### [DataService]()
 Type: <code>DataService</code>
 
 
-### [DevicesService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L30)
+### [DevicesService]()
 Type: <code>DevicesService</code>
 
 
-### [DevtoolsHost](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L39)
+### [DevtoolsHost]()
 Type: <code>DevtoolsHost</code>
 
 
-### [IdentityService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L28)
+### [IdentityService]()
 Type: <code>IdentityService</code>
 
 
-### [InvitationsService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L29)
+### [InvitationsService]()
 Type: <code>InvitationsService</code>
 
 
-### [LoggingService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L36)
+### [LoggingService]()
 Type: <code>LoggingService</code>
 
 
-### [NetworkService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L34)
+### [NetworkService]()
 Type: <code>NetworkService</code>
 
 
-### [SpacesService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L31)
+### [SpacesService]()
 Type: <code>SpacesService</code>
 
 
-### [SystemService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L26)
+### [SystemService]()
 Type: <code>SystemService</code>
