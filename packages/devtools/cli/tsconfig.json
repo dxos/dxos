@@ -8,16 +8,13 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
-      "./src",
-      "./notebooks"
+      "./notebooks",
+      "./src"
     ],
     "types": [
       "@dxos/typings",
       "node"
     ]
-  },
-  "ts-node": {
-    "transpileOnly": true
   },
   "include": [
     "notebooks",
@@ -59,7 +56,13 @@
       "path": "../../common/telemetry"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"
@@ -73,5 +76,8 @@
     {
       "path": "../../sdk/config"
     }
-  ]
+  ],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }

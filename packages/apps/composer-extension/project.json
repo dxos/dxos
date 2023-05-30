@@ -41,8 +41,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "pnpm -w nx serve-with-vault composer-app",
-          "VITE_COMPOSER_URL=http://localhost:5173 pnpm -w nx bundle composer-extension --watch --mode development"
+          "VITE_COMPOSER_URL=http://localhost:5173 pnpm -w nx bundle composer-extension --watch --mode development",
+          "pnpm -w nx serve-with-vault composer-app"
         ]
       }
     }

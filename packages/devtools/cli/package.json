@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -47,6 +46,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@oclif/core": "^2.6.5",
     "@oclif/plugin-help": "^5.2.8",

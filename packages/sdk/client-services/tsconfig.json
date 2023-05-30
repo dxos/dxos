@@ -95,7 +95,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../client"
+      "path": "../client-protocol"
     },
     {
       "path": "../config"
