@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.45](https://github.com/dxos/dxos/compare/v0.1.44...v0.1.45) (2023-05-30)
+
+
+### Features
+
+* Epoch creation API and devtools features ([#3272](https://github.com/dxos/dxos/issues/3272)) ([5967acd](https://github.com/dxos/dxos/commit/5967acddc4b5ee39267f6471950c3f20ebb18838))
+
+
+### Bug Fixes
+
+* Fix publish extension script ([#3280](https://github.com/dxos/dxos/issues/3280)) ([51332b9](https://github.com/dxos/dxos/commit/51332b97439ddda54676c5a58031226e0ea1bbc4))
+
 ## [0.1.44](https://github.com/dxos/dxos/compare/v0.1.43...v0.1.44) (2023-05-29)
 
 
