@@ -10,7 +10,7 @@ ROOT=$(git rev-parse --show-toplevel)
 # See https://developer.chrome.com/docs/webstore/using_webstore_api/
 # See how to obtaine ACCESS_TOKEN from REFRESH_TOKEN https://circleci.com/blog/continuously-deploy-a-chrome-extension/
 if [ $BRANCH = "production" ]; then
-  for EXTENSIONS in "${EXTENSIONS[@]}"; do
+  for EXTENSION in "${EXTENSIONS[@]}"; do
     pushd $EXTENSION
 
     PACKAGE=${PWD##*/}
