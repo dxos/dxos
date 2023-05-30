@@ -1,0 +1,62 @@
+diff --git a/src/executors/build/build.impl.js b/src/executors/build/build.impl.js
+index a1da972d970458fb720cc7e9271692f73ab0ab11..69af53526a7f2ca52a37afd237962c96444cdcab 100644
+--- a/src/executors/build/build.impl.js
++++ b/src/executors/build/build.impl.js
+@@ -31,9 +31,9 @@ async function* viteBuildExecutor(options, context) {
+         build: (0, _optionsutils.getViteBuildOptions)(normalizedOptions, context)
+     });
+     const watcherOrOutput = await runInstance(buildConfig);
+-    const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
+-    const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
+-    const distPackageJson = (0, _path.resolve)(normalizedOptions.outputPath, 'package.json');
++    // const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
++    // const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
++    // const distPackageJson = (0, _path.resolve)(normalizedOptions.outputPath, 'package.json');
+     // Generate a package.json if option has been set.
+     if (options.generatePackageJson) {
+         const builtPackageJson = (0, _js.createPackageJson)(context.projectName, context.projectGraph, {
+@@ -47,18 +47,19 @@ async function* viteBuildExecutor(options, context) {
+         (0, _fs.writeFileSync)(`${options.outputPath}/${(0, _js.getLockFileName)()}`, lockFile, {
+             encoding: 'utf-8'
+         });
+-    } else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
+-        await (0, _js.copyAssets)({
+-            outputPath: normalizedOptions.outputPath,
+-            assets: [
+-                {
+-                    input: projectRoot,
+-                    output: '.',
+-                    glob: 'package.json'
+-                }
+-            ]
+-        }, context);
+-    }
++    } 
++    // else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
++    //     await (0, _js.copyAssets)({
++    //         outputPath: normalizedOptions.outputPath,
++    //         assets: [
++    //             {
++    //                 input: projectRoot,
++    //                 output: '.',
++    //                 glob: 'package.json'
++    //             }
++    //         ]
++    //     }, context);
++    // }
+     if ('on' in watcherOrOutput) {
+         const iterable = (0, _asynciterable.createAsyncIterable)(({ next  })=>{
+             let success = true;
+diff --git a/src/utils/options-utils.js b/src/utils/options-utils.js
+index 9805bdb6e4693ee15d1a6dcd3ab5453132a5291a..126e73e59e73293848e395ea8c43482b636a07a7 100644
+--- a/src/utils/options-utils.js
++++ b/src/utils/options-utils.js
+@@ -57,7 +57,7 @@ function getViteSharedConfig(options, clearScreen, context) {
+     const root = (0, _path.relative)(context.cwd, (0, _devkit.joinPathFragments)(context.root, projectRoot));
+     return {
+         mode: options.mode,
+-        root,
++        root: _path.join(root, options.base || '.'),
+         base: options.base,
+         configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
+         plugins: [
