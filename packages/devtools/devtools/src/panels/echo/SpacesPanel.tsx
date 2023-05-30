@@ -15,14 +15,18 @@ import { ComplexSet, humanize, range } from '@dxos/util';
 
 import { DetailsTable } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsState } from '../../hooks';
+import { useDevtoolsState, useSpacesInfo } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
 const SpacesPanel = () => {
   // TODO(dmaretskyi): We dont need SpaceInfo anymore.
-  const { spaceInfo: metadata, space } = useDevtoolsState();
+  const { space } = useDevtoolsState();
+  const spacesInfo = useSpacesInfo();
+  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
+
+  console.log(space)
 
   const object = useMemo(() => {
     if (!metadata) {
@@ -36,7 +40,9 @@ const SpacesPanel = () => {
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
       genesisFeed: humanize(metadata?.genesisFeed),
       controlFeed: humanize(metadata?.controlFeed),
-      dataFeed: humanize(metadata?.dataFeed)
+      dataFeed: humanize(metadata?.dataFeed),
+      startupTime: space?.internal.data?.metrics.open && space?.internal.data?.metrics.ready && (space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime()),
+      // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
 

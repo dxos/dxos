@@ -12,7 +12,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState, Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -74,6 +74,8 @@ export class DataSpace {
   public readonly authVerifier: TrustedKeySetAuthVerifier;
   public readonly stateUpdate = new Event();
 
+  public metrics: SpaceProto.Metrics = {};
+
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
     this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
@@ -134,6 +136,7 @@ export class DataSpace {
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
     this._state = SpaceState.INACTIVE;
+    this.metrics.open = new Date();
   }
 
   async close() {
@@ -163,6 +166,7 @@ export class DataSpace {
   initializeDataPipelineAsync() {
     scheduleTask(this._ctx, async () => {
       try {
+        this.metrics.pipelineInitBegin = new Date();
         await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError) {
@@ -174,6 +178,8 @@ export class DataSpace {
         this._state = SpaceState.ERROR;
         this.error = err as Error;
         this.stateUpdate.emit();
+      } finally {
+        this.metrics.ready = new Date();
       }
     });
   }
@@ -190,6 +196,8 @@ export class DataSpace {
       breakOnStall: false,
     });
 
+    this.metrics.controlPipelineReady = new Date();
+
     await this._createWritableFeeds();
     log('Writable feeds created');
     this.stateUpdate.emit();
@@ -205,6 +213,8 @@ export class DataSpace {
 
     await this._inner.initializeDataPipeline();
 
+    this.metrics.dataPipelineOpen = new Date();
+
     // Wait for the first epoch.
     await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
 
@@ -214,6 +224,8 @@ export class DataSpace {
       ctx: this._ctx,
       breakOnStall: false,
     });
+
+    this.metrics.dataPipelineReady = new Date();
 
     log('data pipeline ready');
     await this._callbacks.beforeReady?.();
@@ -269,5 +281,28 @@ export class DataSpace {
 
     // Set this after credentials are notarized so that on failure we will retry.
     await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
+  }
+
+  async createEpoch() {
+    const epoch = await this.dataPipeline.createEpoch();
+
+    await this.inner.controlPipeline.writer.write({
+      credential: {
+        credential: await this._signingContext.credentialSigner.createCredential({
+          subject: this.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.Epoch',
+            ...epoch,
+          },
+        }),
+      },
+    });
+
+    for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
+      const indexBeforeEpoch = epoch.timeframe.get(feed.key);
+      if (indexBeforeEpoch) {
+        await feed.clear(0, indexBeforeEpoch + 1);
+      }
+    }
   }
 }
