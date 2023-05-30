@@ -70,7 +70,7 @@ Arguments:
 
 
 
-Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[TypedObject](/api/@dxos/client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;&gt;</code>
+Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[TypedObject](/api/@dxos/client/values#TypedObject)&gt;</code>
 
 Arguments: 
 

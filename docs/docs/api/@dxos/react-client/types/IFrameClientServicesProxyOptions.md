@@ -1,13 +1,13 @@
 # Type `IFrameClientServicesProxyOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:6]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:8]()</sub>
 
 
 
 
 
 ## Properties
-### [channel]()
-Type: <code>string</code>
+### [client]()
+Type: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
 
 
 ### [logFilter]()
