@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { assert } from 'node:console';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
@@ -14,43 +13,75 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 import { addrFromSocket } from './util';
 
 export type RunServicesParams = {
-  listen: string;
+  listen: string[];
   config: Config;
 };
 
 export const runServices = async (params: RunServicesParams) => {
   const services = fromHost(params.config);
 
+  // Global hook for debuggers;
+  ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
+
   await services.open();
   log.info('open');
 
   const httpServer = http.createServer();
 
-  assert(params.listen.startsWith('unix://'), 'Invalid listen address.');
-  const socketAddr = addrFromSocket(params.listen);
-  mkdirSync(dirname(socketAddr), { recursive: true });
-  rmSync(socketAddr, { force: true });
-  httpServer.listen(socketAddr);
+  for (const listenAddr of params.listen) {
+    if (listenAddr.startsWith('unix://')) {
+      const socketAddr = addrFromSocket(listenAddr);
+      mkdirSync(dirname(socketAddr), { recursive: true });
+      rmSync(socketAddr, { force: true });
+      httpServer.listen(socketAddr);
 
-  const server = new WebsocketRpcServer<{}, ClientServices>({
-    server: httpServer,
-    onConnection: async () => {
-      const id = PublicKey.random().toHex();
-      log.info('connection', { id });
+      const server = new WebsocketRpcServer<{}, ClientServices>({
+        server: httpServer,
+        onConnection: async () => {
+          const id = PublicKey.random().toHex();
+          log.info('connection', { id });
 
-      return {
-        exposed: services.descriptors,
-        handlers: services.services as ClientServices,
-        onOpen: async () => {
-          log.info('open', { id });
+          return {
+            exposed: services.descriptors,
+            handlers: services.services as ClientServices,
+            onOpen: async () => {
+              log.info('open', { id });
+            },
+            onClose: async () => {
+              log.info('close', { id });
+            },
+          };
         },
-        onClose: async () => {
-          log.info('close', { id });
-        },
-      };
-    },
-  });
+      });
 
-  await server.open();
+      await server.open();
+    } else if (listenAddr.startsWith('ws://')) {
+      const { port } = new URL(listenAddr);
+
+      const server = new WebsocketRpcServer<{}, ClientServices>({
+        port: parseInt(port),
+        onConnection: async () => {
+          const id = PublicKey.random().toHex();
+          log.info('connection', { id });
+
+          return {
+            exposed: services.descriptors,
+            handlers: services.services as ClientServices,
+            onOpen: async () => {
+              log.info('open', { id });
+            },
+            onClose: async () => {
+              log.info('close', { id });
+            },
+          };
+        },
+      });
+
+      await server.open();
+    } else {
+      throw new Error(`Unsupported listen address: ${listenAddr}`);
+    }
+  }
+
   log.info('listening', { socket: params.listen });
 };

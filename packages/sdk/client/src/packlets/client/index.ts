@@ -9,3 +9,4 @@ export * from './iframe-service-host';
 export * from './iframe-service-proxy';
 export * from './serializer';
 export * from './utils';
+export * from './socket';

@@ -19,6 +19,7 @@ export default class Run extends BaseCommand {
     listen: Flags.string({
       description: 'Expose services.',
       required: true,
+      multiple: true,
     }),
   };
 
