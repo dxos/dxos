@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import path, { join } from 'node:path';
 
-import { Client, Config, DEFAULT_DX_PROFILE, fromCliEnv } from '@dxos/client';
+import { Client, DEFAULT_DX_PROFILE, fromCliEnv, Config } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
@@ -60,7 +60,6 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => join(context.config.configDir, 'dx.yml'),
       aliases: ['c'],
     }),
 
@@ -155,23 +154,29 @@ export abstract class BaseCommand extends Command {
     });
 
     // Load user config file.
+    await this._loadConfig();
+  }
+
+  private async _loadConfig() {
     const { flags } = await this.parse(this.constructor as any);
-    const { config: configFile } = flags as any;
-
-    const configExists = await exists(configFile);
-    const configContent = await readFile(
-      configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
-      'utf-8',
-    );
-    if (!configExists) {
-      void writeFile(configFile, configContent, 'utf-8');
+    let { config: configFile, profile } = flags;
+    if (!configFile) {
+      configFile = path.join(this.config.configDir, `${profile}.yml`);
     }
-
     try {
+      const configExists = await exists(configFile);
+      const configContent = await readFile(
+        configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
+        'utf-8',
+      );
+
       const yamlConfig = yaml.load(configContent) as ConfigProto;
-      if (yamlConfig.runtime?.client?.storage?.path) {
-        // Isolate DX_PROFILE storages.
-        yamlConfig.runtime.client.storage.path = path.join(yamlConfig.runtime.client.storage.path, flags.profile);
+      if (!configExists) {
+        if (yamlConfig.runtime?.client?.storage?.path) {
+          // Isolate DX_PROFILE storages.
+          yamlConfig.runtime.client.storage.path = path.join(yamlConfig.runtime.client.storage.path, flags.profile);
+        }
+        void writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
       }
       this._clientConfig = new Config(yaml.load(configContent) as any);
     } catch (err) {
