@@ -21,14 +21,21 @@
   "devDependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/log": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
+    "@types/dompurify": "^3.0.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "dompurify": "^3.0.3",
+    "github-markdown-css": "^5.2.0",
+    "isomorphic-fetch": "^3.0.0",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-drag-drop-files": "^2.3.8"
   },
   "peerDependencies": {
     "@dxos/aurora": "workspace:*",
@@ -38,7 +45,14 @@
   },
   "optionalDependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
-    "octokit": "^2.0.14"
+    "@types/dompurify": "^3.0.2",
+    "dompurify": "^3.0.3",
+    "github-markdown-css": "^5.2.0",
+    "isomorphic-fetch": "^3.0.0",
+    "octokit": "^2.0.14",
+    "react-drag-drop-files": "^2.3.8"
   }
 }

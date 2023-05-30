@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { Button, List, ListItem, ListItemHeading } from '@dxos/aurora';
+import { Button, List, ListItem, ListItemHeading, Main } from '@dxos/aurora';
 import { useQuery, observer, Space } from '@dxos/react-client';
 
 export const MainAll = observer(({ data }: { data?: any }) => {
@@ -23,7 +23,7 @@ export const MainAll = observer(({ data }: { data?: any }) => {
     }
   }, [space, navigate]);
   return (
-    <>
+    <Main>
       <Button onClick={handleCreate}>Create document</Button>
       <List>
         {documents.map((document) => {
@@ -36,6 +36,6 @@ export const MainAll = observer(({ data }: { data?: any }) => {
           );
         })}
       </List>
-    </>
+    </Main>
   );
 });

@@ -5,7 +5,7 @@
 import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 
-import { Button, Main, MainRoot, Sidebar } from '@dxos/aurora';
+import { Button, MainOverlay, MainRoot, Sidebar } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
@@ -46,9 +46,8 @@ export const SplitView = observer(() => {
           <SidebarIcon weight='light' className={getSize(5)} />
         </Button>
       </div>
-      <Main>
-        <Surface name='main' />
-      </Main>
+      <MainOverlay />
+      <Surface name='main' />
     </MainRoot>
   );
 });

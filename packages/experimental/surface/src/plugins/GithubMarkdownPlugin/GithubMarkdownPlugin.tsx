@@ -9,10 +9,7 @@ import { Document } from '@braneframe/types';
 
 import { definePlugin, PluginDefinition, Surface } from '../../framework';
 import { isSpace } from '../SpacePlugin';
-import { MainAll } from './MainAll';
-import { MainOne } from './MainOne';
-
-// import { OctokitProvider } from './OctokitProvider';
+import { MainAll, MainOne, OctokitProvider } from './components';
 
 export const isDocument = (datum: any): datum is Document => {
   return 'type' in datum && 'name' in datum.type && Document.type.name === datum.type.name;
@@ -23,9 +20,7 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
     id: 'dxos:GithubMarkdownPlugin',
   },
   provides: {
-    // context: ({ children }) => {
-    //   return <OctokitProvider>{children}</OctokitProvider>;
-    // },
+    context: (props) => <OctokitProvider {...props} />,
     router: {
       routes: () => [
         {
@@ -51,10 +46,10 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
           case isDocument(datum) && surfaceType === 'main':
             return MainOne;
           default:
-            return undefined;
+            return null;
         }
       } else {
-        return undefined;
+        return null;
       }
     },
     components: {

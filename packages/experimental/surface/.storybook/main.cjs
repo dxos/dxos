@@ -28,9 +28,15 @@ module.exports = {
             resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
             resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+            resolve(__dirname, '../node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
             resolve(__dirname, '../node_modules/@dxos/kai-frames/dist/**/*.mjs')
           ]
         })
-      ]
+      ],
+      resolve: {
+        alias: {
+          'node-fetch': 'isomorphic-fetch'
+        }
+      },
     })
 };

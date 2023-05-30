@@ -5,6 +5,7 @@
 import React, { UIEvent, FC, createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
+import { Button } from '@dxos/aurora';
 import { observer } from '@dxos/observable-object/react';
 
 import { definePlugin, usePluginContext, Plugin } from '../framework';
@@ -94,9 +95,9 @@ export const ListViewContainer = () => {
     <div>
       <div>
         {actions?.map((action) => (
-          <button key={action.id} onClick={action.invoke}>
+          <Button variant='ghost' key={action.id} onClick={action.invoke}>
             {action.label}
-          </button>
+          </Button>
         ))}
       </div>
       <ListView
