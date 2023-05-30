@@ -21,6 +21,7 @@ export type MochaExecutorOptions = NodeOptions &
     serve?: string;
     serveOptions?: { [key: string]: string };
     setup?: string;
+    setupOptions?: Record<string, any>;
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -50,7 +51,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 
   const [skipBrowserTests] = await Promise.all([
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
-    resolvedOptions.setup && runSetup(resolvedOptions.setup),
+    resolvedOptions.setup && runSetup({ script: resolvedOptions.setup, options: resolvedOptions.setupOptions }),
   ]);
 
   let success = false;

@@ -44,6 +44,10 @@
       "type": "string",
       "description": "Setup script to run before tests"
     },
+    "setupOptions": {
+      "type": "object",
+      "description": "Options to pass to the setup script"
+    },
     "coverage": {
       "type": "boolean",
       "description": "Run tests with a code coverage tool",
