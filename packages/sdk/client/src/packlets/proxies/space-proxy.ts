@@ -92,8 +92,14 @@ export class SpaceProxy implements Space {
     this._itemManager = new ItemManager(this._modelFactory);
 
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
     this._internal = {
       db: this._dbBackend,
+      get data() {
+        return self._data;
+      },
       createEpoch: this._createEpoch.bind(this),
     };
 

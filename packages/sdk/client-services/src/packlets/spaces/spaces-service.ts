@@ -146,8 +146,10 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch({ spaceKey: _ }: CreateEpochRequest) {
-    throw new Error('Not implemented');
+  async createEpoch({ spaceKey }: CreateEpochRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    await space.createEpoch();
   }
 
   private _transformSpace(space: DataSpace): Space {
@@ -180,6 +182,7 @@ export class SpacesServiceImpl implements SpacesService {
             : SpaceMember.PresenceState.OFFLINE,
       })),
       cache: space.cache,
+      metrics: space.metrics,
     };
   }
 }

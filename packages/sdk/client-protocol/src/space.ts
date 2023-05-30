@@ -15,6 +15,8 @@ import { CancellableInvitationObservable } from './invitations';
 export interface SpaceInternal {
   get db(): DatabaseProxy;
 
+  get data(): SpaceData;
+
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
 }
