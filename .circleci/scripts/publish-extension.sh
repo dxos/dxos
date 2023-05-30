@@ -14,7 +14,7 @@ if [ $BRANCH = "production" ]; then
     pushd $EXTENSION
 
     PACKAGE=${PWD##*/}
-    PACKAGE_CAPS='DEVTOOLS-EXTENSION'
+    PACKAGE_CAPS=${PACKAGE^^}
     PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
     eval "CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
