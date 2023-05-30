@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { spawn } from 'child_process';
-import type { SpawnOptions } from 'child_process';
+import { spawn, type SpawnOptions } from 'node:child_process';
 
 export const run = async (command: string, args: string[], options?: SpawnOptions) =>
   new Promise<void>((resolve, reject) => {
