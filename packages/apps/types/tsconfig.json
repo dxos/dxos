@@ -8,16 +8,13 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/hypercore"
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/timeframe"
+      "path": "../../core/echo/echo-typegen"
     }
   ]
 }

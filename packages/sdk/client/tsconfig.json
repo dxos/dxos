@@ -82,7 +82,16 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
+      "path": "../../core/mesh/websocket-rpc"
+    },
+    {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-protocol"
+    },
+    {
+      "path": "../client-services"
     },
     {
       "path": "../config"
