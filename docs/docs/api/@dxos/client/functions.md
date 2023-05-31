@@ -63,6 +63,19 @@ Arguments:
 
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
+### [fromSocket(url)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/socket.ts#L11)
+
+
+
+Access to remote client via a socket.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`url`: <code>string</code>
+
 ### [generateSeedPhrase()]()
 
 
