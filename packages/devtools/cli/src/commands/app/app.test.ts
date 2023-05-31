@@ -11,17 +11,19 @@ import { describe, test } from '@dxos/test';
 import { runCommand } from '../../util';
 
 describe('App', () => {
-  const tmpFolder = path.join(__dirname, '../../../tmp/dx');
+  const tmpFolder = './tmp/packages/devtools/cli/';
 
-  afterEach(() => {
+  const cleanUp = () => {
     fs.rmSync(tmpFolder, { recursive: true, force: true });
-  });
+  };
+
+  beforeEach(() => cleanUp());
+
+  afterEach(() => cleanUp());
 
   test('create', async () => {
     const appName = 'test-app';
     await runCommand(`app create ${appName}`, tmpFolder);
     expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
-  })
-    .retries(2)
-    .timeout(5_000);
+  }).timeout(5_000);
 });
