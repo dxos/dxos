@@ -10,10 +10,10 @@ import { Document } from '@braneframe/types';
 import { Button, List, ListItem, ListItemHeading, Main } from '@dxos/aurora';
 import { useQuery, observer, Space } from '@dxos/react-client';
 
-export const MainAll = observer(({ data }: { data?: any }) => {
+export const MainAll = observer(({ data }: { data?: any; role?: string }) => {
   const navigate = useNavigate();
-  const [space]: [Space, 'main'] = data ?? [];
-  const spaceSlug = space?.key.toHex() ?? 'never';
+  const space = data as Space;
+  const spaceSlug = space?.key?.toHex() ?? 'never';
 
   const documents = useQuery(space, Document.filter());
   const handleCreate = useCallback(async () => {

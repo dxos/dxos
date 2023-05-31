@@ -37,13 +37,12 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
         },
       ],
     },
-    component: (arg: any) => {
-      if (Array.isArray(arg)) {
-        const [datum, surfaceType] = arg;
+    component: (datum, role) => {
+      if (role === 'main') {
         switch (true) {
-          case isSpace(datum) && surfaceType === 'main':
+          case isSpace(datum):
             return MainAll;
-          case isDocument(datum) && surfaceType === 'main':
+          case isDocument(datum):
             return MainOne;
           default:
             return null;

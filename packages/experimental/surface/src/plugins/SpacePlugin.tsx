@@ -19,7 +19,7 @@ export const isSpace = (datum: any): datum is Space => 'key' in datum && 'db' in
 export const SpaceMain = () => {
   const { spaceId } = useParams();
   const space = useSpace(spaceId);
-  return space ? <Surface data={[space, 'main']} /> : <p>…</p>;
+  return space ? <Surface data={space} role='main' /> : <p>…</p>;
 };
 
 const nodes = createStore<GraphNode[]>([]);

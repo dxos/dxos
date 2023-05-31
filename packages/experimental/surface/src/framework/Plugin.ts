@@ -8,8 +8,9 @@ export type PluginProvides<TProvides> = TProvides & {
   context?: FC<PropsWithChildren>;
   component?: <P extends PropsWithChildren = PropsWithChildren>(
     datum: any,
+    role?: string,
     props?: Partial<P>,
-  ) => FC<PropsWithChildren<{ data: any }>> | undefined | null | false | 0;
+  ) => FC<PropsWithChildren<{ data: any; role?: string }>> | undefined | null | false | 0;
   components?: Record<string, FC> & { default?: FC };
 };
 

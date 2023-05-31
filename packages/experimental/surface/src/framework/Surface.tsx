@@ -13,6 +13,7 @@ export type SurfaceProps = PropsWithChildren<{
   name?: string;
   data?: any;
   component?: string | string[];
+  role?: string;
   surfaces?: Record<string, Partial<SurfaceProps>>;
   limit?: number | undefined;
   direction?: Direction;
@@ -45,10 +46,10 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
   } else {
     const components = plugins
       .map((plugin) => {
-        const Component = plugin.provides.component?.(props.data);
+        const Component = plugin.provides.component?.(props.data, props.role);
         return (
           Component && (
-            <Component data={props.data} key={plugin.meta.id}>
+            <Component data={props.data} role={props.role} key={plugin.meta.id}>
               {props.children ?? null}
             </Component>
           )
