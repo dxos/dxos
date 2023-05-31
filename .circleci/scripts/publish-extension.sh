@@ -4,14 +4,15 @@ EXTENSIONS=(
   ./packages/devtools/devtools-extension
   ./packages/apps/composer-extension
 )
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-ROOT=$(git rev-parse --show-toplevel)
 
 # See https://developer.chrome.com/docs/webstore/using_webstore_api/
 # See how to obtaine ACCESS_TOKEN from REFRESH_TOKEN https://circleci.com/blog/continuously-deploy-a-chrome-extension/
 if [ $BRANCH = "production" ]; then
   for EXTENSION in "${EXTENSIONS[@]}"; do
     pushd $EXTENSION
+    ROOT=$(git rev-parse --show-toplevel)
 
     PACKAGE=${PWD##*/}
     PACKAGE_CAPS=${PACKAGE^^}
