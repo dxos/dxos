@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-appkit",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "description": "DXOS opinions for building React applications",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,7 +44,6 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-dropdown-menu": "^2.0.4",
     "@radix-ui/react-navigation-menu": "^1.1.2",
     "@radix-ui/react-popover": "^1.0.5",
     "@radix-ui/react-portal": "^1.0.2",
