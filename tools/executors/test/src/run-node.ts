@@ -29,6 +29,7 @@ export type NodeOptions = {
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
+  envVariables?: Record<string, string>;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -37,6 +38,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
+      ...options.envVariables,
       FORCE_COLOR: '2',
       MOCHA_TAGS: options.tags.join(','),
       MOCHA_ENV: 'nodejs',

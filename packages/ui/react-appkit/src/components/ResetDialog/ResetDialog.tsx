@@ -5,13 +5,23 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, Message, MessageTitle, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  Message,
+  MessageTitle,
+  useTranslation,
+  DropdownMenuRoot,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuArrow,
+  DropdownMenuPortal,
+} from '@dxos/aurora';
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { getAsyncValue, Provider } from '@dxos/util';
 
 import { Dialog, DialogProps } from '../Dialog';
-import { DropdownMenu, DropdownMenuItem } from '../DropdownMenu';
 import { Tooltip } from '../Tooltip';
 
 // TODO(burdon): Factor out.
@@ -84,21 +94,26 @@ export const ResetDialog = ({
           </Tooltip>
         )}
         <div role='none' className='flex-grow' />
-        <DropdownMenu
-          trigger={<Button variant='ghost'>{t('reset client label')}</Button>}
-          slots={{ content: { side: 'top', className: 'z-[51]' } }}
-        >
-          <DropdownMenuItem
-            onClick={async () => {
-              // TODO(wittjosiah): This is a hack.
-              //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
-              const config = await getAsyncValue(configProvider);
-              window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN}#reset`, '_blank');
-            }}
-          >
-            {t('reset client confirm label')}
-          </DropdownMenuItem>
-        </DropdownMenu>
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost'>{t('reset client label')}</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent side='top' classNames='z-[51]'>
+              <DropdownMenuItem
+                onClick={async () => {
+                  // TODO(wittjosiah): This is a hack.
+                  //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
+                  const config = await getAsyncValue(configProvider);
+                  window.open(`${config?.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN}#reset`, '_blank');
+                }}
+              >
+                {t('reset client confirm label')}
+              </DropdownMenuItem>
+              <DropdownMenuArrow />
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
         <Button variant='primary' onClick={() => location.reload()}>
           {t('reload page label')}
         </Button>
