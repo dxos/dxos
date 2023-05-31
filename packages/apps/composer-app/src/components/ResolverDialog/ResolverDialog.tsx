@@ -32,14 +32,19 @@ export const ResolverDialog = () => {
       <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
         <div
           role='none'
-          className={osTx('dialog.content', 'dialog--resolver__content', {}, 'p-2 bs-64 shadow-none bg-transparent')}
+          className={osTx(
+            'dialog.content',
+            'dialog--resolver__content',
+            {},
+            'p-2 bs-72 flex flex-col shadow-none bg-transparent',
+          )}
         >
           {!space ? (
             <ResolverTree />
           ) : (
-            <h1 className='text-lg font-system-normal'>{t('resolver init document message')}</h1>
+            <h1 className='shrink-0 text-lg font-system-normal'>{t('resolver init document message')}</h1>
           )}
-          <div role='group' className='flex is-full gap-2'>
+          <div role='group' className='shrink-0 flex is-full gap-2'>
             <Button classNames='grow' onClick={handleCreateSpace}>
               {t('create space label', { ns: 'appkit' })}
             </Button>
