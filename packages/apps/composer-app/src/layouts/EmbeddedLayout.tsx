@@ -80,13 +80,13 @@ const EmbeddedLayoutImpl = () => {
           <span className='sr-only'>{t('open in composer label')}</span>
           <Eye className={getSize(5)} />
         </Toggle>
-        <ButtonGroup>
+        <ButtonGroup classNames={[!(space && document) && 'shadow-none']}>
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
           </Button>
           <DropdownMenuRoot>
             <DropdownMenuTrigger asChild>
-              <Button>
+              <Button disabled={!(space && document)}>
                 <CaretDown />
               </Button>
             </DropdownMenuTrigger>
