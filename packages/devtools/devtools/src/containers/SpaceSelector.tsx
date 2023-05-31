@@ -2,14 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
+import React, { FC, ReactNode, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client';
 
-import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
 import { Planet } from '@phosphor-icons/react';
+import { Select } from '@dxos/react-appkit';
+import { humanize } from '@dxos/util';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -24,18 +25,39 @@ export const SpaceSelector = () => {
       spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
       feedKey: undefined
     }));
+    
+    if(spaceKey) {
+      localStorage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+    }
   };
 
-  console.log(spaces)
+  useEffect(() => {
+    const spaceKeyHex = localStorage.getItem('dxos.devtools.spaceKey')
+    if(spaceKeyHex) {
+      console.log({ spaceKeyHex, spaces })
+      handleSelect(PublicKey.fromHex(spaceKeyHex));
+    }
+  }, []);
 
   return (
-    <PublicKeySelector
-      keys={spaces.map((space) => space.key)}
-      Icon={Planet}
-      defaultValue={space?.key}
-      placeholder={'Select space'}
-      onChange={handleSelect}
-    />
+    <Select
+      defaultValue={space?.key?.toHex()}
+      placeholder='Select space'
+      value={space?.key.toHex()}
+      onValueChange={(id) => handleSelect(PublicKey.fromHex(id))}
+    >
+      {spaces.map(space => (
+        <Select.Item value={space.key.toHex()} key={space.key.toHex()}>
+          <div className='flex items-center gap-2'>
+            <div className='pr-1'>
+              <Planet />
+            </div>
+            {space.properties.name ?? humanize(space.key)}
+            <span className='text-neutral-250'>{space.key.truncate(4)}</span>
+          </div>
+        </Select.Item>
+      ))}
+    </Select>
   );
 };
 
