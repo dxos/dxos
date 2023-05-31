@@ -7,9 +7,18 @@ import React, { Dispatch, HTMLAttributes, PropsWithChildren, ReactNode, SetState
 import { FileUploader } from 'react-drag-drop-files';
 
 import { Document } from '@braneframe/types';
-import { Button, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  DropdownMenuRoot,
+  DropdownMenuContent,
+  DropdownMenuArrow,
+  DropdownMenuTrigger,
+  ThemeContext,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/aurora';
 import { getSize, osTx } from '@dxos/aurora-theme';
-import { Dialog, DropdownMenu, Input } from '@dxos/react-appkit';
+import { Dialog, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
 export const StandaloneDocumentPage = observer(
@@ -56,15 +65,17 @@ export const StandaloneDocumentPage = observer(
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu
-                trigger={
+              <DropdownMenuRoot>
+                <DropdownMenuTrigger asChild>
                   <Button classNames='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
-                }
-              >
-                {dropdownMenuContent}
-              </DropdownMenu>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {dropdownMenuContent}
+                  <DropdownMenuArrow />
+                </DropdownMenuContent>
+              </DropdownMenuRoot>
             </ThemeContext.Provider>
           </div>
           {children}
