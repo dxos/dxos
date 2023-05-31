@@ -178,8 +178,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     .timeout(2_000);
 
   // TODO(mykola): Fails with large amount of peers ~10.
-  // Time wasted: 1 hour (increment when you work on it).
-  test.skip('many peers and connections', async () => {
+  test('many peers and connections', async () => {
     const numTopics = 2;
     const peersPerTopic = 3;
     const swarmsAllPeersConnected: Promise<any>[] = [];
@@ -207,5 +206,5 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     );
 
     await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
-  });
+  }).tag('stress');
 };
