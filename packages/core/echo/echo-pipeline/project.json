@@ -47,6 +47,8 @@
         "outputPath": "tmp/mocha/packages/core/echo/echo-pipeline",
         "resultsPath": "test-results/packages/core/echo/echo-pipeline",
         "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setupOptions": { "port": 4001 },
+        "envVariables": { "SIGNAL_PORT": 4001 },
         "testPatterns": [
           "packages/core/echo/echo-pipeline/src/**/*.test.{ts,js}"
         ],
