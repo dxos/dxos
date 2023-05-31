@@ -37,6 +37,7 @@ importers:
       '@dxos/signal': workspace:*
       '@dxos/swc-log-plugin': workspace:*
       '@dxos/test': workspace:*
+      '@dxos/test-builder': workspace:*
       '@dxos/toolbox': workspace:*
       '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
@@ -145,6 +146,7 @@ importers:
       '@dxos/signal': link:packages/core/mesh/signal
       '@dxos/swc-log-plugin': link:tools/swc-log-plugin
       '@dxos/test': link:tools/executors/test
+      '@dxos/test-builder': link:packages/common/test-builder
       '@dxos/toolbox': link:tools/executors/toolbox
       '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
@@ -1313,6 +1315,12 @@ importers:
       analytics-node: 6.2.0
     devDependencies:
       '@types/analytics-node': 3.1.9
+
+  packages/common/test-builder:
+    specifiers:
+      '@dxos/node-std': workspace:*
+    dependencies:
+      '@dxos/node-std': link:../node-std
 
   packages/common/timeframe:
     specifiers:
@@ -19212,7 +19220,7 @@ packages:
   /axios/0.21.4_debug@4.3.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
     dev: false
@@ -25272,6 +25280,7 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
+    dev: true
 
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
