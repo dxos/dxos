@@ -4,17 +4,24 @@
 
 import assert from 'node:assert';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, Event } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable, Invitation } from '@dxos/client';
 
-export const hostInvitation = async (
-  observable: CancellableInvitationObservable,
+export const hostInvitation = async ({
+  observable,
+  callbacks,
+  peersNumber = 1,
+}: {
+  observable: CancellableInvitationObservable;
   callbacks?: {
     onConnecting?: (invitation: Invitation) => Promise<void>;
     onSuccess?: (invitation: Invitation) => Promise<void>;
-  },
-): Promise<Invitation> => {
-  const done = new Trigger<Invitation>();
+  };
+  peersNumber?: number;
+}): Promise<Invitation> => {
+  const invitationEvent = new Event<Invitation>();
+
+  const done = invitationEvent.waitForCount(peersNumber);
 
   const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
@@ -26,7 +33,7 @@ export const hostInvitation = async (
 
         case Invitation.State.SUCCESS: {
           await callbacks?.onSuccess?.(invitation);
-          done.wake(invitation);
+          invitationEvent.emit(invitation);
           break;
         }
       }
@@ -36,20 +43,23 @@ export const hostInvitation = async (
     },
   );
 
-  const invitation = await done.wait();
+  const invitation = await done;
   unsubscribeHandle.unsubscribe();
 
   return invitation;
 };
 
-export const acceptInvitation = async (
-  observable: AuthenticatingInvitationObservable,
+export const acceptInvitation = async ({
+  observable,
+  callbacks,
+}: {
+  observable: AuthenticatingInvitationObservable;
   callbacks?: {
     onConnecting?: (invitation: Invitation) => Promise<void>;
     onReadyForAuth?: (invitation: Invitation) => Promise<string | void>;
     onSuccess?: (invitation: Invitation) => Promise<void>;
-  },
-): Promise<Invitation> => {
+  };
+}): Promise<Invitation> => {
   const done = new Trigger<Invitation>();
 
   const unsubscribeHandle = observable.subscribe(
@@ -61,8 +71,9 @@ export const acceptInvitation = async (
         }
 
         case Invitation.State.READY_FOR_AUTHENTICATION: {
+          const callbackResult = await callbacks?.onReadyForAuth?.(invitation);
           if (invitation.authMethod === Invitation.AuthMethod.SHARED_SECRET) {
-            const code = invitation.authCode ?? (await callbacks?.onReadyForAuth?.(invitation));
+            const code = invitation.authCode ?? callbackResult;
             assert(code, 'No code provided');
             await observable.authenticate(code);
           }

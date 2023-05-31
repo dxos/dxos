@@ -46,6 +46,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@oclif/core": "^2.6.5",
     "@oclif/plugin-help": "^5.2.8",
@@ -83,6 +84,7 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "globby": "^11.1.0",
+    "nodemon": "^2.0.22",
     "shx": "^0.3.3",
     "typescript": "^5.0.4"
   },

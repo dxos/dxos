@@ -11,7 +11,7 @@ export type FromCliEnvOptions = {
   profile?: string;
 };
 
-export const DEFAULT_DX_PROFILE = 'DXOS_DEFAULT';
+export const DEFAULT_DX_PROFILE = 'dxos-default';
 
 /**
  * Connects to locally running CLI daemon.

@@ -8,6 +8,7 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
+      "./notebooks",
       "./src"
     ],
     "types": [
@@ -15,10 +16,8 @@
       "node"
     ]
   },
-  "ts-node": {
-    "transpileOnly": true
-  },
   "include": [
+    "notebooks",
     "src",
     "src/util/telemetryrc.json"
   ],
@@ -57,7 +56,13 @@
       "path": "../../common/telemetry"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"
@@ -71,5 +76,8 @@
     {
       "path": "../../sdk/config"
     }
-  ]
+  ],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }

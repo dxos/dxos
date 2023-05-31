@@ -11,25 +11,16 @@ import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 import { ConnectionInfoView } from '../../components/ConnectionInfoView';
+import { TreeItemText } from '../../components/TreeItemText';
 
 const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
   swarms.map((swarm) => ({
     id: swarm.id.toHex(),
-    Element: (
-      <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-        <span>{humanize(swarm.topic)}</span>
-        <span className='text-gray-400'>{swarm.label}</span>
-      </div>
-    ),
+    Element: <TreeItemText primary={humanize(swarm.topic)} secondary={swarm.label} />,
     Icon: ShareNetwork,
     items: swarm.connections?.map((connection) => ({
       id: connection.sessionId.toHex(),
-      Element: (
-        <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-          <span>{humanize(connection.remotePeerId)}</span>
-          <span className='text-gray-400'>{connection.state}</span>
-        </div>
-      ),
+      Element: <TreeItemText primary={humanize(connection.remotePeerId)} secondary={connection.state} />,
       Icon:
         {
           CONNECTED: LinkSimple,

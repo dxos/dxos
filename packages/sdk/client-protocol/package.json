@@ -26,8 +26,8 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "base-x": "~3.0.9"
   },
   "publishConfig": {

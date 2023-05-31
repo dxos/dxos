@@ -2,17 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ux } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationEncoder } from '@dxos/client';
+import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { hostInvitation } from '../../util/invitation';
+import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Create HALO (device) invitation.';
+
+  static override flags = {
+    ...super.flags,
+    noCode: Flags.boolean({
+      description: 'Flag that specifies if secret auth code is not required',
+      default: false,
+    }),
+  };
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
@@ -21,13 +29,20 @@ export default class Share extends BaseCommand {
         return {};
       }
 
-      const observable = client.halo.createInvitation();
-      const invitationSuccess = hostInvitation(observable, {
-        onConnecting: async () => {
-          const invitationCode = InvitationEncoder.encode(observable.get());
+      const { flags } = await this.parse(Share);
 
-          this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-          this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+      const observable = client.halo.createInvitation({
+        authMethod: flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
+      });
+      const invitationSuccess = hostInvitation({
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            const invitationCode = InvitationEncoder.encode(observable.get());
+
+            this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            !flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+          },
         },
       });
 

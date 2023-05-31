@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.43",
+  "version": "0.1.44",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "workspace:*",

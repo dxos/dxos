@@ -5,7 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-import "error.proto";
+import "dxos/error.proto";
 
 // TODO(burdon): Move to `dxos.mesh.rpc` (reconcile with @dxos/kube repo).
 package dxos.rpc;
@@ -37,7 +37,7 @@ message Response {
   int32 id = 1;
   oneof content {
     google.protobuf.Any payload = 2;
-    Error error = 3;
+    dxos.error.Error error = 3;
     /// Sent when stream is closed without an error.
     bool close = 4;
 

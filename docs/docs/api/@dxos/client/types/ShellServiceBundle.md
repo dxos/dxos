@@ -1,10 +1,10 @@
 # Type `ShellServiceBundle`
-<sub>Declared in [packages/sdk/client/src/packlets/client/service-definitions.ts:94](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L94)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:43]()</sub>
 
 
 
 
 
 ## Properties
-### [ShellService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L95)
+### [ShellService]()
 Type: <code>ShellService</code>
