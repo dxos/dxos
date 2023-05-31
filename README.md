@@ -20,7 +20,7 @@ Shown below are two sessions of an application using ECHO to replicate state pee
 
 ## Documentation
 
-- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
+- [⚡️ Quick Start](https://docs.dxos.org/guide/getting-started.html)
 - [📖 Developer Guide](https://docs.dxos.org/guide)
 - [📚 API Reference](https://docs.dxos.org/api)
 - [🔧 Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
