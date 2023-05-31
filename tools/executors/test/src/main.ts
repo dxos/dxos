@@ -21,6 +21,8 @@ export type MochaExecutorOptions = NodeOptions &
     serve?: string;
     serveOptions?: { [key: string]: string };
     setup?: string;
+    setupOptions?: Record<string, any>;
+    envVariables?: Record<string, string>;
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -41,6 +43,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     resultsPath: resolve(context.root, options.resultsPath),
     coveragePath: resolve(context.root, options.coveragePath),
     headless: options.stayOpen ? false : options.headless,
+    envVariables: options.envVariables,
   };
 
   const includesBrowserEnv =
@@ -50,7 +53,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 
   const [skipBrowserTests] = await Promise.all([
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
-    resolvedOptions.setup && runSetup(resolvedOptions.setup),
+    resolvedOptions.setup && runSetup({ script: resolvedOptions.setup, options: resolvedOptions.setupOptions }),
   ]);
 
   let success = false;

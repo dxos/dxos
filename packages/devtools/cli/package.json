@@ -98,11 +98,6 @@
     "bin": "dx",
     "dirname": "dx",
     "commands": "./dist/src/commands",
-    "hooks": {
-      "init": [
-        "./dist/src/hooks/init/config"
-      ]
-    },
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
