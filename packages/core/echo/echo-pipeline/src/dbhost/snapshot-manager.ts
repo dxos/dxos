@@ -3,15 +3,15 @@
 //
 
 import { trackLeaks } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
+import { timed } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
 import { ObjectSync } from '@dxos/teleport-extension-object-sync';
 
 import { SnapshotStore } from './snapshot-store';
-import { timed } from '@dxos/debug';
-import { log } from '@dxos/log';
-import { Any } from '@dxos/codec-protobuf';
 
 /**
  * Snapshot manager for a specific space.
@@ -27,7 +27,7 @@ export class SnapshotManager {
     this._objectSync = new ObjectSync({
       getObject: async (id: string) => {
         const snapshot = await this._snapshotStore.loadSnapshot(id);
-        log('getObject', { id, snapshot })
+        log('getObject', { id, snapshot });
         if (!snapshot) {
           return undefined;
         }
@@ -37,7 +37,7 @@ export class SnapshotManager {
         };
       },
       setObject: async (data: DataObject) => {
-        log('setObject', { data })
+        log('setObject', { data });
         const snapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((data.payload as Any).value);
         await this._snapshotStore.saveSnapshot(snapshot);
       }

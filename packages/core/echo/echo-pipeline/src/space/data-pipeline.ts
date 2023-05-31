@@ -279,7 +279,7 @@ export class DataPipeline {
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
 
-    log('restarting pipeline for epoch')
+    log('restarting pipeline for epoch');
 
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
