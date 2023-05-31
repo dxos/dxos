@@ -77,6 +77,19 @@ Arguments:
 
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
+### [fromSocket(url)]()
+
+
+
+Access to remote client via a socket.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`url`: <code>string</code>
+
 ### [generateSeedPhrase()]()
 
 
