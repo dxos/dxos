@@ -25,5 +25,5 @@ describe('App', () => {
     const appName = 'test-app';
     await runCommand(`app create ${appName}`, tmpFolder);
     expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
-  }).timeout(5_000);
+  });
 });
