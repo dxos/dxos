@@ -271,12 +271,15 @@ export class DataPipeline {
     assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
+    log('Processing epoch', { epoch });
     if (epoch.snapshotCid) {
       const snapshot = await this._params.snapshotManager.load(epoch.snapshotCid);
 
       // TODO(dmaretskyi): Clearing old items + events.
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
+
+    log('restarting pipeline for epoch');
 
     await this._pipeline.pause();
     await this._pipeline.setCursor(epoch.timeframe);
