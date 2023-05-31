@@ -31,9 +31,6 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/echo/text-model"
     },
     {
@@ -65,6 +62,9 @@
     },
     {
       "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

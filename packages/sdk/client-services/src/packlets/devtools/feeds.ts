@@ -31,7 +31,7 @@ export const subscribeToFeeds = (
           if (!feedMap.has(feed.key)) {
             feedMap.set(feed.key, feed);
             feed.on('close', update);
-            subscriptions.add(feed.off('close', update));
+            subscriptions.add(() => feed.off('close', update));
           }
         });
 
