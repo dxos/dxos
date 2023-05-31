@@ -76,10 +76,6 @@ const createLog = (): LogImp => {
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    {
-      const _ = 1 + 1;
-      const __ = 3 + 3;
-    }
     log._config.processors.forEach((processor) => processor(log._config, { level, message, context, meta, error }));
   };
 
