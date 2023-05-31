@@ -17,12 +17,12 @@ import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useStat
 import { useOutletContext } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import { Button, useTranslation, Trans } from '@dxos/aurora';
+import { Button, useTranslation, Trans, DropdownMenuItem } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef, TextKind, TipTapEditor } from '@dxos/aurora-composer';
 import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Input, Dialog, DropdownMenuItem } from '@dxos/react-appkit';
+import { Input, Dialog } from '@dxos/react-appkit';
 import { observer, useIdentity } from '@dxos/react-client';
 
 import { PatDialog, useOctokitContext } from '../../components';
@@ -337,11 +337,11 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
 
   const dropdownMenuContent = (
     <>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={fileProps.handleFileExport}>
+      <DropdownMenuItem classNames='gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
+      <DropdownMenuItem classNames='gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
         <UploadSimple className={getSize(4)} />
         <span>{t('import from file label')}</span>
       </DropdownMenuItem>
@@ -349,7 +349,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
         <>
           <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
           <DropdownMenuItem
-            className='flex items-center gap-2'
+            classNames='gap-2'
             onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
           >
             {editorViewState === 'preview' ? (
@@ -367,7 +367,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
           {docGhId ? (
             <>
               <DropdownMenuItem
-                className='flex items-center gap-2'
+                classNames='gap-2'
                 onClick={() => {
                   const index = document.meta?.keys?.findIndex((key) => key.source === 'com.github');
                   index && index >= 0 && document.meta?.keys?.splice(index, 1);
@@ -377,15 +377,15 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
                 <LinkBreak className={getSize(4)} />
                 <span>{t('unbind to file in github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
+              <DropdownMenuItem classNames='gap-2' onClick={() => setImportConfirmOpen(true)}>
                 <FileArrowDown className={getSize(4)} />
                 <span>{t('import from github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={handleGhExport}>
+              <DropdownMenuItem classNames='gap-2' onClick={handleGhExport}>
                 <FileArrowUp className={getSize(4)} />
                 <span>{t('export to github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className='flex items-center gap-2'>
+              <DropdownMenuItem asChild classNames='gap-2'>
                 <a href={`https://github.com/${ghId}`} target='_blank' rel='noreferrer'>
                   <ArrowSquareOut className={getSize(4)} />
                   <span>{t('open in github label')}</span>
@@ -394,7 +394,7 @@ const MarkdownDocumentPage = observer(({ document, space }: DocumentPageProps) =
             </>
           ) : (
             <>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
+              <DropdownMenuItem classNames='gap-2' onClick={() => setGhBindOpen(true)}>
                 <Link className={getSize(4)} />
                 <span>{t('bind to file in github label')}</span>
               </DropdownMenuItem>

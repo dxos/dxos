@@ -27,20 +27,21 @@ import {
   TreeItemBody,
   TreeItemHeading,
   TreeItemOpenTrigger,
-} from '@dxos/aurora';
-import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
-import { SpaceState } from '@dxos/client';
-import {
-  Tooltip,
-  useFileDownload,
-  Dialog,
-  DropdownMenu,
-  DropdownMenuItem,
-  Input,
   TooltipContent,
   TooltipRoot,
   TooltipTrigger,
-} from '@dxos/react-appkit';
+  DropdownMenuRoot,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuArrow,
+  DropdownMenuItem,
+  TooltipArrow,
+  TooltipPortal,
+  DropdownMenuPortal,
+} from '@dxos/aurora';
+import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
+import { SpaceState } from '@dxos/client';
+import { Tooltip, useFileDownload, Dialog, Input } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
@@ -138,11 +139,24 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             }
           }}
         >
-          <TooltipContent classNames='z-[31]' side='bottom'>
-            {t('space options label')}
-          </TooltipContent>
-          <DropdownMenu
-            trigger={
+          <TooltipPortal>
+            <TooltipContent classNames='z-[31]' side='bottom'>
+              {t('space options label')}
+              <TooltipArrow />
+            </TooltipContent>
+          </TooltipPortal>
+          <DropdownMenuRoot
+            {...{
+              open: optionsMenuOpen,
+              onOpenChange: (nextOpen: boolean) => {
+                if (!nextOpen) {
+                  suppressNextTooltip.current = true;
+                }
+                return setOpetionsMenuOpen(nextOpen);
+              },
+            }}
+          >
+            <DropdownMenuTrigger asChild>
               <TooltipTrigger asChild>
                 <Button
                   variant='ghost'
@@ -153,53 +167,45 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
               </TooltipTrigger>
-            }
-            slots={{
-              root: {
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  if (!nextOpen) {
-                    suppressNextTooltip.current = true;
-                  }
-                  return setOpetionsMenuOpen(nextOpen);
-                },
-              },
-              content: { className: 'z-[31]' },
-            }}
-          >
-            <DropdownMenuItem asChild>
-              <Input
-                label={t('space name label')}
-                labelVisuallyHidden
-                value={space.properties.name ?? ''}
-                placeholder={t('untitled space title')}
-                onChange={({ target: { value } }) => (space.properties.name = value)}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
-              <PaperPlaneTilt className={getSize(4)} />
-              <span>{t('view space invitations label', { ns: 'os' })}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
-              <EyeSlash className={getSize(4)} />
-              <span>{t('hide space label')}</span>
-            </DropdownMenuItem>
-            <Separator />
-            <DropdownMenuItem
-              className='flex items-center gap-2'
-              onClick={async () => {
-                const backupBlob = await backupSpace(space, t('untitled document title'));
-                return download(backupBlob, `${spaceDisplayName} backup.zip`);
-              }}
-            >
-              <Download className={getSize(4)} />
-              <span>{t('download all docs in space label')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className='flex items-center gap-2' onClick={() => setRestoreDialogOpen(true)}>
-              <Upload className={getSize(4)} />
-              <span>{t('upload all docs in space label')}</span>
-            </DropdownMenuItem>
-          </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-[31]'>
+                <DropdownMenuItem asChild>
+                  <Input
+                    label={t('space name label')}
+                    labelVisuallyHidden
+                    value={space.properties.name ?? ''}
+                    placeholder={t('untitled space title')}
+                    onChange={({ target: { value } }) => (space.properties.name = value)}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleViewInvitations} classNames='gap-2'>
+                  <PaperPlaneTilt className={getSize(4)} />
+                  <span>{t('view space invitations label', { ns: 'os' })}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleHideSpace} classNames='gap-2'>
+                  <EyeSlash className={getSize(4)} />
+                  <span>{t('hide space label')}</span>
+                </DropdownMenuItem>
+                <Separator />
+                <DropdownMenuItem
+                  classNames='gap-2'
+                  onClick={async () => {
+                    const backupBlob = await backupSpace(space, t('untitled document title'));
+                    return download(backupBlob, `${spaceDisplayName} backup.zip`);
+                  }}
+                >
+                  <Download className={getSize(4)} />
+                  <span>{t('download all docs in space label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem classNames='gap-2' onClick={() => setRestoreDialogOpen(true)}>
+                  <Upload className={getSize(4)} />
+                  <span>{t('upload all docs in space label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
         </TooltipRoot>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
           <Button

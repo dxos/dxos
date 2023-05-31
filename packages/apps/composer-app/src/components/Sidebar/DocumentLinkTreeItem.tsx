@@ -17,10 +17,18 @@ import {
   TooltipRoot,
   TreeItem,
   TreeItemHeading,
+  DropdownMenuRoot,
+  DropdownMenuArrow,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  TooltipContent,
+  TooltipArrow,
+  TooltipPortal,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
-import { DropdownMenu, DropdownMenuItem, TooltipContent } from '@dxos/react-appkit';
 import { observer, Space } from '@dxos/react-client';
 
 import { getPath } from '../../router';
@@ -73,11 +81,24 @@ export const DocumentLinkTreeItem = observer(
             }
           }}
         >
-          <TooltipContent classNames='z-[31]' side='bottom'>
-            {t('document options label')}
-          </TooltipContent>
-          <DropdownMenu
-            trigger={
+          <TooltipPortal>
+            <TooltipContent classNames='z-[31]' side='bottom'>
+              {t('document options label')}
+              <TooltipArrow />
+            </TooltipContent>
+          </TooltipPortal>
+          <DropdownMenuRoot
+            {...{
+              open: optionsMenuOpen,
+              onOpenChange: (nextOpen: boolean) => {
+                if (!nextOpen) {
+                  suppressNextTooltip.current = true;
+                }
+                return setOpetionsMenuOpen(nextOpen);
+              },
+            }}
+          >
+            <DropdownMenuTrigger asChild>
               <TooltipTrigger asChild>
                 <Button
                   variant='ghost'
@@ -88,25 +109,17 @@ export const DocumentLinkTreeItem = observer(
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
               </TooltipTrigger>
-            }
-            slots={{
-              root: {
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  if (!nextOpen) {
-                    suppressNextTooltip.current = true;
-                  }
-                  return setOpetionsMenuOpen(nextOpen);
-                },
-              },
-              content: { className: 'z-[31]' },
-            }}
-          >
-            <DropdownMenuItem onClick={handleDelete} className='flex items-center gap-2'>
-              <FileMinus className={getSize(4)} />
-              <span>{t('delete document label')}</span>
-            </DropdownMenuItem>
-          </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-[31]'>
+                <DropdownMenuItem onClick={handleDelete} classNames='gap-2'>
+                  <FileMinus className={getSize(4)} />
+                  <span>{t('delete document label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
         </TooltipRoot>
         <ListItemEndcap classNames='is-6 flex items-center'>
           <Circle

@@ -5,12 +5,20 @@
 import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button } from '@dxos/aurora';
+import {
+  Button,
+  DropdownMenuRoot,
+  DropdownMenuContent,
+  DropdownMenuArrow,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+} from '@dxos/aurora';
 import { Composer } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
-import { DropdownMenu, DropdownMenuItem, Input } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
 export const colors: { id: string; color: string; border: string }[] = [
@@ -58,16 +66,19 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       <div className='flex w-full overflow-hidden'>
         {/* Actions */}
         <div className='order-1'>
-          <DropdownMenu
-            trigger={
+          <DropdownMenuRoot>
+            <DropdownMenuTrigger asChild>
               <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(5)} />
               </Button>
-            }
-            slots={{ content: { className: 'z-50' } }}
-          >
-            <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
-          </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-50'>
+                <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
         </div>
 
         {/* Title */}

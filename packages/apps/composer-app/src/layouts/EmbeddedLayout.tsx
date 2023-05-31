@@ -7,10 +7,21 @@ import { ArrowSquareOut, CaretDown, Eye } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { Button, ButtonGroup, DensityProvider, Toggle, useTranslation } from '@dxos/aurora';
+import {
+  Button,
+  ButtonGroup,
+  DensityProvider,
+  Toggle,
+  useTranslation,
+  DropdownMenuRoot,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuArrow,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+} from '@dxos/aurora';
 import { defaultDescription, getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
-import { DropdownMenu, DropdownMenuItem } from '@dxos/react-appkit';
 import { useShell } from '@dxos/react-shell';
 
 import {
@@ -73,23 +84,26 @@ const EmbeddedLayoutImpl = () => {
           <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
             {t('save and close label')}
           </Button>
-          <DropdownMenu
-            slots={{ content: { collisionPadding: 8 } }}
-            trigger={
+          <DropdownMenuRoot>
+            <DropdownMenuTrigger asChild>
               <Button>
                 <CaretDown />
               </Button>
-            }
-          >
-            <DropdownMenuItem onClick={handleSaveAndCloseEmbed} className='block'>
-              <p>{t('save and close label')}</p>
-              <p className={defaultDescription}>{t('save and close description')}</p>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleCloseEmbed} className='block'>
-              <p>{t('close label', { ns: 'appkit' })}</p>
-              <p className={defaultDescription}>{t('close embed description')}</p>
-            </DropdownMenuItem>
-          </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleSaveAndCloseEmbed} classNames='block'>
+                  <p>{t('save and close label')}</p>
+                  <p className={defaultDescription}>{t('save and close description')}</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCloseEmbed} classNames='block'>
+                  <p>{t('close label', { ns: 'appkit' })}</p>
+                  <p className={defaultDescription}>{t('close embed description')}</p>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
         </ButtonGroup>
       </div>
       {space && document ? (
