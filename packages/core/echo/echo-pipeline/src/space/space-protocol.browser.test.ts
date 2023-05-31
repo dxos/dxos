@@ -17,7 +17,8 @@ import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } fr
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
-const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+const port = process.env.SIGNAL_PORT ?? 4000;
+const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space/space-protocol', () => {
   test('two peers discover each other', async () => {
