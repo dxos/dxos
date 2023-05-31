@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
   TooltipContent,
+  TooltipArrow,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
@@ -80,6 +81,7 @@ export const DocumentLinkTreeItem = observer(
         >
           <TooltipContent classNames='z-[31]' side='bottom'>
             {t('document options label')}
+            <TooltipArrow />
           </TooltipContent>
           <DropdownMenuRoot
             {...{

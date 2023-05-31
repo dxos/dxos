@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuArrow,
   DropdownMenuItem,
+  TooltipArrow,
 } from '@dxos/aurora';
 import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
@@ -138,6 +139,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
         >
           <TooltipContent classNames='z-[31]' side='bottom'>
             {t('space options label')}
+            <TooltipArrow />
           </TooltipContent>
           <DropdownMenuRoot
             {...{

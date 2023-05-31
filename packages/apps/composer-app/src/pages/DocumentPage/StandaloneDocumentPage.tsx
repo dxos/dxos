@@ -71,7 +71,7 @@ export const StandaloneDocumentPage = observer(
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent sideOffset={10} classNames='z-10'>
                   {dropdownMenuContent}
                   <DropdownMenuArrow />
                 </DropdownMenuContent>
