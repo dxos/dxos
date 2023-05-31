@@ -4,7 +4,8 @@
 
 import React, { ComponentPropsWithoutRef } from 'react';
 
-import { getSize, mx, Size } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
+import { Size } from '@dxos/aurora-types';
 import { Invitation } from '@dxos/client';
 
 import { inactiveStrokeColor, activeStrokeColor, resolvedStrokeColor } from '../../styles';

@@ -45,7 +45,7 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      async () => Array.from(this._getFiles(sub).keys()), // TODO(dmaretskyi): Fix me.
+      this._list.bind(this),
       (...args) => this.getOrCreateFile(...args),
       () => this._delete(sub),
     );
@@ -64,6 +64,17 @@ export abstract class AbstractStorage implements Storage {
     } catch (err: any) {
       log.catch(err);
     }
+  }
+
+  protected async _list(path: string): Promise<string[]> {
+    // TODO(dmaretskyi): Fix me.
+    return Array.from(this._getFiles(path).keys()).map((filename) => {
+      let name = filename.replace(path, '');
+      if (name.startsWith('/')) {
+        name = name.substring(1);
+      }
+      return name;
+    });
   }
 
   protected getOrCreateFile(path: string, filename: string, opts?: any): File {

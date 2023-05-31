@@ -43,11 +43,14 @@ export default class Open extends BaseCommand {
         return {};
       }
       const { args, flags } = await this.parse(Open);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // const { chromium } = require('playwright');
 
+      const browser = await chromium.launch({ headless: false });
       const pages = await Promise.all(
         range(flags.instances).map(async () => {
-          const browser = await chromium.launch({ headless: false });
-          return await browser.newPage();
+          const context = await browser.newContext();
+          return await context.newPage();
         }),
       );
 

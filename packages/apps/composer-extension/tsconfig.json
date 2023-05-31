@@ -23,12 +23,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    }
-  ]
+  "references": []
 }

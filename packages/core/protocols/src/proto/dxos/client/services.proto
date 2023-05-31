@@ -159,6 +159,15 @@ enum SpaceState {
 }
 
 message Space {
+  message Metrics {
+    optional google.protobuf.Timestamp open = 1;
+    optional google.protobuf.Timestamp pipeline_init_begin = 2;
+    optional google.protobuf.Timestamp control_pipeline_ready = 3;
+    optional google.protobuf.Timestamp data_pipeline_open = 4;
+    optional google.protobuf.Timestamp data_pipeline_ready = 5;
+    optional google.protobuf.Timestamp ready = 6;
+  }
+
   // TODO(dmaretskyi): Consider merging with space metadata records.
   // TODO(dmaretskyi): ...or split into two separate pipeline messages.
   message PipelineState {
@@ -204,6 +213,8 @@ message Space {
   repeated SpaceMember members = 10;
 
   optional dxos.echo.metadata.SpaceCache cache = 20;
+
+  Metrics metrics = 21;
 }
 
 message UpdateSpaceRequest {
