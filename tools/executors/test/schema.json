@@ -17,6 +17,10 @@
       "type": "array",
       "description": "Override which environments to run tests in"
     },
+    "envVariables": {
+      "type": "object",
+      "description": "Environment variables to inject into test process"
+    },
     "devEnvironments": {
       "type": "array",
       "description": "Environments to run tests in during development"

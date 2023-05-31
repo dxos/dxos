@@ -22,6 +22,7 @@ export type MochaExecutorOptions = NodeOptions &
     serveOptions?: { [key: string]: string };
     setup?: string;
     setupOptions?: Record<string, any>;
+    envVariables?: Record<string, string>;
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -42,6 +43,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     resultsPath: resolve(context.root, options.resultsPath),
     coveragePath: resolve(context.root, options.coveragePath),
     headless: options.stayOpen ? false : options.headless,
+    envVariables: options.envVariables,
   };
 
   const includesBrowserEnv =
