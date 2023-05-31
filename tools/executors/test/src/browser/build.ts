@@ -19,6 +19,7 @@ export interface BuildTestsOpts {
   timeout: number;
   checkLeaks: boolean;
   tags: string[];
+  envVariables?: Record<string, string>;
 }
 
 export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
@@ -67,6 +68,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     format: 'iife',
     sourcemap: 'inline',
     outfile: join(opts.outDir, 'bundle.js'),
+    define: { 'process.env': JSON.stringify(opts.envVariables ?? {}) },
     plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()],
   });
 };
