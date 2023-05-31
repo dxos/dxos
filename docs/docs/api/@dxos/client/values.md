@@ -13,7 +13,7 @@ Type: "dxos:app"
 Type: "https://halo.dxos.org/vault.html"
 
 ### [`DEFAULT_DX_PROFILE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L14)
-Type: "DXOS_DEFAULT"
+Type: "dxos-default"
 
 ### [`DEFAULT_INTERNAL_CHANNEL`]()
 Type: "dxos:vault"
