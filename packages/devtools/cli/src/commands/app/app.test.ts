@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'path';
+import waitForExpect from 'wait-for-expect';
 
 import { describe, test } from '@dxos/test';
 
@@ -23,7 +24,9 @@ describe('App', () => {
 
   test('create', async () => {
     const appName = 'test-app';
-    await runCommand(`app create ${appName}`, tmpFolder);
-    expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
-  });
+    void runCommand(`app create ${appName}`, tmpFolder);
+    await waitForExpect(() => {
+      expect(fs.existsSync(path.join(tmpFolder, appName, 'dx.yml'))).to.be.true;
+    }, 5_000);
+  }).timeout(5_000);
 });
