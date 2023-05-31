@@ -16,6 +16,7 @@ import {
   ThemeContext,
   useThemeContext,
   useTranslation,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { getSize, osTx } from '@dxos/aurora-theme';
 import { Dialog, Input } from '@dxos/react-appkit';
@@ -71,10 +72,12 @@ export const StandaloneDocumentPage = observer(
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent sideOffset={10} classNames='z-10'>
-                  {dropdownMenuContent}
-                  <DropdownMenuArrow />
-                </DropdownMenuContent>
+                <DropdownMenuPortal>
+                  <DropdownMenuContent sideOffset={10} classNames='z-10'>
+                    {dropdownMenuContent}
+                    <DropdownMenuArrow />
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
               </DropdownMenuRoot>
             </ThemeContext.Provider>
           </div>

@@ -36,6 +36,8 @@ import {
   DropdownMenuArrow,
   DropdownMenuItem,
   TooltipArrow,
+  TooltipPortal,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
@@ -137,10 +139,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             }
           }}
         >
-          <TooltipContent classNames='z-[31]' side='bottom'>
-            {t('space options label')}
-            <TooltipArrow />
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent classNames='z-[31]' side='bottom'>
+              {t('space options label')}
+              <TooltipArrow />
+            </TooltipContent>
+          </TooltipPortal>
           <DropdownMenuRoot
             {...{
               open: optionsMenuOpen,
@@ -164,41 +168,43 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                 </Button>
               </TooltipTrigger>
             </DropdownMenuTrigger>
-            <DropdownMenuContent classNames='z-[31]'>
-              <DropdownMenuItem asChild>
-                <Input
-                  label={t('space name label')}
-                  labelVisuallyHidden
-                  value={space.properties.name ?? ''}
-                  placeholder={t('untitled space title')}
-                  onChange={({ target: { value } }) => (space.properties.name = value)}
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleViewInvitations} classNames='gap-2'>
-                <PaperPlaneTilt className={getSize(4)} />
-                <span>{t('view space invitations label', { ns: 'os' })}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleHideSpace} classNames='gap-2'>
-                <EyeSlash className={getSize(4)} />
-                <span>{t('hide space label')}</span>
-              </DropdownMenuItem>
-              <Separator />
-              <DropdownMenuItem
-                classNames='gap-2'
-                onClick={async () => {
-                  const backupBlob = await backupSpace(space, t('untitled document title'));
-                  return download(backupBlob, `${spaceDisplayName} backup.zip`);
-                }}
-              >
-                <Download className={getSize(4)} />
-                <span>{t('download all docs in space label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem classNames='gap-2' onClick={() => setRestoreDialogOpen(true)}>
-                <Upload className={getSize(4)} />
-                <span>{t('upload all docs in space label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-[31]'>
+                <DropdownMenuItem asChild>
+                  <Input
+                    label={t('space name label')}
+                    labelVisuallyHidden
+                    value={space.properties.name ?? ''}
+                    placeholder={t('untitled space title')}
+                    onChange={({ target: { value } }) => (space.properties.name = value)}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleViewInvitations} classNames='gap-2'>
+                  <PaperPlaneTilt className={getSize(4)} />
+                  <span>{t('view space invitations label', { ns: 'os' })}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleHideSpace} classNames='gap-2'>
+                  <EyeSlash className={getSize(4)} />
+                  <span>{t('hide space label')}</span>
+                </DropdownMenuItem>
+                <Separator />
+                <DropdownMenuItem
+                  classNames='gap-2'
+                  onClick={async () => {
+                    const backupBlob = await backupSpace(space, t('untitled document title'));
+                    return download(backupBlob, `${spaceDisplayName} backup.zip`);
+                  }}
+                >
+                  <Download className={getSize(4)} />
+                  <span>{t('download all docs in space label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem classNames='gap-2' onClick={() => setRestoreDialogOpen(true)}>
+                  <Upload className={getSize(4)} />
+                  <span>{t('upload all docs in space label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
           </DropdownMenuRoot>
         </TooltipRoot>
         <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>

@@ -12,6 +12,7 @@ import {
   DropdownMenuArrow,
   DensityProvider,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Message } from '@dxos/kai-types';
@@ -69,10 +70,12 @@ export const AppMenu = () => {
                 <List className={getSize(6)} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent classNames='z-50'>
-              <Actions />
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-50'>
+                <Actions />
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
           </DropdownMenuRoot>
         </DensityProvider>
       </div>

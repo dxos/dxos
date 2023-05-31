@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuArrow,
   DropdownMenuItem,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { defaultDescription, getSize } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
@@ -89,17 +90,19 @@ const EmbeddedLayoutImpl = () => {
                 <CaretDown />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={handleSaveAndCloseEmbed} classNames='block'>
-                <p>{t('save and close label')}</p>
-                <p className={defaultDescription}>{t('save and close description')}</p>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCloseEmbed} classNames='block'>
-                <p>{t('close label', { ns: 'appkit' })}</p>
-                <p className={defaultDescription}>{t('close embed description')}</p>
-              </DropdownMenuItem>
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
+            <DropdownMenuPortal>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleSaveAndCloseEmbed} classNames='block'>
+                  <p>{t('save and close label')}</p>
+                  <p className={defaultDescription}>{t('save and close description')}</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCloseEmbed} classNames='block'>
+                  <p>{t('close label', { ns: 'appkit' })}</p>
+                  <p className={defaultDescription}>{t('close embed description')}</p>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
           </DropdownMenuRoot>
         </ButtonGroup>
       </div>

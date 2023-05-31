@@ -24,6 +24,8 @@ import {
   DropdownMenuContent,
   TooltipContent,
   TooltipArrow,
+  TooltipPortal,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
@@ -79,10 +81,12 @@ export const DocumentLinkTreeItem = observer(
             }
           }}
         >
-          <TooltipContent classNames='z-[31]' side='bottom'>
-            {t('document options label')}
-            <TooltipArrow />
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent classNames='z-[31]' side='bottom'>
+              {t('document options label')}
+              <TooltipArrow />
+            </TooltipContent>
+          </TooltipPortal>
           <DropdownMenuRoot
             {...{
               open: optionsMenuOpen,
@@ -106,13 +110,15 @@ export const DocumentLinkTreeItem = observer(
                 </Button>
               </TooltipTrigger>
             </DropdownMenuTrigger>
-            <DropdownMenuContent classNames='z-[31]'>
-              <DropdownMenuItem onClick={handleDelete} classNames='gap-2'>
-                <FileMinus className={getSize(4)} />
-                <span>{t('delete document label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-[31]'>
+                <DropdownMenuItem onClick={handleDelete} classNames='gap-2'>
+                  <FileMinus className={getSize(4)} />
+                  <span>{t('delete document label')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
           </DropdownMenuRoot>
         </TooltipRoot>
         <ListItemEndcap classNames='is-6 flex items-center'>

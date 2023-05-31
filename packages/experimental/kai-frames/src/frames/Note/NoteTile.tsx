@@ -12,6 +12,7 @@ import {
   DropdownMenuArrow,
   DropdownMenuTrigger,
   DropdownMenuItem,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { Composer } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
@@ -71,10 +72,12 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
                 <List className={getSize(5)} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent classNames='z-50'>
-              <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
+            <DropdownMenuPortal>
+              <DropdownMenuContent classNames='z-50'>
+                <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
+                <DropdownMenuArrow />
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
           </DropdownMenuRoot>
         </div>
 

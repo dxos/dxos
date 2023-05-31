@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuPortal,
 } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 
@@ -60,23 +61,25 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
             <DotsThreeCircle className={getSize(6)} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' classNames='z-50'>
-          {actions?.map((action, i) => (
-            <div key={i}>
-              {i > 0 && <DropdownMenuSeparator />}
-              {action?.map((action, i) => {
-                const { label, Icon } = action;
-                return (
-                  <DropdownMenuItem key={i} onClick={() => handleAction(action)}>
-                    <Icon className={getSize(5)} />
-                    <span className='mis-2'>{label}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </div>
-          ))}
-          <DropdownMenuArrow />
-        </DropdownMenuContent>
+        <DropdownMenuPortal>
+          <DropdownMenuContent align='end' classNames='z-50'>
+            {actions?.map((action, i) => (
+              <div key={i}>
+                {i > 0 && <DropdownMenuSeparator />}
+                {action?.map((action, i) => {
+                  const { label, Icon } = action;
+                  return (
+                    <DropdownMenuItem key={i} onClick={() => handleAction(action)}>
+                      <Icon className={getSize(5)} />
+                      <span className='mis-2'>{label}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </div>
+            ))}
+            <DropdownMenuArrow />
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
       </DropdownMenuRoot>
     </div>
   );
