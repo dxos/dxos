@@ -20,7 +20,7 @@ import {
 
 const StorybookDropdownMenu = () => {
   return (
-    <DropdownMenuRoot>
+    <DropdownMenuRoot defaultOpen>
       <DropdownMenuTrigger asChild>
         <Button> Customise options</Button>
       </DropdownMenuTrigger>
@@ -105,4 +105,7 @@ export default {
 
 export const Default = {
   args: {},
+  parameters: {
+    chromatic: { delay: 500 },
+  },
 };
