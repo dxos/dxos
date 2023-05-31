@@ -4483,6 +4483,7 @@ importers:
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
       vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
     dependencies:
       '@dxos/react-hooks': link:../primitives/react-hooks
       '@dxos/react-input': link:../primitives/react-input
@@ -4513,6 +4514,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/ui/aurora-composer:
     specifiers:
@@ -39994,6 +39996,10 @@ packages:
     transitivePeerDependencies:
       - '@types/babel__core'
       - supports-color
+    dev: true
+
+  /vite-plugin-turbosnap/1.0.2:
+    resolution: {integrity: sha512-irjKcKXRn7v5bPAg4mAbsS6DgibpP1VUFL9tlgxU6lloK6V9yw9qCZkS+s2PtbkZpWNzr3TN3zVJAc6J7gJZmA==}
     dev: true
 
   /vite-plugin-web-extension/3.0.7_vite@4.3.9:
