@@ -5,20 +5,20 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { defaultTooltip } from '../fragments';
+import { arrow, defaultTooltip, minorSurfaceElevation } from '../fragments';
 
 export type TooltipStyleProps = {};
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
   mx(
     'inline-flex items-center rounded-md plb-2 pli-3',
-    'shadow-lg bg-white dark:bg-neutral-800',
+    'bg-white dark:bg-neutral-800',
+    minorSurfaceElevation,
     defaultTooltip,
     ...etc,
   );
 
-export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
-  mx('fill-white dark:fill-neutral-800', ...etc);
+export const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
 
 export const tooltipTheme: Theme<TooltipStyleProps> = {
   content: tooltipContent,
