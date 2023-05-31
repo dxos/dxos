@@ -18,37 +18,28 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../apps/types"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../common/observable-object"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-shell"
-    },
-    {
       "path": "../../ui/aurora"
     },
     {
-      "path": "../../ui/aurora-theme"
+      "path": "../../ui/aurora-composer"
     },
     {
       "path": "../../ui/aurora-theme"
     },
     {
       "path": "../../ui/react-appkit"
-    },
-    {
-      "path": "../kai-frames"
-    },
-    {
-      "path": "../kai-types"
     }
   ],
   "ts-node": {
