@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@dxos/cli": "workspace:*",
