@@ -16,7 +16,7 @@ export const SidebarTree = observer(() => {
   const { t } = useTranslation('composer');
   const identity = useIdentity();
   return (
-    <div className='grow flex flex-col plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto'>
+    <div className='grow flex flex-col plb-1.5 pis-1 pie-1.5 min-bs-0 overflow-y-auto overscroll-contain'>
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
