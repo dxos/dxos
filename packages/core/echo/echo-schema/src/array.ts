@@ -10,6 +10,8 @@ import { log } from '@dxos/log';
 import { base } from './defs';
 import { EchoObject } from './object';
 import { TypedObject } from './typed-object';
+import { inspect } from 'node:util';
+import { CustomInspectFunction } from 'node:util';
 
 const isIndex = (property: string | symbol): property is string =>
   typeof property === 'string' && parseInt(property).toString() === property;
@@ -305,6 +307,12 @@ export class EchoArray<T> implements Array<T> {
     return this.length;
   }
 
+  [inspect.custom]: CustomInspectFunction = (depth, options) => {
+    const data = this.slice();
+
+    return inspect(data, { ...options, depth: typeof options.depth === 'number' ? options.depth - 1 : options.depth });
+  }
+
   //
   // Impl.
   //
@@ -341,10 +349,10 @@ export class EchoArray<T> implements Array<T> {
     } else {
       assert(
         value === null ||
-          value === undefined ||
-          typeof value === 'boolean' ||
-          typeof value === 'number' ||
-          typeof value === 'string',
+        value === undefined ||
+        typeof value === 'boolean' ||
+        typeof value === 'number' ||
+        typeof value === 'string',
         `Invalid type: ${JSON.stringify(value)}`,
       );
       return value;
