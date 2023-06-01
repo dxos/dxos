@@ -114,8 +114,8 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
   }
 
   [subscribe](callback: (value: any) => void) {
-    this._callbacks.add(callback);
-    return () => this._callbacks.delete(callback);
+    this[base]._callbacks.add(callback);
+    return () => this[base]._callbacks.delete(callback);
   }
 
   /**
