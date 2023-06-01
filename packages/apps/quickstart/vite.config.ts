@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
-    host: true
+    host: true,
   },
   optimizeDeps: {
     force: true,
@@ -19,7 +19,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/aurora',
       '@dxos/aurora-theme',
-      '@dxos/config'
+      '@dxos/config',
     ],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.
@@ -30,34 +30,29 @@ export default defineConfig({
             onResolve({ filter: /yjs/ }, () => {
               return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
             });
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   },
   build: {
     outDir: 'out/quickstart',
     commonjsOptions: {
-      include: [/packages/, /node_modules/]
-    }
+      include: [/packages/, /node_modules/],
+    },
   },
 
   plugins: [
     ConfigPlugin(),
     react(),
     ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')
-      ]
+      root: __dirname,
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
     VitePWA({
       registerType: 'prompt',
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -68,15 +63,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ]
+            type: 'image/png',
+          },
+        ],
+      },
+    }),
+  ],
 });
