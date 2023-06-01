@@ -63,4 +63,25 @@ describe('ordered-set', () => {
     expect(queriedContainer.records.length).to.equal(1);
     expect(queriedContainer.records[0].contacts?.[0].name).to.equal('Mykola');
   });
+
+  test('reset array', async () => {
+    const db = await createDatabase();
+    const root = db.add(new Container());
+    await db.flush();
+    root.records.push({ title: 'one' });
+
+    expect(root.records).to.have.length(1);
+
+    // debugger;
+    root.records = [];
+    expect(root.records).to.have.length(0);
+    await db.flush();
+    expect(root.records).to.have.length(0);
+
+    root.records.push({ title: 'two' });
+
+    expect(root.records).to.have.length(1);
+    await db.flush();
+    expect(root.records).to.have.length(1);
+  });
 });
