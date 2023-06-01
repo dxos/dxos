@@ -68,7 +68,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-  ) {}
+  ) { }
 
   // TODO(burdon): Remove.
   get spaces() {
@@ -207,6 +207,9 @@ export class DataSpaceManager {
         );
         session.addExtension('dxos.mesh.teleport.objectsync', space.snapshotManager.objectSync.createExtension());
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
+      },
+      onAuthFailure: () => {
+        log.warn('auth failure');
       },
       memberKey: this._signingContext.identityKey,
     });

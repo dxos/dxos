@@ -40,6 +40,7 @@ export type SpaceProtocolOptions = {
    * Additional extensions can be added here.
    */
   onSessionAuth?: (session: Teleport) => void;
+  onAuthFailure?: (session: Teleport) => void;
 };
 
 /**
@@ -49,6 +50,7 @@ export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
+  private readonly _onAuthFailure?: (session: Teleport) => void;
 
   @logInfo
   private readonly _topic: PublicKey;
@@ -71,10 +73,11 @@ export class SpaceProtocol {
     return this._swarmIdentity.peerKey;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, onSessionAuth }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
+    this._onAuthFailure = onAuthFailure;
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -130,6 +133,7 @@ export class SpaceProtocol {
         wireParams,
         swarmIdentity: this._swarmIdentity,
         onSessionAuth: this._onSessionAuth,
+        onAuthFailure: this._onAuthFailure,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -150,6 +154,8 @@ export type SpaceProtocolSessionParams = {
    * Additional extensions can be added here.
    */
   onSessionAuth?: (session: Teleport) => void;
+
+  onAuthFailure?: (session: Teleport) => void;
 };
 
 export enum AuthStatus {
@@ -167,6 +173,7 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly _wireParams: WireProtocolParams;
 
   private readonly _onSessionAuth?: (session: Teleport) => void;
+  private readonly _onAuthFailure?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
@@ -182,10 +189,11 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, onSessionAuth }: SpaceProtocolSessionParams) {
+  constructor({ wireParams, swarmIdentity, onSessionAuth, onAuthFailure }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
+    this._onAuthFailure = onAuthFailure;
 
     this._teleport = new Teleport(wireParams);
   }
@@ -202,14 +210,14 @@ export class SpaceProtocolSession implements WireProtocol {
         provider: this._swarmIdentity.credentialProvider,
         verifier: this._swarmIdentity.credentialAuthenticator,
         onAuthSuccess: () => {
-          this._authStatus = AuthStatus.SUCCESS;
           log('Peer authenticated');
+          this._authStatus = AuthStatus.SUCCESS;
           this._onSessionAuth?.(this._teleport);
           // TODO(dmaretskyi): Configure replicator to upload.
         },
         onAuthFailure: () => {
-          log.warn('Auth failed');
           this._authStatus = AuthStatus.FAILURE;
+          this._onAuthFailure?.(this._teleport);
         },
       }),
     );
