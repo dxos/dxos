@@ -433,6 +433,11 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/proto-guard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/client/package.json",
           "jsonpath": "$.version"
         },
