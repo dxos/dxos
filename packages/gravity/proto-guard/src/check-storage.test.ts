@@ -18,13 +18,16 @@ describe('Tests against old storage', () => {
 
   beforeAll(() => {
     // Copy storage to tmp folder to not affect storage image.
+    log.info(`Storage version ${getLastVersion()}`);
     fse.mkdirSync(testStoragePath, { recursive: true });
     const storagePath = path.join(getStorageDir(), getLastVersion().toString());
     fse.copySync(storagePath, testStoragePath, { overwrite: true });
+    log.info('Copied storage', { src: storagePath, dest: testStoragePath });
   });
 
   test('check if space loads', async () => {
     const client = new Client({ config: getConfig(testStoragePath) });
+    log.info('Running test', { storage: client.config.values.runtime?.client?.storage?.path });
     afterTest(() => client.destroy());
     await client.initialize();
     const space = client.spaces.get()[0];
