@@ -179,6 +179,8 @@ const configColors = Object.keys(paletteConfigs).reduce((acc: Record<string, Rec
   return acc;
 }, {});
 
+console.log('[neutral]', configColors.neutral);
+
 export const tailwindConfig = ({
   env = 'production',
   root = './',
