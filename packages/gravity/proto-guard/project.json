@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/gravity/proto-guard/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/proto-guard/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/gravity/proto-guard",
+        "environments": [
+          "nodejs"
+        ],
+        "outputPath": "tmp/mocha/packages/gravity/proto-guard",
+        "resultsPath": "test-results/packages/gravity/proto-guard",
+        "testPatterns": [
+          "packages/gravity/proto-guard/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/proto-guard/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  }
+}
