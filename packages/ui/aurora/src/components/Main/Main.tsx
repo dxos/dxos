@@ -61,7 +61,7 @@ type MainRootProps = PropsWithChildren<{
 
 const MainRoot = ({
   sidebarOpen: propsSidebarOpen,
-  defaultSidebarOpen,
+  defaultSidebarOpen, // TODO(burdon): Make controlled.
   onSidebarOpenChange,
   children,
   ...props
