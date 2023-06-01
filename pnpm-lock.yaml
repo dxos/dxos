@@ -4074,14 +4074,18 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
+      '@types/fs-extra': ^9.0.4
       '@types/node': ^18.11.9
+      fs-extra: ^8.1.0
       ts-node: 10.9.1
       typescript: ^5.0.4
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
+      fs-extra: 8.1.0
     devDependencies:
+      '@types/fs-extra': 9.0.13
       '@types/node': 18.11.9
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4

@@ -22,9 +22,11 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "fs-extra": "^8.1.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^9.0.4",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
     "typescript": "^5.0.4"

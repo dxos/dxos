@@ -16,16 +16,15 @@ export const getStorageDir = () => {
 };
 
 export const getLastVersion = () => {
-  const versions = fs.readdirSync(getStorageDir()).map((version) => Number(version));
-
+  const versions = fs
+    .readdirSync(getStorageDir())
+    .map((version) => Number(version))
+    .filter((version) => !Number.isNaN(version));
   return Math.max(...versions, 0);
 };
 
-export const getConfig = (storageVersion?: number) => {
-  storageVersion ??= getLastVersion();
-
-  return new Config({
+export const getConfig = (path: string) =>
+  new Config({
     version: 1,
-    runtime: { client: { storage: { persistent: true, path: path.join(getStorageDir(), storageVersion.toString()) } } },
+    runtime: { client: { storage: { persistent: true, path } } },
   });
-};
