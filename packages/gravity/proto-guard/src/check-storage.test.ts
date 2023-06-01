@@ -11,16 +11,16 @@ import { log } from '@dxos/log';
 import { afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { expectedExpando, expectedProperties, expectedText } from './expected-objects';
-import { getConfig, getLastVersion, getStorageDir } from './util';
+import { getConfig, getStorageVersion, getStorageDir } from './util';
 
 describe('Tests against old storage', () => {
-  const testStoragePath = path.join('/tmp/dxos/proto-guard/storage/', getLastVersion().toString());
+  const testStoragePath = path.join('/tmp/dxos/proto-guard/storage/', getStorageVersion().toString());
 
   beforeAll(() => {
     // Copy storage to tmp folder to not affect storage image.
-    log.info(`Storage version ${getLastVersion()}`);
+    log.info(`Storage version ${getStorageVersion()}`);
     fse.mkdirSync(testStoragePath, { recursive: true });
-    const storagePath = path.join(getStorageDir(), getLastVersion().toString());
+    const storagePath = path.join(getStorageDir(), getStorageVersion().toString());
     fse.copySync(storagePath, testStoragePath, { overwrite: true });
     log.info('Copied storage', { src: storagePath, dest: testStoragePath });
   });

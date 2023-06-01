@@ -8,14 +8,17 @@ import pkgUp from 'pkg-up';
 import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
+export const getPackageDir = () =>
+  path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('No package.json found')));
+
 export const getStorageDir = () => {
-  const packageDirname = path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('No package.json found')));
+  const packageDirname = getPackageDir();
   const storageDir = path.join(packageDirname, 'storage');
   fs.mkdirSync(storageDir, { recursive: true });
   return storageDir;
 };
 
-export const getLastVersion = () => {
+export const getStorageVersion = () => {
   const versions = fs
     .readdirSync(getStorageDir())
     .map((version) => Number(version))
