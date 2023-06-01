@@ -9,7 +9,7 @@ import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
 export const getStorageDir = () => {
-  const packageDirname = path.dirname(pkgUp.sync() ?? raise(new Error('No package.json found')));
+  const packageDirname = path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('No package.json found')));
   const storageDir = path.join(packageDirname, 'storage');
   fs.mkdirSync(storageDir, { recursive: true });
   return storageDir;
