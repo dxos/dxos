@@ -16,13 +16,17 @@
     "dist",
     "src"
   ],
-  "scripts": {},
+  "scripts": {
+    "bump-version": "ts-node ./src/bump-storage-version"
+  },
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/debug": "workspace:*"
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "ts-node": "10.9.1",
     "typescript": "^5.0.4"
   },
   "publishConfig": {
