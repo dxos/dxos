@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Client } from '@dxos/client';
+import { Client, Text } from '@dxos/client';
 import { log } from '@dxos/log';
 import { afterTest, test } from '@dxos/test';
 
@@ -25,7 +25,7 @@ test('check if space loads', async () => {
 
   // TODO(maykola): add ability to query `Text`-s.
   const text = space.db.query({ text: expectedText }).objects[0];
-  expect(text.text).to.equal(expectedText);
+  expect((text as unknown as Text).text).to.equal(expectedText);
 });
 
 const contains = (container: Record<string, any>, contained: Record<string, any>): boolean => {
