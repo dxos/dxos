@@ -18,7 +18,7 @@ export type SerializedObject = {
   /**
    * Text content of Text object.
    */
-  text: string;
+  text?: string;
 };
 
 export type SerializedSpace = {
