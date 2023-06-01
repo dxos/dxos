@@ -101,7 +101,7 @@ export default defineConfig({
     //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   dryRun: !process.env.CI
+    //   dryRun: process.env.DX_ENVIRONMENT !== 'production'
     // })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
