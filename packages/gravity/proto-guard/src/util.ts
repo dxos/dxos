@@ -8,6 +8,8 @@ import pkgUp from 'pkg-up';
 import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
+const STORAGE_VERSION_FILENAME = '.storage-version';
+
 export const getPackageDir = () =>
   path.dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('No package.json found')));
 
@@ -19,11 +21,17 @@ export const getStorageDir = () => {
 };
 
 export const getStorageVersion = () => {
-  const versions = fs
-    .readdirSync(getStorageDir())
-    .map((version) => Number(version))
-    .filter((version) => !Number.isNaN(version));
-  return Math.max(...versions, 0);
+  const filePath = path.join(getPackageDir(), STORAGE_VERSION_FILENAME);
+  return Number(fs.readFileSync(filePath).toString());
+};
+
+/**
+ * Bumps storage version in .storage-version file
+ */
+export const bumpStorageVersion = () => {
+  const filePath = path.join(getPackageDir(), STORAGE_VERSION_FILENAME);
+  const version = Number(fs.readFileSync(filePath).toString());
+  fs.writeFileSync(filePath, `${(version + 1).toString()}\n`);
 };
 
 export const getConfig = (path: string) =>
