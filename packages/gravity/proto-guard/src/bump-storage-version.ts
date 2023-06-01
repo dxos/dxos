@@ -2,26 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import path from 'node:path';
-
-import { Client, Config, Expando, Text } from '@dxos/client';
+import { Client, Expando, Text } from '@dxos/client';
 import { log } from '@dxos/log';
 
 import { expectedExpando, expectedProperties, expectedText } from './expected-objects';
-import { getLastVersion, getStorageDir } from './util';
+import { getConfig, getLastVersion } from './util';
 
 const main = async () => {
-  const newVersion = (getLastVersion() + 1).toString();
-  const storagePath = path.join(getStorageDir(), newVersion);
+  const newVersion = getLastVersion() + 1;
 
   let client: Client;
   {
     // Init client.
-    const config = new Config({
-      version: 1,
-      runtime: { client: { storage: { persistent: true, path: storagePath } } },
-    });
-    client = new Client({ config });
+    client = new Client({ config: getConfig(newVersion) });
     await client.initialize();
   }
 
