@@ -2,14 +2,16 @@
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
-    "compile": {
+    "build": {
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/gravity/proto-guard/src/index.ts",
-          "packages/gravity/proto-guard/src/main.ts"
+          "packages/gravity/proto-guard/src/index.ts"
         ],
-        "outputPath": "packages/gravity/proto-guard/dist/lib"
+        "outputPath": "packages/gravity/proto-guard/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,6 +33,9 @@
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/gravity/proto-guard",
+        "environments": [
+          "nodejs"
+        ],
         "outputPath": "tmp/mocha/packages/gravity/proto-guard",
         "resultsPath": "test-results/packages/gravity/proto-guard",
         "testPatterns": [
