@@ -156,8 +156,7 @@ const configColors = Object.keys(paletteConfigs).reduce((acc: Record<string, Rec
     keyColor: hexToLch(paletteConfig.keyColor),
   });
   const defaultShades = paletteShadesFromCurve(curve, 21, [0, 100], 1, 24).reverse();
-  const valueToHex = (value: string) => {
-    const shadeNumber = parseInt(value);
+  const renderCssValue = (shadeNumber: number) => {
     if (shadeNumber > 999) {
       return '#000000';
     } else if (shadeNumber < 1) {
@@ -173,8 +172,7 @@ const configColors = Object.keys(paletteConfigs).reduce((acc: Record<string, Rec
     }
   };
   acc[palette] = shadeNumbers.reduce((acc: Record<string, string>, shadeNumber) => {
-    const shade = `${shadeNumber}`;
-    acc[shade] = valueToHex(shade);
+    acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
     return acc;
   }, {});
 
