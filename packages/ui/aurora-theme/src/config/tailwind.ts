@@ -184,12 +184,10 @@ export const configColors = Object.keys(paletteConfigs).reduce(
 
 export const tailwindConfig = ({
   env = 'production',
-  root = './',
   content = [],
   extensions = [],
 }: {
   env?: string;
-  root?: string;
   content?: string[];
   extensions?: Partial<TailwindThemeConfig>[];
 }): TailwindConfig => ({
