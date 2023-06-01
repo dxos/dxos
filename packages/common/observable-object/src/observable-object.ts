@@ -42,7 +42,40 @@ class ObservableObjectImpl<T> implements ObservableObject {
     return () => this._subscriptions.delete(callback);
   }
 
-  _emitUpdate() {
+  private _emitUpdate() {
+    for (const callback of this._subscriptions) {
+      callback(this);
+    }
+  }
+}
+
+class ObservableArray<T> extends Array<T> implements ObservableObject {
+  private _subscriptions = new Set<(value: ObservableArray<T>) => void>();
+
+  constructor(...args: T[]) {
+    super(...args);
+
+    // TODO(wittjosiah): Implement other proxy methods here: enuming properties, instanceof, etc.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+    return new Proxy(this, {
+      get: (_target, property, receiver) => {
+        logObjectAccess(this);
+        return Reflect.get(this, property, receiver);
+      },
+      set: (_target, property, value, receiver) => {
+        logObjectAccess(this);
+        this._emitUpdate();
+        return Reflect.set(this, property, value, receiver);
+      },
+    });
+  }
+
+  [subscribe](callback: (value: any) => void) {
+    this._subscriptions.add(callback);
+    return () => this._subscriptions.delete(callback);
+  }
+
+  private _emitUpdate() {
     for (const callback of this._subscriptions) {
       callback(this);
     }
@@ -51,8 +84,7 @@ class ObservableObjectImpl<T> implements ObservableObject {
 
 export const createStore = <T extends object | any[]>(data?: T): T => {
   if (Array.isArray(data)) {
-    // TODO(wittjosiah): Implement array as well.
-    throw new Error('Not implemented');
+    return new ObservableArray(...data) as T;
   } else {
     return new ObservableObjectImpl(data) as T;
   }
