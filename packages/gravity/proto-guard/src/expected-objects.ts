@@ -8,7 +8,7 @@ export const expectedProperties: PropertiesProps = {
   name: 'PROTO_GUARD_SPACE',
 };
 
-export const expectedExpando: Record<string, any> = {
+export const expectedExpando: Record<string, any> & { type: 'expando' } = {
   type: 'expando',
   in: 'such',
   manner: ['we', 'will', 'test', 'if', 'expando', 'loads', 'correctly'],
