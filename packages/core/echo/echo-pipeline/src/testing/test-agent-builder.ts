@@ -146,8 +146,8 @@ export class TestAgent {
     spaceKey?: PublicKey,
     genesisKey?: PublicKey,
     dataKey?: PublicKey,
+    saveMetadata = false,
   ): Promise<Space> {
-    let saveMetadata = false;
     if (!spaceKey) {
       saveMetadata = true;
       spaceKey = await this.keyring.createKey();
