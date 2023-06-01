@@ -23,7 +23,7 @@ describe('database (unit)', () => {
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
-    peer.confirm();
+    await peer.confirm();
     expect(peer.confirmed).toEqual(1);
     expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]));
 
@@ -47,7 +47,7 @@ describe('database (unit)', () => {
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
-    peer.confirm();
+    await peer.confirm();
     expect(peer.confirmed).toEqual(1);
     expect(peer.timeframe).toEqual(new Timeframe([[peer.key, 1]]));
     peer.makeSnapshot();
@@ -72,7 +72,7 @@ describe('database (unit)', () => {
     peer1.proxy.mutate(
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
-    peer1.confirm();
+    await peer1.confirm();
 
     peer2.replicate(peer1.timeframe);
 
@@ -92,29 +92,27 @@ describe('database (unit)', () => {
       createModelMutation(id, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('test', 42).build())),
     );
 
-    peer1.confirm();
+    await peer1.confirm();
     peer2.replicate(peer1.timeframe);
 
     expect(peer2.items.getItem(id)).toBeUndefined();
 
     peer1.proxy.commitBatch();
-    peer1.confirm();
+    await peer1.confirm();
     peer2.replicate(peer1.timeframe);
 
     // TODO(dmaretskyi): Helper functions to compare state.
     expect(peer1.items.getItem(id)!.state).toEqual(peer1.items.getItem(id)!.state);
   });
 
-  // TODO(dmaretskyi): Flush is broken in this test database fixture.
-  test
-    .skip('flush', async () => {
-      const builder = new DatabaseTestBuilder();
-      const peer = await builder.createPeer();
+  test('flush', async () => {
+    const builder = new DatabaseTestBuilder();
+    const peer = await builder.createPeer();
 
-      const id = PublicKey.random().toHex();
-      peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
-      peer.confirm();
-      await peer.proxy.flush();
-    })
+    const id = PublicKey.random().toHex();
+    peer.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
+    await peer.confirm();
+    await peer.proxy.flush();
+  })
     .timeout(100);
 });

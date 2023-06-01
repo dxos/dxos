@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -15,6 +15,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { DatabaseHost } from '../dbhost';
+import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
 
 const SPACE_KEY = PublicKey.random();
 
@@ -27,6 +28,12 @@ export class DatabaseTestBuilder {
     await peer.open();
     return peer;
   }
+}
+
+type WriteRequest = {
+  receipt: WriteReceipt;
+  options: WriteOptions;
+  trigger: Trigger;
 }
 
 export class DatabaseTestPeer {
@@ -60,12 +67,14 @@ export class DatabaseTestPeer {
 
   private readonly _onConfirm = new Event();
 
-  constructor(public readonly rig: DatabaseTestBuilder) {}
+  private readonly _writes = new Set<WriteRequest>();
+
+  constructor(public readonly rig: DatabaseTestBuilder) { }
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
     this.host = new DatabaseHost({
-      write: async (message) => {
+      write: async (message, { afterWrite }: WriteOptions) => {
         const seq =
           this.feedMessages.push({
             timeframe: this.timeframe,
@@ -74,11 +83,17 @@ export class DatabaseTestPeer {
             },
           }) - 1;
 
-        await this._onConfirm.waitFor(() => this.confirmed >= seq);
-        return {
-          seq,
-          feedKey: this.key,
+        const request: WriteRequest = {
+          receipt: {
+            seq,
+            feedKey: this.key,
+          },
+          options: { afterWrite },
+          trigger: new Trigger(),
         };
+        this._writes.add(request);
+        await request.trigger.wait();
+        return request.receipt;
       },
     });
 
@@ -96,9 +111,17 @@ export class DatabaseTestPeer {
    * Confirm mutations written to the local feed.
    * @param seq Sequence number of the mutation to confirm. If not specified, all mutations will be confirmed.
    */
-  confirm(seq?: number) {
+  async confirm(seq?: number) {
     this.confirmed = seq ?? this.feedMessages.length - 1;
     this._onConfirm.emit();
+
+    for (const request of [...this._writes]) {
+      if (this.confirmed >= request.receipt.seq) {
+        this._writes.delete(request);
+        await request.options.afterWrite?.(request.receipt);
+        request.trigger.wake();
+      }
+    }
 
     this._processMessages(Timeframe.merge(this.timeframe, new Timeframe([[this.key, this.confirmed]])));
   }
