@@ -2,21 +2,6 @@
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/gravity/proto-guard/src/index.ts"
-        ],
-        "outputPath": "packages/gravity/proto-guard/dist/lib",
-        "platforms": [
-          "node"
-        ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
