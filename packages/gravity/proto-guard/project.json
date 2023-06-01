@@ -1,0 +1,31 @@
+{
+  "sourceRoot": "packages/gravity/proto-guard/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/gravity/proto-guard/src/index.ts",
+          "packages/gravity/proto-guard/src/main.ts"
+        ],
+        "outputPath": "packages/gravity/proto-guard/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/proto-guard/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  }
+}
