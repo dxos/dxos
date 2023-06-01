@@ -9,9 +9,11 @@
   "type": "module",
   "scripts": {
     "apidoc": "apidoc",
+    "prebuild": "dxtype src/stories/proto/TaskList.proto src/stories/proto/gen/TaskList.ts",
+    "build": "tsc && tsc -p src/stories/react/tsconfig.json && tsc -p src/templates/vite/tsconfig.json",
     "bundle": "vuepress build docs",
+    "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir src/stories/react/out --exit-zero-on-changes",
     "clean:api": "rm -rf docs/api",
-    "prebuild": "dxtype src/demos/proto/schema.proto src/demos/proto/gen/schema.ts",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
     "serve": "vuepress dev docs",
     "typedoc": "typedoc"
@@ -49,6 +51,7 @@
     "@vuepress/plugin-register-components": "2.0.0-beta.61",
     "@vuepress/plugin-search": "2.0.0-beta.61",
     "change-case": "^4.1.2",
+    "chromatic": "^6.17.0",
     "codesandbox-import-utils": "^2.2.3",
     "eslint": "^8.41.0",
     "front-matter": "^4.0.2",

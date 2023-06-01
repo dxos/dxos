@@ -35,8 +35,16 @@ This demonstrates how two peers would synchronize over ECHO (The Eventually Cons
 
 Type in the boxes below to create new list items and experiment with the replication toggle to see how clients reconcile when returning from offline mode. [Learn more about ECHO](/guide/).
 
-```tsx{28} file=../src/demos/TaskList.tsx#L12-L47 showcase peers=2 controls=airplane,fork setup=identity,space
-const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number }) => {
+```tsx file=../src/stories/react/examples/TaskList.tsx#L5-L48 showcase peers=2 controls=fork
+import React, { KeyboardEventHandler, useState } from 'react';
+
+import type { PublicKey } from '@dxos/client';
+import { useQuery, useSpace } from '@dxos/react-client';
+
+import { Task } from '../../proto';
+
+const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
+  const space = useSpace(spaceKey);
   const tasks = useQuery(space, Task.filter());
   const [input, setInput] = useState<HTMLInputElement>();
 
@@ -44,15 +52,15 @@ const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number })
     if (event.key === 'Enter' && input) {
       const task = new Task({ title: input.value });
       input.value = '';
-      space.db.add(task);
+      space?.db.add(task);
     }
   };
 
-  const inputId = `createTaskInput--${clientIndex}`;
+  const inputId = `createTaskInput--${id}`;
 
   return (
     <div className='task-list'>
-      <p role='heading'>{`Peer ${clientIndex + 1}`}</p>
+      <p role='heading'>{`Peer ${id + 1}`}</p>
       <input
         aria-label='Create new item'
         placeholder='New item'
@@ -65,7 +73,7 @@ const TaskList = ({ space, clientIndex }: { space: Space; clientIndex: number })
           <div role='listitem' key={task.id}>
             <input type='checkbox' checked={!!task.completed} onChange={() => (task.completed = !task.completed)} />
             <p>{task.title}</p>
-            <button onClick={() => space.db.remove(task)}>&times;</button>
+            <button onClick={() => space?.db.remove(task)}>&times;</button>
           </div>
         ))}
       </div>

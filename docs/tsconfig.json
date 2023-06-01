@@ -9,15 +9,19 @@
     "outDir": "dist",
     "types": [
       "@vuepress/client/types",
-      "node"
+      "node",
+      "vite/client"
     ]
   },
   "exclude": [
-    "src/templates/codesandbox/src/main.tsx"
+    "src/stories",
+    "src/templates"
   ],
   "include": [
+    "**/*.vue",
     "docs",
     "src",
+    "src/components/*.vue",
     "vuepress.config.ts"
   ],
   "references": [

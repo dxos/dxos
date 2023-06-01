@@ -266,6 +266,7 @@ importers:
       '@vuepress/plugin-register-components': 2.0.0-beta.61
       '@vuepress/plugin-search': 2.0.0-beta.61
       change-case: ^4.1.2
+      chromatic: ^6.17.0
       codesandbox-import-utils: ^2.2.3
       eslint: ^8.41.0
       front-matter: ^4.0.2
@@ -318,6 +319,7 @@ importers:
       '@vuepress/plugin-register-components': 2.0.0-beta.61
       '@vuepress/plugin-search': 2.0.0-beta.61
       change-case: 4.1.2
+      chromatic: 6.17.0
       codesandbox-import-utils: 2.2.3
       eslint: 8.41.0
       front-matter: 4.0.2

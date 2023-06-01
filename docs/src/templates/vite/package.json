@@ -15,11 +15,12 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "noise-protocol": "3.0.1",
     "@dxos/echo-typegen": "latest",
-    "@dxos/vault": "latest",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
+    "faker": "^5",
     "typescript": "^5.0.4",
     "vite": "^4.3.9"
   }

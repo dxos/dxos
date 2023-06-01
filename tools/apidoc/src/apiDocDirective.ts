@@ -132,7 +132,7 @@ export namespace MarkdownIt {
         return renderer(tokens, idx, ...args);
       }
 
-      const demo = /(?<=\/)[a-zA-Z]+(?=\.tsx)/.exec(file);
+      const example = /(?<=\/)[a-zA-Z]+(?=\.tsx)/.exec(file);
       const attrs = info.reduce((acc, attr) => {
         const [key, value] = attr.split('=');
         if (key === 'peers') {
@@ -140,7 +140,7 @@ export namespace MarkdownIt {
         }
 
         return `${acc} :${key}="[${value.split(',').map((v) => `'${v}'`)}]"`;
-      }, `language="${language}" demo="${demo}"`);
+      }, `language="${language}" example="${example}"`);
 
       return `<Showcase ${attrs} />\n${renderer(tokens, idx, ...args)}`;
     };
