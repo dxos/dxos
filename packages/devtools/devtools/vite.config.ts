@@ -22,9 +22,9 @@ export default defineConfig({
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
-        searchForWorkspaceRoot(process.cwd())
-      ]
-    }
+        searchForWorkspaceRoot(process.cwd()),
+      ],
+    },
   },
   build: {
     sourcemap: true,
@@ -32,25 +32,20 @@ export default defineConfig({
       output: {
         manualChunks: {
           highlighter: ['react-syntax-highlighter'],
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+        },
+      },
+    },
   },
   plugins: [
     ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'] }),
     ThemePlugin({
+      root: __dirname,
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
-      ]
+      ],
     }),
     ReactPlugin(),
     VitePWA({
@@ -58,7 +53,7 @@ export default defineConfig({
       selfDestroying: true,
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
@@ -70,15 +65,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     }),
     /**
      * Bundle fonts.
@@ -95,7 +90,7 @@ export default defineConfig({
           'DM Sans',
           'DM Mono',
           'Montserrat'
-        ]
+        ],
       },
 
       custom: {
@@ -104,10 +99,10 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
-          }
-        ]
-      }
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf',
+          },
+        ],
+      },
     }),
     // https://www.bundle-buddy.com/rollup
     {
@@ -128,7 +123,7 @@ export default defineConfig({
           mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      }
-    }
-  ]
+      },
+    },
+  ],
 });

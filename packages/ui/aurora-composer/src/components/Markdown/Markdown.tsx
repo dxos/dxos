@@ -33,7 +33,7 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useStat
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
-import { configPalettes } from '@dxos/aurora-theme';
+import { configColors } from '@dxos/aurora-theme';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
@@ -52,7 +52,7 @@ export type MarkdownComposerRef = {
   view?: EditorView;
 };
 
-const hexadecimalPaletteSeries: (keyof typeof configPalettes)[] = [
+const hexadecimalPaletteSeries: (keyof typeof configColors)[] = [
   'red' as const,
   'orange' as const,
   'amber' as const,
@@ -102,9 +102,9 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
         } catch (_) {}
         provider.awareness.setLocalStateField('user', {
           name: peer.name ?? humanize(peer.id),
-          color: configPalettes[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
+          color: configColors[hexadecimalPaletteSeries[peerColorDigit]][shadeKeys.color],
           colorLight:
-            configPalettes[hexadecimalPaletteSeries[peerColorDigit]][
+            configColors[hexadecimalPaletteSeries[peerColorDigit]][
               shadeKeys[themeMode === 'dark' ? 'highlightDark' : 'highlightLight']
             ],
         });
