@@ -35,13 +35,13 @@ This demonstrates how two peers would synchronize over ECHO (The Eventually Cons
 
 Type in the boxes below to create new list items and experiment with the replication toggle to see how clients reconcile when returning from offline mode. [Learn more about ECHO](/guide/).
 
-```tsx file=../src/stories/react/examples/TaskList.tsx#L5-L48 showcase peers=2 controls=fork
+```tsx file=../node_modules/@dxos/examples/src/examples/TaskList.tsx#L5-L48 showcase peers=2 controls=fork
 import React, { KeyboardEventHandler, useState } from 'react';
 
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 
-import { Task } from '../../proto';
+import { Task } from '../proto';
 
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);

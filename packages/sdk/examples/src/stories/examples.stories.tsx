@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ClientDecorator, setupPeersInSpace } from '@dxos/react-client/testing';
 
-import { TaskListExample } from './examples';
+import { TaskListExample } from '../examples';
 
 export default {
   title: 'DXOS Examples',

@@ -1,11 +1,10 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
 
 module.exports = {
-  stories: ['../*.stories.@(js|jsx|ts|tsx)'],
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
@@ -24,7 +23,6 @@ module.exports = {
         target: ['es2022', 'edge89', 'firefox89', 'chrome89', 'safari15']
       },
       plugins: [
-        ConfigPlugin(),
         ThemePlugin({
           content: [
             resolve(__dirname, '../**/*.{js,ts,jsx,tsx}'),

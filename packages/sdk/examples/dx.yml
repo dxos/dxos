@@ -1,23 +1,6 @@
 version: 1
 
-schema:
-  files:
-    - 'src/proto/*.proto'
-  outdir: 'src/proto/gen'
-
-package:
-  modules:
-    - name: docs
-      type: dxos:type/app
-      display_name: DXOS Docs
-      build:
-        command: pnpm -w nx bundle docs
-        outdir: ./docs/.vuepress/dist
-
 runtime:
-  client:
-    mode: local
-
   services:
     signaling:
       - server: wss://kube.dxos.org/.well-known/dx/signal

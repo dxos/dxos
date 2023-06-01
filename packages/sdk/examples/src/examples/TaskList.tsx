@@ -7,7 +7,7 @@ import React, { KeyboardEventHandler, useState } from 'react';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
 
-import { Task } from '../../proto';
+import { Task } from '../proto';
 
 const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   const space = useSpace(spaceKey);

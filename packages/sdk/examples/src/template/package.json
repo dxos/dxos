@@ -1,5 +1,5 @@
 {
-  "name": "dxos-codesandbox-template",
+  "name": "dxos-example-template",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -15,12 +15,12 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "noise-protocol": "3.0.1",
     "@dxos/echo-typegen": "latest",
-    "@types/react": "^18.0.15",
+    "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
-    "faker": "^5",
+    "faker": "^5.5.3",
+    "noise-protocol": "3.0.1",
     "typescript": "^5.0.4",
     "vite": "^4.3.9"
   }

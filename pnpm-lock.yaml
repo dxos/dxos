@@ -243,7 +243,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
+      '@dxos/examples': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -266,7 +266,6 @@ importers:
       '@vuepress/plugin-register-components': 2.0.0-beta.61
       '@vuepress/plugin-search': 2.0.0-beta.61
       change-case: ^4.1.2
-      chromatic: ^6.17.0
       codesandbox-import-utils: ^2.2.3
       eslint: ^8.41.0
       front-matter: ^4.0.2
@@ -296,7 +295,7 @@ importers:
       '@dxos/client-services': link:../packages/sdk/client-services
       '@dxos/config': link:../packages/sdk/config
       '@dxos/echo-schema': link:../packages/core/echo/echo-schema
-      '@dxos/echo-typegen': link:../packages/core/echo/echo-typegen
+      '@dxos/examples': link:../packages/sdk/examples
       '@dxos/keys': link:../packages/common/keys
       '@dxos/log': link:../packages/common/log
       '@dxos/protocols': link:../packages/core/protocols
@@ -319,7 +318,6 @@ importers:
       '@vuepress/plugin-register-components': 2.0.0-beta.61
       '@vuepress/plugin-search': 2.0.0-beta.61
       change-case: 4.1.2
-      chromatic: 6.17.0
       codesandbox-import-utils: 2.2.3
       eslint: 8.41.0
       front-matter: 4.0.2
@@ -4306,6 +4304,40 @@ importers:
 
   packages/sdk/errors:
     specifiers: {}
+
+  packages/sdk/examples:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      chromatic: ^6.17.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      tailwindcss: ~3.3.2
+      typescript: ^5.0.4
+      vite: ^4.3.9
+    devDependencies:
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-client': link:../react-client
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      tailwindcss: 3.3.2
+      typescript: 5.0.4
+      vite: 4.3.9
 
   packages/sdk/react-client:
     specifiers:

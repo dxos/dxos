@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Client, ClientProvider, PublicKey } from '@dxos/react-client';
 
-import Demo from './Demo';
+import { Demo } from './components';
 
 const App = ({ spaceKey, clients }: { spaceKey: PublicKey; clients: Client[] }) => {
   return (

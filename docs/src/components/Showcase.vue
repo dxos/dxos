@@ -72,13 +72,13 @@ import VueCustomTooltip from '@adamdehaven/vue-custom-tooltip';
 import sdk from '@stackblitz/sdk';
 import { onMounted, ref } from 'vue';
 
-const examples = import.meta.glob('../stories/react/examples/*.tsx', { as: 'raw', eager: true })
-const proto = import.meta.glob('../stories/proto/*.proto', { as: 'raw', eager: true })
+const examples = import.meta.glob('../../node_modules/@dxos/examples/src/examples/*.tsx', { as: 'raw', eager: true })
+const proto = import.meta.glob('../../node_modules/@dxos/examples/src/proto/*.proto', { as: 'raw', eager: true })
 
 const template = Object
-  .entries(import.meta.glob('../templates/vite/**/*', { as: 'raw', eager: true }))
+  .entries(import.meta.glob('../../node_modules/@dxos/examples/src/template/**/*', { as: 'raw', eager: true }))
   .reduce((acc, [path, content]) => {
-    acc[path.replace(/^..\/templates\/vite\//, '')] = content;
+    acc[path.replace(/^..\/..\/node_modules\/@dxos\/examples\/src\/template\//, '')] = content;
     return acc;
   }, {});
 
@@ -111,8 +111,8 @@ const handleStackblitz = async () => {
     template: 'node',
     files: {
       ...template,
-      'src/Demo.tsx': examples[`../stories/react/examples/${props.example}.tsx`],
-      'src/proto/schema.proto': proto[`../stories/proto/${props.example}.proto`],
+      'src/components/Demo.tsx': examples[`../../node_modules/@dxos/examples/src/examples/${props.example}.tsx`],
+      'src/proto/schema.proto': proto[`../../node_modules/@dxos/examples/src/proto/${props.example}.proto`],
     }
   });
 };

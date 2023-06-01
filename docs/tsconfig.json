@@ -13,15 +13,10 @@
       "vite/client"
     ]
   },
-  "exclude": [
-    "src/stories",
-    "src/templates"
-  ],
   "include": [
     "**/*.vue",
     "docs",
     "src",
-    "src/components/*.vue",
     "vuepress.config.ts"
   ],
   "references": [
@@ -41,9 +36,6 @@
       "path": "../packages/core/echo/echo-schema"
     },
     {
-      "path": "../packages/core/echo/echo-typegen"
-    },
-    {
       "path": "../packages/core/protocols"
     },
     {
@@ -54,6 +46,9 @@
     },
     {
       "path": "../packages/sdk/config"
+    },
+    {
+      "path": "../packages/sdk/examples"
     },
     {
       "path": "../packages/sdk/react-client"
