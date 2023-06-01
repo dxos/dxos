@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { Client, Expando, Text } from '@dxos/client';
 import { log } from '@dxos/log';
 
 import { expectedExpando, expectedProperties, expectedText } from './expected-objects';
-import { getConfig, getLastVersion, getStorageDir } from './util';
+import { getConfig, getPackageDir, getStorageDir, getStorageVersion } from './util';
 
 const main = async () => {
-  const newVersion = (getLastVersion() + 1).toString();
+  const newVersion = (getStorageVersion() + 1).toString();
   const newStoragePath = path.join(getStorageDir(), newVersion);
 
   let client: Client;
@@ -33,6 +34,13 @@ const main = async () => {
   {
     // Clean up.
     await client.destroy();
+  }
+
+  {
+    // Bump storage version in .storage-version file
+    const filePath = path.join(getPackageDir(), '.storage-version');
+    const version = Number(fs.readFileSync(filePath).toString());
+    fs.writeFileSync(filePath, `${(version + 1).toString()}\n`);
   }
 };
 
