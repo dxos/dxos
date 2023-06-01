@@ -576,7 +576,7 @@ export const DocumentPage = observer(() => {
   const { space, document } = useOutletContext<OutletContext>();
   return (
     <div role='none'>
-      {document && space ? (
+      {document && document.content && space ? (
         document.content.kind === TextKind.PLAIN ? (
           <MarkdownDocumentPage document={document} space={space} />
         ) : (
