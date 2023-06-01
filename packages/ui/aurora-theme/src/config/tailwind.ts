@@ -149,37 +149,38 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
   },
 };
 
-const configColors = Object.keys(paletteConfigs).reduce((acc: Record<string, Record<string, string>>, palette) => {
-  const paletteConfig = paletteConfigs[palette] as PaletteConfig;
-  const curve = curvePathFromPalette({
-    ...paletteConfig,
-    keyColor: hexToLch(paletteConfig.keyColor),
-  });
-  const defaultShades = paletteShadesFromCurve(curve, 21, [0, 100 * (22 / 21)], 1, 24).reverse();
-  const renderCssValue = (shadeNumber: number) => {
-    if (shadeNumber > 999) {
-      return '#000000';
-    } else if (shadeNumber < 1) {
-      return '#ffffff';
-    } else if (shadeNumber % 50 === 0) {
-      return labToHex(defaultShades[shadeNumber / 50]);
-    } else {
-      const k2 = (shadeNumber % 50) / 50;
-      const k1 = 1 - k2;
-      const [l1, a1, b1] = defaultShades[Math.floor(shadeNumber / 50)];
-      const [l2, a2, b2] = defaultShades[Math.ceil(shadeNumber / 50)];
-      return labToHex([l1 * k1 + l2 * k2, a1 * k1 + a2 * k2, b1 * k1 + b2 * k2]);
-    }
-  };
-  acc[palette] = shadeNumbers.reduce((acc: Record<string, string>, shadeNumber) => {
-    acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
+export const configColors = Object.keys(paletteConfigs).reduce(
+  (acc: Record<string, Record<string, string>>, palette) => {
+    const paletteConfig = paletteConfigs[palette] as PaletteConfig;
+    const curve = curvePathFromPalette({
+      ...paletteConfig,
+      keyColor: hexToLch(paletteConfig.keyColor),
+    });
+    const defaultShades = paletteShadesFromCurve(curve, 21, [0, 100 * (22 / 21)], 1, 24).reverse();
+    const renderCssValue = (shadeNumber: number) => {
+      if (shadeNumber > 999) {
+        return '#000000';
+      } else if (shadeNumber < 1) {
+        return '#ffffff';
+      } else if (shadeNumber % 50 === 0) {
+        return labToHex(defaultShades[shadeNumber / 50]);
+      } else {
+        const k2 = (shadeNumber % 50) / 50;
+        const k1 = 1 - k2;
+        const [l1, a1, b1] = defaultShades[Math.floor(shadeNumber / 50)];
+        const [l2, a2, b2] = defaultShades[Math.ceil(shadeNumber / 50)];
+        return labToHex([l1 * k1 + l2 * k2, a1 * k1 + a2 * k2, b1 * k1 + b2 * k2]);
+      }
+    };
+    acc[palette] = shadeNumbers.reduce((acc: Record<string, string>, shadeNumber) => {
+      acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
+      return acc;
+    }, {});
+
     return acc;
-  }, {});
-
-  return acc;
-}, {});
-
-console.log('[neutral]', configColors.neutral);
+  },
+  {},
+);
 
 export const tailwindConfig = ({
   env = 'production',
