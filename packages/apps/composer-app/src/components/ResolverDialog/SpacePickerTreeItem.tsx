@@ -8,7 +8,6 @@ import React, { useMemo, useState } from 'react';
 import { Document } from '@braneframe/types';
 import {
   Button,
-  MockListItemOpenTrigger,
   Tag,
   TooltipArrow,
   TooltipContent,
@@ -70,7 +69,9 @@ export const SpacePickerTreeItem = observer(
               <OpenTriggerIcon />
             </TreeItemOpenTrigger>
           ) : (
-            <MockListItemOpenTrigger />
+            <TreeItemOpenTrigger disabled classNames={defaultDisabled}>
+              <CaretRight />
+            </TreeItemOpenTrigger>
           )}
           <TreeItemHeading
             classNames='grow break-words pbs-1 text-base font-medium'

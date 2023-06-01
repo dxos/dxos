@@ -49,22 +49,13 @@ export const osTheme: Theme<Record<string, any>> = {
   list: listOsTheme,
 };
 
-export const appTx = <P extends Record<string, any>>(
-  path: string,
-  defaultClassName: string,
-  styleProps: P,
-  ...options: any[]
-): string => {
-  const result: Theme<P> | ComponentFunction<P> = get(theme, path);
-  return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
+export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {
+  return (path: string, defaultClassName: string, styleProps: P, ...options: any[]): string => {
+    const result: Theme<P> | ComponentFunction<P> = get(theme, path);
+    return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
+  };
 };
 
-export const osTx = <P extends Record<string, any>>(
-  path: string,
-  defaultClassName: string,
-  styleProps: P,
-  ...options: any[]
-): string => {
-  const result: Theme<P> | ComponentFunction<P> = get(osTheme, path);
-  return typeof result === 'function' ? result(styleProps, ...options) : defaultClassName;
-};
+export const appTx = bindTheme(theme);
+
+export const osTx = bindTheme(osTheme);
