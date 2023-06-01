@@ -19,7 +19,7 @@ export type SerializedObject = {
    * Text content of Text object.
    */
   text?: string;
-};
+} & Record<string, any>;
 
 export type SerializedSpace = {
   objects: SerializedObject[];
