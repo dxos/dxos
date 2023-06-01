@@ -15,6 +15,8 @@
     "plugin.d.ts"
   ],
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@fluent-blocks/colors": "^9.2.0",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
     "@fontsource/space-grotesk": "^4.5.10",

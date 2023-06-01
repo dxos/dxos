@@ -103,6 +103,6 @@ export default {
 export const Default = {
   args: {},
   parameters: {
-    chromatic: { delay: 500 },
+    chromatic: { delay: 1600 },
   },
 };
