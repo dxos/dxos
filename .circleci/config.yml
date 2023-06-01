@@ -201,9 +201,6 @@ workflows:
       - e2e:
           context:
             - Github
-      - flaky:
-          context:
-            - Github
 
   deploy:
     when:
