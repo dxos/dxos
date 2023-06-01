@@ -18,22 +18,25 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../apps/types"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/observable-object"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../sdk/react-shell"
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
     },
     {
       "path": "../../ui/aurora-theme"
