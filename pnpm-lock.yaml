@@ -1400,6 +1400,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1415,6 +1416,7 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
+      '@dxos/errors': link:../../../sdk/errors
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
@@ -17430,7 +17432,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -40079,7 +40081,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.20.4
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

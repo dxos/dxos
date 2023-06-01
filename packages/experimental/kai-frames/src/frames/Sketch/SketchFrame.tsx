@@ -79,6 +79,8 @@ export const SketchFrame = observer(() => {
 
   // Rendering
   useSubscription(() => {
+    console.log('subscription');
+
     if (sketch) {
       setTimeout(async () => {
         await canvasRef.current.resetCanvas();
@@ -93,6 +95,7 @@ export const SketchFrame = observer(() => {
 
   // TODO(burdon): Pseudo CRDT using timestamp on each path.
   const handleUpdate = async (sketch: Sketch) => {
+    console.log('handleUpdate', sketch.paths);
     if (sketch.paths.length === 0) {
       canvasRef.current.resetCanvas();
       return;

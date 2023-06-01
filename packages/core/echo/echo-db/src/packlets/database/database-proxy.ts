@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { Model, ModelFactory } from '@dxos/model-factory';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
+import { ApiError } from '@dxos/errors'
 
 import { Batch } from './batch';
 import { tagMutationsInBatch } from './builder';
@@ -49,6 +50,7 @@ export class DatabaseProxy {
   private _currentBatch?: Batch;
 
   private _opening = false;
+  private _open = false;
 
   // prettier-ignore
   constructor(
@@ -130,6 +132,8 @@ export class DatabaseProxy {
 
     // Wait for initial set of items.
     await loaded.wait();
+
+    this._open = true;
   }
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
@@ -203,6 +207,10 @@ export class DatabaseProxy {
    * @returns true if a batch was started, false if there was already a batch in progress.
    */
   beginBatch(): boolean {
+    if(!this._open) {
+      throw new ApiError('Database not open');
+    }
+
     if (this._currentBatch) {
       return false;
     }
