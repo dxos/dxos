@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { describe, test } from '@dxos/test';
 

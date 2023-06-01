@@ -6,10 +6,7 @@ import { definePlugin } from '../framework';
 
 export const StackPlugin = definePlugin({
   meta: {
-    id: 'com.dxos.stack'
+    id: 'com.dxos.stack',
   },
-  provides: {
-    
-  }
+  provides: {},
 });
-
