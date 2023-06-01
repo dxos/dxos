@@ -3881,6 +3881,7 @@ importers:
       '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/dompurify': ^3.0.2
       '@types/react': ^18.0.21
@@ -3903,6 +3904,7 @@ importers:
       '@braneframe/types': link:../../apps/types
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/dompurify': 3.0.2
       dompurify: 3.0.3

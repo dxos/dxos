@@ -17,11 +17,11 @@ import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useStat
 import { useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
-import { Button, Main, Trans, useTranslation } from '@dxos/aurora';
+import { Button, Main, DropdownMenuItem, Trans, useTranslation } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Dialog, DropdownMenuItem, Input } from '@dxos/react-appkit';
+import { Dialog, Input } from '@dxos/react-appkit';
 import { useIdentity, useSpace } from '@dxos/react-client';
 
 import { PatDialog, useOctokitContext } from '../GithubContext';
@@ -300,11 +300,11 @@ export const MainOne = () => {
 
   const dropdownMenuContent = (
     <>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={fileProps.handleFileExport}>
+      <DropdownMenuItem classNames='gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
       </DropdownMenuItem>
-      <DropdownMenuItem className='flex items-center gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
+      <DropdownMenuItem classNames='gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
         <UploadSimple className={getSize(4)} />
         <span>{t('import from file label')}</span>
       </DropdownMenuItem>
@@ -312,7 +312,7 @@ export const MainOne = () => {
         <>
           <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
           <DropdownMenuItem
-            className='flex items-center gap-2'
+            classNames='gap-2'
             onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
           >
             {editorViewState === 'preview' ? (
@@ -330,7 +330,7 @@ export const MainOne = () => {
           {docGhId ? (
             <>
               <DropdownMenuItem
-                className='flex items-center gap-2'
+                classNames='gap-2'
                 onClick={() => {
                   const index = document?.meta?.keys?.findIndex((key) => key.source === 'com.github');
                   index && index >= 0 && document?.meta?.keys?.splice(index, 1);
@@ -340,15 +340,15 @@ export const MainOne = () => {
                 <LinkBreak className={getSize(4)} />
                 <span>{t('unbind to file in github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setImportConfirmOpen(true)}>
+              <DropdownMenuItem classNames='gap-2' onClick={() => setImportConfirmOpen(true)}>
                 <FileArrowDown className={getSize(4)} />
                 <span>{t('import from github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={handleGhExport}>
+              <DropdownMenuItem classNames='gap-2' onClick={handleGhExport}>
                 <FileArrowUp className={getSize(4)} />
                 <span>{t('export to github label')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className='flex items-center gap-2'>
+              <DropdownMenuItem asChild classNames='gap-2'>
                 <a href={`https://github.com/${ghId}`} target='_blank' rel='noreferrer'>
                   <ArrowSquareOut className={getSize(4)} />
                   <span>{t('open in github label')}</span>
@@ -357,7 +357,7 @@ export const MainOne = () => {
             </>
           ) : (
             <>
-              <DropdownMenuItem className='flex items-center gap-2' onClick={() => setGhBindOpen(true)}>
+              <DropdownMenuItem classNames='gap-2' onClick={() => setGhBindOpen(true)}>
                 <Link className={getSize(4)} />
                 <span>{t('bind to file in github label')}</span>
               </DropdownMenuItem>
