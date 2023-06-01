@@ -12,7 +12,7 @@
     "src"
   ],
   "scripts": {
-    "bump-version": "ts-node ./src/create-new-storage"
+    "bump": "ts-node ./src/bump-storage"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
