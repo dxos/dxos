@@ -14,7 +14,7 @@ import {
   ObservableProvider,
   Trigger,
 } from '@dxos/async';
-import { ClientServicesProvider, Halo } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -24,8 +24,6 @@ import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protoco
 import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from './invitations-proxy';
-
-const THROW_TIMEOUT_ERROR_AFTER = 3000;
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -300,7 +298,7 @@ export class HaloProxy implements Halo {
 
     const credentials = await asyncTimeout(
       trigger.wait(),
-      THROW_TIMEOUT_ERROR_AFTER,
+      AUTH_TIMEOUT,
       new ApiError('Timeout while waiting for credentials'),
     );
     return this._serviceProvider.services.IdentityService.signPresentation({

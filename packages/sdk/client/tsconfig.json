@@ -43,9 +43,6 @@
       "path": "../../common/random-access-storage"
     },
     {
-      "path": "../../common/timeouts"
-    },
-    {
       "path": "../../common/util"
     },
     {

@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import {
   DeviceStateMachine,
   CredentialSigner,
@@ -25,11 +26,6 @@ import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitati
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
-
-/**
- * Timeout for the device to be added to the trusted set during auth.
- */
-const AUTH_TIMEOUT = 30000;
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -102,7 +98,7 @@ export class Identity {
   async ready() {
     await this._deviceStateMachine.processor.deviceChainReady.wait();
 
-    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: 3_000 });
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
   }
 
   get profileDocument(): ProfileDocument | undefined {

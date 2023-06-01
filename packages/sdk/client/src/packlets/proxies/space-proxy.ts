@@ -7,7 +7,7 @@ import isEqualWith from 'lodash.isequalwith';
 import assert from 'node:assert';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
-import { ClientServicesProvider, Space, SpaceInternal } from '@dxos/client-protocol';
+import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
@@ -22,8 +22,6 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { Properties } from '../proto';
 import { InvitationsProxy } from './invitations-proxy';
-
-const META_LOAD_TIMEOUT = 3000;
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
@@ -252,7 +250,7 @@ export class SpaceProxy implements Space {
         });
 
         try {
-          await waitForSpaceMeta.wait({ timeout: META_LOAD_TIMEOUT });
+          await waitForSpaceMeta.wait({ timeout: LOAD_PROPERTIES_TIMEOUT });
         } catch {
           throw new ApiError('Properties not found.');
         } finally {
