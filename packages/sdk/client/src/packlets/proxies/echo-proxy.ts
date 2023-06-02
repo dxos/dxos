@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
-import { ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
+import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
@@ -181,7 +181,7 @@ export class EchoProxy implements Echo {
     });
     const spaceProxy = this._spacesMap.get(space.spaceKey) ?? failUndefined();
 
-    await spaceProxy._databaseInitialized.wait({ timeout: 3_000 });
+    await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     spaceProxy.db.add(new Properties(meta));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
