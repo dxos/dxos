@@ -79,7 +79,7 @@ export default defineConfig({
         assets: './packages/apps/tasks-app/out/tasks/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: !process.env.CI,
+      dryRun: process.env.DX_ENVIRONMENT !== 'production',
     }),
   ],
 });
