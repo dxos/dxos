@@ -7,8 +7,8 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
-import fs, { writeFileSync } from 'node:fs';
-import { readFile, stat } from 'node:fs/promises';
+import fs from 'node:fs';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -184,7 +184,7 @@ export abstract class BaseCommand extends Command {
           // Isolate DX_PROFILE storages.
           yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
         }
-        writeFileSync(configFile, yaml.dump(yamlConfig), 'utf-8');
+        await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
       }
 
       this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
