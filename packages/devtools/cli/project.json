@@ -11,7 +11,11 @@
         "script": "bin"
       }
     },
-    "compile": {
+    "build": {
+      "dependsOn": [
+        "^build",
+        "prebuild"
+      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
