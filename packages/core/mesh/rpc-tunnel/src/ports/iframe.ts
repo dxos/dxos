@@ -128,22 +128,5 @@ export const createIFrame = (source: string, id: string, { hidden = true, allow 
     return iframe;
   };
 
-  {
-    const cssStyle = 'color:#C026D3;font-weight:bold';
-
-    console.log(
-      `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
-      cssStyle,
-    );
-
-    const devtoolsHost = `devtools${
-      window.location.href.includes('.dev.') || window.location.href.includes('localhost') ? '.dev.' : '.'
-    }dxos.org`;
-    console.log(
-      `%cTo inspect this application, click here:\nhttps://${devtoolsHost}/?target=vault:${source}`,
-      cssStyle,
-    );
-  }
-
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };
