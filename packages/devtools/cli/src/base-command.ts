@@ -7,8 +7,8 @@ import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
-import fs from 'node:fs';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import fs, { writeFileSync } from 'node:fs';
+import { readFile, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -62,6 +62,14 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
+      default: async (context: any) => {
+        if (context?.flags?.profile) {
+          return join((context.config as OclifConfig).configDir, `${context.flags.profile}.yml`);
+        } else {
+          return join((context.config as OclifConfig).configDir, `${DEFAULT_DX_PROFILE}.yml`);
+        }
+      },
+      dependsOn: ['profile'],
       aliases: ['c'],
     }),
 
@@ -161,33 +169,28 @@ export abstract class BaseCommand extends Command {
 
   private async _loadConfig() {
     const { flags } = await this.parse(this.constructor as any);
-    let { config: configFile, profile } = flags;
-    if (!configFile) {
-      configFile = join(this.config.configDir, `${profile}.yml`);
-    }
+    const { config: configFile } = flags;
 
     try {
       const configExists = await exists(configFile);
-      const defaultConfigPath = join(
-        dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
-        'config/config-default.yml',
-      );
-
-      const configContent = await readFile(configExists ? configFile : defaultConfigPath, 'utf-8');
-      const yamlConfig = yaml.load(configContent) as ConfigProto;
 
       if (!configExists) {
+        const defaultConfigPath = join(
+          dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+          'config/config-default.yml',
+        );
+        const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
         if (yamlConfig.runtime?.client?.storage?.path) {
           // Isolate DX_PROFILE storages.
           yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
         }
-        void writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
+        writeFileSync(configFile, yaml.dump(yamlConfig), 'utf-8');
       }
 
-      this._clientConfig = new Config(yaml.load(configContent) as any);
+      this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
     } catch (err) {
       Sentry.captureException(err);
-      console.error(`Invalid config file: ${configFile}`);
+      log.error(`Invalid config file: ${configFile}`, err);
       process.exit(1);
     }
   }
