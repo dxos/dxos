@@ -4313,6 +4313,7 @@ importers:
       '@dxos/echo-typegen': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
@@ -4322,6 +4323,7 @@ importers:
       tailwindcss: ~3.3.2
       typescript: ^5.0.4
       vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
     devDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
@@ -4329,6 +4331,7 @@ importers:
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
@@ -4338,6 +4341,7 @@ importers:
       tailwindcss: 3.3.2
       typescript: 5.0.4
       vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/sdk/react-client:
     specifiers:
@@ -4589,6 +4593,7 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     dependencies:
+      '@dxos/aurora-types': link:../aurora-types
       '@dxos/react-hooks': link:../primitives/react-hooks
       '@dxos/react-input': link:../primitives/react-input
       '@dxos/react-list': link:../primitives/react-list
@@ -4610,7 +4615,6 @@ importers:
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
       '@dxos/aurora-theme': link:../aurora-theme
-      '@dxos/aurora-types': link:../aurora-types
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6

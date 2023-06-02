@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { ClientDecorator, setupPeersInSpace } from '@dxos/react-client/testing';
+import '@dxosTheme';
+import { ClientDecorator, setupPeersInSpace, ToggleNetworkDecorator } from '@dxos/react-client/testing';
 
 import { TaskListExample } from '../examples';
 
@@ -16,5 +17,5 @@ const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 
 export const TaskList = {
   render: (args: { id: number }) => <TaskListExample {...args} spaceKey={spaceKey} />,
-  decorators: [ClientDecorator({ clients })],
+  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
 };

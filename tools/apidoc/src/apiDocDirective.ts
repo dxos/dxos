@@ -140,7 +140,7 @@ export namespace MarkdownIt {
         }
 
         return `${acc} :${key}="[${value.split(',').map((v) => `'${v}'`)}]"`;
-      }, `language="${language}" example="${example}"`);
+      }, `language="${language}" example="${example}" :darkMode="$isDarkmode"`);
 
       return `<Showcase ${attrs} />\n${renderer(tokens, idx, ...args)}`;
     };

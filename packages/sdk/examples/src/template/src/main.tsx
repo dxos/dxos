@@ -5,6 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
+import '@dxosTheme';
 import { setupPeersInSpace } from '@dxos/react-client/testing';
 
 import App from './App';
