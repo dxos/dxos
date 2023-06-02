@@ -135,8 +135,12 @@ export const createIFrame = (source: string, id: string, { hidden = true, allow 
       `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
       cssStyle,
     );
+
+    const devtoolsHost = `devtools${
+      window.location.href.includes('.dev.') || window.location.href.includes('localhost') ? '.dev.' : '.'
+    }dxos.org`;
     console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
+      `%cTo inspect this application, click here:\nhttps://${devtoolsHost}/?target=vault:${source}`,
       cssStyle,
     );
   }
