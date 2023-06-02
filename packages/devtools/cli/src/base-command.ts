@@ -9,7 +9,7 @@ import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import path, { dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Client, DEFAULT_DX_PROFILE, fromCliEnv, Config } from '@dxos/client';
@@ -163,24 +163,27 @@ export abstract class BaseCommand extends Command {
     const { flags } = await this.parse(this.constructor as any);
     let { config: configFile, profile } = flags;
     if (!configFile) {
-      configFile = path.join(this.config.configDir, `${profile}.yml`);
+      configFile = join(this.config.configDir, `${profile}.yml`);
     }
+
     try {
       const configExists = await exists(configFile);
       const defaultConfigPath = join(
         dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
         'config/config-default.yml',
       );
-      const configContent = await readFile(configExists ? configFile : defaultConfigPath, 'utf-8');
 
+      const configContent = await readFile(configExists ? configFile : defaultConfigPath, 'utf-8');
       const yamlConfig = yaml.load(configContent) as ConfigProto;
+
       if (!configExists) {
         if (yamlConfig.runtime?.client?.storage?.path) {
           // Isolate DX_PROFILE storages.
-          yamlConfig.runtime.client.storage.path = path.join(yamlConfig.runtime.client.storage.path, flags.profile);
+          yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
         }
         void writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
       }
+
       this._clientConfig = new Config(yaml.load(configContent) as any);
     } catch (err) {
       Sentry.captureException(err);
