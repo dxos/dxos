@@ -19,7 +19,7 @@
     "@dxos/bare-template": "workspace:*",
     "@dxos/plate": "workspace:*",
     "postcss": "^8.4.21",
-    "tailwindcss": "~3.2.7"
+    "tailwindcss": "~3.3.2"
   },
   "devDependencies": {
     "typescript": "^5.0.4"

@@ -13,7 +13,7 @@ import merge from 'lodash.merge';
 import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
-import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
+import defaultConfig from 'tailwindcss/stubs/config.full.js';
 import { Config, ThemeConfig } from 'tailwindcss/types/config';
 
 export type TailwindConfig = Config;
