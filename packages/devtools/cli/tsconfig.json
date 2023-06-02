@@ -7,8 +7,10 @@
       "ESNext"
     ],
     "outDir": "dist/src",
-    // First root dir should be `src` for oclif to map dev files
-    "rootDirs": [ "./src", "./notebooks" ],
+    "rootDirs": [
+      "./notebooks",
+      "./src"
+    ],
     "types": [
       "@dxos/typings",
       "node"
