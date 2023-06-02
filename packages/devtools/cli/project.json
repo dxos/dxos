@@ -11,7 +11,7 @@
         "script": "bin"
       }
     },
-    "compile": {
+    "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
