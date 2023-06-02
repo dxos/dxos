@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import ProtocolStream from 'hypercore-protocol';
 
 import { latch } from '@dxos/async';
@@ -213,7 +213,7 @@ describe('ProtocolStream', () => {
     });
 
     Array.from(Array(numBlocks)).forEach((_, i) => {
-      const [core1] = faker.random.arrayElement(feeds);
+      const [core1] = faker.helpers.arrayElement(feeds);
       core1.append(`block-${i}`, () => {});
     });
 

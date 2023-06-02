@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';

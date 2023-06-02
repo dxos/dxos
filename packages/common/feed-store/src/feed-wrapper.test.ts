@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';

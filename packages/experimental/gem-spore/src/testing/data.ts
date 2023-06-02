@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { GraphData, GraphLink } from '../graph';
 import { TestNode } from './types';
@@ -81,8 +81,8 @@ export const createGraph = (numNodes = 0, numLinks = 0): GraphData<TestNode> => 
 
   if (numLinks && nodes.length >= 2) {
     for (let i = 0; i < numLinks; i++) {
-      const source = faker.random.arrayElement(nodes);
-      const target = faker.random.arrayElement(nodes);
+      const source = faker.helpers.arrayElement(nodes);
+      const target = faker.helpers.arrayElement(nodes);
 
       if (source.id !== target.id) {
         const link = createLink(source, target);

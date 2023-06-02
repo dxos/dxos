@@ -3,7 +3,7 @@
 //
 
 import { Args } from '@oclif/core';
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { Client } from '@dxos/client';
 

@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { PassThrough, Transform } from 'streamx';
 
 import { latch } from '@dxos/async';
@@ -56,7 +56,7 @@ describe('Multiplexing', () => {
     const numMessages = 1;
     const written = new Set<string>();
     Array.from(Array(numMessages)).forEach((_, i) => {
-      const [core] = faker.random.arrayElement(feeds);
+      const [core] = faker.helpers.arrayElement(feeds);
       written.add(core.key.toString());
       core.append(`test-${i}: ${faker.lorem.sentence(10)}`, noop); // Long message.
     });
