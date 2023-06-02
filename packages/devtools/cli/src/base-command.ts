@@ -9,10 +9,12 @@ import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import path, { join } from 'node:path';
+import path, { dirname, join } from 'node:path';
+import pkgUp from 'pkg-up';
 
 import { Client, DEFAULT_DX_PROFILE, fromCliEnv, Config } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -165,10 +167,11 @@ export abstract class BaseCommand extends Command {
     }
     try {
       const configExists = await exists(configFile);
-      const configContent = await readFile(
-        configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
-        'utf-8',
+      const defaultConfigPath = join(
+        dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+        'config/config-default.yml',
       );
+      const configContent = await readFile(configExists ? configFile : defaultConfigPath, 'utf-8');
 
       const yamlConfig = yaml.load(configContent) as ConfigProto;
       if (!configExists) {
