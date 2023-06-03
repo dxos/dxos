@@ -11,7 +11,7 @@ import { ChromaticPalette, MessageValence, NeutralPalette } from '@dxos/aurora-t
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
-type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.span>> & {
+export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.span>> & {
   palette?: NeutralPalette | ChromaticPalette | MessageValence;
   asChild?: boolean;
 };

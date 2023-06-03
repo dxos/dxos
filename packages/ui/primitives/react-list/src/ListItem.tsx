@@ -6,14 +6,21 @@ import { DraggableAttributes } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CheckboxProps } from '@radix-ui/react-checkbox';
-import { CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
+import { CollapsibleContentProps, CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentProps, ComponentPropsWithRef, Dispatch, forwardRef, SetStateAction } from 'react';
+import React, {
+  ComponentProps,
+  ComponentPropsWithRef,
+  Dispatch,
+  forwardRef,
+  ForwardRefExoticComponent,
+  SetStateAction,
+} from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
@@ -92,7 +99,7 @@ const ListItemOpenTrigger = Collapsible.Trigger;
 
 type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content>;
 
-const ListItemCollapsibleContent = Collapsible.Content;
+const ListItemCollapsibleContent: ForwardRefExoticComponent<CollapsibleContentProps> = Collapsible.Content;
 
 const PureListItem = forwardRef<
   ListItemElement,

@@ -4,13 +4,13 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 
-import { ListItem, ListItemProps } from '@dxos/aurora';
+import { ListItem, ListItemRootProps } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Move to react-appkit?
 // Removes need for class overrides in console.
 
-export type ListItemButtonProps = ListItemProps & {
+export type ListItemButtonProps = ListItemRootProps & {
   slots?: any;
   onClick?: () => void;
 };

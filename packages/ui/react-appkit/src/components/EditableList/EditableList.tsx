@@ -18,7 +18,7 @@ import {
   ListItemHeading,
   ListItemEndcap,
   useListDensity,
-  ListItemProps,
+  ListItemRootProps,
   ListScopedProps,
   ListItemDragHandle,
   useListContext,
@@ -37,7 +37,7 @@ export interface EditableListItemSlots {
   input?: InputProps['slots'];
 }
 
-export type EditableListItemProps = ListItemProps & {
+export type EditableListItemProps = ListItemRootProps & {
   id: string;
   defaultCompleted?: boolean;
   completed?: boolean;

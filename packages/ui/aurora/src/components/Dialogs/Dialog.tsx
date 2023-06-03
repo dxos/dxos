@@ -121,15 +121,15 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
 DialogContent.displayName = DIALOG_CONTENT_NAME;
 
-export {
-  DialogRoot,
-  DialogTrigger,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
+export const Dialog = {
+  Root: DialogRoot,
+  Trigger: DialogTrigger,
+  Portal: DialogPortal,
+  Overlay: DialogOverlay,
+  Content: DialogContent,
+  Title: DialogTitle,
+  Description: DialogDescription,
+  Close: DialogClose,
 };
 
 export type {

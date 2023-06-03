@@ -8,7 +8,7 @@ import {
   TreeItemBody,
   TreeItemHeading,
   TreeRoot,
-  TreeProps,
+  TreeRootProps,
   TreeBranch,
   MockTreeItemOpenTrigger,
   TreeItemOpenTrigger,
@@ -48,7 +48,7 @@ const JsonTreeBranch = ({ data, prefix }: JsonTreeNodeProps) => {
   );
 };
 
-type JsonTreeProps = { data: Record<string, any> } & TreeProps;
+type JsonTreeProps = { data: Record<string, any> } & TreeRootProps;
 
 const JsonTree = ({ data, ...props }: JsonTreeProps) => {
   return (

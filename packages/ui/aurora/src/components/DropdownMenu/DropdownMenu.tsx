@@ -122,16 +122,16 @@ const DropdownMenuGroupLabel = forwardRef<HTMLDivElement, DropdownMenuGroupLabel
   },
 );
 
-export {
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-  DropdownMenuPortal,
-  DropdownMenuContent,
-  DropdownMenuArrow,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuGroupLabel,
+export const DropdownMenu = {
+  Root: DropdownMenuRoot,
+  Trigger: DropdownMenuTrigger,
+  Portal: DropdownMenuPortal,
+  Content: DropdownMenuContent,
+  Arrow: DropdownMenuArrow,
+  Group: DropdownMenuGroup,
+  Item: DropdownMenuItem,
+  Separator: DropdownMenuSeparator,
+  GroupLabel: DropdownMenuGroupLabel,
 };
 
 export type {

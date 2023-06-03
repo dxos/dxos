@@ -51,64 +51,66 @@ const AvatarRoot = ({
   return <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status }}>{children}</AvatarProvider>;
 };
 
-type AvatarProps = ThemedClassName<AvatarRootPrimitiveProps>;
+type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
-const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(({ children, classNames, ...props }, forwardedRef) => {
-  const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
-  const { tx } = useThemeContext();
-  const imageSizeNumber = size === 'px' ? 1 : size * 4;
-  const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
-  const maskSize = statusIconSize * 4 + 2;
-  const maskCenter = imageSizeNumber - (statusIconSize * 4) / 2;
-  return (
-    <AvatarRootPrimitive
-      role='img'
-      {...props}
-      className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
-      ref={forwardedRef}
-      aria-labelledby={labelId}
-      aria-describedby={descriptionId}
-    >
-      <svg
-        viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
-        width={imageSizeNumber}
-        height={imageSizeNumber}
-        className={tx('avatar.frame', 'avatar__frame', {})}
+const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
+  ({ children, classNames, ...props }, forwardedRef) => {
+    const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
+    const { tx } = useThemeContext();
+    const imageSizeNumber = size === 'px' ? 1 : size * 4;
+    const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
+    const maskSize = statusIconSize * 4 + 2;
+    const maskCenter = imageSizeNumber - (statusIconSize * 4) / 2;
+    return (
+      <AvatarRootPrimitive
+        role='img'
+        {...props}
+        className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
+        ref={forwardedRef}
+        aria-labelledby={labelId}
+        aria-describedby={descriptionId}
       >
-        <defs>
-          <mask id={maskId}>
-            {variant === 'circle' ? (
-              <circle fill='white' cx='50%' cy='50%' r='50%' />
-            ) : (
-              <rect fill='white' width='100%' height='100%' />
-            )}
-            {status && (
-              <circle
-                fill='black'
-                cx={`${(100 * maskCenter) / imageSizeNumber}%`}
-                cy={`${(100 * maskCenter) / imageSizeNumber}%`}
-                r={`${(50 * maskSize) / imageSizeNumber}%`}
-              />
-            )}
-          </mask>
-        </defs>
-        {children}
-      </svg>
-      {status === 'inactive' ? (
-        <Moon
-          mirrored
-          weight='fill'
-          className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
-        />
-      ) : status ? (
-        <Circle
-          weight='fill'
-          className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
-        />
-      ) : null}
-    </AvatarRootPrimitive>
-  );
-});
+        <svg
+          viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
+          width={imageSizeNumber}
+          height={imageSizeNumber}
+          className={tx('avatar.frame', 'avatar__frame', {})}
+        >
+          <defs>
+            <mask id={maskId}>
+              {variant === 'circle' ? (
+                <circle fill='white' cx='50%' cy='50%' r='50%' />
+              ) : (
+                <rect fill='white' width='100%' height='100%' />
+              )}
+              {status && (
+                <circle
+                  fill='black'
+                  cx={`${(100 * maskCenter) / imageSizeNumber}%`}
+                  cy={`${(100 * maskCenter) / imageSizeNumber}%`}
+                  r={`${(50 * maskSize) / imageSizeNumber}%`}
+                />
+              )}
+            </mask>
+          </defs>
+          {children}
+        </svg>
+        {status === 'inactive' ? (
+          <Moon
+            mirrored
+            weight='fill'
+            className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
+          />
+        ) : status ? (
+          <Circle
+            weight='fill'
+            className={tx('avatar.statusIcon', 'avatar__status-icon', { size: statusIconSize, status })}
+          />
+        ) : null}
+      </AvatarRootPrimitive>
+    );
+  },
+);
 
 type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
   asChild?: boolean;
@@ -192,22 +194,22 @@ const useJdenticonHref = (value: string, size: Size) => {
   );
 };
 
-export {
-  AvatarRoot,
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-  AvatarLabel,
-  AvatarDescription,
-  useJdenticonHref,
-  useAvatarContext,
+export const Avatar = {
+  Root: AvatarRoot,
+  Frame: AvatarFrame,
+  Image: AvatarImage,
+  Fallback: AvatarFallback,
+  Label: AvatarLabel,
+  Description: AvatarDescription,
 };
+
+export { useJdenticonHref, useAvatarContext };
 
 export type {
   AvatarStatus,
   AvatarVariant,
   AvatarRootProps,
-  AvatarProps,
+  AvatarFrameProps,
   AvatarImageProps,
   AvatarFallbackProps,
   AvatarLabelProps,

@@ -23,6 +23,14 @@ import {
   useInputContext,
   INPUT_NAME,
   InputScopedProps,
+  Description as DescriptionPrimitive,
+  DescriptionAndValidation as DescriptionAndValidationPrimitive,
+  DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
+  DescriptionProps as DescriptionPrimitiveProps,
+  Label as LabelPrimitive,
+  LabelProps as LabelPrimitiveProps,
+  Validation as ValidationPrimitive,
+  ValidationProps as ValidationPrimitiveProps,
 } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
@@ -31,6 +39,74 @@ import { ThemedClassName } from '../../util';
 type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
+
+type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
+
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, classNames)} ref={forwardedRef}>
+      {children}
+    </LabelPrimitive>
+  );
+});
+
+type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
+
+const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
+  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DescriptionPrimitive
+        {...props}
+        className={tx('input.description', 'input__description', { srOnly }, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </DescriptionPrimitive>
+    );
+  },
+);
+
+type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
+
+const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
+  ({ __inputScope, srOnly, classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    return (
+      <ValidationPrimitive
+        {...props}
+        className={tx(
+          'input.validation',
+          `input__validation-message input__validation-message--${validationValence}`,
+          { srOnly, validationValence },
+          classNames,
+        )}
+        ref={forwardedRef}
+      >
+        {children}
+      </ValidationPrimitive>
+    );
+  },
+);
+
+type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
+
+const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
+  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DescriptionAndValidationPrimitive
+        {...props}
+        className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </DescriptionAndValidationPrimitive>
+    );
+  },
+);
 
 type PinInputProps = InputSharedProps &
   Omit<PinInputPrimitiveProps, 'segmentClassName' | 'inputClassName'> & {
@@ -206,6 +282,27 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   },
 );
 
-export { InputRoot, PinInput, TextInput, TextArea, Checkbox };
+export const Input = {
+  Root: InputRoot,
+  PinInput,
+  TextInput,
+  TextArea,
+  Checkbox,
+  Label,
+  Description,
+  Validation,
+  DescriptionAndValidation,
+};
 
-export type { InputVariant, InputRootProps, PinInputProps, TextInputProps, TextAreaProps, CheckboxProps };
+export type {
+  InputVariant,
+  InputRootProps,
+  PinInputProps,
+  TextInputProps,
+  TextAreaProps,
+  CheckboxProps,
+  LabelProps,
+  DescriptionProps,
+  ValidationProps,
+  DescriptionAndValidationProps,
+};
