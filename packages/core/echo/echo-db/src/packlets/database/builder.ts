@@ -16,7 +16,7 @@ export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string, startin
 
     object.mutations?.forEach((mutation, mutationIndex) => {
       mutation.meta ??= {};
-      mutation.meta.clientTag = `${tag}:${objectIndex}:${mutationIndex + startingIndex}`;
+      mutation.meta.clientTag = `${tag}:${objectIndex + startingIndex}:${mutationIndex}`;
     });
   });
 };
