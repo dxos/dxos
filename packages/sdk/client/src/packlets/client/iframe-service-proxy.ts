@@ -9,6 +9,7 @@ import {
   DEFAULT_CLIENT_ORIGIN,
   DEFAULT_INTERNAL_CHANNEL,
   DEFAULT_SHELL_CHANNEL,
+  PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
@@ -19,7 +20,6 @@ import { LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { RpcPort, ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { DEFAULT_TIMEOUT } from '@dxos/timeouts';
 import { Provider } from '@dxos/util';
 
 import { ShellController } from '../proxies';
@@ -64,7 +64,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     shell = DEFAULT_SHELL_CHANNEL,
     vault = DEFAULT_INTERNAL_CHANNEL,
     logFilter = 'error,warn',
-    timeout = DEFAULT_TIMEOUT,
+    timeout = PROXY_CONNECTION_TIMEOUT,
   }: IFrameClientServicesProxyOptions = {}) {
     this._source = source;
     this._shell = shell;

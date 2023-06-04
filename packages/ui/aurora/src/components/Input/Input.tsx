@@ -194,7 +194,12 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
         ref={forwardedRef}
       >
         <CheckboxIndicatorPrimitive asChild>
-          <Icon weight={weight} className={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size })} />
+          <Icon
+            {...(checked && {
+              weight,
+              className: tx('input.checkboxIndicator', 'input--checkbox__indicator', { size }),
+            })}
+          />
         </CheckboxIndicatorPrimitive>
       </CheckboxPrimitive>
     );

@@ -1,7 +1,7 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ThemePlugin } = require('@dxos/aurora-theme/dist/plugin/node/plugin.cjs');
+const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
 const turbosnap = require('vite-plugin-turbosnap');
 
 module.exports = {
@@ -21,10 +21,9 @@ module.exports = {
   viteFinal: async (config) => mergeConfig(config, {
     plugins: [
       ThemePlugin({
+        root: __dirname,
         content: [
           resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-          resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-          resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs')
         ]
       }),
       turbosnap({ rootDir: config.root }),
