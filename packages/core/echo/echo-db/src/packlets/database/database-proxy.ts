@@ -260,11 +260,13 @@ export class DatabaseProxy {
 
     const batchCreated = this.beginBatch();
     try {
+      const startingMutationIndex = this._currentBatch!.data.objects!.length;
+
       this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
 
       const objectsUpdated: Item<any>[] = [];
 
-      tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!);
+      tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!, startingMutationIndex);
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.

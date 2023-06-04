@@ -8,11 +8,13 @@ import { describe, test } from '@dxos/test';
 
 import { EchoArray } from './array';
 import { createDatabase } from './testing';
-import { TypedObject } from './typed-object';
+import { Expando, TypedObject } from './typed-object';
+import { base } from './defs';
+import { log } from '@dxos/log';
 
 describe('Arrays', () => {
   test('array of tags', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const task = new TypedObject({ title: 'Main task' });
     db.add(task);
@@ -40,7 +42,7 @@ describe('Arrays', () => {
   });
 
   test('array of sub documents', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const task = new TypedObject({ title: 'Main task' });
     db.add(task);
@@ -68,7 +70,7 @@ describe('Arrays', () => {
   });
 
   test('assign a plain array', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const task = new TypedObject({ title: 'Main task' });
     db.add(task);
@@ -84,7 +86,7 @@ describe('Arrays', () => {
   });
 
   test('empty array', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const task = new TypedObject({ title: 'Main task' });
     db.add(task);
@@ -96,7 +98,7 @@ describe('Arrays', () => {
   });
 
   test('importing arrays into a database', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const root = new TypedObject({ title: 'Main task' });
     root.array = [new TypedObject({ title: 'Subtask 1' }), 'red'];
@@ -116,7 +118,7 @@ describe('Arrays', () => {
   });
 
   test('importing empty arrays into a database', async () => {
-    const db = await createDatabase();
+    const {db} = await createDatabase();
 
     const root = new TypedObject();
     root.array = [];
@@ -126,5 +128,27 @@ describe('Arrays', () => {
     await db.flush();
 
     expect(root.array.length).toEqual(0);
+  });
+
+  test('reset array', async () => {
+    const {db, host} = await createDatabase();
+    const root = db.add(new Expando());
+    await db.flush();
+    root.records = ['one'];
+
+    expect(root.records).toHaveLength(1);
+
+    root.records = [];
+    expect(root.records).toHaveLength(0);
+
+    await db.flush();
+    expect(root.records).toHaveLength(0);
+
+
+    root.records.push({ title: 'two' });
+    expect(root.records).toHaveLength(1);
+
+    await db.flush();
+    expect(root.records).toHaveLength(1);
   });
 });

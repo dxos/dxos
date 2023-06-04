@@ -12,7 +12,7 @@ import { Contact, Container, Task } from './proto';
 
 describe('database', () => {
   test('creating objects', async () => {
-    const database = await createDatabase();
+    const {db:database} = await createDatabase();
 
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
@@ -30,7 +30,7 @@ describe('database', () => {
   });
 
   test('enums', async () => {
-    const database = await createDatabase();
+    const {db:database} = await createDatabase();
 
     {
       const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
@@ -47,7 +47,7 @@ describe('database', () => {
 
   describe('dxos.schema.Text', () => {
     test('text objects are auto-created on schema', async () => {
-      const database = await createDatabase();
+      const {db:database} = await createDatabase();
 
       const task = new Task();
       expect(task.description).to.be.instanceOf(Text);
@@ -62,7 +62,7 @@ describe('database', () => {
   });
 
   test('dxos.schema.Expando', async () => {
-    const database = await createDatabase();
+    const {db:database} = await createDatabase();
 
     {
       const container = new Container();
@@ -84,7 +84,7 @@ describe('database', () => {
 
   // TODO(burdon): Test cannot update random properties.
   test('dxos.schema.TextObject', async () => {
-    const database = await createDatabase();
+    const {db:database} = await createDatabase();
 
     {
       const container = new Container();
