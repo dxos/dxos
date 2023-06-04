@@ -7,12 +7,12 @@ import assert from 'node:assert';
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Model, ModelFactory } from '@dxos/model-factory';
 import { EchoObject, EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { DataService, EchoEvent } from '@dxos/protocols/proto/dxos/echo/service';
-import { ApiError } from '@dxos/errors'
 
 import { Batch } from './batch';
 import { tagMutationsInBatch } from './builder';
@@ -207,7 +207,7 @@ export class DatabaseProxy {
    * @returns true if a batch was started, false if there was already a batch in progress.
    */
   beginBatch(): boolean {
-    if(!this._open) {
+    if (!this._open) {
       throw new ApiError('Database not open');
     }
 

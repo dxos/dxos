@@ -93,7 +93,6 @@ export const SketchFrame = observer(() => {
 
   // TODO(burdon): Pseudo CRDT using timestamp on each path.
   const handleUpdate = async (sketch: Sketch) => {
-    console.log('handleUpdate', sketch.paths);
     if (sketch.paths.length === 0) {
       canvasRef.current.resetCanvas();
       return;

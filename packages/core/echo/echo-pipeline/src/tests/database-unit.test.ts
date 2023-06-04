@@ -11,7 +11,6 @@ import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DatabaseTestBuilder } from '../testing/database-test-rig';
-import { Model } from '@dxos/model-factory';
 
 describe('database (unit)', () => {
   test('create object and reload', async () => {
@@ -123,29 +122,37 @@ describe('database (unit)', () => {
       const id = PublicKey.random().toHex();
       const { objectsUpdated } = peer1.proxy.mutate(genesisMutation(id, DocumentModel.meta.type));
       const item = objectsUpdated[0] as Item<DocumentModel>;
-      const model = new DocumentModel(
-        DocumentModel.meta,
-        item.id,
-        () => item.state,
-      );
+      const model = new DocumentModel(DocumentModel.meta, item.id, () => item.state);
 
       peer1.proxy.mutate(
-        createModelMutation(id, encodeModelMutation(DocumentModel.meta,
-          model.builder().set('tags', OrderedArray.fromValues(['red'])).build()))
+        createModelMutation(
+          id,
+          encodeModelMutation(
+            DocumentModel.meta,
+            model
+              .builder()
+              .set('tags', OrderedArray.fromValues(['red']))
+              .build(),
+          ),
+        ),
       );
       await peer1.confirm();
       expect(model.get('tags').toArray()).toHaveLength(1);
 
       peer1.proxy.mutate(
-        createModelMutation(id, encodeModelMutation(DocumentModel.meta,
-          model.builder().set('tags', OrderedArray.fromValues([])).build()))
+        createModelMutation(
+          id,
+          encodeModelMutation(DocumentModel.meta, model.builder().set('tags', OrderedArray.fromValues([])).build()),
+        ),
       );
       await peer1.confirm();
       expect(model.get('tags').toArray()).toHaveLength(0);
 
       peer1.proxy.mutate(
-        createModelMutation(id, encodeModelMutation(DocumentModel.meta,
-          model.builder().arrayPush('tags', ['green']).build()))
+        createModelMutation(
+          id,
+          encodeModelMutation(DocumentModel.meta, model.builder().arrayPush('tags', ['green']).build()),
+        ),
       );
       await peer1.confirm();
       expect(model.get('tags').toArray()).toHaveLength(1);

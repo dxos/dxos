@@ -79,7 +79,11 @@ export class MutationQueue<T> {
    */
   pushOptimistic(entry: MutationInQueue<T>) {
     assert(entry.mutation.meta!.clientTag);
-    assert(this._optimistic.findIndex((message) => message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag) === -1, `Mutation with the same tag already exists: ${entry.mutation.meta!.clientTag}}`);
+    assert(
+      this._optimistic.findIndex((message) => message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag) ===
+        -1,
+      `Mutation with the same tag already exists: ${entry.mutation.meta!.clientTag}}`,
+    );
     this._optimistic.push(entry);
   }
 
@@ -108,9 +112,8 @@ export class MutationQueue<T> {
     const lengthBefore = this._confirmed.length;
     this._confirmed.splice(insertionIndex, 0, entry);
 
-    const reorder = insertionIndex !== lengthBefore ||
-      optimisticIndex > 0 ||
-      (optimisticIndex === -1 && this._optimistic.length > 0);
+    const reorder =
+      insertionIndex !== lengthBefore || optimisticIndex > 0 || (optimisticIndex === -1 && this._optimistic.length > 0);
 
     const apply = optimisticIndex === -1;
 

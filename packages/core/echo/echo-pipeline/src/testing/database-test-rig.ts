@@ -5,6 +5,7 @@
 import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessageBlock } from '@dxos/protocols';
@@ -15,7 +16,6 @@ import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { DatabaseHost } from '../dbhost';
-import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
 
 const SPACE_KEY = PublicKey.random();
 
@@ -34,7 +34,7 @@ type WriteRequest = {
   receipt: WriteReceipt;
   options: WriteOptions;
   trigger: Trigger;
-}
+};
 
 export class DatabaseTestPeer {
   public readonly modelFactory = new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
@@ -69,7 +69,7 @@ export class DatabaseTestPeer {
 
   private readonly _writes = new Set<WriteRequest>();
 
-  constructor(public readonly rig: DatabaseTestBuilder) { }
+  constructor(public readonly rig: DatabaseTestBuilder) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);

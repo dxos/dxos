@@ -10,9 +10,9 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
-import { EchoObjectBatch } from '@dxos/protocols/src/proto/gen/dxos/echo/object';
 
 /**
  * Provides methods for DataService for a single space.
@@ -55,7 +55,7 @@ export class DataServiceHost {
 
         // Assign feed metadata
         batch.objects?.forEach((object) => {
-          setMetadataOnObject(object, {...meta});
+          setMetadataOnObject(object, { ...meta });
         });
 
         // Assign client tag metadata
@@ -106,4 +106,4 @@ const createDataMessage = (batch: EchoObjectBatch) => ({
       meta: undefined,
     })),
   },
-})
+});

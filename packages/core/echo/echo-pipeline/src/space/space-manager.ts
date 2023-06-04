@@ -71,7 +71,13 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, onNetworkConnection, onAuthFailure, memberKey }: ConstructSpaceParams) {
+  async constructSpace({
+    metadata,
+    swarmIdentity,
+    onNetworkConnection,
+    onAuthFailure,
+    memberKey,
+  }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 

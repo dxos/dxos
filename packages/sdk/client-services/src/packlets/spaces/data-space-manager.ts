@@ -68,7 +68,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-  ) { }
+  ) {}
 
   // TODO(burdon): Remove.
   get spaces() {

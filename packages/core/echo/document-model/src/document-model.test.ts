@@ -249,7 +249,10 @@ describe.skip('DocumentModel', () => {
       const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
       const peer1 = testBuilder.createPeer();
 
-      await peer1.model.builder().set('tags', OrderedArray.fromValues(['red'])).commit();
+      await peer1.model
+        .builder()
+        .set('tags', OrderedArray.fromValues(['red']))
+        .commit();
       expect(peer1.model.get('tags').toArray()).toHaveLength(1);
 
       await peer1.model.builder().set('tags', OrderedArray.fromValues([])).commit();

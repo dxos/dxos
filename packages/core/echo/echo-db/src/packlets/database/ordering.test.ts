@@ -69,7 +69,10 @@ describe('Ordering', () => {
 
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: false, apply: true });
       expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe()))).toEqual({ reorder: false, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), 'unk'))).toEqual({ reorder: false, apply: true });
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), 'unk'))).toEqual({
+        reorder: false,
+        apply: true,
+      });
       expect(queue.pushConfirmed(createMutation(feedA, 2, new Timeframe()))).toEqual({ reorder: true, apply: true });
 
       expect(queue.getMutations().length).toEqual(4);
@@ -79,10 +82,16 @@ describe('Ordering', () => {
       const queue = new MutationQueue();
 
       queue.pushOptimistic(createOptimisticMutation('1'));
-      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), '1'))).toEqual({ reorder: false, apply: false });
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), '1'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
 
       queue.pushOptimistic(createOptimisticMutation('2'));
-      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), '2'))).toEqual({ reorder: false, apply: false });
+      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), '2'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
 
       expect(queue.getMutations().length).toEqual(2);
     });
@@ -92,14 +101,22 @@ describe('Ordering', () => {
 
       queue.pushOptimistic(createOptimisticMutation('1'));
       expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: true, apply: true });
-      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), '1'))).toEqual({ reorder: false, apply: false });
-      
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), '1'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
+
       expect(queue.getMutations().length).toEqual(2);
     });
   });
 });
 
-const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe, clientTag?: string): MutationInQueue => ({
+const createMutation = (
+  feedKey: PublicKey,
+  seq: number,
+  timeframe: Timeframe,
+  clientTag?: string,
+): MutationInQueue => ({
   mutation: {
     meta: {
       feedKey,
