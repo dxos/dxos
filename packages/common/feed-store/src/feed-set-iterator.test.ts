@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
 import { faker } from '@faker-js/faker';
+import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from 'expect';
 import { faker } from '@faker-js/faker';
+import expect from 'expect';
 
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';

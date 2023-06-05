@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import add from 'date-fns/add';
 import roundToNearestMinutes from 'date-fns/roundToNearestMinutes';
-import { faker } from '@faker-js/faker';
 import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 

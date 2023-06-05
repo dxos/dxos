@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
 import { faker } from '@faker-js/faker';
+import { expect } from 'chai';
 import ProtocolStream from 'hypercore-protocol';
 
 import { latch } from '@dxos/async';
