@@ -39,7 +39,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          faker: ['faker'],
+          faker: ['@faker-js/faker'],
           highlighter: ['react-syntax-highlighter'],
           vendor: ['react', 'react-dom', 'react-router-dom'],
         },
