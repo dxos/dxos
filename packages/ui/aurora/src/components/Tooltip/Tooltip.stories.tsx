@@ -16,7 +16,7 @@ const StoryTooltip = ({ content }: StoryTooltipProps) => (
   <Tooltip.Provider>
     <Tooltip.Root defaultOpen>
       <Tooltip.Trigger asChild>
-        <Button>Trigger Tooltip.</Button>
+        <Button>Trigger Tooltip</Button>
       </Tooltip.Trigger>
       <Tooltip.Content side='right'>
         <Tooltip.Arrow />
