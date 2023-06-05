@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';

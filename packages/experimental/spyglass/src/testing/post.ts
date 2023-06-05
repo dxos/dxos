@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { PublicKey } from '@dxos/keys';
 
@@ -41,7 +41,7 @@ switch (cmd) {
   case Command.LOG:
   default: {
     const init = async () => {
-      const key = PublicKey.from(faker.random.arrayElement(keys));
+      const key = PublicKey.from(faker.helpers.arrayElement(keys));
       await spy.log(key, {
         num: faker.datatype.number(),
         text: faker.lorem.paragraph()

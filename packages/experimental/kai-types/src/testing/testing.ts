@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import add from 'date-fns/add';
 import roundToNearestMinutes from 'date-fns/roundToNearestMinutes';
-import faker from 'faker';
 import { schema } from 'prosemirror-schema-basic';
 import { prosemirrorToYXmlFragment } from 'y-prosemirror';
 
@@ -54,7 +54,7 @@ export class Generator {
         const organization = await this.createOrganization();
 
         // Address.
-        const city = faker.random.arrayElement(cities);
+        const city = faker.helpers.arrayElement(cities);
         organization.address = {
           city: city.name,
           coordinates: {
@@ -97,7 +97,7 @@ export class Generator {
       range(this._options.contacts).map(async () => {
         const contact = await this.createContact();
         if (faker.datatype.number(10) > 7) {
-          const organization = faker.random.arrayElement(organizations);
+          const organization = faker.helpers.arrayElement(organizations);
           organization.people.push(contact);
           contact.employer = organization;
         }
@@ -110,7 +110,7 @@ export class Generator {
     await Promise.all(
       range(this._options.events).map(async () => {
         const event = await this.createEvent();
-        event.members.push(...faker.random.arrayElements(contacts, faker.datatype.number(2)));
+        event.members.push(...faker.helpers.arrayElements(contacts, faker.datatype.number(2)));
         return event;
       }),
     );
@@ -121,7 +121,7 @@ export class Generator {
     // Messages.
     await Promise.all(
       range(this._options.messages).map(async () => {
-        const contact = faker.random.arrayElement(contacts);
+        const contact = faker.helpers.arrayElement(contacts);
         return this.createMessage(faker.datatype.number(10) > 6 ? contact : undefined);
       }),
     );
@@ -129,7 +129,7 @@ export class Generator {
     // Chat.
     await Promise.all(
       range(this._options.messages).map(async () => {
-        const contact = faker.random.arrayElement(contacts);
+        const contact = faker.helpers.arrayElement(contacts);
         return this.createMessage(contact, 'dxos.module.frame.chat', 1);
       }),
     );
@@ -213,7 +213,7 @@ export const createProject = (tag?: string) => {
   return new Project({
     title: faker.commerce.productAdjective() + ' ' + faker.commerce.product(),
     url: faker.internet.url(),
-    tag: tag ?? faker.random.arrayElement(tags),
+    tag: tag ?? faker.helpers.arrayElement(tags),
   });
 };
 
@@ -238,7 +238,7 @@ export const createContact = () => {
           coordinates: { lat: Number(faker.address.latitude()), lng: Number(faker.address.longitude()) },
         }
       : undefined,
-    tag: faker.datatype.number(10) > 7 ? faker.random.arrayElement(tags) : undefined,
+    tag: faker.datatype.number(10) > 7 ? faker.helpers.arrayElement(tags) : undefined,
   });
 };
 

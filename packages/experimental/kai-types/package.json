@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "@dxos/client-services": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "@types/faker": "^5.5.9",
     "date-fns": "^2.29.3",
-    "faker": "^5.5.3",
     "prosemirror-model": "^1.19.0",
     "prosemirror-schema-basic": "^1.2.1",
     "prosemirror-state": "^1.4.2",

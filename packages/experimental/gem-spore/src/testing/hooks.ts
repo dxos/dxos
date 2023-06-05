@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import update from 'immutability-helper';
 
 import { useStateRef } from '@dxos/gem-core';
@@ -52,7 +52,7 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
   let interval;
 
   const mutator = () => {
-    const parent = data.nodes.length ? faker.random.arrayElement(data.nodes) : undefined;
+    const parent = data.nodes.length ? faker.helpers.arrayElement(data.nodes) : undefined;
     const node = createNode();
 
     updateData({
