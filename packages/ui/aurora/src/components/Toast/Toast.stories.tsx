@@ -6,17 +6,7 @@ import '@dxosTheme';
 import React, { ReactNode, useState } from 'react';
 
 import { Button } from '../Buttons';
-import {
-  ToastAction,
-  ToastActions,
-  ToastBody,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastRoot,
-  ToastTitle,
-  ToastViewport,
-} from './Toast';
+import { Toast } from './Toast';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 
@@ -31,24 +21,24 @@ type StorybookToastProps = Partial<{
 const StorybookToast = (props: StorybookToastProps) => {
   const [open, setOpen] = useState(true);
   return (
-    <ToastProvider>
+    <Toast.Provider>
       <Button onClick={() => setOpen(true)}>{props.openTrigger}</Button>
-      <ToastViewport />
-      <ToastRoot open={open} onOpenChange={setOpen}>
-        <ToastBody>
-          <ToastTitle>{props.title}</ToastTitle>
-          <ToastDescription>{props.description}</ToastDescription>
-        </ToastBody>
-        <ToastActions>
-          <ToastClose asChild={typeof props.closeTrigger !== 'string'}>{props.closeTrigger}</ToastClose>
+      <Toast.Viewport />
+      <Toast.Root open={open} onOpenChange={setOpen}>
+        <Toast.Body>
+          <Toast.Title>{props.title}</Toast.Title>
+          <Toast.Description>{props.description}</Toast.Description>
+        </Toast.Body>
+        <Toast.Actions>
+          <Toast.Close asChild={typeof props.closeTrigger !== 'string'}>{props.closeTrigger}</Toast.Close>
           {(props.actionTriggers || []).map(({ altText, trigger }: ActionTriggerProps, index: number) => (
-            <ToastAction key={index} altText={altText} asChild={typeof trigger !== 'string'}>
+            <Toast.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
               {trigger}
-            </ToastAction>
+            </Toast.Action>
           ))}
-        </ToastActions>
-      </ToastRoot>
-    </ToastProvider>
+        </Toast.Actions>
+      </Toast.Root>
+    </Toast.Provider>
   );
 };
 
