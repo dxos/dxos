@@ -5,15 +5,7 @@
 import { List, Palette, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import {
-  Button,
-  DropdownMenuRoot,
-  DropdownMenuContent,
-  DropdownMenuArrow,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-} from '@dxos/aurora';
+import { Button, DropdownMenu } from '@dxos/aurora';
 import { Composer } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Note } from '@dxos/kai-types';
@@ -34,16 +26,16 @@ const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = 
     <div className='flex flex-col'>
       <div className='border-b'>
         {colors.map(({ id }) => (
-          <DropdownMenuItem key={id} onClick={() => onColorChange(id)}>
+          <DropdownMenu.Item key={id} onClick={() => onColorChange(id)}>
             <Palette className={getSize(5)} />
             <span className='mis-2'>{id}</span>
-          </DropdownMenuItem>
+          </DropdownMenu.Item>
         ))}
       </div>
-      <DropdownMenuItem onClick={onDelete}>
+      <DropdownMenu.Item onClick={onDelete}>
         <X className={getSize(5)} />
         <span className='mis-2'>Delete</span>
-      </DropdownMenuItem>
+      </DropdownMenu.Item>
     </div>
   );
 };
@@ -66,19 +58,19 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       <div className='flex w-full overflow-hidden'>
         {/* Actions */}
         <div className='order-1'>
-          <DropdownMenuRoot>
-            <DropdownMenuTrigger asChild>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
               <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(5)} />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent classNames='z-50'>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content classNames='z-50'>
                 <Menu onDelete={handleDelete} onColorChange={handleColorChange} />
-                <DropdownMenuArrow />
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
 
         {/* Title */}
