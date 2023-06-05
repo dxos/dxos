@@ -8,12 +8,8 @@ import React, { useCallback } from 'react';
 import {
   Button,
   ListItemScopedProps,
-  TreeBranch,
+  Tree,
   TreeItem,
-  TreeItemBody,
-  TreeItemHeading,
-  TreeItemOpenTrigger,
-  TreeRoot,
   useId,
   useListItemContext,
   useSidebar,
@@ -38,8 +34,8 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
   const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
   const { sidebarOpen } = useSidebar();
   return (
-    <TreeItem classNames='flex mis-1 mie-1.5'>
-      <TreeItemHeading classNames='grow'>{spaceDisplayName}</TreeItemHeading>
+    <TreeItem.Root classNames='flex mis-1 mie-1.5'>
+      <TreeItem.Heading classNames='grow'>{spaceDisplayName}</TreeItem.Heading>
       <Tooltip content={t('unhide space label')} tooltipLabelsTrigger side='top' zIndex='z-[31]'>
         <Button
           variant='ghost'
@@ -51,7 +47,7 @@ const HiddenSpaceItem = ({ space, handleUnhideSpace }: { space: Space; handleUnh
           <Eye className={getSize(4)} />
         </Button>
       </Tooltip>
-    </TreeItem>
+    </TreeItem.Root>
   );
 };
 
@@ -82,20 +78,20 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
   return (
     <>
       <div role='none' className='flex'>
-        <TreeItemOpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
+        <TreeItem.OpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon />
-        </TreeItemOpenTrigger>
-        <TreeItemHeading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
+        </TreeItem.OpenTrigger>
+        <TreeItem.Heading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
           {t('hidden spaces tree label')}
-        </TreeItemHeading>
+        </TreeItem.Heading>
       </div>
-      <TreeItemBody className='mbs-2'>
-        <TreeBranch>
+      <TreeItem.Body className='mbs-2'>
+        <Tree.Branch>
           {hiddenSpaces!.map((space) => (
             <HiddenSpaceItem key={space.key.toHex()} {...{ space, handleUnhideSpace }} />
           ))}
-        </TreeBranch>
-      </TreeItemBody>
+        </Tree.Branch>
+      </TreeItem.Body>
     </>
   );
 };
@@ -108,11 +104,11 @@ export const HiddenSpacesTree = (props: HiddenSpacesTreeProps) => {
       <span className='sr-only' id={treeLabel}>
         {t('hidden spaces tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' classNames='shrink-0'>
-        <TreeItem collapsible classNames='mis-1 block'>
+      <Tree.Root aria-labelledby={treeLabel} data-testid='composer.hiddenSpaces' classNames='shrink-0'>
+        <TreeItem.Root collapsible classNames='mis-1 block'>
           <HiddenSpacesBranch {...props} />
-        </TreeItem>
-      </TreeRoot>
+        </TreeItem.Root>
+      </Tree.Root>
     </>
   ) : null;
 };

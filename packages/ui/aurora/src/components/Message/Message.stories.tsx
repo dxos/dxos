@@ -8,7 +8,7 @@ import React from 'react';
 
 import { MessageValence } from '@dxos/aurora-types';
 
-import { Message, MessageBody, MessageTitle } from './Message';
+import { Message } from './Message';
 
 type StoryMessageProps = {
   valence: MessageValence;
@@ -17,12 +17,12 @@ type StoryMessageProps = {
 };
 
 const StoryMessage = ({ valence, title, body }: StoryMessageProps) => (
-  <Message valence={valence}>
-    <MessageTitle>
+  <Message.Root valence={valence}>
+    <Message.Title>
       <Info className='inline w-5 h-5 mb-1' weight='duotone' /> {title}
-    </MessageTitle>
-    <MessageBody>{body}</MessageBody>
-  </Message>
+    </Message.Title>
+    <Message.Body>{body}</Message.Body>
+  </Message.Root>
 );
 
 export default {

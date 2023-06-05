@@ -8,17 +8,7 @@ import React, { useState } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import {
-  List,
-  ListItem,
-  ListItemOpenTrigger,
-  ListItemCollapsibleContent,
-  ListItemEndcap,
-  ListItemHeading,
-  arrayMove,
-  DragEndEvent,
-  MockListItemOpenTrigger,
-} from './List';
+import { List, ListItem, arrayMove, DragEndEvent } from './List';
 
 export default {
   component: List,
@@ -47,15 +37,15 @@ export const Default = {
     return (
       <List {...args} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
-          <ListItem key={id} id={id}>
-            <ListItemEndcap>
+          <ListItem.Root key={id} id={id}>
+            <ListItem.Endcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItemEndcap>
-            <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
-            <ListItemEndcap>
+            </ListItem.Endcap>
+            <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
+            <ListItem.Endcap>
               <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItemEndcap>
-          </ListItem>
+            </ListItem.Endcap>
+          </ListItem.Root>
         ))}
       </List>
     );
@@ -79,16 +69,16 @@ export const Collapsible = {
     return (
       <List {...args}>
         {items.map(({ id, text, body }, index) => (
-          <ListItem key={id} id={id} collapsible={index !== 2} defaultOpen={index % 2 === 0}>
+          <ListItem.Root key={id} id={id} collapsible={index !== 2} defaultOpen={index % 2 === 0}>
             <div role='none' className='grow flex'>
-              {index !== 2 ? <ListItemOpenTrigger /> : <MockListItemOpenTrigger />}
-              <ListItemHeading classNames='grow pbs-2'>{text}</ListItemHeading>
-              <ListItemEndcap>
+              {index !== 2 ? <ListItem.OpenTrigger /> : <ListItem.MockOpenTrigger />}
+              <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
+              <ListItem.Endcap>
                 <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-              </ListItemEndcap>
+              </ListItem.Endcap>
             </div>
-            {index !== 2 && <ListItemCollapsibleContent>{body}</ListItemCollapsibleContent>}
-          </ListItem>
+            {index !== 2 && <ListItem.CollapsibleContent>{body}</ListItem.CollapsibleContent>}
+          </ListItem.Root>
         ))}
       </List>
     );

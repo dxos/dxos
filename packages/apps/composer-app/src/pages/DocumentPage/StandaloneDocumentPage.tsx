@@ -7,17 +7,7 @@ import React, { Dispatch, HTMLAttributes, PropsWithChildren, ReactNode, SetState
 import { FileUploader } from 'react-drag-drop-files';
 
 import { Document } from '@braneframe/types';
-import {
-  Button,
-  DropdownMenuRoot,
-  DropdownMenuContent,
-  DropdownMenuArrow,
-  DropdownMenuTrigger,
-  ThemeContext,
-  useThemeContext,
-  useTranslation,
-  DropdownMenuPortal,
-} from '@dxos/aurora';
+import { Button, DropdownMenu, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
 import { getSize, osTx } from '@dxos/aurora-theme';
 import { Dialog, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
@@ -66,19 +56,19 @@ export const StandaloneDocumentPage = observer(
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenuRoot>
-                <DropdownMenuTrigger asChild>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
                   <Button classNames='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuContent sideOffset={10} classNames='z-10'>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content sideOffset={10} classNames='z-10'>
                     {dropdownMenuContent}
-                    <DropdownMenuArrow />
-                  </DropdownMenuContent>
-                </DropdownMenuPortal>
-              </DropdownMenuRoot>
+                    <DropdownMenu.Arrow />
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </ThemeContext.Provider>
           </div>
           {children}

@@ -2,36 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, ForwardRefExoticComponent } from 'react';
+import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
 
+import { ThemedClassName } from '../../util';
 import {
   List,
   LIST_ITEM_NAME,
   ListItem,
-  ListItemCollapsibleContent,
   ListItemCollapsibleContentProps,
-  ListItemHeading,
   ListItemHeadingProps,
-  ListItemOpenTrigger,
   ListItemOpenTriggerProps,
-  ListItemProps,
+  ListItemRootProps,
   ListProps,
   ListScopedProps,
-  MockListItemOpenTrigger,
   useListItemContext,
 } from './List';
 
-type TreeProps = ListProps;
+type TreeRootProps = ListProps;
 
-type TreeItemProps = ListItemProps;
+type TreeItemProps = ListItemRootProps;
 
-const TreeRoot: ForwardRefExoticComponent<TreeProps> = forwardRef<HTMLOListElement, TreeProps>(
+const TreeRoot: ForwardRefExoticComponent<TreeRootProps> = forwardRef<HTMLOListElement, TreeRootProps>(
   (props, forwardedRef) => {
     return <List {...props} ref={forwardedRef} />;
   },
 );
 
-type TreeBranchProps = TreeProps;
+type TreeBranchProps = TreeRootProps;
 
 const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<
   HTMLOListElement,
@@ -41,26 +38,39 @@ const TreeBranch: ForwardRefExoticComponent<TreeBranchProps> = forwardRef<
   return <List {...props} aria-labelledby={headingId} ref={forwardedRef} />;
 });
 
-const TreeItem: ForwardRefExoticComponent<ListItemProps> = forwardRef<HTMLLIElement, ListItemProps>(
+const TreeItemRoot: ForwardRefExoticComponent<ListItemRootProps> = forwardRef<HTMLLIElement, ListItemRootProps>(
   (props, forwardedRef) => {
-    return <ListItem role='treeitem' {...props} ref={forwardedRef} />;
+    return <ListItem.Root role='treeitem' {...props} ref={forwardedRef} />;
   },
 );
 
 type TreeItemHeadingProps = ListItemHeadingProps;
 
-const TreeItemHeading = ListItemHeading;
+const TreeItemHeading = ListItem.Heading;
 
 type TreeItemOpenTriggerProps = ListItemOpenTriggerProps;
 
-const TreeItemOpenTrigger = ListItemOpenTrigger;
+const TreeItemOpenTrigger = ListItem.OpenTrigger;
 
-const MockTreeItemOpenTrigger = MockListItemOpenTrigger;
+const MockTreeItemOpenTrigger = ListItem.MockOpenTrigger;
 
 type TreeItemBodyProps = ListItemCollapsibleContentProps;
 
-const TreeItemBody: ForwardRefExoticComponent<TreeItemBodyProps> = ListItemCollapsibleContent;
+const TreeItemBody: ForwardRefExoticComponent<TreeItemBodyProps> = ListItem.CollapsibleContent;
 
-export { TreeRoot, TreeBranch, TreeItem, TreeItemHeading, TreeItemBody, TreeItemOpenTrigger, MockTreeItemOpenTrigger };
+export const Tree = { Root: TreeRoot, Branch: TreeBranch };
+export const TreeItem: {
+  Root: ForwardRefExoticComponent<TreeItemProps>;
+  Heading: ForwardRefExoticComponent<TreeItemHeadingProps>;
+  Body: ForwardRefExoticComponent<TreeItemBodyProps>;
+  OpenTrigger: ForwardRefExoticComponent<TreeItemOpenTriggerProps>;
+  MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
+} = {
+  Root: TreeItemRoot,
+  Heading: TreeItemHeading,
+  Body: TreeItemBody,
+  OpenTrigger: TreeItemOpenTrigger,
+  MockOpenTrigger: MockTreeItemOpenTrigger,
+};
 
-export type { TreeProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };
+export type { TreeRootProps, TreeItemProps, TreeItemHeadingProps, TreeItemBodyProps, TreeItemOpenTriggerProps };

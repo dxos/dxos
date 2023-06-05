@@ -7,7 +7,7 @@ import React, { FC, ReactNode, Suspense, useContext, useEffect, useState } from 
 import { createMemoryRouter, RouterProvider, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Event } from '@dxos/async';
-import { Button, MainRoot, Sidebar as SidebarRoot, Main, ThemeProvider, MainOverlay, useSidebar } from '@dxos/aurora';
+import { Button, Main, ThemeProvider, useSidebar } from '@dxos/aurora';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { raise } from '@dxos/debug';
 import { FullscreenDecorator } from '@dxos/kai-frames';
@@ -301,18 +301,18 @@ const Layout = () => {
   }, [main]);
 
   return (
-    <MainRoot>
-      <MainOverlay />
-      <SidebarRoot>
+    <Main.Root>
+      <Main.Overlay />
+      <Main.Sidebar>
         <Surface id='sidebar' element={<SidebarSurface />} />
-      </SidebarRoot>
-      <Main>
+      </Main.Sidebar>
+      <Main.Content>
         <PanelSidebarContent>
           <Surface id='main' element={<MainSurface />} />
           <Surface id='debug' />
         </PanelSidebarContent>
-      </Main>
-    </MainRoot>
+      </Main.Content>
+    </Main.Root>
   );
 };
 

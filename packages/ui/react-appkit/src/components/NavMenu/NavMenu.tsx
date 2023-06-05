@@ -5,7 +5,7 @@
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { TooltipRoot, TooltipContent, TooltipTrigger, TooltipContentProps } from '@dxos/aurora';
+import { Tooltip, TooltipContentProps } from '@dxos/aurora';
 import {
   defaultFocus,
   defaultHover,
@@ -113,9 +113,9 @@ const NavMenuLinkItem = forwardRef(
 
 const NavMenuTooltipLinkItem = forwardRef(
   ({ tooltip, triggerLinkProps, active, children }: NavMenuTooltipLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
-    <TooltipRoot>
-      <TooltipContent {...tooltip} />
-      <TooltipTrigger asChild>
+    <Tooltip.Root>
+      <Tooltip.Content {...tooltip} />
+      <Tooltip.Trigger asChild>
         {/* todo: why does the Tooltip not show if you use <NavMenuLinkItem {…}/> here? */}
         <NavigationMenuPrimitive.Item asChild ref={ref}>
           <NavigationMenuPrimitive.Link
@@ -133,8 +133,8 @@ const NavMenuTooltipLinkItem = forwardRef(
             {children}
           </NavigationMenuPrimitive.Link>
         </NavigationMenuPrimitive.Item>
-      </TooltipTrigger>
-    </TooltipRoot>
+      </Tooltip.Trigger>
+    </Tooltip.Root>
   ),
 );
 

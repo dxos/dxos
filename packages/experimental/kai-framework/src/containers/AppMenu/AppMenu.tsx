@@ -5,15 +5,7 @@
 import { Chat, Chats, List, User } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import {
-  Button,
-  DropdownMenuRoot,
-  DropdownMenuContent,
-  DropdownMenuArrow,
-  DensityProvider,
-  DropdownMenuTrigger,
-  DropdownMenuPortal,
-} from '@dxos/aurora';
+import { Button, DropdownMenu, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Message } from '@dxos/kai-types';
 import { ShellLayout, useQuery } from '@dxos/react-client';
@@ -64,19 +56,19 @@ export const AppMenu = () => {
           <Button variant='ghost' classNames='p-2' onClick={() => shell.setLayout(ShellLayout.DEVICE_INVITATIONS)}>
             <User className={getSize(6)} />
           </Button>
-          <DropdownMenuRoot>
-            <DropdownMenuTrigger asChild>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
               <Button variant='ghost' classNames='p-2'>
                 <List className={getSize(6)} />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent classNames='z-50'>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content classNames='z-50'>
                 <Actions />
-                <DropdownMenuArrow />
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </DensityProvider>
       </div>
     </>

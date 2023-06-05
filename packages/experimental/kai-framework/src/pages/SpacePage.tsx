@@ -47,9 +47,9 @@ const SpacePage = () => {
         className={['!block-start-appbar md:is-sidebar', !sidebarOpen && 'md:-inline-start-sidebar']}
         onNavigate={(path) => navigate(path)}
       />
-      <Main classNames={['flex flex-col bs-full overflow-hidden', sidebarOpen && 'md:pis-sidebar']}>
+      <Main.Content classNames={['flex flex-col bs-full overflow-hidden', sidebarOpen && 'md:pis-sidebar']}>
         <SpacePanel />
-      </Main>
+      </Main.Content>
     </div>
   );
 };

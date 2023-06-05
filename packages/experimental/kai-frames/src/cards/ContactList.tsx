@@ -5,7 +5,7 @@
 import { User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { List, ListItem, ListItemEndcap, ListItemHeading } from '@dxos/aurora';
+import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { Address, Contact } from '@dxos/kai-types';
@@ -28,11 +28,11 @@ export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) 
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <ListItem classNames='mbe-1 is-full'>
-      <ListItemEndcap>
+    <ListItem.Root classNames='mbe-1 is-full'>
+      <ListItem.Endcap>
         <User className={mx(getSize(5), 'mlb-2.5')} />
-      </ListItemEndcap>
-      <ListItemHeading>
+      </ListItem.Endcap>
+      <ListItem.Heading>
         <Input
           variant='subdued'
           label='Contact name'
@@ -48,7 +48,7 @@ export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) 
           {contact.email && <p className='truncate'>{contact.email}</p>}
           {contact.address && <p className='truncate'>{address(contact.address)}</p>}
         </div>
-      </ListItemHeading>
-    </ListItem>
+      </ListItem.Heading>
+    </ListItem.Root>
   );
 });

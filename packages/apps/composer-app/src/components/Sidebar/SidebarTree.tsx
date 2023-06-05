@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useId, useTranslation, TreeRoot } from '@dxos/aurora';
+import { useId, useTranslation, Tree } from '@dxos/aurora';
 import { observer, useIdentity, useSpaces } from '@dxos/react-client';
 
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';
@@ -20,13 +20,13 @@ export const SidebarTree = observer(() => {
       <span className='sr-only' id={treeLabel}>
         {t('sidebar tree label')}
       </span>
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' classNames='shrink-0'>
+      <Tree.Root aria-labelledby={treeLabel} data-testid='composer.sidebarTree' classNames='shrink-0'>
         {spaces
           .filter((space) => !identity || space.properties.members?.[identity.identityKey.toHex()]?.hidden !== true)
           .map((space) => {
             return <FullSpaceTreeItem key={space.key.toHex()} space={space} />;
           })}
-      </TreeRoot>
+      </Tree.Root>
       <div role='none' className='grow' />
       <HiddenSpacesTree
         hiddenSpaces={spaces.filter(
