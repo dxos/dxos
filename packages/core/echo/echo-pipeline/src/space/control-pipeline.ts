@@ -8,7 +8,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';
@@ -17,7 +16,6 @@ export type ControlPipelineParams = {
   spaceKey: PublicKey;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
-  initialTimeframe?: Timeframe;
 };
 
 /**
@@ -31,8 +29,8 @@ export class ControlPipeline {
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
-  constructor({ spaceKey, genesisFeed, feedProvider, initialTimeframe }: ControlPipelineParams) {
-    this._pipeline = new Pipeline(initialTimeframe);
+  constructor({ spaceKey, genesisFeed, feedProvider }: ControlPipelineParams) {
+    this._pipeline = new Pipeline();
     void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
     this._spaceStateMachine = new SpaceStateMachine(spaceKey);

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -46,6 +46,7 @@
     "@dxos/sentry": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@oclif/core": "^2.6.5",
     "@oclif/plugin-help": "^5.2.8",
@@ -56,6 +57,7 @@
     "debug": "^4.3.3",
     "do-wrapper": "^4.5.1",
     "faker": "^5.5.3",
+    "forever": "^4.0.3",
     "fs-extra": "^8.1.0",
     "get-folder-size": "^2.0.1",
     "inquirer": "^8.2.0",
@@ -82,8 +84,9 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "globby": "^11.1.0",
+    "nodemon": "^2.0.22",
     "shx": "^0.3.3",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "engines": {
     "node": ">=12.0.0"
@@ -95,11 +98,6 @@
     "bin": "dx",
     "dirname": "dx",
     "commands": "./dist/src/commands",
-    "hooks": {
-      "init": [
-        "./dist/src/hooks/init/config"
-      ]
-    },
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"

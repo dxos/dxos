@@ -34,7 +34,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
   test('joins swarm with star topology', async () => {
@@ -48,7 +48,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
   test('joins swarm multiple times', async () => {
@@ -75,7 +75,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       await exchangeMessages(swarm1, swarm2);
       await leaveSwarm([peer1, peer2], topic2);
     }
-  }).tag('flaky');
+  });
 
   test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
@@ -109,7 +109,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
       test2.swarm1a.protocol.testConnection(test2.peer2a.peerId),
     ]);
-  }).tag('flaky');
+  });
 
   test('peers reconnect after and error in connection', async () => {
     const peer1 = testBuilder.createPeer();
@@ -178,8 +178,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     .timeout(2_000);
 
   // TODO(mykola): Fails with large amount of peers ~10.
-  // Time wasted: 1 hour (increment when you work on it).
-  test.skip('many peers and connections', async () => {
+  test('many peers and connections', async () => {
     const numTopics = 2;
     const peersPerTopic = 3;
     const swarmsAllPeersConnected: Promise<any>[] = [];
@@ -207,5 +206,5 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     );
 
     await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
-  });
+  }).tag('stress');
 };

@@ -1,8 +1,8 @@
 # Class `EchoArray`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/echo-array.d.ts:5]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/array.d.ts:5]()</sub>
 
 
-
+Array of complex or scalar values.
 
 
 ## Constructors
@@ -21,6 +21,9 @@ Arguments:
 ### [[base]]()
 Type: <code>[EchoArray](/api/@dxos/react-client/classes/EchoArray)&lt;T&gt;</code>
 
+### [[unscopables]]()
+Type: <code>any</code>
+
 ### [length]()
 Type: <code>number</code>
 
@@ -34,14 +37,6 @@ Type: <code>ArrayConstructor</code>
 
 
 Returns: <code>IterableIterator&lt;T&gt;</code>
-
-Arguments: none
-
-### [\[unscopables\]()]()
-
-
-
-Returns: <code>object</code>
 
 Arguments: none
 
@@ -138,6 +133,30 @@ Arguments:
 `thisArg`: <code>any</code>
 
 ### [findIndex(predicate, \[thisArg\])]()
+
+
+
+Returns: <code>number</code>
+
+Arguments: 
+
+`predicate`: <code>function</code>
+
+`thisArg`: <code>any</code>
+
+### [findLast(predicate, \[thisArg\])]()
+
+
+
+Returns: <code>undefined | T</code>
+
+Arguments: 
+
+`predicate`: <code>function</code>
+
+`thisArg`: <code>any</code>
+
+### [findLastIndex(predicate, \[thisArg\])]()
 
 
 

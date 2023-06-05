@@ -1,5 +1,5 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:49]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/space-proxy.d.ts:9]()</sub>
 
 
 
@@ -29,8 +29,11 @@ Type: <code>[EchoDatabase](/api/@dxos/react-client/classes/EchoDatabase)</code>
 
 Echo database.
 
+### [error]()
+Type: <code>undefined | Error</code>
+
 ### [internal]()
-Type: <code>Internal</code>
+Type: <code>[SpaceInternal](/api/@dxos/react-client/interfaces/SpaceInternal)</code>
 
 ### [invitations]()
 Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/react-client/classes/CancellableInvitationObservable)[]&gt;</code>
@@ -50,7 +53,7 @@ Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
 Current state of space pipeline.
 
 ### [properties]()
-Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+Type: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject) | [Properties](/api/@dxos/react-client/classes/Properties)</code>
 
 Properties object.
 

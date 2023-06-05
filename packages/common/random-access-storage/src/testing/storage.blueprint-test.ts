@@ -60,8 +60,8 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
           await writeAndCheck(file, buffer);
         }
 
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(count);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(count);
       }
 
       {
@@ -72,8 +72,8 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
           await file.destroy();
         }
 
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(count - amountToDelete);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(count - amountToDelete);
       }
 
       // Cleanup.
@@ -288,27 +288,37 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       }
     });
 
-    // TODO(mykola): Implement such behavior for all storages?
-    test.skip('list all files after reopen', async () => {
-      const storage = createStorage();
-      const directory = storage.createDirectory();
-      const files = [...Array(10)].map((name) => directory.getOrCreateFile(randomText()));
+    test('list all files after reopen', async function () {
+      if (testGroupName !== StorageType.WEBFS) {
+        this.skip();
+      }
 
+      const dirname = randomText();
+
+      const storage = createStorage();
+      const directory = storage.createDirectory(dirname);
+
+      {
+        const entries = await directory.list();
+        expect(entries).toHaveLength(0);
+      }
+
+      const files = [...Array(10)].map(() => directory.getOrCreateFile(randomText()));
       for (const file of files) {
         const buffer = Buffer.from(randomText());
         await writeAndCheck(file, buffer);
       }
 
       {
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(files.length);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(files.length);
       }
 
       {
         const storage = createStorage();
-        const directory = storage.createDirectory();
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(files.length);
+        const directory = storage.createDirectory(dirname);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(files.length);
       }
     });
   });

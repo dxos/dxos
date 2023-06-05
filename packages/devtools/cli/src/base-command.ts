@@ -9,16 +9,19 @@ import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import pkgUp from 'pkg-up';
 
-import { sleep } from '@dxos/async';
-import { Client, Config } from '@dxos/client';
-import { fromHost } from '@dxos/client-services';
+import { Client, DEFAULT_DX_PROFILE, fromCliEnv, Config } from '@dxos/client';
+import { ConfigProto } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { Daemon } from './daemon';
+import { ForeverDaemon } from './daemon/forever';
 import {
   disableTelemetry,
   getTelemetryContext,
@@ -59,7 +62,14 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => join(context.config.configDir, 'dx.yml'),
+      default: async (context: any) => {
+        if (context?.flags?.profile) {
+          return join((context.config as OclifConfig).configDir, `${context.flags.profile}.yml`);
+        } else {
+          return join((context.config as OclifConfig).configDir, `${DEFAULT_DX_PROFILE}.yml`);
+        }
+      },
+      dependsOn: ['profile'],
       aliases: ['c'],
     }),
 
@@ -67,6 +77,12 @@ export abstract class BaseCommand extends Command {
       description: 'Timeout in seconds',
       default: 30,
       aliases: ['t'],
+    }),
+
+    profile: Flags.string({
+      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
+      default: DEFAULT_DX_PROFILE,
+      env: 'DX_PROFILE',
     }),
 
     // TODO(mykola): Implement JSON args.
@@ -148,23 +164,33 @@ export abstract class BaseCommand extends Command {
     });
 
     // Load user config file.
-    const { flags } = await this.parse(this.constructor as any);
-    const { config: configFile } = flags as any;
+    await this._loadConfig();
+  }
 
-    const configExists = await exists(configFile);
-    const configContent = await readFile(
-      configExists ? configFile : join(__dirname, '../../config/config-default.yml'),
-      'utf-8',
-    );
-    if (!configExists) {
-      void writeFile(configFile, configContent, 'utf-8');
-    }
+  private async _loadConfig() {
+    const { flags } = await this.parse(this.constructor as any);
+    const { config: configFile } = flags;
 
     try {
-      this._clientConfig = new Config(yaml.load(configContent) as any);
+      const configExists = await exists(configFile);
+
+      if (!configExists) {
+        const defaultConfigPath = join(
+          dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+          'config/config-default.yml',
+        );
+        const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
+        if (yamlConfig.runtime?.client?.storage?.path) {
+          // Isolate DX_PROFILE storages.
+          yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
+        }
+        await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
+      }
+
+      this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
     } catch (err) {
       Sentry.captureException(err);
-      console.error(`Invalid config file: ${configFile}`);
+      log.error(`Invalid config file: ${configFile}`, err);
       process.exit(1);
     }
   }
@@ -194,10 +220,17 @@ export abstract class BaseCommand extends Command {
    * Lazily create the client.
    */
   async getClient() {
+    const { flags } = await this.parse(this.constructor as any);
+    await this.execWithDaemon(async (daemon) => {
+      if (!(await daemon.isRunning(flags.profile))) {
+        await daemon.start(flags.profile);
+      }
+    });
+
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromHost(this._clientConfig) });
+      this._client = new Client({ config: this._clientConfig, services: fromCliEnv(flags.profile) });
       await this._client.initialize();
       log('Initialized');
     }
@@ -214,10 +247,23 @@ export abstract class BaseCommand extends Command {
       const value = await callback(client);
       log('Destroying...');
       await client.destroy();
-      log('Destroyed');
 
-      // TODO(burdon): Ends with abort signal without sleep (threads still open?)
-      await sleep(3_000);
+      log('Done');
+      return value;
+    } catch (err: any) {
+      Sentry.captureException(err);
+      this.error(err);
+    }
+  }
+
+  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
+    try {
+      const daemon = new ForeverDaemon();
+      await daemon.connect();
+      const value = await callback(daemon);
+      log('Disconnecting...');
+      await daemon.disconnect();
+
       log('Done');
       return value;
     } catch (err: any) {

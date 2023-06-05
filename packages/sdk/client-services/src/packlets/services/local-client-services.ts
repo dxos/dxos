@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClientServices, ClientServicesProvider } from '@dxos/client';
+import { ClientServices, ClientServicesProvider } from '@dxos/client-protocol';
 import { ServiceBundle } from '@dxos/rpc';
 
 import { ClientServicesHost, ClientServicesHostParams } from './service-host';

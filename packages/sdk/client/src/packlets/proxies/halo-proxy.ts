@@ -14,35 +14,16 @@ import {
   ObservableProvider,
   Trigger,
 } from '@dxos/async';
+import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ClientServicesProvider } from '../client';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsProxy } from '../invitations';
-
-/**
- * TODO(burdon): Public API (move comments here).
- */
-export interface Halo {
-  get identity(): MulticastObservable<Identity | null>;
-  get devices(): MulticastObservable<Device[]>;
-  get device(): Device | undefined;
-  get contacts(): MulticastObservable<Contact[]>;
-  get invitations(): MulticastObservable<CancellableInvitationObservable[]>;
-
-  createIdentity(options?: ProfileDocument): Promise<Identity>;
-  recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
-
-  createInvitation(): CancellableInvitationObservable;
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
-}
-
-const THROW_TIMEOUT_ERROR_AFTER = 3000;
+import { InvitationsProxy } from './invitations-proxy';
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
@@ -317,7 +298,7 @@ export class HaloProxy implements Halo {
 
     const credentials = await asyncTimeout(
       trigger.wait(),
-      THROW_TIMEOUT_ERROR_AFTER,
+      AUTH_TIMEOUT,
       new ApiError('Timeout while waiting for credentials'),
     );
     return this._serviceProvider.services.IdentityService.signPresentation({

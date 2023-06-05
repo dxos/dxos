@@ -10,8 +10,9 @@ import { describe, test, afterTest } from '@dxos/test';
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
 // TODO(burdon): Config.
-// Signal server will be started by the setup script.
-const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+// Signal server will be started by the setup script.// Signal server will be started by the setup script.
+const port = process.env.SIGNAL_PORT ?? 4000;
+const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space-manager', () => {
   test.skip('invitations', async () => {
@@ -22,11 +23,11 @@ describe('space-manager', () => {
     afterTest(async () => await builder.close());
 
     const peer1 = await builder.createPeer();
-    const spaceManager1 = peer1.createSpaceManager();
+    const spaceManager1 = peer1.spaceManager;
     await spaceManager1.open();
 
     const peer2 = await builder.createPeer();
-    const spaceManager2 = peer2.createSpaceManager();
+    const spaceManager2 = peer2.spaceManager;
     await spaceManager2.open();
 
     afterTest(() => spaceManager1.close());

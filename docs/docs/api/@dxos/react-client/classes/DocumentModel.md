@@ -14,7 +14,7 @@ Returns: <code>[DocumentModel](/api/@dxos/react-client/classes/DocumentModel)</c
 
 Arguments: 
 
-`_meta`: <code>ModelMeta&lt;any, any, any&gt;</code>
+`_meta`: <code>ModelMeta</code>
 
 `_itemId`: <code>string</code>
 
@@ -28,13 +28,13 @@ Arguments:
 Type: <code>function</code>
 
 ### [meta]()
-Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>ModelMeta</code>
 
 ### [itemId]()
 Type: <code>string</code>
 
 ### [modelMeta]()
-Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>ModelMeta</code>
 
 ### [readOnly]()
 Type: <code>boolean</code>

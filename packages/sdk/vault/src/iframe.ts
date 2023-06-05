@@ -6,15 +6,22 @@ import { StrictMode } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
-import { ClientServicesHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntime } from '@dxos/client-services';
+import {
+  ClientServicesHost,
+  IFrameHostRuntime,
+  IFrameProxyRuntime,
+  ShellRuntime,
+  ShellRuntimeImpl,
+} from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
 import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
+import { safariCheck } from '@dxos/util';
 
-import { mobileAndTabletCheck } from './util';
+const cssStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');
@@ -49,7 +56,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
   const shellDisabled = window.location.hash === '#disableshell';
   const config = new Config(await Dynamics(), Defaults());
 
-  const appReady = new Trigger<string>();
+  const appReady = new Trigger<MessagePort | undefined>();
   window.addEventListener('message', (event) => {
     if (event.source !== window.parent) {
       return;
@@ -60,17 +67,42 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       return;
     }
 
-    if (payload === 'init') {
-      appReady.wake(event.origin);
+    if (payload.command === 'port') {
+      appReady.wake(payload.port);
     }
   });
 
-  // TODO(wittjosiah): Remove mobile check once we can inspect shared workers in iOS Safari.
-  if (mobileAndTabletCheck() || typeof SharedWorker === 'undefined') {
-    console.log('Running DXOS vault in compatibility mode.');
+  if (safariCheck()) {
+    log.info('Running DXOS shell from app client.');
+    const origin = (window as any).__DXOS_APP_ORIGIN__;
+    window.parent.postMessage({ channel: DEFAULT_INTERNAL_CHANNEL, payload: 'client' }, origin);
+    const port = await appReady.wait();
 
-    const origin = await appReady.wait();
+    let shellClientProxy: ClientServicesProvider | undefined;
+    if (!shellDisabled && port) {
+      shellClientProxy = new ClientServicesProxy(createWorkerPort({ port }));
+      void shellClientProxy.open();
+    }
+
+    if (shellClientProxy) {
+      const shellRuntime = new ShellRuntimeImpl(createIFramePort({ channel: 'dxos:shell' }));
+      await shellRuntime.open();
+      await startShell(config, shellRuntime, shellClientProxy, origin);
+    }
+
+    return;
+  } else {
+    console.log(
+      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${window.location.href}`,
+      cssStyle,
+    );
+  }
+
+  if (typeof SharedWorker === 'undefined') {
+    log.info('Running DXOS vault in main process.');
+
     const messageChannel = new MessageChannel();
+    const origin = (window as any).__DXOS_APP_ORIGIN__;
     window.parent.postMessage(
       {
         channel: DEFAULT_INTERNAL_CHANNEL,
@@ -99,6 +131,10 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
+    console.log(
+      `%cDXOS Client is communicating with the shared worker on ${window.location.origin}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
+      cssStyle,
+    );
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
       const { command, payload } = event.data;
@@ -108,7 +144,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     };
 
     const { systemPort, shellPort, appPort } = await ports.wait();
-    const origin = await appReady.wait();
+    const origin = (window as any).__DXOS_APP_ORIGIN__;
     window.parent.postMessage(
       {
         channel: DEFAULT_INTERNAL_CHANNEL,

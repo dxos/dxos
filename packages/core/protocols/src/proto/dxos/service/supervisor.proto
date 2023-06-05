@@ -35,11 +35,26 @@ message Service {
   Status status = 2;
   repeated string addresses = 4;
   Type type = 5;
+  repeated WellKnown well_knowns = 6;
 }
 
 // Public .well-known endpoint.
 message Services {
   repeated Service services = 1;
+}
+
+message WellKnown {
+  string url = 1;
+  string description = 2;
+}
+
+message WellKnowns {
+  message WellKnownsByService {
+    string service_name = 1;
+    repeated WellKnown well_knowns = 2;
+  }
+
+  repeated WellKnownsByService well_knowns = 1;
 }
 
 message ConfigPair {

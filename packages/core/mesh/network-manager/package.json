@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,7 +48,7 @@
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
     "fast-check": "~3.3.0",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "publishConfig": {
     "access": "public"

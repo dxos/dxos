@@ -103,8 +103,7 @@ class Toolbox {
     const projects: Project[] = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());
     this.projects = projects.filter(
       (project: Project) =>
-        project.name?.startsWith('@dxos') &&
-        project.name?.startsWith('@braneframe') &&
+        (project.name?.startsWith('@dxos') || project.name?.startsWith('@braneframe')) &&
         (!this.config.project?.ignored || this.config.project?.ignored.indexOf(project.name) === -1),
     );
 

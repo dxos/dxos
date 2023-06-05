@@ -7,7 +7,7 @@ import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { TestBuilder } from '@dxos/client-services/testing';
+import { TestBuilder } from '@dxos/client/testing';
 
 import { ClientContext, ClientProvider } from '../client';
 

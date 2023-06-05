@@ -45,7 +45,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm nx run-many --target=build --skip-nx-cache
+        run: pnpm nx run-many --target=build --parallel 3
         env:
           # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
           NODE_ENV: production
@@ -55,7 +55,7 @@ jobs:
           DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
 
       - name: Bundle Vault
-        run: pnpm nx run-many --target=bundle --projects=vault --skip-nx-cache
+        run: pnpm nx bundle vault --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
@@ -72,7 +72,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bundle
-        run: pnpm nx run-many --target=bundle --projects=devtools-extension
+        run: |
+          pnpm nx bundle devtools-extension --parallel 3
+          pnpm nx bundle composer-extension --parallel 3
         env:
           NODE_ENV: production
           DX_ENVIRONMENT: production
@@ -83,6 +85,7 @@ jobs:
           ROOT_CWD="$(pwd)"
           mkdir artifacts
           pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1

@@ -1,30 +1,30 @@
 # Type `IFrameClientServicesProxyOptions`
-<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:38](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L38)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/client/iframe-service-proxy.ts:30](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L30)</sub>
 
 
 
 
 
 ## Properties
-### [channel](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L40)
+### [client](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L32)
+Type: <code>[Client](/api/@dxos/client/classes/Client)</code>
+
+
+### [logFilter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L35)
 Type: <code>string</code>
 
 
-### [logFilter](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L43)
-Type: <code>string</code>
-
-
-### [shell](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L41)
+### [shell](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L33)
 Type: <code>boolean | string</code>
 
 
-### [source](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L39)
+### [source](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L31)
 Type: <code>string</code>
 
 
-### [timeout](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L44)
+### [timeout](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L36)
 Type: <code>number</code>
 
 
-### [vault](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L42)
+### [vault](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/iframe-service-proxy.ts#L34)
 Type: <code>string</code>

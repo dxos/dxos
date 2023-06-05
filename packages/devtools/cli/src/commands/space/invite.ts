@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args } from '@oclif/core';
+import { ux, Args } from '@oclif/core';
+import chalk from 'chalk';
 
-import { Client } from '@dxos/client';
+import { Client, InvitationEncoder } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace } from '../../util';
+import { selectSpace, hostInvitation } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
@@ -27,33 +28,25 @@ export default class Invite extends BaseCommand {
 
       const space = spaces.find((space) => space.key.toHex().startsWith(key));
       if (!space) {
-        this.log(`Invalid key: ${truncateKey(key)}`);
+        throw new Error(`Invalid key: ${truncateKey(key)}`);
       }
 
-      /*
-      const invitation = await space.createInvitation();
-      const descriptor = invitation.encode();
-      const secret = invitation.secret.toString();
+      const observable = space.createInvitation();
+      const invitationSuccess = hostInvitation({
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            const invitationCode = InvitationEncoder.encode(observable.get());
 
-      this.log(chalk`\n{blue Invitation}: ${descriptor}`);
-      this.log(chalk`\n{red Secret}: ${secret}\n`);
+            this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+          },
+        },
+      });
 
-      try {
-        CliUx.ux.action.start('Waiting for peer to connect');
-        await invitation.wait(timeout * 1_000);
-        CliUx.ux.action.stop();
-
-        const { value: members } = space.queryMembers();
-        printMembers(members);
-
-        // TODO(burdon): Wait to replicate.
-        await sleep(5_000);
-      } catch (err: any) {
-        CliUx.ux.action.stop(String(err));
-
-        invitation.cancel();
-      }
-      */
+      ux.action.start('Waiting for peer to connect');
+      await invitationSuccess;
+      ux.action.stop();
     });
   }
 }

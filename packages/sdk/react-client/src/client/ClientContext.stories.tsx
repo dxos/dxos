@@ -4,7 +4,7 @@
 
 import React, { Component, PropsWithChildren } from 'react';
 
-import { fromHost } from '@dxos/client-services';
+import { fromHost } from '@dxos/client';
 import { Config } from '@dxos/config';
 
 import { ClientProvider, useClient } from './ClientContext';

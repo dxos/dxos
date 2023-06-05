@@ -17,7 +17,7 @@ and the ordered set of mutations since that point is replayed.
 The state of the model is formed from the following components (in order):
 - The custom snapshot from the initial state.
 - The snapshot mutations from the initial state.
-- The mutatation queue.
+- The mutation queue.
 - Optimistic mutations.
 
 
@@ -46,7 +46,7 @@ Type: <code>undefined | string</code>
 Type: <code>ItemManager</code>
 
 ### [_modelMeta]()
-Type: <code>"null" | ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>"null" | ModelMeta</code>
 
 ### [deleted]()
 Type: <code>boolean</code>
@@ -58,7 +58,7 @@ Type: <code>string</code>
 Type: <code>boolean</code>
 
 ### [modelMeta]()
-Type: <code>undefined | ModelMeta&lt;any, any, any&gt;</code>
+Type: <code>undefined | ModelMeta</code>
 
 ### [modelType]()
 Type: <code>string</code>

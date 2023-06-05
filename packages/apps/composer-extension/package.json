@@ -1,8 +1,8 @@
 {
   "name": "@dxos/composer-extension",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "private": true,
-  "description": "Composer Web Extension",
+  "description": "DXOS Composer Web Extension",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
@@ -15,8 +15,8 @@
   },
   "devDependencies": {
     "@types/webextension-polyfill": "^0.10.0",
-    "typescript": "^4.8.4",
-    "vite": "^4.3.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.9",
     "vite-plugin-web-extension": "^3.0.7",
     "webextension-polyfill": "^0.10.0"
   }

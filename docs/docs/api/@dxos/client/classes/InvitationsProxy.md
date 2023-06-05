@@ -1,12 +1,12 @@
 # Class `InvitationsProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/invitations/invitations-proxy.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L39)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/invitations-proxy.ts:42](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L42)</sub>
 
 
 
 
 
 ## Constructors
-### [constructor(_invitationsService, _getInvitationContext)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L51)
+### [constructor(_invitationsService, _getInvitationContext)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L54)
 
 
 
@@ -20,18 +20,18 @@ Arguments:
 
 
 ## Properties
-### [accepted](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L60)
+### [accepted](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L63)
 Type: <code>MulticastObservable&lt;[AuthenticatingInvitationObservable](/api/@dxos/client/classes/AuthenticatingInvitationObservable)[]&gt;</code>
 
-### [created](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L56)
+### [created](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L59)
 Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/client/classes/CancellableInvitationObservable)[]&gt;</code>
 
-### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L64)
+### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L67)
 Type: <code>boolean</code>
 
 
 ## Methods
-### [acceptInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L155)
+### [acceptInvitation(invitation)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L158)
 
 
 
@@ -41,7 +41,7 @@ Arguments:
 
 `invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L109)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L112)
 
 
 
@@ -49,7 +49,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L132)
+### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L135)
 
 
 
@@ -59,7 +59,7 @@ Arguments:
 
 `options`: <code>Partial&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
 
-### [getInvitationOptions()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L121)
+### [getInvitationOptions()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L124)
 
 
 
@@ -67,7 +67,7 @@ Returns: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 Arguments: none
 
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations-proxy.ts#L68)
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitations-proxy.ts#L71)
 
 
 

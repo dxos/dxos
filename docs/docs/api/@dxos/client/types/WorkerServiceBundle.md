@@ -1,10 +1,10 @@
 # Type `WorkerServiceBundle`
-<sub>Declared in [packages/sdk/client/src/packlets/client/service-definitions.ts:80](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L80)</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:35]()</sub>
 
 
 
 
 
 ## Properties
-### [WorkerService](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/service-definitions.ts#L81)
+### [WorkerService]()
 Type: <code>WorkerService</code>

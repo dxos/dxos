@@ -35,7 +35,7 @@ Type: <code>[DatabaseRouter](/api/@dxos/client/classes/DatabaseRouter)</code>
 
 
 
-Add object to th database.
+Add object to the database.
 Restores the object if it was deleted.
 
 
@@ -66,15 +66,17 @@ Arguments:
 
 `id`: <code>string</code>
 
-### [query(\[filter\])]()
+### [query(\[filter\], \[options\])]()
 
 
 
-Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;&gt;</code>
+Returns: <code>[Query](/api/@dxos/client/classes/Query)&lt;[TypedObject](/api/@dxos/client/values#TypedObject)&gt;</code>
 
 Arguments: 
 
 `filter`: <code>[Filter](/api/@dxos/client/types/Filter)&lt;any&gt;</code>
+
+`options`: <code>[QueryOptions](/api/@dxos/client/types/QueryOptions)</code>
 
 ### [remove(obj)]()
 

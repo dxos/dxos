@@ -5,9 +5,10 @@
 //
 
 import { Flags } from '@oclif/core';
+import assert from 'node:assert';
 
 import { BaseCommand } from '../../base-command';
-import { runDaemon } from '../../daemon/run';
+import { runServices } from '../../daemon';
 
 export default class Run extends BaseCommand {
   static override enableJsonFlag = true;
@@ -17,17 +18,18 @@ export default class Run extends BaseCommand {
     ...BaseCommand.flags,
     listen: Flags.string({
       description: 'Expose services.',
-    }),
-    profile: Flags.string({
-      description: 'Profile to use.',
+      required: true,
+      multiple: true,
     }),
   };
 
   async run(): Promise<any> {
     const {
-      flags: { listen, profile },
+      flags: { listen },
     } = await this.parse(Run);
-    await runDaemon({ listen: listen!, profile: profile! });
-    await new Promise(() => {});
+    assert(this.clientConfig);
+    await runServices({ listen, config: this.clientConfig });
+
+    this.log('daemon started');
   }
 }

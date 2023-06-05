@@ -8,7 +8,7 @@ import { ReactRenderer } from '@storybook/react';
 import React, { PropsWithChildren, ReactNode, useState } from 'react';
 
 import { Client, EchoSchema, PublicKey, Space, SpaceProxy } from '@dxos/client';
-import { performInvitation, TestBuilder } from '@dxos/client-services/testing';
+import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';

@@ -36,6 +36,32 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
+### [fromCliEnv(\[options\])]()
+
+
+
+Connects to locally running CLI daemon.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`options`: <code>[FromCliEnvOptions](/api/@dxos/react-client/types/FromCliEnvOptions)</code>
+
+### [fromHost(\[config\])]()
+
+
+
+Creates stand-alone services without rpc.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
 ### [fromIFrame(\[config\], \[options\])]()
 
 
@@ -50,6 +76,19 @@ Arguments:
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
+
+### [fromSocket(url)]()
+
+
+
+Access to remote client via a socket.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`url`: <code>string</code>
 
 ### [generateSeedPhrase()]()
 
@@ -76,13 +115,13 @@ Arguments:
 
 
 
-Returns: <code>object is [TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;</code>
+Returns: <code>object is [TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
 
 Arguments: 
 
 `object`: <code>unknown</code>
 
-### [observer(baseComponent)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/observer.tsx#L33)
+### [observer(baseComponent)]()
 
 
 
@@ -94,6 +133,18 @@ Returns: <code>FunctionComponent&lt;P&gt;</code>
 Arguments: 
 
 `baseComponent`: <code>FunctionComponent&lt;P&gt;</code>
+
+### [setStateFromSnapshot(obj, snapshot)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`obj`: <code>[EchoObject](/api/@dxos/react-client/classes/EchoObject)&lt;any&gt;</code>
+
+`snapshot`: <code>ObjectSnapshot</code>
 
 ### [useClient()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
 
@@ -232,20 +283,24 @@ Returns: <code>NetworkStatus</code>
 
 Arguments: none
 
-### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
+### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 
 
 Create subscription.
 
 
-Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)&lt;object&gt;[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)[]</code>
 
 Arguments: 
 
 `space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 `filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)&lt;T&gt;</code>
+
+`options`: <code>[QueryOptions](/api/@dxos/react-client/types/QueryOptions)</code>
+
+`deps`: <code>any[]</code>
 
 ### [useResultSet(resultSet)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/util/useResultSet.ts#L17)
 
@@ -337,22 +392,21 @@ Arguments:
 
 `deps`: <code>DependencyList</code>
 
-### [useSubscription(cb, selection)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSubscription.ts#L16)
+### [useSubscription(cb, selection)]()
 
 
 
 Create reactive selection.
-Calls the callback when any object from the selection changes.
-Also calls the callback when the selection changes and during the first render.
+Calls the callback when the selection changes and during the first render.
 
 
-Returns: <code>undefined | [SubscriptionHandle](/api/@dxos/react-client/interfaces/SubscriptionHandle)</code>
+Returns: <code>undefined | SubscriptionHandle</code>
 
 Arguments: 
 
 `cb`: <code>function</code>
 
-`selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
+`selection`: <code>Selection</code>
 
 ### [wrapObservable(observable)]()
 

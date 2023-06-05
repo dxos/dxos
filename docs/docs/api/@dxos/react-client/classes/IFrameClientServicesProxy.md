@@ -1,5 +1,5 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:17]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:19]()</sub>
 
 
 Proxy to host client service via iframe.
@@ -14,7 +14,7 @@ Returns: <code>[IFrameClientServicesProxy](/api/@dxos/react-client/classes/IFram
 
 Arguments: 
 
-`options`: <code>Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;</code>
+`options`: <code>[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)</code>
 
 
 ## Properties
@@ -34,7 +34,7 @@ Type: <code>undefined | [ShellDisplay](/api/@dxos/react-client/enums#ShellDispla
 Type: <code>ProtoRpcPeer&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
 ### [services]()
-Type: <code>[ClientServices](/api/@dxos/react-client/types/ClientServices)</code>
+Type: <code>Partial&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 
 
 ## Methods

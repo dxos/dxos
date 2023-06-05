@@ -3,10 +3,12 @@
 //
 
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
+import { SpaceState } from '@dxos/client';
 import { log } from '@dxos/log';
+import { useMulticastObservable } from '@dxos/react-async';
 import { Space, useIdentity, useQuery, useSpaces, Text, observer } from '@dxos/react-client';
 import { ShellProvider } from '@dxos/react-shell';
 
@@ -14,7 +16,8 @@ import { displayName, matchSpace } from '../../util';
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 
 const useLocationIdentifier = () => {
-  const { '*': location } = useParams();
+  const [searchParams] = useSearchParams();
+  const location = searchParams.get('location');
   let source, id;
   try {
     const url = location ? new URL(location) : undefined;
@@ -34,7 +37,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
 export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
   const [searchParams] = useSearchParams();
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
-  const haloInvitationCode = searchParams.get('haloInvitationCode');
+  const deviceInvitationCode = searchParams.get('deviceInvitationCode');
   const identity = useIdentity({ login: true });
   const identityHex = identity?.identityKey.toHex();
   const [source, id] = useLocationIdentifier();
@@ -52,7 +55,7 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
     <ShellProvider
       space={space || undefined}
       spaceInvitationCode={spaceInvitationCode}
-      haloInvitationCode={haloInvitationCode}
+      deviceInvitationCode={deviceInvitationCode}
       onJoinedSpace={(nextSpaceKey) => {
         console.warn('TODO: onJoinedSpace', nextSpaceKey);
       }}
@@ -72,12 +75,13 @@ const defaultDocumentResolverContext: DocumentResolverProps = {
 export const DocumentResolverContext: Context<DocumentResolverProps> =
   createContext<DocumentResolverProps>(defaultDocumentResolverContext);
 
-const DocumentsQueryableDocumentResolverProvider = ({
+const DocumentResolverProviderImpl = ({
   space,
   source,
   id,
   children,
 }: PropsWithChildren<{ space: Space; source: string; id: string }>) => {
+  const spaceState = useMulticastObservable(space.state);
   const [document, setDocument] = useState<Document | null>(null);
   const defaultDisplayName = displayName(source, id);
 
@@ -88,7 +92,7 @@ const DocumentsQueryableDocumentResolverProvider = ({
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (event.source !== window.parent) {
+      if (event.source !== window.parent || spaceState !== SpaceState.READY) {
         return;
       }
 
@@ -113,7 +117,7 @@ const DocumentsQueryableDocumentResolverProvider = ({
     } else {
       setDocument(documents[0] as Document);
     }
-  }, [space, documents]);
+  }, [spaceState, space, documents]);
 
   return (
     <DocumentResolverContext.Provider value={{ document, setDocument }}>{children}</DocumentResolverContext.Provider>
@@ -124,9 +128,9 @@ export const DocumentResolverProvider = ({ children }: PropsWithChildren<{}>) =>
   const { space, source, id } = useContext(SpaceResolverContext);
 
   return space && source && id ? (
-    <DocumentsQueryableDocumentResolverProvider space={space} source={source} id={id}>
+    <DocumentResolverProviderImpl space={space} source={source} id={id}>
       {children}
-    </DocumentsQueryableDocumentResolverProvider>
+    </DocumentResolverProviderImpl>
   ) : (
     <DocumentResolverContext.Provider value={defaultDocumentResolverContext}>
       {children}

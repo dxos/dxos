@@ -3,6 +3,7 @@
 //
 
 import { asyncTimeout, Trigger } from '@dxos/async';
+import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
 
@@ -42,7 +43,7 @@ export class VaultResourceLock {
 
     try {
       log('aquiring lock...');
-      await asyncTimeout(this._requestLock(), 3_000);
+      await asyncTimeout(this._requestLock(), RESOURCE_LOCK_TIMEOUT);
       log('acquired lock');
     } catch {
       log('stealing lock...');

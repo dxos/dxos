@@ -11,6 +11,7 @@ import "dxos/halo/credentials.proto";
 import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
 import "dxos/echo/metadata.proto";
+import "dxos/error.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -152,9 +153,21 @@ enum SpaceState {
 
   /// Data pipeline is ready.
   READY = 3;
+
+  /// Space errored.
+  ERROR = 5;
 }
 
 message Space {
+  message Metrics {
+    optional google.protobuf.Timestamp open = 1;
+    optional google.protobuf.Timestamp pipeline_init_begin = 2;
+    optional google.protobuf.Timestamp control_pipeline_ready = 3;
+    optional google.protobuf.Timestamp data_pipeline_open = 4;
+    optional google.protobuf.Timestamp data_pipeline_ready = 5;
+    optional google.protobuf.Timestamp ready = 6;
+  }
+
   // TODO(dmaretskyi): Consider merging with space metadata records.
   // TODO(dmaretskyi): ...or split into two separate pipeline messages.
   message PipelineState {
@@ -195,9 +208,13 @@ message Space {
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
 
+  optional dxos.error.Error error = 4;
+
   repeated SpaceMember members = 10;
 
   optional dxos.echo.metadata.SpaceCache cache = 20;
+
+  Metrics metrics = 21;
 }
 
 message UpdateSpaceRequest {
@@ -428,7 +445,7 @@ message LogEntry {
   string message = 2;
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
-  optional dxos.rpc.Error error = 5;
+  optional Error error = 5;
 }
 
 service LoggingService {

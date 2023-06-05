@@ -20,10 +20,6 @@ export const subscribeToFeeds = (
   { feedKeys }: SubscribeToFeedsRequest,
 ) => {
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
-    if (feedKeys?.length === 0) {
-      return;
-    }
-
     const subscriptions = new EventSubscriptions();
     const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
@@ -35,12 +31,16 @@ export const subscribeToFeeds = (
           if (!feedMap.has(feed.key)) {
             feedMap.set(feed.key, feed);
             feed.on('close', update);
-            subscriptions.add(feed.off('close', update));
+            subscriptions.add(() => feed.off('close', update));
           }
         });
 
       next({
-        feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length })),
+        feeds: Array.from(feedMap.values()).map((feed) => ({
+          feedKey: feed.key,
+          length: feed.properties.length,
+          diskUsage: feed.core.byteLength,
+        })),
       });
     };
 

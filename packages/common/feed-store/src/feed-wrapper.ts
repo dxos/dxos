@@ -96,14 +96,7 @@ export class FeedWrapper<T extends {}> {
             this._writeLock.reset();
           }
 
-          const seq = await this.append(data);
-          assert(seq < this.length, 'Invalid seq after write');
-          log('write complete', { feed: this._key, seq });
-          const receipt: WriteReceipt = {
-            feedKey: this.key,
-            seq,
-          };
-
+          const receipt = await this.appendWithReceipt(data);
           await afterWrite?.(receipt);
 
           return receipt;
@@ -116,6 +109,17 @@ export class FeedWrapper<T extends {}> {
         }
       },
     };
+  }
+
+  async appendWithReceipt(data: T): Promise<WriteReceipt> {
+    const seq = await this.append(data);
+    assert(seq < this.length, 'Invalid seq after write');
+    log('write complete', { feed: this._key, seq });
+    const receipt: WriteReceipt = {
+      feedKey: this.key,
+      seq,
+    };
+    return receipt;
   }
 
   get opened() {
@@ -151,4 +155,5 @@ export class FeedWrapper<T extends {}> {
   append = this._binder.async(this._hypercore.append);
   download = this._binder.async(this._hypercore.download);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
+  clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
 }

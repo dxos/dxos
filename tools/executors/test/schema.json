@@ -17,6 +17,10 @@
       "type": "array",
       "description": "Override which environments to run tests in"
     },
+    "envVariables": {
+      "type": "object",
+      "description": "Environment variables to inject into test process"
+    },
     "devEnvironments": {
       "type": "array",
       "description": "Environments to run tests in during development"
@@ -43,6 +47,10 @@
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"
+    },
+    "setupOptions": {
+      "type": "object",
+      "description": "Options to pass to the setup script"
     },
     "coverage": {
       "type": "boolean",

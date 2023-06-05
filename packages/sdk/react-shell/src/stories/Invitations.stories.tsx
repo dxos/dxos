@@ -55,7 +55,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <ButtonGroup className='mbe-4'>
+        <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
           <Button
             onClick={() => client.createSpace({ name: faker.animal.bird() })}
@@ -109,7 +109,7 @@ const Invitations = ({ id }: { id: number }) => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <ButtonGroup className='mbe-4'>
+    <ButtonGroup classNames='mbe-4'>
       {/* <Tooltip content='Create Identity'> */}
       <Button
         onClick={() => client.halo.createIdentity({ displayName: faker.name.firstName() })}

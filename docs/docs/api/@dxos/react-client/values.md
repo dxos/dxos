@@ -15,6 +15,9 @@ Type: "dxos:app"
 ### [`DEFAULT_CLIENT_ORIGIN`]()
 Type: "https://halo.dxos.org/vault.html"
 
+### [`DEFAULT_DX_PROFILE`]()
+Type: "dxos-default"
+
 ### [`DEFAULT_INTERNAL_CHANNEL`]()
 Type: "dxos:vault"
 
@@ -66,6 +69,9 @@ Type: ConfigProto
 Type: ServiceBundle&lt;[IframeServiceBundle](/api/@dxos/react-client/types/IframeServiceBundle)&gt;
 
 ### [`proxy`]()
+Type: unique symbol
+
+### [`readOnly`]()
 Type: unique symbol
 
 ### [`schema`]()

@@ -3,7 +3,7 @@
 //
 
 import Observable from 'zen-observable';
-import type { ObservableLike, Observer, Subscriber, Subscription } from 'zen-observable/esm';
+import type { ObservableLike, Observer, Subscriber } from 'zen-observable/esm';
 import PushStream from 'zen-push';
 
 import { Event } from './events';
@@ -16,18 +16,20 @@ export { Observable, PushStream, Subscriber };
  * The current value is emitted to new subscribers on subscription.
  */
 // Inspired by:
-// https://github.com/zenparsing/zen-push/blob/39949f1/index.js
+// https://github.com/zenparsing/zen-push/blob/39949f1/index.js#L93
 // https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
 export class MulticastObservable<T> extends Observable<T> {
   private readonly _observers = new Set<Observer<T>>();
-  private readonly _observerable: Observable<T>;
-  private _subscription: Subscription;
+  private readonly _observable: Observable<T>;
 
   constructor(subscriber: Observable<T> | Subscriber<T>, private _value?: T) {
     super((observer) => this._subscribe(observer));
 
-    this._observerable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
-    this._subscription = this._observerable.subscribe(this._handlers);
+    this._observable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
+    // Automatically subscribe to source observable.
+    // Ensures that the current value is always up to date.
+    // TODO(wittjosiah): Does this subscription need to be cleaned up? Where should that happen?
+    this._observable.subscribe(this._handlers);
   }
 
   static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
@@ -40,12 +42,12 @@ export class MulticastObservable<T> extends Observable<T> {
       }, initialValue);
     }
 
-    const observable = super.from(value);
+    const observable = Observable.from(value);
     return new MulticastObservable(observable, initialValue);
   }
 
   static override of<T>(...items: T[]) {
-    return new MulticastObservable(super.of(...items.slice(1)), items[0]);
+    return new MulticastObservable(Observable.of(...items.slice(1)), items[0]);
   }
 
   /**
@@ -69,22 +71,67 @@ export class MulticastObservable<T> extends Observable<T> {
     return this._value;
   }
 
+  override forEach(callback: (value: T) => void): Promise<void> {
+    return this._observable.forEach(callback);
+  }
+
+  override map<R>(callback: (value: T) => R): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.map(callback), this._value && callback(this._value));
+  }
+
+  override filter(callback: (value: T) => boolean): MulticastObservable<T> {
+    return new MulticastObservable(
+      this._observable.filter(callback),
+      this._value && callback(this._value) ? this._value : undefined,
+    );
+  }
+
+  override reduce<R = T>(callback: (previousValue: R, currentValue: T) => R, initialValue?: R): MulticastObservable<R> {
+    return new MulticastObservable(
+      initialValue ? this._observable.reduce(callback, initialValue) : this._observable.reduce(callback),
+      initialValue ?? (this._value as R),
+    );
+  }
+
+  override flatMap<R>(callback: (value: T) => MulticastObservable<R>): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.flatMap(callback), this._value && callback(this._value).get());
+  }
+
+  override concat<R>(...observables: Array<Observable<R>>): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.concat(...observables), this._value as R);
+  }
+
+  /**
+   * Concatenates multicast observables without losing the current value.
+   * @param reducer reduces the values of any multicast observables being concatenated into a single value
+   * @param observables observables to concatenate
+   * @returns concatenated observable
+   */
+  losslessConcat<R>(
+    reducer: (currentValue: R, newValues: R[]) => R,
+    ...observables: Array<Observable<R>>
+  ): MulticastObservable<R> {
+    const multicast = observables.filter(
+      (observable): observable is MulticastObservable<R> => observable instanceof MulticastObservable,
+    );
+    const value = reducer(
+      this._value as R,
+      multicast.map((observable) => observable.get()),
+    );
+    return new MulticastObservable(this._observable.concat(...observables), value);
+  }
+
   private _subscribe(observer: Observer<T>) {
-    if (this._subscription.closed) {
-      this._subscription = this._observerable.subscribe(this._handlers);
+    if (!this._observers.has(observer)) {
+      this._observers.add(observer);
     }
 
-    if (!this._observers.has(observer) && this._value !== undefined) {
+    if (this._value !== undefined) {
       observer.next?.(this._value);
-      this._observers.add(observer);
     }
 
     return () => {
       this._observers.delete(observer);
-
-      if (this._observers.size === 0) {
-        this._subscription.unsubscribe();
-      }
     };
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/rpc": "workspace:*",

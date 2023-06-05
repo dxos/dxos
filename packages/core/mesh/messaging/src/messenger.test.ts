@@ -359,7 +359,7 @@ describe('Messenger', () => {
     });
   }).timeout(5_000);
 
-  describe.skip('load', () => {
+  describe('load', () => {
     test('many connections to KUBE', async () => {
       let numReceived = 0;
 
@@ -392,6 +392,8 @@ describe('Messenger', () => {
       });
 
       await sleep(1000000);
-    }).timeout(5_000);
+    })
+      .tag('stress')
+      .timeout(5_000);
   });
 });

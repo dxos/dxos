@@ -73,18 +73,6 @@ Values:
 
 - `ONLINE`
 
-### [`ShowDeletedOption`]()
-
-Controls how deleted items are filtered.
-
-
-Values:
-- `HIDE_DELETED` Do not return deleted items. Default behaviour.
-
-- `SHOW_DELETED` Return deleted and regular items.
-
-- `SHOW_DELETED_ONLY` Return only deleted items.
-
 ### [`ShellDisplay`]()
 
 Defined in:
@@ -113,6 +101,18 @@ Values:
 
 - `SPACE_INVITATIONS`
 
+### [`ShowDeletedOption`]()
+
+Controls how deleted items are filtered.
+
+
+Values:
+- `HIDE_DELETED` Do not return deleted items. Default behaviour.
+
+- `SHOW_DELETED` Return deleted and regular items.
+
+- `SHOW_DELETED_ONLY` Return only deleted items.
+
 ### [`SpaceState`]()
 
 Runtime state of the space object.
@@ -123,6 +123,8 @@ Defined in:
 
 Values:
 - `CLOSED`
+
+- `ERROR`
 
 - `INACTIVE`
 

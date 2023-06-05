@@ -8,10 +8,10 @@ import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
+import { DropdownMenuItem } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Serializer } from '@dxos/echo-schema';
 import { useFileDownload } from '@dxos/kai-frames';
-import { DropdownMenuItem } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
 import { createPath, defaultFrameId, useAppRouter, useGenerator } from '../../hooks';
@@ -55,8 +55,19 @@ export const Actions = () => {
     navigate('/settings');
   };
 
-  const handleGenerateData = async () => {
-    await generator?.generate();
+  const handleGenerateData: React.MouseEventHandler = async (e) => {
+    let count = 1;
+
+    if (e.shiftKey) {
+      count *= 10;
+    }
+    if (e.altKey) {
+      count *= 10;
+    }
+
+    for (let i = 0; i < count; i++) {
+      await generator?.generate();
+    }
   };
 
   const handleReset = async () => {

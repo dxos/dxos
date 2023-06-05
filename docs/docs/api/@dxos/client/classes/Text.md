@@ -34,7 +34,7 @@ Type: <code>undefined | [EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</
 Database reference if bound.
 
 ### [content]()
-Type: <code>undefined | YXmlFragment | YText</code>
+Type: <code>undefined | YText | YXmlFragment</code>
 
 ### [doc]()
 Type: <code>undefined | Doc</code>
@@ -57,6 +57,16 @@ Returns the text content of the object.
 
 
 ## Methods
+### [\[subscribe\](callback)]()
+
+
+
+Returns: <code>function</code>
+
+Arguments: 
+
+`callback`: <code>function</code>
+
 ### [_afterBind()]()
 
 

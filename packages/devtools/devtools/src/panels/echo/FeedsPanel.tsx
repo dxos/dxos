@@ -11,7 +11,7 @@ import { humanize } from '@dxos/util';
 
 import { MasterTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages, useSpacesInfo } from '../../hooks';
 import { Rows } from '@phosphor-icons/react';
 
 const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
@@ -32,7 +32,9 @@ const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
 
 const FeedsPanel = () => {
   const setContext = useDevtoolsDispatch();
-  const { spaceInfo: metadata, feedKey } = useDevtoolsState();
+  const { space, feedKey } = useDevtoolsState();
+  const spacesInfo = useSpacesInfo();
+  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
 
   const [feeds, setFeeds] = useState<PublicKey[]>([]);
   useEffect(() => {

@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [createDefaultModelFactory()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L35)
+### [createDefaultModelFactory()]()
 
 
 
@@ -10,7 +10,7 @@ Returns: <code>ModelFactory</code>
 
 Arguments: none
 
-### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L47)
+### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L48)
 
 
 
@@ -22,7 +22,33 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L14)
+### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L19)
+
+
+
+Connects to locally running CLI daemon.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`options`: <code>[FromCliEnvOptions](/api/@dxos/client/types/FromCliEnvOptions)</code>
+
+### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
+
+
+
+Creates stand-alone services without rpc.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
+
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L20)
 
 
 
@@ -36,6 +62,19 @@ Arguments:
 `config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
+
+### [fromSocket(url)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/socket.ts#L11)
+
+
+
+Access to remote client via a socket.
+
+
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+
+Arguments: 
+
+`url`: <code>string</code>
 
 ### [generateSeedPhrase()]()
 
@@ -62,13 +101,25 @@ Arguments:
 
 
 
-Returns: <code>object is [TypedObject](/api/@dxos/client/values#TypedObject)&lt;object&gt;</code>
+Returns: <code>object is [TypedObject](/api/@dxos/client/values#TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
 
 Arguments: 
 
 `object`: <code>unknown</code>
 
-### [wrapObservable(observable)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/invitations/invitations.ts#L73)
+### [setStateFromSnapshot(obj, snapshot)]()
+
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`obj`: <code>[EchoObject](/api/@dxos/client/classes/EchoObject)&lt;any&gt;</code>
+
+`snapshot`: <code>ObjectSnapshot</code>
+
+### [wrapObservable(observable)]()
 
 
 

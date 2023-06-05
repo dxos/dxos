@@ -1,0 +1,66 @@
+{
+  "sourceRoot": "packages/common/observable-object/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/observable-object/src/index.ts",
+        "outputPath": "packages/common/observable-object/dist/types",
+        "tsConfig": "packages/common/observable-object/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/common/observable-object/src/index.ts",
+          "packages/common/observable-object/src/react/index.ts"
+        ],
+        "outputPath": "packages/common/observable-object/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/common/observable-object/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/common/observable-object",
+        "domRequired": true,
+        "outputPath": "tmp/mocha/packages/common/observable-object",
+        "resultsPath": "test-results/packages/common/observable-object",
+        "testPatterns": [
+          "packages/common/observable-object/src/**/*.test.{ts,js,tsx,jsx}"
+        ],
+        "watchPatterns": [
+          "packages/common/observable-object/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

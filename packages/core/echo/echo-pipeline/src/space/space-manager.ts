@@ -95,7 +95,6 @@ export class SpaceManager {
       metadataStore: this._metadataStore,
       snapshotManager,
       memberKey,
-      snapshotId: metadata.snapshot,
     });
     this._spaces.set(space.key, space);
     log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));

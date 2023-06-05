@@ -12,7 +12,8 @@ const generateManifest = () => {
   const packageJson = readJsonFile(resolve(__dirname, 'package.json'));
 
   return {
-    name: packageJson.name,
+    name: 'DXOS Composer',
+    author: 'DXOS.org',
     description: packageJson.description,
     version: packageJson.version,
     ...manifest
@@ -25,6 +26,9 @@ mkdirSync(resolve(__dirname, '.profiles/firefox'), { recursive: true });
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build:{
+    outDir: 'out/composer-extension'
+  },
   plugins: [
     // https://vite-plugin-web-extension.aklinker1.io/config/plugin-options.html
     WebExtensionPlugin({

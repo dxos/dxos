@@ -5,18 +5,23 @@
 import { CaretDown, CaretRight, Eye } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItemScopedProps, useId, useListItemContext, useSidebar, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
-import { Space, SpaceState } from '@dxos/client';
 import {
-  Tooltip,
+  Button,
+  ListItemScopedProps,
   TreeBranch,
   TreeItem,
   TreeItemBody,
   TreeItemHeading,
   TreeItemOpenTrigger,
   TreeRoot,
-} from '@dxos/react-appkit';
+  useId,
+  useListItemContext,
+  useSidebar,
+  useTranslation,
+} from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
+import { Space, SpaceState } from '@dxos/client';
+import { Tooltip } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { useIdentity } from '@dxos/react-client';
 

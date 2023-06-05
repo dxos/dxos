@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.1.41",
+  "version": "0.1.45",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",

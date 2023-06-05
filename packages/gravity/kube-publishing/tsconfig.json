@@ -22,31 +22,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/mesh/messaging"
-    },
-    {
-      "path": "../../core/mesh/signal"
-    },
-    {
-      "path": "../../core/protocols"
+      "path": "../../devtools/cli"
     }
   ]
 }
