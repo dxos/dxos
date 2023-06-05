@@ -2,11 +2,12 @@
   <div class="showcase-preview">
     <div class="demo-controls">
       <div role="separator"></div>
-      <vue-custom-tooltip v-if="controls.includes('fork')" label="Fork to Stackblitz">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256" @click="handleStackblitz">
+      <button v-if="controls.includes('fork')" @click="handleStackblitz">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256">
           <path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"></path>
         </svg>
-      </vue-custom-tooltip>
+        Try on Stackblitz
+      </button>
     </div>
     <ClientOnly>
       <iframe :src="iframeSrc"></iframe>
@@ -41,16 +42,29 @@
   margin-block-end: 1rem;
 }
 
-.demo-controls form {
-  display: contents;
-}
-
 .demo-controls [role='separator'] {
   flex-grow: 1;
 }
 
 .demo-controls path {
   fill: var(--text-color-light);
+}
+
+.demo-controls button {
+  background-color: var(--bg-color-secondary);
+  color: var(--text-color-light);
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  border: 0;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.demo-controls button svg {
+  margin-inline-end: 5px;
 }
 
 iframe {
@@ -65,7 +79,6 @@ iframe {
 </style>
 
 <script setup lang="ts">
-import VueCustomTooltip from '@adamdehaven/vue-custom-tooltip';
 import sdk from '@stackblitz/sdk';
 import { onMounted, ref } from 'vue';
 

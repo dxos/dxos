@@ -234,7 +234,6 @@ importers:
 
   docs:
     specifiers:
-      '@adamdehaven/vue-custom-tooltip': ^2.6.0
       '@dxos/apidoc': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
@@ -286,7 +285,6 @@ importers:
       vuepress-plugin-check-md: 0.0.3
       vuepress-theme-hope: 2.0.0-beta.197
     devDependencies:
-      '@adamdehaven/vue-custom-tooltip': 2.6.0_vue@3.2.47
       '@dxos/apidoc': link:../tools/apidoc
       '@dxos/async': link:../packages/common/async
       '@dxos/aurora': link:../packages/ui/aurora
@@ -5493,15 +5491,6 @@ packages:
     resolution: {integrity: sha512-iTASGs+HTFK5E4ZqcMsHmeJ4zodyq8L38lZV33jwqcBJYoUt3HjN4+ot+O9/0b+ke8ddE7UgOtVuZN/OkV19/g==}
     engines: {node: 4.x || >=6.0.0}
     dev: false
-
-  /@adamdehaven/vue-custom-tooltip/2.6.0_vue@3.2.47:
-    resolution: {integrity: sha512-wypRRapb1pNmkvhuGSSENaDQEQeJ7gM+IXiHOmotvSzhXiVztnqw2U7fe7JWT6PiGFluVdIcoAY5QKfGzO7ktw==}
-    peerDependencies:
-      vue: ^3.0.0
-    dependencies:
-      core-js: 3.27.1
-      vue: 3.2.47
-    dev: true
 
   /@alloc/quick-lru/5.2.0:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -21602,11 +21591,6 @@ packages:
     resolution: {integrity: sha512-ovcyhs2DEBUIE0MGEKHP4olCUW/XYte3Vroyxuh38rD1wAO4dHohsovUC4eAOuzFxE6b+RXvBU3UZ9o0YhUTkA==}
     dependencies:
       browserslist: 4.21.4
-
-  /core-js/3.27.1:
-    resolution: {integrity: sha512-GutwJLBChfGCpwwhbYoqfv03LAfmiz7e7D/BNxzeMxwQf10GRSzqiOjx7AmtEk+heiD/JWmBuyBPgFtx0Sg1ww==}
-    requiresBuild: true
-    dev: true
 
   /core-js/3.29.0:
     resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}
