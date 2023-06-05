@@ -105,8 +105,8 @@ const kebabize = (str: string) => str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs)
 const story = kebabize(props.example);
 // TODO(wittjosiah): Make reactive inside story embed.
 const theme = props.darkMode ? '&globals=theme:dark' : '';
-// TODO(wittjosiah): Default to chromatic url.
-const iframeSrc = `http://localhost:9009/iframe.html?args=&id=dxos-examples--${story}&viewMode=story${theme}`;
+const baseUrl = import.meta.env.VITE_EXAMPLE_BASE_URL ?? 'https://main--647a35ed4eb504c8af6680fc.chromatic.com'
+const iframeSrc = `${baseUrl}/iframe.html?args=&id=dxos-examples--${story}&viewMode=story${theme}`;
 
 const handleStackblitz = async () => {
   sdk.openProject({
