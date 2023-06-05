@@ -5,18 +5,7 @@
 import { Gift } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  useTranslation,
-  Button,
-  useTranslationsContext,
-  ToastRoot,
-  ToastTitle,
-  ToastDescription,
-  ToastBody,
-  ToastActions,
-  ToastClose,
-  ToastAction,
-} from '@dxos/aurora';
+import { useTranslation, Button, useTranslationsContext, Toast } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 export interface NeedRefreshToastProps {
@@ -38,9 +27,9 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
   const { variant } = props;
   const needRefresh = isNeedRefreshToast(props);
   return (
-    <ToastRoot defaultOpen {...(needRefresh && { duration: 240e3 })}>
-      <ToastBody>
-        <ToastTitle>
+    <Toast.Root defaultOpen {...(needRefresh && { duration: 240e3 })}>
+      <Toast.Body>
+        <Toast.Title>
           {variant === 'needRefresh' ? (
             <>
               <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
@@ -49,23 +38,23 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
           ) : (
             t('offline ready label', { appName: t('current app name', { ns: appNs }) })
           )}
-        </ToastTitle>
-        <ToastDescription>{t('need refresh description')}</ToastDescription>
-      </ToastBody>
-      <ToastActions>
+        </Toast.Title>
+        <Toast.Description>{t('need refresh description')}</Toast.Description>
+      </Toast.Body>
+      <Toast.Actions>
         {needRefresh && (
-          <ToastAction altText={t('refresh alt')} asChild>
+          <Toast.Action altText={t('refresh alt')} asChild>
             <Button variant='primary' onClick={() => props.updateServiceWorker()}>
               {t('refresh label')}
             </Button>
-          </ToastAction>
+          </Toast.Action>
         )}
         {variant === 'offlineReady' && (
-          <ToastClose asChild>
+          <Toast.Close asChild>
             <Button>{t('confirm label', { ns: 'appkit' })}</Button>
-          </ToastClose>
+          </Toast.Close>
         )}
-      </ToastActions>
-    </ToastRoot>
+      </Toast.Actions>
+    </Toast.Root>
   );
 };

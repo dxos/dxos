@@ -63,7 +63,14 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ classN
   );
 });
 
-export { TooltipProvider, TooltipRoot, TooltipPortal, TooltipTrigger, TooltipArrow, TooltipContent };
+export const Tooltip = {
+  Provider: TooltipProvider,
+  Root: TooltipRoot,
+  Portal: TooltipPortal,
+  Trigger: TooltipTrigger,
+  Arrow: TooltipArrow,
+  Content: TooltipContent,
+};
 
 export type {
   TooltipProviderProps,

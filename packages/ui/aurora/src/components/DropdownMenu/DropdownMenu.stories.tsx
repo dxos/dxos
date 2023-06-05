@@ -7,92 +7,84 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import {
-  DropdownMenuArrow,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuGroupLabel,
-} from './DropdownMenu';
+import { DropdownMenu } from './DropdownMenu';
 
 const StorybookDropdownMenu = () => {
   return (
-    <DropdownMenuRoot defaultOpen>
-      <DropdownMenuTrigger asChild>
+    <DropdownMenu.Root defaultOpen>
+      <DropdownMenu.Trigger asChild>
         <Button> Customise options</Button>
-      </DropdownMenuTrigger>
+      </DropdownMenu.Trigger>
 
-      <DropdownMenuContent sideOffset={4} collisionPadding={4}>
-        <DropdownMenuItem>
+      <DropdownMenu.Content sideOffset={4} collisionPadding={4}>
+        <DropdownMenu.Item>
           <span className='grow'>New Tab </span>
           <span className='opacity-50'>⌘+T</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem>
+        </DropdownMenu.Item>
+        <DropdownMenu.Item>
           <span className='grow'>New Window </span>
           <span className='opacity-50'>⌘+N</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
+        </DropdownMenu.Item>
+        <DropdownMenu.Item disabled>
           <span className='grow'>New Private Window </span>
           <span className='opacity-50'>⇧+⌘+N</span>
-        </DropdownMenuItem>
-        {/* <DropdownMenuSub> */}
-        {/*  <DropdownMenuSubTrigger> */}
+        </DropdownMenu.Item>
+        {/* <DropdownMenu.Sub> */}
+        {/*  <DropdownMenu.SubTrigger> */}
         {/*    More Tools */}
         {/*    <div> */}
         {/*      <ChevronRightIcon /> */}
         {/*    </div> */}
-        {/*  </DropdownMenuSubTrigger> */}
-        {/*  <DropdownMenuPortal> */}
-        {/*    <DropdownMenuSubContent sideOffset={2} alignOffset={-5}> */}
-        {/*      <DropdownMenuItem> */}
+        {/*  </DropdownMenu.SubTrigger> */}
+        {/*  <DropdownMenu.Portal> */}
+        {/*    <DropdownMenu.SubContent sideOffset={2} alignOffset={-5}> */}
+        {/*      <DropdownMenu.Item> */}
         {/*        Save Page As… <div>⌘+S</div> */}
-        {/*      </DropdownMenuItem> */}
-        {/*      <DropdownMenuItem>Create Shortcut…</DropdownMenuItem> */}
-        {/*      <DropdownMenuItem>Name Window…</DropdownMenuItem> */}
-        {/*      <DropdownMenuSeparator /> */}
-        {/*      <DropdownMenuItem>Developer Tools</DropdownMenuItem> */}
-        {/*    </DropdownMenuSubContent> */}
-        {/*  </DropdownMenuPortal> */}
-        {/* </DropdownMenuSub> */}
+        {/*      </DropdownMenu.Item> */}
+        {/*      <DropdownMenu.Item>Create Shortcut…</DropdownMenu.Item> */}
+        {/*      <DropdownMenu.Item>Name Window…</DropdownMenu.Item> */}
+        {/*      <DropdownMenu.Separator /> */}
+        {/*      <DropdownMenu.Item>Developer Tools</DropdownMenu.Item> */}
+        {/*    </DropdownMenu.SubContent> */}
+        {/*  </DropdownMenu.Portal> */}
+        {/* </DropdownMenu.Sub> */}
 
-        {/* <DropdownMenuSeparator /> */}
+        {/* <DropdownMenu.Separator /> */}
 
-        {/* <DropdownMenuCheckboxItem checked={bookmarksChecked} onCheckedChange={setBookmarksChecked}> */}
-        {/*  <DropdownMenuItemIndicator> */}
+        {/* <DropdownMenu.CheckboxItem checked={bookmarksChecked} onCheckedChange={setBookmarksChecked}> */}
+        {/*  <DropdownMenu.ItemIndicator> */}
         {/*    <CheckIcon /> */}
-        {/*  </DropdownMenuItemIndicator> */}
+        {/*  </DropdownMenu.ItemIndicator> */}
         {/*  Show Bookmarks <div>⌘+B</div> */}
-        {/* </DropdownMenuCheckboxItem> */}
-        {/* <DropdownMenuCheckboxItem checked={urlsChecked} onCheckedChange={setUrlsChecked}> */}
-        {/*  <DropdownMenuItemIndicator> */}
+        {/* </DropdownMenu.CheckboxItem> */}
+        {/* <DropdownMenu.CheckboxItem checked={urlsChecked} onCheckedChange={setUrlsChecked}> */}
+        {/*  <DropdownMenu.ItemIndicator> */}
         {/*    <CheckIcon /> */}
-        {/*  </DropdownMenuItemIndicator> */}
+        {/*  </DropdownMenu.ItemIndicator> */}
         {/*  Show Full URLs */}
-        {/* </DropdownMenuCheckboxItem> */}
+        {/* </DropdownMenu.CheckboxItem> */}
 
-        <DropdownMenuSeparator />
+        <DropdownMenu.Separator />
 
-        <DropdownMenuGroupLabel>People</DropdownMenuGroupLabel>
-        {/* <DropdownMenuRadioGroup value={person} onValueChange={setPerson}> */}
-        {/*  <DropdownMenuRadioItem value='pedro'> */}
-        {/*    <DropdownMenuItemIndicator> */}
+        <DropdownMenu.GroupLabel>People</DropdownMenu.GroupLabel>
+        {/* <DropdownMenu.RadioGroup value={person} onValueChange={setPerson}> */}
+        {/*  <DropdownMenu.RadioItem value='pedro'> */}
+        {/*    <DropdownMenu.ItemIndicator> */}
         {/*      <DotFilledIcon /> */}
-        {/*    </DropdownMenuItemIndicator> */}
+        {/*    </DropdownMenu.ItemIndicator> */}
         {/*    Pedro Duarte */}
-        {/*  </DropdownMenuRadioItem> */}
-        {/*  <DropdownMenuRadioItem value='colm'> */}
-        {/*    <DropdownMenuItemIndicator> */}
+        {/*  </DropdownMenu.RadioItem> */}
+        {/*  <DropdownMenu.RadioItem value='colm'> */}
+        {/*    <DropdownMenu.ItemIndicator> */}
         {/*      <DotFilledIcon /> */}
-        {/*    </DropdownMenuItemIndicator> */}
+        {/*    </DropdownMenu.ItemIndicator> */}
         {/*    Colm Tuite */}
-        {/*  </DropdownMenuRadioItem> */}
-        {/* </DropdownMenuRadioGroup> */}
+        {/*  </DropdownMenu.RadioItem> */}
+        {/* </DropdownMenu.RadioGroup> */}
 
-        <DropdownMenuArrow />
-      </DropdownMenuContent>
-    </DropdownMenuRoot>
+        <DropdownMenu.Arrow />
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 };
 

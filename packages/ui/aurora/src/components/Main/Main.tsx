@@ -83,9 +83,9 @@ const MainRoot = ({
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
-type SidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
+type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
 
-const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
+const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ({ classNames, children, swipeToDismiss, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
@@ -109,11 +109,11 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
   },
 );
 
-Sidebar.displayName = SIDEBAR_NAME;
+MainSidebar.displayName = SIDEBAR_NAME;
 
 type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
 
-const Main = forwardRef<HTMLDivElement, MainProps>(
+const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, children, ...props }: MainProps, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen } = useMainContext(MAIN_NAME);
@@ -128,7 +128,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
   },
 );
 
-Main.displayName = MAIN_NAME;
+MainContent.displayName = MAIN_NAME;
 
 type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
 
@@ -149,6 +149,8 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
   );
 });
 
-export { Main, MainOverlay, MainRoot, Sidebar, useMainContext, useSidebar };
+export const Main = { Content: MainContent, Overlay: MainOverlay, Root: MainRoot, Sidebar: MainSidebar };
 
-export type { MainRootProps, MainProps, MainOverlayProps, SidebarProps };
+export { useMainContext, useSidebar };
+
+export type { MainRootProps, MainProps, MainOverlayProps, MainSidebarProps };

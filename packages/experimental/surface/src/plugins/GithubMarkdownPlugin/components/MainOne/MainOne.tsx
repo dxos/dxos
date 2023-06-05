@@ -17,7 +17,7 @@ import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useStat
 import { useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
-import { Button, Main, DropdownMenuItem, Trans, useTranslation } from '@dxos/aurora';
+import { Button, Main, Trans, DropdownMenu, useTranslation } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
@@ -300,18 +300,18 @@ export const MainOne = () => {
 
   const dropdownMenuContent = (
     <>
-      <DropdownMenuItem classNames='gap-2' onClick={fileProps.handleFileExport}>
+      <DropdownMenu.Item classNames='gap-2' onClick={fileProps.handleFileExport}>
         <DownloadSimple className={getSize(4)} />
         <span>{t('export to file label')}</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem classNames='gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item classNames='gap-2' onClick={() => fileProps.setFileImportDialogOpen(true)}>
         <UploadSimple className={getSize(4)} />
         <span>{t('import from file label')}</span>
-      </DropdownMenuItem>
+      </DropdownMenu.Item>
       {octokit && (
         <>
           <div role='separator' className='bs-px mli-2 mlb-1 bg-neutral-500 opacity-20' />
-          <DropdownMenuItem
+          <DropdownMenu.Item
             classNames='gap-2'
             onClick={() => setEditorViewState(editorViewState === 'preview' ? 'editor' : 'preview')}
           >
@@ -326,10 +326,10 @@ export const MainOne = () => {
                 <span>{t('preview gfm label')}</span>
               </>
             )}
-          </DropdownMenuItem>
+          </DropdownMenu.Item>
           {docGhId ? (
             <>
-              <DropdownMenuItem
+              <DropdownMenu.Item
                 classNames='gap-2'
                 onClick={() => {
                   const index = document?.meta?.keys?.findIndex((key) => key.source === 'com.github');
@@ -339,28 +339,28 @@ export const MainOne = () => {
               >
                 <LinkBreak className={getSize(4)} />
                 <span>{t('unbind to file in github label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem classNames='gap-2' onClick={() => setImportConfirmOpen(true)}>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item classNames='gap-2' onClick={() => setImportConfirmOpen(true)}>
                 <FileArrowDown className={getSize(4)} />
                 <span>{t('import from github label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem classNames='gap-2' onClick={handleGhExport}>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item classNames='gap-2' onClick={handleGhExport}>
                 <FileArrowUp className={getSize(4)} />
                 <span>{t('export to github label')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild classNames='gap-2'>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild classNames='gap-2'>
                 <a href={`https://github.com/${ghId}`} target='_blank' rel='noreferrer'>
                   <ArrowSquareOut className={getSize(4)} />
                   <span>{t('open in github label')}</span>
                 </a>
-              </DropdownMenuItem>
+              </DropdownMenu.Item>
             </>
           ) : (
             <>
-              <DropdownMenuItem classNames='gap-2' onClick={() => setGhBindOpen(true)}>
+              <DropdownMenu.Item classNames='gap-2' onClick={() => setGhBindOpen(true)}>
                 <Link className={getSize(4)} />
                 <span>{t('bind to file in github label')}</span>
-              </DropdownMenuItem>
+              </DropdownMenu.Item>
             </>
           )}
         </>
@@ -369,7 +369,7 @@ export const MainOne = () => {
   );
 
   return (
-    <Main classNames='min-bs-full'>
+    <Main.Content classNames='min-bs-full'>
       {document && (
         <StandaloneDocumentPage
           {...{
@@ -530,6 +530,6 @@ export const MainOne = () => {
           </div>
         )}
       </Dialog>
-    </Main>
+    </Main.Content>
   );
 };
