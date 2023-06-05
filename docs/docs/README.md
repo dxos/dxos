@@ -35,7 +35,7 @@ This demonstrates how two peers would synchronize over ECHO (The Eventually Cons
 
 Type in the boxes below to create new list items and experiment with the replication toggle to see how clients reconcile when returning from offline mode. [Learn more about ECHO](/guide/).
 
-```tsx file=../node_modules/@dxos/examples/src/examples/TaskList.tsx#L5-L56 showcase peers=2 controls=fork
+```tsx{41} file=../node_modules/@dxos/examples/src/examples/TaskList.tsx#L5-L56 showcase peers=2 controls=fork
 import { X } from '@phosphor-icons/react';
 import React, { KeyboardEventHandler, useState } from 'react';
 
