@@ -9,7 +9,6 @@
   "type": "module",
   "scripts": {
     "apidoc": "apidoc",
-    "build": "tsc && tsc -p src/stories/react/tsconfig.json && tsc -p src/templates/vite/tsconfig.json",
     "bundle": "vuepress build docs",
     "clean:api": "rm -rf docs/api",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
