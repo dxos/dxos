@@ -3,8 +3,8 @@
 //
 
 import { css } from '@emotion/css';
+import { faker } from '@faker-js/faker';
 import * as d3 from 'd3';
-import faker from 'faker';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';

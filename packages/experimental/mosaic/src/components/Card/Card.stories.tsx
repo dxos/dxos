@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { Buildings, DotsThree, Envelope, User } from '@phosphor-icons/react';
-import faker from 'faker';
 import React from 'react';
 
 // TODO(burdon): Add note to @dxos/react-components/plugin
