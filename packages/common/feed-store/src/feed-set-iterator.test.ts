@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
-import faker from 'faker';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -80,7 +80,7 @@ describe('FeedSetIterator', () => {
 
       // Write block.
       setTimeout(async () => {
-        const feed = faker.random.arrayElement(feeds);
+        const feed = faker.helpers.arrayElement(feeds);
         await builder.generator.writeBlocks(feed.createFeedWriter(), {
           count: numBlocks,
         });
@@ -119,7 +119,7 @@ describe('FeedSetIterator', () => {
       expect(iterator.size).to.eq(numFeeds);
 
       for (const _ of Array.from(Array(numBlocks))) {
-        const writer = faker.random.arrayElement(writers);
+        const writer = faker.helpers.arrayElement(writers);
         const receipts = await builder.generator.writeBlocks(writer, {
           count: 1,
         });

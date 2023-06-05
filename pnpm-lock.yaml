@@ -916,12 +916,12 @@ importers:
   packages/common/crypto-names:
     specifiers:
       '@dxos/node-std': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/binary-parser': ^1.5.1
       '@types/faker': ^5.5.9
       '@types/js-yaml': ^4.0.5
       '@types/uniq': ^0.0.27
       binary-parser: ^2.0.2
-      faker: ^5.5.3
       hypercore-crypto: ^2.3.0
       js-yaml: ^4.1.0
       uniq: ^1.0.1
@@ -930,11 +930,11 @@ importers:
       binary-parser: 2.2.1
       hypercore-crypto: 2.3.2
     devDependencies:
+      '@faker-js/faker': 7.6.0
       '@types/binary-parser': 1.5.1
       '@types/faker': 5.5.9
       '@types/js-yaml': 4.0.5
       '@types/uniq': 0.0.27
-      faker: 5.5.3
       js-yaml: 4.1.0
       uniq: 1.0.1
 
@@ -989,10 +989,10 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       debug: ^4.3.3
-      faker: ^5.5.3
       hypercore: ^9.12.0
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
@@ -1016,9 +1016,9 @@ importers:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/keyring': link:../../core/halo/keyring
+      '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      faker: 5.5.3
 
   packages/common/hypercore:
     specifiers:
@@ -1031,12 +1031,12 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/randombytes': ^2.0.0
       '@types/readable-stream': ^2.3.9
       debug: ^4.3.3
-      faker: ^5.5.3
       hypercore: ^9.12.0
       hypercore-protocol: ^8.0.7
       random-access-memory: ^4.1.0
@@ -1057,12 +1057,12 @@ importers:
     devDependencies:
       '@dxos/log': link:../log
       '@dxos/util': link:../util
+      '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/randombytes': 2.0.0
       '@types/readable-stream': 2.3.14
       debug: 4.3.4
-      faker: 5.5.3
       random-access-memory: 4.1.0
 
   packages/common/keys:
@@ -1357,13 +1357,13 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/lodash.clonedeep': ^4.5.6
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       debug: ^4.3.3
-      faker: ^5.5.3
       lodash.clonedeep: ^4.5.0
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
@@ -1383,12 +1383,12 @@ importers:
       minisearch: 3.3.0
       yjs: 13.5.44
     devDependencies:
+      '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/lodash.clonedeep': 4.5.7
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
-      faker: 5.5.3
 
   packages/core/echo/echo-db:
     specifiers:
@@ -1623,9 +1623,9 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
-      faker: ^5.5.3
       yjs: ^13.5.44
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1639,8 +1639,8 @@ importers:
       '@dxos/document-model': link:../document-model
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/protocols': link:../../protocols
+      '@faker-js/faker': 7.6.0
       '@types/faker': 5.5.9
-      faker: 5.5.3
 
   packages/core/halo/credentials:
     specifiers:
@@ -2115,6 +2115,7 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
       '@oclif/plugin-plugins': ^2.4.3
@@ -2132,7 +2133,6 @@ importers:
       cli-progress: ^3.11.2
       debug: ^4.3.3
       do-wrapper: ^4.5.1
-      faker: ^5.5.3
       forever: ^4.0.3
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
@@ -2171,6 +2171,7 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      '@faker-js/faker': 7.6.0
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 2.4.3_d2gyhxeuxd6tnmgqdyixls47tq
@@ -2179,7 +2180,6 @@ importers:
       cli-progress: 3.11.2
       debug: 4.3.4
       do-wrapper: 4.5.1
-      faker: 5.5.3
       forever: 4.0.3
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
@@ -2627,6 +2627,7 @@ importers:
       '@dxos/gem-core': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
+      '@faker-js/faker': ^7.3.0
       '@types/d3': ^7.1.0
       '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
@@ -2635,7 +2636,6 @@ importers:
       clsx: ^1.1.1
       d3: ^7.4.4
       d3-force: ~3.0.0
-      faker: ^5.5.3
       immutability-helper: ^3.0.2
       postcss: ^8.4.21
       react: ^18.2.0
@@ -2655,11 +2655,11 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/aurora': link:../../ui/aurora
+      '@faker-js/faker': 7.6.0
       '@types/d3': 7.4.0
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      faker: 5.5.3
       postcss: 8.4.21
 
   packages/experimental/kai:
@@ -2808,6 +2808,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@octokit/rest': ^19.0.5
       '@types/faker': ^5.5.9
       '@types/html-to-text': ^9.0.0
@@ -2825,7 +2826,6 @@ importers:
       csv-parse: ^5.3.6
       date-fns: ^2.29.3
       email-addresses: ^5.0.0
-      faker: ^5.5.3
       html-to-text: ^9.0.4
       imap: ^0.8.19
       imap-simple: ^5.1.0
@@ -2849,6 +2849,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
+      '@faker-js/faker': 7.6.0
       '@octokit/rest': 19.0.5
       amadeus: 8.0.0
       assert: 2.0.0
@@ -2857,7 +2858,6 @@ importers:
       csv-parse: 5.3.6
       date-fns: 2.29.3
       email-addresses: 5.0.0
-      faker: 5.5.3
       html-to-text: 9.0.4
       imap: 0.8.19
       imap-simple: 5.1.0
@@ -2916,6 +2916,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@monaco-editor/react': ^4.4.6
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-scroll-area': ^1.0.3
@@ -2942,7 +2943,6 @@ importers:
       clipboard-copy: ^4.0.1
       d3: ^7.4.4
       date-fns: ^2.29.3
-      faker: ^5.5.3
       hastscript: ^7.1.0
       ipfs-http-client: ~56.0.1
       leaflet: ^1.9.3
@@ -3052,6 +3052,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
+      '@faker-js/faker': 7.6.0
       '@monaco-editor/react': 4.4.6_mxtbfgz57rpc6pjn6jsomqlbdm
       '@remix-run/router': 1.0.2
       '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
@@ -3070,7 +3071,6 @@ importers:
       '@types/simple-peer': 9.11.3
       '@types/string-hash': 1.1.1
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
-      faker: 5.5.3
       monaco-editor: 0.25.2
       postcss: 8.4.21
       tailwindcss: 3.3.2
@@ -3123,6 +3123,7 @@ importers:
       '@dxos/util': workspace:*
       '@dxos/vault': workspace:*
       '@dxos/websocket-rpc': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
@@ -3143,7 +3144,6 @@ importers:
       base-x: ~3.0.9
       clipboard-copy: ^4.0.1
       date-fns: ^2.29.3
-      faker: ^5.5.3
       mobile-detect: ^1.4.5
       node-fetch: ^2.6.0
       postcss: ^8.4.21
@@ -3223,6 +3223,7 @@ importers:
       '@babel/core': 7.21.3
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/vault': link:../../sdk/vault
+      '@faker-js/faker': 7.6.0
       '@remix-run/router': 1.0.2
       '@sentry/vite-plugin': 0.7.2
       '@storybook/addons': 7.0.7_biqbaboplfbrettd7655fr4n2y
@@ -3237,7 +3238,6 @@ importers:
       '@types/react-dom': 18.0.6
       '@types/react-syntax-highlighter': 15.5.5
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
-      faker: 5.5.3
       postcss: 8.4.21
       react-router: 6.4.2_react@18.2.0
       storybook-addon-react-router-v6: 0.3.2_aeibqh7zhbg3w5q6bov6r5kdaq
@@ -3340,10 +3340,10 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
       assert: ^2.0.0
       date-fns: ^2.29.3
-      faker: ^5.5.3
       prosemirror-model: ^1.19.0
       prosemirror-schema-basic: ^1.2.1
       prosemirror-state: ^1.4.2
@@ -3365,9 +3365,9 @@ importers:
       assert: 2.0.0
     devDependencies:
       '@dxos/client-services': link:../../sdk/client-services
+      '@faker-js/faker': 7.6.0
       '@types/faker': 5.5.9
       date-fns: 2.29.3
-      faker: 5.5.3
       prosemirror-model: 1.19.0
       prosemirror-schema-basic: 1.2.1
       prosemirror-state: 1.4.2
@@ -3643,6 +3643,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-shell': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-scroll-area': ^1.0.3
       '@swc-node/register': 1.5.4
@@ -3654,7 +3655,6 @@ importers:
       '@types/react-dom': ^18.0.6
       '@types/react-table': ^7.7.14
       '@vitejs/plugin-react': ^3.0.1
-      faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
       lodash.isequal: ^4.5.0
       postcss: ^8.4.21
@@ -3694,6 +3694,7 @@ importers:
       '@babel/core': 7.20.12
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/config': link:../../sdk/config
+      '@faker-js/faker': 7.6.0
       '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
       '@swc/core': 1.3.21
       '@types/faker': 5.5.9
@@ -3703,7 +3704,6 @@ importers:
       '@types/react-dom': 18.0.6
       '@types/react-table': 7.7.14
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      faker: 5.5.3
       postcss: 8.4.21
       tailwindcss: 3.3.2
       typescript: 5.0.4
@@ -3721,6 +3721,7 @@ importers:
       '@dxos/gem-spore': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@swc-node/register': 1.5.4
       '@swc/core': 1.3.21
@@ -3734,7 +3735,6 @@ importers:
       assert: ^2.0.0
       chromatic: ^6.17.0
       d3: ^7.4.4
-      faker: ^5.5.3
       lodash.defaultsdeep: ^4.6.1
       postcss: ^8.4.21
       react: ^18.2.0
@@ -3763,6 +3763,7 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.12
+      '@faker-js/faker': 7.6.0
       '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
       '@swc/core': 1.3.21
       '@types/d3': 7.4.0
@@ -3773,7 +3774,6 @@ importers:
       '@types/string-hash': 1.1.1
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
       chromatic: 6.17.0
-      faker: 5.5.3
       postcss: 8.4.21
       string-hash: 1.1.3
       tailwindcss: 3.3.2
@@ -3840,11 +3840,11 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
       '@types/isomorphic-fetch': ^0.0.36
       '@types/node': ^18.11.9
       assert: ^2.0.0
-      faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
@@ -3861,10 +3861,10 @@ importers:
       preact-render-to-string: 5.2.5_preact@10.11.2
       url-join: 5.0.0
     devDependencies:
+      '@faker-js/faker': 7.6.0
       '@types/faker': 5.5.9
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 18.11.9
-      faker: 5.5.3
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4
 
@@ -3974,13 +3974,13 @@ importers:
       '@dxos/gem-core': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
+      '@faker-js/faker': ^7.3.0
       '@types/d3': ^7.1.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/lodash': ^4.14.182
       d3: ^7.4.4
       debug: ^4.3.3
-      faker: ^5.5.3
       react: ^18.2.0
       react-dom: ^18.2.0
       use-resize-observer: ^9.0.0
@@ -3996,11 +3996,11 @@ importers:
       '@dxos/esbuild-server': 2.29.0
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@faker-js/faker': 7.6.0
       '@types/d3': 7.4.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/lodash': 4.14.186
-      faker: 5.5.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
@@ -4035,11 +4035,11 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
       '@types/seedrandom': ^3.0.5
       danfojs-node: ^1.1.2
-      faker: ^5.5.3
       redis: ^4.6.6
       seedrandom: ^3.0.5
       ts-node: 10.9.1
@@ -4055,8 +4055,8 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/signal': link:../../core/mesh/signal
       '@dxos/util': link:../../common/util
+      '@faker-js/faker': 7.6.0
       danfojs-node: 1.1.2_seedrandom@3.0.5
-      faker: 5.5.3
       redis: 4.6.6
       seedrandom: 3.0.5
     devDependencies:
@@ -4396,7 +4396,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
-      '@faker-js/faker': ^7.6.0
+      '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-accordion': ^1.1.1
       '@radix-ui/react-radio-group': ^1.1.2
@@ -5774,7 +5774,7 @@ packages:
       '@babel/helper-plugin-utils': 7.20.2
       debug: 4.3.4
       lodash.debounce: 4.0.8
-      resolve: 1.22.1
+      resolve: 1.22.2
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
@@ -5789,7 +5789,7 @@ packages:
       '@babel/helper-plugin-utils': 7.20.2
       debug: 4.3.4
       lodash.debounce: 4.0.8
-      resolve: 1.22.1
+      resolve: 1.22.2
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
@@ -13582,7 +13582,7 @@ packages:
       builtin-modules: 3.3.0
       deepmerge: 4.3.1
       is-module: 1.0.0
-      resolve: 1.22.1
+      resolve: 1.22.2
       rollup: 2.79.1
     dev: true
 
@@ -19316,7 +19316,7 @@ packages:
   /axios/1.3.4_debug@4.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -19441,7 +19441,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.21.0
       cosmiconfig: 6.0.0
-      resolve: 1.22.1
+      resolve: 1.22.2
     dev: true
 
   /babel-plugin-macros/3.1.0:
@@ -19450,7 +19450,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.21.0
       cosmiconfig: 7.1.0
-      resolve: 1.22.1
+      resolve: 1.22.2
 
   /babel-plugin-polyfill-corejs2/0.3.3_@babel+core@7.19.3:
     resolution: {integrity: sha512-8hOdmFYFSZhqg2C/JgLUQ+t52o5nirNwaWM2B9LWteozwIvM14VSwdsCAUET10qT+kmySAlseadmfeeSWFCy+Q==}
@@ -23926,7 +23926,7 @@ packages:
     resolution: {integrity: sha512-0En0w03NRVMn9Uiyn8YRPDKvWjxCWkslUEhGNTdGx15RvPJYQ+lbOlqrlNI2vEAs4pDYK4f/HN2TbDmk5TP0iw==}
     dependencies:
       debug: 3.2.7
-      resolve: 1.22.1
+      resolve: 1.22.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -24766,9 +24766,6 @@ packages:
     resolution: {integrity: sha512-GipyPsXO1anza0AOZdy69Im7hGFCNB7Y/NGjDlZGJ3GJJLtwNSb2vrzYrTYJRrRloVx7pl+bhUaTB8yiccPvFQ==}
     engines: {node: '> 0.1.90'}
     dev: false
-
-  /faker/5.5.3:
-    resolution: {integrity: sha512-wLTv2a28wjUyWkbnX7u/ABZBkUkIF2fCd73V6P2oFqEGEktDfzWx4UxrSqtPRw0xPRAcjeAOIiJWqZm3pP4u3g==}
 
   /fancy-test/2.0.15:
     resolution: {integrity: sha512-yCtzWue60qfQd+b16dVUNE8kWCyQHNHUALnrue32M/ZxwH2AXjzjxdzA5YCe48kFlzqIi/tSxOuJa8TkU8Px1g==}
@@ -28828,7 +28825,7 @@ packages:
       jest-pnp-resolver: 1.2.2_jest-resolve@26.6.2
       jest-util: 26.6.2
       read-pkg-up: 7.0.1
-      resolve: 1.22.1
+      resolve: 1.22.2
       slash: 3.0.0
     dev: true
 
@@ -28842,7 +28839,7 @@ packages:
       jest-pnp-resolver: 1.2.2_jest-resolve@28.1.3
       jest-util: 28.1.3
       jest-validate: 28.1.3
-      resolve: 1.22.1
+      resolve: 1.22.2
       resolve.exports: 1.1.0
       slash: 3.0.0
     dev: true
@@ -28857,7 +28854,7 @@ packages:
       jest-pnp-resolver: 1.2.2_jest-resolve@29.5.0
       jest-util: 29.5.0
       jest-validate: 29.5.0
-      resolve: 1.22.1
+      resolve: 1.22.2
       resolve.exports: 2.0.2
       slash: 3.0.0
     dev: true
@@ -32373,7 +32370,7 @@ packages:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
     dependencies:
       hosted-git-info: 2.8.9
-      resolve: 1.22.1
+      resolve: 1.22.2
       semver: 5.7.1
       validate-npm-package-license: 3.0.4
 
@@ -35094,7 +35091,7 @@ packages:
       estree-to-babel: 3.2.1
       neo-async: 2.6.2
       node-dir: 0.1.17
-      resolve: 1.22.1
+      resolve: 1.22.2
       strip-indent: 3.0.0
     transitivePeerDependencies:
       - supports-color
@@ -35679,7 +35676,7 @@ packages:
     resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
     engines: {node: '>= 0.10'}
     dependencies:
-      resolve: 1.22.1
+      resolve: 1.22.2
 
   /recursive-readdir/2.2.2:
     resolution: {integrity: sha512-nRCcW9Sj7NuZwa2XvH9co8NPeXUBhZP7CRKJtU+cS6PW9FpCIFoI5ib0NT1ZrbNuPoRy0ylyCaUL8Gih4LSyFg==}
@@ -36129,7 +36126,7 @@ packages:
     dependencies:
       debug: 4.3.4
       module-details-from-path: 1.0.3
-      resolve: 1.22.1
+      resolve: 1.22.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -36205,6 +36202,7 @@ packages:
       is-core-module: 2.11.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+    dev: false
 
   /resolve/1.22.2:
     resolution: {integrity: sha512-Sb+mjNHOULsBv818T40qSPeRiuWLyaGMa5ewydRLFimneixmVy2zdivRl+AF6jaYPC8ERxGDmFSiqui6SfPd+g==}
@@ -37275,7 +37273,7 @@ packages:
       blake2b: 2.1.4
       chacha20-universal: 1.0.4
       nanoassert: 2.0.0
-      resolve: 1.22.1
+      resolve: 1.22.2
       sha256-universal: 1.2.1
       sha512-universal: 1.2.1
       siphash24: 1.3.1
@@ -38269,7 +38267,7 @@ packages:
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
       quick-lru: 5.1.1
-      resolve: 1.22.1
+      resolve: 1.22.2
       tmp: 0.2.1
     transitivePeerDependencies:
       - ts-node
@@ -38304,7 +38302,7 @@ packages:
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
       quick-lru: 5.1.1
-      resolve: 1.22.1
+      resolve: 1.22.2
       tmp: 0.2.1
     transitivePeerDependencies:
       - ts-node
