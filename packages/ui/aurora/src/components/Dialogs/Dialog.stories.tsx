@@ -6,15 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import {
-  DialogRoot,
-  DialogTitle,
-  DialogDescription,
-  DialogContent,
-  DialogOverlay,
-  DialogTrigger,
-  DialogClose,
-} from './Dialog';
+import { Dialog } from './Dialog';
 
 type StorybookDialogProps = Partial<{
   title: string;
@@ -26,21 +18,21 @@ type StorybookDialogProps = Partial<{
 
 const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger }: StorybookDialogProps) => {
   return (
-    <DialogRoot defaultOpen>
-      <DialogTrigger asChild>
+    <Dialog.Root defaultOpen>
+      <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
-      </DialogTrigger>
-      <DialogOverlay>
-        <DialogContent>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+      </Dialog.Trigger>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Title>{title}</Dialog.Title>
+          <Dialog.Description>{description}</Dialog.Description>
           <p className='mbs-2 mbe-4'>{body}</p>
-          <DialogClose asChild>
+          <Dialog.Close asChild>
             <Button variant='primary'>{closeTrigger}</Button>
-          </DialogClose>
-        </DialogContent>
-      </DialogOverlay>
-    </DialogRoot>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };
 

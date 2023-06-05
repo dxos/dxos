@@ -6,16 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import {
-  AlertDialogRoot,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  AlertDialogTrigger,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from './AlertDialog';
+import { AlertDialog } from './AlertDialog';
 
 type StorybookAlertDialogProps = Partial<{
   title: string;
@@ -35,24 +26,24 @@ const StorybookAlertDialog = ({
   actionTrigger,
 }: StorybookAlertDialogProps) => {
   return (
-    <AlertDialogRoot defaultOpen>
-      <AlertDialogTrigger asChild>
+    <AlertDialog.Root defaultOpen>
+      <AlertDialog.Trigger asChild>
         <Button>{openTrigger}</Button>
-      </AlertDialogTrigger>
-      <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+      </AlertDialog.Trigger>
+      <AlertDialog.Overlay>
+        <AlertDialog.Content>
+          <AlertDialog.Title>{title}</AlertDialog.Title>
+          <AlertDialog.Description>{description}</AlertDialog.Description>
           <p className='mbs-2 mbe-4'>{body}</p>
-          <AlertDialogCancel asChild>
+          <AlertDialog.Cancel asChild>
             <Button>{cancelTrigger}</Button>
-          </AlertDialogCancel>
-          <AlertDialogAction asChild>
+          </AlertDialog.Cancel>
+          <AlertDialog.Action asChild>
             <Button variant='primary'>{actionTrigger}</Button>
-          </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialogRoot>
+          </AlertDialog.Action>
+        </AlertDialog.Content>
+      </AlertDialog.Overlay>
+    </AlertDialog.Root>
   );
 };
 

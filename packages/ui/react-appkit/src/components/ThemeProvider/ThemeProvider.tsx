@@ -7,11 +7,10 @@ import React, { PropsWithChildren } from 'react';
 import {
   ThemeProvider as AuroraThemeProvider,
   ThemeProviderProps as AuroraThemeProviderProps,
-  TooltipProvider,
+  Toast,
+  Tooltip,
   TooltipProviderProps,
-  ToastProvider,
   ToastProviderProps,
-  ToastViewport,
   ToastViewportProps,
 } from '@dxos/aurora';
 import { osTx, appTx } from '@dxos/aurora-theme';
@@ -34,12 +33,12 @@ export const ThemeProvider = ({
 }: ThemeProviderProps) => {
   return (
     <AuroraThemeProvider tx={themeVariant === 'os' ? osTx : appTx} {...auroraThemeProviderProps}>
-      <ToastProvider {...toastProviderProps}>
-        <TooltipProvider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
+      <Toast.Provider {...toastProviderProps}>
+        <Tooltip.Provider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}
-        </TooltipProvider>
-        <ToastViewport {...toastViewportProps} classNames={toastViewportProps?.classNames} />
-      </ToastProvider>
+        </Tooltip.Provider>
+        <Toast.Viewport {...toastViewportProps} classNames={toastViewportProps?.classNames} />
+      </Toast.Provider>
     </AuroraThemeProvider>
   );
 };

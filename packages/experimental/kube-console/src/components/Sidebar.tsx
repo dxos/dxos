@@ -5,12 +5,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { List, ListItemEndcap } from '@dxos/aurora';
+import { List, ListItem } from '@dxos/aurora';
 import { useConfig } from '@dxos/react-client';
 import { DXOS } from '@dxos/react-icons';
 
-import { Toolbar } from '../components';
 import { Module } from '../hooks';
+import { Toolbar } from './Toolbar';
 import { ListItemButton, ListItemText } from './util';
 
 export type SidebarProps = {
@@ -37,9 +37,9 @@ export const Sidebar = ({ modules, active, onActiveChange }: SidebarProps) => {
       <List aria-labelledby='modules'>
         {modules.map(({ id, label, Icon }) => (
           <ListItemButton key={id} selected={id === active} onClick={() => onActiveChange(id)}>
-            <ListItemEndcap asChild>
+            <ListItem.Endcap asChild>
               <Icon />
-            </ListItemEndcap>
+            </ListItem.Endcap>
             <ListItemText className='font-thin'>{label}</ListItemText>
           </ListItemButton>
         ))}

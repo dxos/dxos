@@ -4,17 +4,7 @@
 
 import React from 'react';
 
-import {
-  DialogClose,
-  DialogContent,
-  DialogContentProps,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  ThemeContext,
-  useId,
-  useThemeContext,
-} from '@dxos/aurora';
+import { Dialog, DialogContentProps, ThemeContext, useId, useThemeContext } from '@dxos/aurora';
 import { osTx } from '@dxos/aurora-theme';
 
 import { SpacePanel, SpacePanelProps } from '../../panels';
@@ -29,21 +19,21 @@ export const SpaceDialog = ({ ...spacePanelProps }: SpaceDialogProps) => {
 
   return (
     <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <DialogRoot defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
-        <DialogPortal>
-          <DialogOverlay>
-            <DialogContent>
+      <Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
+        <Dialog.Portal>
+          <Dialog.Overlay>
+            <Dialog.Content>
               <SpacePanel
                 {...{
                   ...spacePanelProps,
                   titleId,
-                  doneActionParent: <DialogClose asChild />,
+                  doneActionParent: <Dialog.Close asChild />,
                 }}
               />
-            </DialogContent>
-          </DialogOverlay>
-        </DialogPortal>
-      </DialogRoot>
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Portal>
+      </Dialog.Root>
     </ThemeContext.Provider>
   );
 };

@@ -4,7 +4,7 @@
 
 import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithoutRef, forwardRef } from 'react';
+import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
 
 import { Density } from '@dxos/aurora-types';
 import {
@@ -165,44 +165,50 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
   },
 );
 
-type ListItemProps = ThemedClassName<ListPrimitiveItemProps>;
+type ListItemRootProps = ThemedClassName<ListPrimitiveItemProps>;
 
-const ListItem = forwardRef<HTMLLIElement, ListItemProps>(({ classNames, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const density = useDensityContext();
-  return (
-    <ListPrimitiveItem
-      {...props}
-      className={tx('list.item.root', 'list__listItem', { density, collapsible: props.collapsible }, classNames)}
-      ref={forwardedRef}
-    >
-      {children}
-    </ListPrimitiveItem>
-  );
-});
+const ListItemRoot = forwardRef<HTMLLIElement, ListItemRootProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext();
+    return (
+      <ListPrimitiveItem
+        {...props}
+        className={tx('list.item.root', 'list__listItem', { density, collapsible: props.collapsible }, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </ListPrimitiveItem>
+    );
+  },
+);
 
-export {
-  List,
-  ListItem,
-  ListItemEndcap,
-  ListItemHeading,
-  ListItemDragHandle,
-  ListItemOpenTrigger,
-  ListItemCollapsibleContent,
-  MockListItemOpenTrigger,
-  MockListItemDragHandle,
-  useListDensity,
-  useListContext,
-  useListItemContext,
-  LIST_NAME,
-  LIST_ITEM_NAME,
-  arrayMove,
+export const ListItem: {
+  Root: ForwardRefExoticComponent<ListItemRootProps>;
+  Endcap: ForwardRefExoticComponent<ListItemEndcapProps>;
+  Heading: ForwardRefExoticComponent<ListItemHeadingProps>;
+  DragHandle: ForwardRefExoticComponent<ListItemDragHandleProps>;
+  OpenTrigger: ForwardRefExoticComponent<ListItemOpenTriggerProps>;
+  CollapsibleContent: ForwardRefExoticComponent<ListItemCollapsibleContentProps>;
+  MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
+  MockDragHandle: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
+} = {
+  Root: ListItemRoot,
+  Endcap: ListItemEndcap,
+  Heading: ListItemHeading,
+  DragHandle: ListItemDragHandle,
+  OpenTrigger: ListItemOpenTrigger,
+  CollapsibleContent: ListItemCollapsibleContent,
+  MockOpenTrigger: MockListItemOpenTrigger,
+  MockDragHandle: MockListItemDragHandle,
 };
+
+export { List, useListDensity, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME, arrayMove };
 
 export type {
   ListProps,
   ListScopedProps,
-  ListItemProps,
+  ListItemRootProps,
   ListItemScopedProps,
   ListItemEndcapProps,
   ListItemHeadingProps,

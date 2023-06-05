@@ -7,14 +7,7 @@ import React from 'react';
 
 import { MessageValence } from '@dxos/aurora-types';
 
-import {
-  InputRoot,
-  PinInput as NaturalPinInput,
-  TextInput as NaturalTextInput,
-  TextArea as NaturalTextArea,
-  Checkbox as NaturalCheckbox,
-} from './Input';
-import { Description, DescriptionAndValidation, Label, Validation } from './InputMeta';
+import { Input } from './Input';
 
 type StoryInputProps = Partial<{
   label: string;
@@ -40,21 +33,21 @@ const StoryInput = ({
 }: StoryInputProps) => {
   // TODO(thure): Implement
   return (
-    <InputRoot {...{ validationValence }}>
-      <Label srOnly={labelVisuallyHidden}>{label}</Label>
-      {type === 'pin' && <NaturalPinInput {...props} />}
-      {type === 'textarea' && <NaturalTextArea {...props} />}
-      {type === 'checkbox' && <NaturalCheckbox {...props} />}
-      {type === 'default' && <NaturalTextInput {...props} />}
-      <DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
+    <Input.Root {...{ validationValence }}>
+      <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
+      {type === 'pin' && <Input.PinInput {...props} />}
+      {type === 'textarea' && <Input.TextArea {...props} />}
+      {type === 'checkbox' && <Input.Checkbox {...props} />}
+      {type === 'default' && <Input.TextInput {...props} />}
+      <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && (
           <>
-            <Validation>{validationMessage}</Validation>{' '}
+            <Input.Validation>{validationMessage}</Input.Validation>{' '}
           </>
         )}
-        <Description>{description}</Description>
-      </DescriptionAndValidation>
-    </InputRoot>
+        <Input.Description>{description}</Input.Description>
+      </Input.DescriptionAndValidation>
+    </Input.Root>
   );
 };
 

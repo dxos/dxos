@@ -5,15 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import {
-  MockTreeItemOpenTrigger,
-  TreeBranch,
-  TreeItem,
-  TreeItemBody,
-  TreeItemHeading,
-  TreeItemOpenTrigger,
-  TreeRoot,
-} from './Tree';
+import { Tree, TreeItem } from './Tree';
 
 type StorybookTreeProps = {
   data: any;
@@ -38,19 +30,19 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
         const valueIsScalar = isScalar(value);
 
         return (
-          <TreeItem key={id} id={id} collapsible={!valueIsScalar} defaultOpen>
+          <TreeItem.Root key={id} id={id} collapsible={!valueIsScalar} defaultOpen>
             <div role='none' className='grow flex'>
-              {valueIsScalar ? <MockTreeItemOpenTrigger /> : <TreeItemOpenTrigger />}
-              <TreeItemHeading classNames='grow pbs-1'>{valueIsScalar ? String(value) : key}</TreeItemHeading>
+              {valueIsScalar ? <TreeItem.MockOpenTrigger /> : <TreeItem.OpenTrigger />}
+              <TreeItem.Heading classNames='grow pbs-1'>{valueIsScalar ? String(value) : key}</TreeItem.Heading>
             </div>
             {!valueIsScalar && (
-              <TreeItemBody className='pis-2'>
-                <TreeBranch>
+              <TreeItem.Body className='pis-2'>
+                <Tree.Branch>
                   <StorybookTreeItem data={value} prefix={id} />
-                </TreeBranch>
-              </TreeItemBody>
+                </Tree.Branch>
+              </TreeItem.Body>
             )}
-          </TreeItem>
+          </TreeItem.Root>
         );
       })}
     </>
@@ -59,9 +51,9 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
 
 const StorybookTree = ({ data }: StorybookTreeProps) => {
   return (
-    <TreeRoot density='fine'>
+    <Tree.Root density='fine'>
       <StorybookTreeItem data={data} />
-    </TreeRoot>
+    </Tree.Root>
   );
 };
 
