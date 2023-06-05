@@ -9,23 +9,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Document } from '@braneframe/types';
 import {
   useTranslation,
-  ListItemEndcap,
+  ListItem,
   useSidebar,
   useDensityContext,
-  TooltipTrigger,
+  Tooltip,
   Button,
-  TooltipRoot,
   TreeItem,
-  TreeItemHeading,
-  DropdownMenuRoot,
-  DropdownMenuArrow,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  TooltipContent,
-  TooltipArrow,
-  TooltipPortal,
-  DropdownMenuPortal,
+  DropdownMenu,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
@@ -55,8 +45,8 @@ export const DocumentLinkTreeItem = observer(
     }, [space, document]);
 
     return (
-      <TreeItem classNames='pis-7 pointer-fine:pis-6 pie-1 pointer-fine:pie-0 flex'>
-        <TreeItemHeading
+      <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pie-1 pointer-fine:pie-0 flex'>
+        <TreeItem.Heading
           asChild
           classNames={appTx(
             'button.root',
@@ -65,12 +55,12 @@ export const DocumentLinkTreeItem = observer(
             'grow text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
           )}
         >
-          <Link to={linkTo} data-testid='composer.documentTreeItemHeading' {...(!sidebarOpen && { tabIndex: -1 })}>
+          <Link to={linkTo} data-testid='composer.documentTreeItem.Heading' {...(!sidebarOpen && { tabIndex: -1 })}>
             <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
             <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           </Link>
-        </TreeItemHeading>
-        <TooltipRoot
+        </TreeItem.Heading>
+        <Tooltip.Root
           open={optionsTooltipOpen}
           onOpenChange={(nextOpen) => {
             if (suppressNextTooltip.current) {
@@ -81,13 +71,13 @@ export const DocumentLinkTreeItem = observer(
             }
           }}
         >
-          <TooltipPortal>
-            <TooltipContent classNames='z-[31]' side='bottom'>
+          <Tooltip.Portal>
+            <Tooltip.Content classNames='z-[31]' side='bottom'>
               {t('document options label')}
-              <TooltipArrow />
-            </TooltipContent>
-          </TooltipPortal>
-          <DropdownMenuRoot
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+          <DropdownMenu.Root
             {...{
               open: optionsMenuOpen,
               onOpenChange: (nextOpen: boolean) => {
@@ -98,8 +88,8 @@ export const DocumentLinkTreeItem = observer(
               },
             }}
           >
-            <DropdownMenuTrigger asChild>
-              <TooltipTrigger asChild>
+            <DropdownMenu.Trigger asChild>
+              <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
                   data-testid='composer.openSpaceMenu'
@@ -108,26 +98,26 @@ export const DocumentLinkTreeItem = observer(
                 >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
-              </TooltipTrigger>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent classNames='z-[31]'>
-                <DropdownMenuItem onClick={handleDelete} classNames='gap-2'>
+              </Tooltip.Trigger>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content classNames='z-[31]'>
+                <DropdownMenu.Item onClick={handleDelete} classNames='gap-2'>
                   <FileMinus className={getSize(4)} />
                   <span>{t('delete document label')}</span>
-                </DropdownMenuItem>
-                <DropdownMenuArrow />
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
-        </TooltipRoot>
-        <ListItemEndcap classNames='is-6 flex items-center'>
+                </DropdownMenu.Item>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </Tooltip.Root>
+        <ListItem.Endcap classNames='is-6 flex items-center'>
           <Circle
             weight='fill'
             className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}
           />
-        </ListItemEndcap>
-      </TreeItem>
+        </ListItem.Endcap>
+      </TreeItem.Root>
     );
   },
 );

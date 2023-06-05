@@ -5,16 +5,7 @@
 import { DotsThreeCircle } from '@phosphor-icons/react';
 import React, { FC, useContext } from 'react';
 
-import {
-  Button,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-  DropdownMenuArrow,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuPortal,
-} from '@dxos/aurora';
+import { Button, DropdownMenu } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 
 import { StackSectionContext } from './context';
@@ -55,32 +46,32 @@ export const StackMenu = ({ actions = [], onAction }: StackMenuProps) => {
 
   return (
     <div className='flex'>
-      <DropdownMenuRoot>
-        <DropdownMenuTrigger asChild>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
           <Button variant='ghost' density='fine' classNames='p-0'>
             <DotsThreeCircle className={getSize(6)} />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuContent align='end' classNames='z-50'>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content align='end' classNames='z-50'>
             {actions?.map((action, i) => (
               <div key={i}>
-                {i > 0 && <DropdownMenuSeparator />}
+                {i > 0 && <DropdownMenu.Separator />}
                 {action?.map((action, i) => {
                   const { label, Icon } = action;
                   return (
-                    <DropdownMenuItem key={i} onClick={() => handleAction(action)}>
+                    <DropdownMenu.Item key={i} onClick={() => handleAction(action)}>
                       <Icon className={getSize(5)} />
                       <span className='mis-2'>{label}</span>
-                    </DropdownMenuItem>
+                    </DropdownMenu.Item>
                   );
                 })}
               </div>
             ))}
-            <DropdownMenuArrow />
-          </DropdownMenuContent>
-        </DropdownMenuPortal>
-      </DropdownMenuRoot>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   );
 };

@@ -7,23 +7,7 @@ import { ArrowSquareOut, CaretDown, DotsThreeVertical, Eye, Option, UserPlus } f
 import React, { useCallback, useContext, useRef, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import {
-  Button,
-  ButtonGroup,
-  DensityProvider,
-  Toggle,
-  useTranslation,
-  DropdownMenuRoot,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuArrow,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  TooltipRoot,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipArrow,
-} from '@dxos/aurora';
+import { Button, ButtonGroup, DensityProvider, Toggle, useTranslation, DropdownMenu, Tooltip } from '@dxos/aurora';
 import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useShell } from '@dxos/react-shell';
@@ -79,20 +63,20 @@ const EmbeddedLayoutImpl = () => {
       `}</style>
       <DensityProvider density='fine'>
         <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
-          <TooltipRoot>
-            <TooltipTrigger asChild>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
               <Button disabled={!space} onClick={handleInvite}>
                 <span className='sr-only'>{t('create invitation label', { ns: 'appkit' })}</span>
                 <UserPlus className={getSize(5)} />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent {...overlayAttrs}>
+            </Tooltip.Trigger>
+            <Tooltip.Content {...overlayAttrs}>
               {t('create invitation label', { ns: 'appkit' })}
-              <TooltipArrow />
-            </TooltipContent>
-          </TooltipRoot>
-          <TooltipRoot>
-            <TooltipTrigger asChild>
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Root>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
               <Toggle
                 disabled={!(space && document)}
                 pressed={editorViewState === 'preview'}
@@ -101,13 +85,13 @@ const EmbeddedLayoutImpl = () => {
                 <span className='sr-only'>{t('preview gfm label')}</span>
                 <Eye className={getSize(5)} />
               </Toggle>
-            </TooltipTrigger>
-            <TooltipContent {...overlayAttrs}>
+            </Tooltip.Trigger>
+            <Tooltip.Content {...overlayAttrs}>
               {t('preview gfm label')}
-              <TooltipArrow />
-            </TooltipContent>
-          </TooltipRoot>
-          <TooltipRoot
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Root>
+          <Tooltip.Root
             open={optionsTooltipOpen}
             onOpenChange={(nextOpen) => {
               if (suppressNextTooltip.current) {
@@ -118,7 +102,7 @@ const EmbeddedLayoutImpl = () => {
               }
             }}
           >
-            <DropdownMenuRoot
+            <DropdownMenu.Root
               {...{
                 open: optionsMenuOpen,
                 onOpenChange: (nextOpen: boolean) => {
@@ -129,16 +113,16 @@ const EmbeddedLayoutImpl = () => {
                 },
               }}
             >
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
+              <Tooltip.Trigger asChild>
+                <DropdownMenu.Trigger asChild>
                   <Button disabled={!(space && document)}>
                     <span className='sr-only'>{t('embedded options label')}</span>
                     <DotsThreeVertical className={getSize(5)} />
                   </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <DropdownMenuContent {...overlayAttrs}>
-                <DropdownMenuItem asChild>
+                </DropdownMenu.Trigger>
+              </Tooltip.Trigger>
+              <DropdownMenu.Content {...overlayAttrs}>
+                <DropdownMenu.Item asChild>
                   <a
                     target='_blank'
                     rel='noreferrer'
@@ -147,8 +131,8 @@ const EmbeddedLayoutImpl = () => {
                     <span className='grow'>{t('open in composer label')}</span>
                     <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
                   </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
                   onClick={() => {
                     if (space && identityHex && source && id) {
                       unbindSpace(space, identityHex, source, id);
@@ -158,39 +142,39 @@ const EmbeddedLayoutImpl = () => {
                 >
                   <span className='grow'>{t('unset repo space label')}</span>
                   <Option className={mx('shrink-0', getSize(5))} />
-                </DropdownMenuItem>
-                <DropdownMenuArrow />
-              </DropdownMenuContent>
-              <TooltipContent {...overlayAttrs}>
+                </DropdownMenu.Item>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+              <Tooltip.Content {...overlayAttrs}>
                 {t('embedded options label')}
-                <TooltipArrow />
-              </TooltipContent>
-            </DropdownMenuRoot>
-          </TooltipRoot>
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </DropdownMenu.Root>
+          </Tooltip.Root>
           <ButtonGroup classNames={[!(space && document) && 'shadow-none']}>
             <Button disabled={!(space && document)} onClick={handleSaveAndCloseEmbed}>
               {t('save and close label')}
             </Button>
-            <DropdownMenuRoot>
-              <DropdownMenuTrigger asChild>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
                 <Button disabled={!(space && document)}>
                   <CaretDown />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuContent {...overlayAttrs}>
-                  <DropdownMenuItem onClick={handleSaveAndCloseEmbed} classNames='block'>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content {...overlayAttrs}>
+                  <DropdownMenu.Item onClick={handleSaveAndCloseEmbed} classNames='block'>
                     <p>{t('save and close label')}</p>
                     <p className={defaultDescription}>{t('save and close description')}</p>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCloseEmbed} classNames='block'>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={handleCloseEmbed} classNames='block'>
                     <p>{t('close label', { ns: 'appkit' })}</p>
                     <p className={defaultDescription}>{t('close embed description')}</p>
-                  </DropdownMenuItem>
-                  <DropdownMenuArrow />
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
-            </DropdownMenuRoot>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </ButtonGroup>
         </div>
         {space && document ? (
