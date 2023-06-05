@@ -8,7 +8,9 @@
         </svg>
       </vue-custom-tooltip>
     </div>
-    <iframe :src="iframeSrc"></iframe>
+    <ClientOnly>
+      <iframe :src="iframeSrc"></iframe>
+    </ClientOnly>
   </div>
 </template>
 
