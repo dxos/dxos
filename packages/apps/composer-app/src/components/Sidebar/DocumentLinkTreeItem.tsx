@@ -16,6 +16,7 @@ import {
   Button,
   TreeItem,
   DropdownMenu,
+  useMediaQuery,
 } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
@@ -25,11 +26,13 @@ import { getPath } from '../../router';
 
 export const DocumentLinkTreeItem = observer(
   ({ document, space, linkTo }: { document: Document; space: Space; linkTo: string }) => {
-    const { sidebarOpen } = useSidebar();
+    const { sidebarOpen, closeSidebar } = useSidebar();
     const { t } = useTranslation('composer');
     const { docKey } = useParams();
     const density = useDensityContext();
     const navigate = useNavigate();
+    const [isLg] = useMediaQuery('lg', { ssr: false });
+
     const active = docKey === document.id;
     const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
 
@@ -45,7 +48,7 @@ export const DocumentLinkTreeItem = observer(
     }, [space, document]);
 
     return (
-      <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pie-1 pointer-fine:pie-0 flex'>
+      <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
         <TreeItem.Heading
           asChild
           classNames={appTx(
@@ -55,7 +58,12 @@ export const DocumentLinkTreeItem = observer(
             'grow text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
           )}
         >
-          <Link to={linkTo} data-testid='composer.documentTreeItem.Heading' {...(!sidebarOpen && { tabIndex: -1 })}>
+          <Link
+            to={linkTo}
+            data-testid='composer.documentTreeItem.Heading'
+            {...(!sidebarOpen && { tabIndex: -1 })}
+            onClick={() => !isLg && closeSidebar()}
+          >
             <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
             <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
           </Link>
@@ -93,7 +101,7 @@ export const DocumentLinkTreeItem = observer(
                 <Button
                   variant='ghost'
                   data-testid='composer.openSpaceMenu'
-                  classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                  classNames='shrink-0 pli-2 pointer-fine:pli-1 self-start'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
                   <DotsThreeVertical className={getSize(4)} />
@@ -111,7 +119,7 @@ export const DocumentLinkTreeItem = observer(
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         </Tooltip.Root>
-        <ListItem.Endcap classNames='is-6 flex items-center'>
+        <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
           <Circle
             weight='fill'
             className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}
