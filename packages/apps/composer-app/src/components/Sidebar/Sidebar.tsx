@@ -109,7 +109,7 @@ const SidebarContent = () => {
             <SidebarTree />
             <Separator flush />
             {identity && (
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 pointer-fine:pie-3 plb-1.5'>
+              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 pointer-fine:pie-1.5 plb-1.5'>
                 <Avatar
                   size={6}
                   variant='circle'
