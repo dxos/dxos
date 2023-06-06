@@ -38,4 +38,4 @@ packages/apps/braneframe-app
 
 ## Braneframe plugins
 @braneframe/plugin-*
-packages/apps/composer-plugins/*
+packages/apps/composer-plugins/plugin-*
