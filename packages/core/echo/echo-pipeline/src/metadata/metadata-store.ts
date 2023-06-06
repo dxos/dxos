@@ -74,18 +74,11 @@ export class MetadataStore {
       }
 
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
-      this._checkVersion();
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
     } finally {
       await file.close();
-    }
-  }
-
-  private _checkVersion() {
-    if (this._metadata.version !== STORAGE_VERSION) {
-      throw new Error(`Invalid storage version: current=${this._metadata.version}, expected=${STORAGE_VERSION}`);
     }
   }
 
