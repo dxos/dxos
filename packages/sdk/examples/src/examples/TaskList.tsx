@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React, { KeyboardEventHandler, useState } from 'react';
 
-import { TextInput, Button, Checkbox, InputRoot, Label } from '@dxos/aurora';
+import { Button, Input } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import type { PublicKey } from '@dxos/client';
 import { useQuery, useSpace } from '@dxos/react-client';
@@ -28,22 +28,22 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
   return (
     <div className='grow max-w-lg mbs-4 place-content-evenly'>
       <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
-      <InputRoot>
-        <Label srOnly>Create new item</Label>
-        <TextInput
+      <Input.Root>
+        <Input.Label srOnly>Create new item</Input.Label>
+        <Input.TextInput
           classNames='mbe-2'
           placeholder='New item'
           ref={(e: HTMLInputElement) => setInput(e)}
           onKeyDown={handleKeyDown}
         />
-      </InputRoot>
+      </Input.Root>
       <ul>
         {tasks.map((task) => (
           <li key={task.id} className='flex items-center gap-2 mbe-2 pl-3'>
-            <InputRoot>
-              <Label srOnly>Complete {task.title}</Label>
-              <Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
-            </InputRoot>
+            <Input.Root>
+              <Input.Label srOnly>Complete {task.title}</Input.Label>
+              <Input.Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
+            </Input.Root>
             <div className='grow'>{task.title}</div>
             <Button variant='ghost' onClick={() => space?.db.remove(task)}>
               <X className={getSize(4)} />

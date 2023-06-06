@@ -6,7 +6,7 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
-import { Checkbox, InputRoot, Label } from '@dxos/aurora';
+import { Input } from '@dxos/aurora';
 import { Client } from '@dxos/client';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -31,9 +31,9 @@ export const ToggleNetworkDecorator = ({
   return (Story, context) => (
     <>
       <div className='flex'>
-        <InputRoot>
-          <Checkbox classNames='me-2' onCheckedChange={toggleNetwork} />
-          <Label>
+        <Input.Root>
+          <Input.Checkbox classNames='me-2' onCheckedChange={toggleNetwork} />
+          <Input.Label>
             Disable{' '}
             <a
               href='https://docs.dxos.org/guide/platform/'
@@ -44,8 +44,8 @@ export const ToggleNetworkDecorator = ({
               replication
             </a>{' '}
             (go offline)
-          </Label>
-        </InputRoot>
+          </Input.Label>
+        </Input.Root>
       </div>
       {Story({ args: context.args })}
     </>
