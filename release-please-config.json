@@ -458,6 +458,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/examples/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
           "jsonpath": "$.version"
         },

@@ -29,6 +29,7 @@ versionGroups:
       - '@swc/core'
   - packages:
       - '@dxos/*-monitor'
+      - 'dxos-example-template'
     dependencies:
       - '@dxos/*'
 sortFirst:
