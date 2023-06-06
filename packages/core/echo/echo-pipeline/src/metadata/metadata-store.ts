@@ -124,6 +124,7 @@ export class MetadataStore {
   async clear(): Promise<void> {
     log('clearing all metadata');
     await this._directory.delete();
+    this._metadata = emptyEchoMetadata();
   }
 
   getIdentityRecord(): IdentityRecord | undefined {
