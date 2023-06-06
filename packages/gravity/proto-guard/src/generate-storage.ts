@@ -14,7 +14,7 @@ import { getLatestStorage, getConfig, getStorageDir } from './util';
 const main = async () => {
   {
     // Check if storage for current version does not already exist.
-    if (getLatestStorage() >= STORAGE_VERSION) {
+    if (!(STORAGE_VERSION > getLatestStorage())) {
       throw new Error(`Storage for current version ${STORAGE_VERSION} already exists`);
     }
   }

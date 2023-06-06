@@ -12,7 +12,7 @@
     "src"
   ],
   "scripts": {
-    "generate": "ts-node ./src/generate-storage"
+    "storage": "ts-node ./src/generate-storage"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
