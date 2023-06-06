@@ -23,6 +23,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@sentry/browser": "^7.45.0",
     "@sentry/integrations": "7.45.0",
     "@sentry/node": "^7.45.0",
