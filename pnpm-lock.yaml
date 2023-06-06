@@ -1277,6 +1277,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/util': workspace:*
       '@sentry/browser': ^7.45.0
       '@sentry/integrations': 7.45.0
       '@sentry/node': ^7.45.0
@@ -1289,6 +1290,7 @@ importers:
       '@dxos/debug': link:../debug
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
+      '@dxos/util': link:../util
       '@sentry/browser': 7.46.0
       '@sentry/integrations': 7.45.0
       '@sentry/node': 7.46.0
