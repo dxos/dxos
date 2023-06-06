@@ -81,7 +81,7 @@ const HiddenSpacesBranch = ({ __listItemScope, hiddenSpaces }: ListItemScopedPro
         <TreeItem.OpenTrigger {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon />
         </TreeItem.OpenTrigger>
-        <TreeItem.Heading classNames='grow break-words pbs-1.5 text-sm font-system-medium'>
+        <TreeItem.Heading classNames='grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-system-medium'>
           {t('hidden spaces tree label')}
         </TreeItem.Heading>
       </div>
