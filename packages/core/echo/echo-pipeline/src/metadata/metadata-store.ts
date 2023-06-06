@@ -9,17 +9,10 @@ import { synchronized } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { STORAGE_VERSION, schema } from '@dxos/protocols';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-
-/**
- * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
- *
- * Should be incremented every time there's a breaking change to the stored data.
- */
-export const STORAGE_VERSION = 1;
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -81,11 +74,18 @@ export class MetadataStore {
       }
 
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
+      this._checkVersion();
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
     } finally {
       await file.close();
+    }
+  }
+
+  private _checkVersion() {
+    if (this._metadata.version !== STORAGE_VERSION) {
+      throw new Error(`Invalid storage version: current=${this._metadata.version}, expected=${STORAGE_VERSION}`);
     }
   }
 
