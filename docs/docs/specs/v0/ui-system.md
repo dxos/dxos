@@ -32,10 +32,12 @@ packages/sdk/react-shell
 @dxos/react-appkit
 packages/ui/react-appkit
 
-## Braneframe (Composer v2)
-@braneframe/app
-packages/apps/braneframe-app
+## Extensible Composer
+@braneframe/composer
+packages/apps/composer-app
 
-## Braneframe plugins
-@braneframe/plugin-*
+## Composer plugins
+@braneframe/composer-plugin-*
 packages/apps/composer-plugins/*
+
+e.g.: packages/apps/composer-plugins/stack @braneframe/composer-plugin-stack
