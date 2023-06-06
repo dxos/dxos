@@ -5,7 +5,7 @@
 import { CaretCircleDoubleDown, PlusCircle, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, Checkbox, InputRoot } from '@dxos/aurora';
+import { Button, Input } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { ShellLayout, useClient, useSpaces } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
@@ -58,9 +58,9 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
       <div className='flex flex-col px-4 py-2'>
         {/* TODO(burdon): Not aligned with buttons. Checkbox not part of Aurora? */}
         <div className='flex px-0.5 py-1 items-center'>
-          <InputRoot id='sidebar.showDeleted'>
-            <Checkbox checked={showDeletedObjects} onCheckedChange={setShowDeletedObjects} />
-          </InputRoot>
+          <Input.Root id='sidebar.showDeleted'>
+            <Input.Checkbox checked={showDeletedObjects} onCheckedChange={setShowDeletedObjects} />
+          </Input.Root>
           <span className='px-2.5 pt-0.5 text-sm'>Show deleted objects</span>
         </div>
         <Separator />

@@ -18,8 +18,8 @@ type ToggleGroupProps = Omit<ToggleGroupSingleProps, 'className'> | Omit<ToggleG
 const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <ToggleGroupPrimitive {...props} asChild ref={forwardedRef}>
-        <ButtonGroup {...{ classNames, children }} />
+      <ToggleGroupPrimitive {...props} asChild>
+        <ButtonGroup {...{ classNames, children }} ref={forwardedRef} />
       </ToggleGroupPrimitive>
     );
   },
@@ -27,15 +27,13 @@ const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupPro
 
 type ToggleGroupItemProps = ToggleGroupItemPrimitiveProps;
 
-const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
-  ({ value, disabled, ...props }, forwardedRef) => {
-    return (
-      <ToggleGroupItemPrimitive {...{ value, disabled }} asChild ref={forwardedRef}>
-        <Button {...props} />
-      </ToggleGroupItemPrimitive>
-    );
-  },
-);
+const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(({ value, ...props }, forwardedRef) => {
+  return (
+    <ToggleGroupItemPrimitive {...{ value, disabled: props.disabled }} asChild>
+      <Button {...props} ref={forwardedRef} />
+    </ToggleGroupItemPrimitive>
+  );
+});
 
 export { ToggleGroup, ToggleGroupItem };
 export type { ToggleGroupProps, ToggleGroupItemProps };

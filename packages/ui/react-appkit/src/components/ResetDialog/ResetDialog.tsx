@@ -5,18 +5,7 @@
 import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import {
-  Button,
-  Message,
-  MessageTitle,
-  useTranslation,
-  DropdownMenuRoot,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuArrow,
-  DropdownMenuPortal,
-} from '@dxos/aurora';
+import { Button, Message, useTranslation, DropdownMenu } from '@dxos/aurora';
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { getAsyncValue, Provider } from '@dxos/util';
@@ -77,10 +66,10 @@ export const ResetDialog = ({
     >
       {isDev && errors.length > 0 ? (
         errors.map(({ message, stack }, index) => (
-          <Message key={`${index}--${message}`} valence='error' className='mlb-4 overflow-auto max-bs-72'>
-            <MessageTitle>{message}</MessageTitle>
+          <Message.Root key={`${index}--${message}`} valence='error' className='mlb-4 overflow-auto max-bs-72'>
+            <Message.Title>{message}</Message.Title>
             <pre className='text-xs'>{stack}</pre>
-          </Message>
+          </Message.Root>
         ))
       ) : (
         <p>{t(errors.length > 0 ? 'fatal error message' : 'reset dialog message')}</p>
@@ -94,13 +83,13 @@ export const ResetDialog = ({
           </Tooltip>
         )}
         <div role='none' className='flex-grow' />
-        <DropdownMenuRoot>
-          <DropdownMenuTrigger asChild>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
             <Button variant='ghost'>{t('reset client label')}</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent side='top' classNames='z-[51]'>
-              <DropdownMenuItem
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content side='top' classNames='z-[51]'>
+              <DropdownMenu.Item
                 onClick={async () => {
                   // TODO(wittjosiah): This is a hack.
                   //   We should have access to client here and be able to reset over rpc even if storage is corrupted.
@@ -109,11 +98,11 @@ export const ResetDialog = ({
                 }}
               >
                 {t('reset client confirm label')}
-              </DropdownMenuItem>
-              <DropdownMenuArrow />
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
-        </DropdownMenuRoot>
+              </DropdownMenu.Item>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
         <Button variant='primary' onClick={() => location.reload()}>
           {t('reload page label')}
         </Button>

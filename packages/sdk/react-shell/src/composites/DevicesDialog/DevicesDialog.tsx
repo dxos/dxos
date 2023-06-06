@@ -4,17 +4,7 @@
 
 import React from 'react';
 
-import {
-  DialogClose,
-  DialogContent,
-  DialogContentProps,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  ThemeContext,
-  useId,
-  useThemeContext,
-} from '@dxos/aurora';
+import { DialogContentProps, Dialog, ThemeContext, useId, useThemeContext } from '@dxos/aurora';
 import { osTx } from '@dxos/aurora-theme';
 
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
@@ -29,21 +19,21 @@ export const DevicesDialog = ({ ...devicesDialogProps }: DevicesDialogProps) => 
 
   return (
     <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <DialogRoot defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
-        <DialogPortal>
-          <DialogOverlay>
-            <DialogContent>
+      <Dialog.Root defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
+        <Dialog.Portal>
+          <Dialog.Overlay>
+            <Dialog.Content>
               <DevicesPanel
                 {...{
                   ...devicesDialogProps,
                   titleId,
-                  doneActionParent: <DialogClose asChild />,
+                  doneActionParent: <Dialog.Close asChild />,
                 }}
               />
-            </DialogContent>
-          </DialogOverlay>
-        </DialogPortal>
-      </DialogRoot>
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Portal>
+      </Dialog.Root>
     </ThemeContext.Provider>
   );
 };

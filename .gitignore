@@ -120,3 +120,6 @@ packages/devtools/cli/src/util/telemetryrc.json
 
 # Bot temp files
 dxos-tmp
+template
+build
+.secrets

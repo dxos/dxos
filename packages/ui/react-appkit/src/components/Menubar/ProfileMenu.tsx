@@ -4,7 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { AvatarFallback, AvatarLabel, AvatarRoot, Avatar, useJdenticonHref } from '@dxos/aurora';
+import { Avatar, useJdenticonHref } from '@dxos/aurora';
 import { Identity as IdentityType } from '@dxos/client';
 import { humanize } from '@dxos/util';
 
@@ -20,12 +20,12 @@ export const ProfileMenu = (props: PropsWithChildren<ProfileMenuProps>) => {
   return (
     <Popover
       openTrigger={
-        <AvatarRoot>
-          <AvatarLabel srOnly>{identity.profile?.displayName ?? humanize(identity.identityKey.toHex())}</AvatarLabel>
-          <Avatar>
-            <AvatarFallback href={jdenticon} />
-          </Avatar>
-        </AvatarRoot>
+        <Avatar.Root>
+          <Avatar.Label srOnly>{identity.profile?.displayName ?? humanize(identity.identityKey.toHex())}</Avatar.Label>
+          <Avatar.Frame>
+            <Avatar.Fallback href={jdenticon} />
+          </Avatar.Frame>
+        </Avatar.Root>
       }
       slots={{
         content: { collisionPadding: 8, sideOffset: 4, className: 'flex flex-col gap-4 items-center z-[2]' },

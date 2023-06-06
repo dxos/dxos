@@ -10,7 +10,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Checkbox, InputRoot } from '@dxos/aurora';
+import { Input as NaturalInput } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 import { useConfig, useKeyStore } from '@dxos/react-client';
@@ -63,14 +63,14 @@ const SettingsPage = () => {
             <div className='py-4 bg-white'>
               {Array.from(options.entries()).map(([key, value]) => (
                 <div key={key} className='flex px-4 py-2 items-center'>
-                  <InputRoot id={key}>
-                    <Checkbox
+                  <NaturalInput.Root id={key}>
+                    <NaturalInput.Checkbox
                       checked={bool(value)}
                       onCheckedChange={(value) => {
                         handleUpdateOption(key, !!value);
                       }}
                     />
-                  </InputRoot>
+                  </NaturalInput.Root>
                   <div className='px-2'>{key}</div>
                 </div>
               ))}
