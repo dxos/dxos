@@ -98,7 +98,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const Root = isLg ? Primitive.div : DialogContent;
     return (
       <Root
-        {...(!isLg && { forceMount: true })}
+        {...(!isLg && { forceMount: true, tabIndex: -1 })}
         {...props}
         className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
         ref={ref}

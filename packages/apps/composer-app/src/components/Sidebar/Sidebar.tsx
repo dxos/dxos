@@ -109,7 +109,10 @@ const SidebarContent = () => {
             <SidebarTree />
             <Separator flush />
             {identity && (
-              <div role='none' className='shrink-0 flex items-center gap-1 pis-3 pie-1 pointer-fine:pie-3 plb-1.5'>
+              <div
+                role='none'
+                className='shrink-0 flex items-center gap-1 pis-3 pie-1.5 plb-3 pointer-fine:pie-1.5 pointer-fine:plb-1.5'
+              >
                 <Avatar
                   size={6}
                   variant='circle'
@@ -157,7 +160,7 @@ const SidebarToggle = () => {
       <div
         role='none'
         className={mx(
-          'fixed z-10 block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          'fixed z-10 block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-4 pointer-fine:p-2 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
           sidebarOpen && 'opacity-0 pointer-events-none',
         )}
       >
