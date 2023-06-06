@@ -6,17 +6,23 @@ import path from 'node:path';
 
 import { Client, Expando, Text } from '@dxos/client';
 import { log } from '@dxos/log';
+import { STORAGE_VERSION } from '@dxos/protocols';
 
 import { expectedExpando, expectedProperties, expectedText } from './expected-objects';
-import { bumpStorageVersion, getConfig, getStorageDir, getStorageVersion } from './util';
+import { getLatestStorage, getConfig, getStorageDir } from './util';
 
 const main = async () => {
-  bumpStorageVersion();
+  {
+    // Check if storage for current version does not already exist.
+    if (getLatestStorage() >= STORAGE_VERSION) {
+      throw new Error(`Storage for current version ${STORAGE_VERSION} already exists`);
+    }
+  }
 
   let client: Client;
   {
     // Init client.
-    const newStoragePath = path.join(getStorageDir(), getStorageVersion().toString());
+    const newStoragePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
     client = new Client({ config: getConfig(newStoragePath) });
     await client.initialize();
   }

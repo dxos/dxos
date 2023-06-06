@@ -12,12 +12,13 @@
     "src"
   ],
   "scripts": {
-    "bump": "ts-node ./src/bump-storage"
+    "generate": "ts-node ./src/generate-storage"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "fs-extra": "^8.1.0"
   },
   "devDependencies": {

@@ -4071,6 +4071,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@types/fs-extra': ^9.0.4
       '@types/node': ^18.11.9
       fs-extra: ^8.1.0
@@ -4080,6 +4081,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
       fs-extra: 8.1.0
     devDependencies:
       '@types/fs-extra': 9.0.13
