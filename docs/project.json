@@ -49,15 +49,6 @@
         ]
       }
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "docs/src/demos/proto/gen"
-      ]
-    },
     "prerelease": {
       "executor": "nx:run-script",
       "options": {
