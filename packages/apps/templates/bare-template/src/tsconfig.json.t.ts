@@ -18,7 +18,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
     emitDeclarationOnly: false,
     lib: ['DOM', 'ESNext'],
     outDir: 'dist',
-    types: ['node']
+    types: ['node', 'vite-plugin-pwa/client']
   };
 
   const include = ['src'];
