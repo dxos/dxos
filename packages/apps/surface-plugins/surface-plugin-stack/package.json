@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-stack",
+  "name": "@braneframe/surface-plugin-stack",
   "version": "0.1.45",
-  "description": "DXOS Composer plugin for Stack entities",
+  "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -17,8 +17,7 @@
   "devDependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/config": "workspace:*",
+    "@dxos/surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
@@ -29,7 +28,7 @@
   "peerDependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/client": "workspace:*",
+    "@dxos/surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

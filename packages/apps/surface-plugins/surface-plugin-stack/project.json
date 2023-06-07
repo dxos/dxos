@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/composer-plugins/stack/src",
+  "sourceRoot": "packages/apps/surface-plugins/surface-plugin-stack/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/composer-plugins/stack/src/index.ts",
-        "outputPath": "packages/apps/composer-plugins/stack/dist/types",
-        "tsConfig": "packages/apps/composer-plugins/stack/tsconfig.json"
+        "main": "packages/apps/surface-plugins/surface-plugin-stack/src/index.ts",
+        "outputPath": "packages/apps/surface-plugins/surface-plugin-stack/dist/types",
+        "tsConfig": "packages/apps/surface-plugins/surface-plugin-stack/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/composer-plugins/stack/src/index.ts"
+          "packages/apps/surface-plugins/surface-plugin-stack/src/index.ts"
         ],
-        "outputPath": "packages/apps/composer-plugins/stack/dist/lib",
+        "outputPath": "packages/apps/surface-plugins/surface-plugin-stack/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/composer-plugins/stack/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/surface-plugins/surface-plugin-stack/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -48,7 +48,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/composer-plugins/stack/.storybook"
+        "configDir": "packages/apps/surface-plugins/surface-plugin-stack/.storybook"
       }
     }
   },

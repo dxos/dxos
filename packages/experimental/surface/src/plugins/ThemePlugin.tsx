@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
 import React from 'react';
 
 import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';

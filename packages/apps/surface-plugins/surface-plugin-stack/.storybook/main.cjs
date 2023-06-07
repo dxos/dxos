@@ -1,7 +1,6 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { ConfigPlugin } = require('@dxos/config/vite-plugin');
 const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
 
 module.exports = {
@@ -18,7 +17,6 @@ module.exports = {
   viteFinal: async (config) =>
     mergeConfig(config, {
       plugins: [
-        ConfigPlugin(),
         ThemePlugin({
           root: __dirname,
           content: [

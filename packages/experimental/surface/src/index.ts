@@ -3,3 +3,4 @@
 //
 
 export * from './framework';
+export * from './plugins';
