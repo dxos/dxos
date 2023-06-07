@@ -2,23 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useParams } from 'react-router';
+import { useEffect } from 'react';
+import React, { useNavigate, useParams } from 'react-router';
 
 import { createStore } from '@dxos/observable-object';
-import { Space, useSpace } from '@dxos/react-client';
+import { EchoDatabase, PublicKey, Space, useSpace } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
-import { GraphNode, GraphPluginProvides } from './ListViewPlugin';
+import { GraphNode, GraphPluginProvides, useListViewContext } from './ListViewPlugin';
 import { RouterPluginProvides } from './RoutesPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
 
-export const isSpace = (datum: any): datum is Space => 'key' in datum && 'db' in datum;
+export const isSpace = (datum: any): datum is Space =>
+  'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase;
 
 export const SpaceMain = () => {
-  const { spaceId } = useParams();
-  const space = useSpace(spaceId);
+  const { selected } = useListViewContext();
+  const space = useSpace(selected?.id);
   return space ? <Surface data={space} role='main' /> : <p>…</p>;
 };
 
@@ -63,9 +65,34 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     },
     components: {
       SpaceMain,
+      default: () => {
+        // TODO(wittjosiah): Should come from plugin provides.
+        const navigate = useNavigate();
+        const { spaceId } = useParams();
+        const { selected, setSelected } = useListViewContext();
+
+        useEffect(() => {
+          if (!selected && spaceId) {
+            const node = nodes.find((node) => node.id === spaceId);
+            node && setSelected(node);
+          }
+        }, []);
+
+        useEffect(() => {
+          if (!selected) {
+            return;
+          }
+
+          if (selected.id !== spaceId) {
+            navigate(`/space/${selected.id}`);
+          }
+        }, [selected, spaceId]);
+
+        return null;
+      },
     },
     graph: {
-      nodes: (plugins, parent) => {
+      nodes: (_plugins, parent) => {
         if (parent) {
           return [];
         }
