@@ -3,14 +3,15 @@
 //
 
 import React from 'react';
-import { RouteObject, useRoutes } from 'react-router';
+import { Outlet, RouteObject, useRoutes } from 'react-router';
 import { HashRouter } from 'react-router-dom';
 
 import { definePlugin, Plugin, usePluginContext } from '../framework';
 
 export type RouterPluginProvides = {
   router: {
-    routes: () => RouteObject[];
+    routes?: () => RouteObject[];
+    useNavigator?: () => void;
   };
 };
 
@@ -18,6 +19,11 @@ export type RouterPlugin = Plugin<RouterPluginProvides>;
 
 const routerPlugins = (plugins: Plugin[]): RouterPlugin[] => {
   return (plugins as RouterPlugin[]).filter((p) => p.provides?.router);
+};
+
+const Root = ({ plugins }: { plugins: RouterPlugin[] }) => {
+  plugins.map((plugin) => plugin.provides.router.useNavigator?.());
+  return <Outlet />;
 };
 
 export const RoutesPlugin = definePlugin({
@@ -28,11 +34,16 @@ export const RoutesPlugin = definePlugin({
     context: ({ children }) => <HashRouter>{children}</HashRouter>,
     components: {
       default: () => {
-        const { plugins } = usePluginContext();
-        const routes = routerPlugins(plugins)
-          .map((plugin) => plugin.provides.router.routes())
-          .flat();
-        return useRoutes(routes);
+        const pluginContext = usePluginContext();
+        const plugins = routerPlugins(pluginContext.plugins);
+        const routes = plugins.map((plugin) => plugin.provides.router.routes?.() ?? []).flat();
+        return useRoutes([
+          {
+            path: '/',
+            element: <Root plugins={plugins} />,
+            children: routes,
+          },
+        ]);
       },
     },
   },
