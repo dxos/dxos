@@ -169,7 +169,7 @@ export class Peer {
       connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
-      log.warn('initiation error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+      log.warn('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
       // Calls `onStateChange` with CLOSED state.
       await this.closeConnection();
       throw err;
