@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PluginContextProvider } from '../framework';
-import { ThemePlugin, ClientPlugin, SplitViewPlugin, ListViewPlugin, RoutesPlugin } from '../plugins';
+import { ThemePlugin, ClientPlugin, SplitViewPlugin, ListViewPlugin, RoutesPlugin, GraphPlugin } from '../plugins';
 import { GithubMarkdownPlugin } from '../plugins/GithubMarkdownPlugin';
 import { SpacePlugin } from '../plugins/SpacePlugin';
 
@@ -16,6 +16,7 @@ export const TestApp = () => {
         RoutesPlugin,
         ThemePlugin,
         ClientPlugin,
+        GraphPlugin,
         ListViewPlugin,
         SplitViewPlugin,
         SpacePlugin,
