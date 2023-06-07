@@ -10,7 +10,7 @@ import { Stack } from '../components';
 
 export const StackPlugin = definePlugin({
   meta: {
-    id: 'RoutesPlugin',
+    id: 'dxos:StackPlugin',
   },
   provides: {
     components: {
