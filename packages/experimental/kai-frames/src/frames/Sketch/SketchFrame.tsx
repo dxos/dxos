@@ -126,9 +126,7 @@ export const SketchFrame = observer(() => {
   const handleColorChange = ({ hex }: { hex: string }) => setStrokeColor(hex);
 
   const handleClear = () => {
-    // TODO(dmaretskyi): Assigning an array is broken in ECHO.
-    sketch!.paths.splice(0, sketch!.paths.length);
-    // sketch!.paths = [];
+    sketch!.paths = [];
   };
 
   const handleDownload = async () => {
