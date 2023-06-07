@@ -9,7 +9,8 @@ import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { appTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 
-import { definePlugin } from '../framework';
+import { definePlugin } from '../../framework';
+import compositeEnUs from './translations/en-US';
 
 const themeStore = createStore<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
@@ -34,7 +35,7 @@ export const ThemePlugin = definePlugin({
   },
   provides: {
     context: ({ children }) => (
-      <ThemeProvider {...{ tx: appTx, themeMode: themeStore.themeMode }}>
+      <ThemeProvider {...{ tx: appTx, themeMode: themeStore.themeMode, resourceExtensions: [compositeEnUs] }}>
         <Toast.Provider>
           <Tooltip.Provider>{children}</Tooltip.Provider>
           <Toast.Viewport />
