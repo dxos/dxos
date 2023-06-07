@@ -9,7 +9,7 @@ import React, { useNavigate, useParams } from 'react-router';
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createStore } from '@dxos/observable-object';
-import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject, useSpace } from '@dxos/react-client';
+import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
@@ -26,11 +26,7 @@ export const isSpace = (datum: unknown): datum is Space =>
 
 export const SpaceMain = () => {
   const { selected } = useTreeView();
-  const spaceDatum = useSpace(selected?.id);
-  const spaceParent = useSpace(selected?.parent?.id);
-  const objectDatum = spaceParent?.db.getObjectById(selected?.id ?? 'never');
-  const data = objectDatum ?? spaceDatum;
-  return data ? <Surface data={data} role='main' /> : <p>…</p>;
+  return selected ? <Surface data={selected.data} role='main' /> : <p>…</p>;
 };
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
