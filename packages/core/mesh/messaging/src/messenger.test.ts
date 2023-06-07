@@ -153,10 +153,10 @@ describe('Messenger', () => {
         recipient: peer2.peerId,
         payload: PAYLOAD_1,
       };
+      const promise = peer2.waitTillReceive(message);
       await peer1.messenger.sendMessage(message);
 
       // 3 listeners (default one that was returned by setupPeer() and 2 that listen for type "1") should receive message.
-      const promise = peer2.waitTillReceive(message);
       await asyncTimeout(promise, 1_000);
       expect(onMessage1).toHaveBeenCalledWith([message]);
       expect(onMessage2).toHaveBeenCalledWith([message]);
