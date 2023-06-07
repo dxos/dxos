@@ -42,6 +42,29 @@ export const bindSpace = (space: Space, identityHex: string, source: string, id:
       return [];
   }
 };
+const ghUnbind = (space: Space, identityHex: string, id: string): string[] => {
+  const [ghOwner, ghRepo, ..._ghEtc] = id.split('/');
+  update(space.properties, ['members', identityHex, 'github', 'repos'], (ghBindings) => {
+    const index = ghBindings.indexOf(`${ghOwner}/${ghRepo}`);
+    if (index >= 0) {
+      const result = [...ghBindings];
+      result.splice(index, 1);
+      return result;
+    } else {
+      return ghBindings;
+    }
+  });
+  return space.properties.members?.[identityHex]?.github?.repos ?? [];
+};
+
+export const unbindSpace = (space: Space, identityHex: string, source: string, id: string): string[] => {
+  switch (source) {
+    case 'com.github':
+      return ghUnbind(space, identityHex, id);
+    default:
+      return [];
+  }
+};
 
 const ghDisplayName = (id: string): string => {
   const [ghOwner, ghRepo, ghResource, ...etc] = id.split('/');

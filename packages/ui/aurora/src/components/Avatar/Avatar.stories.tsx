@@ -7,15 +7,7 @@ import React from 'react';
 
 import { Size } from '@dxos/aurora-types';
 
-import {
-  Avatar,
-  AvatarDescription,
-  AvatarFallback,
-  AvatarImage,
-  AvatarLabel,
-  AvatarRoot,
-  useJdenticonHref,
-} from './Avatar';
+import { Avatar, useJdenticonHref } from './Avatar';
 
 type StorybookAvatarProps = {
   imgSrc?: string;
@@ -38,14 +30,14 @@ const StorybookAvatar = ({
 }: StorybookAvatarProps) => {
   const jdenticon = useJdenticonHref(fallbackValue ?? '', size);
   return (
-    <AvatarRoot {...{ size, variant, status }}>
-      <Avatar>
-        <AvatarImage href={imgSrc} />
-        <AvatarFallback href={jdenticon} />
-      </Avatar>
-      <AvatarLabel classNames='block'>{label}</AvatarLabel>
-      <AvatarDescription classNames='block'>{description}</AvatarDescription>
-    </AvatarRoot>
+    <Avatar.Root {...{ size, variant, status }}>
+      <Avatar.Frame>
+        <Avatar.Image href={imgSrc} />
+        <Avatar.Fallback href={jdenticon} />
+      </Avatar.Frame>
+      <Avatar.Label classNames='block'>{label}</Avatar.Label>
+      <Avatar.Description classNames='block'>{description}</Avatar.Description>
+    </Avatar.Root>
   );
 };
 

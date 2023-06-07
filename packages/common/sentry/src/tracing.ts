@@ -9,6 +9,7 @@ import assert from 'node:assert';
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
+import { humanize } from '@dxos/util';
 
 let TX!: Transaction;
 const SPAN_MAP = new Map<string, Span>();
@@ -59,8 +60,7 @@ export const SENTRY_PROCESSOR: LogProcessor = (config, entry) => {
 
     if (entry.message === 'dxos.halo.identity' && context?.identityKey) {
       setUser({
-        id: context.identityKey,
-        username: context.displayName,
+        id: humanize(context.identityKey),
       });
     }
 

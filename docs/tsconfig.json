@@ -9,13 +9,12 @@
     "outDir": "dist",
     "types": [
       "@vuepress/client/types",
-      "node"
+      "node",
+      "vite/client"
     ]
   },
-  "exclude": [
-    "src/templates/codesandbox/src/main.tsx"
-  ],
   "include": [
+    "**/*.vue",
     "docs",
     "src",
     "vuepress.config.ts"
@@ -37,9 +36,6 @@
       "path": "../packages/core/echo/echo-schema"
     },
     {
-      "path": "../packages/core/echo/echo-typegen"
-    },
-    {
       "path": "../packages/core/protocols"
     },
     {
@@ -50,6 +46,9 @@
     },
     {
       "path": "../packages/sdk/config"
+    },
+    {
+      "path": "../packages/sdk/examples"
     },
     {
       "path": "../packages/sdk/react-client"

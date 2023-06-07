@@ -29,7 +29,7 @@ export const testConfigWithLocalSignal = new Config({
       signaling: [
         {
           // TODO(burdon): Port numbers and global consts?
-          server: 'ws://localhost:4000/.well-known/dx/signal',
+          server: `ws://localhost:${process.env.SIGNAL_PORT ?? 4000}/.well-known/dx/signal`,
         },
       ],
     },

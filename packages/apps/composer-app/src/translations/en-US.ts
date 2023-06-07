@@ -77,4 +77,6 @@ export const composer = {
   'stale rescue title': 'Set a personal access token',
   'stale rescue description':
     'Another user has recently updated this issue, so Github won’t accept your changes unless you set a personal access token (a PAT) here, or refresh the page.',
+  'embedded options label': 'Options',
+  'unset repo space label': 'Select a different space for this repository',
 };

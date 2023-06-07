@@ -168,11 +168,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/timeouts/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/typings/package.json",
           "jsonpath": "$.version"
         },
@@ -408,6 +403,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/surface/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-agent/package.json",
           "jsonpath": "$.version"
         },
@@ -424,6 +424,11 @@
         {
           "type": "json",
           "path": "packages/gravity/kube-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/proto-guard/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -449,6 +454,11 @@
         {
           "type": "json",
           "path": "packages/sdk/errors/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/examples/package.json",
           "jsonpath": "$.version"
         },
         {

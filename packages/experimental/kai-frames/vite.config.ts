@@ -24,7 +24,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   server: {
     host: true,
-    https: process.env.HTTPS === 'true'
+    https: process.env.HTTPS === 'true',
   },
 
   build: {
@@ -34,35 +34,30 @@ export default defineConfig({
         manualChunks: {
           faker: ['faker'],
           highlighter: ['react-syntax-highlighter'],
-          vendor: ['react', 'react-dom', 'react-router-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
   },
 
   plugins: [
     mkcert(),
 
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),
 
     // Directories to scan for Tailwind classes.
     ThemePlugin({
+      root: __dirname,
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/mosaic/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/plexus/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
       ],
-      extensions: [osThemeExtension, kaiThemeExtension]
+      extensions: [osThemeExtension, kaiThemeExtension],
     }),
 
     ReactPlugin(),
@@ -72,7 +67,7 @@ export default defineConfig({
       // TODO(wittjosiah): Remove.
       selfDestroying: true,
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -84,15 +79,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     }),
 
     /**
@@ -107,7 +102,7 @@ export default defineConfig({
         families: [
           'DM Sans',
           'DM Mono'
-        ]
+        ],
       },
 
       custom: {
@@ -116,10 +111,10 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
-          }
-        ]
-      }
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf',
+          },
+        ],
+      },
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
@@ -132,7 +127,7 @@ export default defineConfig({
     //     assets: './packages/experimental/kai-frames/out/kai-showcase/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   dryRun: !process.env.CI
+    //   dryRun: process.env.DX_ENVIRONMENT !== 'production'
     // }),
 
     // https://www.bundle-buddy.com/rollup
@@ -154,7 +149,7 @@ export default defineConfig({
           mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      }
-    }
-  ]
+      },
+    },
+  ],
 });

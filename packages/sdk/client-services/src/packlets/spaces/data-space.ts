@@ -3,6 +3,7 @@
 //
 
 import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
@@ -23,8 +24,6 @@ import { ComplexSet } from '@dxos/util';
 import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
-
-const AUTH_TIMEOUT = 30000;
 
 export type DataSpaceCallbacks = {
   /**

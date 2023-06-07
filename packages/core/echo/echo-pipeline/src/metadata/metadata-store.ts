@@ -9,17 +9,10 @@ import { synchronized } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { STORAGE_VERSION, schema } from '@dxos/protocols';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-
-/**
- * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
- *
- * Should be incremented every time there's a breaking change to the stored data.
- */
-export const STORAGE_VERSION = 1;
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -131,6 +124,7 @@ export class MetadataStore {
   async clear(): Promise<void> {
     log('clearing all metadata');
     await this._directory.delete();
+    this._metadata = emptyEchoMetadata();
   }
 
   getIdentityRecord(): IdentityRecord | undefined {

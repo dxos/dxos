@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Event } from './events';
-import { MulticastObservable } from './observable';
+import { MulticastObservable, Observable, PushStream } from './observable';
 import { Trigger } from './trigger';
 
 describe('multicast observable', () => {
@@ -58,5 +58,86 @@ describe('multicast observable', () => {
     expect(result1).to.equal(next);
     expect(result2).to.equal(next);
     expect(result1).to.equal(result2);
+  });
+
+  test('forEach', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const result: number[] = [];
+    await observable.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3]);
+  });
+
+  test('map', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const mapped = observable.map((value) => value * 2);
+    const result: number[] = [];
+    await mapped.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([2, 4, 6]);
+  });
+
+  test('map stream', async () => {
+    const stream = new PushStream<number>();
+    const observable = new MulticastObservable(stream.observable);
+    const mapped = observable.map((value) => value * 2);
+    stream.next(1);
+    stream.next(2);
+    stream.next(3);
+    const result = new Trigger<number>();
+    const subscription = mapped.subscribe((value) => {
+      result.wake(value);
+    });
+    afterTest(() => subscription.unsubscribe());
+    expect(await result.wait()).to.deep.equal(6);
+  });
+
+  test('filter', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const filtered = observable.filter((value) => value % 2 === 0);
+    const result: number[] = [];
+    await filtered.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([2]);
+  });
+
+  test('reduce', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const reduced = observable.reduce((previousValue, currentValue) => previousValue + currentValue);
+    const result = new Trigger<number>();
+    const subscription = reduced.subscribe((value) => {
+      result.wake(value);
+    });
+    afterTest(() => subscription.unsubscribe());
+    expect(await result.wait()).to.deep.equal(6);
+  });
+
+  test('flatMap', async () => {
+    const observable = MulticastObservable.from([[1], [2, 3]]);
+    const flatMapped = observable.flatMap((value) => MulticastObservable.from(value));
+    const result: number[] = [];
+    await flatMapped.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3]);
+  });
+
+  test('concat', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const concat = observable.concat(Observable.from([4, 5, 6]));
+    const result: number[] = [];
+    await concat.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3, 4, 5, 6]);
+  });
+
+  test('lossless concat', async () => {
+    const observable = MulticastObservable.of([1, 2, 3]);
+    const concat = observable.losslessConcat((a, b) => a.concat(...b), MulticastObservable.of([4, 5, 6]));
+    expect(concat.get()).to.deep.equal([1, 2, 3, 4, 5, 6]);
   });
 });

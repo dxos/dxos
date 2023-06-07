@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button, List, ListItem, ListItemEndcap } from '@dxos/aurora';
+import { Button, List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 
@@ -63,12 +63,12 @@ export const EditableObjectList = <T extends Object>({
         {objects.map((object) => {
           const isSelected = object.id === selected;
           return (
-            <ListItem
+            <ListItem.Root
               id={object.id}
               key={object.id}
               classNames={['flex w-full px-3 items-center', selected === object.id && slots?.selected?.className]}
             >
-              <ListItemEndcap>
+              <ListItem.Endcap>
                 <Button
                   variant='ghost'
                   onClick={() => onSelect?.(object.id)}
@@ -76,7 +76,7 @@ export const EditableObjectList = <T extends Object>({
                 >
                   <Icon className={getSize(6)} />
                 </Button>
-              </ListItemEndcap>
+              </ListItem.Endcap>
 
               <Input
                 variant='subdued'
@@ -93,13 +93,13 @@ export const EditableObjectList = <T extends Object>({
               />
 
               {Action && (
-                <ListItemEndcap asChild>
+                <ListItem.Endcap asChild>
                   <div className='flex justify-center items-center'>
                     <Action object={object} />
                   </div>
-                </ListItemEndcap>
+                </ListItem.Endcap>
               )}
-            </ListItem>
+            </ListItem.Root>
           );
         })}
       </List>
@@ -107,11 +107,11 @@ export const EditableObjectList = <T extends Object>({
       {/* TODO(burdon): Not aligned with list. */}
       {onCreate && (
         <div className='flex items-center pl-3'>
-          <ListItemEndcap>
+          <ListItem.Endcap>
             <Button variant='ghost' onClick={handleCreate}>
               <Plus className={getSize(6)} />
             </Button>
-          </ListItemEndcap>
+          </ListItem.Endcap>
           <span className='ml-1 text-sm'>New item</span>
         </div>
       )}

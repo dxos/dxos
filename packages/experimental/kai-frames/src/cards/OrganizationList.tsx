@@ -5,7 +5,7 @@
 import { Buildings, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { List, ListItem, ListItemEndcap, ListItemHeading } from '@dxos/aurora';
+import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { Address, Organization } from '@dxos/kai-types';
@@ -28,11 +28,11 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
-    <ListItem>
-      <ListItemEndcap>
+    <ListItem.Root>
+      <ListItem.Endcap>
         <Buildings className={mx(getSize(5), 'mbs-2.5')} />
-      </ListItemEndcap>
-      <ListItemHeading>
+      </ListItem.Endcap>
+      <ListItem.Heading>
         <Input
           variant='subdued'
           label='Organization name'
@@ -50,17 +50,17 @@ export const OrganizationListItem: FC<{ organization: Organization }> = observer
           {organization.people?.length > 0 && (
             <List density='fine' aria-labelledby='todo' classNames='mlb-1'>
               {organization.people?.map((contact) => (
-                <ListItem key={contact.id}>
-                  <ListItemEndcap classNames='flex items-center'>
+                <ListItem.Root key={contact.id}>
+                  <ListItem.Endcap classNames='flex items-center'>
                     <User className={getSize(5)} />
-                  </ListItemEndcap>
-                  <ListItemHeading classNames='text-sm pbs-1.5'>{contact.name}</ListItemHeading>
-                </ListItem>
+                  </ListItem.Endcap>
+                  <ListItem.Heading classNames='text-sm pbs-1.5'>{contact.name}</ListItem.Heading>
+                </ListItem.Root>
               ))}
             </List>
           )}
         </div>
-      </ListItemHeading>
-    </ListItem>
+      </ListItem.Heading>
+    </ListItem.Root>
   );
 });

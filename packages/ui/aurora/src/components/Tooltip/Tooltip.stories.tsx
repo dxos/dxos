@@ -6,24 +6,24 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import { TooltipRoot, TooltipContent, TooltipArrow, TooltipTrigger, TooltipProvider } from './Tooltip';
+import { Tooltip } from './Tooltip';
 
 type StoryTooltipProps = {
   content: string;
 };
 
 const StoryTooltip = ({ content }: StoryTooltipProps) => (
-  <TooltipProvider>
-    <TooltipRoot defaultOpen>
-      <TooltipTrigger asChild>
+  <Tooltip.Provider>
+    <Tooltip.Root defaultOpen>
+      <Tooltip.Trigger asChild>
         <Button>Trigger tooltip</Button>
-      </TooltipTrigger>
-      <TooltipContent side='right'>
-        <TooltipArrow />
+      </Tooltip.Trigger>
+      <Tooltip.Content side='right'>
+        <Tooltip.Arrow />
         {content}
-      </TooltipContent>
-    </TooltipRoot>
-  </TooltipProvider>
+      </Tooltip.Content>
+    </Tooltip.Root>
+  </Tooltip.Provider>
 );
 
 export default {

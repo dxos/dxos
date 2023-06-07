@@ -26,37 +26,32 @@ export default defineConfig({
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
-        panel: resolve(__dirname, 'panel.html')
+        panel: resolve(__dirname, 'panel.html'),
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+        },
+      },
+    },
   },
   plugins: [
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY']
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'],
     }),
 
     ReactPlugin(),
 
     ThemePlugin({
+      root: __dirname,
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
         resolve(__dirname, './node_modules/@dxos/devtools/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
+        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs'),
       ],
-      extensions: [osThemeExtension, kaiThemeExtension]
+      extensions: [osThemeExtension, kaiThemeExtension],
     }),
 
     chromeExtensionPlugin({
@@ -69,31 +64,31 @@ export default defineConfig({
         description: 'Debugging tools for DXOS Client in the Chrome developer console.',
         icons: {
           '48': 'assets/img/icon-dxos-48.png',
-          '128': 'assets/img/icon-dxos-128.png'
+          '128': 'assets/img/icon-dxos-128.png',
         },
         action: {
           default_icon: 'assets/img/icon-dxos-48.png',
           default_title: 'DXOS',
-          default_popup: '/popup.html'
+          default_popup: '/popup.html',
         },
         content_security_policy: {
-          extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+          extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },
         sandbox: {
-          pages: ['/sandbox.html']
+          pages: ['/sandbox.html'],
         },
         devtools_page: '/main.html',
         background: {
-          service_worker: '/src/background.ts'
+          service_worker: '/src/background.ts',
         },
         content_scripts: [
           {
             matches: ['http://*/*', 'https://*/*'],
             js: ['/src/content.ts'],
-            run_at: 'document_start'
-          }
-        ]
-      }
+            run_at: 'document_start',
+          },
+        ],
+      },
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
@@ -106,7 +101,7 @@ export default defineConfig({
     //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   dryRun: !process.env.CI
+    //   dryRun: process.env.DX_ENVIRONMENT !== 'production'
     // })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
@@ -139,5 +134,5 @@ export default defineConfig({
     //     ]
     //   }
     // })
-  ]
+  ],
 });

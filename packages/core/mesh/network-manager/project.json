@@ -48,10 +48,16 @@
           "nodejs"
         ],
         "coveragePath": "coverage/packages/core/mesh/network-manager",
+        "envVariables": {
+          "SIGNAL_PORT": 4005
+        },
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
         "resultsPath": "test-results/packages/core/mesh/network-manager",
         "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setupOptions": {
+          "port": 4005
+        },
         "testPatterns": [
           "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
         ],

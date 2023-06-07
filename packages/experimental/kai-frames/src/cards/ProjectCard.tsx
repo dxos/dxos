@@ -5,7 +5,7 @@
 import { Archive, User } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { List, ListItem, ListItemEndcap, ListItemHeading } from '@dxos/aurora';
+import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
@@ -70,12 +70,12 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
           <h2 className='pl-2 text-xs'>Team</h2>
           <List aria-labelledby='todo' classNames='mlb-1'>
             {object.team?.map((contact) => (
-              <ListItem key={contact.id}>
-                <ListItemEndcap classNames={getSize(6)}>
+              <ListItem.Root key={contact.id}>
+                <ListItem.Endcap classNames={getSize(6)}>
                   <User className={mx(getSize(4), 'mbs-1')} />
-                </ListItemEndcap>
-                <ListItemHeading classNames='text-sm mbs-0.5'>{contact.name}</ListItemHeading>
-              </ListItem>
+                </ListItem.Endcap>
+                <ListItem.Heading classNames='text-sm mbs-0.5'>{contact.name}</ListItem.Heading>
+              </ListItem.Root>
             ))}
           </List>
         </div>

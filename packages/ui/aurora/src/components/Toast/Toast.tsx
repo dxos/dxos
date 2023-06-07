@@ -101,16 +101,16 @@ type ToastCloseProps = ToastClosePrimitiveProps;
 
 const ToastClose: FunctionComponent<ToastCloseProps> = ToastClosePrimitive;
 
-export {
-  ToastProvider,
-  ToastViewport,
-  ToastRoot,
-  ToastBody,
-  ToastTitle,
-  ToastDescription,
-  ToastActions,
-  ToastAction,
-  ToastClose,
+export const Toast = {
+  Provider: ToastProvider,
+  Viewport: ToastViewport,
+  Root: ToastRoot,
+  Body: ToastBody,
+  Title: ToastTitle,
+  Description: ToastDescription,
+  Actions: ToastActions,
+  Action: ToastAction,
+  Close: ToastClose,
 };
 
 export type {

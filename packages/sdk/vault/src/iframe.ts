@@ -21,6 +21,8 @@ import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
+const cssStyle = 'color:#C026D3;font-weight:bold';
+
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
   const { createElement } = await import('react');
   const { createRoot } = await import('react-dom/client');
@@ -87,7 +89,16 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       await shellRuntime.open();
       await startShell(config, shellRuntime, shellClientProxy, origin);
     }
-  } else if (typeof SharedWorker === 'undefined') {
+
+    return;
+  } else {
+    console.log(
+      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${window.location.href}`,
+      cssStyle,
+    );
+  }
+
+  if (typeof SharedWorker === 'undefined') {
     log.info('Running DXOS vault in main process.');
 
     const messageChannel = new MessageChannel();
@@ -120,6 +131,10 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
+    console.log(
+      `%cDXOS Client is communicating with the shared worker on ${window.location.origin}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
+      cssStyle,
+    );
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
       const { command, payload } = event.data;

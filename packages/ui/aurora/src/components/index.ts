@@ -5,6 +5,7 @@
 export * from './Avatar';
 export * from './Buttons';
 export * from './Dialogs';
+export * from './DropdownMenu';
 export * from './Input';
 export * from './Lists';
 export * from './Main';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-theme",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "description": "A set of design system tokens to use with DXOS Aurora.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,6 +15,8 @@
     "plugin.d.ts"
   ],
   "dependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@fluent-blocks/colors": "^9.2.0",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
     "@fontsource/space-grotesk": "^4.5.10",
@@ -24,7 +26,7 @@
     "lodash.merge": "^4.6.2",
     "postcss": "^8.4.21",
     "tailwind-merge": "^1.10.0",
-    "tailwindcss": "~3.2.7",
+    "tailwindcss": "~3.3.2",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.8.0"
   },
@@ -34,7 +36,7 @@
     "@types/lodash.merge": "^4.6.6",
     "esbuild": "^0.16.14",
     "esbuild-style-plugin": "^1.6.1",
-    "vite": "^4.3.0"
+    "vite": "^4.3.9"
   },
   "publishConfig": {
     "access": "public"

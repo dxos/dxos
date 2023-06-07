@@ -7,6 +7,7 @@ import React, { useContext } from 'react';
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
+import { Loading } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
@@ -32,21 +33,28 @@ export const ResolverDialog = () => {
       <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
         <div
           role='none'
-          className={osTx('dialog.content', 'dialog--resolver__content', {}, 'p-2 bs-64 shadow-none bg-transparent')}
+          className={osTx(
+            'dialog.content',
+            'dialog--resolver__content',
+            {},
+            'p-2 bs-72 flex flex-col shadow-none bg-transparent',
+          )}
         >
           {!space ? (
-            <ResolverTree />
+            <>
+              <ResolverTree />
+              <div role='group' className='shrink-0 flex is-full gap-2'>
+                <Button classNames='grow' onClick={handleCreateSpace}>
+                  {t('create space label', { ns: 'appkit' })}
+                </Button>
+                <Button classNames='grow' onClick={handleJoinSpace}>
+                  {t('join space label', { ns: 'appkit' })}
+                </Button>
+              </div>
+            </>
           ) : (
-            <h1 className='text-lg font-system-normal'>{t('resolver init document message')}</h1>
+            <Loading label={t('resolver init document message')} />
           )}
-          <div role='group' className='flex is-full gap-2'>
-            <Button classNames='grow' onClick={handleCreateSpace}>
-              {t('create space label', { ns: 'appkit' })}
-            </Button>
-            <Button classNames='grow' onClick={handleJoinSpace}>
-              {t('join space label', { ns: 'appkit' })}
-            </Button>
-          </div>
         </div>
       </div>
     </DensityProvider>
