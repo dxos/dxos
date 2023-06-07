@@ -18,6 +18,10 @@ export type RunServicesParams = {
 };
 
 export const runServices = async (params: RunServicesParams) => {
+  log.info('faasd', {
+    gateway: params.config.values.runtime?.services?.faasd?.gateway,
+  });
+
   const services = fromHost(params.config);
 
   // Global hook for debuggers;
@@ -84,4 +88,12 @@ export const runServices = async (params: RunServicesParams) => {
   }
 
   log.info('listening', { socket: params.listen });
+
+  const faasConfig = params.config.values.runtime?.services?.faasd;
+  if (faasConfig) {
+    const { FaasConnector } = await import('./faas/connector');
+    const connector = new FaasConnector(faasConfig, services);
+    await connector.open();
+    log.info('connected to OpenFASS', { gateway: faasConfig.gateway });
+  }
 };
