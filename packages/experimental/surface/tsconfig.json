@@ -27,6 +27,9 @@
       "path": "../../common/observable-object"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../../core/echo/text-model"
     },
     {

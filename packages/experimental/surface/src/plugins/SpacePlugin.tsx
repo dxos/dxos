@@ -8,6 +8,7 @@ import React, { useNavigate, useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
+import { TFunction } from '@dxos/aurora';
 import { createStore } from '@dxos/observable-object';
 import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject } from '@dxos/react-client';
 
@@ -18,6 +19,14 @@ import { RouterPluginProvides } from './RoutesPlugin';
 import { useTreeView } from './TreeViewPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
+
+export const getSpaceDisplayName = (t: TFunction, space: Space, disabled?: boolean) => {
+  return (space.properties.name?.length ?? 0) > 0
+    ? space.properties.name
+    : disabled
+    ? t('loading space title')
+    : t('untitled space title');
+};
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'

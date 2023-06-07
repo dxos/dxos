@@ -7,6 +7,8 @@ import React, { createContext, useContext, useState } from 'react';
 
 import {
   Avatar,
+  Tree,
+  TreeItem,
   Button,
   DensityProvider,
   ElevationProvider,
@@ -23,27 +25,45 @@ import { useIdentity } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
 import { GraphNode, useGraphContext } from '../GraphPlugin';
+import { isSpace } from '../SpacePlugin';
+import { FullSpaceTreeItem } from './FullSpaceTreeItem';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
 
 export type TreeViewProps = {
   items?: GraphNode[];
   onSelect?: (node: GraphNode) => void;
+  selected: GraphNode | null;
 };
 
 export const TreeView = (props: TreeViewProps) => {
   const { items } = props;
   return (
-    <div className='ps-4'>
+    <Tree.Branch>
       {items?.length
-        ? items.map((item) => (
-            <div key={item.id}>
-              <span onClick={() => props.onSelect?.(item)}>{item.label}</span>
-              {item.children && <TreeView items={item.children} onSelect={props.onSelect} />}
-            </div>
-          ))
+        ? items.map((item) => {
+            switch (true) {
+              case isSpace(item.data):
+                return (
+                  <FullSpaceTreeItem space={item.data}>
+                    <TreeView items={item.children} onSelect={props.onSelect} selected={props.selected} />
+                  </FullSpaceTreeItem>
+                );
+              default:
+                return (
+                  <TreeItem.Root key={item.id} classNames='block' collapsible>
+                    <TreeItem.Heading onClick={() => props.onSelect?.(item)}>{item.label}</TreeItem.Heading>
+                    {item.children && (
+                      <TreeItem.Body>
+                        <TreeView items={item.children} onSelect={props.onSelect} selected={props.selected} />
+                      </TreeItem.Body>
+                    )}
+                  </TreeItem.Root>
+                );
+            }
+          })
         : 'no items'}
-    </div>
+    </Tree.Branch>
   );
 };
 
@@ -61,7 +81,7 @@ export const useTreeView = () => useContext(Context);
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
-  const { setSelected } = useTreeView();
+  const { selected, setSelected } = useTreeView();
 
   const identity = useIdentity();
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
@@ -100,13 +120,14 @@ export const TreeViewContainer = observer(() => {
               ))}
             </div>
             <div role='separator' className='bs-px mli-2.5 bg-neutral-500/20' />
-            <div role='none' className='grow min-bs-0 overflow-y-auto overscroll-contain'>
+            <Tree.Root role='none' classNames='grow min-bs-0 overflow-y-auto overscroll-contain'>
               {Object.entries(graph.roots).map(([key, items]) => (
-                <div role='none' key={key} className='flex flex-col plb-1.5 pis-1 pie-1.5'>
-                  <TreeView key={key} items={items} onSelect={setSelected} />
-                </div>
+                <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
+                  <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
+                  <TreeView key={key} items={items} onSelect={setSelected} selected={selected} />
+                </TreeItem.Root>
               ))}
-            </div>
+            </Tree.Root>
             {identity && (
               <>
                 <div role='separator' className='bs-px mli-2.5 bg-neutral-500/20' />
