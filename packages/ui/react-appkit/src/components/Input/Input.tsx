@@ -4,17 +4,7 @@
 
 import React, { ForwardedRef, forwardRef } from 'react';
 
-import {
-  Description,
-  DescriptionAndValidation,
-  InputRoot,
-  Label,
-  PinInput,
-  TextArea,
-  TextAreaProps,
-  TextInput,
-  Validation,
-} from '@dxos/aurora';
+import { Input as NaturalInput, TextAreaProps } from '@dxos/aurora';
 
 import { InputProps as AppkitInputProps } from './InputProps';
 
@@ -65,31 +55,40 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
 
     const bareInput =
       size === 'pin' ? (
-        <PinInput {...bareInputBaseProps} length={length} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
+        <NaturalInput.PinInput
+          {...bareInputBaseProps}
+          length={length}
+          ref={forwardedRef as ForwardedRef<HTMLInputElement>}
+        />
       ) : size === 'textarea' ? (
-        <TextArea {...(bareInputBaseProps as TextAreaProps)} ref={forwardedRef as ForwardedRef<HTMLTextAreaElement>} />
+        <NaturalInput.TextArea
+          {...(bareInputBaseProps as TextAreaProps)}
+          ref={forwardedRef as ForwardedRef<HTMLTextAreaElement>}
+        />
       ) : (
-        <TextInput {...bareInputBaseProps} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
+        <NaturalInput.TextInput {...bareInputBaseProps} ref={forwardedRef as ForwardedRef<HTMLInputElement>} />
       );
 
     return (
       <div role='none' className={slots.root?.className}>
-        <InputRoot {...{ validationValence, id }}>
-          <Label {...slots?.label} srOnly={labelVisuallyHidden}>
+        <NaturalInput.Root {...{ validationValence, id }}>
+          <NaturalInput.Label {...slots?.label} srOnly={labelVisuallyHidden}>
             {label}
-          </Label>
+          </NaturalInput.Label>
           {bareInput}
           {(description || validationMessage) && (
-            <DescriptionAndValidation classNames={slots.description?.className}>
+            <NaturalInput.DescriptionAndValidation classNames={slots.description?.className}>
               {validationMessage && (
-                <Validation classNames={slots.validation?.className}>{validationMessage} </Validation>
+                <NaturalInput.Validation classNames={slots.validation?.className}>
+                  {validationMessage}{' '}
+                </NaturalInput.Validation>
               )}
-              <Description srOnly={descriptionVisuallyHidden} classNames={slots.description?.className}>
+              <NaturalInput.Description srOnly={descriptionVisuallyHidden} classNames={slots.description?.className}>
                 {description}
-              </Description>
-            </DescriptionAndValidation>
+              </NaturalInput.Description>
+            </NaturalInput.DescriptionAndValidation>
           )}
-        </InputRoot>
+        </NaturalInput.Root>
       </div>
     );
   },

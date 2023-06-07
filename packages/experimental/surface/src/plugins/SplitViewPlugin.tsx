@@ -5,7 +5,7 @@
 import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 
-import { Button, MainOverlay, MainRoot, Sidebar } from '@dxos/aurora';
+import { Button, Main } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
@@ -28,10 +28,10 @@ export const SplitView = observer(() => {
   const { sidebarOpen } = context;
 
   return (
-    <MainRoot sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      <Sidebar swipeToDismiss>
+    <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
+      <Main.Sidebar swipeToDismiss>
         <Surface name='sidebar' />
-      </Sidebar>
+      </Main.Sidebar>
       <div
         role='none'
         className={mx(
@@ -46,9 +46,9 @@ export const SplitView = observer(() => {
           <SidebarIcon weight='light' className={getSize(5)} />
         </Button>
       </div>
-      <MainOverlay />
+      <Main.Overlay />
       <Surface name='main' />
-    </MainRoot>
+    </Main.Root>
   );
 });
 

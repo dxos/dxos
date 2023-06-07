@@ -1,0 +1,62 @@
+{
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/examples/src/index.ts",
+        "outputPath": "packages/sdk/examples/dist/types",
+        "tsConfig": "packages/sdk/examples/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/sdk/examples/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/sdk/examples/src/proto/gen"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/sdk/examples/.storybook"
+      }
+    },
+    "storybook-build": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:build",
+      "options": {
+        "configDir": "packages/sdk/examples/.storybook",
+        "outputDir": "packages/sdk/examples/out"
+      },
+      "outputs": [
+        "{options.outputDir}"
+      ]
+    }
+  },
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/sdk/examples"
+}

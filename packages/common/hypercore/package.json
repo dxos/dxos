@@ -31,12 +31,12 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
     "@types/randombytes": "^2.0.0",
     "@types/readable-stream": "^2.3.9",
     "debug": "^4.3.3",
-    "faker": "^5.5.3",
     "random-access-memory": "^4.1.0"
   },
   "publishConfig": {

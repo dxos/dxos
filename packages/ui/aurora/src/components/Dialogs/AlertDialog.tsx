@@ -133,16 +133,16 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
 
 AlertDialogContent.displayName = ALERT_DIALOG_CONTENT_NAME;
 
-export {
-  AlertDialogRoot,
-  AlertDialogTrigger,
-  AlertDialogPortal,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
+export const AlertDialog = {
+  Root: AlertDialogRoot,
+  Trigger: AlertDialogTrigger,
+  Portal: AlertDialogPortal,
+  Overlay: AlertDialogOverlay,
+  Content: AlertDialogContent,
+  Title: AlertDialogTitle,
+  Description: AlertDialogDescription,
+  Cancel: AlertDialogCancel,
+  Action: AlertDialogAction,
 };
 
 export type {

@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import { Main, MainRoot, MainOverlay, Sidebar, useSidebar } from './Main';
+import { Main, useSidebar } from './Main';
 
 type StoryMainArgs = {};
 
@@ -17,17 +17,17 @@ const SidebarToggle = () => {
 
 const StoryMain = (_args: StoryMainArgs) => {
   return (
-    <MainRoot defaultSidebarOpen>
-      <MainOverlay />
-      <Sidebar swipeToDismiss>
+    <Main.Root defaultSidebarOpen>
+      <Main.Overlay />
+      <Main.Sidebar swipeToDismiss>
         <p>Sidebar content, hi!</p>
         <SidebarToggle />
-      </Sidebar>
-      <Main>
+      </Main.Sidebar>
+      <Main.Content>
         <p>Main content, hello!</p>
         <SidebarToggle />
-      </Main>
-    </MainRoot>
+      </Main.Content>
+    </Main.Root>
   );
 };
 

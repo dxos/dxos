@@ -4,18 +4,14 @@
 
 import { Root as PortalRoot } from '@radix-ui/react-portal';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
-import React, { ComponentProps, ReactNode, useState, forwardRef, ForwardRefExoticComponent } from 'react';
+import React, { ComponentProps, ReactNode, useState, forwardRef, ForwardRefExoticComponent, FC } from 'react';
 
 import {
   useId,
+  Tooltip as NaturalTooltip,
   TooltipRootProps,
-  TooltipRoot,
   TooltipContentProps,
-  TooltipPortal,
-  TooltipContent as AuroraTooltipContent,
-  TooltipArrow,
   TooltipTriggerProps,
-  TooltipTrigger,
 } from '@dxos/aurora';
 
 export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = forwardRef<
@@ -23,12 +19,12 @@ export const TooltipContent: ForwardRefExoticComponent<TooltipContentProps> = fo
   TooltipContentProps
 >(({ children, ...props }, forwardedRef) => {
   return (
-    <TooltipPortal>
-      <AuroraTooltipContent forceMount {...props} ref={forwardedRef}>
-        <TooltipArrow />
+    <NaturalTooltip.Portal>
+      <NaturalTooltip.Content forceMount {...props} ref={forwardedRef}>
+        <NaturalTooltip.Arrow />
         {children}
-      </AuroraTooltipContent>
-    </TooltipPortal>
+      </NaturalTooltip.Content>
+    </NaturalTooltip.Portal>
   );
 });
 
@@ -79,13 +75,13 @@ export const Tooltip = ({
   );
 
   const triggerContent = (
-    <TooltipTrigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
+    <NaturalTooltip.Trigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
       {children}
-    </TooltipTrigger>
+    </NaturalTooltip.Trigger>
   );
 
   return (
-    <TooltipRoot open={isOpen} onOpenChange={setIsOpen}>
+    <NaturalTooltip.Root open={isOpen} onOpenChange={setIsOpen}>
       {triggerIsInToolbar ? <ToolbarButtonItem asChild>{triggerContent}</ToolbarButtonItem> : triggerContent}
       {tooltipLabelsTrigger && (
         <PortalRoot asChild>
@@ -97,12 +93,14 @@ export const Tooltip = ({
       {mountAsSibling ? (
         tooltipContent
       ) : (
-        <TooltipPortal forceMount {...(zIndex && { className: `!${zIndex}` })}>
+        <NaturalTooltip.Portal forceMount {...(zIndex && { className: `!${zIndex}` })}>
           {tooltipContent}
-        </TooltipPortal>
+        </NaturalTooltip.Portal>
       )}
-    </TooltipRoot>
+    </NaturalTooltip.Root>
   );
 };
 
-export { TooltipRoot, TooltipTrigger };
+export const TooltipRoot: FC<TooltipRootProps> = NaturalTooltip.Root;
+
+export const TooltipTrigger: ForwardRefExoticComponent<TooltipTriggerProps> = NaturalTooltip.Trigger;

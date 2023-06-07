@@ -97,7 +97,7 @@ export const AlertDialog = ({
             tabIndex={0}
             {...slots.title}
             className={mx(
-              'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+              'text-2xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus,
               slots.title?.className,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import React, { ComponentProps, FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';

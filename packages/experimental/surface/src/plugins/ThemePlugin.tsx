@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { ThemeMode, ThemeProvider, TooltipProvider, ToastProvider, ToastViewport } from '@dxos/aurora';
+import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { appTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 
@@ -35,10 +35,10 @@ export const ThemePlugin = definePlugin({
   provides: {
     context: ({ children }) => (
       <ThemeProvider {...{ tx: appTx, themeMode: themeStore.themeMode }}>
-        <ToastProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <ToastViewport />
-        </ToastProvider>
+        <Toast.Provider>
+          <Tooltip.Provider>{children}</Tooltip.Provider>
+          <Toast.Viewport />
+        </Toast.Provider>
       </ThemeProvider>
     ),
   },
