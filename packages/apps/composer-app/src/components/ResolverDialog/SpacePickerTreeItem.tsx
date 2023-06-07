@@ -6,22 +6,7 @@ import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { Document } from '@braneframe/types';
-import {
-  Button,
-  MockListItemOpenTrigger,
-  Tag,
-  TooltipArrow,
-  TooltipContent,
-  TooltipPortal,
-  TooltipRoot,
-  TooltipTrigger,
-  TreeBranch,
-  TreeItem,
-  TreeItemBody,
-  TreeItemHeading,
-  TreeItemOpenTrigger,
-  useTranslation,
-} from '@dxos/aurora';
+import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
 import { Space, SpaceState } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-async';
@@ -57,7 +42,7 @@ export const SpacePickerTreeItem = observer(
     const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
     return (
-      <TreeItem
+      <TreeItem.Root
         collapsible
         open={open}
         onOpenChange={setOpen}
@@ -66,32 +51,34 @@ export const SpacePickerTreeItem = observer(
       >
         <div role='none' className='flex items-center gap-2'>
           {hasDocuments ? (
-            <TreeItemOpenTrigger>
+            <TreeItem.OpenTrigger>
               <OpenTriggerIcon />
-            </TreeItemOpenTrigger>
+            </TreeItem.OpenTrigger>
           ) : (
-            <MockListItemOpenTrigger />
+            <TreeItem.OpenTrigger disabled classNames={defaultDisabled}>
+              <CaretRight />
+            </TreeItem.OpenTrigger>
           )}
-          <TreeItemHeading
+          <TreeItem.Heading
             classNames='grow break-words pbs-1 text-base font-medium'
             data-testid='composer.spaceTreeItemHeading'
           >
             {spaceDisplayName}
-          </TreeItemHeading>
+          </TreeItem.Heading>
           {nBoundMembers > 0 && (
-            <TooltipRoot>
-              <TooltipTrigger asChild>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
                 <Tag palette='info' aria-label={t('bound members message', { count: nBoundMembers })}>
                   {nBoundMembers}
                 </Tag>
-              </TooltipTrigger>
-              <TooltipPortal>
-                <TooltipContent side='bottom'>
-                  <TooltipArrow />
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side='bottom'>
+                  <Tooltip.Arrow />
                   {t('bound members message', { count: nBoundMembers })}
-                </TooltipContent>
-              </TooltipPortal>
-            </TooltipRoot>
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
           )}
           <Button
             density='fine'
@@ -106,16 +93,16 @@ export const SpacePickerTreeItem = observer(
             Select
           </Button>
         </div>
-        <TreeItemBody>
+        <TreeItem.Body>
           {hasDocuments && (
-            <TreeBranch>
+            <Tree.Branch>
               {documents.map((document) => (
                 <DocumentTreeItem key={document.id} document={document} />
               ))}
-            </TreeBranch>
+            </Tree.Branch>
           )}
-        </TreeItemBody>
-      </TreeItem>
+        </TreeItem.Body>
+      </TreeItem.Root>
     );
   },
 );

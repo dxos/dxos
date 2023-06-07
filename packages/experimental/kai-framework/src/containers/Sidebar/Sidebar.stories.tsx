@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { withRouter } from 'storybook-addon-react-router-v6';
 
-import { Button, Main, MainOverlay, MainRoot, useSidebar } from '@dxos/aurora';
+import { Button, Main, useSidebar } from '@dxos/aurora';
 import { frameDefs, frameModules, FrameRegistryContextProvider } from '@dxos/kai-frames';
 import { MetagraphClientFake } from '@dxos/metagraph';
 import { useSpaces } from '@dxos/react-client';
@@ -44,13 +44,13 @@ const Test = () => {
               frames: defaultFrames,
             }}
           >
-            <MainRoot>
-              <MainOverlay />
+            <Main.Root>
+              <Main.Overlay />
               <Sidebar onNavigate={() => {}} />
-              <Main>
+              <Main.Content>
                 <SidebarInvoker />
-              </Main>
-            </MainRoot>
+              </Main.Content>
+            </Main.Root>
           </AppStateProvider>
         </FrameRegistryContextProvider>
       </MetagraphProvider>

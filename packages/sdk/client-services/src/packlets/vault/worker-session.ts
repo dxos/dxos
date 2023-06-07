@@ -5,7 +5,12 @@
 import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { iframeServiceBundle, IframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
+import {
+  iframeServiceBundle,
+  IframeServiceBundle,
+  PROXY_CONNECTION_TIMEOUT,
+  workerServiceBundle,
+} from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -48,7 +53,7 @@ export class WorkerSession {
 
     const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
       handleCall: async (method, params, handler) => {
-        const error = await readySignal.wait({ timeout: 3_000 });
+        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
@@ -56,7 +61,7 @@ export class WorkerSession {
         return handler(method, params);
       },
       handleStream: async (method, params, handler) => {
-        const error = await readySignal.wait({ timeout: 3_000 });
+        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
@@ -109,7 +114,7 @@ export class WorkerSession {
     log.info('opening..');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
-    await this._startTrigger.wait({ timeout: 3_000 });
+    await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
     if (this.lockKey) {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }

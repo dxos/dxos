@@ -43,10 +43,16 @@
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/echo/echo-db",
+        "envVariables": {
+          "SIGNAL_PORT": 4000
+        },
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/core/echo/echo-db",
         "resultsPath": "test-results/packages/core/echo/echo-db",
         "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setupOptions": {
+          "port": 4000
+        },
         "testPatterns": [
           "packages/core/echo/echo-db/src/**/*.test.{ts,js}"
         ],

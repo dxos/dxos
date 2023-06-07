@@ -12,6 +12,7 @@ import { useClient } from '../client';
 import { useSpace } from '../echo';
 import { ClientDecorator } from './ClientDecorator';
 import { setupPeersInSpace } from './ClientSpaceDecorator';
+import { ToggleNetworkDecorator } from './ToggleNetworkDecorator';
 
 export default {
   title: 'testing/decorators',
@@ -63,4 +64,9 @@ const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 export const WithClientSpace = {
   render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
   decorators: [ClientDecorator({ clients })],
+};
+
+export const WithNetworkToggle = {
+  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
+  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
 };

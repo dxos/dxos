@@ -3,6 +3,7 @@
 //
 
 export * from './active';
+export * from './arrow';
 export * from './density';
 export * from './disabled';
 export * from './elevation';

@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { PROXY_CONNECTION_TIMEOUT } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -84,7 +85,7 @@ export class IFrameHostRuntime {
 
       const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
         handleCall: async (method, params, handler) => {
-          const error = await this._ready.wait({ timeout: 3_000 });
+          const error = await this._ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
           if (error) {
             throw error;
           }
@@ -92,7 +93,7 @@ export class IFrameHostRuntime {
           return handler(method, params);
         },
         handleStream: async (method, params, handler) => {
-          const error = await this._ready.wait({ timeout: 3_000 });
+          const error = await this._ready.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
           if (error) {
             throw error;
           }

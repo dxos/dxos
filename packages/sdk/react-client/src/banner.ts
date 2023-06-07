@@ -5,14 +5,20 @@
 import { Client } from '@dxos/client';
 
 // http://patorjk.com/software/taag/#p=testall&f=Patorjk-HeX&t=DXOS
-const BANNER = (client: Client) =>
-  '\n' +
-  '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\______/\\/\\/\\/\\/\\_\n' +
-  '_/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\____/\\/\\__/\\/\\_________\n' +
-  '_/\\/\\____/\\/\\______/\\/\\______/\\/\\____/\\/\\____/\\/\\/\\/\\___\n' +
-  '_/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\____/\\/\\__________/\\/\\_\n' +
-  '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\/\\/\\/\\___\n' +
-  `\n DXOS Client ${client.version} \n`;
+const BANNER = (client: Client) => {
+  const commitHash = client.config.get('runtime.app.build.commitHash');
+  const hash = commitHash ? ` App Commit ${commitHash} \n` : '';
+
+  return (
+    '\n' +
+    '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\______/\\/\\/\\/\\/\\_\n' +
+    '_/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\____/\\/\\__/\\/\\_________\n' +
+    '_/\\/\\____/\\/\\______/\\/\\______/\\/\\____/\\/\\____/\\/\\/\\/\\___\n' +
+    '_/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\____/\\/\\__________/\\/\\_\n' +
+    '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\/\\/\\/\\___\n' +
+    `\n DXOS Client ${client.version} \n${hash}`
+  );
+};
 
 let bannerPrinted = false;
 
@@ -22,5 +28,5 @@ export const printBanner = (client: Client) => {
   }
 
   bannerPrinted = true;
-  console.log(BANNER(client));
+  console.log(`%c${BANNER(client)}`, 'font-family: monospace;');
 };

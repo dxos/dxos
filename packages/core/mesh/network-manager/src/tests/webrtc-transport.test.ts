@@ -17,7 +17,7 @@ describe('WebRTC transport proxy', () => {
   basicTestSuite(testBuilder);
 }).timeout(10_000);
 
-describe.skip('test with signal server', () => {
+describe('test with signal server', () => {
   describe('WebRTC transport', () => {
     const testBuilder = new TestBuilder({ signalHosts: TEST_SIGNAL_HOSTS });
     basicTestSuite(testBuilder);

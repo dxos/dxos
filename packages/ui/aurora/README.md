@@ -30,11 +30,10 @@ export default defineConfig({
   // ...
   plugins: [
     // ...
-    ThemePlugin({content: [
-        resolve(__dirname, '../node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, '../node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        './index.html', './src/**/*.{js,ts,jsx,tsx}'
-      ]}),
+    ThemePlugin({
+      root: __dirname,
+      content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']
+    }),
     // ...
   ]
   // ...

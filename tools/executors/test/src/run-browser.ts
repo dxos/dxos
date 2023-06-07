@@ -25,6 +25,7 @@ export type BrowserOptions = {
   headless: boolean;
   debug: boolean;
   browserArgs?: string[];
+  envVariables?: Record<string, string>;
 };
 
 export const runBrowser = async (context: ExecutorContext, options: BrowserOptions) => {
@@ -77,6 +78,7 @@ export const runBrowserBuild = async (options: BrowserOptions) => {
     timeout: options.timeout,
     checkLeaks: options.checkLeaks,
     tags: options.tags,
+    envVariables: options.envVariables,
   });
 
   return false;

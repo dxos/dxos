@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
+import { STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -118,6 +118,8 @@ export class ServiceContext {
   async open() {
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
+    await this._checkStorageVersion();
+
     log('opening...');
     await this.signalManager.open();
     await this.networkManager.open();
@@ -161,6 +163,15 @@ export class ServiceContext {
 
     await this._initialize();
     return identity;
+  }
+
+  private async _checkStorageVersion() {
+    await this.metadataStore.load();
+    if (this.metadataStore.version !== STORAGE_VERSION) {
+      log.error('Invalid storage version', { current: this.metadataStore.version, expected: STORAGE_VERSION });
+      // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
+      await this.metadataStore.clear();
+    }
   }
 
   // Called when identity is created.

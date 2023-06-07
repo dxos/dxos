@@ -4,7 +4,7 @@
 
 import React, { useContext } from 'react';
 
-import { Button, TreeRoot, useId, useTranslation } from '@dxos/aurora';
+import { Button, Tree, useId, useTranslation } from '@dxos/aurora';
 import { observer, useClient, useSpaces } from '@dxos/react-client';
 
 import { bindSpace } from '../../util';
@@ -20,11 +20,15 @@ export const ResolverTree = observer(() => {
   return spaces.length ? (
     <>
       {' '}
-      <h1 className='text-lg font-system-normal' id={treeLabel}>
+      <h1 className='shrink-0 text-lg font-system-normal' id={treeLabel}>
         {t('resolver tree label')}
       </h1>
-      <div role='separator' className='bs-px bg-neutral-500/20 mlb-2' />
-      <TreeRoot aria-labelledby={treeLabel} data-testid='composer.sidebarTree' classNames='shrink-0'>
+      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-2' />
+      <Tree.Root
+        aria-labelledby={treeLabel}
+        data-testid='composer.sidebarTree'
+        classNames='overflow-y-auto -mli-2 pli-2'
+      >
         {spaces.map((space) => {
           return (
             <SpacePickerTreeItem
@@ -33,7 +37,7 @@ export const ResolverTree = observer(() => {
             />
           );
         })}
-      </TreeRoot>
+      </Tree.Root>
     </>
   ) : (
     <>

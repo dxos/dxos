@@ -8,10 +8,10 @@ import React, { FC, useMemo } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 
+import { DropdownMenu } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Serializer } from '@dxos/echo-schema';
 import { useFileDownload } from '@dxos/kai-frames';
-import { DropdownMenuItem } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
 import { createPath, defaultFrameId, useAppRouter, useGenerator } from '../../hooks';
@@ -81,32 +81,32 @@ export const Actions = () => {
 
   return (
     <>
-      <DropdownMenuItem onClick={handleSettings}>
+      <DropdownMenu.Item onClick={handleSettings}>
         <Gear className={getSize(5)} />
         <span className='mis-2'>Settings</span>
-      </DropdownMenuItem>
+      </DropdownMenu.Item>
       {space && !isMobile && (
         <>
-          <DropdownMenuItem onClick={handleExportSpace}>
+          <DropdownMenu.Item onClick={handleExportSpace}>
             <UploadSimple className={getSize(5)} />
             <span className='mis-2'>Export data</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item>
             <FileUploader classes='flex flex-row flex-1' types={['json']} handleChange={handleImportSpace}>
               <DownloadSimple className={getSize(5)} />
               <span className='mis-2'>Import data</span>
             </FileUploader>
-          </DropdownMenuItem>
+          </DropdownMenu.Item>
         </>
       )}
-      <DropdownMenuItem onClick={handleGenerateData}>
+      <DropdownMenu.Item onClick={handleGenerateData}>
         <Robot className={getSize(5)} />
         <span className='mis-2'>Generate test data</span>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleReset}>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item onClick={handleReset}>
         <Trash className={getSize(5)} />
         <span className='mis-2'>Reset storage</span>
-      </DropdownMenuItem>
+      </DropdownMenu.Item>
     </>
   );
 };

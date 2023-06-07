@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
-import faker from 'faker';
 
 import { createKeyPair } from '@dxos/crypto';
 import { describe, test } from '@dxos/test';
@@ -31,7 +31,7 @@ describe('HypercoreFactory', () => {
     {
       const data = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
       for await (const datum of data) {
-        const feed = faker.random.arrayElement(feeds);
+        const feed = faker.helpers.arrayElement(feeds);
         await py(feed, feed.append)(Buffer.from(JSON.stringify(datum)));
       }
     }
@@ -41,7 +41,7 @@ describe('HypercoreFactory', () => {
       const total = feeds.reduce((result, feed) => result + feed.length, 0);
       expect(total).to.eq(numBlocks);
 
-      const feed = faker.random.arrayElement(feeds);
+      const feed = faker.helpers.arrayElement(feeds);
       const block1 = await py(feed, feed.head)();
       const block2 = await py(feed, feed.get)(feed.length - 1);
       expect(block1.toString()).to.eq(block2.toString());

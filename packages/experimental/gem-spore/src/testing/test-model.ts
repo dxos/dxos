@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 import { emptyGraph, GraphData, GraphModel } from '../graph';
 import { createLink, createNode } from './data';
@@ -28,7 +28,7 @@ export class TestGraphModel extends GraphModel<TestNode> {
   }
 
   getRandomNode() {
-    return faker.random.arrayElement(this._graph.nodes);
+    return faker.helpers.arrayElement(this._graph.nodes);
   }
 
   clear() {
@@ -40,7 +40,7 @@ export class TestGraphModel extends GraphModel<TestNode> {
   createNodes(node: TestNode = undefined, n = 1, update = true) {
     Array.from({ length: n }).forEach(() => {
       const child = createNode();
-      const parent = node || faker.random.arrayElement(this._graph.nodes);
+      const parent = node || faker.helpers.arrayElement(this._graph.nodes);
       this._graph.nodes.push(child);
       if (parent) {
         const link = createLink(parent, child);

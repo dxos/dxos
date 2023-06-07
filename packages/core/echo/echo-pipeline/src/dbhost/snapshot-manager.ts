@@ -3,6 +3,9 @@
 //
 
 import { trackLeaks } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
+import { timed } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
@@ -24,6 +27,7 @@ export class SnapshotManager {
     this._objectSync = new ObjectSync({
       getObject: async (id: string) => {
         const snapshot = await this._snapshotStore.loadSnapshot(id);
+        log('getObject', { id, snapshot });
         if (!snapshot) {
           return undefined;
         }
@@ -33,7 +37,8 @@ export class SnapshotManager {
         };
       },
       setObject: async (data: DataObject) => {
-        const snapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(data.payload);
+        log('setObject', { data });
+        const snapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((data.payload as Any).value);
         await this._snapshotStore.saveSnapshot(snapshot);
       }
     });
@@ -51,6 +56,7 @@ export class SnapshotManager {
     await this._objectSync.close();
   }
 
+  @timed(10_000)
   async load(id: string): Promise<SpaceSnapshot> {
     const local = await this._snapshotStore.loadSnapshot(id);
     if (local) {
@@ -58,7 +64,7 @@ export class SnapshotManager {
     }
 
     const remote = await this._objectSync.download(id);
-    return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(remote.payload);
+    return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((remote.payload as Any).value);
   }
 
   async store(snapshot: SpaceSnapshot): Promise<string> {

@@ -18,29 +18,10 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
-import {
-  Button,
-  useSidebar,
-  useTranslation,
-  TreeBranch,
-  TreeItem,
-  TreeItemBody,
-  TreeItemHeading,
-  TreeItemOpenTrigger,
-} from '@dxos/aurora';
+import { Button, useSidebar, useTranslation, Tree, TreeItem, Tooltip, DropdownMenu } from '@dxos/aurora';
 import { defaultDescription, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
-import {
-  Tooltip,
-  useFileDownload,
-  Dialog,
-  DropdownMenu,
-  DropdownMenuItem,
-  Input,
-  TooltipContent,
-  TooltipRoot,
-  TooltipTrigger,
-} from '@dxos/react-appkit';
+import { useFileDownload, Dialog, Input } from '@dxos/react-appkit';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, ShellLayout, Space, useIdentity, useQuery } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
@@ -103,7 +84,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
   const [optionsMenuOpen, setOpetionsMenuOpen] = useState(false);
 
   return (
-    <TreeItem
+    <TreeItem.Root
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
@@ -111,12 +92,12 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItemOpenTrigger disabled={disabled} {...(!sidebarOpen && { tabIndex: -1 })}>
+        <TreeItem.OpenTrigger disabled={disabled} {...(!sidebarOpen && { tabIndex: -1 })}>
           <OpenTriggerIcon
             {...(hasActiveDocument && !open && { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' })}
           />
-        </TreeItemOpenTrigger>
-        <TreeItemHeading
+        </TreeItem.OpenTrigger>
+        <TreeItem.Heading
           classNames={[
             'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
             !disabled && 'cursor-pointer',
@@ -126,8 +107,8 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           onClick={() => setOpen(!open)}
         >
           {spaceDisplayName}
-        </TreeItemHeading>
-        <TooltipRoot
+        </TreeItem.Heading>
+        <Tooltip.Root
           open={optionsTooltipOpen}
           onOpenChange={(nextOpen) => {
             if (suppressNextTooltip.current) {
@@ -138,12 +119,25 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             }
           }}
         >
-          <TooltipContent classNames='z-[31]' side='bottom'>
-            {t('space options label')}
-          </TooltipContent>
-          <DropdownMenu
-            trigger={
-              <TooltipTrigger asChild>
+          <Tooltip.Portal>
+            <Tooltip.Content classNames='z-[31]' side='bottom'>
+              {t('space options label')}
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+          <DropdownMenu.Root
+            {...{
+              open: optionsMenuOpen,
+              onOpenChange: (nextOpen: boolean) => {
+                if (!nextOpen) {
+                  suppressNextTooltip.current = true;
+                }
+                return setOpetionsMenuOpen(nextOpen);
+              },
+            }}
+          >
+            <DropdownMenu.Trigger asChild>
+              <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
                   data-testid='composer.openSpaceMenu'
@@ -152,71 +146,71 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                 >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
-              </TooltipTrigger>
-            }
-            slots={{
-              root: {
-                open: optionsMenuOpen,
-                onOpenChange: (nextOpen: boolean) => {
-                  if (!nextOpen) {
-                    suppressNextTooltip.current = true;
-                  }
-                  return setOpetionsMenuOpen(nextOpen);
-                },
-              },
-              content: { className: 'z-[31]' },
-            }}
-          >
-            <DropdownMenuItem asChild>
-              <Input
-                label={t('space name label')}
-                labelVisuallyHidden
-                value={space.properties.name ?? ''}
-                placeholder={t('untitled space title')}
-                onChange={({ target: { value } }) => (space.properties.name = value)}
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleViewInvitations} className='flex items-center gap-2'>
-              <PaperPlaneTilt className={getSize(4)} />
-              <span>{t('view space invitations label', { ns: 'os' })}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleHideSpace} className='flex items-center gap-2'>
-              <EyeSlash className={getSize(4)} />
-              <span>{t('hide space label')}</span>
-            </DropdownMenuItem>
-            <Separator />
-            <DropdownMenuItem
-              className='flex items-center gap-2'
-              onClick={async () => {
-                const backupBlob = await backupSpace(space, t('untitled document title'));
-                return download(backupBlob, `${spaceDisplayName} backup.zip`);
-              }}
+              </Tooltip.Trigger>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content classNames='z-[31]'>
+                <DropdownMenu.Item asChild>
+                  <Input
+                    label={t('space name label')}
+                    labelVisuallyHidden
+                    value={space.properties.name ?? ''}
+                    placeholder={t('untitled space title')}
+                    onChange={({ target: { value } }) => (space.properties.name = value)}
+                  />
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleViewInvitations} classNames='gap-2'>
+                  <PaperPlaneTilt className={getSize(4)} />
+                  <span>{t('view space invitations label', { ns: 'os' })}</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleHideSpace} classNames='gap-2'>
+                  <EyeSlash className={getSize(4)} />
+                  <span>{t('hide space label')}</span>
+                </DropdownMenu.Item>
+                <Separator />
+                <DropdownMenu.Item
+                  classNames='gap-2'
+                  onClick={async () => {
+                    const backupBlob = await backupSpace(space, t('untitled document title'));
+                    return download(backupBlob, `${spaceDisplayName} backup.zip`);
+                  }}
+                >
+                  <Download className={getSize(4)} />
+                  <span>{t('download all docs in space label')}</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item classNames='gap-2' onClick={() => setRestoreDialogOpen(true)}>
+                  <Upload className={getSize(4)} />
+                  <span>{t('upload all docs in space label')}</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </Tooltip.Root>
+        <Tooltip.Root>
+          <Tooltip.Portal>
+            <Tooltip.Content side='bottom' classNames='z-[31]'>
+              {t('create document label')}
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+          <Tooltip.Trigger asChild>
+            <Button
+              variant='ghost'
+              data-testid='composer.createDocument'
+              classNames='shrink-0 pli-2 pointer-fine:pli-1'
+              onClick={handleCreate}
+              {...(!sidebarOpen && { tabIndex: -1 })}
             >
-              <Download className={getSize(4)} />
-              <span>{t('download all docs in space label')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className='flex items-center gap-2' onClick={() => setRestoreDialogOpen(true)}>
-              <Upload className={getSize(4)} />
-              <span>{t('upload all docs in space label')}</span>
-            </DropdownMenuItem>
-          </DropdownMenu>
-        </TooltipRoot>
-        <Tooltip content={t('create document label')} tooltipLabelsTrigger side='bottom' zIndex='z-[31]'>
-          <Button
-            variant='ghost'
-            data-testid='composer.createDocument'
-            classNames='shrink-0 pli-2 pointer-fine:pli-1'
-            onClick={handleCreate}
-            {...(!sidebarOpen && { tabIndex: -1 })}
-          >
-            <span className='sr-only'>{t('create document label')}</span>
-            <Plus className={getSize(4)} />
-          </Button>
-        </Tooltip>
+              <span className='sr-only'>{t('create document label')}</span>
+              <Plus className={getSize(4)} />
+            </Button>
+          </Tooltip.Trigger>
+        </Tooltip.Root>
       </div>
-      <TreeItemBody>
+      <TreeItem.Body>
         {documents.length > 0 ? (
-          <TreeBranch>
+          <Tree.Branch>
             {documents.map((document) => (
               <DocumentLinkTreeItem
                 key={document.id}
@@ -225,7 +219,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
                 linkTo={getPath(space.key, document.id)}
               />
             ))}
-          </TreeBranch>
+          </Tree.Branch>
         ) : (
           <div
             role='none'
@@ -237,7 +231,7 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
             {t('empty space message')}
           </div>
         )}
-      </TreeItemBody>
+      </TreeItem.Body>
       <Dialog
         open={restoreDialogOpen}
         onOpenChange={setRestoreDialogOpen}
@@ -260,6 +254,6 @@ export const FullSpaceTreeItem = observer(({ space }: { space: Space }) => {
           {t('cancel label', { ns: 'appkit' })}
         </Button>
       </Dialog>
-    </TreeItem>
+    </TreeItem.Root>
   );
 });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-app-2",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "private": true,
   "description": "tasks-app-2",
   "homepage": "https://dxos.org",
@@ -43,8 +43,8 @@
     "@vitejs/plugin-react": "^3.0.1",
     "autoprefixer": "^10.4.12",
     "postcss": "^8.4.21",
-    "tailwindcss": "~3.2.7",
+    "tailwindcss": "~3.3.2",
     "typescript": "^5.0.4",
-    "vite": "^4.3.0"
+    "vite": "^4.3.9"
   }
 }

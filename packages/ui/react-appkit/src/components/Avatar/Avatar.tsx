@@ -4,22 +4,11 @@
 
 import React, { ComponentProps, ForwardedRef, forwardRef, PropsWithChildren, ReactHTMLElement, ReactNode } from 'react';
 
-import {
-  AvatarDescription,
-  AvatarFallback,
-  AvatarFallbackProps,
-  AvatarImage,
-  AvatarLabel,
-  AvatarRoot,
-  Avatar as NaturalAvatar,
-  AvatarProps as NaturalAvatarProps,
-  Size,
-  useJdenticonHref,
-} from '@dxos/aurora';
+import { AvatarFallbackProps, Size, Avatar as NaturalAvatar, useJdenticonHref, AvatarFrameProps } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 
 export interface AvatarSlots {
-  root?: Omit<NaturalAvatarProps, 'children'>;
+  root?: Omit<AvatarFrameProps, 'children'>;
   image?: ComponentProps<'image'>;
   fallback?: Omit<AvatarFallbackProps, 'children'>;
   labels?: Omit<ComponentProps<'div'>, 'children' | 'ref'>;
@@ -73,18 +62,20 @@ export const Avatar = forwardRef(
     const jdenticon = useJdenticonHref(fallbackValue, size);
     return (
       <>
-        <AvatarRoot labelId={propsLabelId} descriptionId={propsDescriptionId} {...{ size, variant, status }}>
-          <NaturalAvatar {...slots.root} ref={ref}>
-            {mediaSrc && <AvatarImage href={mediaSrc} />}
-            <AvatarFallback delayMs={0} href={jdenticon} />
-          </NaturalAvatar>
+        <NaturalAvatar.Root labelId={propsLabelId} descriptionId={propsDescriptionId} {...{ size, variant, status }}>
+          <NaturalAvatar.Frame {...slots.root} ref={ref}>
+            {mediaSrc && <NaturalAvatar.Image href={mediaSrc} />}
+            <NaturalAvatar.Fallback delayMs={0} href={jdenticon} />
+          </NaturalAvatar.Frame>
           <div role='none' {...slots.labels} className={mx('contents', slots?.labels?.className)}>
-            <AvatarLabel asChild={typeof label !== 'string'}>{label}</AvatarLabel>
+            <NaturalAvatar.Label asChild={typeof label !== 'string'}>{label}</NaturalAvatar.Label>
             {description && (
-              <AvatarDescription asChild={typeof description !== 'string'}>{description}</AvatarDescription>
+              <NaturalAvatar.Description asChild={typeof description !== 'string'}>
+                {description}
+              </NaturalAvatar.Description>
             )}
           </div>
-        </AvatarRoot>
+        </NaturalAvatar.Root>
       </>
     );
   },

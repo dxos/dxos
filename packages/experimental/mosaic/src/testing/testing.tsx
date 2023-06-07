@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { Item, Location } from '../layout';

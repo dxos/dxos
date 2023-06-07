@@ -190,11 +190,5 @@
         "^compile"
       ]
     }
-  },
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    }
   }
 }

@@ -72,7 +72,7 @@ test('Runtime and module config', () => {
         services: {
           signaling: [
             {
-              server: 'ws://localhost:4000',
+              server: 'ws://localhost:<random-port>',
             },
           ],
         },
@@ -98,7 +98,7 @@ test('Runtime and module config', () => {
       services: {
         signaling: [
           {
-            server: 'ws://localhost:4000',
+            server: 'ws://localhost:<random-port>',
           },
         ],
       },

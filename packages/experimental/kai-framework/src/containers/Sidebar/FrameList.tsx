@@ -5,7 +5,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { List, ListItem, ListItemEndcap } from '@dxos/aurora';
+import { List, ListItem } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useFrameRegistry } from '@dxos/kai-frames';
 
@@ -27,18 +27,18 @@ export const FrameList = () => {
           .map((frameId) => frameRegistry.getFrameDef(frameId)!)
           .filter(Boolean)
           .map(({ module: { id, displayName }, runtime: { Icon } }) => (
-            <ListItem
+            <ListItem.Root
               id={id}
               key={id}
               classNames={['flex w-full px-3 items-center', id === currentFrame?.module.id && 'bg-zinc-200']}
             >
               <Link key={id} className='flex w-full items-center' to={createPath({ spaceKey: space.key, frame: id })}>
-                <ListItemEndcap classNames='items-center'>
+                <ListItem.Endcap classNames='items-center'>
                   <Icon className={getSize(6)} />
-                </ListItemEndcap>
+                </ListItem.Endcap>
                 <div className='pl-1'>{displayName}</div>
               </Link>
-            </ListItem>
+            </ListItem.Root>
           ))}
       </List>
     </div>

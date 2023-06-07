@@ -7,20 +7,13 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { ComponentProps, ReactNode } from 'react';
 
 import {
-  DialogClose,
+  Dialog as NaturalDialog,
   DialogCloseProps,
-  DialogContent,
   DialogContentProps,
-  DialogDescription,
   DialogDescriptionProps,
-  DialogOverlay,
   DialogOverlayProps,
-  DialogPortal,
-  DialogRoot,
   DialogRootProps,
-  DialogTitle,
   DialogTitleProps,
-  DialogTrigger,
 } from '@dxos/aurora';
 import { defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
 
@@ -71,20 +64,20 @@ export const Dialog = ({
   });
 
   const dialogOverlayAndContent = (
-    <DialogOverlay {...slots.overlay} classNames={slots.overlay?.classNames}>
-      <DialogContent
+    <NaturalDialog.Overlay {...slots.overlay} classNames={slots.overlay?.classNames}>
+      <NaturalDialog.Content
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         {...slots.content}
         classNames={slots.content?.classNames}
       >
-        <DialogTitle {...slots.title} classNames={slots?.title?.classNames}>
+        <NaturalDialog.Title {...slots.title} classNames={slots?.title?.classNames}>
           {title}
-        </DialogTitle>
+        </NaturalDialog.Title>
         {description && (
-          <DialogDescription {...slots.description} classNames={slots.description?.classNames}>
+          <NaturalDialog.Description {...slots.description} classNames={slots.description?.classNames}>
             {description}
-          </DialogDescription>
+          </NaturalDialog.Description>
         )}
 
         {children}
@@ -93,7 +86,7 @@ export const Dialog = ({
           <TooltipRoot>
             <TooltipContent classNames='z-[51]'>{closeLabel}</TooltipContent>
             <TooltipTrigger asChild>
-              <DialogClose
+              <NaturalDialog.Close
                 className={mx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
                   defaultFocus,
@@ -108,7 +101,7 @@ export const Dialog = ({
                     slots.closeIcon?.className,
                   )}
                 />
-              </DialogClose>
+              </NaturalDialog.Close>
             </TooltipTrigger>
           </TooltipRoot>
         )}
@@ -118,20 +111,24 @@ export const Dialog = ({
             className={mx('flex flex-wrap justify-end gap-4', slots.closeTriggers?.className)}
           >
             {closeTriggers.map((closeTrigger, key) => (
-              <DialogClose key={key} asChild>
+              <NaturalDialog.Close key={key} asChild>
                 {closeTrigger}
-              </DialogClose>
+              </NaturalDialog.Close>
             ))}
           </div>
         )}
-      </DialogContent>
-    </DialogOverlay>
+      </NaturalDialog.Content>
+    </NaturalDialog.Overlay>
   );
 
   return (
-    <DialogRoot open={open} onOpenChange={setOpen}>
-      {openTrigger && <DialogTrigger asChild>{openTrigger}</DialogTrigger>}
-      {mountAsSibling ? dialogOverlayAndContent : <DialogPortal>{dialogOverlayAndContent}</DialogPortal>}
-    </DialogRoot>
+    <NaturalDialog.Root open={open} onOpenChange={setOpen}>
+      {openTrigger && <NaturalDialog.Trigger asChild>{openTrigger}</NaturalDialog.Trigger>}
+      {mountAsSibling ? (
+        dialogOverlayAndContent
+      ) : (
+        <NaturalDialog.Portal>{dialogOverlayAndContent}</NaturalDialog.Portal>
+      )}
+    </NaturalDialog.Root>
   );
 };

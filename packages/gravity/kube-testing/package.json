@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -27,8 +27,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "danfojs-node": "^1.1.2",
-    "faker": "^5.5.3",
     "redis": "^4.6.6",
     "seedrandom": "^3.0.5"
   },
