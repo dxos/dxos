@@ -2,31 +2,60 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Planet } from '@phosphor-icons/react';
 import { useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
+import { Document } from '@braneframe/types';
+import { EventSubscriptions } from '@dxos/async';
 import { createStore } from '@dxos/observable-object';
-import { EchoDatabase, PublicKey, Space, useSpace } from '@dxos/react-client';
+import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject, useSpace } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
 import { GraphNode, GraphPluginProvides } from './GraphPlugin';
-import { useListViewContext } from './ListViewPlugin';
 import { RouterPluginProvides } from './RoutesPlugin';
+import { useTreeView } from './TreeViewPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
 
-export const isSpace = (datum: any): datum is Space =>
-  'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase;
+export const isSpace = (datum: unknown): datum is Space =>
+  datum && typeof datum === 'object'
+    ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
+    : false;
 
 export const SpaceMain = () => {
-  const { selected } = useListViewContext();
-  const space = useSpace(selected?.id);
-  return space ? <Surface data={space} role='main' /> : <p>…</p>;
+  const { selected } = useTreeView();
+  const spaceDatum = useSpace(selected?.id);
+  const spaceParent = useSpace(selected?.parent?.id);
+  const objectDatum = spaceParent?.db.getObjectById(selected?.id ?? 'never');
+  const data = objectDatum ?? spaceDatum;
+  return data ? <Surface data={data} role='main' /> : <p>…</p>;
+};
+
+const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
+  return objects.map((obj) => ({
+    id: obj.id,
+    label: obj.title ?? 'Untitled',
+    description: obj.description,
+    icon: obj.icon,
+    data: obj,
+    parent,
+    actions: [
+      {
+        id: 'delete',
+        label: 'Delete',
+        invoke: async () => {
+          parent.data?.db.remove(obj);
+        },
+      },
+    ],
+  }));
 };
 
 const nodes = createStore<GraphNode[]>([]);
-let subscription: ZenObservable.Subscription | undefined;
+const rootObjects = new Map<string, GraphNode[]>();
+const subscriptions = new EventSubscriptions();
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
@@ -35,17 +64,46 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     if (clientPlugin) {
-      subscription = clientPlugin.provides.client.spaces.subscribe((spaces) => {
+      const subscription = clientPlugin.provides.client.spaces.subscribe((spaces) => {
         nodes.splice(
           0,
           nodes.length,
-          ...spaces.map((space) => ({ id: space.key.toHex(), label: space.properties.name ?? 'Untitled space' })),
+          ...spaces.map((space) => {
+            const node: GraphNode<Space> = {
+              id: space.key.toHex(),
+              label: space.properties.name ?? 'Untitled space',
+              description: space.properties.description,
+              icon: Planet,
+              data: space,
+              actions: [],
+            };
+
+            let children = rootObjects.get(node.id);
+
+            if (!children) {
+              const query = space.db.query(Document.filter());
+              const objects = createStore(objectsToGraphNodes(node, query.objects));
+              subscriptions.add(
+                query.subscribe((query) => {
+                  objects.splice(0, objects.length, ...objectsToGraphNodes(node, query.objects));
+                }),
+              );
+
+              children = objects;
+              rootObjects.set(node.id, children);
+            }
+
+            node.children = children?.map((child) => ({ ...child, parent: node })) ?? [];
+
+            return node;
+          }),
         );
       });
+      subscriptions.add(subscription.unsubscribe);
     }
   },
   unload: async () => {
-    subscription?.unsubscribe();
+    subscriptions.clear();
   },
   provides: {
     router: {
@@ -56,41 +114,70 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
-                sidebar: { component: 'dxos:ListViewPlugin/ListView' },
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                main: { component: 'dxos:SpacePlugin/SpaceMain' },
+              }}
+            />
+          ),
+        },
+        {
+          path: '/space/:spaceId/:objectId',
+          element: (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
                 main: { component: 'dxos:SpacePlugin/SpaceMain' },
               }}
             />
           ),
         },
       ],
-    },
-    components: {
-      SpaceMain,
-      default: () => {
+      useNavigator: () => {
         // TODO(wittjosiah): Should come from plugin provides.
         const navigate = useNavigate();
-        const { spaceId } = useParams();
-        const { selected, setSelected } = useListViewContext();
+        const params = useParams();
+        const { spaceId, objectId } = params;
+        const { selected, setSelected } = useTreeView();
 
         useEffect(() => {
-          if (!selected && spaceId) {
-            const node = nodes.find((node) => node.id === spaceId);
+          if (!selected) {
+            const space = nodes.find((node) => node.id === spaceId);
+            const object = space?.children?.find((node) => node.id === objectId);
+            const node = object ?? space;
             node && setSelected(node);
           }
-        }, []);
+        }, [selected, spaceId, objectId]);
 
         useEffect(() => {
           if (!selected) {
             return;
           }
 
-          if (selected.id !== spaceId) {
+          if (isSpace(selected.data) && selected.id !== spaceId) {
             navigate(`/space/${selected.id}`);
           }
-        }, [selected, spaceId]);
 
-        return null;
+          if (isTypedObject(selected.data) && selected.parent && selected.id !== objectId) {
+            navigate(`/space/${selected.parent.id}/${selected.id}`);
+          }
+        }, [selected, spaceId, objectId]);
       },
+    },
+    component: (datum, role) => {
+      if (role === 'main') {
+        switch (true) {
+          case isSpace(datum):
+            return () => <pre>{JSON.stringify((datum as SpaceProxy).properties)}</pre>;
+          default:
+            return null;
+        }
+      } else {
+        return null;
+      }
+    },
+    components: {
+      SpaceMain,
     },
     graph: {
       nodes: () => nodes,

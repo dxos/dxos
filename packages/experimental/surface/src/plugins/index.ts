@@ -11,3 +11,4 @@ export * from './SpacePlugin';
 export * from './SplitViewPlugin';
 export * from './StackPlugin';
 export * from './ThemePlugin';
+export * from './TreeViewPlugin';
