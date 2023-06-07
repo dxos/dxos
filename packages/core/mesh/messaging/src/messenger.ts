@@ -4,13 +4,14 @@
 
 import assert from 'node:assert';
 
+import { scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
-import { ComplexMap, ComplexSet, exponentialBackoffInterval } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
@@ -82,43 +83,57 @@ export class Messenger {
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     assert(!this._closed, 'Closed');
+    const messageContext = this._ctx.derive();
 
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
       payload,
     };
-
-    log('sent message', { messageId: reliablePayload.messageId, author, recipient });
-
-    // Setting retry interval if signal was not acknowledged.
-    const cancelRetry = exponentialBackoffInterval(async () => {
-      log('retrying message', { messageId: reliablePayload.messageId });
-      try {
-        await this._encodeAndSend({ author, recipient, reliablePayload });
-      } catch (error) {
-        log.error('failed to send message', { error });
-      }
-    }, this._retryDelay);
-
-    const timeout = setTimeout(() => {
-      log('message not delivered', { messageId: reliablePayload.messageId });
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
-      cancelRetry();
-    }, this._timeout);
-
     assert(!this._onAckCallbacks.has(reliablePayload.messageId!));
-    this._onAckCallbacks.set(reliablePayload.messageId, () => {
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
-      cancelRetry();
-      clearTimeout(timeout);
+    log('send message', { messageId: reliablePayload.messageId, author, recipient });
+
+    let messageReceived: () => void;
+    let timeoutHit: (err: Error) => void;
+
+    const promise = new Promise<void>((resolve, reject) => {
+      messageReceived = resolve;
+      timeoutHit = reject;
     });
 
-    this._ctx.onDispose(() => {
-      cancelRetry();
-      clearTimeout(timeout);
+    // Setting retry interval if signal was not acknowledged.
+    scheduleExponentialBackoffTaskInterval(
+      messageContext,
+      async () => {
+        log('retrying message', { messageId: reliablePayload.messageId });
+        try {
+          await this._encodeAndSend({ author, recipient, reliablePayload });
+        } catch (error) {
+          log.error('failed to send message', { error });
+        }
+      },
+      this._retryDelay,
+    );
+
+    scheduleTask(
+      messageContext,
+      () => {
+        log.error('message not delivered', { messageId: reliablePayload.messageId });
+        this._onAckCallbacks.delete(reliablePayload.messageId!);
+        timeoutHit(new Error('message not delivered'));
+        void messageContext.dispose();
+      },
+      this._timeout,
+    );
+
+    this._onAckCallbacks.set(reliablePayload.messageId, () => {
+      messageReceived();
+      this._onAckCallbacks.delete(reliablePayload.messageId!);
+      void messageContext.dispose();
     });
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
+
+    return promise;
   }
 
   /**
