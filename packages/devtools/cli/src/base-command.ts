@@ -28,6 +28,7 @@ import {
   IPDATA_API_KEY,
   PublisherRpcPeer,
   SupervisorRpcPeer,
+  TunnelRpcPeer,
   SENTRY_DESTINATION,
   TelemetryContext,
   TELEMETRY_API_KEY,
@@ -284,6 +285,31 @@ export abstract class BaseCommand extends Command {
       assert(wsEndpoint);
 
       rpc = new PublisherRpcPeer(wsEndpoint);
+
+      await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
+
+      const value = await callback(rpc);
+
+      return value;
+    } catch (err: any) {
+      Sentry.captureException(err);
+      this.error(err);
+    } finally {
+      if (rpc) {
+        await rpc.close();
+      }
+    }
+  }
+
+  async execWithTunneling<T>(callback: (rpc: TunnelRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    let rpc: TunnelRpcPeer | undefined;
+    try {
+      assert(this._clientConfig);
+
+      const wsEndpoint = this._clientConfig.get('runtime.services.tunneling.server');
+      assert(wsEndpoint);
+
+      rpc = new TunnelRpcPeer(wsEndpoint);
 
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
