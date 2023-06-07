@@ -10,7 +10,8 @@ import { EchoDatabase, PublicKey, Space, useSpace } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../framework';
 import { ClientPluginProvides } from './ClientPlugin';
-import { GraphNode, GraphPluginProvides, useListViewContext } from './ListViewPlugin';
+import { GraphNode, GraphPluginProvides } from './GraphPlugin';
+import { useListViewContext } from './ListViewPlugin';
 import { RouterPluginProvides } from './RoutesPlugin';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
@@ -92,20 +93,10 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
       },
     },
     graph: {
-      nodes: (_plugins, parent) => {
-        if (parent) {
-          return [];
-        }
-
-        return nodes;
-      },
-      actions: (plugins, parent) => {
+      nodes: () => nodes,
+      actions: (plugins) => {
         const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
         if (!clientPlugin) {
-          return [];
-        }
-
-        if (parent) {
           return [];
         }
 

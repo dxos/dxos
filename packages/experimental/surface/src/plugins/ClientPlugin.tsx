@@ -7,7 +7,7 @@ import React from 'react';
 import { Client, ClientProvider, Config } from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
-import { GraphPluginProvides } from './ListViewPlugin';
+import { GraphPluginProvides } from './GraphPlugin';
 
 export type ClientPluginProvides = GraphPluginProvides & {
   client: Client;
@@ -27,10 +27,7 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
       client,
       context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
       graph: {
-        actions: (_, parent) => {
-          if (parent) {
-            return [];
-          }
+        actions: () => {
           // TODO(wittjosiah): This is probably not a graph node action, just to expose it in the story for the moment.
           return [
             {
