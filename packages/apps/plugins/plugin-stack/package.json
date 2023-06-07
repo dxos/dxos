@@ -1,5 +1,5 @@
 {
-  "name": "@braneframe/surface-plugin-stack",
+  "name": "@braneframe/plugin-stack",
   "version": "0.1.45",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
