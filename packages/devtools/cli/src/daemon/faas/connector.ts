@@ -10,8 +10,7 @@ import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { FunctionListEntry } from './api';
-
-const SERVICES_URL = 'ws://192.168.64.1:4567';
+import { raise } from '@dxos/debug';
 
 export type Trigger = {
   id: string;
@@ -243,7 +242,7 @@ export class FaasConnector {
     const data: InvocationData = {
       event,
       context: {
-        clientUrl: SERVICES_URL,
+        clientUrl: this._faasConfig.daemonUrl ?? raise(new Error('daemonUrl is not set')),
       },
     };
 
