@@ -26,7 +26,6 @@ interface MessageRouterOptions {
   topic: PublicKey;
 }
 
-const OFFER_TIMEOUT = 2_000;
 /**
  * Adds offer/answer and signal interfaces.
  */
@@ -80,7 +79,7 @@ export class MessageRouter implements SignalMessenger {
 
   async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    await this._sendReliableMessage({
+    return this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
       message,
@@ -118,7 +117,7 @@ export class MessageRouter implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage({
+    return this._sendMessage({
       author,
       recipient,
       payload: {
