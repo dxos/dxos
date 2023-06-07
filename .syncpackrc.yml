@@ -25,6 +25,13 @@ semverGroups:
       - '@nwrl/*'
 versionGroups:
   - packages:
+      - '@dxos/kai-fn-chess'
+      - '@dxos/openfaas-node18-dxos'
+    dependencies:
+      - '**'
+    isIgnored: true
+
+  - packages:
       - '@dxos/docs'
     dependencies:
       - '@mdx-js/react'
