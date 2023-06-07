@@ -8,7 +8,7 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
-      "./src", // <-- KEEP "./src" first.
+      "./src", // <-- KEEP "./src" FIRST
       "./notebooks"
     ],
     "types": [
