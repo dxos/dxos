@@ -271,7 +271,7 @@ class Toolbox {
         });
 
         // Preserve root dir order.
-        if(tsConfigJson.compilerOptions?.rootDirs) {
+        if (tsConfigJson.compilerOptions?.rootDirs) {
           updated.compilerOptions.rootDirs = tsConfigJson.compilerOptions.rootDirs;
         }
 

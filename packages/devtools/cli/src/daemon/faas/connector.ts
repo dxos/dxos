@@ -5,12 +5,12 @@
 import { DeferredTask } from '@dxos/async';
 import { Client, ClientServicesProvider, Space, SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { FunctionListEntry } from './api';
-import { raise } from '@dxos/debug';
 
 export type Trigger = {
   id: string;
