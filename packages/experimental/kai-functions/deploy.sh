@@ -1,8 +1,11 @@
+set -exuo pipefail
+
 # TODO(burdon): Get from multipass.
 export IP=$(multipass info faasd | grep IPv4 | awk '{print $2}')
 export OPENFAAS_URL=http://$IP:8080
 echo "Server: $IP"
 
+# TODO(burdon): Optional param.
 # Get password.
 # ssh ubuntu@$IP "sudo cat /var/lib/faasd/secrets/basic-auth-password" | faas-cli login --password-stdin
 

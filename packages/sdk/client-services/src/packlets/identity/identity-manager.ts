@@ -238,6 +238,9 @@ export class IdentityManager {
       },
       swarmIdentity,
       onNetworkConnection: () => {},
+      onAuthFailure: () => {
+        log.warn('auth failure');
+      },
       memberKey: identityKey,
     });
   }

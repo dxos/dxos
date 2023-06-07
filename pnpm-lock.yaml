@@ -234,7 +234,6 @@ importers:
 
   docs:
     specifiers:
-      '@adamdehaven/vue-custom-tooltip': ^2.6.0
       '@dxos/apidoc': workspace:*
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
@@ -243,7 +242,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
+      '@dxos/examples': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -286,7 +285,6 @@ importers:
       vuepress-plugin-check-md: 0.0.3
       vuepress-theme-hope: 2.0.0-beta.197
     devDependencies:
-      '@adamdehaven/vue-custom-tooltip': 2.6.0_vue@3.2.47
       '@dxos/apidoc': link:../tools/apidoc
       '@dxos/async': link:../packages/common/async
       '@dxos/aurora': link:../packages/ui/aurora
@@ -295,7 +293,7 @@ importers:
       '@dxos/client-services': link:../packages/sdk/client-services
       '@dxos/config': link:../packages/sdk/config
       '@dxos/echo-schema': link:../packages/core/echo/echo-schema
-      '@dxos/echo-typegen': link:../packages/core/echo/echo-typegen
+      '@dxos/examples': link:../packages/sdk/examples
       '@dxos/keys': link:../packages/common/keys
       '@dxos/log': link:../packages/common/log
       '@dxos/protocols': link:../packages/core/protocols
@@ -1279,6 +1277,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/util': workspace:*
       '@sentry/browser': ^7.45.0
       '@sentry/integrations': 7.45.0
       '@sentry/node': ^7.45.0
@@ -1291,6 +1290,7 @@ importers:
       '@dxos/debug': link:../debug
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
+      '@dxos/util': link:../util
       '@sentry/browser': 7.46.0
       '@sentry/integrations': 7.45.0
       '@sentry/node': 7.46.0
@@ -1397,6 +1397,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/document-model': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1412,6 +1413,7 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
+      '@dxos/errors': link:../../../sdk/errors
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
@@ -2103,10 +2105,12 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hello-template': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2159,10 +2163,12 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/hello-template': link:../../apps/templates/hello-template
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -4071,6 +4077,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@types/fs-extra': ^9.0.4
       '@types/node': ^18.11.9
       fs-extra: ^8.1.0
@@ -4080,6 +4087,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
       fs-extra: 8.1.0
     devDependencies:
       '@types/fs-extra': 9.0.13
@@ -4302,6 +4310,44 @@ importers:
 
   packages/sdk/errors:
     specifiers: {}
+
+  packages/sdk/examples:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/echo-typegen': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-client': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^3.0.1
+      chromatic: ^6.17.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      tailwindcss: ~3.3.2
+      typescript: ^5.0.4
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    devDependencies:
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-client': link:../react-client
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      tailwindcss: 3.3.2
+      typescript: 5.0.4
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/sdk/react-client:
     specifiers:
@@ -4553,6 +4599,7 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     dependencies:
+      '@dxos/aurora-types': link:../aurora-types
       '@dxos/react-hooks': link:../primitives/react-hooks
       '@dxos/react-input': link:../primitives/react-input
       '@dxos/react-list': link:../primitives/react-list
@@ -4574,7 +4621,6 @@ importers:
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
       '@dxos/aurora-theme': link:../aurora-theme
-      '@dxos/aurora-types': link:../aurora-types
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -5453,15 +5499,6 @@ packages:
     resolution: {integrity: sha512-iTASGs+HTFK5E4ZqcMsHmeJ4zodyq8L38lZV33jwqcBJYoUt3HjN4+ot+O9/0b+ke8ddE7UgOtVuZN/OkV19/g==}
     engines: {node: 4.x || >=6.0.0}
     dev: false
-
-  /@adamdehaven/vue-custom-tooltip/2.6.0_vue@3.2.47:
-    resolution: {integrity: sha512-wypRRapb1pNmkvhuGSSENaDQEQeJ7gM+IXiHOmotvSzhXiVztnqw2U7fe7JWT6PiGFluVdIcoAY5QKfGzO7ktw==}
-    peerDependencies:
-      vue: ^3.0.0
-    dependencies:
-      core-js: 3.27.1
-      vue: 3.2.47
-    dev: true
 
   /@alloc/quick-lru/5.2.0:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -21537,11 +21574,6 @@ packages:
     resolution: {integrity: sha512-ovcyhs2DEBUIE0MGEKHP4olCUW/XYte3Vroyxuh38rD1wAO4dHohsovUC4eAOuzFxE6b+RXvBU3UZ9o0YhUTkA==}
     dependencies:
       browserslist: 4.21.4
-
-  /core-js/3.27.1:
-    resolution: {integrity: sha512-GutwJLBChfGCpwwhbYoqfv03LAfmiz7e7D/BNxzeMxwQf10GRSzqiOjx7AmtEk+heiD/JWmBuyBPgFtx0Sg1ww==}
-    requiresBuild: true
-    dev: true
 
   /core-js/3.29.0:
     resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}

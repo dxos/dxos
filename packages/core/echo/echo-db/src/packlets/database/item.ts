@@ -250,7 +250,7 @@ export class Item<M extends Model = Model> {
     const { reorder, apply } = this._mutationQueue.pushConfirmed(queueEntry);
 
     log('process message', {
-      mutation: queueEntry,
+      mutation: queueEntry.mutation.meta,
       reorder,
       apply,
     });

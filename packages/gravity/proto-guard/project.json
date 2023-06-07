@@ -2,6 +2,20 @@
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gravity/proto-guard/src/index.ts",
+        "outputPath": "packages/gravity/proto-guard/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/gravity/proto-guard/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -13,6 +27,15 @@
       "outputs": [
         "{options.outputFile}"
       ]
+    },
+    "storage": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "storage"
+      }
     },
     "test": {
       "executor": "@dxos/test:run",

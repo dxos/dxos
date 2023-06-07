@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -29,6 +30,7 @@ interface MessageRouterOptions {
  * Adds offer/answer and signal interfaces.
  */
 export class MessageRouter implements SignalMessenger {
+  private readonly _ctx = new Context();
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
@@ -77,7 +79,7 @@ export class MessageRouter implements SignalMessenger {
 
   async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    await this._sendReliableMessage({
+    return this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
       message,
@@ -115,24 +117,12 @@ export class MessageRouter implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._encodeAndSend({ author, recipient, message: networkMessage });
-  }
-
-  private async _encodeAndSend({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    message: SwarmMessage;
-  }) {
-    await this._sendMessage({
+    return this._sendMessage({
       author,
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message),
+        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(networkMessage),
       },
     });
   }

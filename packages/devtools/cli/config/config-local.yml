@@ -29,5 +29,7 @@ runtime:
       server: ws://127.0.0.1/.well-known/dx/deploy
     supervisor:
       server: ws://127.0.0.1/.well-known/dx/supervisor
+    tunneling:
+      server: wss://127.0.0.1/.well-known/dx/tunnel
     machine:
       doAccessToken: ''

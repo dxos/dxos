@@ -17,7 +17,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@dxos/client": "0.1.45"
+    "@dxos/client": "0.1.45",
+    "chess.js": "1.0.0-alpha.0"
   },
   "devDependencies": {
     "typescript": "*"
