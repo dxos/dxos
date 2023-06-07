@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { UIEvent, FC, createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import React, { UIEvent, FC, createContext, useContext, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { observer } from '@dxos/observable-object/react';
@@ -81,15 +80,7 @@ const Context = createContext<ListViewContextValue>({
 export const useListViewContext = () => useContext(Context);
 
 export const ListViewContainer = () => {
-  const { items, actions, selected, setSelected } = useListViewContext();
-
-  const { spaceId } = useParams();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (selected && selected?.id !== spaceId) {
-      navigate(`/space/${selected.id}`);
-    }
-  }, [selected, spaceId]);
+  const { items, actions, setSelected } = useListViewContext();
 
   return (
     <div>

@@ -45,8 +45,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "configDir": "packages/experimental/surface/.storybook",
-        "uiFramework": "@storybook/react"
+        "configDir": "packages/experimental/surface/.storybook"
       }
     },
     "test": {
