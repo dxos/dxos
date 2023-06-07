@@ -5,9 +5,16 @@
 import React from 'react';
 
 import { PluginContextProvider } from '../framework';
-import { ThemePlugin, ClientPlugin, SplitViewPlugin, ListViewPlugin, RoutesPlugin, GraphPlugin } from '../plugins';
-import { GithubMarkdownPlugin } from '../plugins/GithubMarkdownPlugin';
-import { SpacePlugin } from '../plugins/SpacePlugin';
+import {
+  ClientPlugin,
+  SpacePlugin,
+  GithubMarkdownPlugin,
+  GraphPlugin,
+  RoutesPlugin,
+  SplitViewPlugin,
+  ThemePlugin,
+  TreeViewPlugin,
+} from '../plugins';
 
 export const TestApp = () => {
   return (
@@ -17,7 +24,7 @@ export const TestApp = () => {
         ThemePlugin,
         ClientPlugin,
         GraphPlugin,
-        ListViewPlugin,
+        TreeViewPlugin,
         SplitViewPlugin,
         SpacePlugin,
         GithubMarkdownPlugin,
