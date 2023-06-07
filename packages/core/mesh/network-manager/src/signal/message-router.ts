@@ -4,7 +4,9 @@
 
 import assert from 'node:assert';
 
+import { scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -25,10 +27,12 @@ interface MessageRouterOptions {
   topic: PublicKey;
 }
 
+const OFFER_TIMEOUT = 5_000;
 /**
  * Adds offer/answer and signal interfaces.
  */
 export class MessageRouter implements SignalMessenger {
+  private readonly _ctx = new Context();
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
@@ -91,6 +95,7 @@ export class MessageRouter implements SignalMessenger {
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
+      scheduleTask(this._ctx, () => reject(new Error(`Offer timeout exceeded ${OFFER_TIMEOUT}`)), OFFER_TIMEOUT);
       return this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
