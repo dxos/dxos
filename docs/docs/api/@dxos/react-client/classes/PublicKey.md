@@ -254,4 +254,4 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`key`: <code>Buffer | Uint8Array | ArrayBuffer</code>
+`key`: <code>Uint8Array | ArrayBuffer | Buffer</code>
