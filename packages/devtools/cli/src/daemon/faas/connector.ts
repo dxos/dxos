@@ -1,10 +1,9 @@
-import { Client, ClientServicesProvider, PublicKey, Query, Subscription } from "@dxos/client";
+import { Client, ClientServicesProvider, PublicKey, Query, Space, SpaceState, Subscription } from "@dxos/client";
 import { Runtime } from "@dxos/protocols/proto/dxos/config";
 import { Context } from '@dxos/context';
 import { DeferredTask, scheduleTaskInterval } from "@dxos/async";
 import { FunctionListEntry } from "./api";
 import { log } from "@dxos/log";
-import { TRIGGERS } from "./triggers";
 import { createSubscription } from "@dxos/observable-object";
 
 const SERVICES_URL = 'ws://192.168.64.1:4567';
@@ -60,6 +59,10 @@ type InvocationData = {
 export class FaasConnector {
   private readonly _ctx = new Context();
 
+  private readonly _remountTask = new DeferredTask(this._ctx, async () => {
+    await this._remountTriggers();
+  });
+
   private readonly _mountedTriggers: MountedTrigger[] = [];
 
   private readonly _client: Client;
@@ -74,7 +77,9 @@ export class FaasConnector {
   async open() {
     await this._client.initialize();
 
-    await this._remountTriggers();
+    await this._watchTriggers();
+    await this._remountTask.schedule();
+
   }
 
   async close() {
@@ -83,9 +88,64 @@ export class FaasConnector {
     await this._unmountTriggers();
   }
 
+  private async _watchTriggers() {
+    const observedSpaces = new Map<Space, Context>();
+
+    const update = () => {
+      const spaces = this._client.spaces.get();
+
+      for(const space of spaces) {
+        if(observedSpaces.has(space)) {
+          continue;
+        }
+        if(space.state.get() !== SpaceState.READY) {
+          continue;
+        }
+
+        const ctx = this._ctx.derive();
+        observedSpaces.set(space, ctx);
+
+        const subscription = createSubscription(() => {
+          this._remountTask.schedule();
+        })
+
+        const query = space.db.query({ '__type': 'dxos.function.Trigger' });
+        const unsubscribe = query.subscribe(() => {
+          subscription.update(query.objects);
+        });
+        subscription.update(query.objects);
+        ctx.onDispose(unsubscribe);
+      }
+
+      for(const [space, ctx] of observedSpaces) {
+        if(spaces.includes(space)) {
+          continue;
+        }
+        observedSpaces.delete(space);
+        ctx.dispose();
+      }
+    }
+
+    const sub = this._client.spaces.subscribe(() => {
+      update();
+    })
+    this._ctx.onDispose(() => sub.unsubscribe());
+  }
+
   private async _getTriggers(): Promise<Trigger[]> {
-    // TODO(dmaretskyi): Fetch from echo.
-    return TRIGGERS;
+    const triggers: Trigger[] = [];
+
+    for(const space of this._client.spaces.get()) {
+      if(space.state.get() !== SpaceState.READY) {
+        continue;
+      }
+
+      // TODO(dmaretskyi): fix type.
+      const objects = space.db.query({ '__type': 'dxos.function.Trigger' }).objects
+      triggers.push(...objects.map(object => object.toJSON() as Trigger));
+    }
+
+    return triggers;
   }
 
   private async _unmountTriggers () {
@@ -101,6 +161,8 @@ export class FaasConnector {
     await this._unmountTriggers();
 
     const triggers = await this._getTriggers();
+
+    log.info('discovered triggers', { triggers: triggers.length })
 
     await Promise.all(triggers.map(async trigger => {
       await this._mountTrigger(trigger);
