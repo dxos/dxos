@@ -29,8 +29,6 @@ versionGroups:
       - '@dxos/openfaas-node18-dxos'
     dependencies:
       - '**'
-#    isIgnored: true
-
   - packages:
       - '@dxos/docs'
     dependencies:
