@@ -26,7 +26,7 @@ export const isSpace = (datum: unknown): datum is Space =>
 
 export const SpaceMain = () => {
   const { selected } = useTreeView();
-  return selected ? <Surface data={selected.data} role='main' /> : <p>…</p>;
+  return selected ? <Surface data={[selected.data, selected.parent?.data]} role='main' /> : <p>…</p>;
 };
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
