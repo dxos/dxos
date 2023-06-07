@@ -2101,10 +2101,12 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hello-template': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2157,10 +2159,12 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/hello-template': link:../../apps/templates/hello-template
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc

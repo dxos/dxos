@@ -20,7 +20,9 @@ export interface SubscriptionHandle {
 
 export type UpdateInfo = {
   // TODO(dmaretskyi): Include metadata about the update.
-  // updatedIds: string[];
+  updated: any[];
+  added: any[];
+  removed: any[];
 };
 
 export const createAccessObserver = () => {
@@ -75,10 +77,20 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
         });
 
         added.forEach((obj) => {
-          subscriptions.set(obj, obj[subscribe](onUpdate));
+          subscriptions.set(obj, obj[subscribe](() => {
+            onUpdate({
+              added: [],
+              removed: [],
+              updated: [obj],
+            });
+          }));
         });
 
-        onUpdate({});
+        onUpdate({
+          added,
+          removed,
+          updated: [],
+        });
       }
 
       return handle;

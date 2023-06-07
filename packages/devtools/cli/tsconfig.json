@@ -8,8 +8,8 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
-      "./notebooks",
-      "./src"
+      "./src", // <-- KEEP "./src" first.
+      "./notebooks"
     ],
     "types": [
       "@dxos/typings",
@@ -38,6 +38,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -45,6 +48,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
     },
     {
       "path": "../../common/plate"
