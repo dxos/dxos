@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -95,14 +94,6 @@ export class MessageRouter implements SignalMessenger {
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
-      scheduleTask(
-        this._ctx,
-        () => {
-          reject(new Error(`Offer timeout exceeded ${OFFER_TIMEOUT}`));
-          this._offerRecords.delete(networkMessage.messageId!);
-        },
-        OFFER_TIMEOUT,
-      );
       return this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
@@ -127,24 +118,12 @@ export class MessageRouter implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._encodeAndSend({ author, recipient, message: networkMessage });
-  }
-
-  private async _encodeAndSend({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    message: SwarmMessage;
-  }) {
     await this._sendMessage({
       author,
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message),
+        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(networkMessage),
       },
     });
   }
