@@ -14,7 +14,7 @@ import { TypedObject } from './typed-object';
 describe('Queries', () => {
   let db: EchoDatabase;
   beforeAll(async () => {
-    db = await createDatabase();
+    ({ db } = await createDatabase());
 
     // TODO(burdon): Factor out common dataset.
     const objects = [

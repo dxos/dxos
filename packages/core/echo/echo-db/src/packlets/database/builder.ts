@@ -9,14 +9,14 @@ import { EchoObject, EchoObjectBatch, MutationMeta } from '@dxos/protocols/proto
 /**
  * Assigns a unique tag to each mutation in a batch with proper indexing.
  */
-export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string) => {
+export const tagMutationsInBatch = (batch: EchoObjectBatch, tag: string, startingIndex: number) => {
   batch.objects?.forEach((object, objectIndex) => {
     object.meta ??= {};
     object.meta.clientTag = `${tag}:${objectIndex}`;
 
     object.mutations?.forEach((mutation, mutationIndex) => {
       mutation.meta ??= {};
-      mutation.meta.clientTag = `${tag}:${objectIndex}:${mutationIndex}`;
+      mutation.meta.clientTag = `${tag}:${objectIndex + startingIndex}:${mutationIndex}`;
     });
   });
 };
