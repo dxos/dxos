@@ -15,13 +15,13 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
+import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
 export interface MessengerOptions {
   signalManager: SignalManager;
   retryDelay?: number;
-  timeout?: number;
 }
 
 /**
@@ -44,12 +44,10 @@ export class Messenger {
   private _ctx!: Context;
   private _closed = true;
   private readonly _retryDelay: number;
-  private readonly _timeout: number;
 
-  constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
+  constructor({ signalManager, retryDelay = 100 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._retryDelay = retryDelay;
-    this._timeout = timeout;
 
     this.open();
   }
@@ -117,12 +115,12 @@ export class Messenger {
     scheduleTask(
       messageContext,
       () => {
-        log.error('message not delivered', { messageId: reliablePayload.messageId });
+        log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
-        timeoutHit(new Error('message not delivered'));
+        timeoutHit(new Error(`message not delivered ${reliablePayload.messageId.toHex()}`));
         void messageContext.dispose();
       },
-      this._timeout,
+      MESSAGE_TIMEOUT,
     );
 
     this._onAckCallbacks.set(reliablePayload.messageId, () => {
