@@ -77,13 +77,16 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
         });
 
         added.forEach((obj) => {
-          subscriptions.set(obj, obj[subscribe](() => {
-            onUpdate({
-              added: [],
-              removed: [],
-              updated: [obj],
-            });
-          }));
+          subscriptions.set(
+            obj,
+            obj[subscribe](() => {
+              onUpdate({
+                added: [],
+                removed: [],
+                updated: [obj],
+              });
+            }),
+          );
         });
 
         onUpdate({

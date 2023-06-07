@@ -1,8 +1,12 @@
 /**
- * 
+ *
  * @export
  * @interface DeleteFunctionRequest
  */
+//
+// Copyright 2023 DXOS.org
+//
+
 export interface DeleteFunctionRequest {
   /**
    * Name of deployed function
@@ -13,10 +17,10 @@ export interface DeleteFunctionRequest {
 }
 
 /**
-* 
-* @export
-* @interface FunctionDefinition
-*/
+ *
+ * @export
+ * @interface FunctionDefinition
+ */
 export interface FunctionDefinition {
   /**
    * Name of deployed function
@@ -47,9 +51,9 @@ export interface FunctionDefinition {
    * @type {{ [key: string]: string; }}
    * @memberof FunctionDefinition
    */
-  envVars?: { [key: string]: string; };
+  envVars?: { [key: string]: string };
   /**
-   * 
+   *
    * @type {Array<string>}
    * @memberof FunctionDefinition
    */
@@ -59,15 +63,15 @@ export interface FunctionDefinition {
    * @type {{ [key: string]: string; }}
    * @memberof FunctionDefinition
    */
-  labels?: { [key: string]: string; };
+  labels?: { [key: string]: string };
   /**
    * A map of annotations for management, orchestration, events and build tasks
    * @type {{ [key: string]: string; }}
    * @memberof FunctionDefinition
    */
-  annotations?: { [key: string]: string; };
+  annotations?: { [key: string]: string };
   /**
-   * 
+   *
    * @type {Array<string>}
    * @memberof FunctionDefinition
    */
@@ -79,13 +83,13 @@ export interface FunctionDefinition {
    */
   registryAuth?: string;
   /**
-   * 
+   *
    * @type {FunctionDefinitionLimits}
    * @memberof FunctionDefinition
    */
   limits?: FunctionDefinitionLimits;
   /**
-   * 
+   *
    * @type {FunctionDefinitionLimits}
    * @memberof FunctionDefinition
    */
@@ -99,19 +103,19 @@ export interface FunctionDefinition {
 }
 
 /**
-* 
-* @export
-* @interface FunctionDefinitionLimits
-*/
+ *
+ * @export
+ * @interface FunctionDefinitionLimits
+ */
 export interface FunctionDefinitionLimits {
   /**
-   * 
+   *
    * @type {string}
    * @memberof FunctionDefinitionLimits
    */
   memory?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof FunctionDefinitionLimits
    */
@@ -119,10 +123,10 @@ export interface FunctionDefinitionLimits {
 }
 
 /**
-* 
-* @export
-* @interface FunctionListEntry
-*/
+ *
+ * @export
+ * @interface FunctionListEntry
+ */
 export interface FunctionListEntry {
   /**
    * The name of the function
@@ -165,29 +169,29 @@ export interface FunctionListEntry {
    * @type {{ [key: string]: string; }}
    * @memberof FunctionListEntry
    */
-  labels: { [key: string]: string; };
+  labels: { [key: string]: string };
   /**
    * A map of annotations for management, orchestration, events and build tasks
    * @type {{ [key: string]: string; }}
    * @memberof FunctionListEntry
    */
-  annotations?: { [key: string]: string; };
+  annotations?: { [key: string]: string };
 }
 
 /**
-* 
-* @export
-* @interface Info
-*/
+ *
+ * @export
+ * @interface Info
+ */
 export interface Info {
   /**
-   * 
+   *
    * @type {InfoProvider}
    * @memberof Info
    */
   provider: InfoProvider;
   /**
-   * 
+   *
    * @type {InfoVersion}
    * @memberof Info
    */
@@ -201,25 +205,25 @@ export interface Info {
 }
 
 /**
-* The OpenFaaS Provider
-* @export
-* @interface InfoProvider
-*/
+ * The OpenFaaS Provider
+ * @export
+ * @interface InfoProvider
+ */
 export interface InfoProvider {
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoProvider
    */
   provider?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoProvider
    */
   orchestration?: string;
   /**
-   * 
+   *
    * @type {InfoProviderVersion}
    * @memberof InfoProvider
    */
@@ -227,25 +231,25 @@ export interface InfoProvider {
 }
 
 /**
-* Version of the OpenFaaS Provider
-* @export
-* @interface InfoProviderVersion
-*/
+ * Version of the OpenFaaS Provider
+ * @export
+ * @interface InfoProviderVersion
+ */
 export interface InfoProviderVersion {
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoProviderVersion
    */
   commitMessage?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoProviderVersion
    */
   sha?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoProviderVersion
    */
@@ -253,25 +257,25 @@ export interface InfoProviderVersion {
 }
 
 /**
-* Version of the Gateway
-* @export
-* @interface InfoVersion
-*/
+ * Version of the Gateway
+ * @export
+ * @interface InfoVersion
+ */
 export interface InfoVersion {
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoVersion
    */
   commitMessage?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoVersion
    */
   sha?: string;
   /**
-   * 
+   *
    * @type {string}
    * @memberof InfoVersion
    */
@@ -279,10 +283,10 @@ export interface InfoVersion {
 }
 
 /**
-* 
-* @export
-* @interface LogEntry
-*/
+ *
+ * @export
+ * @interface LogEntry
+ */
 export interface LogEntry {
   /**
    * the function name
@@ -311,10 +315,10 @@ export interface LogEntry {
 }
 
 /**
-* 
-* @export
-* @interface Secret
-*/
+ *
+ * @export
+ * @interface Secret
+ */
 export interface Secret {
   /**
    * Name of secret
@@ -331,10 +335,10 @@ export interface Secret {
 }
 
 /**
-* 
-* @export
-* @interface SecretName
-*/
+ *
+ * @export
+ * @interface SecretName
+ */
 export interface SecretName {
   /**
    * Name of secret
@@ -343,4 +347,3 @@ export interface SecretName {
    */
   name?: string;
 }
-

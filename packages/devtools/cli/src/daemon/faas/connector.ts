@@ -1,10 +1,15 @@
-import { Client, ClientServicesProvider, PublicKey, Query, Space, SpaceState, Subscription } from "@dxos/client";
-import { Runtime } from "@dxos/protocols/proto/dxos/config";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { DeferredTask } from '@dxos/async';
+import { Client, ClientServicesProvider, Space, SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { DeferredTask, scheduleTaskInterval } from "@dxos/async";
-import { FunctionListEntry } from "./api";
-import { log } from "@dxos/log";
-import { createSubscription } from "@dxos/observable-object";
+import { log } from '@dxos/log';
+import { createSubscription } from '@dxos/observable-object';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
+
+import { FunctionListEntry } from './api';
 
 const SERVICES_URL = 'ws://192.168.64.1:4567';
 
@@ -18,10 +23,9 @@ export type Trigger = {
      * Name of deployed function to invoke.
      */
     name: string;
-  },
+  };
 
   subscription: {
-
     /**
      * Object types.
      */
@@ -31,30 +35,28 @@ export type Trigger = {
      * Properties to match.
      */
     props?: Record<string, any>;
-    
+
     /**
      * List of paths for referenced objects to include.
      */
     nested?: string[];
-  }
-}
+  };
+};
 
 type MountedTrigger = {
   trigger: Trigger;
   clear: () => Promise<void>;
-}
+};
 
 type DatabaseEvent = {
   trigger: Trigger;
   objects: string[];
-}
+};
 
 type InvocationData = {
-  event: DatabaseEvent,
-  context: {
-
-  }
-}
+  event: DatabaseEvent;
+  context: {};
+};
 
 export class FaasConnector {
   private readonly _ctx = new Context();
@@ -79,7 +81,6 @@ export class FaasConnector {
 
     await this._watchTriggers();
     await this._remountTask.schedule();
-
   }
 
   async close() {
@@ -94,11 +95,11 @@ export class FaasConnector {
     const update = () => {
       const spaces = this._client.spaces.get();
 
-      for(const space of spaces) {
-        if(observedSpaces.has(space)) {
+      for (const space of spaces) {
+        if (observedSpaces.has(space)) {
           continue;
         }
-        if(space.state.get() !== SpaceState.READY) {
+        if (space.state.get() !== SpaceState.READY) {
           continue;
         }
 
@@ -107,9 +108,9 @@ export class FaasConnector {
 
         const subscription = createSubscription(() => {
           this._remountTask.schedule();
-        })
+        });
 
-        const query = space.db.query({ '__type': 'dxos.function.Trigger' });
+        const query = space.db.query({ __type: 'dxos.function.Trigger' });
         const unsubscribe = query.subscribe(() => {
           subscription.update(query.objects);
         });
@@ -117,56 +118,58 @@ export class FaasConnector {
         ctx.onDispose(unsubscribe);
       }
 
-      for(const [space, ctx] of observedSpaces) {
-        if(spaces.includes(space)) {
+      for (const [space, ctx] of observedSpaces) {
+        if (spaces.includes(space)) {
           continue;
         }
         observedSpaces.delete(space);
-        ctx.dispose();
+        void ctx.dispose();
       }
-    }
+    };
 
     const sub = this._client.spaces.subscribe(() => {
       update();
-    })
+    });
     this._ctx.onDispose(() => sub.unsubscribe());
   }
 
   private async _getTriggers(): Promise<Trigger[]> {
     const triggers: Trigger[] = [];
 
-    for(const space of this._client.spaces.get()) {
-      if(space.state.get() !== SpaceState.READY) {
+    for (const space of this._client.spaces.get()) {
+      if (space.state.get() !== SpaceState.READY) {
         continue;
       }
 
       // TODO(dmaretskyi): fix type.
-      const objects = space.db.query({ '__type': 'dxos.function.Trigger' }).objects
-      triggers.push(...objects.map(object => object.toJSON() as Trigger));
+      const objects = space.db.query({ __type: 'dxos.function.Trigger' }).objects;
+      triggers.push(...objects.map((object) => object.toJSON() as Trigger));
     }
 
     return triggers;
   }
 
-  private async _unmountTriggers () {
+  private async _unmountTriggers() {
     const oldTriggers = this._mountedTriggers.splice(0, this._mountedTriggers.length);
 
-    for(const { clear, trigger } of oldTriggers) {
+    for (const { clear, trigger } of oldTriggers) {
       await clear();
       log.info('unmounted trigger', { trigger: trigger.id });
     }
   }
 
-  private async _remountTriggers () {
+  private async _remountTriggers() {
     await this._unmountTriggers();
 
     const triggers = await this._getTriggers();
 
-    log.info('discovered triggers', { triggers: triggers.length })
+    log.info('discovered triggers', { triggers: triggers.length });
 
-    await Promise.all(triggers.map(async trigger => {
-      await this._mountTrigger(trigger);
-    }));
+    await Promise.all(
+      triggers.map(async (trigger) => {
+        await this._mountTrigger(trigger);
+      }),
+    );
   }
 
   private async _mountTrigger(trigger: Trigger) {
@@ -176,54 +179,52 @@ export class FaasConnector {
       trigger,
       clear: async () => {
         await ctx.dispose();
-      }
+      },
     });
 
-    const space = this._client.spaces.get().find(space => space.key.equals(trigger.spaceKey));
-    if(!space) {
+    const space = this._client.spaces.get().find((space) => space.key.equals(trigger.spaceKey));
+    if (!space) {
       log.warn('space not found', { space: trigger.spaceKey });
       return;
     }
 
     await space.waitUntilReady();
 
-    if(this._ctx.disposed) {
+    if (this._ctx.disposed) {
       return;
     }
-
-    
     const updatedIds = new Set<string>();
 
     const invoker = new DeferredTask(ctx, async () => {
-      const updatedObjects = Array.from(updatedIds)
+      const updatedObjects = Array.from(updatedIds);
       updatedIds.clear();
 
       const event: DatabaseEvent = {
-        trigger: trigger,
+        trigger,
         objects: updatedObjects,
-      }
+      };
       await this._dispatch(event);
     });
-    
+
     const selection = createSubscription(({ added, updated }) => {
-      for(const object of added) {
+      for (const object of added) {
         updatedIds.add(object.id);
       }
-      for(const object of updated) {
+      for (const object of updated) {
         updatedIds.add(object.id);
       }
 
       invoker.schedule();
-    })
+    });
     ctx.onDispose(() => selection.unsubscribe());
-    
+
     const query = space.db.query({
       ...trigger.subscription.props,
       '@type': trigger.subscription.type,
-    })
+    });
     const unsubscribe = query.subscribe(({ objects }) => {
       selection.update(objects);
-    })
+    });
     ctx.onDispose(unsubscribe);
 
     log.info('mounted trigger', { trigger: trigger.id });
@@ -232,9 +233,9 @@ export class FaasConnector {
   private async _dispatch(event: DatabaseEvent) {
     const installedFunctions = await this._getFunctions();
 
-    const installedFunction = installedFunctions.find(func => func.name === event.trigger.function.name);
+    const installedFunction = installedFunctions.find((func) => func.name === event.trigger.function.name);
 
-    if(!installedFunction) {
+    if (!installedFunction) {
       log.warn('function not found', { function: event.trigger.function.name });
       return;
     }
@@ -243,10 +244,10 @@ export class FaasConnector {
       event,
       context: {
         clientUrl: SERVICES_URL,
-      }
-    }
+      },
+    };
 
-    log.info('invoking function', { function: installedFunction.name })
+    log.info('invoking function', { function: installedFunction.name });
     const result = await this._invokeFunction(installedFunction.name, data);
     log.info('function result', { result });
   }
@@ -255,7 +256,9 @@ export class FaasConnector {
     const res = await fetch(`${this._faasConfig.gateway}/function/${functionName}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString(
+          'base64',
+        )}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -269,10 +272,12 @@ export class FaasConnector {
   private async _getFunctions() {
     const res = await fetch(`${this._faasConfig.gateway}/system/functions`, {
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString('base64')}`
-      }
+        Authorization: `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString(
+          'base64',
+        )}`,
+      },
     });
-    
+
     const functions: FunctionListEntry[] = await res.json();
 
     return functions;

@@ -20,10 +20,7 @@ export type RunServicesParams = {
 export const runServices = async (params: RunServicesParams) => {
   log.info('faasd', {
     gateway: params.config.values.runtime?.services?.faasd?.gateway,
-  })
-
- 
-
+  });
 
   const services = fromHost(params.config);
 
