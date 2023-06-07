@@ -316,7 +316,7 @@ export class Swarm {
           try {
             await this._initiateConnection(peer);
           } catch (err: any) {
-            log.warn('initiation error', err);
+            log('initiation error', err);
           }
         });
       },
