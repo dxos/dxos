@@ -7,10 +7,12 @@ import { log } from "@dxos/log";
 import { TRIGGERS } from "./triggers";
 import { createSubscription } from "@dxos/observable-object";
 
+const SERVICES_URL = 'ws://192.168.64.1:4567';
+
 export type Trigger = {
   id: string;
 
-  spaceKey: PublicKey;
+  spaceKey: string;
 
   function: {
     /**
@@ -178,7 +180,7 @@ export class FaasConnector {
     const data: InvocationData = {
       event,
       context: {
-
+        clientUrl: SERVICES_URL,
       }
     }
 
@@ -191,14 +193,15 @@ export class FaasConnector {
     const res = await fetch(`${this._faasConfig.gateway}/function/${functionName}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString('base64')}`
+        'Authorization': `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString('base64')}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
-    const result = await res.json();
+    const body = await res.text();
 
-    return result;
+    return { body, status: res.status };
   }
 
   private async _getFunctions() {
