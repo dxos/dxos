@@ -1,6 +1,6 @@
 {
   "name": "@dxos/presenter",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "private": true,
   "description": "Slide presentations using Vite/Tailwind.",
   "homepage": "https://dxos.org",
@@ -53,13 +53,13 @@
     "remark-parse-frontmatter": "^1.0.3",
     "remark-unwrap-texts": "^1.0.3",
     "rollup": "^3.20.4",
-    "tailwindcss": "~3.2.7",
+    "tailwindcss": "~3.3.2",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.8.0",
     "typescript": "^5.0.4",
     "unist-builder": "^3.0.0",
     "unist-util-visit": "^4.1.0",
-    "vite": "^4.3.0",
+    "vite": "^4.3.9",
     "vite-plugin-fonts": "^0.7.0"
   }
 }

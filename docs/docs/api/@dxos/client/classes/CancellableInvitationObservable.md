@@ -37,21 +37,21 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [concat(observable)]()
+### [concat(observables)]()
 
 
 
-Returns: <code>Observable&lt;R&gt;</code>
+Returns: <code>MulticastObservable&lt;R&gt;</code>
 
 Arguments: 
 
-`observable`: <code>Observable&lt;R&gt;[]</code>
+`observables`: <code>Observable&lt;R&gt;[]</code>
 
 ### [filter(callback)]()
 
 
 
-Returns: <code>Observable&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
+Returns: <code>MulticastObservable&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
 
 Arguments: 
 
@@ -61,7 +61,7 @@ Arguments:
 
 
 
-Returns: <code>Observable&lt;R&gt;</code>
+Returns: <code>MulticastObservable&lt;R&gt;</code>
 
 Arguments: 
 
@@ -88,11 +88,26 @@ Returns: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 Arguments: none
 
+### [losslessConcat(reducer, observables)]()
+
+
+
+Concatenates multicast observables without losing the current value.
+
+
+Returns: <code>MulticastObservable&lt;R&gt;</code>
+
+Arguments: 
+
+`reducer`: <code>function</code>
+
+`observables`: <code>Observable&lt;R&gt;[]</code>
+
 ### [map(callback)]()
 
 
 
-Returns: <code>Observable&lt;R&gt;</code>
+Returns: <code>MulticastObservable&lt;R&gt;</code>
 
 Arguments: 
 
@@ -102,7 +117,7 @@ Arguments:
 
 
 
-Returns: <code>Observable&lt;R&gt;</code>
+Returns: <code>MulticastObservable&lt;R&gt;</code>
 
 Arguments: 
 

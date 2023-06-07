@@ -12,7 +12,7 @@ import { useId } from '@dxos/react-hooks';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
 
-type MessageProps = ComponentPropsWithRef<typeof Primitive.div> & {
+type MessageRootProps = ComponentPropsWithRef<typeof Primitive.div> & {
   valence?: MessageValence;
   elevation?: Elevation;
   asChild?: boolean;
@@ -24,7 +24,7 @@ type MessageContextValue = { titleId?: string; descriptionId: string };
 const MESSAGE_NAME = 'Message';
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
 
-const Message = forwardRef<HTMLDivElement, MessageProps>(
+const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     {
       asChild,
@@ -59,7 +59,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
   },
 );
 
-Message.displayName = MESSAGE_NAME;
+MessageRoot.displayName = MESSAGE_NAME;
 
 type MessageTitleProps = Omit<ComponentPropsWithRef<typeof Primitive.h2>, 'id'> & { asChild?: boolean };
 
@@ -104,6 +104,6 @@ const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
 
 MessageBody.displayName = MESSAGE_BODY_NAME;
 
-export { Message, MessageTitle, MessageBody };
+export const Message = { Root: MessageRoot, Title: MessageTitle, Body: MessageBody };
 
-export type { MessageProps, MessageTitleProps, MessageBodyProps };
+export type { MessageRootProps, MessageTitleProps, MessageBodyProps };

@@ -6,7 +6,7 @@ import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSla
 import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
 
-import { Button, DensityProvider, Sidebar as NaturalSidebar, ClassNameValue, useSidebar } from '@dxos/aurora';
+import { Button, DensityProvider, Main, ClassNameValue, useSidebar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
@@ -154,7 +154,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   const Icon = getIcon(space.properties.icon);
 
   return (
-    <NaturalSidebar classNames={className}>
+    <Main.Sidebar classNames={className}>
       <DensityProvider density='fine'>
         <div role='none' className={mx('flex flex-col w-full h-full overflow-hidden min-bs-full bg-sidebar-bg')}>
           {/* Header */}
@@ -309,7 +309,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
           </div>
         </div>
       </DensityProvider>
-    </NaturalSidebar>
+    </Main.Sidebar>
   );
 });
 

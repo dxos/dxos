@@ -22,51 +22,45 @@ export default defineConfig({
       process.env.HTTPS === 'true'
         ? {
             key: './key.pem',
-            cert: './cert.pem'
+            cert: './cert.pem',
           }
         : false,
     fs: {
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
-        searchForWorkspaceRoot(process.cwd())
-      ]
-    }
+        searchForWorkspaceRoot(process.cwd()),
+      ],
+    },
   },
   build: {
     sourcemap: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        vault: resolve(__dirname, 'vault.html')
+        vault: resolve(__dirname, 'vault.html'),
       },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+        },
+      },
+    },
   },
   plugins: [
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),
     ThemePlugin({
-      content: [
-        resolve(__dirname, './*.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
-      ]
+      root: __dirname,
+      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
     ReactPlugin(),
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
@@ -78,15 +72,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
@@ -94,10 +88,10 @@ export default defineConfig({
       org: 'dxos',
       project: 'halo-app',
       sourcemaps: {
-        assets: './packages/apps/halo-app/out/halo/**'
+        assets: './packages/apps/halo-app/out/halo/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: !process.env.CI
+      dryRun: process.env.DX_ENVIRONMENT !== 'production',
     }),
     // https://www.bundle-buddy.com/rollup
     {
@@ -118,15 +112,15 @@ export default defineConfig({
           mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      }
-    }
+      },
+    },
   ],
   worker: {
     format: 'es',
     plugins: [
       ConfigPlugin({
-        env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
-      })
-    ]
-  }
+        env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
+      }),
+    ],
+  },
 });

@@ -7,7 +7,6 @@ export * from './Avatar';
 export * from './CompoundButton';
 export * from './DeviceList';
 export * from './Dialog';
-export * from './DropdownMenu';
 export * from './EditableList';
 export * from './ErrorProvider';
 export * from './Fallback';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';

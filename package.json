@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -50,16 +50,16 @@
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@mdx-js/react": "^2.1.3",
-    "@nrwl/devkit": "15.9.2",
-    "@nrwl/eslint-plugin-nx": "15.9.2",
-    "@nrwl/jest": "15.9.2",
-    "@nrwl/js": "15.9.2",
-    "@nrwl/linter": "15.9.2",
-    "@nrwl/nx-cloud": "^15.0.2",
-    "@nrwl/storybook": "15.9.2",
-    "@nrwl/vite": "15.9.2",
-    "@nrwl/web": "15.9.2",
-    "@nrwl/workspace": "15.9.2",
+    "@nrwl/devkit": "16.2.2",
+    "@nrwl/eslint-plugin-nx": "16.2.2",
+    "@nrwl/jest": "16.2.2",
+    "@nrwl/js": "16.2.2",
+    "@nrwl/linter": "16.2.2",
+    "@nrwl/nx-cloud": "^16.0.5",
+    "@nrwl/storybook": "16.2.2",
+    "@nrwl/vite": "16.2.2",
+    "@nrwl/web": "16.2.2",
+    "@nrwl/workspace": "16.2.2",
     "@playwright/test": "^1.32.2",
     "@rushstack/eslint-patch": "^1.1.4",
     "@storybook/addon-essentials": "^7.0.6",
@@ -113,7 +113,7 @@
     "mocha-junit-reporter": "^2.1.0",
     "mocha-multi-reporters": "^1.5.1",
     "node-fetch": "^2.6.0",
-    "nx": "15.9.2",
+    "nx": "16.2.2",
     "nyc": "^15.1.0",
     "pkg-up": "^3.1.0",
     "playwright": "^1.32.2",
@@ -130,7 +130,8 @@
     "types-package-json": "^2.0.39",
     "typescript": "^5.0.4",
     "uuid": "^8.3.2",
-    "vite": "^4.3.0",
+    "vite": "^4.3.9",
+    "vitest": "^0.31.2",
     "wait-for-expect": "^3.0.2"
   },
   "engines": {
@@ -138,11 +139,11 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@nrwl/js@15.9.2": "patches/@nrwl__js@15.9.2.patch",
-      "@nrwl/vite@15.9.2": "patches/@nrwl__vite@15.9.2.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
-      "uuid@8.3.2": "patches/uuid@8.3.2.patch"
+      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
+      "@nx/js@16.2.2": "patches/@nx__js@16.2.2.patch",
+      "@nx/vite@16.2.2": "patches/@nx__vite@16.2.2.patch"
     }
   }
 }

@@ -24,6 +24,6 @@ export const Heading = ({ level, ...rootSlot }: PropsWithChildren<HeadingProps>)
   const resolvedLevel = level || 1;
   return createElement(`h${resolvedLevel}`, {
     ...rootSlot,
-    className: mx('font-bold font-display', levelClassNameMap.get(resolvedLevel), rootSlot.className),
+    className: mx('font-system-bold', levelClassNameMap.get(resolvedLevel), rootSlot.className),
   });
 };

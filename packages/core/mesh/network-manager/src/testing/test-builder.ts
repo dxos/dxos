@@ -27,7 +27,10 @@ import {
 import { TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
-export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [{ server: 'ws://localhost:4000/.well-known/dx/signal' }];
+const port = process.env.SIGNAL_PORT ?? 4000;
+export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
+  { server: `ws://localhost:${port}/.well-known/dx/signal` },
+];
 
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];

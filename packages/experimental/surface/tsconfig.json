@@ -1,0 +1,55 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../apps/types"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    }
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+    "files": true,
+    "transpileOnly": true
+  }
+}

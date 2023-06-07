@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto-names",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "description": "Basic crypto key utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,11 +22,11 @@
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.3.0",
     "@types/binary-parser": "^1.5.1",
     "@types/faker": "^5.5.9",
     "@types/js-yaml": "^4.0.5",
     "@types/uniq": "^0.0.27",
-    "faker": "^5.5.3",
     "js-yaml": "^4.1.0",
     "uniq": "^1.0.1"
   },

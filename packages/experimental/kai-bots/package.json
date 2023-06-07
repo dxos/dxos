@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-bots",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "private": true,
   "description": "Experimental bots.",
   "homepage": "https://dxos.org",
@@ -28,6 +28,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "@octokit/rest": "^19.0.5",
     "amadeus": "^8.0.0",
     "assert": "^2.0.0",
@@ -36,7 +37,6 @@
     "csv-parse": "^5.3.6",
     "date-fns": "^2.29.3",
     "email-addresses": "^5.0.0",
-    "faker": "^5.5.3",
     "html-to-text": "^9.0.4",
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",

@@ -28,33 +28,27 @@ export default defineConfig({
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
-        searchForWorkspaceRoot(process.cwd())
-      ]
-    }
+        searchForWorkspaceRoot(process.cwd()),
+      ],
+    },
   },
 
   build: {
-    sourcemap: true
+    sourcemap: true,
   },
 
   plugins: [
     mkcert(),
 
     ConfigPlugin({
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT']
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),
 
     // Directories to scan for Tailwind classes.
     ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-shell/dist/**/*.mjs')
-      ],
-      extensions: [osThemeExtension, consoleThemeExtension]
+      root: __dirname,
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      extensions: [osThemeExtension, consoleThemeExtension],
     }),
 
     ReactPlugin(),
@@ -67,7 +61,7 @@ export default defineConfig({
     VitePluginFonts({
       google: {
         injectTo: 'head-prepend',
-        families: ['DM Sans', 'DM Mono']
+        families: ['DM Sans', 'DM Mono'],
       },
 
       custom: {
@@ -76,10 +70,10 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: './node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf'
-          }
-        ]
-      }
+            src: './node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf',
+          },
+        ],
+      },
     }),
 
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
@@ -92,7 +86,7 @@ export default defineConfig({
     //     assets: './packages/experimental/kube-console/out/console/**'
     //   },
     //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   dryRun: !process.env.CI
+    //   dryRun: process.env.DX_ENVIRONMENT !== 'production'
     // }),
 
     // https://www.bundle-buddy.com/rollup
@@ -114,7 +108,7 @@ export default defineConfig({
           mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      }
-    }
-  ]
+      },
+    },
+  ],
 });
