@@ -27,7 +27,7 @@ interface MessageRouterOptions {
   topic: PublicKey;
 }
 
-const OFFER_TIMEOUT = 5_000;
+const OFFER_TIMEOUT = 2_000;
 /**
  * Adds offer/answer and signal interfaces.
  */
@@ -95,7 +95,14 @@ export class MessageRouter implements SignalMessenger {
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
-      scheduleTask(this._ctx, () => reject(new Error(`Offer timeout exceeded ${OFFER_TIMEOUT}`)), OFFER_TIMEOUT);
+      scheduleTask(
+        this._ctx,
+        () => {
+          reject(new Error(`Offer timeout exceeded ${OFFER_TIMEOUT}`));
+          this._offerRecords.delete(networkMessage.messageId!);
+        },
+        OFFER_TIMEOUT,
+      );
       return this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
