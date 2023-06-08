@@ -6,6 +6,8 @@ import React from 'react';
 import { Outlet, RouteObject, useRoutes } from 'react-router';
 import { HashRouter } from 'react-router-dom';
 
+import { observer } from '@dxos/observable-object/react';
+
 import { definePlugin, Plugin, usePluginContext } from '../framework';
 
 export type RouterPluginProvides = {
@@ -21,10 +23,10 @@ const routerPlugins = (plugins: Plugin[]): RouterPlugin[] => {
   return (plugins as RouterPlugin[]).filter((p) => p.provides?.router);
 };
 
-const Root = ({ plugins }: { plugins: RouterPlugin[] }) => {
+const Root = observer(({ plugins }: { plugins: RouterPlugin[] }) => {
   plugins.map((plugin) => plugin.provides.router.useNavigator?.());
   return <Outlet />;
-};
+});
 
 export const RoutesPlugin = definePlugin({
   meta: {
