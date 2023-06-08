@@ -17,7 +17,8 @@ module.exports = {
   framework: {
     name: '@storybook/react-vite',
     options: {
-      strictMode: true
+      // TODO(wittjosiah): Enable strict mode.
+      strictMode: false
     }
   },
   viteFinal: async (config) =>

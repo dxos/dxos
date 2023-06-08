@@ -6,14 +6,14 @@
 import React from 'react-router';
 
 import { Document } from '@braneframe/types';
+import { isTypedObject } from '@dxos/react-client';
 
-import { definePlugin, PluginDefinition, Surface } from '../../framework';
+import { definePlugin, PluginDefinition } from '../../framework';
 import { isSpace } from '../SpacePlugin';
 import { MainAll, MainOne, OctokitProvider } from './components';
 
-export const isDocument = (datum: any): datum is Document => {
-  return 'type' in datum && 'name' in datum.type && Document.type.name === datum.type.name;
-};
+export const isDocument = (datum: unknown): datum is Document =>
+  isTypedObject(datum) && Document.type.name === datum.__typename;
 
 export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
   meta: {
@@ -21,28 +21,11 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
   },
   provides: {
     context: (props) => <OctokitProvider {...props} />,
-    router: {
-      routes: () => [
-        {
-          path: '/document/:spaceSlug/:documentSlug',
-          element: (
-            <Surface
-              component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{
-                sidebar: { component: 'dxos:ListViewPlugin/ListView' },
-                main: { component: 'dxos:GithubMarkdownPlugin/MainOne' },
-              }}
-            />
-          ),
-        },
-      ],
-    },
     component: (datum, role) => {
-      if (role === 'main') {
+      if (Array.isArray(datum) && role === 'main') {
+        const [childDatum, parentDatum] = datum;
         switch (true) {
-          case isSpace(datum):
-            return MainAll;
-          case isDocument(datum):
+          case isDocument(childDatum) && isSpace(parentDatum):
             return MainOne;
           default:
             return null;

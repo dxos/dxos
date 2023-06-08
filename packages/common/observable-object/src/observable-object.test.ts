@@ -51,6 +51,13 @@ describe('createStore', () => {
       expect(store).to.deep.equal([4, 5, 6]);
     });
 
+    test('find', () => {
+      const example = { id: 1 };
+      const store = createStore([example, { id: 2 }]);
+      const result = store.find((value) => value.id === 1);
+      expect(result).to.equal(example);
+    });
+
     test('subscribe', async () => {
       const store = createStore<number[]>([]);
       const trigger = new Trigger();

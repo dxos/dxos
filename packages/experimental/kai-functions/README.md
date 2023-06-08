@@ -1,6 +1,8 @@
 # Kai Remote Functions
 
-## Set-up Multipass
+## Getting Started
+
+### Install Multipass
 
 Faasd must run in a VM since it will create its own `containerd` runtime.
 [Multipass](https://github.com/openfaas/faasd/blob/master/docs/MULTIPASS.md) supports Ubuntu VMs for OSX.
@@ -16,23 +18,47 @@ multipass launch delete faasd
 multipass launch purge
 ```
 
+### Install Faasd
+
+https://www.openfaas.com/blog/serverless-nodejs
+
+```bash
+brew install faas-cli
+faas-cli template store list --verbose
+```
+
+
 ## Build and deploy functions to Faasd
 
-See `./deploy.sh`
+```bash
+./scripts/deploy.sh
+```
 
 
-## Running the CLI Daemon
+## Development
 
-1. Configure `$HOME/.config/dx/default.yml` (Client persistence and Faasd Gateway.)
+Configure env variables:
+
+```bash
+. ./scripts/env.sh
+
+# Or manually:
+export IP=$(multipass info faasd | grep IPv4 | awk '{print $2}')
+export OPENFAAS_URL="http://$IP:8080"
+```
+
+### Running the CLI Daemon
+
+1. Configure `$HOME/.config/dx/default.yml` (Set client persistence and Faasd Gateway.)
 2. From the CLI directory start the daemon:
-   
+
 ```bash
 ./bin/dev daemon run --listen=unix://$HOME/.dx/run/default.sock --listen=ws://localhost:4567 --profile=default
 ```
 
-## Test with Notebook
+### Test with Notebook
 
-- Install vscode plugin: Node.js Notebooks (REPL)
+- Install VSCode plugin: `Node.js` Notebooks (REPL)
 - Open cli notebook (open `testing.nnb`)
 - Create trigger:
 
@@ -42,14 +68,61 @@ See `./deploy.sh`
   }
 ```
 
-## Connect Devtools
+### Connect Devtools
 
-- https://devtools.dev.dxos.org/?target=ws://localhost:4567#/echo/feeds 
+- https://devtools.dev.dxos.org/?target=ws://localhost:4567
 
-## Connect KAI
+### Connect KAI
 
-- Get space key from Devtools
+- Create invitation (get space key from Devtools).
 
 ```bash
 dx space invite SPACE_KEY
+```
+
+- Join Space from kai (Open Space list info panel in sidebar).
+
+
+
+
+## OpenFaaS (faasd)
+
+### Overview
+
+- [fassd](https://docs.openfaas.com/deployment/faasd) is a lightweight [open source](https://github.com/openfaas/faasd) single-host container for functions.
+- DXOS Agent implements faasd [connector](https://docs.openfaas.com/deployment/pro/#event-connectors).
+- Connector queries for `org.dxos:subscription` ECHO objects and manages subscriptions.
+  - ISSUE: Per Space?
+  - ISSUE: Lifetime of subscriptions.
+- ECHO mutations trigger function via event.
+- Function has access to a Client object via the context.
+- The Client is configured to connect to a ClientServices object (via a socket) hosted by the agent.
+
+
+## Design
+
+### Why faasd?
+
+- Communities
+  - OpenFaas [Community](https://docs.openfaas.com/community)
+  - AWS Lambda/Google Run communities (MMs developers) 
+  - Python AI community (10ks developers)
+- Simple programming model
+- Multiple languages (Node, Go, Python, etc...)
+- Small footprint for local install via KUBE
+  - Uses `containerd`.
+  - Can be deployed using `cloud-init` script.
+  - Can run on Pi 3 or 4 with 1G.
+  - Compatible with other third-party microservices framework (e.g., `Next.js`)
+  - Compatible with OpenFaaS for larger managed services
+  - Cost to hots $5-10/mo.
+
+### Functions
+
+```js
+module.exports = async (event, context) => {
+  return context
+    .status(200)
+    .succeed({ message: 'hello' })
+}
 ```
