@@ -3,7 +3,7 @@
 //
 
 import { WorkerRuntime } from '@dxos/client-services';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -21,7 +21,7 @@ void initializeAppTelemetry({
 });
 
 const workerRuntime = new WorkerRuntime(async () => {
-  const config = new Config(await Dynamics(), await Envs(), Defaults());
+  const config = new Config(await Dynamics(), await Envs(), Local(), Defaults());
   log.config({ filter: LOG_FILTER, prefix: config.get('runtime.client.log.prefix') });
   return config;
 });

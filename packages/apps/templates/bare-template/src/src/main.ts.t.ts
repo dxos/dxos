@@ -10,7 +10,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
   return !react
     ? text`
     import { Client } from '@dxos/client';
-    import { Config, Defaults, Dynamics } from '@dxos/config';
+    import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 
     ${
       dxosUi &&
@@ -29,7 +29,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     
     void (async () => {
       // Grab a configuration with defaults and dynamic values from KUBE.
-      const config = new Config(await Dynamics(), Defaults());
+      const config = new Config(await Dynamics(), Local(), Defaults());
       // Create a client.
       const client = new Client({ config });
       // Initialize before using.
