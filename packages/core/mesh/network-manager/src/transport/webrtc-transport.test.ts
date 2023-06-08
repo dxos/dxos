@@ -4,7 +4,7 @@
 
 import { Duplex } from 'stream';
 
-import { latch, sleep, TestStream } from '@dxos/async';
+import { sleep, TestStream } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { WebRTCTransport } from './webrtc-transport';
@@ -18,11 +18,9 @@ describe('WebRTCTransport', () => {
       sendSignal: async () => {},
     });
 
-    const [wait, inc] = latch({ count: 1, timeout: 1000 });
-
-    connection.closed.once(() => inc());
+    const wait = connection.closed.waitForCount(1);
     await connection.destroy();
-    await wait();
+    await wait;
   })
     .timeout(1_000)
     .retries(3);

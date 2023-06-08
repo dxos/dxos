@@ -4,7 +4,7 @@
 
 // @dxos/test platform=nodejs
 
-import { latch, TestStream } from '@dxos/async';
+import { TestStream } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -74,11 +74,9 @@ describe('WebRTCTransportProxy', () => {
   test('open and close', async () => {
     const { webRTCTransportProxy: connection } = await setupProxy();
 
-    const [wait, inc] = latch({ count: 1, timeout: 1000 });
-    connection.closed.once(() => inc());
-
+    const wait = connection.closed.waitForCount(1);
     await connection.destroy();
-    await wait();
+    await wait;
   }).timeout(1_000);
 
   test('establish connection and send data through with protocol', async () => {
