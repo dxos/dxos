@@ -25,6 +25,7 @@ import { useIdentity, observer } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
 import { useGraphContext } from '../GraphPlugin';
+import { useSplitViewContext } from '../SplitViewPlugin';
 import { TreeView } from './TreeView';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
@@ -48,6 +49,7 @@ export const TreeViewContainer = observer(() => {
   const themeContext = useThemeContext();
   const { t } = useTranslation('composer');
   const { sidebarOpen } = useSidebar(TREE_VIEW_PLUGIN);
+  const splitViewContext = useSplitViewContext();
 
   const actions = Object.values(graph.actions).reduce((acc, actions) => [...acc, ...actions], []);
 
@@ -78,7 +80,7 @@ export const TreeViewContainer = observer(() => {
                       {...(!sidebarOpen && { tabIndex: -1 })}
                     >
                       <span className='sr-only'>{action.label}</span>
-                      <Placeholder className={getSize(4)} />
+                      {action.icon ? <action.icon className={getSize(4)} /> : <Placeholder className={getSize(4)} />}
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Content classNames='z-[31]'>
@@ -106,6 +108,10 @@ export const TreeViewContainer = observer(() => {
                       variant='ghost'
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!sidebarOpen && { tabIndex: -1 })}
+                      onClick={() => {
+                        splitViewContext.dialogOpen = true;
+                        splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
+                      }}
                     >
                       <GearSix className={mx(getSize(4), 'rotate-90')} />
                     </Button>

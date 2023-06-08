@@ -10,7 +10,7 @@ import { isTypedObject } from '@dxos/react-client';
 
 import { definePlugin, PluginDefinition } from '../../framework';
 import { isSpace } from '../SpacePlugin';
-import { MainAll, MainOne, OctokitProvider } from './components';
+import { MainAll, MainOne, OctokitProvider, PatDialog } from './components';
 
 export const isDocument = (datum: unknown): datum is Document =>
   isTypedObject(datum) && Document.type.name === datum.__typename;
@@ -30,6 +30,8 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
           default:
             return null;
         }
+      } else if (role === 'dialog' && datum === 'dxos:SplitViewPlugin/ProfileSettings') {
+        return PatDialog;
       } else {
         return null;
       }

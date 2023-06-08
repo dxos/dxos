@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Planet } from '@phosphor-icons/react';
+import { EyeSlash, Intersect, PaperPlane, PencilSimple, Planet, Plus } from '@phosphor-icons/react';
 import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
@@ -26,7 +26,9 @@ import { ClientPluginProvides } from '../ClientPlugin';
 import { isDocument } from '../GithubMarkdownPlugin';
 import { GraphNode, GraphProvides, useGraphContext } from '../GraphPlugin';
 import { RouterPluginProvides } from '../RoutesPlugin';
+import { SplitViewProvides } from '../SplitViewPlugin';
 import { TreeViewProvides, useTreeView } from '../TreeViewPlugin';
+import { DialogRenameSpace } from './DialogRenameSpace';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';
 
@@ -81,6 +83,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+    const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
     if (!clientPlugin) {
       return;
     }
@@ -103,6 +106,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               {
                 id: 'create-doc',
                 label: 'Create document',
+                icon: Plus,
                 invoke: async () => {
                   const document = space.db.add(new Document());
                   if (treeViewPlugin) {
@@ -113,13 +117,18 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               {
                 id: 'rename-space',
                 label: 'Rename space',
+                icon: PencilSimple,
                 invoke: async () => {
-                  // TODO(wittjosiah): Space meta dialog.
+                  if (splitViewPlugin?.provides.splitView) {
+                    splitViewPlugin.provides.splitView.dialogOpen = true;
+                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:SpacePlugin/RenameSpaceDialog', space];
+                  }
                 },
               },
               {
                 id: 'view-invitations',
                 label: 'View invitations',
+                icon: PaperPlane,
                 invoke: async () => {
                   await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
                 },
@@ -127,6 +136,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               {
                 id: 'hide-space',
                 label: 'Hide space',
+                icon: EyeSlash,
                 invoke: async () => {
                   if (identity) {
                     const identityHex = identity.identityKey.toHex();
@@ -296,6 +306,15 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             default:
               return null;
           }
+        case 'dialog':
+          switch (true) {
+            case Array.isArray(datum) && datum[0] === 'dxos:SpacePlugin/RenameSpaceDialog':
+              return DialogRenameSpace;
+            default:
+              return null;
+          }
+        default:
+          return null;
       }
     },
     components: {
@@ -314,6 +333,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           {
             id: 'create-space',
             label: 'Create space',
+            icon: Planet,
             invoke: async () => {
               await clientPlugin.provides.client.createSpace();
             },
@@ -321,6 +341,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           {
             id: 'join-space',
             label: 'Join space',
+            icon: Intersect,
             invoke: async () => {
               await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
             },

@@ -3,9 +3,9 @@
 //
 
 import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
-import React, { PropsWithChildren, createContext, useContext } from 'react';
+import React, { PropsWithChildren, createContext, useContext, useEffect } from 'react';
 
-import { Button, Main } from '@dxos/aurora';
+import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
@@ -13,10 +13,16 @@ import { observer } from '@dxos/observable-object/react';
 import { Surface, definePlugin } from '../framework';
 import { RouterPluginProvides } from './RoutesPlugin';
 
-export type SplitViewProps = {};
+export type SplitViewContextValue = {
+  sidebarOpen: boolean;
+  dialogContent: any;
+  dialogOpen: boolean;
+};
 
-const store = createStore({
+const store = createStore<SplitViewContextValue>({
   sidebarOpen: true,
+  dialogContent: 'never',
+  dialogOpen: false,
 });
 
 const Context = createContext(store);
@@ -25,7 +31,12 @@ export const useSplitViewContext = () => useContext(Context);
 
 export const SplitView = observer(() => {
   const context = useSplitViewContext();
-  const { sidebarOpen } = context;
+  const { sidebarOpen, dialogOpen, dialogContent } = context;
+  const { t } = useTranslation('os');
+
+  useEffect(() => {
+    console.log('[dialogOpen]', dialogOpen);
+  }, [dialogOpen]);
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
@@ -48,11 +59,36 @@ export const SplitView = observer(() => {
       </div>
       <Main.Overlay />
       <Surface name='main' />
+      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
+        <DensityProvider density='fine'>
+          <Dialog.Overlay>
+            {dialogContent === 'dxos:SplitViewPlugin/ProfileSettings' ? (
+              <Dialog.Content>
+                <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
+                <Surface role='dialog' data={dialogContent} />
+                <Dialog.Close asChild>
+                  <Button variant='primary' classNames='mbs-2'>
+                    {t('done label', { ns: 'os' })}
+                  </Button>
+                </Dialog.Close>
+              </Dialog.Content>
+            ) : (
+              <Dialog.Content>
+                <Surface role='dialog' data={dialogContent} />
+              </Dialog.Content>
+            )}
+          </Dialog.Overlay>
+        </DensityProvider>
+      </Dialog.Root>
     </Main.Root>
   );
 });
 
-export const SplitViewPlugin = definePlugin<RouterPluginProvides>({
+export type SplitViewProvides = {
+  splitView: SplitViewContextValue;
+};
+
+export const SplitViewPlugin = definePlugin<RouterPluginProvides & SplitViewProvides>({
   meta: {
     id: 'dxos:SplitViewPlugin',
   },
@@ -72,5 +108,6 @@ export const SplitViewPlugin = definePlugin<RouterPluginProvides>({
     },
     context: (props: PropsWithChildren) => <Context.Provider value={store}>{props.children}</Context.Provider>,
     components: { SplitView },
+    splitView: store,
   },
 });

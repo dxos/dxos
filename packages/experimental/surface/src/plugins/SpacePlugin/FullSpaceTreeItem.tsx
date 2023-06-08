@@ -27,7 +27,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
-  const [optionsMenuOpen, setOpetionsMenuOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   const [open, setOpen] = useState(true /* todo(thure): Open if document within is selected */);
 
@@ -89,7 +89,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                 if (!nextOpen) {
                   suppressNextTooltip.current = true;
                 }
-                return setOpetionsMenuOpen(nextOpen);
+                return setOptionsMenuOpen(nextOpen);
               },
             }}
           >
@@ -108,8 +108,17 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
             <DropdownMenu.Portal>
               <DropdownMenu.Content classNames='z-[31]'>
                 {actions.map((action) => (
-                  <DropdownMenu.Item key={action.id} onClick={action.invoke} classNames='gap-2'>
-                    <Placeholder className={getSize(4)} />
+                  <DropdownMenu.Item
+                    key={action.id}
+                    onClick={(event) => {
+                      // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                      suppressNextTooltip.current = true;
+                      setOptionsMenuOpen(false);
+                      void action.invoke(event);
+                    }}
+                    classNames='gap-2'
+                  >
+                    {action.icon && <action.icon className={getSize(4)} />}
                     <span>{action.label}</span>
                   </DropdownMenu.Item>
                 ))}
@@ -135,7 +144,11 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
                 <span className='sr-only'>{primaryAction.label}</span>
-                <Placeholder className={getSize(4)} />
+                {primaryAction.icon ? (
+                  <primaryAction.icon className={getSize(4)} />
+                ) : (
+                  <Placeholder className={getSize(4)} />
+                )}
               </Button>
             </Tooltip.Trigger>
           </Tooltip.Root>
