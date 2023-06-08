@@ -23,7 +23,7 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
     context: (props) => <OctokitProvider {...props} />,
     component: (datum, role) => {
       if (Array.isArray(datum) && role === 'main') {
-        const [childDatum, parentDatum] = datum;
+        const [parentDatum, childDatum] = datum;
         switch (true) {
           case isDocument(childDatum) && isSpace(parentDatum):
             return MainOne;

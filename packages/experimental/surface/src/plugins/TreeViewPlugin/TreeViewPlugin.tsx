@@ -24,22 +24,21 @@ import { createStore } from '@dxos/observable-object';
 import { useIdentity, observer } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
-import { GraphNode, useGraphContext } from '../GraphPlugin';
+import { useGraphContext } from '../GraphPlugin';
 import { TreeView } from './TreeView';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
 
+// TODO(wittjosiah): Derive graph nodes from selected.
 export type TreeViewContextValue = {
-  selected: GraphNode | null;
+  selected: string[];
 };
 
-const Context = createContext<TreeViewContextValue>({
-  selected: null,
-});
+const store = createStore<TreeViewContextValue>({ selected: [] });
+
+const Context = createContext<TreeViewContextValue>(store);
 
 export const useTreeView = () => useContext(Context);
-
-const store = createStore<TreeViewContextValue>({ selected: null });
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();

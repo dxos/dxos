@@ -10,12 +10,12 @@ import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject } from '@dxos/react-client';
+import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../../framework';
 import { ClientPluginProvides } from '../ClientPlugin';
 import { isDocument } from '../GithubMarkdownPlugin';
-import { GraphNode, GraphPluginProvides } from '../GraphPlugin';
+import { GraphNode, GraphPluginProvides, useGraphContext } from '../GraphPlugin';
 import { RouterPluginProvides } from '../RoutesPlugin';
 import { useTreeView } from '../TreeViewPlugin';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
@@ -30,11 +30,14 @@ export const isSpace = (datum: unknown): datum is Space =>
 
 export const SpaceMain: FC<{}> = observer(() => {
   const treeView = useTreeView();
-  return treeView.selected ? (
-    <Surface data={[treeView.selected.data, treeView.selected.parent?.data]} role='main' />
-  ) : (
-    <p>…</p>
-  );
+  const graph = useGraphContext();
+  const [parentId, childId] = treeView.selected;
+
+  const parentNode = graph.roots[SpacePlugin.meta.id].find((node) => node.id === parentId);
+  const childNode = parentNode?.children?.find((node) => node.id === childId);
+
+  const data = parentNode ? (childNode ? [parentNode.data, childNode.data] : [parentNode.data]) : null;
+  return data ? <Surface data={data} role='main' /> : <p>…</p>;
 });
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
@@ -145,10 +148,10 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         const treeView = useTreeView();
 
         useEffect(() => {
-          if (!treeView.selected) {
+          if (!treeView.selected.length) {
             const space = nodes.find((node) => node.id === spaceId);
             const object = space?.children?.find((node) => node.id === objectId);
-            const node = object ?? space;
+            const node = space ? (object ? [space.id, object.id] : [space.id]) : null;
             if (node) {
               treeView.selected = node;
             }
@@ -156,16 +159,18 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         }, [treeView.selected, spaceId, objectId]);
 
         useEffect(() => {
-          if (!treeView.selected) {
+          if (!treeView.selected.length) {
             return;
           }
 
-          if (isSpace(treeView.selected.data) && treeView.selected.id !== spaceId) {
-            navigate(`/space/${treeView.selected.id}`);
+          // TODO(wittjosiah): Check if space.
+          if (treeView.selected.length === 1 && treeView.selected[0] !== spaceId) {
+            navigate(`/space/${treeView.selected[0]}`);
           }
 
-          if (isTypedObject(treeView.selected.data) && treeView.selected.parent && treeView.selected.id !== objectId) {
-            navigate(`/space/${treeView.selected.parent.id}/${treeView.selected.id}`);
+          // TODO(wittjosiah): Check if object.
+          if (treeView.selected.length === 2 && treeView.selected[1] !== objectId) {
+            navigate(`/space/${treeView.selected[0]}/${treeView.selected[1]}`);
           }
         }, [treeView.selected, spaceId, objectId]);
       },
