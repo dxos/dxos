@@ -3,7 +3,7 @@
 //
 
 import { GearSix, Placeholder } from '@phosphor-icons/react';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 
 import {
   Avatar,
@@ -20,6 +20,7 @@ import {
   useTranslation,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
+import { createStore } from '@dxos/observable-object';
 import { useIdentity, observer } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
@@ -30,15 +31,15 @@ const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
 
 export type TreeViewContextValue = {
   selected: GraphNode | null;
-  setSelected(item: GraphNode | null): any;
 };
 
 const Context = createContext<TreeViewContextValue>({
   selected: null,
-  setSelected: () => {},
 });
 
 export const useTreeView = () => useContext(Context);
+
+const store = createStore<TreeViewContextValue>({ selected: null });
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
@@ -120,20 +121,18 @@ export const TreeViewContainer = observer(() => {
   );
 });
 
-export const TreeViewPlugin = definePlugin({
+export type TreeViewProvides = {
+  treeView: TreeViewContextValue;
+};
+
+export const TreeViewPlugin = definePlugin<TreeViewProvides, {}>({
   meta: {
     id: TREE_VIEW_PLUGIN,
   },
   provides: {
+    treeView: store,
     context: ({ children }) => {
-      const [selected, setSelected] = useState<GraphNode | null>(null);
-
-      const context: TreeViewContextValue = {
-        selected,
-        setSelected,
-      };
-
-      return <Context.Provider value={context}>{children}</Context.Provider>;
+      return <Context.Provider value={store}>{children}</Context.Provider>;
     },
     components: { TreeView: TreeViewContainer },
   },
