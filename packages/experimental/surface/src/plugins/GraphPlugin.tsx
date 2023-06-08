@@ -17,6 +17,7 @@ export type GraphNode<TDatum = any> = {
   parent?: GraphNode;
   children?: GraphNode[];
   actions?: GraphNodeAction[];
+  attributes?: { [key: string]: any };
 };
 
 export type GraphNodeAction = {
