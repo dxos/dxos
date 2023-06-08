@@ -9,6 +9,7 @@ import { Document } from '@braneframe/types';
 import { isTypedObject } from '@dxos/react-client';
 
 import { definePlugin, PluginDefinition } from '../../framework';
+import { isSpace } from '../SpacePlugin';
 import { MainAll, MainOne, OctokitProvider } from './components';
 
 export const isDocument = (datum: unknown): datum is Document =>
@@ -21,9 +22,10 @@ export const GithubMarkdownPlugin: PluginDefinition = definePlugin({
   provides: {
     context: (props) => <OctokitProvider {...props} />,
     component: (datum, role) => {
-      if (role === 'main') {
+      if (Array.isArray(datum) && role === 'main') {
+        const [childDatum, parentDatum] = datum;
         switch (true) {
-          case isDocument(datum):
+          case isDocument(childDatum) && isSpace(parentDatum):
             return MainOne;
           default:
             return null;
