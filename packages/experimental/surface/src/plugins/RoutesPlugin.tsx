@@ -33,6 +33,7 @@ export const RoutesPlugin = definePlugin({
     id: 'RoutesPlugin',
   },
   provides: {
+    // TODO(wittjosiah): Should be BrowserRouter.
     context: ({ children }) => <HashRouter>{children}</HashRouter>,
     components: {
       default: () => {
