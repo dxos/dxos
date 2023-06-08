@@ -15,7 +15,7 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
+import { SwarmMessenger, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
@@ -39,7 +39,7 @@ export class Swarm {
    */
   readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
-  private readonly _swarmMessenger: MessageRouter;
+  private readonly _swarmMessenger: SwarmMessenger;
 
   private _ctx = new Context();
 
@@ -88,7 +88,7 @@ export class Swarm {
     log('creating swarm', { peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
-    this._swarmMessenger = new MessageRouter({
+    this._swarmMessenger = new SwarmMessenger({
       sendMessage: async (msg) => await this._messenger.sendMessage(msg),
       onSignal: async (msg) => await this.onSignal(msg),
       onOffer: async (msg) => await this.onOffer(msg),

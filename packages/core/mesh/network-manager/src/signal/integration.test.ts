@@ -12,8 +12,8 @@ import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
+import { SwarmMessenger } from './swarm-messenger';
 
 describe('Signal Integration Test', () => {
   let broker: SignalServerRunner;
@@ -45,7 +45,7 @@ describe('Signal Integration Test', () => {
     const signalMock = async (msg: SignalMessage) => {
       receivedSignals.push(msg);
     };
-    const messageRouter = new MessageRouter({
+    const messageRouter = new SwarmMessenger({
       sendMessage: messenger.sendMessage.bind(messenger),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true }),
