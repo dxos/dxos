@@ -4,9 +4,7 @@
 
 // @dxos/test platform=nodejs
 
-import expect from 'expect';
-
-import { sleep, TestStream } from '@dxos/async';
+import { latch, TestStream } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -76,18 +74,11 @@ describe('WebRTCTransportProxy', () => {
   test('open and close', async () => {
     const { webRTCTransportProxy: connection } = await setupProxy();
 
-    let callsCounter = 0;
-    const closedCb = () => {
-      callsCounter++;
-    };
-    connection.closed.once(closedCb);
+    const [wait, inc] = latch({ count: 1, timeout: 1000 });
+    connection.closed.once(() => inc());
 
-    await sleep(10); // Let simple-peer process events.
     await connection.destroy();
-
-    await sleep(1); // Process events.
-
-    expect(callsCounter).toEqual(1);
+    await wait();
   }).timeout(1_000);
 
   test('establish connection and send data through with protocol', async () => {
@@ -96,8 +87,7 @@ describe('WebRTCTransportProxy', () => {
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
-        await sleep(10);
-        await connection2.signal(signal);
+        connection2.signal(signal);
       },
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -107,8 +97,7 @@ describe('WebRTCTransportProxy', () => {
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
-        await sleep(10);
-        await connection1.signal(signal);
+        connection1.signal(signal);
       },
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -154,32 +143,32 @@ describe('WebRTCTransportProxy', () => {
       await rpcClient?.close();
     });
 
-    test('establish connection and send data through with protocol', async () => {
-      const stream1 = new TestStream();
-      const proxy1 = new WebRTCTransportProxy({
-        initiator: true,
-        stream: stream1,
-        sendSignal: async (signal) => {
-          await sleep(10);
-          await proxy2.signal(signal);
-        },
-        bridgeService: rpcClient.rpc.BridgeService,
-      });
-      afterTest(() => proxy1.errors.assertNoUnhandledErrors());
+    test
+      .repeat(1000)('establish connection and send data through with protocol', async () => {
+        const stream1 = new TestStream();
+        const proxy1 = new WebRTCTransportProxy({
+          initiator: true,
+          stream: stream1,
+          sendSignal: async (signal) => {
+            proxy2.signal(signal);
+          },
+          bridgeService: rpcClient.rpc.BridgeService,
+        });
+        afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
-      const stream2 = new TestStream();
-      const proxy2 = new WebRTCTransportProxy({
-        initiator: false,
-        stream: stream2,
-        sendSignal: async (signal) => {
-          await sleep(10);
-          await proxy1.signal(signal);
-        },
-        bridgeService: rpcClient.rpc.BridgeService,
-      });
-      afterTest(() => proxy2.errors.assertNoUnhandledErrors());
+        const stream2 = new TestStream();
+        const proxy2 = new WebRTCTransportProxy({
+          initiator: false,
+          stream: stream2,
+          sendSignal: async (signal) => {
+            proxy1.signal(signal);
+          },
+          bridgeService: rpcClient.rpc.BridgeService,
+        });
+        afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 
-      await TestStream.assertConnectivity(stream1, stream2);
-    }).timeout(3_000);
+        await TestStream.assertConnectivity(stream1, stream2);
+      })
+      .timeout(3_000);
   });
 });

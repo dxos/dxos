@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from 'expect';
 import { Duplex } from 'stream';
 
-import { sleep, TestStream } from '@dxos/async';
+import { latch, sleep, TestStream } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { WebRTCTransport } from './webrtc-transport';
@@ -19,17 +18,11 @@ describe('WebRTCTransport', () => {
       sendSignal: async () => {},
     });
 
-    let callsCounter = 0;
-    const closedCb = () => {
-      callsCounter++;
-    };
+    const [wait, inc] = latch({ count: 1, timeout: 1000 });
 
-    connection.closed.once(closedCb);
-    await sleep(10); // Let simple-peer process events.
+    connection.closed.once(() => inc());
     await connection.destroy();
-
-    await sleep(10); // Process events.
-    expect(callsCounter).toEqual(1);
+    await wait();
   })
     .timeout(1_000)
     .retries(3);
