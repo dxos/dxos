@@ -3,12 +3,13 @@
 //
 
 import { Planet } from '@phosphor-icons/react';
-import { useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createStore } from '@dxos/observable-object';
+import { observer } from '@dxos/observable-object/react';
 import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject } from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../../framework';
@@ -27,10 +28,14 @@ export const isSpace = (datum: unknown): datum is Space =>
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
 
-export const SpaceMain = () => {
-  const { selected } = useTreeView();
-  return selected ? <Surface data={[selected.data, selected.parent?.data]} role='main' /> : <p>…</p>;
-};
+export const SpaceMain: FC<{}> = observer(() => {
+  const treeView = useTreeView();
+  return treeView.selected ? (
+    <Surface data={[treeView.selected.data, treeView.selected.parent?.data]} role='main' />
+  ) : (
+    <p>…</p>
+  );
+});
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
   return objects.map((obj) => ({
@@ -137,30 +142,32 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         const navigate = useNavigate();
         const params = useParams();
         const { spaceId, objectId } = params;
-        const { selected, setSelected } = useTreeView();
+        const treeView = useTreeView();
 
         useEffect(() => {
-          if (!selected) {
+          if (!treeView.selected) {
             const space = nodes.find((node) => node.id === spaceId);
             const object = space?.children?.find((node) => node.id === objectId);
             const node = object ?? space;
-            node && setSelected(node);
+            if (node) {
+              treeView.selected = node;
+            }
           }
-        }, [selected, spaceId, objectId]);
+        }, [treeView.selected, spaceId, objectId]);
 
         useEffect(() => {
-          if (!selected) {
+          if (!treeView.selected) {
             return;
           }
 
-          if (isSpace(selected.data) && selected.id !== spaceId) {
-            navigate(`/space/${selected.id}`);
+          if (isSpace(treeView.selected.data) && treeView.selected.id !== spaceId) {
+            navigate(`/space/${treeView.selected.id}`);
           }
 
-          if (isTypedObject(selected.data) && selected.parent && selected.id !== objectId) {
-            navigate(`/space/${selected.parent.id}/${selected.id}`);
+          if (isTypedObject(treeView.selected.data) && treeView.selected.parent && treeView.selected.id !== objectId) {
+            navigate(`/space/${treeView.selected.parent.id}/${treeView.selected.id}`);
           }
-        }, [selected, spaceId, objectId]);
+        }, [treeView.selected, spaceId, objectId]);
       },
     },
     component: (datum, role) => {
