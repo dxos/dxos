@@ -8,7 +8,7 @@ import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromIFrame, fromHost } from '@dxos/client';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   appkitTranslations,
@@ -26,7 +26,7 @@ import { captureException } from '@dxos/sentry';
 import { Routes } from './Routes';
 import tasksTranslations from './translations';
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Local(), Defaults());
 const servicesProvider = (config?: Config) =>
   config?.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config);
 
