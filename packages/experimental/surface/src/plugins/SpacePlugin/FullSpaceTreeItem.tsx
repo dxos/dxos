@@ -15,8 +15,7 @@ import { GraphNode } from '../GraphPlugin';
 import { TreeView } from '../TreeViewPlugin/TreeView';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
 
-export const FullSpaceTreeItem = observer(({ data }: { data: any }) => {
-  const item = data as GraphNode<Space>;
+export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Space> }) => {
   const space = item.data!;
   const { t } = useTranslation('composer');
   const hasActiveDocument = false;

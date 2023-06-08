@@ -14,8 +14,7 @@ import { observer } from '@dxos/react-client';
 import { GraphNode } from '../GraphPlugin';
 import { useTreeView } from '../TreeViewPlugin';
 
-export const DocumentLinkTreeItem = observer(({ data }: { data: any }) => {
-  const item = data as GraphNode<Document>;
+export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<Document> }) => {
   const document = item.data!;
   const { sidebarOpen, closeSidebar } = useSidebar();
   const { t } = useTranslation('composer');
