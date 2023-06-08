@@ -11,11 +11,14 @@ import { EventSubscriptions } from '@dxos/async';
 import { createStore } from '@dxos/observable-object';
 import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject, isTypedObject } from '@dxos/react-client';
 
-import { Surface, definePlugin, findPlugin } from '../framework';
-import { ClientPluginProvides } from './ClientPlugin';
-import { GraphNode, GraphPluginProvides } from './GraphPlugin';
-import { RouterPluginProvides } from './RoutesPlugin';
-import { useTreeView } from './TreeViewPlugin';
+import { Surface, definePlugin, findPlugin } from '../../framework';
+import { ClientPluginProvides } from '../ClientPlugin';
+import { isDocument } from '../GithubMarkdownPlugin';
+import { GraphNode, GraphPluginProvides } from '../GraphPlugin';
+import { RouterPluginProvides } from '../RoutesPlugin';
+import { useTreeView } from '../TreeViewPlugin';
+import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
+import { FullSpaceTreeItem } from './FullSpaceTreeItem';
 
 export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
 
@@ -26,7 +29,7 @@ export const isSpace = (datum: unknown): datum is Space =>
 
 export const SpaceMain = () => {
   const { selected } = useTreeView();
-  return selected ? <Surface data={selected.data} role='main' /> : <p>…</p>;
+  return selected ? <Surface data={[selected.data, selected.parent?.data]} role='main' /> : <p>…</p>;
 };
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
@@ -161,15 +164,23 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
       },
     },
     component: (datum, role) => {
-      if (role === 'main') {
-        switch (true) {
-          case isSpace(datum):
-            return () => <pre>{JSON.stringify((datum as SpaceProxy).properties)}</pre>;
-          default:
-            return null;
-        }
-      } else {
-        return null;
+      switch (role) {
+        case 'main':
+          switch (true) {
+            case isSpace(datum):
+              return () => <pre>{JSON.stringify((datum as SpaceProxy).properties)}</pre>;
+            default:
+              return null;
+          }
+        case 'treeitem':
+          switch (true) {
+            case isSpace(datum?.data):
+              return FullSpaceTreeItem;
+            case isDocument(datum?.data):
+              return DocumentLinkTreeItem;
+            default:
+              return null;
+          }
       }
     },
     components: {

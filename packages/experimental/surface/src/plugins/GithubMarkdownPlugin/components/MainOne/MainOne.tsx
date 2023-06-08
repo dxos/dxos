@@ -14,7 +14,6 @@ import {
   UploadSimple,
 } from '@phosphor-icons/react';
 import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
 import { Button, Main, Trans, DropdownMenu, useTranslation } from '@dxos/aurora';
@@ -22,7 +21,7 @@ import { Composer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Dialog, Input } from '@dxos/react-appkit';
-import { useIdentity, useSpace } from '@dxos/react-client';
+import { Space, useIdentity } from '@dxos/react-client';
 
 import { PatDialog, useOctokitContext } from '../GithubContext';
 import { GfmPreview } from './GfmPreview';
@@ -47,12 +46,10 @@ type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-export const MainOne = () => {
-  const { spaceSlug, documentSlug } = useParams();
-  const space = useSpace(spaceSlug);
+export const MainOne = ({ data }: { data: [Document, Space] }) => {
+  const [document, space]: [Document, Space] = data;
   const [editorViewState, setEditorViewState] = useState<'editor' | 'preview'>('editor');
   const [layout, _setLayout] = useState<'standalone' | 'embedded'>('standalone');
-  const document: Document | undefined = space?.db.getObjectById(documentSlug ?? 'never');
 
   const editorRef = useRef<MarkdownComposerRef>(null);
   const identity = useIdentity();

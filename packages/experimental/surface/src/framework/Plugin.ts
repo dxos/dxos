@@ -11,7 +11,7 @@ export type PluginProvides<TProvides> = TProvides & {
     role?: string,
     props?: Partial<P>,
   ) => FC<PropsWithChildren<{ data: any; role?: string }>> | undefined | null | false | 0;
-  components?: Record<string, FC> & { default?: FC };
+  components?: Record<string, FC<any>> & { default?: FC };
 };
 
 export type Plugin<TProvides = {}> = {
