@@ -49,17 +49,27 @@ export OPENFAAS_URL="http://$IP:8080"
 
 ### Running the CLI Daemon
 
+TODO(burdon): Change to test everywhere.
+
 1. Configure `$HOME/.config/dx/default.yml` (Set client persistence and Faasd Gateway.)
 2. From the CLI directory start the daemon:
 
 ```bash
-./bin/dev daemon run --listen=unix://$HOME/.dx/run/default.sock --listen=ws://localhost:4567 --profile=default
+dx-dev daemon run --listen=unix://$HOME/.dx/run/default.sock --listen=ws://localhost:4567 --profile=default
 ```
+
+To run the CLI:
+
+```bash
+DX_PROFILE=default dx-dev space list
+```
+
+NOTE: Check/delete the socket file to troubleshoot.
 
 ### Test with Notebook
 
 - Install VSCode plugin: `Node.js` Notebooks (REPL)
-- Open cli notebook (open `testing.nnb`)
+- Open cli notebook (open `./notebooks/testing.nnb`)
 - Create trigger:
 
 ```yml
