@@ -46,8 +46,8 @@ type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-export const MainOne = ({ data }: { data: [Document, Space] }) => {
-  const [document, space]: [Document, Space] = data;
+export const MainOne = ({ data }: { data: [Space, Document] }) => {
+  const [space, document]: [Space, Document] = data;
   const [editorViewState, setEditorViewState] = useState<'editor' | 'preview'>('editor');
   const [layout, _setLayout] = useState<'standalone' | 'embedded'>('standalone');
 
