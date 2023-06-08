@@ -7,7 +7,7 @@ export default defineTemplate(
     const imports = new Imports();
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
     const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
-    const { Config, Dynamics, Defaults } = imports.lazy(['Config', 'Dynamics', 'Defaults'], '@dxos/config');
+    const { Config, Dynamics, Defaults, Local } = imports.lazy(['Config', 'Dynamics', 'Defaults', 'Local'], '@dxos/config');
     const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-appkit');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
     const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
@@ -41,7 +41,7 @@ export default defineTemplate(
       ${render?.extraImports?.()}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE.
-      const config = async () => new ${Config()}(await ${Dynamics()}(), ${Defaults()}());
+      const config = async () => new ${Config()}(await ${Dynamics()}(), ${Local()}(), ${Defaults()}());
 
       export const App = () => {
         ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
