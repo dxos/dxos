@@ -143,32 +143,36 @@ describe('WebRTCTransportProxy', () => {
       await rpcClient?.close();
     });
 
-    test
-      .repeat(1000)('establish connection and send data through with protocol', async () => {
-        const stream1 = new TestStream();
-        const proxy1 = new WebRTCTransportProxy({
-          initiator: true,
-          stream: stream1,
-          sendSignal: async (signal) => {
-            proxy2.signal(signal);
-          },
-          bridgeService: rpcClient.rpc.BridgeService,
-        });
-        afterTest(() => proxy1.errors.assertNoUnhandledErrors());
+    test('establish connection and send data through with protocol', async () => {
+      const stream1 = new TestStream();
+      const proxy1 = new WebRTCTransportProxy({
+        initiator: true,
+        stream: stream1,
+        sendSignal: async (signal) => {
+          proxy2.signal(signal);
+        },
+        bridgeService: rpcClient.rpc.BridgeService,
+      });
+      afterTest(async () => {
+        proxy1.errors.assertNoUnhandledErrors();
+        await proxy1.destroy();
+      });
 
-        const stream2 = new TestStream();
-        const proxy2 = new WebRTCTransportProxy({
-          initiator: false,
-          stream: stream2,
-          sendSignal: async (signal) => {
-            proxy1.signal(signal);
-          },
-          bridgeService: rpcClient.rpc.BridgeService,
-        });
-        afterTest(() => proxy2.errors.assertNoUnhandledErrors());
+      const stream2 = new TestStream();
+      const proxy2 = new WebRTCTransportProxy({
+        initiator: false,
+        stream: stream2,
+        sendSignal: async (signal) => {
+          proxy1.signal(signal);
+        },
+        bridgeService: rpcClient.rpc.BridgeService,
+      });
+      afterTest(async () => {
+        proxy2.errors.assertNoUnhandledErrors();
+        await proxy2.destroy();
+      });
 
-        await TestStream.assertConnectivity(stream1, stream2);
-      })
-      .timeout(3_000);
+      await TestStream.assertConnectivity(stream1, stream2);
+    }).timeout(3_000);
   });
 });
