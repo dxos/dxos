@@ -49,6 +49,12 @@ class PendingRpcRequest {
 
 const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
 
+enum RpcState {
+  INIT = 'INIT',
+  OPENED = 'OPENED',
+  CLOSED = 'CLOSED',
+}
+
 /**
  * A remote procedure call peer.
  *
@@ -71,7 +77,7 @@ export class RpcPeer {
   private readonly _closeTrigger = new Trigger();
 
   private _nextId = 0;
-  private _open = false;
+  private _state = RpcState.INIT;
   private _unsubscribe: (() => void) | undefined;
   private _clearOpenInterval: (() => void) | undefined;
 
@@ -87,7 +93,7 @@ export class RpcPeer {
    */
   @synchronized
   async open() {
-    if (this._open) {
+    if (this._state === RpcState.OPENED) {
       return;
     }
 
@@ -99,7 +105,7 @@ export class RpcPeer {
       }
     }) as any;
 
-    this._open = true;
+    this._state = RpcState.OPENED;
 
     if (this._options.noHandshake) {
       this._remoteOpenTrigger.wake();
@@ -118,7 +124,7 @@ export class RpcPeer {
 
     this._clearOpenInterval?.();
 
-    if (!this._open) {
+    if (this._state !== RpcState.OPENED) {
       // Closed while opening.
       return; // TODO(dmaretskyi): Throw error?
     }
@@ -140,7 +146,7 @@ export class RpcPeer {
       req.reject(new RpcClosedError());
     }
     this._outgoingRequests.clear();
-    this._open = false;
+    this._state = RpcState.CLOSED;
   }
 
   /**
@@ -150,7 +156,7 @@ export class RpcPeer {
     const decoded = codec.decode(msg, { preserveAny: true });
 
     if (decoded.request) {
-      if (!this._open) {
+      if (this._state !== RpcState.OPENED) {
         log('received request while closed');
         await this._sendMessage({
           response: {
@@ -188,7 +194,7 @@ export class RpcPeer {
         await this._sendMessage({ response });
       }
     } else if (decoded.response) {
-      if (!this._open) {
+      if (this._state !== RpcState.OPENED) {
         log('received response while closed');
         return; // Ignore when not open.
       }
@@ -223,7 +229,7 @@ export class RpcPeer {
 
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
-      if (!this._open) {
+      if (this._state !== RpcState.OPENED) {
         log('received stream close while closed');
         return; // Ignore when not open.
       }
@@ -250,9 +256,7 @@ export class RpcPeer {
    */
   async call(method: string, request: Any): Promise<Any> {
     log('calling', { method });
-    if (!this._open) {
-      throw new RpcNotOpenError();
-    }
+    throwIfNotOpen(this._state);
 
     let response: Response;
     try {
@@ -303,10 +307,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   callStream(method: string, request: Any): Stream<Any> {
-    if (!this._open) {
-      throw new RpcNotOpenError();
-    }
-
+    throwIfNotOpen(this._state);
     const id = this._nextId++;
 
     return new Stream(({ ready, next, close }) => {
@@ -427,3 +428,17 @@ export class RpcPeer {
     }
   }
 }
+
+const throwIfNotOpen = (state: RpcState) => {
+  switch (state) {
+    case RpcState.OPENED: {
+      return;
+    }
+    case RpcState.INIT: {
+      throw new RpcNotOpenError();
+    }
+    case RpcState.CLOSED: {
+      throw new RpcClosedError();
+    }
+  }
+};
