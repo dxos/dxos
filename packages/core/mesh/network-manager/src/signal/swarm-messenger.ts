@@ -16,7 +16,6 @@ import { OfferMessage, SignalMessage, SignalMessenger } from './signal-messenger
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
-  reject: (error?: Error) => void;
 }
 
 export type SwarmMessengerOptions = {
@@ -92,12 +91,12 @@ export class SwarmMessenger implements SignalMessenger {
       messageId: PublicKey.random(),
     };
     return new Promise<Answer>((resolve, reject) => {
-      this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
-      return this._sendReliableMessage({
+      this._offerRecords.set(networkMessage.messageId!, { resolve });
+      this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
         message: networkMessage,
-      });
+      }).catch((err) => reject(err));
     });
   }
 
