@@ -3,17 +3,21 @@
 //
 
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useSidebar, useTranslation, TreeItem } from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
 import { SpaceState } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-async';
-import { Space } from '@dxos/react-client';
+import { Space, observer } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from '../SpacePlugin';
+import { GraphNode } from '../GraphPlugin';
+import { TreeView } from '../TreeViewPlugin/TreeView';
+import { getSpaceDisplayName } from './getSpaceDisplayName';
 
-export const FullSpaceTreeItem = ({ space, children }: PropsWithChildren<{ space: Space }>) => {
+export const FullSpaceTreeItem = observer(({ data }: { data: any }) => {
+  const item = data as GraphNode<Space>;
+  const space = item.data!;
   const { t } = useTranslation('composer');
   const hasActiveDocument = false;
   const spaceSate = useMulticastObservable(space.state);
@@ -21,7 +25,7 @@ export const FullSpaceTreeItem = ({ space, children }: PropsWithChildren<{ space
   const error = spaceSate === SpaceState.ERROR;
   const { sidebarOpen } = useSidebar();
 
-  const [open, setOpen] = useState(false /* todo(thure): Open if document within is selected */);
+  const [open, setOpen] = useState(true /* todo(thure): Open if document within is selected */);
 
   useEffect(() => {
     // todo(thure): Open if document within is selected
@@ -58,7 +62,9 @@ export const FullSpaceTreeItem = ({ space, children }: PropsWithChildren<{ space
           {spaceDisplayName}
         </TreeItem.Heading>
       </div>
-      <TreeItem.Body>{children}</TreeItem.Body>
+      <TreeItem.Body>
+        <TreeView items={item.children} />
+      </TreeItem.Body>
     </TreeItem.Root>
   );
-};
+});

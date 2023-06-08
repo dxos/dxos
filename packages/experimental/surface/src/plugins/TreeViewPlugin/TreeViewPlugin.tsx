@@ -20,52 +20,13 @@ import {
   useTranslation,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/observable-object/react';
-import { useIdentity } from '@dxos/react-client';
+import { useIdentity, observer } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
 import { GraphNode, useGraphContext } from '../GraphPlugin';
-import { isSpace } from '../SpacePlugin';
-import { FullSpaceTreeItem } from './FullSpaceTreeItem';
+import { TreeView } from './TreeView';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
-
-export type TreeViewProps = {
-  items?: GraphNode[];
-  onSelect?: (node: GraphNode) => void;
-  selected: GraphNode | null;
-};
-
-export const TreeView = (props: TreeViewProps) => {
-  const { items } = props;
-  return (
-    <Tree.Branch>
-      {items?.length
-        ? items.map((item) => {
-            switch (true) {
-              case isSpace(item.data):
-                return (
-                  <FullSpaceTreeItem space={item.data}>
-                    <TreeView items={item.children} onSelect={props.onSelect} selected={props.selected} />
-                  </FullSpaceTreeItem>
-                );
-              default:
-                return (
-                  <TreeItem.Root key={item.id} classNames='block' collapsible>
-                    <TreeItem.Heading onClick={() => props.onSelect?.(item)}>{item.label}</TreeItem.Heading>
-                    {item.children && (
-                      <TreeItem.Body>
-                        <TreeView items={item.children} onSelect={props.onSelect} selected={props.selected} />
-                      </TreeItem.Body>
-                    )}
-                  </TreeItem.Root>
-                );
-            }
-          })
-        : 'no items'}
-    </Tree.Branch>
-  );
-};
 
 export type TreeViewContextValue = {
   selected: GraphNode | null;
@@ -81,7 +42,6 @@ export const useTreeView = () => useContext(Context);
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
-  const { selected, setSelected } = useTreeView();
 
   const identity = useIdentity();
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
@@ -101,7 +61,7 @@ export const TreeViewContainer = observer(() => {
               {Object.entries(graph.roots).map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
-                  <TreeView key={key} items={items} onSelect={setSelected} selected={selected} />
+                  <TreeView key={key} items={items} />
                 </TreeItem.Root>
               ))}
             </Tree.Root>
