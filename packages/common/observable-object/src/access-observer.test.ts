@@ -3,8 +3,8 @@
 //
 
 import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
-import waitForExpect from 'wait-for-expect';
 
+import { Trigger } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './access-observer';
@@ -21,10 +21,10 @@ describe('access observer', () => {
     selection.update([task]);
 
     task.title = 'Test title';
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(1));
+    expect(counter).toEqual(2);
 
     task.title = 'Test title revision';
-    await waitForExpect(() => expect(counter).toBeGreaterThanOrEqual(2));
+    expect(counter).toEqual(3);
   });
 
   test('updates are synchronous', async () => {
@@ -44,6 +44,23 @@ describe('access observer', () => {
 
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
     expect(actions).toEqual(['update', 'before', 'update', 'after']);
+  });
+
+  test('latest value is available in subscription', async () => {
+    const task = createStore<{ title: string }>();
+
+    let counter = 0;
+    const title = new Trigger<string>();
+    const selection = createSubscription(() => {
+      if (counter === 1) {
+        title.wake(task.title);
+      }
+      counter++;
+    });
+    selection.update([task]);
+
+    task.title = 'Test title';
+    expect(await title.wait()).toEqual('Test title');
   });
 
   test('accepts arbitrary selection', async () => {

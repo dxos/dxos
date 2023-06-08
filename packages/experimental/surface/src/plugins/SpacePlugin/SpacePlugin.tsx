@@ -10,18 +10,27 @@ import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-import { EchoDatabase, PublicKey, Space, SpaceProxy, TypedObject } from '@dxos/react-client';
+import {
+  EchoDatabase,
+  IFrameClientServicesHost,
+  IFrameClientServicesProxy,
+  PublicKey,
+  ShellLayout,
+  Space,
+  SpaceProxy,
+  TypedObject,
+} from '@dxos/react-client';
 
 import { Surface, definePlugin, findPlugin } from '../../framework';
 import { ClientPluginProvides } from '../ClientPlugin';
 import { isDocument } from '../GithubMarkdownPlugin';
-import { GraphNode, GraphPluginProvides, useGraphContext } from '../GraphPlugin';
+import { GraphNode, GraphProvides, useGraphContext } from '../GraphPlugin';
 import { RouterPluginProvides } from '../RoutesPlugin';
 import { TreeViewProvides, useTreeView } from '../TreeViewPlugin';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';
 
-export type SpacePluginProvides = GraphPluginProvides & RouterPluginProvides;
+export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
@@ -72,103 +81,127 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
-    if (clientPlugin) {
-      const identity = clientPlugin.provides.client.halo.identity.get();
-      const subscription = clientPlugin.provides.client.spaces.subscribe((spaces) => {
-        console.log({ spaces });
-        nodes.splice(
-          0,
-          nodes.length,
-          ...spaces.map((space) => {
-            const id = space.key.toHex();
-            const node: GraphNode<Space> = {
-              id,
-              label: space.properties.name ?? 'Untitled space',
-              description: space.properties.description,
-              icon: Planet,
-              data: space,
-              actions: [
-                {
-                  id: 'create-doc',
-                  label: 'Create document',
-                  invoke: async () => {
-                    const document = space.db.add(new Document());
-                    if (treeViewPlugin) {
-                      treeViewPlugin.provides.treeView.selected = [id, document.id];
-                    }
-                  },
-                },
-                {
-                  id: 'rename-space',
-                  label: 'Rename space',
-                  invoke: async () => {
-                    // TODO(wittjosiah): Space meta dialog.
-                  },
-                },
-                {
-                  id: 'view-invitations',
-                  label: 'View invitations',
-                  invoke: async () => {
-                    // shell.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
-                  },
-                },
-                {
-                  id: 'hide-space',
-                  label: 'Hide space',
-                  invoke: async () => {
-                    if (identity) {
-                      const identityHex = identity.identityKey.toHex();
-                      space.properties.members = {
-                        ...space.properties.members,
-                        [identityHex]: {
-                          ...space.properties.members?.[identityHex],
-                          hidden: true,
-                        },
-                      };
-                      if (treeViewPlugin?.provides.treeView.selected[0] === id) {
-                        treeViewPlugin.provides.treeView.selected = [];
-                      }
-                    }
-                  },
-                },
-              ],
-            };
-
-            let attributes = nodeAttributes.get(id);
-            if (!attributes) {
-              attributes = createStore<{ hidden: boolean }>();
-              const handle = createSubscription(() => {
-                if (!identity) {
-                  return;
-                }
-                attributes!.hidden = space.properties.members?.[identity.identityKey.toHex()]?.hidden === true;
-              });
-              handle.update([space.properties]);
-              subscriptions.add(handle.unsubscribe);
-            }
-            node.attributes = attributes ?? {};
-
-            let children = rootObjects.get(id);
-            if (!children) {
-              const query = space.db.query(Document.filter());
-              const objects = createStore(objectsToGraphNodes(node, query.objects));
-              subscriptions.add(
-                query.subscribe((query) => {
-                  objects.splice(0, objects.length, ...objectsToGraphNodes(node, query.objects));
-                }),
-              );
-
-              children = objects;
-              rootObjects.set(id, children);
-            }
-            node.children = children ?? [];
-
-            return node;
-          }),
-        );
-      });
-      subscriptions.add(subscription.unsubscribe);
+    if (!clientPlugin) {
+      return;
     }
+
+    const client = clientPlugin.provides.client;
+    const identity = client.halo.identity.get();
+    const subscription = client.spaces.subscribe((spaces) => {
+      nodes.splice(
+        0,
+        nodes.length,
+        ...spaces.map((space) => {
+          const id = space.key.toHex();
+          const node: GraphNode<Space> = {
+            id,
+            label: space.properties.name ?? 'Untitled space',
+            description: space.properties.description,
+            icon: Planet,
+            data: space,
+            actions: [
+              {
+                id: 'create-doc',
+                label: 'Create document',
+                invoke: async () => {
+                  const document = space.db.add(new Document());
+                  if (treeViewPlugin) {
+                    treeViewPlugin.provides.treeView.selected = [id, document.id];
+                  }
+                },
+              },
+              {
+                id: 'rename-space',
+                label: 'Rename space',
+                invoke: async () => {
+                  // TODO(wittjosiah): Space meta dialog.
+                },
+              },
+              {
+                id: 'view-invitations',
+                label: 'View invitations',
+                invoke: async () => {
+                  await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+                },
+              },
+              {
+                id: 'hide-space',
+                label: 'Hide space',
+                invoke: async () => {
+                  if (identity) {
+                    const identityHex = identity.identityKey.toHex();
+                    space.properties.members = {
+                      ...space.properties.members,
+                      [identityHex]: {
+                        ...space.properties.members?.[identityHex],
+                        hidden: true,
+                      },
+                    };
+                    if (treeViewPlugin?.provides.treeView.selected[0] === id) {
+                      treeViewPlugin.provides.treeView.selected = [];
+                    }
+                  }
+                },
+              },
+            ],
+          };
+
+          let attributes = nodeAttributes.get(id);
+          if (!attributes) {
+            attributes = createStore<{ hidden: boolean }>();
+            const handle = createSubscription(() => {
+              if (!identity) {
+                return;
+              }
+              attributes!.hidden = space.properties.members?.[identity.identityKey.toHex()]?.hidden === true;
+            });
+            handle.update([space.properties]);
+            subscriptions.add(handle.unsubscribe);
+          }
+          node.attributes = attributes ?? {};
+
+          let children = rootObjects.get(id);
+          if (!children) {
+            const query = space.db.query(Document.filter());
+            const objects = createStore(objectsToGraphNodes(node, query.objects));
+            subscriptions.add(
+              query.subscribe((query) => {
+                objects.splice(0, objects.length, ...objectsToGraphNodes(node, query.objects));
+              }),
+            );
+
+            children = objects;
+            rootObjects.set(id, children);
+          }
+          node.children = children ?? [];
+
+          return node;
+        }),
+      );
+    });
+
+    subscriptions.add(subscription.unsubscribe);
+
+    if (!treeViewPlugin) {
+      return;
+    }
+
+    const treeView = treeViewPlugin.provides.treeView;
+
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
+      client.services.joinedSpace.on((spaceKey) => {
+        treeView.selected = [spaceKey.toHex()];
+      });
+    }
+
+    const nodeHandle = createSubscription(() => {
+      const [id] = treeView.selected ?? [];
+      if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
+        client.services.setSpaceProvider(() => PublicKey.safeFrom(id));
+      }
+    });
+    nodeHandle.update([treeView]);
+    subscriptions.add(nodeHandle.unsubscribe);
   },
   unload: async () => {
     subscriptions.clear();
@@ -209,15 +242,24 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         const treeView = useTreeView();
 
         useEffect(() => {
-          if (!treeView.selected.length) {
+          const handle = createSubscription(() => {
+            if (treeView.selected.length > 0) {
+              return;
+            }
+
             const space = nodes.find((node) => node.id === spaceId);
-            const object = space?.children?.find((node) => node.id === objectId);
-            const node = space ? (object ? [space.id, object.id] : [space.id]) : null;
+            const object = space?.children?.find((node) => {
+              return node.id === objectId;
+            });
+            const node = space && object ? [space.id, object.id] : null;
             if (node) {
               treeView.selected = node;
             }
-          }
-        }, [treeView.selected, spaceId, objectId]);
+          });
+          handle.update([treeView, nodes]);
+
+          return () => handle.unsubscribe();
+        }, [treeView, nodes, spaceId, objectId]);
 
         useEffect(() => {
           if (!treeView.selected.length) {
@@ -270,10 +312,17 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         // TODO(wittjosiah): Disable if no identity.
         return [
           {
-            id: 'dxos:CreateSpace',
+            id: 'create-space',
             label: 'Create space',
             invoke: async () => {
               await clientPlugin.provides.client.createSpace();
+            },
+          },
+          {
+            id: 'join-space',
+            label: 'Join space',
+            invoke: async () => {
+              await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
             },
           },
         ];

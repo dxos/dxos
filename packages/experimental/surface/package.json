@@ -26,6 +26,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/dompurify": "^3.0.2",
