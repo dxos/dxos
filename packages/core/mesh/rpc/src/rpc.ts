@@ -50,7 +50,7 @@ class PendingRpcRequest {
 const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
 
 enum RpcState {
-  INIT = 'INIT',
+  INITIAL = 'INITIAL',
   OPENED = 'OPENED',
   CLOSED = 'CLOSED',
 }
@@ -77,7 +77,7 @@ export class RpcPeer {
   private readonly _closeTrigger = new Trigger();
 
   private _nextId = 0;
-  private _state = RpcState.INIT;
+  private _state = RpcState.INITIAL;
   private _unsubscribe: (() => void) | undefined;
   private _clearOpenInterval: (() => void) | undefined;
 
@@ -434,7 +434,7 @@ const throwIfNotOpen = (state: RpcState) => {
     case RpcState.OPENED: {
       return;
     }
-    case RpcState.INIT: {
+    case RpcState.INITIAL: {
       throw new RpcNotOpenError();
     }
     case RpcState.CLOSED: {
