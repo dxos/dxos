@@ -97,6 +97,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
+    case 'typedoc': {
+      packageJson.peerDependencies['typescript'] = '^5.0.0'
+      break;
+    }
+
     // Ensure vuepress uses compatible vite version.
     case '@vuepress/bundler-vite': {
       packageJson.dependencies['vite'] = '^4.3.0'
