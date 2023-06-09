@@ -9,7 +9,6 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@dxos/aurora';
 import { Loading } from '@dxos/react-appkit';
 
-import { useSplitViewContext } from '../../../SplitViewPlugin';
 import { PatInput, useOctokitContext } from '../../components';
 
 const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
@@ -78,7 +77,6 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   const [html, setHtml] = useState('');
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
-  const splitViewContext = useSplitViewContext();
 
   useEffect(() => {
     if (octokit && markdown) {
