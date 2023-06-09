@@ -119,7 +119,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                     classNames='gap-2'
                   >
                     {action.icon && <action.icon className={getSize(4)} />}
-                    <span>{action.label}</span>
+                    <span>{t(...action.label)}</span>
                   </DropdownMenu.Item>
                 ))}
                 <DropdownMenu.Arrow />
@@ -131,7 +131,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
           <Tooltip.Root>
             <Tooltip.Portal>
               <Tooltip.Content side='bottom' classNames='z-[31]'>
-                {primaryAction.label}
+                {t(...primaryAction.label)}
                 <Tooltip.Arrow />
               </Tooltip.Content>
             </Tooltip.Portal>
@@ -143,7 +143,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                 onClick={primaryAction.invoke}
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
-                <span className='sr-only'>{primaryAction.label}</span>
+                <span className='sr-only'>{t(...primaryAction.label)}</span>
                 {primaryAction.icon ? (
                   <primaryAction.icon className={getSize(4)} />
                 ) : (

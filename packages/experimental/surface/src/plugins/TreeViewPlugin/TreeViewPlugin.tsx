@@ -79,12 +79,12 @@ export const TreeViewContainer = observer(() => {
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!sidebarOpen && { tabIndex: -1 })}
                     >
-                      <span className='sr-only'>{action.label}</span>
+                      <span className='sr-only'>{t(...action.label)}</span>
                       {action.icon ? <action.icon className={getSize(4)} /> : <Placeholder className={getSize(4)} />}
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Content classNames='z-[31]'>
-                    {action.label}
+                    {t(...action.label)}
                     <Tooltip.Arrow />
                   </Tooltip.Content>
                 </Tooltip.Root>

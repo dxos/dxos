@@ -23,7 +23,8 @@ export type GraphNode<TDatum = any> = {
 
 export type GraphNodeAction = {
   id: string;
-  label: string;
+  // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
+  label: [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
   invoke: (event: UIEvent) => MaybePromise<void>;
 };

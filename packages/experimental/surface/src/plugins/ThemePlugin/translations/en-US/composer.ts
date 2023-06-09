@@ -51,7 +51,7 @@ export const composer = {
   'download all docs in space label': 'Download backup',
   'upload all docs in space label': 'Upload backup',
   'invitation ready for auth code message': 'An invitation is ready for its authentication code',
-  'view invitations label': 'View',
+  'view invitations label': 'View invitations',
   'hidden spaces tree label': 'Hidden spaces',
   'unhide space label': 'Un-hide space',
   'empty space message': 'No documents – click plus ☝ to get started',
@@ -79,4 +79,5 @@ export const composer = {
     'Another user has recently updated this issue, so Github won’t accept your changes unless you set a personal access token (a PAT) here, or refresh the page.',
   'embedded options label': 'Options',
   'unset repo space label': 'Select a different space for this repository',
+  'rename space label': 'Rename space',
 };

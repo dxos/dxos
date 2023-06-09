@@ -62,7 +62,7 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
     actions: [
       {
         id: 'delete',
-        label: 'Delete',
+        label: ['delete document label', { ns: 'composer' }],
         invoke: async () => {
           parent.data?.db.remove(obj);
         },
@@ -105,7 +105,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             actions: [
               {
                 id: 'create-doc',
-                label: 'Create document',
+                label: ['create document label', { ns: 'composer' }],
                 icon: Plus,
                 invoke: async () => {
                   const document = space.db.add(new Document());
@@ -116,7 +116,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'rename-space',
-                label: 'Rename space',
+                label: ['rename space label', { ns: 'composer' }],
                 icon: PencilSimple,
                 invoke: async () => {
                   if (splitViewPlugin?.provides.splitView) {
@@ -127,7 +127,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'view-invitations',
-                label: 'View invitations',
+                label: ['view invitations label', { ns: 'composer' }],
                 icon: PaperPlane,
                 invoke: async () => {
                   await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
@@ -135,7 +135,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'hide-space',
-                label: 'Hide space',
+                label: ['hide space label', { ns: 'composer' }],
                 icon: EyeSlash,
                 invoke: async () => {
                   if (identity) {
@@ -333,7 +333,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         return [
           {
             id: 'create-space',
-            label: 'Create space',
+            label: ['create space label', { ns: 'os' }],
             icon: Planet,
             invoke: async () => {
               await clientPlugin.provides.client.createSpace();
@@ -341,7 +341,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           },
           {
             id: 'join-space',
-            label: 'Join space',
+            label: ['join space label', { ns: 'os' }],
             icon: Intersect,
             invoke: async () => {
               await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
@@ -349,7 +349,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           },
           {
             id: 'close-sidebar',
-            label: 'Close sidebar',
+            label: ['close sidebar label', { ns: 'os' }],
             icon: ArrowLineLeft,
             invoke: async () => {
               if (splitViewPlugin?.provides.splitView) {
