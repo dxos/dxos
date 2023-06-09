@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
 import { RandomAccessStorageConstructor } from 'random-access-storage';
 
 import { sha256, Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { createCrypto } from '@dxos/hypercore';
+import { createCrypto, hypercore } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
