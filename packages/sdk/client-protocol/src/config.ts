@@ -23,8 +23,8 @@ export const DX_CONFIG = `${process.env.HOME}/.config/dx`;
 export const DX_CACHE = `${process.env.HOME}/.cache/dx`;
 export const DX_DATA = `${process.env.HOME}/.local/share/dx`;
 
-// TODO(burdon): Requires root permissions.
-export const DX_RUNTIME = `/var/run/dx/${process.env.USER}`;
+// TODO(burdon): Override via XDG_RUNTIME_DIR
+export const DX_RUNTIME = `/tmp/dx/run/${process.env.USER}`;
 
 export const ENV_DX_CONFIG = 'DX_CONFIG';
 export const ENV_DX_PROFILE = 'DX_PROFILE';
