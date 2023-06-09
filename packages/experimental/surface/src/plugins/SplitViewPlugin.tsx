@@ -3,7 +3,7 @@
 //
 
 import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
-import React, { PropsWithChildren, createContext, useContext, useEffect } from 'react';
+import React, { PropsWithChildren, createContext, useContext } from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
@@ -33,10 +33,6 @@ export const SplitView = observer(() => {
   const context = useSplitViewContext();
   const { sidebarOpen, dialogOpen, dialogContent } = context;
   const { t } = useTranslation('os');
-
-  useEffect(() => {
-    console.log('[dialogOpen]', dialogOpen);
-  }, [dialogOpen]);
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>

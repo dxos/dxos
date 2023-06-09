@@ -56,7 +56,7 @@ export const StandaloneDocumentPage = observer(
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu.Root>
+              <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
                   <Button classNames='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
