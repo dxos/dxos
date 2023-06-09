@@ -58,7 +58,7 @@ export const ListViewContainer = observer(() => {
     <div>
       <div>
         {actions?.map((action) => (
-          <Button variant='ghost' key={action.id} onClick={action.invoke}>
+          <Button variant='ghost' key={action.id} onClick={(event) => action.invoke(t, event)}>
             {t(...action.label)}
           </Button>
         ))}

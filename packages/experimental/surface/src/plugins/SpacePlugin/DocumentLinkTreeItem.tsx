@@ -109,7 +109,7 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
                   onClick={(event) => {
                     suppressNextTooltip.current = true;
                     setOptionsMenuOpen(false);
-                    void action.invoke(event);
+                    void action.invoke(t, event);
                   }}
                   classNames='gap-2'
                 >
