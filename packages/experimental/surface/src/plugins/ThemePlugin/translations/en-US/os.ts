@@ -66,4 +66,5 @@ export const os = {
   'close sidebar label': 'Close sidebar',
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
+  'settings dialog title': 'Settings',
 };
