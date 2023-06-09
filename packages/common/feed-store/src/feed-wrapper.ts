@@ -28,7 +28,10 @@ export class FeedWrapper<T extends {}> {
   private _closed = false;
 
   constructor(
-    private _hypercore: Hypercore<T>,
+    /**
+     * @internal
+     */
+    public _hypercore: Hypercore<T>,
     private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
   ) {
     assert(this._hypercore);
