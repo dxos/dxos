@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EyeSlash, Intersect, PaperPlane, PencilSimple, Planet, Plus } from '@phosphor-icons/react';
+import { ArrowLineLeft, EyeSlash, Intersect, PaperPlane, PencilSimple, Planet, Plus } from '@phosphor-icons/react';
 import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
@@ -324,6 +324,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
       nodes: () => nodes,
       actions: (plugins) => {
         const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
+        const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
         if (!clientPlugin) {
           return [];
         }
@@ -344,6 +345,16 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             icon: Intersect,
             invoke: async () => {
               await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
+            },
+          },
+          {
+            id: 'close-sidebar',
+            label: 'Close sidebar',
+            icon: ArrowLineLeft,
+            invoke: async () => {
+              if (splitViewPlugin?.provides.splitView) {
+                splitViewPlugin.provides.splitView.sidebarOpen = false;
+              }
             },
           },
         ];

@@ -12,14 +12,15 @@ export const DialogRenameSpace = ({ data: [_, space] }: { data: [string, Space] 
   // todo(thure): Why does the input value need to be uncontrolled to work?
   return (
     <>
-      <Dialog.Title tabIndex={-1}>{t('space name label')}</Dialog.Title>
+      <Dialog.Title tabIndex={-1} classNames='mbe-1'>
+        {t('space name label')}
+      </Dialog.Title>
       <Input.Root>
         <Input.Label srOnly>{t('space name label')}</Input.Label>
         <Input.TextInput
           defaultValue={space.properties.name ?? ''}
           placeholder={t('untitled space title')}
           onChange={({ target: { value } }) => (space.properties.name = value)}
-          classNames='mlb-2'
         />
       </Input.Root>
       <Dialog.Close asChild>

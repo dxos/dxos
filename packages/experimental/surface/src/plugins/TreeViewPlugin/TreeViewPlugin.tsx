@@ -104,17 +104,26 @@ export const TreeViewContainer = observer(() => {
                     <Avatar.Label classNames='grow text-sm'>
                       {identity.profile?.displayName ?? identity.identityKey.truncate()}
                     </Avatar.Label>
-                    <Button
-                      variant='ghost'
-                      classNames='pli-2 pointer-fine:pli-1'
-                      {...(!sidebarOpen && { tabIndex: -1 })}
-                      onClick={() => {
-                        splitViewContext.dialogOpen = true;
-                        splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
-                      }}
-                    >
-                      <GearSix className={mx(getSize(4), 'rotate-90')} />
-                    </Button>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <Button
+                          variant='ghost'
+                          classNames='pli-2 pointer-fine:pli-1'
+                          {...(!sidebarOpen && { tabIndex: -1 })}
+                          onClick={() => {
+                            splitViewContext.dialogOpen = true;
+                            splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
+                          }}
+                        >
+                          <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
+                          <GearSix className={mx(getSize(4), 'rotate-90')} />
+                        </Button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>
+                        {t('settings dialog title', { ns: 'os' })}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Root>
                   </div>
                 </Avatar.Root>
               </>
