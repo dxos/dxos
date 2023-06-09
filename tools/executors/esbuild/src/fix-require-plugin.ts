@@ -33,5 +33,21 @@ export const fixRequirePlugin = (): Plugin => ({
 });
 
 const processOutput = (output: string) => {
-  return output.replace(/__require\(/g, 'require(');
+  const defaultImports = [...new Set([...output.matchAll(/var ([^{}\n]+?) = __require\("(.+?)"\)/g)].map((m) => m[2]))]
+    .map((module) => `import import$${module.replace(/[^a-zA-Z]/g, '')} from '${module}'`)
+    .join('\n');
+  const namedImports = [...new Set([...output.matchAll(/var {(.+?)} = __require\("(.+?)"\)/g)].map((m) => m[2]))]
+    .map((module) => `import * as import$${module.replace(/[^a-zA-Z]/g, '')} from '${module}'`)
+    .join('\n');
+
+  const withDefaultImports = [...output.matchAll(/var [^{}\n]+? = __require\("(.+?)"\)/g)].reduce((acc, m) => {
+    const next = m[0].replace(`__require("${m[1]}")`, `import$${m[1].replace(/[^a-zA-Z]/g, '')}`);
+    return acc.replace(m[0], next);
+  }, output);
+  const withNamedImports = [...output.matchAll(/var {.+?} = __require\("(.+?)"\)/g)].reduce((acc, m) => {
+    const next = m[0].replace(`__require("${m[1]}")`, `import$${m[1].replace(/[^a-zA-Z]/g, '')}`);
+    return acc.replace(m[0], next);
+  }, withDefaultImports);
+
+  return `${defaultImports}\n${namedImports}\n${withNamedImports}`;
 };
