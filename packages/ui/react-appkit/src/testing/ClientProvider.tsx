@@ -4,10 +4,10 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 import { ClientProvider as NaturalClientProvider } from '@dxos/react-client';
 
-const configProvider = async () => new Config(await Dynamics(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), Local(), Defaults());
 
 export const ClientProvider = ({ children }: PropsWithChildren<{}>) => {
   return (

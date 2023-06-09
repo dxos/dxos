@@ -70,7 +70,7 @@ describe('space/space', () => {
     const [agent2, space2] = await run(async () => {
       // NOTE: The genesisKey would be passed as part of the invitation.
       const agent = await builder.createPeer();
-      const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey);
+      const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, undefined, true);
 
       await space.open();
       expect(space.isOpen).toBeTruthy();

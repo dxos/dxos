@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -15,20 +16,20 @@ import { OfferMessage, SignalMessage, SignalMessenger } from './signal-messenger
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
-  reject: (error?: Error) => void;
 }
 
-interface MessageRouterOptions {
+export type SwarmMessengerOptions = {
   sendMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
   onOffer: (message: OfferMessage) => Promise<Answer>;
   onSignal: (message: SignalMessage) => Promise<void>;
   topic: PublicKey;
-}
+};
 
 /**
  * Adds offer/answer and signal interfaces.
  */
-export class MessageRouter implements SignalMessenger {
+export class SwarmMessenger implements SignalMessenger {
+  private readonly _ctx = new Context();
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
@@ -37,7 +38,7 @@ export class MessageRouter implements SignalMessenger {
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
 
-  constructor({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
+  constructor({ sendMessage, onSignal, onOffer, topic }: SwarmMessengerOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
     this._onOffer = onOffer;
@@ -77,11 +78,11 @@ export class MessageRouter implements SignalMessenger {
 
   async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    await this._sendReliableMessage({
+    return this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
       message,
-    });
+    }).catch((err) => log.catch(err));
   }
 
   async offer(message: OfferMessage): Promise<Answer> {
@@ -90,12 +91,12 @@ export class MessageRouter implements SignalMessenger {
       messageId: PublicKey.random(),
     };
     return new Promise<Answer>((resolve, reject) => {
-      this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
-      return this._sendReliableMessage({
+      this._offerRecords.set(networkMessage.messageId!, { resolve });
+      this._sendReliableMessage({
         author: message.author,
         recipient: message.recipient,
         message: networkMessage,
-      });
+      }).catch((err) => reject(err));
     });
   }
 
@@ -115,24 +116,12 @@ export class MessageRouter implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._encodeAndSend({ author, recipient, message: networkMessage });
-  }
-
-  private async _encodeAndSend({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    message: SwarmMessage;
-  }) {
-    await this._sendMessage({
+    return this._sendMessage({
       author,
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message),
+        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(networkMessage),
       },
     });
   }
@@ -174,7 +163,7 @@ export class MessageRouter implements SignalMessenger {
         sessionId: message.sessionId,
         data: { answer },
       },
-    });
+    }).catch((err) => log.catch(err));
   }
 
   private async _handleSignal({

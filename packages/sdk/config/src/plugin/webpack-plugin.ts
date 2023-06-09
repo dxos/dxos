@@ -11,11 +11,13 @@ export class ConfigPlugin {
   constructor(private readonly _options: ConfigPluginOpts = {}) {}
 
   apply(compiler: Compiler) {
-    const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : this._options.dynamic ?? false;
-    const define = Object.entries(definitions({ ...this._options, dynamic })).reduce((define, [key, value]) => {
-      define[key] = JSON.stringify(value);
-      return define;
-    }, {} as { [key: string]: string });
+    const define = Object.entries(definitions({ ...this._options, mode: process.env.NODE_ENV })).reduce(
+      (define, [key, value]) => {
+        define[key] = JSON.stringify(value);
+        return define;
+      },
+      {} as { [key: string]: string },
+    );
 
     new DefinePlugin(define).apply(compiler);
   }

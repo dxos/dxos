@@ -33,6 +33,7 @@ export type ConstructSpaceParams = {
   swarmIdentity: SwarmIdentity;
   memberKey: PublicKey;
   onNetworkConnection: (session: Teleport) => void;
+  onAuthFailure?: (session: Teleport) => void;
 };
 
 /**
@@ -70,7 +71,13 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace({ metadata, swarmIdentity, onNetworkConnection, memberKey }: ConstructSpaceParams) {
+  async constructSpace({
+    metadata,
+    swarmIdentity,
+    onNetworkConnection,
+    onAuthFailure,
+    memberKey,
+  }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
@@ -83,6 +90,7 @@ export class SpaceManager {
       swarmIdentity,
       networkManager: this._networkManager,
       onSessionAuth: onNetworkConnection,
+      onAuthFailure,
     });
     const snapshotManager = new SnapshotManager(this._snapshotStore);
 

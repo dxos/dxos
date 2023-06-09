@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Model, ModelFactory } from '@dxos/model-factory';
@@ -49,6 +50,7 @@ export class DatabaseProxy {
   private _currentBatch?: Batch;
 
   private _opening = false;
+  private _open = false;
 
   // prettier-ignore
   constructor(
@@ -130,6 +132,8 @@ export class DatabaseProxy {
 
     // Wait for initial set of items.
     await loaded.wait();
+
+    this._open = true;
   }
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
@@ -203,6 +207,10 @@ export class DatabaseProxy {
    * @returns true if a batch was started, false if there was already a batch in progress.
    */
   beginBatch(): boolean {
+    if (!this._open) {
+      throw new ApiError('Database not open');
+    }
+
     if (this._currentBatch) {
       return false;
     }
@@ -252,11 +260,13 @@ export class DatabaseProxy {
 
     const batchCreated = this.beginBatch();
     try {
+      const startingMutationIndex = this._currentBatch!.data.objects!.length;
+
       this._currentBatch!.data.objects!.push(...(batchInput.objects ?? []));
 
       const objectsUpdated: Item<any>[] = [];
 
-      tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!);
+      tagMutationsInBatch(batchInput, this._currentBatch!.clientTag!, startingMutationIndex);
       log('mutate', { clientTag: this._currentBatch!.clientTag, objectCount: batchInput.objects?.length ?? 0 });
 
       // Optimistic apply.

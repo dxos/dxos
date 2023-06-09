@@ -30,7 +30,7 @@ const encodeStructValue = (structValue: any): any => {
       return { structValue: encodeStruct(structValue) };
     }
     default: {
-      throw new Error(`Unsupported type: ${valueType}`);
+      return { nullValue: 0 };
     }
   }
 };

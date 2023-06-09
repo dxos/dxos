@@ -19,7 +19,7 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       const obj = new TypedObject();
       obj.title = 'Test';
       db.add(obj);
@@ -36,7 +36,7 @@ describe('Serializer', () => {
     }
 
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       await serializer.import(db, data);
 
       const { objects } = db.query();
@@ -51,7 +51,7 @@ describe('Serializer', () => {
     let serialized: SerializedSpace;
 
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       const obj = new TypedObject({
         title: 'Main task',
         subtasks: [
@@ -75,7 +75,7 @@ describe('Serializer', () => {
     }
 
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       await serializer.import(db, serialized);
 
       const { objects } = db.query();
@@ -96,7 +96,7 @@ describe('Serializer', () => {
     let data: SerializedSpace;
     const content = 'Hello world!';
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       const text = new Text(content);
       db.add(text);
       await db.flush();
@@ -113,7 +113,7 @@ describe('Serializer', () => {
     }
 
     {
-      const db = await createDatabase();
+      const { db } = await createDatabase();
       await serializer.import(db, data);
 
       const { objects } = db.query();

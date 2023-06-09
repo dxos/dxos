@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -36,10 +36,12 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hello-template": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -67,6 +69,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
     "oclif": "^3.7.0",
+    "pkg-up": "^3.1.0",
     "pm2": "^5.3.0",
     "react": "^18.2.0",
     "tempy": "^1.0.1",
