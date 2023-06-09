@@ -2,11 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Circle } from '@phosphor-icons/react';
-import React from 'react';
+import { Article, ArticleMedium, Circle, DotsThreeVertical } from '@phosphor-icons/react';
+import React, { useRef, useState } from 'react';
 
 import { Document } from '@braneframe/types';
-import { useTranslation, ListItem, useSidebar, useDensityContext, TreeItem, useMediaQuery } from '@dxos/aurora';
+import {
+  useTranslation,
+  ListItem,
+  useSidebar,
+  useDensityContext,
+  TreeItem,
+  useMediaQuery,
+  Tooltip,
+  DropdownMenu,
+  Button,
+} from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx, appTx } from '@dxos/aurora-theme';
 import { observer } from '@dxos/react-client';
@@ -24,6 +34,10 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
 
   const active = document.id === treeView.selected[1];
   const Icon = document.content?.kind === TextKind.PLAIN ? ArticleMedium : Article;
+
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   return (
     <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
@@ -48,6 +62,66 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
           <p className='grow mbs-1'>{document.title || t('untitled document title')}</p>
         </button>
       </TreeItem.Heading>
+      <Tooltip.Root
+        open={optionsTooltipOpen}
+        onOpenChange={(nextOpen) => {
+          if (suppressNextTooltip.current) {
+            setOptionsTooltipOpen(false);
+            suppressNextTooltip.current = false;
+          } else {
+            setOptionsTooltipOpen(nextOpen);
+          }
+        }}
+      >
+        <Tooltip.Portal>
+          <Tooltip.Content classNames='z-[31]' side='bottom'>
+            {t('document options label')}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+        <DropdownMenu.Root
+          {...{
+            open: optionsMenuOpen,
+            onOpenChange: (nextOpen: boolean) => {
+              if (!nextOpen) {
+                suppressNextTooltip.current = true;
+              }
+              return setOptionsMenuOpen(nextOpen);
+            },
+          }}
+        >
+          <DropdownMenu.Trigger asChild>
+            <Tooltip.Trigger asChild>
+              <Button
+                variant='ghost'
+                classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                {...(!sidebarOpen && { tabIndex: -1 })}
+              >
+                <DotsThreeVertical className={getSize(4)} />
+              </Button>
+            </Tooltip.Trigger>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content classNames='z-[31]'>
+              {item.actions?.map((action) => (
+                <DropdownMenu.Item
+                  key={action.id}
+                  onClick={(event) => {
+                    suppressNextTooltip.current = true;
+                    setOptionsMenuOpen(false);
+                    void action.invoke(event);
+                  }}
+                  classNames='gap-2'
+                >
+                  {action.icon && <action.icon className={getSize(4)} />}
+                  <span>{t(...action.label)}</span>
+                </DropdownMenu.Item>
+              ))}
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </Tooltip.Root>
       <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
         <Circle
           weight='fill'

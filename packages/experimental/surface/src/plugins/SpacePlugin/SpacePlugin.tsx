@@ -2,12 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft, EyeSlash, Intersect, PaperPlane, PencilSimple, Planet, Plus } from '@phosphor-icons/react';
+import {
+  ArrowLineLeft,
+  EyeSlash,
+  Intersect,
+  PaperPlane,
+  PencilSimple,
+  Planet,
+  Plus,
+  Trash,
+} from '@phosphor-icons/react';
 import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
+import { useTranslation } from '@dxos/aurora';
+import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 import {
@@ -63,6 +74,7 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
       {
         id: 'delete',
         label: ['delete document label', { ns: 'composer' }],
+        icon: Trash,
         invoke: async () => {
           parent.data?.db.remove(obj);
         },
@@ -75,6 +87,36 @@ const nodes = createStore<GraphNode[]>([]);
 const nodeAttributes = new Map<string, { [key: string]: any }>();
 const rootObjects = new Map<string, GraphNode[]>();
 const subscriptions = new EventSubscriptions();
+
+const EmptyTree = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div
+      role='none'
+      className={mx(
+        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
+        defaultDescription,
+      )}
+    >
+      {t('empty tree message')}
+    </div>
+  );
+};
+
+const EmptySpace = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div
+      role='none'
+      className={mx(
+        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
+        defaultDescription,
+      )}
+    >
+      {t('empty space message')}
+    </div>
+  );
+};
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
@@ -303,6 +345,15 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               return FullSpaceTreeItem;
             case isDocument(datum?.data):
               return DocumentLinkTreeItem;
+            default:
+              return null;
+          }
+        case 'tree--empty':
+          switch (true) {
+            case datum === 'root':
+              return EmptyTree;
+            case isSpace(datum?.data):
+              return EmptySpace;
             default:
               return null;
           }

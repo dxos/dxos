@@ -55,6 +55,7 @@ export const composer = {
   'hidden spaces tree label': 'Hidden spaces',
   'unhide space label': 'Un-hide space',
   'empty space message': 'No documents – click plus ☝ to get started',
+  'empty tree message': 'No spaces – click the planet ☝ to get started',
   'resolver tree label': 'Choose a Space to collaborate on documents in this repository',
   'resolver no spaces message': 'You aren’t in any spaces yet',
   'resolver create space label': 'Create a space for this repository',

@@ -155,7 +155,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={item.children} />
+        <TreeView items={item.children} parent={item} />
       </TreeItem.Body>
     </TreeItem.Root>
   );

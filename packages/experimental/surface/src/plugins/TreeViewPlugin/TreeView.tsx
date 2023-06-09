@@ -12,17 +12,20 @@ import { GraphNode } from '../GraphPlugin';
 
 export type TreeViewProps = {
   items?: GraphNode[];
+  parent?: 'root' | GraphNode;
 };
 
 export const TreeView = observer((props: TreeViewProps) => {
   const { items } = props;
   return (
     <Tree.Branch>
-      {items?.length // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
-        ? Array.from(items)
-            .filter((item) => !item.attributes?.hidden)
-            .map((item) => <Surface key={item.id} role='treeitem' data={item} />)
-        : 'no items'}
+      {items?.length ? ( // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
+        Array.from(items)
+          .filter((item) => !item.attributes?.hidden)
+          .map((item) => <Surface key={item.id} role='treeitem' data={item} />)
+      ) : (
+        <Surface role='tree--empty' data={props.parent} />
+      )}
     </Tree.Branch>
   );
 });

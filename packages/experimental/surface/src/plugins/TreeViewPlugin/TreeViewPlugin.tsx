@@ -63,7 +63,7 @@ export const TreeViewContainer = observer(() => {
               {Object.entries(graph.roots).map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
-                  <TreeView key={key} items={items} />
+                  <TreeView key={key} items={items} parent='root' />
                 </TreeItem.Root>
               ))}
             </Tree.Root>
