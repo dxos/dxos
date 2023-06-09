@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { IconProps } from '@phosphor-icons/react';
 import React, { UIEvent, FC, createContext, useContext } from 'react';
 
 import { definePlugin, Plugin } from '../framework';
@@ -23,7 +24,7 @@ export type GraphNode<TDatum = any> = {
 export type GraphNodeAction = {
   id: string;
   label: string;
-  icon?: FC;
+  icon?: FC<IconProps>;
   invoke: (event: UIEvent) => MaybePromise<void>;
 };
 

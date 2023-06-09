@@ -8,7 +8,7 @@ import { FileUploader } from 'react-drag-drop-files';
 
 import { Document } from '@braneframe/types';
 import { Button, DropdownMenu, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
-import { getSize, osTx } from '@dxos/aurora-theme';
+import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Dialog, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
@@ -31,14 +31,8 @@ export const StandaloneDocumentPage = observer(
     const themeContext = useThemeContext();
     return (
       <>
-        <div
-          role='none'
-          className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white/20 dark:bg-neutral-850/20 flex flex-col'
-        >
-          <div
-            role='none'
-            className='flex items-center gap-2 bg-neutral-500/20 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'
-          >
+        <div role='none' className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white dark:bg-neutral-925 flex flex-col'>
+          <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
             <Input
               key={document.id}
               variant='subdued'
@@ -48,7 +42,7 @@ export const StandaloneDocumentPage = observer(
               value={document.title ?? ''}
               onChange={({ target: { value } }) => (document.title = value)}
               slots={{
-                root: { className: 'shrink-0 grow pis-6 plb-1' },
+                root: { className: 'shrink-0 grow pis-6 plb-1.5 pointer-fine:plb-0.5' },
                 input: {
                   'data-testid': 'composer.documentTitle',
                   className: 'text-center',
@@ -56,9 +50,9 @@ export const StandaloneDocumentPage = observer(
               }}
             />
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu.Root>
+              <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
-                  <Button classNames='p-0 is-10 shrink-0' variant='ghost' density='coarse'>
+                  <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
                     <DotsThreeVertical className={getSize(6)} />
                   </Button>
                 </DropdownMenu.Trigger>
@@ -71,6 +65,7 @@ export const StandaloneDocumentPage = observer(
               </DropdownMenu.Root>
             </ThemeContext.Provider>
           </div>
+          <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 opacity-50')} />
           {children}
         </div>
         <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
