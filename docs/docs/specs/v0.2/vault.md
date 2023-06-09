@@ -14,5 +14,5 @@ The HALO Vault also provides the DXOS Shell for use when logging into an applica
 ## Scenarios
 
 1. Users can see the list of spaces they are a member of
+3. Users can see members of each space
 2. Users can see the list of devices in their HALO
-3. 
