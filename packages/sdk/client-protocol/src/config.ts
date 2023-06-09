@@ -14,8 +14,21 @@ export const DEFAULT_SHELL_CHANNEL = 'dxos:shell';
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/vault.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
-
 export const defaultConfig: ConfigProto = { version: 1 };
+
+// https://wiki.archlinux.org/title/XDG_Base_Directory
+// TODO(burdon): Change to ~/.config or XDG_CONFIG_HOME
+
+export const DX_CONFIG = `${process.env.HOME}/.config/dx`;
+export const DX_CACHE = `${process.env.HOME}/.cache/dx`;
+export const DX_DATA = `${process.env.HOME}/.local/share/dx`;
+
+// TODO(burdon): Requires root permissions.
+export const DX_RUNTIME = `/var/run/dx/${process.env.USER}`;
+
+export const ENV_DX_CONFIG = 'DX_CONFIG';
+export const ENV_DX_PROFILE = 'DX_PROFILE';
+export const ENV_DX_PROFILE_DEFAULT = 'default';
 
 // TODO(burdon): Factor out to spaces.
 // TODO(burdon): Defaults (with TextModel).

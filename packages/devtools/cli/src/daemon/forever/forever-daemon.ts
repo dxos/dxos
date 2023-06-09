@@ -5,10 +5,11 @@
 import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
 
+import { DX_DATA } from '@dxos/client-protocol';
 import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
-const FOREVER_ROOT = `${process.env.HOME}/.dx/store/forever`;
+const FOREVER_ROOT = `${DX_DATA}/forever`;
 
 /**
  * Manager of daemon processes started with Forever.

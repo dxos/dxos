@@ -51,17 +51,18 @@ export OPENFAAS_URL="http://$IP:8080"
 
 TODO(burdon): Change to test everywhere.
 
-1. Configure `$HOME/.config/dx/default.yml` (Set client persistence and Faasd Gateway.)
+1. Configure `$HOME/.dx/test.yml` (Set client persistence and Faasd Gateway.)
 2. From the CLI directory start the daemon:
 
 ```bash
-dx-dev daemon run --listen=unix://$HOME/.dx/run/default.sock --listen=ws://localhost:4567 --profile=default
+dx-dev daemon list
+dx-dev daemon run --listen=unix://$HOME/.dx/run/test.sock --listen=ws://localhost:4567 --profile=test
 ```
 
 To run the CLI:
 
 ```bash
-DX_PROFILE=default dx-dev space list
+DX_PROFILE=test dx-dev space list
 ```
 
 NOTE: Check/delete the socket file to troubleshoot.

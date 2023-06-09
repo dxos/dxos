@@ -7,9 +7,12 @@ import { promisify } from 'node:util';
 import pm2, { Proc } from 'pm2';
 
 import { Trigger } from '@dxos/async';
+import { DX_DATA } from '@dxos/client-protocol';
 
 import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket } from '../util';
+
+const PM2_ROOT = `${DX_DATA}/pm2`;
 
 /**
  * Manager of daemon processes started with PM2.
@@ -116,7 +119,7 @@ const Pm2Api: new (params?: Pm2Params) => Pm2 = (pm2 as any).custom;
 
 const getPm2 = async () => {
   const instance = new Pm2Api({
-    pm2_home: `${process.env.HOME}/.dx/store/pm2`,
+    pm2_home: `${PM2_ROOT}/pm2`,
   });
 
   const connected = new Trigger();

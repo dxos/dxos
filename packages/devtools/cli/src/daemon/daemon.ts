@@ -8,11 +8,10 @@ export interface Daemon {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 
-  isRunning: (profile: string) => Promise<boolean>;
-
   start: (profile: string) => Promise<ProcessDescription>;
   stop: (profile: string) => Promise<ProcessDescription>;
   restart: (profile: string) => Promise<ProcessDescription>;
 
+  isRunning: (profile: string) => Promise<boolean>;
   list: () => Promise<ProcessDescription[]>;
 }

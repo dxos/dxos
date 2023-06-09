@@ -12,7 +12,8 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Client, DEFAULT_DX_PROFILE, fromCliEnv, Config } from '@dxos/client';
+import { Client, fromCliEnv, Config } from '@dxos/client';
+import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -33,8 +34,6 @@ import {
   TelemetryContext,
   TELEMETRY_API_KEY,
 } from './util';
-
-const ENV_DX_CONFIG = 'DX_CONFIG';
 
 // TODO(wittjosiah): Factor out.
 const exists = async (...args: string[]): Promise<boolean> => {
@@ -64,11 +63,8 @@ export abstract class BaseCommand extends Command {
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
       default: async (context: any) => {
-        if (context?.flags?.profile) {
-          return join((context.config as OclifConfig).configDir, `${context.flags.profile}.yml`);
-        } else {
-          return join((context.config as OclifConfig).configDir, `${DEFAULT_DX_PROFILE}.yml`);
-        }
+        const profile = context?.flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
+        return join((context.config as OclifConfig).configDir, `${profile}.yml`);
       },
       dependsOn: ['profile'],
       aliases: ['c'],
@@ -82,8 +78,8 @@ export abstract class BaseCommand extends Command {
 
     profile: Flags.string({
       description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
-      default: DEFAULT_DX_PROFILE,
-      env: 'DX_PROFILE',
+      default: ENV_DX_PROFILE_DEFAULT,
+      env: ENV_DX_PROFILE,
     }),
 
     // TODO(mykola): Implement JSON args.
@@ -174,7 +170,6 @@ export abstract class BaseCommand extends Command {
 
     try {
       const configExists = await exists(configFile);
-
       if (!configExists) {
         const defaultConfigPath = join(
           dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),

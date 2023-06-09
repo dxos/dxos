@@ -5,10 +5,11 @@
 import fs from 'node:fs';
 
 import { sleep } from '@dxos/async';
+import { DX_RUNTIME } from '@dxos/client-protocol';
 
 const START_TIMEOUT = 5_000;
 
-export const getUnixSocket = (profile: string) => `unix://${process.env.HOME}/.dx/run/${profile}.sock`;
+export const getUnixSocket = (profile: string) => `unix://${process.env.HOME}/${DX_RUNTIME}/${profile}.sock`;
 
 export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
 
