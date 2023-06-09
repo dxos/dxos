@@ -30,7 +30,6 @@ import {
   PublicKey,
   ShellLayout,
   Space,
-  SpaceProxy,
   TypedObject,
 } from '@dxos/react-client';
 
@@ -64,8 +63,25 @@ export const SpaceMain: FC<{}> = observer(() => {
   const childNode = parentNode?.children?.find((node) => node.id === childId);
 
   const data = parentNode ? (childNode ? [parentNode.data, childNode.data] : [parentNode.data]) : null;
-  return data ? <Surface data={data} role='main' /> : <p>…</p>;
+  return <Surface data={data} role='main' />;
 });
+
+export const SpaceMainEmpty = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+      <p
+        role='alert'
+        className={mx(
+          defaultDescription,
+          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
+        )}
+      >
+        {t('first run message')}
+      </p>
+    </div>
+  );
+};
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
   return objects.map((obj) => ({
@@ -365,7 +381,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         case 'main':
           switch (true) {
             case isSpace(datum):
-              return () => <pre>{JSON.stringify((datum as SpaceProxy).properties)}</pre>;
+              return SpaceMainEmpty;
             default:
               return null;
           }
