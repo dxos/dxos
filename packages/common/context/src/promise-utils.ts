@@ -25,6 +25,6 @@ export const cancelWithContext = <T>(ctx: Context, promise: Promise<T>): Promise
     new Promise<never>((resolve, reject) => {
       // Will be called before .finally() handlers.
       clearDispose = ctx.onDispose(() => reject(new CancelledError()));
-    })
+    }),
   ]).finally(() => clearDispose?.());
 };

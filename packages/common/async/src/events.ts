@@ -130,7 +130,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return () => {
       clearDispose();
       this.off(callback);
-    }
+    };
   }
 
   /**

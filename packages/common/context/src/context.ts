@@ -46,7 +46,7 @@ export class Context {
    * Throwing an error inside the callback will result in the error being logged, but not re-thrown.
    *
    * NOTE: Will call the callback immediately if the context is already disposed.
-   * 
+   *
    * @returns A function that can be used to remove the callback from the dispose list.
    */
   onDispose(callback: DisposeCallback) {
@@ -63,7 +63,10 @@ export class Context {
 
     this._disposeCallbacks.push(callback);
     if (this._disposeCallbacks.length > MAX_SAFE_DISPOSE_CALLBACKS) {
-      log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', { count: this._disposeCallbacks.length, safeThreshold: MAX_SAFE_DISPOSE_CALLBACKS });
+      log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', {
+        count: this._disposeCallbacks.length,
+        safeThreshold: MAX_SAFE_DISPOSE_CALLBACKS,
+      });
     }
 
     return () => {
@@ -71,7 +74,7 @@ export class Context {
       if (index !== -1) {
         this._disposeCallbacks.splice(index, 1);
       }
-    }
+    };
   }
 
   /**
@@ -102,7 +105,7 @@ export class Context {
     }
     this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => { }));
+    return (this._disposePromise = Promise.all(promises).then(() => {}));
   }
 
   /**
