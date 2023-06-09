@@ -10,11 +10,11 @@ import { ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => ({
   name: 'dxos-config',
-  config: ({ root, mode }) => {
+  config: ({ root }) => {
     const configPath = root && resolve(root, options.configPath ?? 'dx.yml');
     const envPath = root && resolve(root, options.envPath ?? 'dx-env.yml');
     const devPath = root && resolve(root, options.devPath ?? 'dx-local.yml');
-    const define = Object.entries(definitions({ ...options, mode, configPath, envPath, devPath })).reduce(
+    const define = Object.entries(definitions({ ...options, configPath, envPath, devPath })).reduce(
       (define, [key, value]) => {
         define[key] = JSON.stringify(value);
         return define;

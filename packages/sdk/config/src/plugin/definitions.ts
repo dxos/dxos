@@ -16,7 +16,14 @@ import { ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();
 
-export const definitions = ({ configPath, envPath, devPath, mode, publicUrl = '', env }: ConfigPluginOpts) => {
+export const definitions = ({
+  configPath,
+  envPath,
+  devPath,
+  mode = process.env.NODE_ENV,
+  publicUrl = '',
+  env,
+}: ConfigPluginOpts) => {
   const KEYS_TO_FILE = {
     __CONFIG_DEFAULTS__: configPath ?? resolve(CWD, 'dx.yml'),
     __CONFIG_ENVS__: envPath ?? resolve(CWD, 'dx-env.yml'),
