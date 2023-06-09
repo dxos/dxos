@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.47](https://github.com/dxos/dxos/compare/v0.1.46...v0.1.47) (2023-06-09)
+
+
+### Features
+
+* OpenFaas support ([#3355](https://github.com/dxos/dxos/issues/3355)) ([439287f](https://github.com/dxos/dxos/commit/439287fa3e81a7938d95b2fb4798da1be9a4a7dd))
+* **surface:** add space actions ([#3372](https://github.com/dxos/dxos/issues/3372)) ([c7df0ee](https://github.com/dxos/dxos/commit/c7df0ee6b71547bc01924cecdbb619ff398348c4))
+* **surface:** Icons, dialogs, other harmonizations ([#3373](https://github.com/dxos/dxos/issues/3373)) ([6798ba8](https://github.com/dxos/dxos/commit/6798ba8ba03883026f9eede6bd7017846715e320))
+* **surface:** introduce tree view plugin ([#3358](https://github.com/dxos/dxos/issues/3358)) ([388e591](https://github.com/dxos/dxos/commit/388e5916e714c02fe1dfd98a3eaf065bc8bfe9ea))
+* **surface:** More Composer functionality ([#3360](https://github.com/dxos/dxos/issues/3360)) ([7f38e43](https://github.com/dxos/dxos/commit/7f38e430970d865099bbb945998bb8897e7d4674))
+
+
+### Bug Fixes
+
+* Add bundle command in publish script for extensions ([#3367](https://github.com/dxos/dxos/issues/3367)) ([09d9a9d](https://github.com/dxos/dxos/commit/09d9a9df7f5ae43f3ce62b74628490758d584f6e))
+* **cli:** missing dependency ([#3359](https://github.com/dxos/dxos/issues/3359)) ([e0fe462](https://github.com/dxos/dxos/commit/e0fe4623b189c151423785df5789dcc6b249e973))
+* Encode unknown types as null ([#3369](https://github.com/dxos/dxos/issues/3369)) ([38b9025](https://github.com/dxos/dxos/commit/38b9025a959806d18a60a618fe97c7918e308607))
+* factor out tunnel service ([#3335](https://github.com/dxos/dxos/issues/3335)) ([4c4ae1e](https://github.com/dxos/dxos/commit/4c4ae1edc088326c964ca85cecee62f22c7e760b))
+* Fix stale connection init process ([#3354](https://github.com/dxos/dxos/issues/3354)) ([689d275](https://github.com/dxos/dxos/commit/689d2759ecce231a496094032cd7db71e930fce6))
+* Memory leak in context dispose callbacks ([#3386](https://github.com/dxos/dxos/issues/3386)) ([c52d109](https://github.com/dxos/dxos/commit/c52d109cb81018ea9d7057758d3044f2a7366264))
+* **network-manager:** Add error handlers in swarm messaging ([#3362](https://github.com/dxos/dxos/issues/3362)) ([5138b8c](https://github.com/dxos/dxos/commit/5138b8c7f5b1d6c875a64e8396473d4405757c37))
+* **network-manager:** Fix race condition in webRTC test ([#3368](https://github.com/dxos/dxos/issues/3368)) ([97c8f6a](https://github.com/dxos/dxos/commit/97c8f6a69d068a0bdee2a1e5f2465a6d213d6d3e))
+
 ## [0.1.46](https://github.com/dxos/dxos/compare/v0.1.45...v0.1.46) (2023-06-06)
 
 
