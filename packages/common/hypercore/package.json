@@ -24,6 +24,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "readable-stream": "^3.6.0",
+    "sodium-native": "^3.2.0",
+    "sodium-universal": "^3.0.2",
     "streamx": "^2.12.5"
   },
   "devDependencies": {

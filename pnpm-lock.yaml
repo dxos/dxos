@@ -85,7 +85,7 @@ importers:
       chai-dom: ^1.11.0
       chalk: ^4.1.0
       esbuild: ^0.16.14
-      esbuild-node-externals: ^1.6.0
+      esbuild-node-externals: ^1.7.0
       esbuild-plugin-raw: ^0.1.7
       esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.41.0
@@ -193,7 +193,7 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
-      esbuild-node-externals: 1.6.0_esbuild@0.16.14
+      esbuild-node-externals: 1.7.0_esbuild@0.16.14
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -1038,6 +1038,8 @@ importers:
       noise-protocol: 3.0.1
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
+      sodium-native: ^3.2.0
+      sodium-universal: ^3.0.2
       streamx: ^2.12.5
     dependencies:
       '@dxos/async': link:../async
@@ -1048,6 +1050,8 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       readable-stream: 3.6.0
+      sodium-native: 3.4.1
+      sodium-universal: 3.1.0
       streamx: 2.12.5
     devDependencies:
       '@dxos/log': link:../log
@@ -23655,15 +23659,15 @@ packages:
     dev: true
     optional: true
 
-  /esbuild-node-externals/1.6.0_esbuild@0.16.14:
-    resolution: {integrity: sha512-LmQnnDVMVTvMmPBpBDrCtub7CVW9aavBvF4ZjOLRNy/+ODoHz3kLjvDdMS/UKn1eJ5WrlAImiYsD3hF4YKyGkw==}
+  /esbuild-node-externals/1.7.0_esbuild@0.16.14:
+    resolution: {integrity: sha512-nfY3hxtO2anCTZ87LgfzCTfBuyG6de+NyiCNMF1mgrBufS0NgoYlBwF77HHuOInsJLxsAJf0BfLeV6ekZ3hRuA==}
     engines: {node: '>=12'}
     peerDependencies:
-      esbuild: 0.12 - 0.16
+      esbuild: 0.12 - 0.17
     dependencies:
       esbuild: 0.16.14
       find-up: 5.0.0
-      tslib: 2.4.1
+      tslib: 2.5.0
     dev: true
 
   /esbuild-openbsd-64/0.14.54:

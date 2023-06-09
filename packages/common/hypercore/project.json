@@ -18,8 +18,7 @@
       "options": {
         "bundlePackages": [
           "hypercore",
-          "hypercore-protocol",
-          "noise-protocol"
+          "hypercore-protocol"
         ],
         "entryPoints": [
           "packages/common/hypercore/src/index.ts"
