@@ -6,11 +6,11 @@ import 'github-markdown-css/github-markdown.css';
 import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
 import { Loading } from '@dxos/react-appkit';
 
 import { useSplitViewContext } from '../../../SplitViewPlugin';
-import { useOctokitContext } from '../../components';
+import { PatInput, useOctokitContext } from '../../components';
 
 const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
   ALLOWED_TAGS: [
@@ -105,18 +105,7 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   ) : (
     <div role='none' className='mli-auto max-bs-[300px] text-center'>
       {!octokit && <p className='mlb-4'>{t('empty github pat message')}</p>}
-      {octokit ? (
-        <Loading label={t('loading preview message')} />
-      ) : (
-        <Button
-          onClick={() => {
-            splitViewContext.dialogOpen = true;
-            splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
-          }}
-        >
-          {t('set github pat label')}
-        </Button>
-      )}
+      {octokit ? <Loading label={t('loading preview message')} /> : <PatInput />}
     </div>
   );
 };
