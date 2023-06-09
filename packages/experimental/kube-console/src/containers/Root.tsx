@@ -7,7 +7,7 @@ import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { fromHost } from '@dxos/client';
-import { Defaults, Envs } from '@dxos/config';
+import { Defaults, Envs, Local } from '@dxos/config';
 import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
 import { ClientProvider, Config } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
@@ -17,7 +17,7 @@ const Fullscreen: FC<PropsWithChildren> = ({ children }) => {
 };
 
 export const Root: FC<PropsWithChildren> = ({ children }) => {
-  const configProvider = async () => new Config(/* await Dynamics(), */ await Envs(), Defaults());
+  const configProvider = async () => new Config(/* await Dynamics(), */ await Envs(), Local(), Defaults());
 
   return (
     <ThemeProvider appNs='console' rootDensity='fine' resourceExtensions={[appkitTranslations, osTranslations]}>

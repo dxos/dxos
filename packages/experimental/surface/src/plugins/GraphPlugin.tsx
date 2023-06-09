@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { IconProps } from '@phosphor-icons/react';
 import React, { UIEvent, FC, createContext, useContext } from 'react';
 
 import { definePlugin, Plugin } from '../framework';
@@ -17,23 +18,28 @@ export type GraphNode<TDatum = any> = {
   parent?: GraphNode;
   children?: GraphNode[];
   actions?: GraphNodeAction[];
+  attributes?: { [key: string]: any };
 };
 
 export type GraphNodeAction = {
   id: string;
   label: string;
-  icon?: FC;
+  icon?: FC<IconProps>;
   invoke: (event: UIEvent) => MaybePromise<void>;
 };
 
-export type GraphPluginProvides = {
+export type GraphProvides = {
   graph: {
     nodes?: (plugins: Plugin[]) => GraphNode[];
     actions?: (plugins: Plugin[]) => GraphNodeAction[];
   };
 };
 
-export type GraphPlugin = Plugin<GraphPluginProvides>;
+type GraphPlugin = Plugin<GraphProvides>;
+
+export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
+  return (plugins as GraphPlugin[]).filter((p) => typeof p.provides?.graph?.nodes === 'function');
+};
 
 // TODO(wittjosiah): State can be a GraphNode.
 export type GraphContextValue = {
@@ -50,11 +56,11 @@ const GraphContext = createContext<GraphContextValue>(graph);
 
 export const useGraphContext = () => useContext(GraphContext);
 
-export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
-  return (plugins as GraphPlugin[]).filter((p) => p.provides?.graph);
+export type GraphPluginProvides = {
+  graph: GraphContextValue;
 };
 
-export const GraphPlugin = definePlugin({
+export const GraphPlugin = definePlugin<GraphPluginProvides, {}>({
   meta: {
     id: 'dxos:GraphPlugin',
   },
@@ -72,6 +78,7 @@ export const GraphPlugin = definePlugin({
     }
   },
   provides: {
+    graph,
     context: ({ children }) => {
       return <GraphContext.Provider value={graph}>{children}</GraphContext.Provider>;
     },

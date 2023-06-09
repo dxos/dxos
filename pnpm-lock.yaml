@@ -3889,6 +3889,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-shell': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/dompurify': ^3.0.2
@@ -3901,6 +3902,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       react-router: ^6.4.0
       react-router-dom: ^6.4.0
     dependencies:
@@ -3920,15 +3922,17 @@ importers:
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
       octokit: 2.0.14
-      react-drag-drop-files: 2.3.8_biqbaboplfbrettd7655fr4n2y
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
     devDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/log': link:../../common/log
+      '@dxos/react-shell': link:../../sdk/react-shell
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-is: 18.2.0
 
   packages/gravity/gravity-agent:
     specifiers:
@@ -35132,21 +35136,6 @@ packages:
       - react-is
     dev: false
 
-  /react-drag-drop-files/2.3.8_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-/tA1FEGhw6IwG5DlogYu0y3uLkyZ6np8cbzihW7Hy/k3b1T022T7zjn/4elZ6+M69GwnJnUUO0Utisu1xZFATA==}
-    peerDependencies:
-      react: ^18.0.0
-      react-dom: ^18.0.0
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      styled-components: 5.3.6_biqbaboplfbrettd7655fr4n2y
-    transitivePeerDependencies:
-      - react-is
-    dev: false
-    optional: true
-
   /react-element-to-jsx-string/15.0.0_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
     peerDependencies:
@@ -38060,30 +38049,6 @@ packages:
       shallowequal: 1.1.0
       supports-color: 5.5.0
 
-  /styled-components/5.3.6_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-hGTZquGAaTqhGWldX7hhfzjnIYBZ0IXQXkCYdvF1Sq3DsUaLx6+NTHC5Jj1ooM2F68sBiVz3lvhfwQs/S3l6qg==}
-    engines: {node: '>=10'}
-    requiresBuild: true
-    peerDependencies:
-      react: '>= 16.8.0'
-      react-dom: '>= 16.8.0'
-      react-is: '>= 16.8.0'
-    dependencies:
-      '@babel/helper-module-imports': 7.18.6
-      '@babel/traverse': 7.21.3_supports-color@5.5.0
-      '@emotion/is-prop-valid': 1.2.0
-      '@emotion/stylis': 0.8.5
-      '@emotion/unitless': 0.7.5
-      babel-plugin-styled-components: 2.0.7_styled-components@5.3.6
-      css-to-react-native: 3.0.0
-      hoist-non-react-statics: 3.3.2
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      shallowequal: 1.1.0
-      supports-color: 5.5.0
-    dev: false
-    optional: true
-
   /styled-system/5.1.5:
     resolution: {integrity: sha512-7VoD0o2R3RKzOzPK0jYrVnS8iJdfkKsQJNiLRDjikOpQVqQHns/DXWaPZOH4tIKkhAT7I6wIsy9FWTWh2X3q+A==}
     dependencies:
@@ -39211,7 +39176,7 @@ packages:
     engines: {node: '>= 14.14'}
     hasBin: true
     peerDependencies:
-      typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x
+      typescript: ^5.0.0
     dependencies:
       lunr: 2.3.9
       marked: 4.2.2

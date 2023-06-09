@@ -9,7 +9,7 @@ import { DX_DATA } from '@dxos/client-protocol';
 import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
-const FOREVER_ROOT = `${DX_DATA}/forever`;
+const FOREVER_ROOT = `${DX_DATA}/daemon/forever`;
 
 /**
  * Manager of daemon processes started with Forever.

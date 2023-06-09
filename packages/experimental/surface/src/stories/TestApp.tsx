@@ -7,10 +7,10 @@ import React from 'react';
 import { PluginContextProvider } from '../framework';
 import {
   ClientPlugin,
-  SpacePlugin,
   GithubMarkdownPlugin,
   GraphPlugin,
   RoutesPlugin,
+  SpacePlugin,
   SplitViewPlugin,
   ThemePlugin,
   TreeViewPlugin,

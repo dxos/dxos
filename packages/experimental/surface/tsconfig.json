@@ -36,6 +36,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-shell"
+    },
+    {
       "path": "../../ui/aurora"
     },
     {

@@ -20,9 +20,9 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
   const { t } = useTranslation('composer');
   const density = useDensityContext();
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { selected, setSelected } = useTreeView();
+  const treeView = useTreeView();
 
-  const active = document.id === selected?.data?.id;
+  const active = document.id === treeView.selected[1];
   const Icon = document.content?.kind === TextKind.PLAIN ? ArticleMedium : Article;
 
   return (
@@ -39,7 +39,7 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
         <button
           {...(!sidebarOpen && { tabIndex: -1 })}
           onClick={() => {
-            setSelected(item);
+            treeView.selected = [item.parent!.id, item.id];
             !isLg && closeSidebar();
           }}
           className='text-start flex gap-2'

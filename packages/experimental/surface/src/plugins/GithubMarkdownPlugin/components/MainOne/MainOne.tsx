@@ -16,11 +16,11 @@ import {
 import React, { HTMLAttributes, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Document } from '@braneframe/types';
-import { Button, Main, Trans, DropdownMenu, useTranslation } from '@dxos/aurora';
+import { Button, Main, Dialog, Trans, DropdownMenu, useTranslation } from '@dxos/aurora';
 import { Composer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Dialog, Input } from '@dxos/react-appkit';
+import { Dialog as AppkitDialog, Input } from '@dxos/react-appkit';
 import { Space, useIdentity } from '@dxos/react-client';
 
 import { PatDialog, useOctokitContext } from '../GithubContext';
@@ -46,8 +46,8 @@ type GhIdentifier = GhFileIdentifier | GhIssueIdentifier;
 
 type ExportViewState = 'create-pr' | 'pending' | 'response' | null;
 
-export const MainOne = ({ data }: { data: [Document, Space] }) => {
-  const [document, space]: [Document, Space] = data;
+export const MainOne = ({ data }: { data: [Space, Document] }) => {
+  const [space, document]: [Space, Document] = data;
   const [editorViewState, setEditorViewState] = useState<'editor' | 'preview'>('editor');
   const [layout, _setLayout] = useState<'standalone' | 'embedded'>('standalone');
 
@@ -409,17 +409,22 @@ export const MainOne = ({ data }: { data: [Document, Space] }) => {
           )}
         </StandaloneDocumentPage>
       )}
-      <PatDialog
-        open={staleDialogOpen}
-        setOpen={setStaleDialogOpen}
-        title={t('stale rescue title')}
-        description={t('stale rescue description')}
-      />
-      <Dialog
+      <Dialog.Root open={staleDialogOpen} onOpenChange={setStaleDialogOpen}>
+        <Dialog.Overlay>
+          <Dialog.Portal>
+            <Dialog.Content>
+              <Dialog.Title>{t('stale rescue title')}</Dialog.Title>
+              <Dialog.Description>{t('stale rescue description')}</Dialog.Description>
+              <PatDialog />
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Overlay>
+      </Dialog.Root>
+      <AppkitDialog
         title={t('bind to file in github label')}
         open={ghBindOpen}
         onOpenChange={(nextOpen) => {
-          if (ghId && document?.meta) {
+          if (ghId && document) {
             const key = { source: 'com.github', id: ghId };
             // TODO(wittjosiah): Stop overwriting document.meta.
             document.meta = { keys: [key] };
@@ -444,8 +449,8 @@ export const MainOne = ({ data }: { data: [Document, Space] }) => {
               validationMessage: t('error github markdown path message'),
             })}
         />
-      </Dialog>
-      <Dialog
+      </AppkitDialog>
+      <AppkitDialog
         title={t('confirm import title')}
         open={importConfirmOpen}
         onOpenChange={setImportConfirmOpen}
@@ -462,8 +467,8 @@ export const MainOne = ({ data }: { data: [Document, Space] }) => {
         ]}
       >
         <p className='plb-2'>{t('confirm import body')}</p>
-      </Dialog>
-      <Dialog
+      </AppkitDialog>
+      <AppkitDialog
         title={t('confirm export title')}
         open={!!exportViewState}
         onOpenChange={(nextOpen) => {
@@ -526,7 +531,7 @@ export const MainOne = ({ data }: { data: [Document, Space] }) => {
             </div>
           </div>
         )}
-      </Dialog>
+      </AppkitDialog>
     </Main.Content>
   );
 };

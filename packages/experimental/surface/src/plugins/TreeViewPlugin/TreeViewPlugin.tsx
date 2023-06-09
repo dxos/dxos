@@ -3,7 +3,7 @@
 //
 
 import { GearSix, Placeholder } from '@phosphor-icons/react';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 
 import {
   Avatar,
@@ -20,23 +20,24 @@ import {
   useTranslation,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
+import { createStore } from '@dxos/observable-object';
 import { useIdentity, observer } from '@dxos/react-client';
 
 import { definePlugin } from '../../framework';
-import { GraphNode, useGraphContext } from '../GraphPlugin';
+import { useGraphContext } from '../GraphPlugin';
+import { useSplitViewContext } from '../SplitViewPlugin';
 import { TreeView } from './TreeView';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
 
+// TODO(wittjosiah): Derive graph nodes from selected.
 export type TreeViewContextValue = {
-  selected: GraphNode | null;
-  setSelected(item: GraphNode | null): any;
+  selected: string[];
 };
 
-const Context = createContext<TreeViewContextValue>({
-  selected: null,
-  setSelected: () => {},
-});
+const store = createStore<TreeViewContextValue>({ selected: [] });
+
+const Context = createContext<TreeViewContextValue>(store);
 
 export const useTreeView = () => useContext(Context);
 
@@ -48,6 +49,7 @@ export const TreeViewContainer = observer(() => {
   const themeContext = useThemeContext();
   const { t } = useTranslation('composer');
   const { sidebarOpen } = useSidebar(TREE_VIEW_PLUGIN);
+  const splitViewContext = useSplitViewContext();
 
   const actions = Object.values(graph.actions).reduce((acc, actions) => [...acc, ...actions], []);
 
@@ -78,7 +80,7 @@ export const TreeViewContainer = observer(() => {
                       {...(!sidebarOpen && { tabIndex: -1 })}
                     >
                       <span className='sr-only'>{action.label}</span>
-                      <Placeholder className={getSize(4)} />
+                      {action.icon ? <action.icon className={getSize(4)} /> : <Placeholder className={getSize(4)} />}
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Content classNames='z-[31]'>
@@ -102,13 +104,26 @@ export const TreeViewContainer = observer(() => {
                     <Avatar.Label classNames='grow text-sm'>
                       {identity.profile?.displayName ?? identity.identityKey.truncate()}
                     </Avatar.Label>
-                    <Button
-                      variant='ghost'
-                      classNames='pli-2 pointer-fine:pli-1'
-                      {...(!sidebarOpen && { tabIndex: -1 })}
-                    >
-                      <GearSix className={mx(getSize(4), 'rotate-90')} />
-                    </Button>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <Button
+                          variant='ghost'
+                          classNames='pli-2 pointer-fine:pli-1'
+                          {...(!sidebarOpen && { tabIndex: -1 })}
+                          onClick={() => {
+                            splitViewContext.dialogOpen = true;
+                            splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
+                          }}
+                        >
+                          <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>
+                          <GearSix className={mx(getSize(4), 'rotate-90')} />
+                        </Button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>
+                        {t('settings dialog title', { ns: 'os' })}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Root>
                   </div>
                 </Avatar.Root>
               </>
@@ -120,20 +135,18 @@ export const TreeViewContainer = observer(() => {
   );
 });
 
-export const TreeViewPlugin = definePlugin({
+export type TreeViewProvides = {
+  treeView: TreeViewContextValue;
+};
+
+export const TreeViewPlugin = definePlugin<TreeViewProvides, {}>({
   meta: {
     id: TREE_VIEW_PLUGIN,
   },
   provides: {
+    treeView: store,
     context: ({ children }) => {
-      const [selected, setSelected] = useState<GraphNode | null>(null);
-
-      const context: TreeViewContextValue = {
-        selected,
-        setSelected,
-      };
-
-      return <Context.Provider value={context}>{children}</Context.Provider>;
+      return <Context.Provider value={store}>{children}</Context.Provider>;
     },
     components: { TreeView: TreeViewContainer },
   },

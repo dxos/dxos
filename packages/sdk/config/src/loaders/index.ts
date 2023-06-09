@@ -28,10 +28,9 @@ const maybeLoadFile = (file: string): any => {
 //
 
 /**
- * File storage.
- * @deprecated
+ * Development config.
  */
-export const LocalStorage = <T = ConfigProto>(): T => ({} as T);
+export const Local = <T = ConfigProto>(): T => ({} as T);
 
 /**
  * Provided dynamically by server.

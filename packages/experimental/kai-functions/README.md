@@ -56,12 +56,13 @@ TODO(burdon): Change to test everywhere.
 
 ```bash
 dx-dev daemon list
-dx-dev daemon run --listen=unix://tmp/dx/run/$USER/test.sock --listen=ws://localhost:4567 --profile=test
+DX_PROFILE=test dx-dev daemon start
 ```
 
-To run the CLI:
+Test via the CLI:
 
 ```bash
+DX_PROFILE=test dx-dev halo
 DX_PROFILE=test dx-dev space list
 ```
 

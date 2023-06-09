@@ -2,12 +2,15 @@ version: 1
 
 runtime:
   client:
+    remoteSource: http://localhost:3967/vault.html
     storage:
       persistent: false
 
   services:
     signaling:
-      - server: ws://localhost/.well-known/dx/signal
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
+
     ice:
       - urls: stun:kube.dxos.org:3478
         username: dxos
@@ -20,5 +23,5 @@ runtime:
         username: dxos
         credential: dxos
     ipfs:
-      server: http://localhost:5001/api/v0
-      gateway: http://localhost:8080/ipfs
+      server: https://dev.kube.dxos.org/ipfs/api
+      gateway: https://dev.kube.dxos.org/ipfs/gateway

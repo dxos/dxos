@@ -9,7 +9,7 @@ import { DX_RUNTIME } from '@dxos/client-protocol';
 
 const START_TIMEOUT = 5_000;
 
-export const getUnixSocket = (profile: string) => `unix://${process.env.HOME}/${DX_RUNTIME}/${profile}.sock`;
+export const getUnixSocket = (profile: string, protocol = 'unix') => `${protocol}://${DX_RUNTIME}/daemon/${profile}.sock`;
 
 export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
 
@@ -24,7 +24,6 @@ export const waitForDaemon = async (profile: string) => {
   while (!fs.existsSync(sockAddr)) {
     await sleep(inc);
     slept += inc;
-
     if (slept >= START_TIMEOUT) {
       throw new Error(`Daemon start timeout exceeded ${START_TIMEOUT}[ms]`);
     }

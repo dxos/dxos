@@ -12,7 +12,7 @@ import { DX_DATA } from '@dxos/client-protocol';
 import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket } from '../util';
 
-const PM2_ROOT = `${DX_DATA}/pm2`;
+const PM2_ROOT = `${DX_DATA}/daemon/pm2`;
 
 /**
  * Manager of daemon processes started with PM2.
