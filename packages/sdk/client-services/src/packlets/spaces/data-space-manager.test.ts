@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
+import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
@@ -45,7 +46,7 @@ describe('DataSpaceManager', () => {
     const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
-    const identity1 = await createSigningContext(peer1.keyring);
+    const identity = await createSigningContext(peer1.keyring);
     const dataSpaceManager1 = new DataSpaceManager(
       peer1.spaceManager,
       peer1.metadataStore,
@@ -190,5 +191,34 @@ describe('DataSpaceManager', () => {
 
     await space1.postMessage('test', { '@type': 'google.protobuf.Any', test: true });
     await receivedMessage();
+  });
+
+  describe('Epochs', () => {
+    test.skip('Epoch truncates feeds', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      const identity = await createSigningContext(peer.keyring);
+      const dataSpaceManager = new DataSpaceManager(
+        peer.spaceManager,
+        peer.metadataStore,
+        new DataServiceSubscriptions(),
+        peer.keyring,
+        identity,
+        peer.feedStore,
+      );
+      await dataSpaceManager.open();
+      afterTest(() => dataSpaceManager.close());
+      const space = await dataSpaceManager.createSpace();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+      log.info('feeds', { feeds: space.inner.dataPipeline.pipelineState?.feeds.map((feed) => feed) });
+      await testLocalDatabase(space.dataPipeline);
+      await testLocalDatabase(space.dataPipeline);
+      await testLocalDatabase(space.dataPipeline);
+      await testLocalDatabase(space.dataPipeline);
+      await space.createEpoch();
+      log.info('feeds', { feeds: space.inner.dataPipeline.pipelineState?.feeds.map((feed) => feed.length) });
+    });
   });
 });
