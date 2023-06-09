@@ -224,6 +224,7 @@ export class FaasConnector {
     const unsubscribe = query.subscribe(({ objects }) => {
       selection.update(objects);
     });
+    selection.update(query.objects);
     ctx.onDispose(unsubscribe);
 
     log.info('mounted trigger', { trigger: trigger.id });

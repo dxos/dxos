@@ -59,12 +59,19 @@ export abstract class BaseCommand extends Command {
   private _stdin?: string;
   public static override enableJsonFlag = true;
   static override flags = {
+    profile: Flags.string({
+      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
+      default: ENV_DX_PROFILE_DEFAULT,
+      env: ENV_DX_PROFILE,
+    }),
+
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
+      // TODO(burdon): Factor out.
       default: async (context: any) => {
         const profile = context?.flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
-        return join((context.config as OclifConfig).configDir, `${profile}.yml`);
+        return join((context.config as OclifConfig).configDir, `profile/${profile}.yml`);
       },
       dependsOn: ['profile'],
       aliases: ['c'],
@@ -74,12 +81,6 @@ export abstract class BaseCommand extends Command {
       description: 'Timeout in seconds',
       default: 30,
       aliases: ['t'],
-    }),
-
-    profile: Flags.string({
-      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
-      default: ENV_DX_PROFILE_DEFAULT,
-      env: ENV_DX_PROFILE,
     }),
 
     // TODO(mykola): Implement JSON args.

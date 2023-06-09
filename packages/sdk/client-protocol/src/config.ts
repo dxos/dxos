@@ -19,12 +19,15 @@ export const defaultConfig: ConfigProto = { version: 1 };
 // https://wiki.archlinux.org/title/XDG_Base_Directory
 // TODO(burdon): Change to ~/.config or XDG_CONFIG_HOME
 
-export const DX_CONFIG = `${process.env.HOME}/.config/dx`;
-export const DX_CACHE = `${process.env.HOME}/.cache/dx`;
-export const DX_DATA = `${process.env.HOME}/.local/share/dx`;
+const HOME = typeof process !== 'undefined' ? process?.env?.HOME : '';
+
+// TODO(burdon): Generalize since currently NodeJS only.
+export const DX_CONFIG = `${HOME}/.config/dx`;
+export const DX_CACHE = `${HOME}/.cache/dx`;
+export const DX_DATA = `${HOME}/.local/share/dx`;
 
 // TODO(burdon): Override via XDG_RUNTIME_DIR
-export const DX_RUNTIME = `/tmp/dx/run/${process.env.USER}`;
+export const DX_RUNTIME = '/tmp/dx/run';
 
 export const ENV_DX_CONFIG = 'DX_CONFIG';
 export const ENV_DX_PROFILE = 'DX_PROFILE';
