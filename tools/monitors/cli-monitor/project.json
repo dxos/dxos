@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "tools/monitors/messaging-monitor/src",
+  "sourceRoot": "tools/monitors/cli-monitor/src",
   "projectType": "library",
   "targets": {
     "monitor": {

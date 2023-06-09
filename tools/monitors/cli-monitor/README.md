@@ -1,9 +1,9 @@
-# @dxos/messaging-monitor
+# @dxos/cli-monitor
 
 ## Installation
 
 ```bash
-pnpm i @dxos/messaging-monitor
+pnpm i @dxos/cli-monitor
 ```
 
 ## DXOS Resources
