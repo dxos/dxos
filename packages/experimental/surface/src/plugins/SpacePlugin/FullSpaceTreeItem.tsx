@@ -114,7 +114,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                       // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
-                      void action.invoke(event);
+                      void action.invoke(t, event);
                     }}
                     classNames='gap-2'
                   >
@@ -140,7 +140,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
                 variant='ghost'
                 data-testid='composer.createDocument'
                 classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                onClick={primaryAction.invoke}
+                onClick={(event) => primaryAction.invoke(t, event)}
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
                 <span className='sr-only'>{t(...primaryAction.label)}</span>

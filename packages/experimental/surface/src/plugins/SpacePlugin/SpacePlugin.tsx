@@ -4,6 +4,7 @@
 
 import {
   ArrowLineLeft,
+  Download,
   EyeSlash,
   Intersect,
   PaperPlane,
@@ -11,6 +12,7 @@ import {
   Planet,
   Plus,
   Trash,
+  Upload,
 } from '@phosphor-icons/react';
 import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
@@ -40,8 +42,11 @@ import { RouterPluginProvides } from '../RoutesPlugin';
 import { SplitViewProvides } from '../SplitViewPlugin';
 import { TreeViewProvides, useTreeView } from '../TreeViewPlugin';
 import { DialogRenameSpace } from './DialogRenameSpace';
+import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';
+import { backupSpace } from './backup';
+import { getSpaceDisplayName } from './getSpaceDisplayName';
 
 export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
 
@@ -192,6 +197,31 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                     if (treeViewPlugin?.provides.treeView.selected[0] === id) {
                       treeViewPlugin.provides.treeView.selected = [];
                     }
+                  }
+                },
+              },
+              {
+                id: 'backup-space',
+                label: ['download all docs in space label', { ns: 'composer' }],
+                icon: Download,
+                invoke: async (t) => {
+                  const backupBlob = await backupSpace(space, t('untitled document title'));
+                  const url = URL.createObjectURL(backupBlob);
+                  const element = document.createElement('a');
+                  element.setAttribute('href', url);
+                  element.setAttribute('download', `${getSpaceDisplayName(t, space)} backup.zip`);
+                  element.setAttribute('target', 'download');
+                  element.click();
+                },
+              },
+              {
+                id: 'restore-space',
+                label: ['upload all docs in space label', { ns: 'composer' }],
+                icon: Upload,
+                invoke: async () => {
+                  if (splitViewPlugin?.provides.splitView) {
+                    splitViewPlugin.provides.splitView.dialogOpen = true;
+                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:SpacePlugin/RestoreSpaceDialog', space];
                   }
                 },
               },
@@ -358,11 +388,17 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               return null;
           }
         case 'dialog':
-          switch (true) {
-            case Array.isArray(datum) && datum[0] === 'dxos:SpacePlugin/RenameSpaceDialog':
-              return DialogRenameSpace;
-            default:
-              return null;
+          if (Array.isArray(datum)) {
+            switch (datum[0]) {
+              case 'dxos:SpacePlugin/RenameSpaceDialog':
+                return DialogRenameSpace;
+              case 'dxos:SpacePlugin/RestoreSpaceDialog':
+                return DialogRestoreSpace;
+              default:
+                return null;
+            }
+          } else {
+            return null;
           }
         default:
           return null;

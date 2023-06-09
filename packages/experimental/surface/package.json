@@ -35,6 +35,7 @@
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",
+    "jszip": "^3.10.1",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -58,6 +59,7 @@
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",
+    "jszip": "^3.10.1",
     "octokit": "^2.0.14",
     "react-drag-drop-files": "^2.3.8"
   }
