@@ -24,15 +24,15 @@ import * as Telemetry from '@dxos/telemetry';
 import { Daemon } from './daemon';
 import { ForeverDaemon } from './daemon/forever';
 import {
+  IPDATA_API_KEY,
+  SENTRY_DESTINATION,
+  TELEMETRY_API_KEY,
   disableTelemetry,
   getTelemetryContext,
-  IPDATA_API_KEY,
   PublisherRpcPeer,
   SupervisorRpcPeer,
-  TunnelRpcPeer,
-  SENTRY_DESTINATION,
   TelemetryContext,
-  TELEMETRY_API_KEY,
+  TunnelRpcPeer,
 } from './util';
 
 // TODO(wittjosiah): Factor out.
@@ -176,11 +176,13 @@ export abstract class BaseCommand extends Command {
           dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
           'config/config-default.yml',
         );
+
         const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
         if (yamlConfig.runtime?.client?.storage?.path) {
           // Isolate DX_PROFILE storages.
           yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
         }
+
         await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
       }
 
@@ -281,11 +283,9 @@ export abstract class BaseCommand extends Command {
       assert(wsEndpoint);
 
       rpc = new PublisherRpcPeer(wsEndpoint);
-
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
       const value = await callback(rpc);
-
       return value;
     } catch (err: any) {
       Sentry.captureException(err);
@@ -306,11 +306,9 @@ export abstract class BaseCommand extends Command {
       assert(wsEndpoint);
 
       rpc = new TunnelRpcPeer(wsEndpoint);
-
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
       const value = await callback(rpc);
-
       return value;
     } catch (err: any) {
       Sentry.captureException(err);
@@ -331,11 +329,9 @@ export abstract class BaseCommand extends Command {
       assert(wsEndpoint);
 
       rpc = new SupervisorRpcPeer(wsEndpoint);
-
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
       const value = await callback(rpc);
-
       return value;
     } catch (err: any) {
       // TODO(egorgripasov): Move Sentry into this.error?
