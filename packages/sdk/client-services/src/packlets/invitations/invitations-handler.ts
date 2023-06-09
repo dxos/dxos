@@ -20,12 +20,15 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationGuestExtension, InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-extension';
+import {
+  InvitationGuestExtension,
+  InvitationHostExtension,
+  isAuthenticationRequired,
+  MAX_OTP_ATTEMPTS,
+} from './invitation-extension';
 import { InvitationProtocol } from './invitation-protocol';
-
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -58,7 +61,7 @@ export class InvitationsHandler {
   /**
    * @internal
    */
-  constructor(private readonly _networkManager: NetworkManager) { }
+  constructor(private readonly _networkManager: NetworkManager) {}
 
   createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitationObservable {
     const {
@@ -101,7 +104,6 @@ export class InvitationsHandler {
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
       const extension = new InvitationHostExtension({
-
         onStateUpdate: (invitation) => {
           stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
         },

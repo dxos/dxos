@@ -10,19 +10,17 @@ import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AdmissionRequest,
   AdmissionResponse,
-  AuthenticationRequest,
   AuthenticationResponse,
   IntroductionRequest,
-  IntroductionResponse,
   InvitationHostService,
   Options,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
-import { ProfileDocument } from '@dxos/protocols/src/proto/gen/dxos/halo/credentials';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
@@ -173,7 +171,7 @@ export class InvitationHostExtension extends RpcExtension<
             }
 
             const response = await this._callbacks.admit(request);
-          
+
             log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
             return response;
           } catch (err: any) {
@@ -286,4 +284,5 @@ export class InvitationGuestExtension extends RpcExtension<
   }
 }
 
-export const isAuthenticationRequired = (invitation: Invitation) => invitation.authMethod !== Invitation.AuthMethod.NONE;
+export const isAuthenticationRequired = (invitation: Invitation) =>
+  invitation.authMethod !== Invitation.AuthMethod.NONE;
