@@ -4,12 +4,12 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
+import { stripKeys } from '@dxos/util';
 
 import { EchoDatabase } from './database';
 import { base } from './defs';
-import { Document } from './document';
 import { Text } from './text-object';
-import { strip } from './util';
+import { TypedObject } from './typed-object';
 
 export type SerializedObject = {
   '@id': string;
@@ -18,8 +18,8 @@ export type SerializedObject = {
   /**
    * Text content of Text object.
    */
-  text: string;
-};
+  text?: string;
+} & Record<string, any>;
 
 export type SerializedSpace = {
   objects: SerializedObject[];
@@ -33,10 +33,10 @@ export class Serializer {
     const { objects } = database.query();
     const data = {
       objects: objects.map((object) => {
-        return strip({
-          ...object[base].toJSON() // TODO(burdon): Not working unless schema.
+        return stripKeys({
+          ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
         });
-      })
+      }),
     };
 
     return data;
@@ -44,7 +44,7 @@ export class Serializer {
 
   async import(database: EchoDatabase, data: SerializedSpace) {
     const {
-      objects: [properties]
+      objects: [properties],
     } = database.query({ '@type': 'dxos.sdk.client.Properties' });
     const { objects } = data;
     for (const object of objects) {
@@ -63,23 +63,25 @@ export class Serializer {
 
       switch (model) {
         case DocumentModel.meta.type: {
-          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? Document;
+          const Prototype = (type ? database.router.schema?.getPrototype(type) : undefined) ?? TypedObject;
           const echoSchema = type ? database.router.schema?.getType(type) : undefined;
 
           const obj = new Prototype(
             {
-              ...data
+              ...data,
             },
-            echoSchema
+            echoSchema,
           );
           obj[base]._id = id;
-          await database.add(obj);
+          database.add(obj);
+          await database.flush();
           break;
         }
         case TextModel.meta.type: {
           const obj = new Text(data.text);
           obj[base]._id = id;
-          await database.add(obj);
+          database.add(obj);
+          await database.flush();
           break;
         }
       }

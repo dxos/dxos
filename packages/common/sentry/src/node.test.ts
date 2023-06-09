@@ -10,10 +10,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { sentryTestkit, TransportFunction } from '../testing';
+import { sentryTestkit } from '../testing';
 import * as Sentry from './node';
 
-const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
+const { testkit, sentryTransport } = sentryTestkit();
 
 // TODO(burdon): https://example.com?
 const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
@@ -24,7 +24,7 @@ describe('Node error reporting', () => {
       destination: MOCK_DESTINATION,
       release: 'test',
       transport: sentryTransport,
-      scrubFilenames: true
+      scrubFilenames: true,
     });
   });
 
@@ -39,7 +39,7 @@ describe('Node error reporting', () => {
       expect(testkit.reports()).to.be.lengthOf(1);
     });
     const report = testkit.findReport(err);
-    (report.error?.stacktrace as Stacktrace).frames?.forEach((frame) => {
+    (report?.error?.stacktrace as Stacktrace).frames?.forEach((frame) => {
       expect(frame.filename?.includes('/')).to.be.false;
     });
   });

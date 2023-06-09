@@ -34,13 +34,13 @@ export class TestExtension implements TeleportExtension {
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
       port: context.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService'),
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -49,12 +49,12 @@ export class TestExtension implements TeleportExtension {
           },
           testCall: async (request) => {
             return {
-              data: request.data
+              data: request.data,
             };
-          }
-        }
+          },
+        },
       },
-      timeout: 1000
+      timeout: 1000,
     });
 
     await this._rpc.open();
@@ -70,9 +70,16 @@ export class TestExtension implements TeleportExtension {
     await this._rpc?.close();
   }
 
-  async test() {
+  async test(message = 'test') {
     await this.open.wait({ timeout: 500 });
-    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
-    assert(res.data === 'test');
+    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 500);
+    assert(res.data === message);
+  }
+
+  /**
+   * Force-close the connection.
+   */
+  async closeConnection(err?: Error) {
+    this.extensionContext?.close(err);
   }
 }

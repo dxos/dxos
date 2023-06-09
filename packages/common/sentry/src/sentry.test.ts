@@ -7,10 +7,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
-import { sentryTestkit, TransportFunction } from '../testing';
+import { sentryTestkit } from '../testing';
 import * as Sentry from './node';
 
-const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
+const { testkit, sentryTransport } = sentryTestkit();
 
 const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
@@ -19,7 +19,7 @@ describe('Error reporting', () => {
     Sentry.init({
       destination: MOCK_DESTINATION,
       release: 'test',
-      transport: sentryTransport
+      transport: sentryTransport,
     });
   });
 

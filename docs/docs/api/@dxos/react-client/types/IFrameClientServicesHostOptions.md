@@ -1,0 +1,26 @@
+# Type `IFrameClientServicesHostOptions`
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-host.d.ts:7]()</sub>
+
+
+
+
+
+## Properties
+### [channel]()
+Type: <code>string</code>
+
+
+### [host]()
+Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
+
+
+### [source]()
+Type: <code>string</code>
+
+
+### [timeout]()
+Type: <code>number</code>
+
+
+### [vault]()
+Type: <code>string</code>

@@ -1,25 +1,34 @@
-import { defineConfig } from "vite";
-import { ConfigPlugin } from "@dxos/config/vite-plugin";
-import react from "@vitejs/plugin-react";
-import { ThemePlugin } from "@dxos/react-components/plugin";
-import { resolve } from "node:path";
-import { VitePWA } from "vite-plugin-pwa";
+import { defineConfig } from 'vite';
+import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import react from '@vitejs/plugin-react';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { resolve } from 'node:path';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "", // Ensures relative path to assets.
+  base: '', // Ensures relative path to assets.
   server: {
     host: true,
   },
   optimizeDeps: {
+    force: true,
+    include: [
+      '@dxos/client',
+      '@dxos/react-client',
+      '@dxos/react-appkit',
+      '@dxos/aurora',
+      '@dxos/aurora-theme',
+      '@dxos/config',
+    ],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.
       plugins: [
         {
-          name: "yjs",
+          name: 'yjs',
           setup: ({ onResolve }) => {
             onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve("yjs").replace(".cjs", ".mjs") };
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
             });
           },
         },
@@ -27,38 +36,39 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "out/quickstart",
+    outDir: 'out/quickstart',
+    commonjsOptions: {
+      include: [/packages/, /node_modules/],
+    },
   },
+
   plugins: [
     ConfigPlugin(),
     react(),
     ThemePlugin({
-      content: [
-        resolve(__dirname, "./index.html"),
-        resolve(__dirname, "./src/**/*.{js,ts,jsx,tsx}"),
-        resolve(__dirname, "node_modules/@dxos/react-appkit/dist/**/*.mjs"),
-      ],
+      root: __dirname,
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
     VitePWA({
-      registerType: "prompt",
+      registerType: 'prompt',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
       },
-      includeAssets: ["favicon.ico"],
+      includeAssets: ['favicon.ico'],
       manifest: {
-        name: "quickstart",
-        short_name: "quickstart",
-        theme_color: "#ffffff",
+        name: 'quickstart',
+        short_name: 'quickstart',
+        theme_color: '#ffffff',
         icons: [
           {
-            src: "icons/icon-32.png",
-            sizes: "32x32",
-            type: "image/png",
+            src: 'icons/icon-32.png',
+            sizes: '32x32',
+            type: 'image/png',
           },
           {
-            src: "icons/icon-256.png",
-            sizes: "256x256",
-            type: "image/png",
+            src: 'icons/icon-256.png',
+            sizes: '256x256',
+            type: 'image/png',
           },
         ],
       },

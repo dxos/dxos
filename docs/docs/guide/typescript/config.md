@@ -15,9 +15,9 @@ const client = new Client({
   config: new Config({
     runtime: {
       services: {
-        signal: {
+        signaling: [{
           server: 'wss://kube.dxos.org/.well-known/dx/signal'
-        }
+        }]
       }
     }
   })
@@ -132,6 +132,24 @@ const client = new Client({
 
 ::: note
 In a Node environment, `Defaults` loads from a `config/default.yml` file in your project.
+:::
+
+### Local development configuration
+
+Often it is convenient to have different configuration presets for local development.
+For this purpose there is `Local` which will return any config included in the `dx-local.yml` file.
+
+```ts file=./snippets/create-with-local.ts#L5-
+import { Client, Config } from '@dxos/client';
+import { Defaults, Local } from '@dxos/config';
+
+const client = new Client({
+  config: new Config(Local(), Defaults())
+});
+```
+
+::: note
+In a Node environment, `Local` is a no-op.
 :::
 
 ### Dynamic app configuration from KUBE

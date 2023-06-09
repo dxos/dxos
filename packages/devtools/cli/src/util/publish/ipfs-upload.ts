@@ -5,8 +5,10 @@
 import fs from 'fs';
 import { CID, create, globSource } from 'ipfs-http-client';
 import assert from 'node:assert';
+import { join } from 'path';
 
 import { Config } from '@dxos/client';
+import { log } from '@dxos/log';
 
 interface UploadOptions {
   timeout: string | number;
@@ -22,7 +24,7 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
 
   const ipfsClient = create({
     url: ipfsServer,
-    timeout: timeout || '1m'
+    timeout: timeout || '1m',
   });
 
   if (!fs.existsSync(path)) {
@@ -33,11 +35,32 @@ export const uploadToIPFS = async (path: string, config?: Config, options?: Uplo
     for await (const file of ipfsClient.addAll(globSource(path, '**/*'), {
       progress,
       pin,
-      wrapWithDirectory: true
+      wrapWithDirectory: true,
     })) {
+      const fullPath = join(path, file.path);
+
+      if (!fs.lstatSync(fullPath).isDirectory()) {
+        const remoteChunks = [];
+        for await (const chunk of ipfsClient.cat(file.cid)) {
+          remoteChunks.push(chunk);
+        }
+        const remoteContent = Buffer.concat(remoteChunks);
+
+        const localContent = fs.readFileSync(fullPath);
+
+        if (!localContent.equals(remoteContent)) {
+          log.error('file content mismatch', {
+            path: fullPath,
+            cid: file.cid.toString(),
+            localSize: localContent.length,
+            remoteSize: remoteContent.length,
+          });
+        }
+      }
+
       files.push(file);
     }
-    return files[files.length - 1].cid;
+    return files[files.length - 1].cid; // last file is the root directory
   } else {
     const content = fs.readFileSync(path);
     const addResult = await ipfsClient.add(content, { pin });

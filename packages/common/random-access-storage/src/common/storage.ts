@@ -10,12 +10,22 @@ export enum StorageType {
   IDB = 'idb',
   CHROME = 'chrome',
   FIREFOX = 'firefox',
-  NODE = 'node'
+  NODE = 'node',
+  WEBFS = 'webfs',
 }
+
+export type DiskInfo = {
+  /**
+   * Bytes.
+   */
+  used: number;
+};
 
 export interface Storage {
   readonly type: StorageType;
   readonly size: number;
+
+  getDiskInfo?(): Promise<DiskInfo>;
 
   // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory;

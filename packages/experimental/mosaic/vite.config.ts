@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import Inspect from 'vite-plugin-inspect';
 
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { osThemeExtension, kaiThemeExtension } from './theme-extensions';
 
@@ -25,9 +25,9 @@ export default defineConfig({
       process.env.HTTPS === 'true'
         ? {
             key: './key.pem',
-            cert: './cert.pem'
+            cert: './cert.pem',
           }
-        : false
+        : false,
 
     // TODO(burdon): Disable HMR due to code size issues.
     // TODO(burdon): If disabled then tailwind doesn't update.
@@ -41,10 +41,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+        },
+      },
+    },
   },
 
   plugins: [
@@ -53,8 +53,9 @@ export default defineConfig({
 
     // TODO(burdon): Document.
     ThemePlugin({
+      root: __dirname,
       content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
-      extensions: [osThemeExtension, kaiThemeExtension]
+      extensions: [osThemeExtension, kaiThemeExtension],
     }),
 
     // TODO(burdon): Document.
@@ -65,7 +66,7 @@ export default defineConfig({
     VitePWA({
       selfDestroying: true,
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -77,15 +78,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     }),
 
     /**
@@ -98,12 +99,9 @@ export default defineConfig({
         injectTo: 'head-prepend',
         // prettier-ignore
         families: [
-          'Roboto',
-          'Roboto Mono',
           'DM Sans',
-          'DM Mono',
-          'Montserrat'
-        ]
+          'DM Mono'
+        ],
       },
 
       custom: {
@@ -112,12 +110,12 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
-          }
-        ]
-      }
-    })
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf',
+          },
+        ],
+      },
+    }),
 
     // Inspect()
-  ]
+  ],
 });

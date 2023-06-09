@@ -3,11 +3,12 @@
 //
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
+import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
+import { log, logInfo } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
 
 enum Message {
-  ACQUIRING = 'acquiring'
+  ACQUIRING = 'acquiring',
 }
 
 export type VaultResourceLockOptions = {
@@ -30,15 +31,24 @@ export class VaultResourceLock {
     this._broadcastChannel.onmessage = this._onMessage.bind(this);
   }
 
+  @logInfo
+  get lockKey() {
+    return this._lockKey;
+  }
+
   async acquire() {
     this._broadcastChannel.postMessage({
-      message: Message.ACQUIRING
+      message: Message.ACQUIRING,
     });
 
     try {
-      await asyncTimeout(this._requestLock(), 3_000);
+      log('aquiring lock...');
+      await asyncTimeout(this._requestLock(), RESOURCE_LOCK_TIMEOUT);
+      log('acquired lock');
     } catch {
+      log('stealing lock...');
       await this._requestLock(true);
+      log('stolen lock');
     }
   }
 

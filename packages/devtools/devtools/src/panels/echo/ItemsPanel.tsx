@@ -2,17 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Document } from '@dxos/client';
+import { DocumentModel, TypedObject, TextModel } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
-import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-components';
 
 import { DetailsTable, JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-
 // TODO(burdon): Factor out.
 
 const textFilter = (text?: string) => {
@@ -28,18 +28,31 @@ const textFilter = (text?: string) => {
 };
 
 // TODO(burdon): Rationalize with new API.
-const getItemType = (doc: Document) => doc.__typename;
-const getItemDetails = (item: Document) => ({
-  id: truncateKey(item.id, 4),
+const getItemType = (doc: TypedObject) => (doc.toJSON()['@model'] === TextModel.meta.type ? 'Text' : doc.__typename);
+const getItemDetails = (item: TypedObject) => ({
+  id: truncateKey(item.id),
   type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
   properties: <JsonView data={item.toJSON()} />
 });
 
-const getHierarchicalItem = (item: Document): TreeViewItem => ({
+const getObjectIcon = (item: TypedObject) => {
+  const model = item.toJSON()['@model'];
+  switch (model) {
+    case DocumentModel.meta.type:
+      return Cube;
+    case TextModel.meta.type:
+      return TextT;
+    default:
+      return undefined;
+  }
+};
+
+const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   id: item.id,
   title: getItemType(item) || 'Unknown type',
-  value: item
+  value: item,
+  Icon: getObjectIcon(item)
 });
 
 const ItemsPanel = () => {
@@ -47,7 +60,7 @@ const ItemsPanel = () => {
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
-  const [selectedItem, setSelectedItem] = useState<Document>();
+  const [selectedItem, setSelectedItem] = useState<TypedObject>();
   const [filter, setFilter] = useState('');
 
   return (
@@ -63,6 +76,11 @@ const ItemsPanel = () => {
           {/* TODO(burdon): Convert to list with new API. */}
           <TreeView
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
+            slots={{
+              value: {
+                className: 'overflow-hidden text-gray-400 truncate pl-2'
+              }
+            }}
             onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.id}
           />

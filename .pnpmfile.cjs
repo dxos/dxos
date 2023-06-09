@@ -15,18 +15,27 @@ function readPackage(packageJson, context) {
     }
 
     case '@nrwl/vite': {
-      // Ensure nx uses patched vite.
-      packageJson.peerDependencies['vite'] = '4.0.4'
-
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
-
       break;
     }
 
-    case '@typescript-eslint/eslint-plugin': 
+    case '@storybook/html': {
+      // Unused.
+      delete packageJson.peerDependencies['@babel/core'];
+      break;
+    }
+
+    case '@typescript-eslint/eslint-plugin':
     case '@typescript-eslint/parser': {
       packageJson.dependencies['eslint'] = '^8.0.0'
+      break;
+    }
+
+    // Conflict between web-ext and addons-scanner-utils.
+    // web-ext > addons-linter > addons-scanner-utils.
+    case 'addons-scanner-utils': {
+      delete packageJson.peerDependencies['node-fetch']
       break;
     }
 
@@ -75,28 +84,34 @@ function readPackage(packageJson, context) {
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '4.0.4'
+      packageJson.peerDependencies['vite'] = '^4.3.0'
       break;
     }
 
-    case 'storybook-dark-mode': {
-      packageJson.dependencies['@storybook/addons'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/api'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/components'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/core-events'] = '^7.0.0-beta'
-      packageJson.dependencies['@storybook/theming'] = '^7.0.0-beta'
+    case 'storybook-addon-react-router-v6': {
+      packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta'
+      packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta'
       break;
     }
 
-    // Ensure vuepress uses patched vite.
+    // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
+    case 'typedoc': {
+      packageJson.peerDependencies['typescript'] = '^5.0.0'
+      break;
+    }
+
+    // Ensure vuepress uses compatible vite version.
     case '@vuepress/bundler-vite': {
-      packageJson.dependencies['vite'] = '4.0.4'
+      packageJson.dependencies['vite'] = '^4.3.0'
       break;
     }
-    
-    // Ensure vuepress uses patched vite.
+
+    // Ensure vuepress uses compatible vite version.
     case '@vitejs/plugin-vue': {
-      packageJson.peerDependencies['vite'] = '4.0.4'
+      packageJson.peerDependencies['vite'] = '^4.3.0'
       break;
     }
   }

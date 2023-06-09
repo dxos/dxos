@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Trigger } from '@dxos/async';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -9,22 +11,30 @@ import {
   valueEncoding,
   MetadataStore,
   SpaceManager,
-  SigningContext,
   DataServiceSubscriptions,
-  SnapshotStore
+  SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { STORAGE_VERSION, trace } from '@dxos/protocols';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
-import { DeviceInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
-import { DataSpaceManager } from '../spaces/data-space-manager';
+import {
+  DeviceInvitationProtocol,
+  InvitationsHandler,
+  InvitationProtocol,
+  SpaceInvitationProtocol,
+} from '../invitations';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 /**
  * Shared backend for all client services.
@@ -39,18 +49,25 @@ export class ServiceContext {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
-  public readonly deviceInvitations: DeviceInvitationsHandler;
-
-  private _deviceSpaceSync?: CredentialConsumer<any>;
+  public readonly invitations: InvitationsHandler;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
-  public spaceInvitations?: SpaceInvitationsHandler;
+
+  private readonly _handlerFactories = new Map<
+    Invitation.Kind,
+    (invitation: Partial<Invitation>) => InvitationProtocol
+  >();
+
+  private _deviceSpaceSync?: CredentialConsumer<any>;
+
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
+    public readonly signalManager: SignalManager,
     public readonly modelFactory: ModelFactory
   ) {
     // TODO(burdon): Move strings to constants.
@@ -70,7 +87,10 @@ export class ServiceContext {
 
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this.networkManager
+      networkManager: this.networkManager,
+      metadataStore: this.metadataStore,
+      modelFactory: this.modelFactory,
+      snapshotStore: this.snapshotStore,
     });
 
     this.identityManager = new IdentityManager(
@@ -80,18 +100,28 @@ export class ServiceContext {
       this.spaceManager
     );
 
+    this.invitations = new InvitationsHandler(this.networkManager);
+
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.deviceInvitations = new DeviceInvitationsHandler({
-      networkManager: this.networkManager,
-      getIdentity: () => this.identityManager.identity ?? failUndefined(),
-      acceptIdentity: this._acceptIdentity.bind(this),
-      keyring: this.keyring
-    });
+    this._handlerFactories.set(
+      Invitation.Kind.DEVICE,
+      () =>
+        new DeviceInvitationProtocol(
+          this.keyring,
+          () => this.identityManager.identity ?? failUndefined(),
+          this._acceptIdentity.bind(this)
+        )
+    );
   }
 
   async open() {
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
+
+    await this._checkStorageVersion();
+
     log('opening...');
+    await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
     await this.identityManager.open();
@@ -99,6 +129,7 @@ export class ServiceContext {
       await this._initialize();
     }
     log('opened');
+    log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
   }
 
   async close() {
@@ -109,15 +140,9 @@ export class ServiceContext {
     await this.spaceManager.close();
     await this.feedStore.close();
     await this.networkManager.close();
+    await this.signalManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
-  }
-
-  async reset() {
-    log('resetting...');
-    await this.close();
-    await this.storage.reset();
-    log('reset');
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
@@ -127,11 +152,26 @@ export class ServiceContext {
     return identity;
   }
 
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    const factory = this._handlerFactories.get(invitation.kind);
+    assert(factory, `Unknown invitation kind: ${invitation.kind}`);
+    return factory(invitation);
+  }
+
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
 
     await this._initialize();
     return identity;
+  }
+
+  private async _checkStorageVersion() {
+    await this.metadataStore.load();
+    if (this.metadataStore.version !== STORAGE_VERSION) {
+      log.error('Invalid storage version', { current: this.metadataStore.version, expected: STORAGE_VERSION });
+      // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
+      await this.metadataStore.clear();
+    }
   }
 
   // Called when identity is created.
@@ -145,7 +185,7 @@ export class ServiceContext {
       profile: identity.profileDocument,
       recordCredential: async (credential) => {
         await identity.controlPipeline.writer.write({ credential: { credential } });
-      }
+      },
     };
 
     this.dataSpaceManager = new DataSpaceManager(
@@ -154,18 +194,14 @@ export class ServiceContext {
       this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
-      this.modelFactory,
       this.feedStore,
-      this.snapshotStore
     );
     await this.dataSpaceManager.open();
 
-    this.spaceInvitations = new SpaceInvitationsHandler(
-      this.networkManager,
-      this.dataSpaceManager,
-      signingContext,
-      this.keyring
-    );
+    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
+      assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
+      return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+    });
     this.initialized.wake();
 
     this._deviceSpaceSync = identity.space.spaceState.registerProcessor({
@@ -191,12 +227,12 @@ export class ServiceContext {
           log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
             spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey
+            genesisFeedKey: assertion.genesisFeedKey,
           });
         } catch (err) {
           log.catch(err);
         }
-      }
+      },
     });
     await this._deviceSpaceSync.open();
   }

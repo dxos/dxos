@@ -147,7 +147,7 @@ export class Config {
    */
   get<K extends ConfigKey>(
     key: K,
-    defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>
+    defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>,
   ): DeepIndex<ConfigProto, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }

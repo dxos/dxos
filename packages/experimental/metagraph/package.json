@@ -1,6 +1,6 @@
 {
   "name": "@dxos/metagraph",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "private": true,
   "description": "Decentralized metagraph (DMG).",
   "homepage": "https://dxos.org",
@@ -9,7 +9,8 @@
   "author": "DXOS.org",
   "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./testing.js": "./dist/lib/browser/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

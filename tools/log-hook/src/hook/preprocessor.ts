@@ -11,7 +11,7 @@ import {
   Span,
   Super,
   transformSync,
-  TsType
+  TsType,
 } from '@swc/core';
 import Visitor from '@swc/core/Visitor';
 import { readFileSync } from 'fs';
@@ -35,16 +35,16 @@ export const preprocess = (code: string, filename: string) => {
         compress: false,
         format: {
           // Does not seem to preserve comments.
-          comments: 'all'
+          comments: 'all',
         },
-        mangle: false
+        mangle: false,
       },
       target: 'es2022',
       parser: {
         syntax: 'typescript',
-        decorators: true
-      }
-    }
+        decorators: true,
+      },
+    },
   });
 };
 
@@ -91,7 +91,7 @@ class TraceInjector extends Visitor {
         return {
           line: newLine,
           column: newColumn,
-          filename: join(dirname(this.filename), source)
+          filename: join(dirname(this.filename), source),
         };
       }
     }
@@ -121,14 +121,14 @@ class TraceInjector extends Visitor {
           expression: {
             type: 'ObjectExpression',
             properties: [],
-            span: ZERO_SPAN
-          }
+            span: ZERO_SPAN,
+          },
         });
       }
 
       if (n.arguments.length === 2) {
         n.arguments.push({
-          expression: this._createMetadataExpression(n.span)
+          expression: this._createMetadataExpression(n.span),
         });
       }
 
@@ -144,23 +144,23 @@ class TraceInjector extends Visitor {
       file: {
         type: 'StringLiteral',
         value: position.filename,
-        span: ZERO_SPAN
+        span: ZERO_SPAN,
       },
       line: {
         type: 'NumericLiteral',
         value: position.line,
-        span: ZERO_SPAN
+        span: ZERO_SPAN,
       },
       scope: {
         type: 'ThisExpression',
-        span: ZERO_SPAN
+        span: ZERO_SPAN,
       },
       bugcheck: {
         type: 'Identifier',
         value: ID_BUGCHECK_STRING,
         optional: false,
-        span: ZERO_SPAN
-      }
+        span: ZERO_SPAN,
+      },
       // TODO(dmaretskyi): callSite.
     });
   }
@@ -207,9 +207,9 @@ const createObjectExpression = (properties: Record<string, Expression>): ObjectE
       type: 'Identifier',
       value: key,
       optional: false,
-      span: ZERO_SPAN
+      span: ZERO_SPAN,
     },
-    value
+    value,
   })),
-  span: ZERO_SPAN
+  span: ZERO_SPAN,
 });

@@ -32,5 +32,5 @@ Run storybook in this project
 pnpm storybook
 ```
 
-[📚 Using ECHO with React](https://docs.dxos.org/guide/echo/react)
+[📚 Using ECHO with React](https://docs.dxos.org/guide/react)
 [📚 DXOS Documentation](https://docs.dxos.org)

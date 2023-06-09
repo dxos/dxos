@@ -45,7 +45,7 @@ export const createSetDispatch = <T extends {}>({ handlers }: SetCallbacks<T>) =
   type Obj = { [i: string | symbol]: any };
   return new Proxy<any>(
     {
-      handlers
+      handlers,
     },
     {
       get: (target: Obj, prop) => {
@@ -57,7 +57,7 @@ export const createSetDispatch = <T extends {}>({ handlers }: SetCallbacks<T>) =
             }
           });
         };
-      }
-    }
+      },
+    },
   );
 };

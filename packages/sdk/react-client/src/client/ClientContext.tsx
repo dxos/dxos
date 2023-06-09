@@ -4,8 +4,7 @@
 
 import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
 
-import { Client, SystemStatus } from '@dxos/client';
-import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
+import { Client, type ClientServices, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -19,11 +18,11 @@ export type ClientContextProps = {
   // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
 
-  status?: SystemStatus;
+  status?: SystemStatus | null;
 };
 
 export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
-  undefined
+  undefined,
 );
 
 /**
@@ -48,7 +47,7 @@ export interface ClientProviderProps {
    *
    * Most apps won't need this.
    */
-  services?: (config?: Config) => ClientServicesProvider;
+  services?: (config?: Config) => MaybePromise<ClientServicesProvider>;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
@@ -82,10 +81,10 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
-  onInitialized
+  onInitialized,
 }: ClientProviderProps) => {
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
-  const [status, setStatus] = useState<SystemStatus>();
+  const [status, setStatus] = useState<SystemStatus | null>(null);
   const [error, setError] = useState();
   if (error) {
     throw error;
@@ -96,16 +95,18 @@ export const ClientProvider = ({
       return;
     }
 
-    return client.subscribeStatus((newStatus) => setStatus(newStatus));
+    const subscription = client.status.subscribe((status) => setStatus(status));
+    return () => subscription.unsubscribe();
   }, [client, setStatus]);
 
   useEffect(() => {
     const done = async (client: Client) => {
-      log('client ready');
       await client.initialize().catch(setError);
+      log('client ready');
       await onInitialized?.(client);
+      log('initialization complete');
       setClient(client);
-      setStatus(client.getStatus() ?? SystemStatus.ACTIVE);
+      setStatus(client.status.get() ?? SystemStatus.ACTIVE);
       printBanner(client);
     };
 
@@ -118,7 +119,7 @@ export const ClientProvider = ({
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
         log('resolved config', { config });
-        const services = createServices?.(config);
+        const services = await createServices?.(config);
         log('created services', { services });
         const client = new Client({ config, services });
         log('created client');

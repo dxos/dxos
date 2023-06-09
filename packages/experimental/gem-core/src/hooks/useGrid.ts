@@ -39,18 +39,18 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
     const axis = [
       [
         [0, dy],
-        [0, dy + h]
+        [0, dy + h],
       ],
       [
         [dx, 0],
-        [dx + w, 0]
-      ]
+        [dx + w, 0],
+      ],
     ];
 
     paths.push({
       id: 'axis',
       class: 'axis',
-      path: axis.map((line) => createLine(line as any)).join()
+      path: axis.map((line) => createLine(line as any)).join(),
     });
   }
 
@@ -66,20 +66,20 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
       .filter((x) => !options.axis || x)
       .map((x) => [
         [x, dy],
-        [x, dy + h]
+        [x, dy + h],
       ]),
     ...yMajor
       .filter((y) => !options.axis || y)
       .map((y) => [
         [dx, y],
-        [dx + w, y]
-      ])
+        [dx + w, y],
+      ]),
   ];
 
   paths.push({
     id: 'major',
     class: 'major',
-    path: major.map((line) => createLine(line as any)).join()
+    path: major.map((line) => createLine(line as any)).join(),
   });
 
   // Minor grid lines.
@@ -94,20 +94,20 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
         .filter((x) => xMajor.indexOf(x) === -1)
         .map((x) => [
           [x, dy],
-          [x, dy + h]
+          [x, dy + h],
         ]),
       ...yMinor
         .filter((y) => yMajor.indexOf(y) === -1)
         .map((y) => [
           [dx, y],
-          [dx + w, y]
-        ])
+          [dx + w, y],
+        ]),
     ];
 
     paths.push({
       id: 'minor',
       class: 'minor',
-      path: minor.map((line) => createLine(line as any)).join()
+      path: minor.map((line) => createLine(line as any)).join(),
     });
   }
 
@@ -121,7 +121,7 @@ export type GridOptions = {
 
 const defaultOptions: GridOptions = {
   visible: true,
-  axis: true
+  axis: true,
 };
 
 /**
@@ -133,7 +133,7 @@ export class GridController {
   constructor(
     private readonly _ref: RefObject<SVGGElement | undefined>,
     private readonly _context: SVGContext,
-    private readonly _options: GridOptions
+    private readonly _options: GridOptions,
   ) {
     this._visible = this._options.visible ?? true;
   }
@@ -189,7 +189,7 @@ export const useGrid = (options: GridOptions = defaultOptions): GridController =
       context.resized.on(() => {
         grid.draw();
       }),
-    []
+    [],
   );
 
   return grid;

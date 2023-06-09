@@ -5,5 +5,5 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run tasks-app:serve-with-halo
+pnpm -w nx run tasks-app:serve-with-vault
 ```

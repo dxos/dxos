@@ -23,7 +23,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   toJSON() {
     return {
       open: this.isOpen,
-      running: this.isRunning
+      running: this.isRunning,
     };
   }
 

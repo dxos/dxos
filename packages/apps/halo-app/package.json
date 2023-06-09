@@ -1,27 +1,18 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.28",
+  "version": "0.1.46",
+  "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/testing/node/testing.cjs"
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing.d.ts"
-      ]
-    }
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -31,37 +22,36 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/react-metagraph": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-shell": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vault": "workspace:*",
     "@headlessui/react": "^1.7.3",
-    "@radix-ui/react-alert-dialog": "^1.0.2",
+    "@phosphor-icons/react": "^2.0.5",
+    "@radix-ui/react-alert-dialog": "^1.0.3",
     "@react-hook/async": "^3.1.1",
-    "@sentry/react": "^7.17.2",
+    "@sentry/react": "^7.41.0",
     "debug": "^4.3.3",
-    "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
+    "@sentry/vite-plugin": "^0.7.2",
     "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^3.0.1",
-    "typescript": "^4.8.4",
-    "vite": "4.0.4",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.9",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

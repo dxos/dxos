@@ -68,6 +68,6 @@ export const parseName = (name: string): Buffer => {
     parseInt(binary, 2)
       .toString(16)
       .padStart((2 * types.length * bits) / 8, '0'),
-    'hex'
+    'hex',
   );
 };

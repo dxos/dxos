@@ -16,17 +16,17 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useOrCreateFirstSpace,
   useIdentity,
-  useQuery
+  useQuery,
+  useSpaces
 } from '@dxos/react-client';
 
 export const App = () => {
   useIdentity({ login: true });
-  const space = useOrCreateFirstSpace();
+  const [space] = useSpaces();
   const tasks = useQuery(space, { type: 'task' });
   return <>
-    {tasks?.map((task) => (
+    {tasks.map((task) => (
       <div key={task.id}>{task.title}</div>
     ))}
   </>;
@@ -43,26 +43,30 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `Document` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-### [useQuery(\[space\], \[filter\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L18)
+### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useQuery.ts#L19)
 
 Create subscription.
 
-Returns: <code>[Document](/api/@dxos/react-client/values#Document)\<object>\[]</code>
+Returns: <code>[TypedObject](/api/@dxos/react-client/values#TypedObject)\[]</code>
 
 Arguments:
 
 `space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 `filter`: <code>[Filter](/api/@dxos/react-client/types/Filter)\<T></code>
+
+`options`: <code>[QueryOptions](/api/@dxos/react-client/types/QueryOptions)</code>
+
+`deps`: <code>any\[]</code>
 :::
 
 ## Typed Queries
 
 It's possible to obtain strongly typed objects from `useQuery<T>`.
 
-Because `useQuery` returns tracked ECHO objects, their type must descend from [`DocumentBase`](/api/@dxos/client/classes/DocumentBase). DXOS provides a tool to generate these types from a schema definition file.
+Because `useQuery` returns tracked ECHO objects, their type must descend from [`TypedObject`](/api/@dxos/client/classes/TypedObject). DXOS provides a tool to generate these types from a schema definition file.
 
-> There are many benefits to expressing the type schema of an application in a language-neutral and inter-operable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
+> There are many benefits to expressing the type schema of an application in a language-neutral and interoperable way. One of them is the ability to generate type-safe data layer code, which makes development faster and safer.
 
 [`Protobuf`](https://protobuf.dev/) is well oriented towards schema migrations, while at the same time being compact and efficient on the wire and in-memory.
 
@@ -88,7 +92,7 @@ message TaskList {
 }
 ```
 
-Using a tool called `dxtype` from `@dxos/echo-schema` we can generate corresponding classes for use with DXOS Client.
+Using a tool called `dxtype` from `@dxos/echo-typegen` we can generate corresponding classes for use with DXOS Client.
 
 ```bash
 dxtype <input protobuf file> <output typescript file>
@@ -106,20 +110,23 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
-export class Task extends DocumentBase {
-  static readonly type = schema.getType('dxos.tasks.Task');
+export class Task extends TypedObject {
+  static readonly type = schema.getType('example.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 
@@ -140,19 +147,19 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useOrCreateFirstSpace,
   useIdentity,
-  useQuery
+  useQuery,
+  useSpaces
 } from '@dxos/react-client';
 
 import { Task } from './schema';
 
 export const App = () => {
   useIdentity({ login: true });
-  const space = useOrCreateFirstSpace();
+  const [space] = useSpaces();
   const tasks = useQuery<Task>(space, Task.filter());
   return <>
-    {tasks?.map((task) => (
+    {tasks.map((task) => (
       <div key={task.id}>{task.title} - {task.completed}</div>
     ))}
   </>;

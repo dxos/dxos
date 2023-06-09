@@ -35,7 +35,7 @@ describe('Swarm', () => {
       protocol.factory,
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
-      undefined
+      undefined,
     );
 
     afterTest(async () => {
@@ -59,22 +59,22 @@ describe('Swarm', () => {
 
     const promise = Promise.all([
       asyncTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
-      asyncTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
+      asyncTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.')),
     ]);
 
     // Behavior of the Signal Server.
     swarm1.onSwarmEvent({
       peerAvailable: {
         peer: peerId1.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
 
     swarm1.onSwarmEvent({
       peerAvailable: {
         peer: peerId2.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
 
     log('Candidates changed');
@@ -100,15 +100,15 @@ describe('Swarm', () => {
     swarm1.onSwarmEvent({
       peerAvailable: {
         peer: peerId2.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
 
     swarm2.onSwarmEvent({
       peerAvailable: {
         peer: peerId1.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
 
     await connectPromises;
@@ -131,15 +131,15 @@ describe('Swarm', () => {
     swarm1.onSwarmEvent({
       peerAvailable: {
         peer: peerId2.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
     await sleep(15);
     swarm2.onSwarmEvent({
       peerAvailable: {
         peer: peerId1.asUint8Array(),
-        since: new Date()
-      }
+        since: new Date(),
+      },
     });
 
     await connectPromises;

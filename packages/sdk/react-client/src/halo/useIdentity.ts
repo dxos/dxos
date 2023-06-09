@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+
+import { IFrameClientServicesHost, IFrameClientServicesProxy, ShellLayout } from '@dxos/client';
 
 import { useClient } from '../client';
 
@@ -12,23 +14,32 @@ import { useClient } from '../client';
  */
 export const useIdentity = (options?: { login?: boolean }) => {
   const { login } = { login: false, ...options };
+
   const client = useClient();
   const identity = useSyncExternalStore(
-    (listener) => client.halo.subscribeIdentity(listener),
-    () => client.halo.identity
+    (listener) => {
+      const subscription = client.halo.identity.subscribe(listener);
+      return () => subscription.unsubscribe();
+    },
+    () => client.halo.identity.get(),
   );
 
-  if (login && !identity) {
-    // TODO(wittjosiah): Replace with shell display command.
-    // TODO(wittjosiah): Config defaults should be available from the config.
-    const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+  useEffect(() => {
+    // TODO(wittjosiah): Allow path/params for invitations to be customizable.
+    const searchParams = new URLSearchParams(window.location.search);
+    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
 
-    if (typeof window !== 'undefined') {
-      // TODO(wittjosiah): Remove hash.
-      const redirect = `#?redirect=${encodeURIComponent(window.location.href)}`;
-      window.location.replace(`${remoteSource.origin}${redirect}`);
+    if (
+      login &&
+      !identity &&
+      !spaceInvitationCode &&
+      !deviceInvitationCode &&
+      (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
+    ) {
+      void client.services.setLayout(ShellLayout.INITIALIZE_IDENTITY);
     }
-  }
+  }, [client, identity, login]);
 
   return identity;
 };

@@ -24,10 +24,10 @@ export default defineClientConfig({
         page({
           properties: {
             environment: DX_ENVIRONMENT,
-            release: DX_RELEASE
-          }
+            release: DX_RELEASE,
+          },
         });
       }
     });
-  }
+  },
 });

@@ -5,61 +5,57 @@ Represents the invitation state passed between client and service.
 
 Defined in:
    file://./../../../dxos/client/services.proto
-## Properties
-### [authMethod]()
-Type: <code>AuthMethod</code>
 
-Options:
-  - proto3_optional = true
-### [authenticationCode]()
+## Properties
+### [authCode]()
 Type: <code>string</code>
 
-Authentication code created by host.
+Authentication code created by host (only present if auth_method is SHARED_SECRET).
 
 Options:
   - proto3_optional = true
-### [error]()
-Type: <code>[Error](/api/@dxos/client/enums#Error)</code>
 
-Error.
+### [authMethod]()
+Type: <code>[AuthMethod](/api/@dxos/client/enums#AuthMethod)</code>
 
-Options:
-  - proto3_optional = true
+How the invitation is authenticated.
+
 ### [identityKey]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-Guest's identity (only present if OFFLINE).
+Guest's identity.
 
 Options:
   - proto3_optional = true
+
 ### [invitationId]()
 Type: <code>string</code>
 
-Local identifier.
+Local identifier (random).
 
-Options:
-  - proto3_optional = true
+### [kind]()
+Type: <code>[Kind](/api/@dxos/client/enums#Kind)</code>
+
+Kind of access the invitation will grant.
+
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
-Space to join.
+Space to join (only present if kind is SPACE).
 
 Options:
   - proto3_optional = true
+
 ### [state]()
 Type: <code>[State](/api/@dxos/client/enums#State)</code>
 
 Local state.
 
-Options:
-  - proto3_optional = true
 ### [swarmKey]()
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Swarm rendezvous (random).
 
-Options:
-  - proto3_optional = true
 ### [timeout]()
 Type: <code>number</code>
 
@@ -67,10 +63,8 @@ Timeout (ms).
 
 Options:
   - proto3_optional = true
+
 ### [type]()
 Type: <code>[Type](/api/@dxos/client/enums#Type)</code>
 
-Determined when created.
-
-Options:
-  - proto3_optional = true
+Determines the behavior of the invitation.

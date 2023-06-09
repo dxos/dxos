@@ -76,6 +76,8 @@ tmp
 
 # Web Extensions
 web-ext-artifacts
+.webextrc
+.webextrc.*
 
 # Heft
 */*/.heft/build-cache/**

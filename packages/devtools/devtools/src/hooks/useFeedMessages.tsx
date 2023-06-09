@@ -12,14 +12,14 @@ import { useDevtoolsState } from './useDevtoolsContext';
 
 export const useFeedMessages = ({ feedKey, maxBlocks = 100 }: { feedKey?: PublicKey; maxBlocks?: number }) => {
   const devtoolsHost = useDevtools();
-  const { spaceInfo } = useDevtoolsState();
+  const { space } = useDevtoolsState();
 
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<SubscribeToFeedBlocksResponse.Block[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: spaceInfo?.key, feedKey, maxBlocks }),
+    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: space?.key, feedKey, maxBlocks }),
     {},
-    [spaceInfo, feedKey]
+    [space, feedKey]
   );
 
   useEffect(() => {

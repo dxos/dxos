@@ -28,7 +28,7 @@ const Test = () => {
             component: () => (
               // TODO(burdon): Client Context.
               <Join />
-            )
+            ),
           },
           {
             id: 'sub',
@@ -41,22 +41,22 @@ const Test = () => {
                   {
                     id: 'sub1',
                     label: 'Sub 1',
-                    component: () => <Text>Sub 1</Text>
+                    component: () => <Text>Sub 1</Text>,
                   },
                   {
                     id: 'sub2',
                     label: 'Sub 2',
-                    component: () => <Text>Sub 2</Text>
-                  }
+                    component: () => <Text>Sub 2</Text>,
+                  },
                 ]}
               />
-            )
+            ),
           },
           {
             id: 'quit',
             label: 'Quit',
-            exec: () => process.exit()
-          }
+            exec: () => process.exit(),
+          },
         ]}
       />
     </Box>
@@ -75,7 +75,7 @@ const init = async () => {
           <Test />
         </ModuleProvider>
       </AppStateProvider>
-    </ClientProvider>
+    </ClientProvider>,
   );
 };
 

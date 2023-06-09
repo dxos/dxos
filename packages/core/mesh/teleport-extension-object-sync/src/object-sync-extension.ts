@@ -22,7 +22,7 @@ export type ObjectSyncExtensionParams = {
  * Manages replication between a set of feeds for a single teleport session.
  */
 export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle> {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({ onError: (err) => log.catch(err) });
 
   /**
    * Set of id's remote peer wants.
@@ -30,18 +30,18 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   public remoteWantList = new Set<string>();
 
   constructor(
-    private readonly _syncParams: ObjectSyncExtensionParams // to not conflict with the base class
+    private readonly _syncParams: ObjectSyncExtensionParams, // to not conflict with the base class
   ) {
     super({
       exposed: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
       },
       requested: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService')
+        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
       },
       encodingOptions: {
-        preserveAny: true
-      }
+        preserveAny: true,
+      },
     });
   }
 
@@ -66,8 +66,8 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
         push: async (data) => {
           log('received', { data });
           await this._syncParams.onPush(data);
-        }
-      }
+        },
+      },
     };
   }
 
@@ -87,7 +87,11 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
     }
 
     log('want', { wantList });
-    await this.rpc.ObjectSyncService.want({ ids: [...wantList] });
+    try {
+      await this.rpc.ObjectSyncService.want({ ids: [...wantList] });
+    } catch (err) {
+      log.warn('want error', err);
+    }
   }
 
   pushInASeparateTask(data: DataObject) {

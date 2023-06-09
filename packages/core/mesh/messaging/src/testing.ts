@@ -5,18 +5,19 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Messenger } from './messenger';
 import {
   SignalManager,
   MemorySignalManager,
   MemorySignalManagerContext,
-  WebsocketSignalManager
+  WebsocketSignalManager,
 } from './signal-manager';
 import { Message } from './signal-methods';
 
 export type TestBuilderOptions = {
-  signalHosts?: string[];
+  signalHosts?: Runtime.Services.Signal[];
   messageDisruption?: (msg: Message) => Message[];
 };
 
@@ -67,14 +68,6 @@ export class TestPeer {
   constructor(private readonly testBuilder: TestBuilder) {
     this.signalManager = testBuilder.createSignalManager();
     this.messenger = new Messenger({ signalManager: this.signalManager });
-    this.messenger
-      .listen({
-        peerId: this.peerId,
-        onMessage: async (msg) => {
-          this.defaultReceived.emit(msg);
-        }
-      })
-      .catch((err) => log.catch(err));
   }
 
   waitTillReceive(message: Message) {
@@ -82,13 +75,21 @@ export class TestPeer {
       (msg) =>
         msg.author.equals(message.author) &&
         msg.recipient.equals(message.recipient) &&
-        msg.payload.value.every((value, index) => value === message.payload.value[index])
+        msg.payload.value.every((value, index) => value === message.payload.value[index]),
     );
   }
 
   async open() {
     await this.signalManager.open();
     this.messenger.open();
+    await this.messenger
+      .listen({
+        peerId: this.peerId,
+        onMessage: async (msg) => {
+          this.defaultReceived.emit(msg);
+        },
+      })
+      .catch((err) => log.catch(err));
   }
 
   async close() {

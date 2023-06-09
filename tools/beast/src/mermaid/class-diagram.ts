@@ -26,7 +26,7 @@ export class ClassDiagram implements Diagram {
         ...properties.filter(({ classDef }) => !classDef).map(({ name, type }) => (type ? `${type} ${name}` : name)),
 
         // TODO(burdon): Async.
-        ...methods.map(({ name }) => `${name}()`)
+        ...methods.map(({ name }) => `${name}()`),
       ].filter(Boolean);
 
       const lines = [];

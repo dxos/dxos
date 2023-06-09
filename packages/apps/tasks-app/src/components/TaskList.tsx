@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus } from 'phosphor-react';
+import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useRef } from 'react';
 
-import { Button, getSize, Loading } from '@dxos/react-components';
+import { Button } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
+import { Loading } from '@dxos/react-appkit';
 
 import { CheckboxItem } from './CheckboxItem';
 import { Input } from './Input';
@@ -118,13 +120,13 @@ export const TaskList = <T extends Task = Task>(props: TaskListProps<T>) => {
                     setCaretPosition(titleRef.current, caret);
                   }
                 }
-              }
+              },
             }}
           />
         ))}
       </List>
       <div role='none' className='my-5'>
-        <Button className='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
+        <Button classNames='rounded-full p-3 border-none' onClick={() => onTaskCreate?.()}>
           <Plus className={getSize(5)} />
         </Button>
       </div>

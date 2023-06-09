@@ -12,12 +12,12 @@ import { MaybePromise } from '@dxos/util';
  */
 export const createMappedFeedWriter = <Source extends {}, Target extends {}>(
   mapper: (arg: Source) => MaybePromise<Target>,
-  writer: FeedWriter<Target>
+  writer: FeedWriter<Target>,
 ): FeedWriter<Source> => {
   assert(mapper);
   assert(writer);
 
   return {
-    write: async (data: Source) => await writer.write(await mapper(data))
+    write: async (data: Source, options) => await writer.write(await mapper(data), options),
   };
 };

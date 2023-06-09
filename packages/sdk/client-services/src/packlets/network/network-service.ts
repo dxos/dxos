@@ -3,22 +3,34 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { SignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
-import { NetworkService, NetworkStatus, SetNetworkOptionsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { NetworkService, NetworkStatus, UpdateConfigRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 export class NetworkServiceImpl implements NetworkService {
-  constructor(private readonly networkManager: NetworkManager) {}
+  constructor(private readonly networkManager: NetworkManager, private readonly signalManager: SignalManager) {}
 
-  subscribeToNetworkStatus() {
+  queryStatus() {
     return new Stream<NetworkStatus>(({ next }) => {
-      const unsubscribe = this.networkManager.connectionStateChanged.on((state) => next({ state }));
-      next({ state: this.networkManager.connectionState });
+      const update = () => {
+        next({
+          swarm: this.networkManager.connectionState,
+          signaling: this.signalManager.getStatus().map(({ host, state }) => ({ server: host, state })),
+        });
+      };
 
-      return unsubscribe;
+      const unsubscribeSwarm = this.networkManager.connectionStateChanged.on(() => update());
+      const unsubscribeSignal = this.signalManager.statusChanged.on(() => update());
+      update();
+
+      return () => {
+        unsubscribeSwarm();
+        unsubscribeSignal();
+      };
     });
   }
 
-  async setNetworkOptions(request: SetNetworkOptionsRequest) {
-    await this.networkManager.setConnectionState(request.state);
+  async updateConfig(request: UpdateConfigRequest) {
+    await this.networkManager.setConnectionState(request.swarm);
   }
 }

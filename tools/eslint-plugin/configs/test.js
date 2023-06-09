@@ -8,6 +8,7 @@ module.exports = {
     'mocha/max-top-level-suites': 'off',
     'mocha/no-mocha-arrows': 'off',
     'mocha/no-global-tests': 'off',
-    'mocha/no-setup-in-describe': 'off'
-  }
+    'mocha/no-setup-in-describe': 'off',
+    'mocha/no-sibling-hooks': 'off',
+  },
 };

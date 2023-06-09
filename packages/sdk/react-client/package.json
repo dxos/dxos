@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -33,8 +34,10 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/react-components": "workspace:*",
-    "@faker-js/faker": "^7.6.0",
+    "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -45,15 +48,18 @@
     "@types/use-subscription": "^1.0.0",
     "level-js": "^5.0.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "yjs": "^13.5.44"
   },
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
   },
   "optionalDependencies": {
-    "@dxos/react-components": "workspace:*",
-    "@faker-js/faker": "^7.6.0"
+    "@dxos/aurora": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "@faker-js/faker": "^7.6.0",
+    "yjs": "^13.5.44"
   },
   "publishConfig": {
     "access": "public"

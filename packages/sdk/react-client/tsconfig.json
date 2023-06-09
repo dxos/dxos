@@ -6,6 +6,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types"
   },
   "include": [
@@ -32,16 +33,19 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../common/observable-object"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/react-async"
     },
     {
       "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/mesh/messaging"
@@ -54,6 +58,12 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../client"

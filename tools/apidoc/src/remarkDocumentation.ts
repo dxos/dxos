@@ -37,8 +37,8 @@ export const remarkDocumentation = async (config: Config) => {
         .process(
           new VFile({
             path: file,
-            value: content
-          })
+            value: content,
+          }),
         );
       if (content !== processed.value && !!processed.value) {
         console.log('processing', file);

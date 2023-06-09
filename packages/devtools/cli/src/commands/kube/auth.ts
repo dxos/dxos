@@ -5,43 +5,11 @@
 import chalk from 'chalk';
 import assert from 'node:assert';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base-command';
-import { SupervisorRpcPeer } from '../../util';
-
-const timeout = 500;
-
-const getCredentials = async (
-  client: Client,
-  type: string,
-  predicate?: (value: Credential) => boolean
-): Promise<Credential[]> => {
-  const credentialsQuery = client.halo.queryCredentials({ type });
-  const trigger = new Trigger<Credential[]>();
-  credentialsQuery.subscribe({
-    onUpdate: (credentials: Credential[]) => {
-      if (predicate) {
-        credentials = credentials.filter(predicate);
-      }
-      if (credentials.length) {
-        trigger.wake(credentials);
-      }
-    },
-    onError: (err) => {
-      throw err;
-    }
-  });
-
-  try {
-    return await asyncTimeout(trigger.wait(), timeout);
-  } catch (err) {
-    return [];
-  }
-};
+import { SupervisorRpcPeer, queryCredentials } from '../../util';
 
 export default class Auth extends BaseCommand {
   static override enableJsonFlag = true;
@@ -51,8 +19,8 @@ export default class Auth extends BaseCommand {
     this.log(chalk`{gray Initiating presentation sequence..}`);
     // TODO(egorgripasov): Find AuthorizedDevice by KubeAccess credential.
     const { deviceKey } = client.halo.device!;
-    const authDeviceCreds = await getCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', (cred) =>
-      PublicKey.equals(cred.subject.id, deviceKey!)
+    const authDeviceCreds = await queryCredentials(client, 'dxos.halo.credentials.AuthorizedDevice', (cred) =>
+      PublicKey.equals(cred.subject.id, deviceKey!),
     );
 
     if (!authDeviceCreds.length) {
@@ -64,8 +32,8 @@ export default class Auth extends BaseCommand {
       const { nonce, kubeKey } = await supervisor.rpc.initAuthSequence();
 
       // Find proper KubeAccess credential.
-      const kubeAccessCreds = await getCredentials(client, 'dxos.halo.credentials.KubeAccess', (cred) =>
-        PublicKey.equals(cred.issuer, kubeKey)
+      const kubeAccessCreds = await queryCredentials(client, 'dxos.halo.credentials.KubeAccess', (cred) =>
+        PublicKey.equals(cred.issuer, kubeKey),
       );
 
       if (!kubeAccessCreds.length) {
@@ -78,11 +46,11 @@ export default class Auth extends BaseCommand {
       // Create presentation.
       const presentation = await client.halo.presentCredentials({
         ids: credsToPresent as PublicKey[],
-        nonce
+        nonce,
       });
 
       return supervisor.rpc.authenticate({
-        presentation
+        presentation,
       });
     });
   }

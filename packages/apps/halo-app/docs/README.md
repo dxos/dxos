@@ -23,7 +23,7 @@ subgraph apps [apps]
   subgraph patterns [patterns]
     style patterns fill:transparent
     dxos/react-appkit("@dxos/react-appkit"):::def
-    click dxos/react-appkit "dxos/dxos/tree/main/packages/apps/patterns/react-appkit/docs"
+    click dxos/react-appkit "dxos/dxos/tree/main/packages/ui/react-appkit/docs"
   end
 end
 

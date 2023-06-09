@@ -15,7 +15,7 @@ import {
   DataRequest,
   BridgeEvent,
   ConnectionState,
-  CloseRequest
+  CloseRequest,
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 
@@ -23,7 +23,7 @@ import { WebRTCTransport } from './webrtc-transport';
 
 export class WebRTCTransportService implements BridgeService {
   private readonly transports = new ComplexMap<PublicKey, { transport: WebRTCTransport; stream: Duplex }>(
-    PublicKey.hash
+    PublicKey.hash,
   );
 
   // prettier-ignore
@@ -38,30 +38,31 @@ export class WebRTCTransportService implements BridgeService {
         write: function (chunk, _, callback) {
           next({ data: { payload: chunk } });
           callback();
-        }
+        },
       });
 
       const transport = new WebRTCTransport({
         initiator: request.initiator,
         stream: duplex,
+        webrtcConfig: this._webrtcConfig,
         sendSignal: async (signal) => {
           next({
-            signal: { payload: signal }
+            signal: { payload: signal },
           });
-        }
+        },
       });
 
       next({
         connection: {
-          state: ConnectionState.CONNECTING
-        }
+          state: ConnectionState.CONNECTING,
+        },
       });
 
       transport.connected.on(() => {
         next({
           connection: {
-            state: ConnectionState.CONNECTED
-          }
+            state: ConnectionState.CONNECTED,
+          },
         });
       });
 
@@ -69,8 +70,8 @@ export class WebRTCTransportService implements BridgeService {
         next({
           connection: {
             state: ConnectionState.CLOSED,
-            error: err.toString()
-          }
+            error: err.toString(),
+          },
         });
         close(err);
       });
@@ -78,8 +79,8 @@ export class WebRTCTransportService implements BridgeService {
       transport.closed.on(() => {
         next({
           connection: {
-            state: ConnectionState.CLOSED
-          }
+            state: ConnectionState.CLOSED,
+          },
         });
         close();
       });

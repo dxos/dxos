@@ -13,15 +13,15 @@ export const FixGracefulFsPlugin = (): Plugin => ({
     onResolve({ filter: /^graceful-fs$/ }, (arg) => {
       return {
         path: 'graceful-fs',
-        namespace: 'fix-graceful-fs-plugin'
+        namespace: 'fix-graceful-fs-plugin',
       };
     });
 
     onLoad({ filter: /^graceful-fs$/, namespace: 'fix-graceful-fs-plugin' }, async (args) => {
       return {
         contents: 'module.exports = {};',
-        loader: 'js'
+        loader: 'js',
       };
     });
-  }
+  },
 });

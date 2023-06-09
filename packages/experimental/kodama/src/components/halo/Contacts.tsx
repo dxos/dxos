@@ -19,11 +19,11 @@ export const Contacts = () => {
         {
           key: 'public_key',
           color: 'blue',
-          value: (key) => truncateKey(key, 4)
+          value: (key) => truncateKey(key),
         },
         {
-          key: 'display_name'
-        }
+          key: 'display_name',
+        },
       ]}
     />
   );

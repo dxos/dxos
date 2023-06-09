@@ -10,11 +10,18 @@ export const truncate = (str = '', length = 8, pad: boolean | string = false) =>
   }
 };
 
-export const truncateKey = (key: any, n = 4) => {
+export type TruncateKeyOptions = {
+  length?: number;
+  start?: boolean;
+};
+
+export const truncateKey = (key: any, { length = 8, start }: TruncateKeyOptions = {}) => {
   const str = String(key);
-  if (str.length < n * 2 + 2) {
+  if (str.length <= length) {
     return str;
   }
 
-  return `${str.substring(0, n)}..${str.substring(str.length - n)}`;
+  return start
+    ? `${str.slice(0, length)}...`
+    : `${str.substring(0, length / 2)}...${str.substring(str.length - length / 2)}`;
 };

@@ -4,8 +4,18 @@
 
 import expect from 'expect';
 
+import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol, valueEncoding } from '@dxos/echo-pipeline';
+import {
+  MetadataStore,
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  SnapshotManager,
+  SnapshotStore,
+  Space,
+  SpaceProtocol,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -30,9 +40,9 @@ describe('identity/identity', () => {
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     });
 
     const createFeed = async () => {
@@ -48,19 +58,26 @@ describe('identity/identity', () => {
       swarmIdentity: {
         peerKey: deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
-        transportFactory: MemoryTransportFactory
-      })
+        transportFactory: MemoryTransportFactory,
+      }),
     });
 
     const space: Space = new Space({
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey)
+      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+      memberKey: identityKey,
+      modelFactory: createDefaultModelFactory(),
+      metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+      snapshotManager: new SnapshotManager(
+        new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+      ),
+      snapshotId: undefined,
     })
       .setControlFeed(controlFeed)
       .setDataFeed(dataFeed);
@@ -69,7 +86,7 @@ describe('identity/identity', () => {
       signer: keyring,
       identityKey,
       deviceKey,
-      space
+      space,
     });
 
     await identity.open();
@@ -83,12 +100,12 @@ describe('identity/identity', () => {
       const credentials = [
         ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
         await generator.createDeviceAuthorization(deviceKey),
-        await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
+        await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA),
       ];
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({
-          credential: { credential }
+          credential: { credential },
         });
       }
     }
@@ -101,9 +118,9 @@ describe('identity/identity', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
         profile: {
-          displayName: 'Alice'
-        }
-      }
+          displayName: 'Alice',
+        },
+      },
     });
 
     expect(credential.issuer).toEqual(identityKey);
@@ -133,9 +150,9 @@ describe('identity/identity', () => {
           root: createStorage({ type: StorageType.RAM }).createDirectory(),
           signer: keyring,
           hypercore: {
-            valueEncoding
-          }
-        })
+            valueEncoding,
+          },
+        }),
       });
 
       const createFeed = async () => {
@@ -153,19 +170,25 @@ describe('identity/identity', () => {
         swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
-          credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
+          credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
-          transportFactory: MemoryTransportFactory
-        })
+          transportFactory: MemoryTransportFactory,
+        }),
       });
 
       const space = new Space({
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
-        feedProvider: (feedKey) => feedStore.openFeed(feedKey)
+        feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+        memberKey: identityKey,
+        modelFactory: createDefaultModelFactory(),
+        metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        snapshotManager: new SnapshotManager(
+          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        ),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);
@@ -174,7 +197,7 @@ describe('identity/identity', () => {
         signer: keyring,
         identityKey,
         deviceKey,
-        space
+        space,
       }));
 
       await identity.open();
@@ -188,12 +211,12 @@ describe('identity/identity', () => {
         const credentials = [
           ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
           await generator.createDeviceAuthorization(deviceKey),
-          await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
+          await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA),
         ];
 
         for (const credential of credentials) {
           await identity.controlPipeline.writer.write({
-            credential: { credential }
+            credential: { credential },
           });
         }
       }
@@ -214,9 +237,9 @@ describe('identity/identity', () => {
           root: createStorage({ type: StorageType.RAM }).createDirectory(),
           signer: keyring,
           hypercore: {
-            valueEncoding
-          }
-        })
+            valueEncoding,
+          },
+        }),
       });
 
       const createFeed = async () => {
@@ -232,19 +255,25 @@ describe('identity/identity', () => {
         swarmIdentity: {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
-          credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
+          credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
-          transportFactory: MemoryTransportFactory
-        })
+          transportFactory: MemoryTransportFactory,
+        }),
       });
 
       const space = new Space({
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
-        feedProvider: (feedKey) => feedStore.openFeed(feedKey)
+        feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+        memberKey: identityKey,
+        modelFactory: createDefaultModelFactory(),
+        metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        snapshotManager: new SnapshotManager(
+          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        ),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);
@@ -253,7 +282,7 @@ describe('identity/identity', () => {
         signer: keyring,
         identityKey: identity1.identityKey,
         deviceKey,
-        space
+        space,
       }));
 
       await identity.open();
@@ -272,10 +301,10 @@ describe('identity/identity', () => {
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
               identityKey: identity1.identityKey,
-              deviceKey: identity2.deviceKey
-            }
-          })
-        }
+              deviceKey: identity2.deviceKey,
+            },
+          }),
+        },
       });
 
       await identity2.ready();

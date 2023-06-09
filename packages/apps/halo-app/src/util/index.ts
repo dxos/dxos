@@ -4,3 +4,4 @@
 
 export * from './browser-check';
 export * from './invitation-code';
+export * from './namespace';

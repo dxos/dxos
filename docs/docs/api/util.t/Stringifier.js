@@ -124,18 +124,18 @@ export class Stringifier {
         const headerSeparatorMap = {
             left: ':--',
             right: '--:',
-            center: ':-:'
+            center: ':-:',
         };
         return [
             `|${headers.join('|')}|`,
             `|${headers.map((_h, i) => headerSeparatorMap[alignment ? alignment[i] : 'left']).join('|')}|`,
-            ...rows.filter(Boolean)
+            ...rows.filter(Boolean),
         ].join(os.EOL);
     }
     declaration(declaration) { }
     type(atype, options) {
         var _a, _b, _c, _d;
-        const { title = !(options === null || options === void 0 ? void 0 : options.subset), headers = !(options === null || options === void 0 ? void 0 : options.subset), sources = !(options === null || options === void 0 ? void 0 : options.subset), comment = !(options === null || options === void 0 ? void 0 : options.subset), subset, level = 1 } = { ...options };
+        const { title = !(options === null || options === void 0 ? void 0 : options.subset), headers = !(options === null || options === void 0 ? void 0 : options.subset), sources = !(options === null || options === void 0 ? void 0 : options.subset), comment = !(options === null || options === void 0 ? void 0 : options.subset), subset, level = 1, } = { ...options };
         const groups = ((_a = atype.type) === null || _a === void 0 ? void 0 : _a.type) === 'reflection' ? (_c = (_b = atype.type) === null || _b === void 0 ? void 0 : _b.declaration) === null || _c === void 0 ? void 0 : _c.groups : [];
         const filteredGroups = (_d = (subset ? groups === null || groups === void 0 ? void 0 : groups.filter((g) => subset.indexOf(g.title.toLowerCase()) >= 0) : groups)) !== null && _d !== void 0 ? _d : [];
         return text `
@@ -169,7 +169,7 @@ export class Stringifier {
     }
     class(aclass, options) {
         const hasSubset = !!(options === null || options === void 0 ? void 0 : options.subset);
-        const { title = !hasSubset, sources = !hasSubset, comment = !hasSubset, headers = !hasSubset, subset, style = 'list' } = { ...options };
+        const { title = !hasSubset, sources = !hasSubset, comment = !hasSubset, headers = !hasSubset, subset, style = 'list', } = { ...options };
         const constructors = reflectionsOfKind(aclass, ReflectionKind.Constructor);
         const properties = reflectionsOfKind(aclass, ReflectionKind.Property, ReflectionKind.Accessor).filter((r) => !r.flags.isPrivate);
         const functions = reflectionsOfKind(aclass, ReflectionKind.Method, ReflectionKind.Function).filter((r) => !r.flags.isPrivate);
@@ -192,7 +192,7 @@ export class Stringifier {
                 : this.table({
                     headers: ['Name', 'Description'],
                     alignment: ['left', 'left'],
-                    rows: properties.map((p) => this.propertyRow(p))
+                    rows: properties.map((p) => this.propertyRow(p)),
                 })}`}
 
     ${(!subset || subset.indexOf('methods') >= 0) &&

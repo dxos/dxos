@@ -22,27 +22,27 @@ describe('Matcher', () => {
           op: Predicate.Operation.EQUALS,
           key: 'name',
           value: {
-            string: 'DXOS'
-          }
-        }
+            string: 'DXOS',
+          },
+        },
       },
       {
         root: {
           op: Predicate.Operation.EQUALS,
           key: 'name',
           value: {
-            string: 'item-0'
-          }
-        }
+            string: 'item-0',
+          },
+        },
       },
       {
         root: {
           op: Predicate.Operation.EQUALS,
           key: 'complete',
           value: {
-            bool: true // TODO(burdon): Should false match undefined?
-          }
-        }
+            bool: true, // TODO(burdon): Should false match undefined?
+          },
+        },
       },
       {
         root: {
@@ -52,11 +52,11 @@ describe('Matcher', () => {
               op: Predicate.Operation.EQUALS,
               key: 'name',
               value: {
-                string: 'item-1'
-              }
-            }
-          ]
-        }
+                string: 'item-1',
+              },
+            },
+          ],
+        },
       },
       {
         root: {
@@ -66,18 +66,18 @@ describe('Matcher', () => {
               op: Predicate.Operation.EQUALS,
               key: 'name',
               value: {
-                string: 'item-0'
-              }
+                string: 'item-0',
+              },
             },
             {
               op: Predicate.Operation.EQUALS,
               key: 'name',
               value: {
-                string: 'item-2'
-              }
-            }
-          ]
-        }
+                string: 'item-2',
+              },
+            },
+          ],
+        },
       },
       {
         root: {
@@ -87,18 +87,18 @@ describe('Matcher', () => {
             array: {
               values: [
                 {
-                  string: 'red'
+                  string: 'red',
                 },
                 {
-                  string: 'green'
+                  string: 'green',
                 },
                 {
-                  string: 'blue'
-                }
-              ]
-            }
-          }
-        }
+                  string: 'blue',
+                },
+              ],
+            },
+          },
+        },
       },
       {
         root: {
@@ -108,8 +108,8 @@ describe('Matcher', () => {
               op: Predicate.Operation.EQUALS,
               key: 'name',
               value: {
-                string: 'item-0'
-              }
+                string: 'item-0',
+              },
             },
             {
               op: Predicate.Operation.IN,
@@ -118,77 +118,77 @@ describe('Matcher', () => {
                 array: {
                   values: [
                     {
-                      string: 'red'
+                      string: 'red',
                     },
                     {
-                      string: 'green'
+                      string: 'green',
                     },
                     {
-                      string: 'blue'
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        }
+                      string: 'blue',
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
       },
       {
         root: {
           op: Predicate.Operation.PREFIX_MATCH,
           key: 'name',
           value: {
-            string: 'item'
-          }
-        }
+            string: 'item',
+          },
+        },
       },
       {
         root: {
           op: Predicate.Operation.TEXT_MATCH,
           key: 'description',
           value: {
-            string: 'dx'
-          }
-        }
+            string: 'dx',
+          },
+        },
       },
       {
         root: {
           op: Predicate.Operation.TEXT_MATCH,
           key: 'description',
           value: {
-            string: ''
-          }
-        }
-      }
+            string: '',
+          },
+        },
+      },
     ];
 
     const items = [
       {
         name: 'item-0',
         description: 'this should not match any text queries.',
-        count: 0
+        count: 0,
       },
       {
         name: 'item-1',
         label: 'red',
         description: 'this item -- references  dxos  projects.',
-        count: 1
+        count: 1,
       },
       {
         name: 'item-2',
         label: 'green',
         complete: true,
-        count: 1
+        count: 1,
       },
       {
         name: 'item-3',
         complete: true,
-        count: 2
+        count: 2,
       },
       {
         name: 'item-4',
-        complete: false
-      }
+        complete: false,
+      },
     ];
 
     const expected = [
@@ -201,7 +201,7 @@ describe('Matcher', () => {
       [items[0], items[1], items[2]],
       [items[0], items[1], items[2], items[3], items[4]],
       [items[1]],
-      []
+      [],
     ];
 
     const matcher = new Matcher({ getter });

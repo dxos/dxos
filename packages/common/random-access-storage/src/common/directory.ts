@@ -14,9 +14,9 @@ export class Directory {
     public readonly type: StorageType,
     public readonly path: string,
     // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
-    private readonly _getFiles: () => Map<string, File>,
+    private readonly _list: (path: string) => Promise<string[]>,
     private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
-    private readonly _delete: () => Promise<void>
+    private readonly _delete: () => Promise<void>,
   ) {}
 
   toString() {
@@ -27,14 +27,14 @@ export class Directory {
    * Create a new sub-directory.
    */
   createDirectory(path: string): Directory {
-    return new Directory(this.type, getFullPath(this.path, path), this._getFiles, this._getOrCreateFile, this._delete);
+    return new Directory(this.type, getFullPath(this.path, path), this._list, this._getOrCreateFile, this._delete);
   }
 
   /**
    * Get all files in the current directory.
    */
-  getFiles(): Map<string, File> {
-    return this._getFiles();
+  list(): Promise<string[]> {
+    return this._list(this.path);
   }
 
   /**

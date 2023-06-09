@@ -5,13 +5,14 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import {
   DeviceStateMachine,
   CredentialSigner,
   createCredentialSignerWithKey,
   createCredentialSignerWithChain,
   ProfileStateMachine,
-  CredentialConsumer
+  CredentialConsumer,
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
@@ -21,15 +22,10 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
-
-/**
- * Timeout for the device to be added to the trusted set during auth.
- */
-const AUTH_TIMEOUT = 30000;
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -64,20 +60,20 @@ export class Identity {
       new DeviceStateMachine({
         identityKey: this.identityKey,
         deviceKey: this.deviceKey,
-        onUpdate: () => this.stateUpdate.emit()
-      })
+        onUpdate: () => this.stateUpdate.emit(),
+      }),
     );
     this._profileStateMachine = this.space.spaceState.registerProcessor(
       new ProfileStateMachine({
         identityKey: this.identityKey,
-        onUpdate: () => this.stateUpdate.emit()
-      })
+        onUpdate: () => this.stateUpdate.emit(),
+      }),
     );
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => this.authorizedDeviceKeys,
       update: this.stateUpdate,
-      authTimeout: AUTH_TIMEOUT
+      authTimeout: AUTH_TIMEOUT,
     });
   }
 
@@ -102,7 +98,7 @@ export class Identity {
   async ready() {
     await this._deviceStateMachine.processor.deviceChainReady.wait();
 
-    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: 3_000 });
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
   }
 
   get profileDocument(): ProfileDocument | undefined {
@@ -128,11 +124,11 @@ export class Identity {
     return this._deviceStateMachine.processor.deviceCredentialChain;
   }
 
-  getAdmissionCredentials(): HaloAdmissionCredentials {
+  getAdmissionCredentials(): DeviceAdmissionRequest {
     return {
       deviceKey: this.deviceKey,
       controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
-      dataFeedKey: this.space.dataFeedKey ?? failUndefined()
+      dataFeedKey: this.space.dataFeedKey ?? failUndefined(),
     };
   }
 
@@ -145,7 +141,7 @@ export class Identity {
     return createCredentialSignerWithChain(
       this._signer,
       this._deviceStateMachine.processor.deviceCredentialChain,
-      this.deviceKey
+      this.deviceKey,
     );
   }
 
@@ -156,13 +152,13 @@ export class Identity {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: HaloAdmissionCredentials) {
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest) {
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,
       deviceKey,
       controlFeedKey,
-      dataFeedKey
+      dataFeedKey,
     });
     const signer = this.getIdentityCredentialSigner();
     await writeMessages(
@@ -173,8 +169,8 @@ export class Identity {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             identityKey: this.identityKey,
-            deviceKey
-          }
+            deviceKey,
+          },
         }),
         await signer.createCredential({
           subject: controlFeedKey,
@@ -183,8 +179,8 @@ export class Identity {
             spaceKey: this.haloSpaceKey,
             deviceKey,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL
-          }
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
         }),
         await signer.createCredential({
           subject: dataFeedKey,
@@ -193,10 +189,10 @@ export class Identity {
             spaceKey: this.haloSpaceKey,
             deviceKey,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.DATA
-          }
-        })
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential } }))
+            designation: AdmittedFeed.Designation.DATA,
+          },
+        }),
+      ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
     );
   }
 }

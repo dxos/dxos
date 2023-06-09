@@ -34,7 +34,7 @@ export const createMappingDescriptors = (substitutions: Substitutions): Bidirect
   }
   return {
     encode,
-    decode
+    decode,
   };
 };
 
@@ -84,14 +84,14 @@ const mapScalarField = async (field: protobufjs.Field, mapper: FieldMapper, valu
 
 const asyncObjectMap = async <K extends keyof any, T, U>(
   map: (value: T, key: K) => Promise<U>,
-  record: Record<K, T>
+  record: Record<K, T>,
 ): Promise<Record<K, U>> => {
   const res: Record<K, U> = {} as any;
 
   await Promise.all(
     Object.entries(record).map(async ([key, value]) => {
       res[key as keyof typeof res] = await map(value as T, key as K);
-    })
+    }),
   );
 
   return res;

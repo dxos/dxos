@@ -1,11 +1,13 @@
 # Class `SpaceProxy`
-<sub>Declared in [packages/sdk/client/src/packlets/proxies/space-proxy.ts:54](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L54)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/proxies/space-proxy.ts:26](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L26)</sub>
+
 
 
 
 
 ## Constructors
-### [constructor(_clientServices, _modelFactory, _state, databaseRouter)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L75)
+### [constructor(_clientServices, _modelFactory, _data, databaseRouter)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L76)
+
 
 
 Returns: <code>[SpaceProxy](/api/@dxos/client/classes/SpaceProxy)</code>
@@ -16,30 +18,56 @@ Arguments:
 
 `_modelFactory`: <code>ModelFactory</code>
 
-`_state`: <code>Space</code>
+`_data`: <code>Space</code>
 
 `databaseRouter`: <code>[DatabaseRouter](/api/@dxos/client/classes/DatabaseRouter)</code>
 
+
 ## Properties
-### [invitationsUpdate](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L55)
-Type: <code>Event&lt;void | [CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)&gt;</code>
-### [stateUpdate](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L56)
-Type: <code>Event&lt;void&gt;</code>
-### [db](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L109)
+### [db](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L140)
 Type: <code>[EchoDatabase](/api/@dxos/client/classes/EchoDatabase)</code>
-### [internal](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L122)
-Type: <code>Internal</code>
-### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L117)
-Type: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)[]</code>
-### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L105)
+
+Echo database.
+
+### [error](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L186)
+Type: <code>undefined | Error</code>
+
+### [internal](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L182)
+Type: <code>[SpaceInternal](/api/@dxos/client/interfaces/SpaceInternal)</code>
+
+### [invitations](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L167)
+Type: <code>MulticastObservable&lt;[CancellableInvitationObservable](/api/@dxos/client/classes/CancellableInvitationObservable)[]&gt;</code>
+
+### [isOpen](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L123)
 Type: <code>boolean</code>
-### [key](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L101)
+
+### [key](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L119)
 Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
-### [properties](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L113)
-Type: <code>[Document](/api/@dxos/client/values#Document)&lt;object&gt;</code>
+
+### [members](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L174)
+Type: <code>MulticastObservable&lt;[SpaceMember](/api/@dxos/client/interfaces/SpaceMember)[]&gt;</code>
+
+### [pipeline](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L160)
+Type: <code>MulticastObservable&lt;PipelineState&gt;</code>
+
+Current state of space pipeline.
+
+### [properties](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L144)
+Type: <code>[Properties](/api/@dxos/client/classes/Properties) | [TypedObject](/api/@dxos/client/values#TypedObject)</code>
+
+Properties object.
+
+### [state](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L153)
+Type: <code>MulticastObservable&lt;[SpaceState](/api/@dxos/client/enums#SpaceState)&gt;</code>
+
+Current state of the space.
+The database is ready to be used in  `SpaceState.READY`  state.
+Presence is available in  `SpaceState.INACTIVE`  state.
+
 
 ## Methods
-### [_setOpen(open)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L251)
+### [_setOpen(open)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L345)
+
 
 
 Returns: <code>Promise&lt;never&gt;</code>
@@ -47,77 +75,90 @@ Returns: <code>Promise&lt;never&gt;</code>
 Arguments: 
 
 `open`: <code>boolean</code>
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L187)
+
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L295)
+
+
+
+TODO
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L208)
+
+### [createInvitation(\[options\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L332)
+
 
 
 Creates an interactive invitation.
 
-Returns: <code>[CancellableInvitationObservable](/api/@dxos/client/interfaces/CancellableInvitationObservable)</code>
+
+Returns: <code>[CancellableInvitationObservable](/api/@dxos/client/classes/CancellableInvitationObservable)</code>
 
 Arguments: 
 
-`options`: <code>InvitationsOptions</code>
-### [createSnapshot()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L246)
+`options`: <code>Partial&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
+
+### [createSnapshot()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L340)
+
 
 
 Implementation method.
 
+
 Returns: <code>Promise&lt;SpaceSnapshot&gt;</code>
 
 Arguments: none
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L176)
+
+### [listen(channel, callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L322)
 
 
-Called by EchoProxy close.
 
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-### [getMembers()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L194)
+Listen for messages posted to the space.
 
 
-Return set of space members.
-
-Returns: <code>[SpaceMember](/api/@dxos/client/interfaces/SpaceMember)[]</code>
-
-Arguments: none
-### [initialize()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L130)
-
-
-Called by EchoProxy open.
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L183)
-
-
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-### [removeInvitation(id)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L235)
-
-
-Remove invitation from space.
-
-Returns: <code>void</code>
+Returns: <code>function</code>
 
 Arguments: 
 
-`id`: <code>string</code>
-### [subscribeMembers(callback)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L201)
-
-
-Subscribe to changes to space members.
-
-Returns: <code>UnsubscribeCallback</code>
-
-Arguments: 
+`channel`: <code>string</code>
 
 `callback`: <code>function</code>
+
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L288)
+
+
+
+TODO
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+
+### [postMessage(channel, message)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L310)
+
+
+
+Post a message to the space.
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`channel`: <code>string</code>
+
+`message`: <code>any</code>
+
+### [waitUntilReady()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L302)
+
+
+
+Waits until the space is in the ready state, with database initialized.
+
+
+Returns: <code>Promise&lt;[SpaceProxy](/api/@dxos/client/classes/SpaceProxy)&gt;</code>
+
+Arguments: none

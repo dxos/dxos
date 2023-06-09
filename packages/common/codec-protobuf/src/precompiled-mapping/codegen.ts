@@ -34,7 +34,7 @@ interface Ref {
  */
 export const ref = (value: any): Ref => ({
   [Ref]: true,
-  value
+  value,
 });
 
 const isRef = (value: any): value is Ref => value[Ref] === true;
@@ -70,7 +70,7 @@ export const codegen = (
   name: string,
   args: string[],
   gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void,
-  ctx: Record<string, any> = {}
+  ctx: Record<string, any> = {},
 ): ((...args: any[]) => any) => {
   const newCtx = { ...ctx };
   let nextAnnon = 1;

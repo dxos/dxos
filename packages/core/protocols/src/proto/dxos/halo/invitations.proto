@@ -6,16 +6,39 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/client/services.proto";
+import "dxos/echo/timeframe.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
-import "dxos/echo/timeframe.proto";
 
 package dxos.halo.invitations;
 
-// TODO(burdon): Reconcile with client.services.Invitation. Merge files.
+message Options {
+  enum Role {
+    GUEST = 0;
+    HOST = 1;
+  }
+
+  /// Role of the peer.
+  Role role = 1;
+}
+
+message IntroductionRequest {
+  /// Guest's profile.
+  optional halo.credentials.ProfileDocument profile = 1;
+
+  optional string invitation_id = 2;
+}
+
+message IntroductionResponse {
+  dxos.client.services.Invitation.AuthMethod auth_method = 1;
+
+  /// Only present for testing invitation types.
+  optional dxos.keys.PublicKey space_key = 100;
+}
 
 message AuthenticationRequest {
-  string authentication_code = 1;
+  string auth_code = 1;
 }
 
 message AuthenticationResponse {
@@ -29,55 +52,10 @@ message AuthenticationResponse {
   optional Status status = 1;
 }
 
-enum AuthMethod {
-  /// No authnetication is required. Guest should not call `Authenticate`.
-  NONE = 0;
-
-  /// Guest should call `Authenticate` with the shared secret.
-  SHARED_SECRET = 1;
-}
-
-//
-// HALO device invitations.
-//
-
-message HaloAdmissionOffer {
-  dxos.keys.PublicKey identity_key = 1;
-  dxos.keys.PublicKey halo_space_key = 2;
-  dxos.keys.PublicKey genesis_feed_key = 3;
-}
-
-message HaloAdmissionCredentials {
+message DeviceAdmissionRequest {
   dxos.keys.PublicKey device_key = 1;
   dxos.keys.PublicKey control_feed_key = 2;
   dxos.keys.PublicKey data_feed_key = 3;
-}
-
-service HaloHostService {
-  /// Process admission offer from host.
-  rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
-
-  /// Authenticate request.
-  rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
-
-  /// Process admission request from guest.
-  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
-}
-
-//
-// Space agent invitations.
-//
-
-message Introduction {
-  /// Guest's profile.
-  optional halo.credentials.ProfileDocument profile = 1;
-}
-
-message IntroductionResponse {
-  /// Only present for testing invitation types.
-  optional dxos.keys.PublicKey space_key = 1;
-
-  AuthMethod auth_method = 2;
 }
 
 message SpaceAdmissionRequest {
@@ -85,6 +63,20 @@ message SpaceAdmissionRequest {
   dxos.keys.PublicKey device_key = 2;
   dxos.keys.PublicKey control_feed_key = 3;
   dxos.keys.PublicKey data_feed_key = 4;
+}
+
+message AdmissionRequest {
+  oneof kind {
+    DeviceAdmissionRequest device = 1;
+    SpaceAdmissionRequest space = 2;
+  }
+}
+
+message DeviceAdmissionCredentials {
+  dxos.keys.PublicKey identity_key = 1;
+  dxos.keys.PublicKey halo_space_key = 2;
+  dxos.keys.PublicKey genesis_feed_key = 3;
+  optional dxos.echo.timeframe.TimeframeVector control_timeframe = 4;
 }
 
 message SpaceAdmissionCredentials {
@@ -98,13 +90,26 @@ message SpaceAdmissionCredentials {
   optional dxos.echo.timeframe.TimeframeVector data_timeframe = 3;
 }
 
-service SpaceHostService {
-  /// Introduce Guest to the host.
-  rpc Introduce(Introduction) returns (IntroductionResponse);
+message AdmissionResponse {
+  oneof kind {
+    DeviceAdmissionCredentials device = 1;
+    SpaceAdmissionCredentials space = 2;
+  }
+}
 
-  /// Authenticate request.
+/// Host service for two peers exchanging an invitation.
+// TODO(wittjosiah): Handle invitations where guest is the initiatating peer.
+// TODO(dmaretskyi): Rename to InvitationExtensionService.
+service InvitationHostService {
+  /// Both peers must call this method before any other.
+  rpc Options(Options) returns (google.protobuf.Empty);
+
+  /// Introduce guest to the host. Only on the host.
+  rpc Introduce(IntroductionRequest) returns (IntroductionResponse);
+
+  /// Authenticate request. Only on the host.
   rpc Authenticate(AuthenticationRequest) returns (AuthenticationResponse);
 
-  /// Process admission credentials.
-  rpc RequestAdmission(SpaceAdmissionRequest) returns (SpaceAdmissionCredentials);
+  /// Process admission credentials. Only on the host.
+  rpc Admit(AdmissionRequest) returns (AdmissionResponse);
 }

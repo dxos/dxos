@@ -2,10 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { UAParser } from 'ua-parser-js';
+
 import { log } from '@dxos/log';
 import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
+
+let browser: string | undefined;
+let os: string | undefined;
+
+if (typeof navigator !== 'undefined') {
+  // TODO(wittjosiah): Stop user agent parsing.
+  const parser = new UAParser(navigator.userAgent);
+  browser = parser.getBrowser().name;
+  os = parser.getOS().name;
+}
 
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
@@ -13,12 +25,19 @@ const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: Messag
     return;
   }
 
-  // TODO(dmaretskyi): Determine if we need to strictly specify the target origin here.
-  iframe.contentWindow.postMessage(message, '*', [message.payload]);
+  if (browser === 'Chrome' && os === 'iOS') {
+    iframe.contentWindow.postMessage(message, origin);
+  } else {
+    iframe.contentWindow.postMessage(message, origin, [message.payload]);
+  }
 };
 
 const sendToParentWindow = (origin: string, message: MessageData) => {
-  window.parent.postMessage(message, origin, [message.payload]);
+  if (browser === 'Chrome' && os === 'iOS') {
+    window.parent.postMessage(message, origin);
+  } else {
+    window.parent.postMessage(message, origin, [message.payload]);
+  }
 };
 
 export type IFramePortOptions = {
@@ -40,7 +59,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
   return {
     send: async (data) => {
       if (!origin) {
-        log.warn('no origin set', { channel });
+        log('no origin set', { channel });
         return;
       }
 
@@ -82,7 +101,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
 
       window.addEventListener('message', handler);
       return () => window.removeEventListener('message', handler);
-    }
+    },
   };
 };
 
@@ -108,19 +127,6 @@ export const createIFrame = (source: string, id: string, { hidden = true, allow 
     document.body.appendChild(iframe);
     return iframe;
   };
-
-  {
-    const cssStyle = 'color:#C026D3;font-weight:bold';
-
-    console.log(
-      `%cDXOS Client is communicating with the shared worker on ${source}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
-      cssStyle
-    );
-    console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${source}`,
-      cssStyle
-    );
-  }
 
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

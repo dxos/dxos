@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Don't re-export.
 export * from '@dxos/client';
+export * from '@dxos/observable-object/react';
 
 export * from './client';
 export * from './echo';

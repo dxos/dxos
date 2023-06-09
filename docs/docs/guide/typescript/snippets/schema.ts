@@ -2,20 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
-export class Task extends DocumentBase {
-  static readonly type = schema.getType('dxos.tasks.Task');
+export class Task extends TypedObject {
+  static readonly type = schema.getType('example.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 

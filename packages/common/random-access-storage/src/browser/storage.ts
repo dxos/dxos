@@ -5,10 +5,21 @@
 import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
 import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
+import { WebFS } from './web-fs';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    return (globalThis as any).IDBMutableFile ? new FirefoxStorage(root) : new IDbStorage(root);
+    if (
+      navigator &&
+      navigator.storage &&
+      typeof navigator.storage.getDirectory === 'function' &&
+      FileSystemFileHandle &&
+      typeof (FileSystemFileHandle.prototype as any).createWritable === 'function'
+    ) {
+      return new WebFS(root);
+    } else {
+      return new IDbStorage(root);
+    }
   }
 
   switch (type) {
@@ -23,6 +34,10 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
 
     case StorageType.FIREFOX: {
       return new FirefoxStorage(root);
+    }
+
+    case StorageType.WEBFS: {
+      return new WebFS(root);
     }
 
     default: {

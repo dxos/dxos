@@ -1,0 +1,69 @@
+{
+  "sourceRoot": "packages/ui/react-appkit/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/ui/react-appkit/src/index.ts",
+        "outputPath": "packages/ui/react-appkit/dist/types",
+        "tsConfig": "packages/ui/react-appkit/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/ui/react-appkit/src/index.ts",
+          "packages/ui/react-appkit/src/telemetry/index.ts"
+        ],
+        "outputPath": "packages/ui/react-appkit/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/ui/react-appkit/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "packages/ui/react-appkit/src/proto/gen"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/ui/react-appkit/.storybook",
+        "uiFramework": "@storybook/react"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

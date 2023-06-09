@@ -17,7 +17,7 @@ const env = (value?: string) => (value ? `'${value}'` : undefined);
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
-  title: 'DXOS',
+  title: 'DXOS', // Used in browser title.
   description: 'The Operating System for Decentralized Software',
   pagePatterns: [
     // Defaults
@@ -30,7 +30,7 @@ const config: UserConfig = defineUserConfig({
     '!contributing',
     '!design',
     '!legacy',
-    '!specs'
+    '!specs',
   ],
   extendsMarkdown: (md) => {
     md.use(MarkdownIt.apiDocRenderDirective);
@@ -38,30 +38,31 @@ const config: UserConfig = defineUserConfig({
   },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
-    logo: '/images/dxos.svg',
-    logoDark: '/images/dxos-white.svg',
+    // Header logotype.
+    logo: '/images/logotype/dxos-horizontal.svg',
+    logoDark: '/images/logotype/dxos-horizontal-white.svg',
     repo: 'dxos/dxos',
     // TODO(wittjosiah): Use release tag?
     docsBranch: 'main',
     docsDir: 'docs/docs',
     sidebar: sidebar({
       '/guide/': 'structure',
-      '/api/': await apiSidebar()
+      '/api/': await apiSidebar(),
     }),
     navbarLayout: {
-      left: ['Brand', 'Links'],
+      start: ['Brand', 'Links'],
       center: [],
-      right: ['Search', 'Outlook', 'Repo']
+      end: ['Search', 'Outlook', 'Repo'],
     },
     navbar: [
       {
         text: 'Guide',
-        link: '/guide/'
+        link: '/guide/',
       },
       {
         text: 'API',
-        link: '/api/'
-      }
+        link: '/api/',
+      },
     ],
     plugins: {
       mdEnhance: {
@@ -70,34 +71,34 @@ const config: UserConfig = defineUserConfig({
         sup: true,
         attrs: true,
         figure: true,
-        imageMark: true
-      }
-    }
+        imgMark: true,
+      },
+    },
   }),
   plugins: [
     // Config: https://vuepress.github.io/reference/plugin/register-components.html
     registerComponentsPlugin({
       components: {
-        Showcase: resolve(__dirname, './src/components/Showcase.vue')
-      }
+        Showcase: resolve(__dirname, './src/components/Showcase.vue'),
+      },
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
-    telemetryPlugin()
+    telemetryPlugin(),
   ],
   bundler: viteBundler({
     viteOptions: {
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
-        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY)
+        'process.env.DX_TELEMETRY_API_KEY': env(process.env.DX_TELEMETRY_API_KEY),
       },
       // Do not try to resolve DXOS deps in ssr mode or bundling fails currently.
       ssr: {
-        external: ['@dxos/client', '@dxos/client/testing', '@dxos/react-client', '@dxos/echo-schema']
-      }
-    }
-  })
+        external: ['@dxos/client', '@dxos/client-services/testing', '@dxos/react-client', '@dxos/echo-schema'],
+      },
+    },
+  }),
 });
 
 export default config;

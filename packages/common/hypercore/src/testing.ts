@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 export const noop = () => {};
 
@@ -11,7 +11,7 @@ export type TestDataItem = { id: number; text: string };
 
 export const createDataItem = (n: number): TestDataItem => ({
   id: n,
-  text: faker.lorem.sentence()
+  text: faker.lorem.sentence(),
 });
 
 type BatchCallback = (next: (num: number) => void, index: number, remaining: number) => void;
@@ -29,7 +29,7 @@ export const batch = (cb: BatchCallback, total: number) => {
         }
       },
       i,
-      remaining
+      remaining,
     );
   };
 

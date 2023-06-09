@@ -24,30 +24,36 @@ export const Share: FC<{
     async () => {
       // TODO(burdon): Set timeout to process invitation? Separate method to start?
       const observable = onCreate();
-      observable.subscribe({
-        onConnected: async (invitation: Invitation) => {
-          setInvitation(invitation);
-          const code = InvitationEncoder.encode(invitation);
-          const clipped = await copyToClipboard(code);
-          setClipped(clipped);
-          if (!clipped) {
-            write(`Invitation (clipboard not available)\n${code}\n\n`);
+      observable.subscribe(
+        async (invitation: Invitation) => {
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              setInvitation(invitation);
+              const code = InvitationEncoder.encode(invitation);
+              const clipped = await copyToClipboard(code);
+              setClipped(clipped);
+              if (!clipped) {
+                write(`Invitation (clipboard not available)\n${code}\n\n`);
+              }
+              break;
+            }
+
+            case Invitation.State.SUCCESS: {
+              if (isMounted()) {
+                setStatus({ success: 'OK' });
+              }
+            }
           }
         },
-        onSuccess: (invitation: Invitation) => {
-          if (isMounted()) {
-            setStatus({ success: 'OK' });
-          }
-        },
-        onError: (err: Error) => {
+        (err: Error) => {
           setStatus({ error: err });
-        }
-      });
+        },
+      );
     },
     () => {
       clear();
     },
-    []
+    [],
   );
 
   return (

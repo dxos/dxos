@@ -11,7 +11,7 @@ import { waitForDXOS } from './utils';
 log('Initialize panel starting...');
 
 const port = browser.runtime.connect({
-  name: `panel-${browser.devtools.inspectedWindow.tabId}`
+  name: `panel-${browser.devtools.inspectedWindow.tabId}`,
 });
 
 const sandbox = document.createElement('iframe');

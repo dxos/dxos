@@ -29,13 +29,13 @@ export class LogTransformer {
       jsc: {
         parser: {
           syntax: 'typescript',
-          decorators: true
+          decorators: true,
         },
         experimental: {
-          plugins: [[wasmModule, {}]]
+          plugins: [[wasmModule, {}]],
         },
-        target: 'es2022'
-      }
+        target: 'es2022',
+      },
     });
 
     return output.code;
@@ -66,7 +66,7 @@ export class LogTransformer {
 
           return {
             contents: transformed,
-            loader: args.path.endsWith('x') ? 'tsx' : 'ts'
+            loader: args.path.endsWith('x') ? 'tsx' : 'ts',
           };
         });
 
@@ -74,12 +74,12 @@ export class LogTransformer {
           onEnd(() => {
             console.log(
               `Log preprocessing took (in parallel) ${time}ms for ${files} files (${(time / files).toFixed(
-                0
-              )} ms/file).`
+                0,
+              )} ms/file).`,
             );
           });
         }
-      }
+      },
     };
   }
 }

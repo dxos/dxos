@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Clipboard } from 'phosphor-react';
+import { Clipboard } from '@phosphor-icons/react';
 import React, { Component, PropsWithChildren, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { Button, Message } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { Alert, Button, Tooltip } from '@dxos/react-components';
+import { Tooltip } from '@dxos/react-appkit';
+import { captureException } from '@dxos/sentry';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
   let insideRouter = false;
@@ -27,11 +29,12 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
 
   return (
     <div className='m-4'>
-      <Alert title={message} valence={'error'} slots={{ root: { className: 'mlb-4' } }}>
-        <pre className='text-xs overflow-auto max-w-72 max-h-72 overflow-hidden'>{stack}</pre>
-      </Alert>
+      <Message.Root valence='error' className='mlb-4'>
+        <Message.Title>{message}</Message.Title>
+        <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
+      </Message.Root>
       <div role='none' className='flex'>
-        <Tooltip content={'Copy'} zIndex={'z-[21]'}>
+        <Tooltip content='Copy' zIndex='z-[21]'>
           <Button onClick={onCopyError}>
             <Clipboard weight='duotone' size='1em' />
           </Button>
@@ -65,6 +68,7 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    captureException(error);
     return { hasError: true, error };
   }
 

@@ -14,7 +14,7 @@ message Contact {
       fixed32 lat = 1;
       fixed32 lng = 2;
     }
-  
+
     string city = 1;
     string state = 2;
     string zip = 3;
@@ -23,7 +23,7 @@ message Contact {
 
   option (object) = true;
 
-  string name = 1;
+  string name = 1 [default="Anonymous", required = true];
   string username = 2;
   string email = 3;
   Address address = 4;
@@ -40,17 +40,36 @@ message Task {
   Task previous = 4;
   repeated Task sub_tasks = 5;
   dxos.schema.Text description = 6;
+
+  Meta meta = 100;
 }
 
 message Container {
   option (object) = true;
 
-  message Section {
-    option (object) = true;
-    
+  message Record {
+    enum Type {
+      UNDEFINED = 0;
+      PERSONAL = 1;
+      WORK = 2;
+    }
+
     string title = 1;
-    dxos.schema.Document document = 2;
+    string description = 2;
+    repeated Contact contacts = 3;
+    Type type = 4;
   }
 
-  repeated Section sections = 1;
+  repeated dxos.schema.TypedObject objects = 1;
+  repeated dxos.schema.Expando expandos = 2;
+  repeated Record records = 3;
+}
+
+message Meta {
+  message ForeignKey {
+    string source = 1;
+    string id = 2;
+  }
+
+  repeated ForeignKey keys = 1;
 }

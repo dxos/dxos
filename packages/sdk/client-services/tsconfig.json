@@ -89,10 +89,13 @@
       "path": "../../core/mesh/teleport"
     },
     {
-      "path": "../../core/mesh/teleport-extension-presence"
+      "path": "../../core/mesh/teleport-extension-gossip"
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-protocol"
     },
     {
       "path": "../config"

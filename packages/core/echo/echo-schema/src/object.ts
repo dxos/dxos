@@ -8,6 +8,8 @@ import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
+import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
@@ -16,7 +18,7 @@ import { base, db } from './defs';
  * Base class for all echo objects.
  * Can carry different models.
  */
-export abstract class EchoObject<T extends Model = any> {
+export abstract class EchoObject<T extends Model = any> implements ObservableObject {
   /**
    * @internal
    */
@@ -50,6 +52,8 @@ export abstract class EchoObject<T extends Model = any> {
    */
   _modelConstructor: ModelConstructor<T>;
 
+  private _callbacks = new Set<(value: any) => void>();
+
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
     this._id = PublicKey.random().toHex();
@@ -66,9 +70,9 @@ export abstract class EchoObject<T extends Model = any> {
         return {
           feedKey: PublicKey.from('00'),
           seq: 0,
-          waitToBeProcessed: () => Promise.resolve()
+          waitToBeProcessed: () => Promise.resolve(),
         };
-      }
+      },
     );
   }
 
@@ -87,20 +91,42 @@ export abstract class EchoObject<T extends Model = any> {
 
   /**
    * @internal
-   * Called after object is bound to database.
+   * Called before object is bound to database.
+   * `_database` is guaranteed to be set.
    */
-  protected async _onBind(): Promise<void> {}
+  _beforeBind(): void {}
 
   /**
    * @internal
+   * Called after object is bound to database.
    */
-  // TODO(burdon): Document.
-  async _bind(item: Item<T>) {
+  protected _afterBind(): void {}
+
+  /**
+   * @internal
+   * Called before object is bound to database.
+   * `_database` is guaranteed to be set.
+   */
+  _itemUpdate(): void {
+    for (const callback of this._callbacks) {
+      callback(this);
+    }
+  }
+
+  [subscribe](callback: (value: any) => void) {
+    this[base]._callbacks.add(callback);
+    return () => this[base]._callbacks.delete(callback);
+  }
+
+  /**
+   * @internal
+   * Called when the object is imported to the database. Assigns the backing item.
+   */
+  _bind(item: Item<T>) {
     // TODO(dmaretskyi): Snapshot and unbind local state machine.
     this._stateMachine = undefined;
     this._item = item;
-
-    await this._onBind();
+    this._afterBind();
   }
 
   /**
@@ -148,8 +174,13 @@ export abstract class EchoObject<T extends Model = any> {
     } else {
       assert(this._database);
       return this._database._backend.mutate(
-        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation))
+        createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation)),
       );
     }
   }
 }
+
+export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
+  assert(obj[base]._stateMachine);
+  obj[base]._stateMachine.reset(snapshot);
+};

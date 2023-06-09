@@ -9,7 +9,7 @@ import { Config } from './rpcsrv';
 enum On {
   CONNECT = 'connect',
   ERROR = 'error',
-  DISCONNECT = 'disconnect'
+  DISCONNECT = 'disconnect',
 }
 
 export class Client {

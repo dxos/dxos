@@ -8,10 +8,11 @@ import "google/protobuf/empty.proto";
 
 import "dxos/config.proto";
 import "dxos/halo/credentials.proto";
-import "dxos/halo/invitations.proto";
+import "dxos/mesh/teleport/gossip.proto";
 import "dxos/keys.proto";
+import "dxos/echo/metadata.proto";
+import "dxos/error.proto";
 
-// TODO(burdon): Restructure all services.
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
 package dxos.client.services;
@@ -139,16 +140,81 @@ message SpaceMember {
   PresenceState presence = 2;
 }
 
-enum SpaceStatus {
-  ACTIVE = 0;
-  INACTIVE = 1;
+/// Runtime state of the space object.
+enum SpaceState {
+  /// Space is closed.
+  CLOSED = 1;
+
+  /// Space is inactive. Database is not available.
+  INACTIVE = 2;
+
+  /// Data pipeline is initializing.
+  INITIALIZING = 4;
+
+  /// Data pipeline is ready.
+  READY = 3;
+
+  /// Space errored.
+  ERROR = 5;
 }
 
 message Space {
+  message Metrics {
+    optional google.protobuf.Timestamp open = 1;
+    optional google.protobuf.Timestamp pipeline_init_begin = 2;
+    optional google.protobuf.Timestamp control_pipeline_ready = 3;
+    optional google.protobuf.Timestamp data_pipeline_open = 4;
+    optional google.protobuf.Timestamp data_pipeline_ready = 5;
+    optional google.protobuf.Timestamp ready = 6;
+  }
+
+  // TODO(dmaretskyi): Consider merging with space metadata records.
+  // TODO(dmaretskyi): ...or split into two separate pipeline messages.
+  message PipelineState {
+    optional dxos.keys.PublicKey control_feed_key = 1;
+    optional dxos.keys.PublicKey data_feed_key = 2;
+
+    repeated dxos.keys.PublicKey control_feeds = 18;
+    repeated dxos.keys.PublicKey data_feeds = 19;
+
+    /// Mutations alredy processed.
+    optional timeframe.TimeframeVector current_control_timeframe = 10;
+
+    /// Minimum timeframe to consider the state to be up-to-date.
+    optional timeframe.TimeframeVector target_control_timeframe = 11;
+
+    /// All mutations stored in feeds.
+    optional timeframe.TimeframeVector total_control_timeframe = 14;
+
+    /// All mutations known to exist on the network.
+    optional timeframe.TimeframeVector known_control_timeframe = 15;
+    
+    /// Mutations alredy processed.
+    optional timeframe.TimeframeVector current_data_timeframe = 12;
+
+    /// Minimum timeframe to consider the state to be up-to-date.
+    optional timeframe.TimeframeVector target_data_timeframe = 13;
+
+    /// All mutations stored in feeds.
+    optional timeframe.TimeframeVector total_data_timeframe = 16;
+
+    /// All mutations known to exist on the network.
+    optional timeframe.TimeframeVector known_data_timeframe = 17;
+
+    // TODO(dmaretskyi): Snapshot & epoch info.
+  }
+
   dxos.keys.PublicKey space_key = 1;
-  SpaceStatus status = 2;
+  SpaceState state = 2;
+  optional PipelineState pipeline = 3;
+
+  optional dxos.error.Error error = 4;
 
   repeated SpaceMember members = 10;
+
+  optional dxos.echo.metadata.SpaceCache cache = 20;
+
+  Metrics metrics = 21;
 }
 
 message UpdateSpaceRequest {
@@ -157,6 +223,17 @@ message UpdateSpaceRequest {
 
 message QuerySpacesResponse {
   repeated Space spaces = 1;
+}
+
+message PostMessageRequest {
+  dxos.keys.PublicKey space_key = 1;
+  string channel = 2;
+  google.protobuf.Any message = 3;
+}
+
+message SubscribeMessagesRequest {
+  dxos.keys.PublicKey space_key = 1;
+  string channel = 2;
 }
 
 message WriteCredentialsRequest {
@@ -168,15 +245,26 @@ message QueryCredentialsRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message CreateEpochRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
+  /// Broadcast an emphemeral message to the space swarm.
+  rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
+  /// Subscribe to messages from the space swarm.
+  rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
+
   /// Write credentials to the space control feed.
   rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
+
+  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
 }
 
 //
@@ -188,113 +276,178 @@ service SpacesService {
  */
 message Invitation {
   enum Type {
-    /// Requires both to be online with OTP to complete key exchange.
+    /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
-    /// Interactive without OTP.
-    /// @deprecated Use authMethod.
-    INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
-    OFFLINE = 2;
-    /// Multiple-use invitation with OTP.
-    MULTIUSE_TESTING = 3;
+    OFFLINE = 1;
+    /// Multiple-use interactive invitation.
+    MULTIUSE = 2;
+  }
+
+  enum Kind {
+    DEVICE = 0;
+    SPACE = 1;
+  }
+
+  enum AuthMethod {
+    /// No authnetication is required. Guest should not call `Authenticate`.
+    NONE = 0;
+
+    /// Guest should call `Authenticate` with the shared secret.
+    SHARED_SECRET = 1;
   }
 
   enum State {
     INIT = 0;
     CONNECTING = 1;
     CONNECTED = 2;
-    AUTHENTICATING = 3;
-    SUCCESS = 4;
-    CANCELLED = 5;
-    TIMEOUT = 6;
-    ERROR = 7;
+    READY_FOR_AUTHENTICATION = 3;
+    AUTHENTICATING = 4;
+    SUCCESS = 5;
+    CANCELLED = 6;
+    TIMEOUT = 7;
+    ERROR = 8;
   }
 
-  enum Error {
-    OK = 0;
-    TIMEOUT = 1;
-    INVALID_OTP = 2;
-    INVALID_OPT_ATTEMPTS = 3;
-    INVALID_CREDENTIALS = 4;
-  }
+  /// Local identifier (random).
+  string invitation_id = 1;
 
-  /// Local identifier.
-  optional string invitation_id = 1;
+  /// Determines the behavior of the invitation.
+  Type type = 2;
 
-  /// Determined when created.
-  optional Type type = 2;
+  /// Kind of access the invitation will grant.
+  Kind kind = 3;
 
-  optional dxos.halo.invitations.AuthMethod auth_method = 10; // TODO: Fix numbering.
-
-  /// Local state.
-  optional State state = 3;
-
-  /// Error.
-  optional Error error = 4;
+  /// How the invitation is authenticated.
+  AuthMethod auth_method = 4;
 
   /// Swarm rendezvous (random).
-  optional dxos.keys.PublicKey swarm_key = 5;
+  dxos.keys.PublicKey swarm_key = 5;
 
-  /// Guest's identity (only present if OFFLINE).
-  optional dxos.keys.PublicKey identity_key = 6;
-
-  /// Space to join.
-  optional dxos.keys.PublicKey space_key = 7;
-
-  /// Authentication code created by host.
-  optional string authentication_code = 8;
+  /// Local state.
+  State state = 6;
 
   /// Timeout (ms).
-  optional int32 timeout = 9;
+  optional int32 timeout = 7;
+
+  /// Guest's identity.
+  optional dxos.keys.PublicKey identity_key = 8;
+
+  /// Space to join (only present if kind is SPACE).
+  optional dxos.keys.PublicKey space_key = 9;
+
+  /// Authentication code created by host (only present if auth_method is SHARED_SECRET).
+  optional string auth_code = 10;
 }
 
 message AuthenticationRequest {
   string invitation_id = 1;
-  string authentication_code = 2;
+  string auth_code = 2;
 }
 
 message CancelInvitationRequest {
   string invitation_id = 1;
 }
 
-// Common TS interface.
-// TODO(burdon): Reconcile with halo/invitations.proto (e.g., common defs like error vs superset of services?)
-
-service DeviceInvitationsService {
-  rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
-  rpc AcceptInvitation(Invitation) returns (stream Invitation);
-  rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
+message InvitationMethod {
+  oneof kind {
+    Invitation created = 1;
+    Invitation accepted = 2;
+  }
 }
 
-service SpaceInvitationsService {
+message QueryInvitationsResponse {
+  enum Action {
+    ADDED = 0;
+    REMOVED = 1;
+  }
+
+  enum Type {
+    CREATED = 0;
+    ACCEPTED = 1;
+  }
+
+  Action action = 1;
+  Type type = 2;
+  repeated Invitation invitations = 3;
+}
+
+service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
+  rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
 }
 
 //
 // MESH
 //
 
+// TODO(wittjosiah): Rename to SwarnState?
 enum ConnectionState {
   OFFLINE = 0;
   ONLINE = 1;
 }
 
-// TODO(mykola): Broden API.
 message NetworkStatus {
-  ConnectionState state = 1;
+  message Signal {
+    string server = 1;
+    dxos.mesh.signal.SignalState state = 2;
+  }
+
+  ConnectionState swarm = 1;
+  repeated Signal signaling = 2;
 }
 
-message SetNetworkOptionsRequest {
-  ConnectionState state = 1;
+message UpdateConfigRequest {
+  ConnectionState swarm = 1;
 }
 
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
-  // TODO(wittjosiah): Align verbs with other services.
-  rpc SubscribeToNetworkStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc SetNetworkOptions(SetNetworkOptionsRequest) returns (google.protobuf.Empty);
+  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
+  rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+}
+
+//
+// Development Tooling
+//
+
+// NOTE: Keep aligned with LogLevel in @dxos/log.
+enum LogLevel {
+  TRACE = 5;
+
+  DEBUG = 10;
+  INFO = 11;
+  WARN = 12;
+  ERROR = 13;
+}
+
+message QueryLogsRequest {
+  message Filter {
+    LogLevel level = 1;
+    optional string pattern = 2;
+  }
+
+  /// Explicitly specify all desired log levels.
+  repeated Filter filters = 1;
+}
+
+message LogEntry {
+  message Meta {
+    string file = 1;
+    int32 line = 2;
+    optional google.protobuf.Struct scope = 3;
+  }
+
+  LogLevel level = 1;
+  string message = 2;
+  optional google.protobuf.Struct context = 3;
+  optional Meta meta = 4;
+  optional Error error = 5;
+}
+
+service LoggingService {
+  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }

@@ -50,12 +50,17 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "checkLeaks": false,
         "coveragePath": "coverage/packages/sdk/client",
+        "envVariables": {
+          "SIGNAL_PORT": 4003
+        },
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/sdk/client",
         "resultsPath": "test-results/packages/sdk/client",
         "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setupOptions": {
+          "port": 4003
+        },
         "testPatterns": [
           "packages/sdk/client/src/**/*.test.{ts,js}"
         ],

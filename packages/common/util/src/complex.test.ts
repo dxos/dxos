@@ -68,7 +68,7 @@ test('ComplexMap', () => {
   expect(map.get(key2)).to.equal('c');
   expect(Array.from(map.entries())).to.deep.equal([
     [key1, 'b'],
-    [key2, 'c']
+    [key2, 'c'],
   ]);
   expect(Array.from(map.keys())).to.deep.equal([key1, key2]);
   expect(Array.from(map.values())).to.deep.equal(['b', 'c']);

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import expect from 'expect';
-import faker from 'faker';
 
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
@@ -20,13 +20,13 @@ describe.skip('TextModel', () => {
 
     peer1.model.insert('Hello World!', 0);
 
-    await peer2.model.update.waitForCount(1);
+    // await peer2.model.update.waitForCount(1);
     expect(peer2.model.textContent).toBe('Hello World!');
 
     // TODO(burdon): Test delete.
     const words = peer1.model.textContent.split(' ');
     peer2.model.insert(' DXOS', words[0].length);
-    await peer1.model.update.waitForCount(1);
+    // await peer1.model.update.waitForCount(1);
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
@@ -56,7 +56,7 @@ describe.skip('TextModel', () => {
       'test',
       { objectId: 'test' },
       PublicKey.random(),
-      new MockFeedWriter()
+      new MockFeedWriter(),
     );
 
     const _text = faker.lorem.lines(1);
@@ -68,7 +68,7 @@ describe.skip('TextModel', () => {
       'test',
       snapshot,
       PublicKey.random(),
-      new MockFeedWriter()
+      new MockFeedWriter(),
     );
     // expect(model2.model.textContent).toBe(text);
   });

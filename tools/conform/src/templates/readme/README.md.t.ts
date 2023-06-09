@@ -21,7 +21,7 @@ export default defineTemplate<Input>(({ input }) => {
     apiReferenceUrl,
     dependencyDiagramUrl,
     codeCoverageUrl,
-    twitter = `dxos_org`,
+    twitter, // = `dxos_org`,
     issuesUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues',
     conductUrl = 'https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md',
     contributionGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md',
@@ -34,9 +34,9 @@ export default defineTemplate<Input>(({ input }) => {
     blogUrl,
     roadmapUrl,
     eventsUrl,
-    discordUrl,
+    discordUrl = 'https://discord.gg/eXVfryv3sW',
     demo,
-    stackOverflowTag = 'dxos',
+    stackOverflowTag,
     repoGuideUrl
   } = input;
 
@@ -82,7 +82,7 @@ export default defineTemplate<Input>(({ input }) => {
     blogUrl && `- [Blog](${blogUrl})`,
     roadmapUrl && `- [Roadmap](${roadmapUrl})`,
     eventsUrl && `- [Events calendar](${eventsUrl})`,
-    discordUrl && `- Hang out with the community on [Discord](${discordUrl})`,
+    discordUrl && `- Talk to us on [Discord](${discordUrl})`,
     stackOverflowTag &&
       `- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/${stackOverflowTag}) with \`#${stackOverflowTag}\``,
     twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`

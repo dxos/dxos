@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Flame, Crown, ShieldStar, Plus, Asterisk, User } from 'phosphor-react';
+import { Flame, Crown, ShieldStar, Plus, Asterisk, User } from '@phosphor-icons/react';
 import React, { ReactNode } from 'react';
 
 const style = {
   white: { width: undefined, height: undefined, color: 'darkred' },
-  black: { width: undefined, height: undefined, color: 'black' }
+  black: { width: undefined, height: undefined, color: 'black' },
 };
 
 const Wrapper = ({ children }: { children: ReactNode }) => (
@@ -51,7 +51,7 @@ const pieces: Record<string, (style: any) => ReactNode> = {
     <Wrapper>
       <Crown {...style} />
     </Wrapper>
-  )
+  ),
 };
 
 export const phosphorPieces: Record<string, ReactNode> = {
@@ -67,5 +67,5 @@ export const phosphorPieces: Record<string, ReactNode> = {
   bN: pieces.n(style.black),
   bB: pieces.b(style.black),
   bQ: pieces.q(style.black),
-  bK: pieces.k(style.black)
+  bK: pieces.k(style.black),
 };

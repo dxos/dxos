@@ -3,3 +3,4 @@
 //
 
 export * from './dxos-hook';
+export * from './telemetry';

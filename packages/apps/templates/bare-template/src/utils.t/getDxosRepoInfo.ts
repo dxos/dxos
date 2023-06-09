@@ -55,6 +55,6 @@ export const getDxosRepoInfo = async () => {
     isDxosMonorepo: true as const,
     repositoryRootPath: dir,
     version: dxosPackage.version,
-    patchedDependencies: findVitePatch(dxosPackage.pnpm.patchedDependencies)
+    patchedDependencies: findVitePatch(dxosPackage.pnpm.patchedDependencies),
   };
 };

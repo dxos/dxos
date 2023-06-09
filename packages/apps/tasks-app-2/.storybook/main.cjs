@@ -2,7 +2,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { ConfigPlugin } = require('@dxos/config/vite-plugin');
-const { ThemePlugin } = require('@dxos/react-components/plugin');
+const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -24,10 +24,9 @@ module.exports = {
       plugins: [
         ConfigPlugin(),
         ThemePlugin({
+          root: __dirname,
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
-            resolve(__dirname, '../node_modules/@dxos/react-components/dist/**/*.js'),
-            resolve(__dirname, '../node_modules/@dxos/react-appkit/dist/**/*.js')
           ]
         })
       ]

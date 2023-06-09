@@ -29,14 +29,14 @@ const main = async () => {
   yargs(hideBin(process.argv))
     .scriptName('beast')
     .option('json', {
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('verbose', {
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('base-dir', {
       type: 'string',
-      default: getBaseDir()
+      default: getBaseDir(),
     })
 
     .command({
@@ -50,7 +50,7 @@ const main = async () => {
         } else {
           projects.forEach((m) => console.log(`- ${m}`));
         }
-      }
+      },
     })
 
     .command({
@@ -60,13 +60,13 @@ const main = async () => {
         yargs.option('filter', {
           description: 'Dependency filter',
           type: 'string',
-          default: '@dxos/*'
+          default: '@dxos/*',
         }),
       handler: ({
         json,
         verbose,
         baseDir,
-        project: name
+        project: name,
       }: {
         json?: boolean;
         verbose?: boolean;
@@ -86,18 +86,18 @@ const main = async () => {
               JSON.stringify(
                 {
                   package: project.package.name,
-                  descendents
+                  descendents,
                 },
                 undefined,
-                2
-              )
+                2,
+              ),
             );
           } else {
             console.log(`${project.package.name}`);
             descendents.forEach((p) => console.log(`- ${p}`));
           }
         }
-      }
+      },
     })
 
     .command({
@@ -108,23 +108,23 @@ const main = async () => {
           .option('baseUrl', {
             description: 'Base URL for links',
             type: 'string',
-            default: 'dxos/dxos/tree/main'
+            default: 'dxos/dxos/tree/main',
           })
           .option('outDir', {
             description: 'Folder for generated docs',
             type: 'string',
-            default: './docs'
+            default: './docs',
           })
           .option('include', {
             description: 'Dependency filter',
             type: 'string',
-            default: '@dxos/*'
+            default: '@dxos/*',
           })
           .option('exclude', {
             description: 'Excluded files',
             type: 'string',
             // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-            default: (config?.config?.exclude ?? []).join(',')
+            default: (config?.config?.exclude ?? []).join(','),
           }),
       handler: ({
         verbose,
@@ -133,7 +133,7 @@ const main = async () => {
         baseUrl,
         outDir,
         include,
-        exclude = ''
+        exclude = '',
       }: {
         verbose?: boolean;
         baseDir: string;
@@ -146,7 +146,7 @@ const main = async () => {
         const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
         const builder = new PackageDependencyBuilder(processor, {
           verbose,
-          exclude: exclude?.split(',')
+          exclude: exclude?.split(','),
         });
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
@@ -154,7 +154,7 @@ const main = async () => {
           }
           builder.createDocs(project, outDir, baseUrl);
         });
-      }
+      },
     })
     .help().argv;
 };

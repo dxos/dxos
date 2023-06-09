@@ -20,7 +20,7 @@ test.describe.skip('Basic test', () => {
   test('our extension loads', async () => {
     await extensionManager.init();
     expect(await extensionManager.page.locator('body').textContent()).to.include(
-      'Open the DXOS Developer Tools extension.'
+      'Open the DXOS Developer Tools extension.',
     );
   });
 });

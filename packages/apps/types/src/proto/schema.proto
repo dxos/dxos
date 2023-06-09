@@ -1,0 +1,28 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/schema.proto";
+
+package braneframe;
+
+message Document {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text content = 2;
+
+  // TODO(wittjosiah): Make system-level prop.
+  Meta meta = 1000;
+}
+
+message Meta {
+  message ForeignKey {
+    string source = 1;
+    string id = 2;
+  }
+
+  repeated ForeignKey keys = 1;
+}

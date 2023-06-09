@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CliUx, Flags } from '@oclif/core';
+import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Trigger, sleep } from '@dxos/async';
-import { Client, Invitation, InvitationEncoder } from '@dxos/client';
+import { Client, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;
@@ -17,8 +17,8 @@ export default class Join extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
-      description: 'Invitation code'
-    })
+      description: 'Invitation code',
+    }),
   };
 
   async run(): Promise<any> {
@@ -26,46 +26,35 @@ export default class Join extends BaseCommand {
     let { invitation: encoded } = flags;
 
     return await this.execWithClient(async (client: Client) => {
-      const identity = client.halo.identity;
-      if (identity) {
+      if (client.halo.identity.get()) {
         this.log(chalk`{red Profile already initialized.}`);
         return {};
-      } else {
-        if (!encoded) {
-          encoded = await CliUx.ux.prompt('Invitation');
-        }
-
-        const invitation = InvitationEncoder.decode(encoded!);
-        const observable = await client.halo.acceptInvitation(invitation);
-
-        const connecting = new Trigger<Invitation>();
-        const done = new Trigger<Invitation>();
-
-        observable.subscribe({
-          onConnecting: (invitation) => {
-            connecting.wake(invitation);
-          },
-          async onAuthenticating() {
-            const code = await CliUx.ux.prompt('Invitation code');
-            await observable.authenticate(code);
-          },
-          onSuccess: (invitation) => {
-            done.wake(invitation);
-          },
-          onError: (err) => {
-            throw err;
-          }
-        });
-
-        CliUx.ux.action.start('Waiting for peer to connect');
-        await connecting.wait();
-        CliUx.ux.action.stop();
-
-        await done.wait();
-
-        // TODO(egorgripasov): Wait to replicate?
-        await sleep(15_000);
       }
+
+      if (!encoded) {
+        encoded = await ux.prompt('Invitation');
+      }
+      if (encoded.startsWith('http')) {
+        const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+        encoded = searchParams.get('deviceInvitationCode') ?? encoded;
+      }
+      const invitation = InvitationEncoder.decode(encoded!);
+
+      const observable = client.halo.acceptInvitation(invitation);
+      ux.action.start('Waiting for peer to connect');
+      const invitationSuccess = acceptInvitation({
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            ux.action.stop();
+          },
+          onReadyForAuth: () => ux.prompt('Invitation code'),
+        },
+      });
+
+      ux.action.start('Waiting for peer to finish invitation');
+      await invitationSuccess;
+      ux.action.stop();
     });
   }
 }

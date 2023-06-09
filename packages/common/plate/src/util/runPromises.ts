@@ -4,7 +4,7 @@
 
 export const runPromises = ({
   before,
-  after
+  after,
 }: {
   before: (p: Promise<any>, i: string) => any;
   after: (p: Promise<any>, i: string) => any;
@@ -26,6 +26,6 @@ export const runPromises = ({
         const r = await p;
         after?.(p, i.toString());
         return r;
-      })
-    )
+      }),
+    ),
 });

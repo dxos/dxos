@@ -6,7 +6,8 @@ import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
-import { Input, InputProps, defaultDescription, defaultFocus, mx } from '@dxos/react-components';
+import { defaultDescription, defaultFocus, mx } from '@dxos/aurora-theme';
+import { Input, InputProps } from '@dxos/react-appkit';
 
 export interface AlertDialogSlots {
   overlay?: Pick<ComponentProps<typeof AlertDialogPrimitive.Overlay>, 'className'>;
@@ -43,7 +44,7 @@ export const AlertDialog = ({
   children,
   initiallyOpen,
   mountAsSibling,
-  slots = {}
+  slots = {},
 }: AlertDialogProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
   const [confirmDisabled, setConfirmDisabled] = useState(!!destructiveConfirmString);
@@ -89,17 +90,17 @@ export const AlertDialog = ({
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
             'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
             defaultFocus,
-            slots.content?.className
+            slots.content?.className,
           )}
         >
           <AlertDialogPrimitive.Title
             tabIndex={0}
             {...slots.title}
             className={mx(
-              'text-2xl font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+              'text-2xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus,
-              slots.title?.className
+              slots.title?.className,
             )}
           >
             {title}

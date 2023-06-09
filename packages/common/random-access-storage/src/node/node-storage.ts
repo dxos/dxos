@@ -3,15 +3,17 @@
 //
 
 import del from 'del';
+import { readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 import raf from 'random-access-file';
 import { RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, StorageType } from '../common';
+import { AbstractStorage, DiskInfo, Storage, StorageType } from '../common';
 
 /**
  * Storage interface implementation for Node.
  */
-export class NodeStorage extends AbstractStorage {
+export class NodeStorage extends AbstractStorage implements Storage {
   public override type: StorageType = StorageType.NODE;
 
   protected override _createFile(path: string, filename: string, opts: any = {}): RandomAccessStorage {
@@ -25,5 +27,26 @@ export class NodeStorage extends AbstractStorage {
 
   protected override async _destroy() {
     await del(this.path, { force: true });
+  }
+
+  async getDiskInfo(): Promise<DiskInfo> {
+    let used = 0;
+
+    const recurse = async (path: string) => {
+      const pathStats = await stat(path);
+
+      used += pathStats.size;
+
+      if (pathStats.isDirectory()) {
+        const entries = await readdir(path);
+        await Promise.all(entries.map((entry) => recurse(join(path, entry))));
+      }
+    };
+
+    await recurse(this.path);
+
+    return {
+      used,
+    };
   }
 }

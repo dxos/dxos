@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Contact, Task } from './proto';
+import { Contact, Container, Task } from './proto';
 
 // TODO(burdon): Test with database.
 // TODO(burdon): Implement Task.from to deserialize JSON string.
@@ -81,7 +81,16 @@ describe('schema', () => {
 
   test('fields', () => {
     expect(Contact.type.fields).to.deep.eq([
-      { name: 'name', type: { kind: 'string' } },
+      {
+        name: 'name',
+        type: {
+          kind: 'string'
+        },
+        options: {
+          default: 'Anonymous',
+          required: true
+        }
+      },
       { name: 'username', type: { kind: 'string' } },
       { name: 'email', type: { kind: 'string' } },
       { name: 'address', type: { kind: 'record', objectType: 'example.test.Contact.Address' } },
@@ -94,5 +103,10 @@ describe('schema', () => {
       },
       { name: 'currentLocation', type: { kind: 'record', objectType: 'example.test.Contact.Address.LatLng' } }
     ]);
+  });
+
+  test('enums', () => {
+    const container = new Container({ records: [{ type: Container.Record.Type.PERSONAL }] });
+    expect(container.records[0].type).to.eq(Container.Record.Type.PERSONAL);
   });
 });

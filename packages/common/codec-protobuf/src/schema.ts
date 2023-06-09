@@ -13,7 +13,7 @@ import { ServiceDescriptor } from './service';
 export class Schema<T, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(
     schema: any,
-    substitutions: Substitutions = {}
+    substitutions: Substitutions = {},
   ): Schema<T, S> {
     const root = protobufjs.Root.fromJSON(schema);
     return new Schema(root, substitutions);

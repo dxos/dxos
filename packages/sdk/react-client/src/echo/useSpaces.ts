@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
-
-import { Space } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
@@ -20,49 +19,23 @@ export const useSpace = (spaceKey?: PublicKeyLike) => {
   return spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
 };
 
-/**
- * Returns the first space in the current spaces array. If none exist, `null`
- * will be returned at first, then the hook will re-run and return a space once
- * it has been created. Requires a ClientProvider somewhere in the parent tree.
- * @returns a Space
- */
-export const useOrCreateFirstSpace = () => {
-  const client = useClient();
-  const spaces = useSpaces();
-  const [space, setSpace] = useState(spaces?.[0]);
-  const isCreatingSpace = useRef(false);
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (!space && !isCreatingSpace.current) {
-        isCreatingSpace.current = true;
-        try {
-          const newSpace = await client.echo.createSpace();
-          setSpace(newSpace);
-        } catch (err) {
-          console.error('Failed to create space');
-          console.error(err);
-        } finally {
-          isCreatingSpace.current = false;
-        }
-      }
-    });
-    return () => clearTimeout(timeout);
-  }, [space]);
-
-  return space;
+export type UseSpacesParams = {
+  /**
+   * Return uninitialized spaces as well.
+   */
+  all?: boolean;
 };
 
 /**
  * Get all Spaces available to current user.
  * Requires a ClientProvider somewhere in the parent tree.
+ * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = (): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
-  const spaces = useSyncExternalStore(
-    (listener) => client.echo.subscribeSpaces(listener),
-    () => client.echo.getSpaces()
-  );
+  const spaces = useMulticastObservable(client.spaces);
 
-  return spaces;
+  // TODO(dmaretskyi): Array reference equality.
+  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
 };

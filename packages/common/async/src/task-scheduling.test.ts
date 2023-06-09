@@ -18,7 +18,7 @@ describe('task-scheduling', () => {
       const ctx = new Context({
         onError: (err) => {
           error = err;
-        }
+        },
       });
 
       scheduleTask(ctx, () => {

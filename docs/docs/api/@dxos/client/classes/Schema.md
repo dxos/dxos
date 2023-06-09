@@ -4,8 +4,10 @@
 
 Wrapper for ECHO Item that represents an  `DocumentModel`  schema.
 
+
 ## Constructors
 ### [constructor(_schema)]()
+
 
 
 Returns: <code>[Schema](/api/@dxos/client/classes/Schema)</code>
@@ -14,14 +16,18 @@ Arguments:
 
 `_schema`: <code>[DocumentModel](/api/@dxos/client/classes/DocumentModel)</code>
 
+
 ## Properties
 ### [fields]()
 Type: <code>[SchemaField](/api/@dxos/client/types/SchemaField)[]</code>
+
 ### [name]()
 Type: <code>string</code>
 
+
 ## Methods
 ### [addField(newField)]()
+
 
 
 Returns: <code>Promise&lt;void&gt;</code>
@@ -29,7 +35,9 @@ Returns: <code>Promise&lt;void&gt;</code>
 Arguments: 
 
 `newField`: <code>[SchemaField](/api/@dxos/client/types/SchemaField)</code>
+
 ### [deleteField(key)]()
+
 
 
 Returns: <code>Promise&lt;void&gt;</code>
@@ -37,7 +45,9 @@ Returns: <code>Promise&lt;void&gt;</code>
 Arguments: 
 
 `key`: <code>string</code>
+
 ### [editField(currentKey, editedField)]()
+
 
 
 Returns: <code>Promise&lt;void&gt;</code>
@@ -47,7 +57,9 @@ Arguments:
 `currentKey`: <code>string</code>
 
 `editedField`: <code>[SchemaField](/api/@dxos/client/types/SchemaField)</code>
+
 ### [getField(key)]()
+
 
 
 Returns: <code>undefined | [SchemaField](/api/@dxos/client/types/SchemaField)</code>
@@ -55,7 +67,9 @@ Returns: <code>undefined | [SchemaField](/api/@dxos/client/types/SchemaField)</c
 Arguments: 
 
 `key`: <code>string</code>
+
 ### [validate(model)]()
+
 
 
 Returns: <code>boolean</code>

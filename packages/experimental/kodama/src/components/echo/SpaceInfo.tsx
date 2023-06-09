@@ -18,21 +18,21 @@ export const SpaceInfo: FC<{
         {
           key: 'property',
           color: 'blue',
-          width: 20
+          width: 20,
         },
         {
-          key: 'value'
-        }
+          key: 'value',
+        },
       ]}
       rows={[
         {
           property: 'Name',
-          value: space.properties?.name // TODO(dmaretskyi): Fix.
+          value: space.properties.name,
         },
         {
           property: 'Public key',
-          value: truncateKey(space.key, 4)
-        }
+          value: truncateKey(space.key),
+        },
       ]}
     />
   );

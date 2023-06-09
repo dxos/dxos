@@ -42,6 +42,5 @@ message CredentialsMessage {
  * A container ECHO database messages in data feeds.
  */
 message DataMessage {
-  // TODO(dmaretskyi): Batch.
-  dxos.echo.object.EchoObject object = 1;
+  dxos.echo.object.EchoObjectBatch batch = 2;
 }

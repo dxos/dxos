@@ -2,13 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TextModel, type Doc } from '@dxos/text-model';
+import { TextKind, TextMutation } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-model';
 
 import { EchoObject } from './object';
 
 export class Text extends EchoObject<TextModel> {
-  constructor(text?: string) {
+  // TODO(burdon): Change to object.
+  constructor(text?: string, kind?: TextKind, field?: string) {
     super(TextModel);
+
+    const mutation: TextMutation = {};
+    if (kind) {
+      mutation.kind = kind;
+    }
+
+    if (field) {
+      mutation.field = field;
+    }
+
+    if (Object.keys(mutation).length > 0) {
+      this._mutate(mutation);
+    }
+
     if (text) {
       this.model?.insert(text, 0);
     }
@@ -18,9 +34,17 @@ export class Text extends EchoObject<TextModel> {
     return this.text;
   }
 
+  get kind(): TextKind | undefined {
+    return this.model?.kind;
+  }
+
   get doc(): Doc | undefined {
     this._database?._logObjectAccess(this);
     return this._model?.doc;
+  }
+
+  get content(): YText | YXmlFragment | undefined {
+    return this.model?.content;
   }
 
   get model(): TextModel | undefined {
@@ -32,9 +56,7 @@ export class Text extends EchoObject<TextModel> {
    * Returns the text content of the object.
    */
   get text(): string {
-    // TODO(dmaretskyi): Should accessing this re-render the react component?
-    // this._database?._logObjectAccess(this);
-
+    this._database?._logObjectAccess(this);
     return this._model.textContent;
   }
 
@@ -42,15 +64,15 @@ export class Text extends EchoObject<TextModel> {
     return {
       '@id': this.id,
       '@model': TextModel.meta.type,
-      text: this.text
+      text: this.text,
     };
   }
 
-  protected override async _onBind(): Promise<void> {
+  protected override _afterBind() {
     this._model.initialize();
-    // TODO(dmaretskyi): Unsubscribe.
-    this._item!.subscribe(() => {
-      this._model.initialize();
-    });
+  }
+
+  override _itemUpdate(): void {
+    this._model.initialize();
   }
 }

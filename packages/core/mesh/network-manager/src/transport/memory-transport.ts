@@ -26,12 +26,12 @@ const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
     objectMode: true,
     transform: (chunk, _, cb) => {
       setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
-    }
+    },
   });
 };
 
 export const MemoryTransportFactory: TransportFactory = {
-  createTransport: (params) => new MemoryTransport(params)
+  createTransport: (params) => new MemoryTransport(params),
 };
 
 /**
@@ -73,6 +73,10 @@ export class MemoryTransport implements Transport {
         log('sending signal');
         void this.options.sendSignal({
           payload: { transportId: this._instanceId.toHex() }
+        }).catch(err => {
+          if (!this._destroyed) {
+            this.errors.raise(err);
+          }
         });
     });
     } else {
@@ -94,7 +98,7 @@ export class MemoryTransport implements Transport {
 
           assert(
             !this._remoteConnection._remoteConnection,
-            new Error(`Remote already connected: ${this._remoteInstanceId}`)
+            new Error(`Remote already connected: ${this._remoteInstanceId}`),
           );
           this._remoteConnection._remoteConnection = this;
           this._remoteConnection._remoteInstanceId = this._instanceId;

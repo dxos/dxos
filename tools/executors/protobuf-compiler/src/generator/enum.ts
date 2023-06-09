@@ -13,10 +13,9 @@ const f = ts.factory;
 
 export const createEnumDeclaration = (type: protobufjs.Enum, ctx: GeneratorContext) => {
   const declaration = f.createEnumDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
-    Object.entries(type.values).map(([name, id]) => f.createEnumMember(name, f.createNumericLiteral(id)))
+    Object.entries(type.values).map(([name, id]) => f.createEnumMember(name, f.createNumericLiteral(id))),
   );
 
   const commentSections = type.comment ? [type.comment] : [];

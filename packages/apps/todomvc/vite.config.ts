@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
@@ -17,14 +18,31 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem'
           }
-        : false
+        : false,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd())
+      ]
+    }
   },
   build: {
-    sourcemap: true,
-    outDir: 'out/todomvc'
+    sourcemap: true
   },
   plugins: [
     ConfigPlugin({ env: ['DX_VAULT'] }),
-    ReactPlugin()
+    ReactPlugin(),
+    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
+    // https://www.npmjs.com/package/@sentry/vite-plugin
+    sentryVitePlugin({
+      org: 'dxos',
+      project: 'todomvc',
+      sourcemaps: {
+        assets: './packages/apps/todomvc/out/todomvc/**'
+      },
+      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+      dryRun: process.env.DX_ENVIRONMENT !== 'production'
+    })
   ]
 });

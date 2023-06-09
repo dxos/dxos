@@ -12,10 +12,6 @@
       }
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "prebuild"
-      ],
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/cli/src/index.ts",
@@ -70,10 +66,6 @@
       ]
     },
     "test": {
-      "dependsOn": [
-        "build",
-        "prebuild"
-      ],
       "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,

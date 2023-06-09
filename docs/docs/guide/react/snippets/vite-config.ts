@@ -4,7 +4,7 @@
 
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,4 +16,4 @@ export default defineConfig({
       ]
     })
   ]
-})
+});

@@ -1,8 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>blueyard</w>
+      <w>bot's</w>
       <w>braneframe</w>
+      <w>brunicki</w>
       <w>burdon</w>
+      <w>cairan</w>
       <w>callbackfn</w>
       <w>crdt</w>
       <w>ctors</w>
@@ -14,6 +18,7 @@
       <w>dxns</w>
       <w>dxos</w>
       <w>dxos's</w>
+      <w>dxrpc</w>
       <w>endcap</w>
       <w>frontmatter</w>
       <w>hljs</w>
@@ -21,14 +26,19 @@
       <w>hypercore</w>
       <w>hypercore's</w>
       <w>hypertrie</w>
+      <w>iata</w>
+      <w>ipdata</w>
       <w>kodama</w>
+      <w>latlng</w>
       <w>lichess</w>
       <w>localizer</w>
+      <w>loopback</w>
       <w>memdown</w>
       <w>metagraph</w>
       <w>micromark</w>
       <w>mins</w>
       <w>minsize</w>
+      <w>mkcert</w>
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
@@ -49,7 +59,9 @@
       <w>onwant</w>
       <w>orgs</w>
       <w>packlets</w>
+      <w>permissionless</w>
       <w>prefs</w>
+      <w>pricings</w>
       <w>protos</w>
       <w>proxied</w>
       <w>rehype</w>

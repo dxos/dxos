@@ -31,7 +31,7 @@ export const getInsertionIndex = (existing: MutationInQueue<unknown>[], newEntry
   for (let i = start + 1; i < existing.length; i++) {
     const existingTimeframe = Timeframe.merge(
       existing[i].mutation.meta!.timeframe!,
-      new Timeframe([[PublicKey.from(existing[i].mutation.meta!.feedKey!), existing[i].mutation.meta!.seq! - 1]])
+      new Timeframe([[PublicKey.from(existing[i].mutation.meta!.feedKey!), existing[i].mutation.meta!.seq! - 1]]),
     );
 
     const deps = Timeframe.dependencies(newEntry.mutation.meta!.timeframe!, existingTimeframe);
@@ -79,6 +79,11 @@ export class MutationQueue<T> {
    */
   pushOptimistic(entry: MutationInQueue<T>) {
     assert(entry.mutation.meta!.clientTag);
+    assert(
+      this._optimistic.findIndex((message) => message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag) ===
+        -1,
+      `Mutation with the same tag already exists: ${entry.mutation.meta!.clientTag}}`,
+    );
     this._optimistic.push(entry);
   }
 
@@ -97,7 +102,7 @@ export class MutationQueue<T> {
       ? -1
       : this._optimistic.findIndex(
           (message) =>
-            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag
+            message.mutation.meta!.clientTag && message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag,
         );
     if (optimisticIndex !== -1) {
       this._optimistic.splice(optimisticIndex, 1);
@@ -107,13 +112,25 @@ export class MutationQueue<T> {
     const lengthBefore = this._confirmed.length;
     this._confirmed.splice(insertionIndex, 0, entry);
 
-    return {
-      reorder:
-        insertionIndex !== lengthBefore ||
-        optimisticIndex > 0 ||
-        (optimisticIndex === -1 && this._optimistic.length > 0),
+    const reorder =
+      insertionIndex !== lengthBefore || optimisticIndex > 0 || (optimisticIndex === -1 && this._optimistic.length > 0);
 
-      apply: optimisticIndex === -1
+    const apply = optimisticIndex === -1;
+
+    // log('pushConfirmed', {
+    //   entry: entry.mutation.meta,
+    //   optimisticIndex,
+    //   insertionIndex,
+    //   lengthBefore,
+    //   reorder,
+    //   apply,
+    //   confirmed: this._confirmed.map(x => x.mutation.meta),
+    //   optimistic: this._optimistic.map(x => x.mutation.meta),
+    // })
+
+    return {
+      reorder,
+      apply,
     };
   }
 

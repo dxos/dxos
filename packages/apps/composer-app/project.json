@@ -25,26 +25,52 @@
         "{options.outputPath}"
       ]
     },
+    "e2e": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "ciEnvironments": [
+          "chromium",
+          "webkit"
+        ],
+        "coveragePath": "coverage/packages/apps/composer-app",
+        "outputPath": "tmp/playwright/packages/apps/composer-app",
+        "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
+        "resultsPath": "test-results/packages/apps/composer-app",
+        "serve": "composer-app:serve-with-vault",
+        "serveOptions": {
+          "serveTarget": "preview"
+        },
+        "testPatterns": [
+          "packages/apps/composer-app/src/playwright/**/*.spec.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/composer-app/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/composer-app/**/*.{ts,js}"
+          "packages/apps/composer-app/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
         "{options.outputFile}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
+    "preview": {
+      "executor": "@nrwl/web:file-server",
       "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "packages/apps/composer-app/src/proto/gen"
-      ]
+        "buildTarget": "composer-app:bundle",
+        "staticFilePath": "packages/apps/composer-app/out/composer"
+      }
     },
     "serve": {
       "executor": "@nrwl/vite:dev-server",
@@ -52,22 +78,11 @@
         "buildTarget": "composer-app:bundle"
       }
     },
-    "serve-with-halo": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          {
-            "command": "nx serve halo-app"
-          },
-          {
-            "command": "nx serve composer-app"
-          }
-        ],
-        "parallel": true
-      }
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
     }
-  }
+  },
+  "implicitDependencies": [
+    "serve-with-vault"
+  ]
 }

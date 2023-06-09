@@ -3,8 +3,8 @@
 //
 
 import { css } from '@emotion/css';
+import { faker } from '@faker-js/faker';
 import * as d3 from 'd3';
-import faker from 'faker';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
@@ -18,12 +18,12 @@ import {
   SVGContext,
   SVGContextProvider,
   useSvgContext,
-  useZoom
+  useZoom,
 } from '@dxos/gem-core';
 
 // TODO(burdon): Package name/title.
 export default {
-  title: 'gravity-dashboard/experimental'
+  title: 'gravity-dashboard/experimental',
 };
 
 // TODO(burdon): Generator for Kube/Bot data structure with dynamic mutation.
@@ -78,7 +78,7 @@ const styles = {
     bottom: 0;
     padding: 8px;
     border: 1px solid #ccc;
-  `
+  `,
 };
 
 /**
@@ -193,7 +193,7 @@ class KubeLayout {
         .selectAll<SVGGElement, Kube>('g.bot')
         .data(
           (d: Kube) => d.bots,
-          (d) => d.id
+          (d) => d.id,
         )
         .join(
           (enter) => enter.append('g').attr('class', 'bot'),
@@ -207,7 +207,7 @@ class KubeLayout {
               .duration(500)
               .attr('transform', 'translate(0,0)')
               .attrTween('opacity', () => d3.interpolate(1, 0))
-              .remove()
+              .remove(),
         )
 
         // Layout bots.
@@ -277,7 +277,7 @@ class MeshLayout {
                 .selectAll('*')
                 .transition()
                 .duration(1000)
-                .attrTween('opacity', () => d3.interpolate(0, 1))
+                .attrTween('opacity', () => d3.interpolate(0, 1)),
             ),
         (update) => update.call(this._kubeLayout.layout),
         (remove) =>
@@ -287,7 +287,7 @@ class MeshLayout {
             .transition()
             .duration(1000)
             .attrTween('opacity', () => d3.interpolate(1, 0))
-            .remove()
+            .remove(),
       )
 
       // Layout after created.
@@ -302,7 +302,7 @@ class MeshLayout {
 const createObjects = (n = 5): Kube[] =>
   Array.from({ length: n }).map(() => ({
     id: `kube-${faker.datatype.uuid()}`,
-    bots: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }).map(() => ({ id: faker.datatype.uuid() }))
+    bots: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }).map(() => ({ id: faker.datatype.uuid() })),
   }));
 
 const Container = () => {
@@ -316,7 +316,7 @@ const Container = () => {
   useButton('Reset', () => setObjects([]));
   useButton('Add', () => setObjects((objects) => [...objects, ...createObjects(1)]));
   useButton('Remove', () =>
-    setObjects((objects) => objects.map((obj) => (faker.datatype.boolean() ? obj : undefined)).filter(Boolean))
+    setObjects((objects) => objects.map((obj) => (faker.datatype.boolean() ? obj : undefined)).filter(Boolean)),
   );
   useButton('Mutate', () => {
     setObjects((objects) =>
@@ -326,11 +326,11 @@ const Container = () => {
           : [
               ...bots.map((bot) => (faker.datatype.number(10) > 7 ? bot : undefined)).filter(Boolean),
               ...Array.from({ length: faker.datatype.number(4) }).map(() => ({
-                id: faker.datatype.uuid()
-              }))
+                id: faker.datatype.uuid(),
+              })),
             ],
-        ...rest
-      }))
+        ...rest,
+      })),
     );
   });
 

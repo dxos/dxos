@@ -5,6 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { File, Storage, StorageType } from '../common';
@@ -59,8 +60,8 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
           await writeAndCheck(file, buffer);
         }
 
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(count);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(count);
       }
 
       {
@@ -71,8 +72,8 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
           await file.destroy();
         }
 
-        const mapFiles = directory.getFiles();
-        expect([...mapFiles.keys()]).toHaveLength(count - amountToDelete);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(count - amountToDelete);
       }
 
       // Cleanup.
@@ -197,13 +198,14 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       await file.write(buffer1.length, buffer2);
       expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
 
+      // Weird behavior. Works only if offset + size === file size. If greater - throws error, if less - does nothing.
       await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
       expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
       await assert.rejects(
         async () => await file.read(buffer1.length, buffer2.length),
         Error,
-        'Could not satisfy length'
+        'Could not satisfy length',
       );
     }).onlyEnvironments('nodejs'); // File.del() throws 'Not deletable' error for IDb.
 
@@ -212,6 +214,112 @@ export const storageTests = (testGroupName: StorageType, createStorage: () => St
       const directory = storage.createDirectory();
       const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
+    });
+
+    test('call del with edge arguments', async () => {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        // Not deletable.
+        return;
+      }
+      const directory = storage.createDirectory();
+
+      const buffer = Buffer.from(randomText());
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(0, buffer.length + 1);
+        expect((await file.stat()).size).toBe(0);
+      }
+
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(1, buffer.length);
+        expect((await file.stat()).size).toBe(1);
+      }
+
+      {
+        const file = directory.getOrCreateFile(randomText());
+        await file.write(0, buffer);
+        await file.del(0, -1);
+        expect((await file.stat()).size).toBe(buffer.length);
+      }
+    });
+
+    test('reset', async () => {
+      if (
+        testGroupName === StorageType.RAM || // RAM storage does not persist data.
+        testGroupName === StorageType.IDB // IDB storage is blocked by opened connection, and there is no handle to close it.
+      ) {
+        return;
+      }
+      const filename = randomText();
+      const buffer = Buffer.from(randomText());
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        await file.write(0, buffer);
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        expect(await file.read(0, buffer.length)).toStrictEqual(buffer);
+        await file.close();
+      }
+
+      {
+        const storage = createStorage();
+        await asyncTimeout(storage.reset(), 1_000);
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory();
+        const file = directory.getOrCreateFile(filename);
+        await expect(async () => {
+          await file.read(0, buffer.length);
+        }).rejects.toThrow();
+      }
+    });
+
+    test('list all files after reopen', async function () {
+      if (testGroupName !== StorageType.WEBFS) {
+        this.skip();
+      }
+
+      const dirname = randomText();
+
+      const storage = createStorage();
+      const directory = storage.createDirectory(dirname);
+
+      {
+        const entries = await directory.list();
+        expect(entries).toHaveLength(0);
+      }
+
+      const files = [...Array(10)].map(() => directory.getOrCreateFile(randomText()));
+      for (const file of files) {
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+      }
+
+      {
+        const entries = await directory.list();
+        expect(entries).toHaveLength(files.length);
+      }
+
+      {
+        const storage = createStorage();
+        const directory = storage.createDirectory(dirname);
+        const entries = await directory.list();
+        expect(entries).toHaveLength(files.length);
+      }
     });
   });
 };

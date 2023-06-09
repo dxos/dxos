@@ -3,8 +3,8 @@
 //
 
 import React from 'react';
-import { Column } from 'react-table';
 
+import { TableColumn } from '@dxos/mosaic';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { useMembers } from '@dxos/react-client';
 
@@ -12,7 +12,7 @@ import { MasterTable } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 
-const columns: Column<SpaceMember>[] = [
+const columns: TableColumn<SpaceMember>[] = [
   {
     Header: 'key',
     width: 120,

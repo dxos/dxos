@@ -2,22 +2,47 @@
 // Copyright 2021 DXOS.org
 //
 
-import { describe, test, afterTest } from '@dxos/test';
+import { expect } from 'chai';
+
+import { performInvitation } from '@dxos/client-services/testing';
+import { log } from '@dxos/log';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
+import { SpaceProxy } from '../proxies';
 import { TestBuilder, testSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
-    afterTest(() => client.destroy());
-    await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const client1 = new Client({ services: testBuilder.createLocal() });
+    const client2 = new Client({ services: testBuilder.createLocal() });
+    await client1.initialize();
+    await client2.initialize();
+    await client1.halo.createIdentity({ displayName: 'Peer 1' });
+    await client2.halo.createIdentity({ displayName: 'Peer 2' });
+
+    log('initialized');
+
+    afterTest(() => Promise.all([client1.destroy()]));
+    afterTest(() => Promise.all([client2.destroy()]));
+
+    const space1 = await client1.createSpace();
+    log('createSpace', { key: space1.key });
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({
+        host: space1 as SpaceProxy,
+        guest: client2,
+      }),
+    );
+    expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
+    expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     {
-      const space = await client.echo.createSpace();
+      const space = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
       await testSpace(space.internal.db);
     }
   });

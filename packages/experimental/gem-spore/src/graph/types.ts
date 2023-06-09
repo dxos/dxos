@@ -31,7 +31,7 @@ export type GraphData<T> = {
 
 export const emptyGraph: GraphData<any> = {
   nodes: [],
-  links: []
+  links: [],
 };
 
 //

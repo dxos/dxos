@@ -72,11 +72,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/sdk/react-client/.storybook"
-        },
-        "open": false,
-        "uiFramework": "@storybook/react"
+        "configDir": "packages/sdk/react-client/.storybook"
       }
     },
     "test": {

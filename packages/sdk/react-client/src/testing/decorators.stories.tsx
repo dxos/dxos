@@ -6,15 +6,16 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Input } from '@dxos/react-components';
+import { observer } from '@dxos/observable-object/react';
 
 import { useClient } from '../client';
-import { observer, useSpace } from '../echo';
+import { useSpace } from '../echo';
 import { ClientDecorator } from './ClientDecorator';
-import { ClientSpaceDecorator } from './ClientSpaceDecorator';
+import { setupPeersInSpace } from './ClientSpaceDecorator';
+import { ToggleNetworkDecorator } from './ToggleNetworkDecorator';
 
 export default {
-  title: 'testing/decorators'
+  title: 'testing/decorators',
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -24,39 +25,48 @@ const JsonPanel = ({ value }: { value: any }) => (
       // code whiteSpace: 'pre-wrap',
       // code wordBreak: 'break-all',
       overflow: 'hidden',
-      textOverflow: 'ellipsis'
+      textOverflow: 'ellipsis',
     }}
   >
     {JSON.stringify(value, undefined, 2)}
   </pre>
 );
 
-export const Client = {
-  render: () => {
-    const client = useClient();
+const ClientStory = () => {
+  const client = useClient();
 
-    return <JsonPanel value={client.toJSON()} />;
-  },
-  decorators: [ClientDecorator({ count: 2 })]
+  return <JsonPanel value={client.toJSON()} />;
 };
 
-export const ClientSpace = {
-  render: observer(({ spaceKey }: { spaceKey: PublicKey }) => {
-    const space = useSpace(spaceKey);
+export const WithClient = {
+  render: () => <ClientStory />,
+  decorators: [ClientDecorator({ count: 2 })],
+};
 
-    if (!space) {
-      return null;
-    }
+const ClientSpace = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
+  const space = useSpace(spaceKey);
 
-    return (
-      <div className='flex-1 min-w-0 p-4'>
-        <Input
-          label='Name'
-          value={space.properties.name}
-          onChange={(event) => (space.properties.name = event.target.value)}
-        />
-      </div>
-    );
-  }),
-  decorators: [ClientSpaceDecorator({ count: 2 })]
+  if (!space) {
+    return <>null</>;
+  }
+
+  return (
+    <div className='flex-1 min-w-0 p-4'>
+      <label>
+        Name <input value={space.properties.name} onChange={(event) => (space.properties.name = event.target.value)} />
+      </label>
+    </div>
+  );
+});
+
+const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
+
+export const WithClientSpace = {
+  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
+  decorators: [ClientDecorator({ clients })],
+};
+
+export const WithNetworkToggle = {
+  render: (args: { id: number }) => <ClientSpace {...args} spaceKey={spaceKey} />,
+  decorators: [ClientDecorator({ clients }), ToggleNetworkDecorator({ clients })],
 };

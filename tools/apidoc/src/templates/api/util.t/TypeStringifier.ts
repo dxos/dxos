@@ -143,7 +143,7 @@ export class TypeStringifier implements AllStringifiers {
       ...tail.map(([type, text]) => {
         return '${' + this.type(type) + '}' + text;
       }),
-      '`'
+      '`',
     ].join('');
   }
 

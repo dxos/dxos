@@ -10,40 +10,24 @@ export { generateSeedPhrase } from '@dxos/credentials';
 export {
   TYPE_SCHEMA,
   Item,
-  ItemFilterDeleted,
   ResultSet,
   Schema,
+  ShowDeletedOption,
+  type QueryOptions,
   type SchemaDef,
   type SchemaField,
-  type SchemaRef
+  type SchemaRef,
 } from '@dxos/echo-db';
 
+// TODO(burdon): Tighten export.
 export * from '@dxos/echo-schema';
+export * from '@dxos/client-protocol';
 
 export { PublicKey } from '@dxos/keys';
 
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
-
-export {
-  type InvitationEvents,
-  InvitationEncoder,
-  type CancellableInvitationObservable,
-  type AuthenticatingInvitationObservable,
-  // TODO(wittjosiah): Remove.
-  ClientServicesHost,
-  ClientServicesProxy,
-  type ClientServicesProvider,
-  IFrameHostRuntime,
-  IFrameProxyRuntime,
-  WorkerRuntime,
-  WorkerSession,
-  type ShellRuntime,
-  MemoryShellRuntime,
-  ShellRuntimeImpl,
-  ShellController
-} from '@dxos/client-services';
-
+export { TextModel } from '@dxos/text-model';
 export { ApiError } from '@dxos/errors';
 
 export {
@@ -51,9 +35,10 @@ export {
   type Identity,
   Invitation,
   SpaceMember,
-  SpaceStatus,
-  SystemStatus
+  SpaceState,
+  SystemStatus,
 } from '@dxos/protocols/proto/dxos/client/services';
+export type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 export { ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.

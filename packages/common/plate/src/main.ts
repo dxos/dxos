@@ -20,69 +20,69 @@ const main = async () => {
     .option('dry', {
       description: 'Show only what files would be generated without writing them to disk',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('input', {
       description: 'Comma separated filenames of json or yaml files to merge as input',
-      type: 'string'
+      type: 'string',
     })
     .option('output', {
       description: 'Destination folder',
       requiresArg: true,
-      type: 'string'
+      type: 'string',
     })
     .option('include', {
       description: 'filter the template files by a set of glob strings (comma separated)',
       requiresArg: false,
-      type: 'string'
+      type: 'string',
     })
     .option('exclude', {
       description: 'globs to exclude entries from the template (comma separated)',
       requiresArg: false,
-      type: 'string'
+      type: 'string',
     })
     .option('sequential', {
       description: 'Run templates one after the other instead of in parallel',
       requiresArg: false,
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('verbose', {
       description: 'Print debugging information',
       requiresArg: false,
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('quiet', {
       description: 'Print nothing to standard out',
       requiresArg: false,
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('overwrite', {
       description: 'allow overwriting existing files or not',
       requiresArg: false,
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('interactive', {
       description: 'allow templates to ask questions interactively',
       requiresArg: false,
       type: 'boolean',
-      default: true
+      default: true,
     })
     .option('executeFileTemplates', {
       description: 'execute any .t.ts files discovered in the template directory',
       requiresArg: false,
       type: 'boolean',
-      default: true
+      default: true,
     })
     .options('inheritance', {
       description: 'controls whether inherited templates should be executed',
       requiresArg: false,
-      type: 'boolean'
+      type: 'boolean',
     })
     .options('printMessage', {
       description: 'whether to print the template message if any',
       requiresArg: false,
-      type: 'boolean'
+      type: 'boolean',
     })
     .command({
       command: '*',
@@ -103,7 +103,7 @@ const main = async () => {
           executeFileTemplates: boolean;
           inheritance: boolean;
           printMessage: boolean;
-        } & any
+        } & any,
       ) => {
         const tstart = Date.now();
         const {
@@ -144,13 +144,13 @@ const main = async () => {
           interactive,
           executeFileTemplates,
           inheritance,
-          printMessage
+          printMessage,
         });
         debug(`output folder: ${output}`);
         info(`template generated ${result.files.length} files ...`);
         const { filesWritten } = await result.save({ dry, printMessage, printFiles: !quiet });
         info(`wrote ${filesWritten} files [${fmtDuration(Date.now() - tstart)}]`);
-      }
+      },
     }).argv;
 };
 

@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx, Flags } from '@oclif/core';
+import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
+import assert from 'node:assert';
 
 import { Client, InvitationEncoder } from '@dxos/client';
-import { wrapObservable } from '@dxos/client-services';
 
 import { BaseCommand } from '../../base-command';
-import { mapMembers, printMembers } from '../../util';
+import { acceptInvitation, mapMembers, printMembers } from '../../util';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;
@@ -17,40 +17,55 @@ export default class Join extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
-      description: 'Invitation code'
+      description: 'Invitation code',
     }),
     secret: Flags.string({
-      description: 'Invitation secret'
-    })
+      description: 'Invitation secret',
+    }),
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Join);
-    let { invitation: encoded, secret, json } = flags;
-    if (!encoded) {
-      encoded = await CliUx.ux.prompt(chalk`\n{blue Invitation}`);
-    }
-    if (!secret) {
-      secret = await CliUx.ux.prompt(chalk`\n{red Secret}`);
-    }
-
     return await this.execWithClient(async (client: Client) => {
-      CliUx.ux.action.start('Waiting for peer to connect');
-      const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
-      // TODO(burdon): Don't use wrapper since doesn't handle auth.
-      const invitation = await wrapObservable(observable);
-      const space = client.echo.getSpace(invitation.spaceKey!)!;
-      CliUx.ux.action.stop();
+      const { flags } = await this.parse(Join);
+      let { invitation: encoded, secret, json } = flags;
 
-      const members = space.getMembers();
+      if (!encoded) {
+        encoded = await ux.prompt(chalk`\n{blue Invitation}`);
+      }
+      if (encoded.startsWith('http')) {
+        const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+        encoded = searchParams.get('spaceInvitationCode') ?? encoded;
+      }
+
+      let invitation = InvitationEncoder.decode(encoded!);
+
+      const observable = client.acceptInvitation(invitation);
+      ux.action.start('Waiting for peer to connect');
+      const invitationSuccess = acceptInvitation({
+        observable,
+        callbacks: {
+          onConnecting: async () => {
+            ux.action.stop();
+          },
+          onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+        },
+      });
+
+      ux.action.start('Waiting for peer to finish invitation');
+      invitation = await invitationSuccess;
+      ux.action.stop();
+
+      assert(invitation.spaceKey);
+      const space = client.getSpace(invitation.spaceKey)!;
+      const members = space.members.get();
       if (!json) {
         printMembers(members);
       }
 
       return {
         key: space.key.toHex(),
-        name: space.properties?.name, // TODO(dmaretskyi): Fix.
-        members: mapMembers(members)
+        name: space.properties.name,
+        members: mapMembers(members),
       };
     });
   }

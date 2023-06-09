@@ -5,7 +5,7 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: './tsconfig.json'
+    project: './tsconfig.json',
   },
   extends: ['plugin:@typescript-eslint/recommended'],
   plugins: ['@typescript-eslint/eslint-plugin'],
@@ -21,6 +21,6 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
-    '@typescript-eslint/no-useless-constructor': ['error']
-  }
+    '@typescript-eslint/no-useless-constructor': ['error'],
+  },
 };

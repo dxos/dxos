@@ -16,12 +16,16 @@ let analytics: Analytics | undefined;
  *
  */
 export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
-  assert(apiKey, 'Key required to send telemetry');
+  try {
+    assert(apiKey, 'Key required to send telemetry');
 
-  analytics = new Analytics(apiKey, {
-    flushAt: batchSize,
-    enable
-  });
+    analytics = new Analytics(apiKey, {
+      flushAt: batchSize,
+      enable,
+    });
+  } catch (err) {
+    log.catch('Failed to initialize telemetry', err);
+  }
 };
 
 /**
@@ -32,11 +36,15 @@ export const page = ({ installationId: anonymousId, identityId: userId, ...optio
     log('Analytics not initialized', { action: 'page' });
   }
 
-  analytics?.page({
-    ...options,
-    userId,
-    anonymousId
-  });
+  try {
+    analytics?.page({
+      ...options,
+      userId,
+      anonymousId,
+    });
+  } catch (err) {
+    log.catch('Failed to track page', err);
+  }
 };
 
 /**
@@ -47,12 +55,16 @@ export const event = ({ installationId: anonymousId, identityId: userId, name: e
     log('Analytics not initialized', { action: 'event' });
   }
 
-  analytics?.track({
-    ...options,
-    userId,
-    anonymousId,
-    event
-  });
+  try {
+    analytics?.track({
+      ...options,
+      userId,
+      anonymousId,
+      event,
+    });
+  } catch (err) {
+    log.catch('Failed to track event', err);
+  }
 };
 
 /**
@@ -63,7 +75,11 @@ export const flush = async () => {
     log('Analytics not initialized', { action: 'flush' });
   }
 
-  await analytics?.flush((err) => {
-    captureException(err);
-  });
+  try {
+    await analytics?.flush((err) => {
+      captureException(err);
+    });
+  } catch (err) {
+    log.catch('Failed to flush', err);
+  }
 };

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
-import { truncateKey, devtoolsFormatter, DevtoolsFormatter } from '@dxos/debug';
+import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
@@ -21,7 +21,7 @@ export type PublicKeyLike = PublicKey | Buffer | Uint8Array | ArrayBuffer | stri
  * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
  * strings as late as possible (eg, to log/display).
  */
-export class PublicKey {
+export class PublicKey implements Equatable {
   /**
    * Creates new instance of PublicKey automatically determining the input format.
    * @param source A Buffer, or Uint8Array, or hex encoded string, or something with an `asUint8Array` method on it
@@ -55,6 +55,7 @@ export class PublicKey {
     if (!source) {
       return undefined;
     }
+
     try {
       return PublicKey.from(source);
     } catch (error: any) {
@@ -155,9 +156,8 @@ export class PublicKey {
     }
   }
 
-  // TODO(burdon): Rename toDebugHex? Make default for toString?
-  truncate(length = 4) {
-    return truncateKey(this, length);
+  truncate(length = 8) {
+    return truncateKey(this, { length });
   }
 
   toString(): string {
@@ -211,16 +211,16 @@ export class PublicKey {
       'blueBright',
       'magentaBright',
       'cyanBright',
-      'whiteBright'
+      'whiteBright',
     ];
     const color = colors[this.getInsecureHash(colors.length)];
 
     return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(
-      inspect.colors.reset![0]
+      inspect.colors.reset![0],
     )})`;
   }
 
-  [devtoolsFormatter](): DevtoolsFormatter {
+  get [devtoolsFormatter](): DevtoolsFormatter {
     return {
       header: () => {
         // NOTE: Keep in sync with inspect colors.
@@ -237,7 +237,7 @@ export class PublicKey {
           'blue',
           'magenta',
           'darkcyan',
-          'black'
+          'black',
         ];
         const color = colors[this.getInsecureHash(colors.length)];
 
@@ -246,9 +246,9 @@ export class PublicKey {
           {},
           ['span', {}, 'PublicKey('],
           ['span', { style: `color: ${color};` }, this.truncate()],
-          ['span', {}, ')']
+          ['span', {}, ')'],
         ];
-      }
+      },
     };
   }
 
@@ -267,5 +267,13 @@ export class PublicKey {
     }
 
     return equal;
+  }
+
+  [equalsSymbol](other: any) {
+    if (!PublicKey.isPublicKey(other)) {
+      return false;
+    }
+
+    return this.equals(other);
   }
 }

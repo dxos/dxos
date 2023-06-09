@@ -94,7 +94,7 @@ export const List: FC<{
   const { focusPrevious, focusNext } = useFocusManager();
   const [{ cursor, startIndex }, setPosition] = useState({
     cursor: onUpdate ? -1 : 0,
-    startIndex: 0
+    startIndex: 0,
   });
 
   // Reset if data changed.
@@ -162,7 +162,7 @@ export const List: FC<{
         }
       }
     },
-    { isActive: isFocused }
+    { isActive: isFocused },
   );
 
   return (
@@ -189,7 +189,7 @@ export const List: FC<{
                 if (!item.id) {
                   setPosition({
                     cursor: -1,
-                    startIndex: Math.max(0, items.length + 1 - pageSize)
+                    startIndex: Math.max(0, items.length + 1 - pageSize),
                   });
                 }
               }}

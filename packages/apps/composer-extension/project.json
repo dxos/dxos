@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/apps/composer-extension/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/composer-extension/src/index.ts",
+        "outputPath": "packages/apps/composer-extension/dist/types",
+        "tsConfig": "packages/apps/composer-extension/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "bundle"
+      },
+      "outputs": [
+        "packages/apps/composer-extension/out/composer-extension"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/composer-extension/**/*.{ts,js}?(x)"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "VITE_COMPOSER_URL=http://localhost:5173 pnpm -w nx bundle composer-extension --watch --mode development",
+          "pnpm -w nx serve-with-vault composer-app"
+        ]
+      }
+    }
+  }
+}

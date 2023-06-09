@@ -87,13 +87,13 @@ const status = (value: TestStatus, errorCount: number) => {
 const buildXmlReport = ({ suites, stats }: RunTestsResults, options: OutputResultsOptions) => {
   const builder = new XMLBuilder({
     ignoreAttributes: false,
-    format: true
+    format: true,
   });
 
   const output = {
     '?xml': {
       '@_version': '1.0',
-      '@_encoding': 'UTF-8'
+      '@_encoding': 'UTF-8',
     },
     testsuites: {
       testsuite: buildXmlTestSuites(suites, suites.errors, stats),
@@ -101,8 +101,8 @@ const buildXmlReport = ({ suites, stats }: RunTestsResults, options: OutputResul
       '@_time': stats.duration ? stats.duration / 1000 : null,
       '@_tests': stats.tests,
       '@_failures': stats.failures,
-      '@_skipped': stats.pending
-    }
+      '@_skipped': stats.pending,
+    },
   };
 
   return builder.build(output);
@@ -129,15 +129,15 @@ const buildXmlTestSuites = (suite: Suites, errors: TestError[], stats: Stats, na
             ? {
                 failure: {
                   '#text': error.stack,
-                  '@_message': error.message
-                }
+                  '@_message': error.message,
+                },
               }
-            : {})
+            : {}),
         };
-      })
+      }),
     },
     ...(suite.suites
       ? Object.entries(suite.suites).map(([name, suite]) => buildXmlTestSuites(suite, errors, stats, name))
-      : [])
+      : []),
   ].flat();
 };

@@ -3,10 +3,10 @@
 //
 
 import React, { useState } from 'react';
-import { Column } from 'react-table';
 
+import { TableColumn } from '@dxos/mosaic';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Searchbar, Select } from '@dxos/react-components';
+import { Searchbar, Select } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
 
 import { MasterTable } from '../../components';
@@ -16,7 +16,7 @@ export type View<T extends {}> = {
   title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: readonly Column<T>[];
+  columns: readonly TableColumn<T>[];
 };
 
 const views = [

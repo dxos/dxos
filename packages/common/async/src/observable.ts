@@ -1,94 +1,152 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { createSetDispatch } from '@dxos/util';
+import Observable from 'zen-observable';
+import type { ObservableLike, Observer, Subscriber } from 'zen-observable/esm';
+import PushStream from 'zen-push';
 
-import { UnsubscribeCallback } from './events';
+import { Event } from './events';
 
-/**
- * Return type for processes that support cancellable subscriptions.
- * The handler object implements the observable events.
- */
-export interface Observable<Events, Value = unknown> {
-  value?: Value;
-  setValue(value: Value): void;
-  subscribe(handler: Events): UnsubscribeCallback;
-}
+export { Observable, PushStream, Subscriber };
 
 /**
- * Provider that manages a set of subscriptions.
+ * Observable which supports multiple subscribers and stores the current value.
+ *
+ * The current value is emitted to new subscribers on subscription.
  */
-// TODO(burdon): Support multiple subscribers.
-//  https://betterprogramming.pub/compare-leading-javascript-functional-reactive-stream-libraries-544163c1ded6
-//  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
-//  https://github.com/mostjs/core
-export class ObservableProvider<Events extends {}, Value = unknown> implements Observable<Events, Value> {
-  protected readonly _handlers = new Set<Events>();
-  private readonly _proxy = createSetDispatch<Events>({
-    handlers: this._handlers
-  });
+// Inspired by:
+// https://github.com/zenparsing/zen-push/blob/39949f1/index.js#L93
+// https://github.com/apollographql/apollo-client/blob/a0eb4d6/src/utilities/observables/Concast.ts
+export class MulticastObservable<T> extends Observable<T> {
+  private readonly _observers = new Set<Observer<T>>();
+  private readonly _observable: Observable<T>;
 
-  private _value?: Value;
+  constructor(subscriber: Observable<T> | Subscriber<T>, private _value?: T) {
+    super((observer) => this._subscribe(observer));
 
-  /**
-   * Proxy used to dispatch callbacks to each subscription.
-   */
-  get callback(): Events {
-    return this._proxy;
+    this._observable = typeof subscriber === 'function' ? new Observable(subscriber) : subscriber;
+    // Automatically subscribe to source observable.
+    // Ensures that the current value is always up to date.
+    // TODO(wittjosiah): Does this subscription need to be cleaned up? Where should that happen?
+    this._observable.subscribe(this._handlers);
   }
 
-  get value() {
+  static override from<T>(value: Observable<T> | ObservableLike<T> | ArrayLike<T> | Event<T>, initialValue?: T) {
+    if ('emit' in value) {
+      return new MulticastObservable((observer) => {
+        // TODO(wittjosiah): Do error/complete matter for events?
+        value.on((data) => {
+          observer.next(data);
+        });
+      }, initialValue);
+    }
+
+    const observable = Observable.from(value);
+    return new MulticastObservable(observable, initialValue);
+  }
+
+  static override of<T>(...items: T[]) {
+    return new MulticastObservable(Observable.of(...items.slice(1)), items[0]);
+  }
+
+  /**
+   * @returns Stable reference to an observable that always returns `undefined`.
+   */
+  static empty() {
+    return EMPTY_OBSERVABLE;
+  }
+
+  /**
+   * Get the current value of the observable.
+   */
+  get(): T {
+    // TODO(wittjosiah): Is there a better way to handle this?
+    //   `this._value` is not guaranteed to be set for compatibility with `Observable` base class.
+    //   `get()` should always return `T` to avoid having to sprinkle conditional logic.
+    if (this._value === undefined) {
+      throw new Error('MulticastObservable is not initialized.');
+    }
+
     return this._value;
   }
 
-  setValue(value: Value) {
-    this._value = value;
+  override forEach(callback: (value: T) => void): Promise<void> {
+    return this._observable.forEach(callback);
   }
 
-  subscribe(handler: Events): UnsubscribeCallback {
-    this._handlers.add(handler);
-    return () => {
-      this._handlers.delete(handler);
-    };
-  }
-}
-
-export interface CancellableObservableEvents {
-  onCancelled?(): void;
-}
-
-export interface CancellableObservable<Events extends CancellableObservableEvents, Value = unknown>
-  extends Observable<Events, Value> {
-  cancel(): Promise<void>;
-}
-
-/**
- * Implements subscriptions with ability to be cancelled.
- */
-export class CancellableObservableProvider<
-  Events extends CancellableObservableEvents
-> extends ObservableProvider<Events> {
-  private _cancelled = false;
-
-  // prettier-ignore
-  constructor(
-    private readonly _handleCancel?: () => Promise<void>
-  ) {
-    super();
+  override map<R>(callback: (value: T) => R): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.map(callback), this._value && callback(this._value));
   }
 
-  get cancelled() {
-    return this._cancelled;
+  override filter(callback: (value: T) => boolean): MulticastObservable<T> {
+    return new MulticastObservable(
+      this._observable.filter(callback),
+      this._value && callback(this._value) ? this._value : undefined,
+    );
   }
 
-  async cancel() {
-    if (this._cancelled) {
-      return;
+  override reduce<R = T>(callback: (previousValue: R, currentValue: T) => R, initialValue?: R): MulticastObservable<R> {
+    return new MulticastObservable(
+      initialValue ? this._observable.reduce(callback, initialValue) : this._observable.reduce(callback),
+      initialValue ?? (this._value as R),
+    );
+  }
+
+  override flatMap<R>(callback: (value: T) => MulticastObservable<R>): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.flatMap(callback), this._value && callback(this._value).get());
+  }
+
+  override concat<R>(...observables: Array<Observable<R>>): MulticastObservable<R> {
+    return new MulticastObservable(this._observable.concat(...observables), this._value as R);
+  }
+
+  /**
+   * Concatenates multicast observables without losing the current value.
+   * @param reducer reduces the values of any multicast observables being concatenated into a single value
+   * @param observables observables to concatenate
+   * @returns concatenated observable
+   */
+  losslessConcat<R>(
+    reducer: (currentValue: R, newValues: R[]) => R,
+    ...observables: Array<Observable<R>>
+  ): MulticastObservable<R> {
+    const multicast = observables.filter(
+      (observable): observable is MulticastObservable<R> => observable instanceof MulticastObservable,
+    );
+    const value = reducer(
+      this._value as R,
+      multicast.map((observable) => observable.get()),
+    );
+    return new MulticastObservable(this._observable.concat(...observables), value);
+  }
+
+  private _subscribe(observer: Observer<T>) {
+    if (!this._observers.has(observer)) {
+      this._observers.add(observer);
     }
 
-    this._cancelled = true;
-    await this._handleCancel?.();
-    this.callback.onCancelled?.();
+    if (this._value !== undefined) {
+      observer.next?.(this._value);
+    }
+
+    return () => {
+      this._observers.delete(observer);
+    };
   }
+
+  private _handlers: Observer<T> = {
+    next: (value) => {
+      this._value = value;
+      this._observers.forEach((observer) => observer.next?.(value));
+    },
+    error: (err) => {
+      this._observers.forEach((observer) => observer.error?.(err));
+    },
+    complete: () => {
+      this._observers.forEach((observer) => observer.complete?.());
+    },
+  };
 }
+
+const EMPTY_OBSERVABLE = MulticastObservable.of(null);

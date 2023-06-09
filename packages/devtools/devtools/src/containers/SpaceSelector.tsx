@@ -2,16 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { FC, ReactNode } from 'react';
+import { Planet } from '@phosphor-icons/react';
+import React, { FC, ReactNode, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { Select } from '@dxos/react-appkit';
 import { useSpaces } from '@dxos/react-client';
+import { humanize } from '@dxos/util';
 
-import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
 
 export const SpaceSelector = () => {
-  const spaces = useSpaces();
+  const spaces = useSpaces({ all: true });
   const spacesInfo = useSpacesInfo();
   const { space } = useDevtoolsState();
   const setState = useDevtoolsDispatch();
@@ -21,17 +23,41 @@ export const SpaceSelector = () => {
       ...state,
       space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
       spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
-      feedKey: undefined
+      feedKey: undefined,
     }));
+
+    if (spaceKey) {
+      localStorage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+    }
   };
 
+  useEffect(() => {
+    const spaceKeyHex = localStorage.getItem('dxos.devtools.spaceKey');
+    if (spaceKeyHex) {
+      console.log({ spaceKeyHex, spaces });
+      handleSelect(PublicKey.fromHex(spaceKeyHex));
+    }
+  }, []);
+
   return (
-    <PublicKeySelector
-      keys={spaces.map((space) => space.key)}
-      defaultValue={space?.key}
-      placeholder={'Select space'}
-      onChange={handleSelect}
-    />
+    <Select
+      defaultValue={space?.key?.toHex()}
+      placeholder='Select space'
+      value={space?.key.toHex()}
+      onValueChange={(id) => handleSelect(PublicKey.fromHex(id))}
+    >
+      {spaces.map((space) => (
+        <Select.Item value={space.key.toHex()} key={space.key.toHex()}>
+          <div className='flex items-center gap-2'>
+            <div className='pr-1'>
+              <Planet />
+            </div>
+            {space.properties.name ?? humanize(space.key)}
+            <span className='text-neutral-250'>{space.key.truncate(4)}</span>
+          </div>
+        </Select.Item>
+      ))}
+    </Select>
   );
 };
 

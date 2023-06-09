@@ -14,8 +14,15 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
   const space = useSpace(spaceKey);
   const invitations =
     useSyncExternalStore(
-      (listener) => (space instanceof SpaceProxy ? space.invitationsUpdate.on(() => listener()) : () => {}),
-      () => space?.invitations
+      (listener) => {
+        if (!(space instanceof SpaceProxy)) {
+          return () => {};
+        }
+
+        const subscription = space.invitations.subscribe(() => listener());
+        return () => subscription.unsubscribe();
+      },
+      () => space?.invitations.get(),
     ) ?? [];
 
   return invitations;
@@ -24,8 +31,8 @@ export const useSpaceInvitations = (spaceKey?: PublicKey) => {
 export const useSpaceInvitation = (spaceKey?: PublicKey, invitationId?: string) => {
   const invitations = useSpaceInvitations(spaceKey);
   const invitation = useMemo(
-    () => invitations.find(({ invitation }) => invitation?.invitationId === invitationId),
-    [invitations]
+    () => invitations.find((invitation) => invitation.get().invitationId === invitationId),
+    [invitations],
   );
   return useInvitationStatus(invitation);
 };

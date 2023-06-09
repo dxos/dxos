@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
  */
 export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions): AbstractValueEncoding<T> => ({
   encode: (obj: T) => Buffer.from(codec.encode(obj, opts)),
-  decode: (buffer: Buffer) => codec.decode(buffer, opts)
+  decode: (buffer: Buffer) => codec.decode(buffer, opts),
 });
 
 /**
@@ -41,6 +41,6 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
     verify: async (message, signature, key, cb) => {
       // NOTE: Uses the public key passed into function.
       callbackify(verifySignature)(publicKey, message, signature, cb);
-    }
+    },
   };
 };

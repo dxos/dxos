@@ -21,7 +21,7 @@ describe('Event', () => {
       pureCount++;
     });
 
-    const debounced = event.debounce(200);
+    const debounced = event.debounce(80);
     debounced.on(() => {
       debounceCount++;
     });
@@ -33,7 +33,7 @@ describe('Event', () => {
     event.emit(true);
     event.emit(true);
 
-    await sleep(100);
+    await sleep(5);
 
     expect(pureCount).to.equal(3);
     expect(debounceCount).to.equal(0);
@@ -74,7 +74,7 @@ describe('Event', () => {
     const ctx = new Context({
       onError: (err) => {
         error = err;
-      }
+      },
     });
 
     event.on(ctx, () => {

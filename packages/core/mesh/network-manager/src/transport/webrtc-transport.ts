@@ -7,7 +7,9 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory } from './transport';
@@ -31,12 +33,15 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
+  private readonly _instanceId = PublicKey.random().toHex();
+
   constructor(private readonly params: WebRTCTransportParams) {
+    log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
-      config: this.params.webrtcConfig
+      config: this.params.webrtcConfig,
     });
 
     this._peer.on('signal', async (data) => {
@@ -58,8 +63,22 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('error', async (err) => {
       this.errors.raise(err);
+
+      // Try to gather additional information about the connection.
+      try {
+        if (typeof (this._peer as any)?._pc.getStats === 'function') {
+          (this._peer as any)._pc.getStats().then((stats: any) => {
+            log.warn('report after webrtc error', {
+              config: this.params.webrtcConfig,
+              stats,
+            });
+          });
+        }
+      } catch {} // TODO(burdon): Ignored?
+
       await this.destroy();
     });
+    log.trace('dxos.mesh.webrtc-transport.constructor', trace.end({ id: this._instanceId }));
   }
 
   async destroy() {
@@ -91,6 +110,6 @@ export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFacto
   createTransport: (params) =>
     new WebRTCTransport({
       ...params,
-      webrtcConfig
-    })
+      webrtcConfig,
+    }),
 });

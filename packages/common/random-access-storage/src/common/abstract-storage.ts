@@ -45,9 +45,9 @@ export abstract class AbstractStorage implements Storage {
     return new Directory(
       this.type,
       getFullPath(this.path, sub),
-      () => this._getFiles(sub),
+      this._list.bind(this),
       (...args) => this.getOrCreateFile(...args),
-      () => this._delete(sub)
+      () => this._delete(sub),
     );
   }
 
@@ -64,6 +64,17 @@ export abstract class AbstractStorage implements Storage {
     } catch (err: any) {
       log.catch(err);
     }
+  }
+
+  protected async _list(path: string): Promise<string[]> {
+    // TODO(dmaretskyi): Fix me.
+    return Array.from(this._getFiles(path).keys()).map((filename) => {
+      let name = filename.replace(path, '');
+      if (name.startsWith('/')) {
+        name = name.substring(1);
+      }
+      return name;
+    });
   }
 
   protected getOrCreateFile(path: string, filename: string, opts?: any): File {
@@ -113,13 +124,13 @@ export abstract class AbstractStorage implements Storage {
   private _getFiles(path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true)
+      [...this._files.entries()].filter(([path, file]) => path.includes(fullPath) && file.destroyed !== true),
     );
   }
 
   private async _closeFilesInPath(path: string): Promise<void> {
     await Promise.all(
-      Array.from(this._getFiles(path).values()).map((file) => file.close().catch((err: any) => log.catch(err)))
+      Array.from(this._getFiles(path).values()).map((file) => file.close().catch((err: any) => log.catch(err))),
     );
   }
 
@@ -131,7 +142,7 @@ export abstract class AbstractStorage implements Storage {
           .destroy()
           .then(() => this._files.delete(path))
           .catch((err: any) => log.error(err.message));
-      })
+      }),
     );
   }
 }

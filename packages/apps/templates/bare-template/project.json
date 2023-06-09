@@ -51,7 +51,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/templates/bare-template/{src,test}/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/templates/bare-template/{src,test}/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [

@@ -2,18 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
+import { scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Keyring } from '@dxos/keyring';
 import { SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
-  new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
-    const update = () => {
+  new Stream<SubscribeToKeyringKeysResponse>(({ next, ctx }) => {
+    const update = async () => {
       next({
-        keys: keyring.list()
+        keys: await keyring.list(),
       });
     };
-    const unsubscribe = keyring.keysUpdate.on(update);
-    update();
-    return unsubscribe;
+    keyring.keysUpdate.on(ctx, update);
+    scheduleTask(ctx, update);
   });

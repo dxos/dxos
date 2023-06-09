@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import os from 'os';
 import { cwd } from 'process';
@@ -30,35 +30,31 @@ const isDirEmpty = async (dirpath: string) => {
 export default class Create extends BaseCommand {
   static override description = 'Create a DXOS project.';
 
-  static override args = [
-    {
-      name: 'name',
-      required: true,
-      description: 'Name of the project'
-    }
-  ];
+  static override args = {
+    name: Args.string({ required: true, description: 'Name of the project' }),
+  };
 
   static override flags = {
     ...BaseCommand.flags,
     tag: Flags.string({
-      description: 'Git tag or branch of the DXOS repo to checkout.'
+      description: 'Git tag or branch of the DXOS repo to checkout.',
     }),
     template: Flags.string({
       char: 't',
       description: 'Template to use when creating the project.',
       default: 'hello',
-      options: APP_TEMPLATES
+      options: APP_TEMPLATES,
     }),
     interactive: Flags.boolean({
       char: 'i',
       description: 'Customize app template options via interactive prompt',
-      default: false
+      default: false,
     }),
     verbose: Flags.boolean({
       char: 'v',
       description: 'Verbose output',
-      default: false
-    })
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -92,7 +88,7 @@ export default class Create extends BaseCommand {
       const plates = {
         tasks,
         bare,
-        hello
+        hello,
       };
 
       const monorepo = isDxosMonorepoSync();
@@ -103,8 +99,8 @@ export default class Create extends BaseCommand {
         verbose,
         input: {
           monorepo,
-          name
-        }
+          name,
+        },
       });
       void result.save({ printFiles: verbose });
     } catch (err: any) {

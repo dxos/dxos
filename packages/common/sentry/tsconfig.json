@@ -13,7 +13,22 @@
   ],
   "references": [
     {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../debug"
+    },
+    {
       "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

@@ -43,7 +43,7 @@ describe('ClientServicesHost', () => {
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey
+      issuer: host._serviceContext.identityManager.identity!.deviceKey,
     });
 
     // Test if Identity exposes haloSpace key.
@@ -56,7 +56,7 @@ describe('ClientServicesHost', () => {
 
     await host.services.SpacesService?.writeCredentials({
       spaceKey: await haloSpace.wait(),
-      credentials: [testCredential]
+      credentials: [testCredential],
     });
 
     const credentials = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
@@ -80,21 +80,21 @@ describe('ClientServicesHost', () => {
 
     const testCredential = await createMockCredential({
       signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey
+      issuer: host._serviceContext.identityManager.identity!.deviceKey,
     });
 
     const nonce = new Uint8Array([0, 0, 0, 0]);
 
     const presentation = await host.services.IdentityService!.signPresentation({
       presentation: {
-        credentials: [testCredential]
+        credentials: [testCredential],
       },
-      nonce
+      nonce,
     });
 
     expect(presentation.proofs?.[0].nonce).to.deep.equal(nonce);
     expect(await verifyPresentation(presentation)).to.deep.equal({
-      kind: 'pass'
+      kind: 'pass',
     });
   });
 });

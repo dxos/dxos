@@ -16,8 +16,8 @@ const createTestSchema = async (database: any) => {
     model: DocumentModel,
     type: TYPE_SCHEMA,
     props: {
-      schema: SCHEMA
-    }
+      schema: SCHEMA,
+    },
   });
   return new Schema(schemaItem.model);
 };
@@ -43,7 +43,7 @@ describe.skip('Schema', () => {
     const schema = await createTestSchema(database);
     const newField = {
       key,
-      required: true
+      required: true,
     };
     await schema.addField(newField);
     expect(schema.fields.length).toBe(1);
@@ -58,7 +58,7 @@ describe.skip('Schema', () => {
     const schema = await createTestSchema(database);
     const newField = {
       key,
-      required: true
+      required: true,
     };
     await schema.addField(newField);
     newField.required = false;
@@ -72,7 +72,7 @@ describe.skip('Schema', () => {
     const schema = await createTestSchema(database);
     const firstField = {
       key,
-      required: true
+      required: true,
     };
     await schema.addField(firstField);
     //   const item = await database.createItem({

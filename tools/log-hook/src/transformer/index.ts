@@ -19,7 +19,7 @@ export const before = (pluginOptions: PluginOptions, program: ts.Program): ts.Cu
         return transformSourceFile(sourceFile, context);
       },
 
-      transformBundle: (bundle) => bundle
+      transformBundle: (bundle) => bundle,
     };
   };
 };

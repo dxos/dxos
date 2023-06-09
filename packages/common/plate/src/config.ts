@@ -10,7 +10,7 @@ import {
   executeDirectoryTemplate,
   DirectoryTemplateOptions,
   ExecuteDirectoryTemplateOptions,
-  DirectoryTemplateResult
+  DirectoryTemplateResult,
 } from './executeDirectoryTemplate';
 import { TEMPLATE_FILE_IGNORE, Files } from './executeFileTemplate';
 import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
@@ -25,24 +25,25 @@ export type Filter<TInput = any> = FilterExpression[] | ((input: TInput) => Filt
 
 export type ConfigDeclaration<
   TShape extends InquirableZodType = InquirableZodType,
-  TInheritedShape extends InquirableZodType = InquirableZodType
+  TInheritedShape extends InquirableZodType = InquirableZodType,
 > = {
   inherits?: ConfigDefinition<TInheritedShape>;
   include?: Filter<z.infer<TShape>>;
   exclude?: Filter<z.infer<TShape>>;
   inputShape?: TShape;
   inputQuestions?: QuestionOptions<z.infer<TShape>>;
+  defaults?: Partial<z.infer<TShape>>;
   message?: (
     context: Required<DirectoryTemplateOptions<z.infer<TShape>>> & {
       results: Files;
       inheritedMessage?: string;
-    }
+    },
   ) => string;
 };
 
 export type ConfigDefinition<
   TInput extends InquirableZodType = InquirableZodType,
-  TInherited extends InquirableZodType = InquirableZodType
+  TInherited extends InquirableZodType = InquirableZodType,
 > = ConfigDeclaration<TInput, TInherited> & {
   templateDirectory: string;
   execute(options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<TInput>>): Promise<DirectoryTemplateResult>;
@@ -55,9 +56,9 @@ export type ExecuteSpecificDirectoryTemplateOptions<TInput> = Omit<
 
 export const defineConfig = <
   I extends InquirableZodType = InquirableZodType,
-  U extends InquirableZodType = InquirableZodType
+  U extends InquirableZodType = InquirableZodType,
 >(
-  config: ConfigDeclaration<I, U>
+  config: ConfigDeclaration<I, U>,
 ): ConfigDefinition<I, U> => {
   const stack = callsite();
   const requester = stack[1].getFileName();
@@ -65,7 +66,7 @@ export const defineConfig = <
   const merged = [defaultConfig, config?.inherits ?? {}, config].reduce(
     // TODO(zhenyasav): remove these any casts
     (memo, next) => (next ? mergeConfigs(memo as any, next as any) : memo),
-    {}
+    {},
   );
   return {
     // TODO(zhenyasav): remove this cast
@@ -74,16 +75,16 @@ export const defineConfig = <
     execute: async (options?: ExecuteSpecificDirectoryTemplateOptions<z.infer<I>>) => {
       return executeDirectoryTemplate({
         ...options,
-        templateDirectory
+        templateDirectory,
       });
-    }
+    },
   };
 };
 
 const exclude = [/\.t\//, /node_modules/, ...TEMPLATE_FILE_IGNORE];
 
 export const defaultConfig: ConfigDeclaration = {
-  exclude
+  exclude,
 };
 
 export type LoadConfigOptions = LoadModuleOptions & {
@@ -124,7 +125,7 @@ export const mergeConfigs = (a: ConfigDeclaration, b: ConfigDeclaration) => {
   const { include, exclude } = b;
   const merged = {
     ...a,
-    ...b
+    ...b,
   };
   if (include?.length || a.include?.length) {
     if (typeof a.include === 'function' || typeof include === 'function') {
@@ -151,13 +152,13 @@ export const prettyConfig = (o?: ConfigDeclaration): any => {
   return {
     ...rest,
     inputShape: inputShape ? '[ZodObject]' : undefined,
-    inherits: prettyConfig(inherits)
+    inherits: prettyConfig(inherits),
   };
 };
 
 export const loadConfig = async (
   templateDirectory: string,
-  options?: LoadConfigOptions
+  options?: LoadConfigOptions,
 ): Promise<ConfigDeclaration<any, any>> => {
   const tsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.ts');
   const jsName = path.resolve(templateDirectory, CONFIG_FILE_BASENAME + '.js');

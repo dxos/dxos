@@ -27,18 +27,18 @@ export class AuthExtension extends RpcExtension<Services, Services> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
-    }
+    },
   });
 
   constructor(private readonly _authParams: AuthExtensionParams) {
     super({
       requested: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService')
+        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
       },
       exposed: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService')
+        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
       },
-      timeout: 60 * 1000 // Long timeout because auth can wait for sync in certain cases.
+      timeout: 60 * 1000, // Long timeout because auth can wait for sync in certain cases.
     });
   }
 
@@ -56,8 +56,8 @@ export class AuthExtension extends RpcExtension<Services, Services> {
             log.error('failed to generate auth credentials', err);
             throw new Error('auth rejected');
           }
-        }
-      }
+        },
+      },
     };
   }
 
@@ -72,7 +72,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
         assert(success, 'credential not verified');
         runInContext(this._ctx, () => this._authParams.onAuthSuccess());
       } catch (err) {
-        log.warn('auth failed', err);
+        log('auth failed', err);
         this.close();
         this._authParams.onAuthFailure();
       }

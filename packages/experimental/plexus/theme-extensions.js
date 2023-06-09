@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-const { osThemeExtension } = require('@dxos/react-ui/theme-extensions');
+const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 module.exports = {
   osThemeExtension,
@@ -10,7 +10,7 @@ module.exports = {
     spacing: {
       appbar: '48px',
       framepicker: '40px',
-      topbars: '88px'
-    }
-  }
+      topbars: '88px',
+    },
+  },
 };

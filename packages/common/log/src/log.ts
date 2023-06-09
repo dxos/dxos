@@ -3,8 +3,8 @@
 //
 
 import { LogConfig, LogLevel, LogOptions } from './config';
-import { LogContext, LogMetadata } from './context';
-import { getConfig } from './options';
+import { LogContext, LogMetadata, LogProcessor } from './context';
+import { getConfig, DEFAULT_PROCESSORS } from './options';
 
 /**
  * Logging function.
@@ -15,6 +15,7 @@ type LogFunction = (message: string, context?: LogContext, meta?: LogMetadata) =
  * Logging methods.
  */
 interface LogMethods {
+  trace: LogFunction;
   debug: LogFunction;
   info: LogFunction;
   warn: LogFunction;
@@ -28,6 +29,8 @@ interface LogMethods {
  */
 interface Log extends LogMethods, LogFunction {
   config: (options: LogOptions) => void;
+  addProcessor: (processor: LogProcessor) => void;
+  runtimeConfig: LogConfig;
 }
 
 interface LogImp extends Log {
@@ -35,9 +38,19 @@ interface LogImp extends Log {
 }
 
 const createLog = (): LogImp => {
-  const log: LogImp = (...params) => processLog(LogLevel.DEBUG, ...params);
+  const log: LogImp = ((...params) => processLog(LogLevel.DEBUG, ...params)) as LogImp;
 
   log._config = getConfig();
+  Object.defineProperty(log, 'runtimeConfig', { get: () => log._config });
+
+  log.addProcessor = (processor: LogProcessor) => {
+    if (DEFAULT_PROCESSORS.filter((p) => p === processor).length === 0) {
+      DEFAULT_PROCESSORS.push(processor);
+    }
+    if (log._config.processors.filter((p) => p === processor).length === 0) {
+      log._config.processors.push(processor);
+    }
+  };
 
   // Set config.
   log.config = (options: LogOptions) => {
@@ -47,6 +60,7 @@ const createLog = (): LogImp => {
   // TODO(burdon): API to set context and separate error object.
   //  E.g., log.warn('failed', { key: 123 }, err);
 
+  log.trace = (...params) => processLog(LogLevel.TRACE, ...params);
   log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
   log.info = (...params) => processLog(LogLevel.INFO, ...params);
   log.warn = (...params) => processLog(LogLevel.WARN, ...params);
@@ -62,7 +76,7 @@ const createLog = (): LogImp => {
    * Process the current log call.
    */
   const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
-    log._config.processor(log._config, { level, message, context, meta, error });
+    log._config.processors.forEach((processor) => processor(log._config, { level, message, context, meta, error }));
   };
 
   return log;

@@ -10,7 +10,7 @@ import { Config } from '@dxos/config';
 import { ClientProvider, useClient } from './ClientContext';
 
 export default {
-  component: ClientProvider
+  component: ClientProvider,
 };
 
 const JsonPanel = ({ value }: { value: any }) => (
@@ -20,7 +20,7 @@ const JsonPanel = ({ value }: { value: any }) => (
       // code whiteSpace: 'pre-wrap',
       // code wordBreak: 'break-all',
       overflow: 'hidden',
-      textOverflow: 'ellipsis'
+      textOverflow: 'ellipsis',
     }}
   >
     {JSON.stringify(value, undefined, 2)}
@@ -52,7 +52,7 @@ export const Primary = {
     <ClientProvider services={servicesProvider}>
       <TestApp />
     </ClientProvider>
-  )
+  ),
 };
 
 class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
@@ -84,5 +84,5 @@ export const Failure = {
         <TestApp />
       </ClientProvider>
     </ErrorBoundary>
-  )
+  ),
 };

@@ -15,7 +15,7 @@ export enum EventType {
   PROTOCOL_ERROR = 'PROTOCOL_ERROR',
   PROTOCOL_EXTENSIONS_INITIALIZED = 'PROTOCOL_EXTENSIONS_INITIALIZED',
   PROTOCOL_EXTENSIONS_HANDSHAKE = 'PROTOCOL_EXTENSIONS_HANDSHAKE',
-  PROTOCOL_HANDSHAKE = 'PROTOCOL_HANDSHAKE'
+  PROTOCOL_HANDSHAKE = 'PROTOCOL_HANDSHAKE',
 }
 
 export class ConnectionLog {
@@ -36,14 +36,14 @@ export class ConnectionLog {
 
   joinedSwarm(swarm: Swarm) {
     const info: SwarmInfo = {
-      id: swarm.instanceId,
+      id: PublicKey.from(swarm._instanceId),
       topic: swarm.topic,
       isActive: true,
       label: swarm.label,
-      connections: []
+      connections: [],
     };
 
-    this._swarms.set(swarm.instanceId, info);
+    this._swarms.set(PublicKey.from(swarm._instanceId), info);
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
@@ -53,7 +53,7 @@ export class ConnectionLog {
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.
-        events: []
+        events: [],
       };
       info.connections!.push(connectionInfo);
       this.update.emit();
@@ -62,7 +62,7 @@ export class ConnectionLog {
         connectionInfo.state = state;
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
-          newState: state
+          newState: state,
         });
         this.update.emit();
       });
@@ -96,7 +96,7 @@ export class ConnectionLog {
   }
 
   leftSwarm(swarm: Swarm) {
-    this.getSwarmInfo(swarm.instanceId).isActive = false;
+    this.getSwarmInfo(PublicKey.from(swarm._instanceId)).isActive = false;
     this.update.emit();
   }
 }

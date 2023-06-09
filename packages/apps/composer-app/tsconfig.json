@@ -14,7 +14,6 @@
     "vite.config.ts"
   ],
   "include": [
-    "../patterns/react-appkit/src/components/AppShell/pwa.d.ts",
     "src"
   ],
   "references": [
@@ -22,7 +21,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/react-async"
     },
     {
       "path": "../../common/sentry"
@@ -31,13 +30,13 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-typegen"
-    },
-    {
       "path": "../../core/echo/text-model"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -46,13 +45,25 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../patterns/react-appkit"
+      "path": "../../sdk/react-shell"
     },
     {
-      "path": "../patterns/react-composer"
+      "path": "../../sdk/vault"
     },
     {
-      "path": "../patterns/react-ui"
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

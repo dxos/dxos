@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
@@ -36,22 +36,25 @@ export class WorkerRuntime {
   // prettier-ignore
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>
-  ) { }
+  ) {
+    this._clientServices = new ClientServicesHost();
+  }
+
+  get host() {
+    return this._clientServices;
+  }
 
   async start() {
     log('starting...');
     try {
       this._config = await this._configProvider();
-      const signalServer = this._config.get('runtime.services.signal.server');
-      this._clientServices = new ClientServicesHost({
+      const signals = this._config.get('runtime.services.signaling');
+      this._clientServices.initialize({
         config: this._config,
-        networkManager: new NetworkManager({
-          log: true,
-          signalManager: signalServer
-            ? new WebsocketSignalManager([signalServer])
-            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
-          transportFactory: this._transportFactory
-        })
+        signalManager: signals
+          ? new WebsocketSignalManager(signals)
+          : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+        transportFactory: this._transportFactory,
       });
 
       await this._clientServices.open();
@@ -73,23 +76,11 @@ export class WorkerRuntime {
    */
   async createSession({ appPort, systemPort, shellPort }: CreateSessionParams) {
     const session = new WorkerSession({
-      getService: async (find) => {
-        const error = await this._ready.wait();
-        if (error) {
-          throw error;
-        }
-
-        const service = find(this._clientServices.services);
-        if (!service) {
-          throw new Error('Service not found');
-        }
-
-        return service;
-      },
+      serviceHost: this._clientServices,
       appPort,
       systemPort,
       shellPort,
-      readySignal: this._ready
+      readySignal: this._ready,
     });
 
     // When tab is closed.
@@ -108,6 +99,7 @@ export class WorkerRuntime {
    * Selects one of the existing session fro WebRTC networking.
    */
   private _reconnectWebrtc() {
+    log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
       if (!this.sessions.has(this._sessionForNetworking)) {

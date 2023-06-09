@@ -42,7 +42,7 @@ export class ProfileStateMachine implements CredentialProcessor {
         this.profile = assertion.profile;
         log('updated profile', {
           identityKey: this._params.identityKey,
-          profile: this.profile
+          profile: this.profile,
         });
         this._params.onUpdate?.();
         break;

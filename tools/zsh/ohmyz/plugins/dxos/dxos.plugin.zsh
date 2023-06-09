@@ -71,8 +71,10 @@ function pre () {
   fi;
 
   # export CI=true
-
+  ROOT=$(git rev-parse --show-toplevel)
+  rm $ROOT/pnpm-lock.yaml
   pnpm i --no-frozen-lockfile
+  nx reset
   CI=true pa build
   CI=true pa test
   CI=true pa lint

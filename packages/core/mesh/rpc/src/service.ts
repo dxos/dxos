@@ -113,7 +113,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
       }
 
       return exposedRpcs[serviceName].callStream(methodName, request);
-    }
+    },
   });
 
   const requestedRpcs: Client = {} as Client;
@@ -125,9 +125,9 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
           call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-          callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
+          callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req),
         },
-        encodingOptions
+        encodingOptions,
       );
     }
   }
@@ -135,7 +135,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   return new ProtoRpcPeer(requestedRpcs, peer);
 };
 
-const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
+export const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
   const separator = method.lastIndexOf('.');
   const serviceName = method.slice(0, separator);
   const methodName = method.slice(separator + 1);
@@ -156,18 +156,18 @@ const parseMethodName = (method: string): [serviceName: string, methodName: stri
  */
 export const createRpcClient = <S>(
   serviceDef: ServiceDescriptor<S>,
-  options: Omit<RpcPeerOptions, 'callHandler'>
+  options: Omit<RpcPeerOptions, 'callHandler'>,
 ): ProtoRpcPeer<S> => {
   const peer = new RpcPeer({
     ...options,
     callHandler: () => {
       throw new Error('Requests to client are not supported.');
-    }
+    },
   });
 
   const client = serviceDef.createClient({
     call: peer.call.bind(peer),
-    callStream: peer.callStream.bind(peer)
+    callStream: peer.callStream.bind(peer),
   });
 
   return new ProtoRpcPeer(client, peer);
@@ -190,7 +190,7 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
   return new RpcPeer({
     ...rest,
     callHandler: server.call.bind(server),
-    streamHandler: server.callStream.bind(server)
+    streamHandler: server.callStream.bind(server),
   });
 };
 
@@ -200,11 +200,11 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
  */
 export const createBundledRpcClient = <S>(
   descriptors: ServiceBundle<S>,
-  options: Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>
+  options: Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>,
 ): ProtoRpcPeer<S> => {
   return createProtoRpcPeer({
     requested: descriptors,
-    ...options
+    ...options,
   });
 };
 
@@ -248,6 +248,6 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
       }
 
       return rpc[serviceName].callStream(methodName, request);
-    }
+    },
   });
 };

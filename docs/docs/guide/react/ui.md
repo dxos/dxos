@@ -8,8 +8,8 @@ There are several open-source packages of UI components available:
 
 | Package                  | Description                                                                                                                                                                                                                                                      | Audience |
 | :----------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--- |
-| `@dxos/react-components` | A set of styled components and design tokens like colors and sizes that form a UI system based on `radix`, `phosphor-icons`, `react`, and `tailwindcss`. | Any react application. |
-| `@dxos/react-ui`         | A set of components, pages, layouts and specific user workflows for working with [ECHO](../platform) [spaces](../glossary#space), invitations, and join-flows. Depends on `@dxos/react-components`. | Any react application using ECHO and HALO. |
+| `@dxos/react-components` | A set of pure components and tokens like colors and sizes that form a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application. |
+| `@dxos/react-shell`      | A set of components, pages, layouts and specific user workflows for working with [ECHO](../platform) [spaces](../glossary#space), invitations, and join-flows. Depends on `@dxos/react-components`. | Any react application using ECHO and HALO. |
 | `@dxos/react-appkit`     | A set of components, pages, and layouts that are shared across DXOS-owned applications like the [HALO app](../platform/halo) itself. | Applications built and operated by DXOS. |
 
 ## Installation
@@ -27,7 +27,7 @@ Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
 ```ts file=./snippets/vite-config.ts#L5-
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-import { ThemePlugin } from '@dxos/react-components/plugin';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -39,7 +39,7 @@ export default defineConfig({
       ]
     })
   ]
-})
+});
 ```
 
 The content array should contain globs that match any other code which will contain `tailwind` css classes.

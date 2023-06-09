@@ -13,11 +13,15 @@ import {
   IdentityPanel,
   ItemsPanel,
   KeyringPanel,
+  LoggingPanel,
   MembersPanel,
-  SpacesPanel,
   SignalPanel,
+  SpacesPanel,
+  StoragePanel,
   SwarmPanel
 } from '../panels';
+
+export const namespace = 'devtools';
 
 /**
  * Main app routes.
@@ -35,7 +39,15 @@ export const useRoutes = () => {
             {
               path: '/client/config',
               element: <ConfigPanel />
-            }
+            },
+            {
+              path: '/client/storage',
+              element: <StoragePanel />
+            },
+            {
+              path: '/client/logs',
+              element: <LoggingPanel />
+            },
           ]
         },
         {

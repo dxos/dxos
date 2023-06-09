@@ -36,7 +36,7 @@
         "outputPath": "tmp/playwright/packages/apps/todomvc",
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/apps/todomvc",
-        "serve": "todomvc:serve-with-halo",
+        "serve": "todomvc:serve-with-vault",
         "serveOptions": {
           "serveTarget": "preview"
         },
@@ -58,7 +58,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/todomvc/**/*.{ts,js}"
+          "packages/apps/todomvc/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
@@ -87,11 +87,11 @@
         "buildTarget": "todomvc:bundle"
       }
     },
-    "serve-with-halo": {
-      "executor": "@dxos/serve-with-halo:run"
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
     }
   },
   "implicitDependencies": [
-    "serve-with-halo"
+    "serve-with-vault"
   ]
 }

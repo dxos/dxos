@@ -28,8 +28,8 @@ export interface File extends RandomAccessStorageProperties {
   read(offset: number, size: number): Promise<Buffer>;
   del(offset: number, size: number): Promise<void>;
   stat(): Promise<FileStat>;
-  close(): Promise<Error>;
-  destroy(): Promise<Error>;
+  close(): Promise<Error | void>;
+  destroy(): Promise<Error | void>;
 
   // Not supported in node, memory.
   truncate?(offset: number): Promise<void>;
@@ -69,6 +69,5 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
  */
 export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
   const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
-
   return Object.assign(file, { type, native });
 };

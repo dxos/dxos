@@ -17,7 +17,7 @@ const items = [
     title: 'Richard III',
     description: 'Richard III is a play by William Shakespeare. It was probably written around 1593.',
     url: 'https://en.wikipedia.org/wiki/Richard_III_(play)',
-    category: 'history'
+    category: 'history',
   },
   {
     id: 'item-1',
@@ -26,14 +26,14 @@ const items = [
       'The Tragedy of Hamlet, Prince of Denmark, often shortened to Hamlet,' +
       ' is a tragedy written by William Shakespeare sometime between 1599 and 1601.',
     url: 'https://en.wikipedia.org/wiki/Hamlet',
-    category: 'tragedy'
+    category: 'tragedy',
   },
   {
     id: 'item-2',
     title: 'Macbeth',
     description: 'Macbeth, fully The Tragedy of Macbeth, is a tragedy by William Shakespeare.',
     url: 'https://en.wikipedia.org/wiki/Macbeth',
-    category: 'tragedy'
+    category: 'tragedy',
   },
   {
     id: 'item-3',
@@ -42,15 +42,15 @@ const items = [
       'The Tempest is a play by English playwright William Shakespeare, probably written in 1610–1611, ' +
       'and thought to be one of the last plays that Shakespeare wrote alone.',
     url: 'https://en.wikipedia.org/wiki/The_Tempest',
-    category: 'comedy'
+    category: 'comedy',
   },
   {
     id: 'item-4',
     title: 'The Seagull',
     description: 'The Seagull is a play by Russian dramatist Anton Chekhov, written in 1895.',
     url: 'https://en.wikipedia.org/wiki/The_Seagull',
-    category: 'tragedy'
-  }
+    category: 'tragedy',
+  },
 ];
 
 describe('TextIndex', () => {
@@ -71,7 +71,7 @@ describe('TextIndex', () => {
       indexer.update(items);
       const results = indexer.search('william');
       expect(results.filter((item) => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(
-        4
+        4,
       );
     }
 
@@ -86,7 +86,7 @@ describe('TextIndex', () => {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],
-      getter
+      getter,
     });
     const matcher = new Matcher({ getter, textIndex });
 
@@ -94,9 +94,9 @@ describe('TextIndex', () => {
       root: {
         op: Predicate.Operation.TEXT_MATCH,
         value: {
-          string: 'william'
-        }
-      }
+          string: 'william',
+        },
+      },
     };
 
     textIndex.update(items);
@@ -108,7 +108,7 @@ describe('TextIndex', () => {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],
-      getter
+      getter,
     });
     const matcher = new Matcher({ getter, textIndex });
 
@@ -119,8 +119,8 @@ describe('TextIndex', () => {
           {
             op: Predicate.Operation.TEXT_MATCH,
             value: {
-              string: 'william'
-            }
+              string: 'william',
+            },
           },
           {
             op: Predicate.Operation.NOT,
@@ -132,19 +132,19 @@ describe('TextIndex', () => {
                   array: {
                     values: [
                       {
-                        string: 'comedy'
+                        string: 'comedy',
                       },
                       {
-                        string: 'history'
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
+                        string: 'history',
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
     };
 
     textIndex.update(items);

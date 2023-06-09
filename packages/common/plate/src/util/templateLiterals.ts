@@ -34,9 +34,9 @@ export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) =>
     flatten(
       zip(
         literals.map((l) => removeLeadingTabs(l, tabs)),
-        cleanArgs
-      ).filter(Boolean)
-    ).join('')
+        cleanArgs,
+      ).filter(Boolean),
+    ).join(''),
   );
 };
 
@@ -47,7 +47,7 @@ export const ts = (literals: TemplateStringsArray, ...args: any[]) => {
   const result = text(literals, ...args);
   try {
     return prettier.format(result, {
-      parser: 'typescript'
+      parser: 'typescript',
     });
   } catch (err: any) {
     console.warn('error formatting typescript:\n', err?.message);

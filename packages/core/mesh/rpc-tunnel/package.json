@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "RPC ports over various transports.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,11 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "ua-parser-js": "^1.0.35"
+  },
+  "devDependencies": {
+    "@types/ua-parser-js": "^0.7.36"
   },
   "publishConfig": {
     "access": "public"

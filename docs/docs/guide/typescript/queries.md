@@ -5,7 +5,7 @@ title: Queries
 
 # Queries
 
-The simplest way to read the items in a space is to use the `space.experimental.db.query()` method. It's also possible to obtain strongly typed results as described [below](#typed-queries).
+The simplest way to read the items in a space is to use the `space.db.query()` method. It's also possible to obtain strongly typed results as described [below](#typed-queries).
 
 ## Untyped Queries
 
@@ -19,15 +19,15 @@ const client = new Client();
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get all items
-  const allObjects = space.experimental.db.query();
+  const allObjects = space.db.query();
   // get items that match a filter
-  const tasks = space.experimental.db.query({ type: 'task' });
+  const tasks = space.db.query({ type: 'task' });
   // get items that match a predicate
-  const finishedTasks = space.experimental.db.query(
+  const finishedTasks = space.db.query(
     (doc) => doc.type == 'task' && doc.isCompleted
   );
 };
@@ -37,14 +37,15 @@ The result is an iterable collection of objects that can be used like an array.
 
 ## Typed Queries
 
-It's possible to receive strongly typed results from a `query`. Pass a type argument to `query<T>` which descends from [`Document`](/api/@dxos/client/classes/Document):
+It's possible to receive strongly typed results from a `query`.
+Pass a type argument to `query<T>` which descends from [`TypedObject`](/api/@dxos/client/classes/TypedObject):
 
 ```ts{5,17} file=./snippets/read-items-typed.ts#L5-
-import { Client, Document } from '@dxos/client';
+import { Client, TypedObject } from '@dxos/client';
 
 const client = new Client();
 
-class Task extends Document {
+class Task extends TypedObject {
   public declare type: 'task';
   public declare isCompleted: boolean;
 }
@@ -52,15 +53,18 @@ class Task extends Document {
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter
-  const tasks = space.experimental.db.query<Task>({ type: 'task' });
+  // TODO(wittjosiah): Fix type inference.
+  // @ts-ignore
+  const tasks = space.db.query<Task>({ type: 'task' });
 };
 ```
 
-The type of the resulting objects must descend from `Document` because ECHO tracks objects returned from `query`. Mutating the objects directly (setting values, modifying arrays, ..., etc.) will cause ECHO to propagate those changes to all listening ECHO peers in the space.
+The type of the resulting objects must descend from `TypedObject` because ECHO tracks objects returned from `query`.
+Mutating the objects directly (setting values, modifying arrays, ..., etc.) will cause ECHO to propagate those changes to all listening ECHO peers in the space.
 
 DXOS provides a tool for conveniently generating entity classes (like `Task` above) that work with the `query<T>` interface.
 
@@ -90,7 +94,7 @@ message TaskList {
 }
 ```
 
-Using a tool called `dxtype` from `@dxos/echo-schema` classes can be generated for use with DXOS Client.
+Using a tool called `dxtype` from `@dxos/echo-typegen` classes can be generated for use with DXOS Client.
 
 ```bash
 dxtype <input protobuf file> <output typescript file>
@@ -108,20 +112,23 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { DocumentBase, TypeFilter, EchoSchema } from "@dxos/react-client";
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
-export class Task extends DocumentBase {
-  static readonly type = schema.getType('dxos.tasks.Task');
+export class Task extends TypedObject {
+  static readonly type = schema.getType('example.tasks.Task');
 
-  static filter(opts?: { title?: string, completed?: boolean }): TypeFilter<Task> {
+  static filter(opts?: {
+    title?: string;
+    completed?: boolean;
+  }): TypeFilter<Task> {
     return Task.type.createFilter(opts);
   }
 
-  constructor(opts?: { title?: string, completed?: boolean }) {
+  constructor(opts?: { title?: string; completed?: boolean }) {
     super({ ...opts, '@type': Task.type.name }, Task.type);
   }
 
@@ -139,18 +146,18 @@ To use the type declarations, simply import the relevant type like `Task` from t
 
 ```ts file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
-import { Task } from "./schema";
+import { Task } from './schema';
 
 const client = new Client();
 
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter: type inferred from Task.filter()
-  const tasks = space.experimental.db.query(Task.filter());
+  const tasks = space.db.query(Task.filter());
 };
 ```
 

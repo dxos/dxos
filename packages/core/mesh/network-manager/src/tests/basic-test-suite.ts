@@ -34,7 +34,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
   test('joins swarm with star topology', async () => {
@@ -48,7 +48,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
   test('joins swarm multiple times', async () => {
@@ -75,7 +75,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       await exchangeMessages(swarm1, swarm2);
       await leaveSwarm([peer1, peer2], topic2);
     }
-  }).tag('flaky');
+  });
 
   test('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
@@ -107,9 +107,31 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await Promise.all([
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
-      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId)
+      test2.swarm1a.protocol.testConnection(test2.peer2a.peerId),
     ]);
-  }).tag('flaky');
+  });
+
+  test('peers reconnect after and error in connection', async () => {
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await openAndCloseAfterTest([peer1, peer2]);
+
+    const topic = PublicKey.random();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
+    await exchangeMessages(swarm1, swarm2);
+
+    void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
+
+    // Wait until both peers are disconnected.
+    await Promise.all([
+      swarm1.protocol.disconnected.waitForCondition(() => swarm1.protocol.connections.size === 0),
+      swarm2.protocol.disconnected.waitForCondition(() => swarm2.protocol.connections.size === 0),
+    ]);
+
+    await exchangeMessages(swarm1, swarm2);
+
+    await leaveSwarm([peer1, peer2], topic);
+  });
 
   test('going offline and back online', async () => {
     const peer1 = testBuilder.createPeer();
@@ -128,8 +150,8 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       .getSwarm(topic)
       ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-    const peerLeft = peer2._networkManager.signalManager.swarmEvent.waitFor(
-      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer)
+    const peerLeft = peer2._signalManager.swarmEvent.waitFor(
+      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer),
     );
 
     await peer1.goOffline();
@@ -156,8 +178,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     .timeout(2_000);
 
   // TODO(mykola): Fails with large amount of peers ~10.
-  // Time wasted: 1 hour (increment when you work on it).
-  test.skip('many peers and connections', async () => {
+  test('many peers and connections', async () => {
     const numTopics = 2;
     const peersPerTopic = 3;
     const swarmsAllPeersConnected: Promise<any>[] = [];
@@ -174,16 +195,16 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
               const swarm = peer.createSwarm(topic);
 
               swarmsAllPeersConnected.push(
-                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1)
+                swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1),
               );
               await swarm.join();
-            })
+            }),
           );
-        })
+        }),
       ),
-      2_000
+      2_000,
     );
 
     await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
-  });
+  }).tag('stress');
 };

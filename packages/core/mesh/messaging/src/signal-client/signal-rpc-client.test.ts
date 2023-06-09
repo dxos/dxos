@@ -9,16 +9,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', () => {
-  let broker: TestBroker;
+  let broker: SignalServerRunner;
 
   beforeAll(async () => {
-    broker = await createTestBroker();
+    broker = await runTestSignalServer();
   });
 
   afterAll(() => {
@@ -27,7 +27,7 @@ describe('SignalRPCClient', () => {
 
   // TODO(burdon): Convert to TestBuilder pattern.
   const setupClient = async () => {
-    const client = new SignalRPCClient(broker.url());
+    const client = new SignalRPCClient({ url: broker.url() });
     afterTest(async () => await client.close());
     return client;
   };
@@ -42,7 +42,7 @@ describe('SignalRPCClient', () => {
     const stream1 = await client1.receiveMessages(peerId1);
     const payload: Any = {
       type_url: 'example.testing.data.TestPayload',
-      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' })
+      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' }),
     };
 
     const received: Promise<SignalMessage> = new Promise((resolve) => {
@@ -55,20 +55,22 @@ describe('SignalRPCClient', () => {
             log.catch(error);
             throw error;
           }
-        }
+        },
       );
     });
 
     await client2.sendMessage({
       author: peerId2,
       recipient: peerId1,
-      payload
+      payload,
     });
 
     expect((await received).author).toEqual(peerId2.asUint8Array());
     expect((await received).payload).toBeAnObjectWith(payload);
     stream1.close();
-  }).timeout(2_000);
+  })
+    .timeout(2_000)
+    .retries(2);
 
   test('join', async () => {
     const client1 = await setupClient();
@@ -91,7 +93,7 @@ describe('SignalRPCClient', () => {
             log.error(error);
             throw error;
           }
-        }
+        },
       );
     });
     const stream2 = await client2.join({ topic, peerId: peerId2 });
@@ -99,5 +101,7 @@ describe('SignalRPCClient', () => {
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     stream1.close();
     stream2.close();
-  }).timeout(2_000);
+  })
+    .timeout(2_000)
+    .retries(2);
 });

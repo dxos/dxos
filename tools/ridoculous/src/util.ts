@@ -41,7 +41,7 @@ export const directiveRegex = regex([
   /<!--\s*/, // Opening comment.
   /@([\w-]+)\s*/, // Group: directive (e.g., `code`).
   /(?:\((.+)\))?/,
-  /\s+-->/ // Closing comment.
+  /\s+-->/, // Closing comment.
 ]);
 
 /**
@@ -74,7 +74,7 @@ export const visitDirectives = (tree: any, callback: VisitorCallback) => {
 
 type ReplaceResult = [
   nodes: any[], // Nodes to insert.
-  skip: number // Number of nodes to skip over (including current).
+  skip: number, // Number of nodes to skip over (including current).
 ];
 
 type ReplaceCallback = (node: any, index: number, parents: any) => ReplaceResult | undefined;
@@ -94,6 +94,6 @@ export const visitAndReplace = (tree: any, callback: ReplaceCallback) => {
         return index + skip;
       }
     },
-    tree
+    tree,
   );
 };

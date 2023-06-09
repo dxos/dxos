@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
-import { DatabaseBackendProxy, ItemManager } from '@dxos/echo-db';
+import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
+import { WriteOptions, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { FeedMessageBlock } from '@dxos/protocols';
@@ -14,7 +15,7 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { DatabaseBackendHost } from '../dbhost';
+import { DatabaseHost } from '../dbhost';
 
 const SPACE_KEY = PublicKey.random();
 
@@ -29,13 +30,19 @@ export class DatabaseTestBuilder {
   }
 }
 
+type WriteRequest = {
+  receipt: WriteReceipt;
+  options: WriteOptions;
+  trigger: Trigger;
+};
+
 export class DatabaseTestPeer {
   public readonly modelFactory = new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
 
   public items!: ItemManager;
-  public proxy!: DatabaseBackendProxy;
+  public proxy!: DatabaseProxy;
 
-  public host!: DatabaseBackendHost;
+  public host!: DatabaseHost;
   public hostItems!: ItemManager;
 
   //
@@ -60,33 +67,42 @@ export class DatabaseTestPeer {
 
   private readonly _onConfirm = new Event();
 
+  private readonly _writes = new Set<WriteRequest>();
+
   constructor(public readonly rig: DatabaseTestBuilder) {}
 
   async open() {
     this.hostItems = new ItemManager(this.modelFactory);
-    this.host = new DatabaseBackendHost(
-      {
-        write: async (message) => {
-          const seq =
-            this.feedMessages.push({
-              timeframe: this.timeframe,
-              payload: {
-                data: message
-              }
-            }) - 1;
+    this.host = new DatabaseHost({
+      write: async (message, { afterWrite }: WriteOptions) => {
+        const seq =
+          this.feedMessages.push({
+            timeframe: this.timeframe,
+            payload: {
+              data: message,
+            },
+          }) - 1;
 
-          await this._onConfirm.waitFor(() => this.confirmed >= seq);
-          return {
+        const request: WriteRequest = {
+          receipt: {
             seq,
-            feedKey: this.key
-          };
-        }
+            feedKey: this.key,
+          },
+          options: { afterWrite },
+          trigger: new Trigger(),
+        };
+        this._writes.add(request);
+        await request.trigger.wait();
+        return request.receipt;
       },
-      this.snapshot?.database
-    );
-    await this.host.open(this.hostItems, this.modelFactory);
+    });
 
-    this.proxy = new DatabaseBackendProxy(this.host.createDataServiceHost(), SPACE_KEY);
+    await this.host.open(this.hostItems, this.modelFactory);
+    if (this.snapshot) {
+      this.host._itemDemuxer.restoreFromSnapshot(this.snapshot.database);
+    }
+
+    this.proxy = new DatabaseProxy(this.host.createDataServiceHost(), SPACE_KEY);
     this.items = new ItemManager(this.modelFactory);
     await this.proxy.open(this.items, this.modelFactory);
   }
@@ -95,9 +111,17 @@ export class DatabaseTestPeer {
    * Confirm mutations written to the local feed.
    * @param seq Sequence number of the mutation to confirm. If not specified, all mutations will be confirmed.
    */
-  confirm(seq?: number) {
+  async confirm(seq?: number) {
     this.confirmed = seq ?? this.feedMessages.length - 1;
     this._onConfirm.emit();
+
+    for (const request of [...this._writes]) {
+      if (this.confirmed >= request.receipt.seq) {
+        this._writes.delete(request);
+        await request.options.afterWrite?.(request.receipt);
+        request.trigger.wake();
+      }
+    }
 
     this._processMessages(Timeframe.merge(this.timeframe, new Timeframe([[this.key, this.confirmed]])));
   }
@@ -109,7 +133,7 @@ export class DatabaseTestPeer {
   replicate(to?: Timeframe) {
     const toTimeframe = Timeframe.merge(
       to ?? new Timeframe(Array.from(this.rig.peers.values()).map((peer) => [peer.key, peer.confirmed])),
-      this.timeframe
+      this.timeframe,
     );
     toTimeframe.set(this.key, this.confirmed);
 
@@ -133,7 +157,7 @@ export class DatabaseTestPeer {
     this.snapshot = {
       spaceKey: SPACE_KEY.asUint8Array(),
       database: this.host.createSnapshot(),
-      timeframe: this.timeframe
+      timeframe: this.timeframe,
     };
     return this.snapshot;
   }
@@ -151,7 +175,7 @@ export class DatabaseTestPeer {
           message && {
             feedKey: peer.key,
             seq: seq + 1,
-            data: message
+            data: message,
           }
         );
       })
@@ -181,13 +205,13 @@ export class DatabaseTestPeer {
 
         run = true;
         this.host.echoProcessor({
-          data: candidate.data.payload.data!.object,
+          batch: candidate.data.payload.data!.batch,
           meta: {
             feedKey: candidate.feedKey,
             seq: candidate.seq,
             memberKey: candidate.feedKey,
-            timeframe: candidate.data.timeframe
-          }
+            timeframe: candidate.data.timeframe,
+          },
         });
         this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[candidate.feedKey, candidate.seq]]));
       }

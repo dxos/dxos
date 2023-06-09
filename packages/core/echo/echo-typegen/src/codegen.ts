@@ -14,7 +14,12 @@ const reservedTypeNames = [importNamespace];
 const reservedFieldNames = ['id', '__typename', '__deleted'];
 
 // Types that are injected from `importNamespace`.
-const injectedTypes = ['.dxos.schema.Text', '.dxos.schema.Document'];
+// prettier-ignore
+const injectedTypes = [
+  '.dxos.schema.Text',
+  '.dxos.schema.Expando',
+  '.dxos.schema.TypedObject'
+];
 
 /**
  * Protobuf schema as JSON object.
@@ -52,7 +57,7 @@ export const createType = (field: pb.Field): string => {
       }
 
       return stringifyFullyQualifiedName(
-        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!))
+        getRelativeName(getFullNestedTypeName(field.resolvedType), getFullNestedTypeName(field.message!)),
       );
     } else {
       switch (field.type) {
@@ -143,6 +148,10 @@ function* emitDeclarations(ns: pb.ReflectionObject): Generator<string> {
     }
   }
 
+  if (ns instanceof pb.Enum) {
+    yield createEnum(ns);
+  }
+
   if ((ns instanceof pb.Namespace || ns instanceof pb.Type) && ns.nestedArray.length > 0) {
     yield text`
       export namespace ${ns.name} {
@@ -174,15 +183,15 @@ export const createObjectClass = (type: pb.Type) => {
   return text`
     export type ${name}Props = {\n${initializer}\n};
 
-    export class ${name} extends ${importNamespace}.Document<{}> {
+    export class ${name} extends ${importNamespace}.TypedObject<${name}Props> {
       static readonly type = schema.getType('${fullName}');
 
       static filter(opts?: Partial<${name}Props>): ${importNamespace}.TypeFilter<${name}> {
       return ${name}.type.createFilter(opts);
       }
 
-      constructor(opts?: Partial<${name}Props>) {
-        super({ ...opts}, ${name}.type);
+      constructor(initValues?: Partial<${name}Props>, opts?: ${importNamespace}.TypedObjectOpts) {
+        super({ ...initValues}, ${name}.type, opts);
       }
       ${fields}
     }
@@ -207,5 +216,24 @@ export const createPlainInterface = (type: pb.Type) => {
   export interface ${name} {
     ${fields}
   }
+  `;
+};
+
+/**
+ * Generate enum definition.
+ */
+export const createEnum = (type: pb.Enum) => {
+  if (reservedTypeNames.includes(type.name)) {
+    throw new Error(`Reserved type name: ${type.name}`);
+  }
+
+  const name = type.name;
+  const values = Object.entries(type.values).map(([key, value]) => `${key} = ${value},`);
+
+  // prettier-ignore
+  return text`
+    export enum ${name} {
+      ${values}
+    }
   `;
 };

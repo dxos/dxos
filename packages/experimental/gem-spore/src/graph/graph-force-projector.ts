@@ -91,7 +91,7 @@ export type ForceOptions = {
 
 export const defaultForceOptions: ForceOptions = {
   link: true,
-  manyBody: true
+  manyBody: true,
 };
 
 export type GraphForceProjectorOptions = ProjectorOptions &
@@ -114,8 +114,8 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
   _layout: GraphLayout<N> = {
     graph: {
       nodes: [],
-      links: []
-    }
+      links: [],
+    },
   };
 
   numChildren = (node) =>
@@ -141,8 +141,8 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             type: 'circle',
             cx: 0,
             cy: 0,
-            r: this.context.scale.model.toValue([10, 1])
-          }
+            r: this.context.scale.model.toValue([10, 1]),
+          },
         ]
       : undefined;
 
@@ -157,13 +157,13 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
           x: (link?.source?.x || 0) + (Math.random() - 0.5) * 30,
-          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30
+          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30,
         });
       }
 
       const children = this.numChildren(node);
       Object.assign(node, {
-        r: valueOrFunction<number>(this.options?.attributes?.radius, (f) => f(node, children), 6)
+        r: valueOrFunction<number>(this.options?.attributes?.radius, (f) => f(node, children), 6),
       });
     });
 
@@ -204,8 +204,8 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
 
             return force;
           },
-          {}
-        )
+          {},
+        ),
       )
 
       .alphaTarget(0)
@@ -223,7 +223,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       let existing: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
       if (!existing) {
         existing = {
-          id: this.options.idAccessor(node)
+          id: this.options.idAccessor(node),
         };
       }
 
@@ -235,14 +235,14 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
     const links = data.links.map((link) => ({
       id: link.id,
       source: nodes.find((n) => n.id === link.source),
-      target: nodes.find((n) => n.id === link.target)
+      target: nodes.find((n) => n.id === link.target),
     }));
 
     this._layout = {
       graph: {
         nodes,
-        links
-      }
+        links,
+      },
     };
 
     return this._layout;
@@ -291,8 +291,8 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             }
             return force;
           },
-          {}
-        )
+          {},
+        ),
       )
 
       // Centering (average center of mass).
@@ -305,7 +305,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             force.strength(config.strength);
           }
           return force;
-        })
+        }),
       )
 
       // Collision
@@ -319,7 +319,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             force.strength(config.strength);
           }
           return force;
-        })
+        }),
       )
 
       // Radial
@@ -332,7 +332,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             force.strength(config.strength);
           }
           return force;
-        })
+        }),
       )
 
       // Positioning
@@ -345,7 +345,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             force.strength(config.strength);
           }
           return force;
-        })
+        }),
       )
       .force(
         'y',
@@ -355,7 +355,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
             force.strength(config.strength);
           }
           return force;
-        })
+        }),
       )
 
       .restart();

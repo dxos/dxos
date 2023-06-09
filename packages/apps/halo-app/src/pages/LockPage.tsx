@@ -5,12 +5,14 @@
 import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { Button, useTranslation, Trans } from '@dxos/aurora';
+import { group, getSize, mx } from '@dxos/aurora-theme';
 import { Client, Space } from '@dxos/client';
-import { AuthChoices } from '@dxos/react-appkit';
+import { AuthChoices, Avatar, Heading } from '@dxos/react-appkit';
 import { useIdentity } from '@dxos/react-client';
-import { Avatar, Button, defaultGroup, Heading, useTranslation, Trans, getSize, mx } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 
+// TODO(burdon): Use @dxos/react-icons.
 import lightThemeLogo from '../assets/icon-halo-black.png';
 import darkThemeLogo from '../assets/icon-halo-white.png';
 
@@ -43,7 +45,15 @@ const LockPage = () => {
             fallbackValue={identity.identityKey.toHex()}
             label={identity.profile?.displayName ?? humanize(identity.identityKey)}
             slots={{
-              root: { className: defaultGroup({ elevation: 'group', spacing: 'p-1', rounding: 'rounded-full' }) }
+              root: {
+                classNames: [group({ elevation: 'group' }), 'p-1 rounded-full'],
+                // NOTE: This is for testing Sentry hookup.
+                onClick: (event) => {
+                  if (event.detail === 3) {
+                    throw new Error('test error');
+                  }
+                },
+              },
             }}
           />
           <Heading>{t('current app name')}</Heading>
@@ -53,7 +63,7 @@ const LockPage = () => {
                 t,
                 i18nKey: 'using halo as message',
                 values: { displayName: identity.profile?.displayName ?? humanize(identity.identityKey.toHex()) },
-                components: { nameStyle: <span className='text-success-600 dark:text-success-300'>_</span> }
+                components: { nameStyle: <span className='text-success-600 dark:text-success-300'>_</span> },
               }}
             />
           </p>
@@ -72,7 +82,7 @@ const LockPage = () => {
             {...{
               onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
               onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
-              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
+              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`),
             }}
           />
         </div>
@@ -80,13 +90,13 @@ const LockPage = () => {
 
       <div role='none' className='text-center px-2 space-b-2'>
         {identity && (
-          <Button className='w-full' variant='primary' onClick={handleUnlock}>
+          <Button classNames='w-full' variant='primary' onClick={handleUnlock}>
             {t('unlock label')}
           </Button>
         )}
         <Button
           variant='outline'
-          className='w-full'
+          classNames='w-full'
           onClick={() => window.open('https://github.com/dxos/dxos', '_blank')}
         >
           {t('generic help label', { ns: 'appkit' })}

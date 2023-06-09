@@ -31,7 +31,7 @@ export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: 
   const swarms = peers.map((peer) => peer.createSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.join(topology?.())));
   await Promise.all(
-    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0))
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0)),
   );
   return swarms;
 };
@@ -43,7 +43,7 @@ export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
   const swarms = peers.map((peer) => peer.getSwarm(topic));
   await Promise.all(swarms.map((swarm) => swarm.leave()));
   await Promise.all(
-    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0))
+    swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0)),
   );
   return swarms;
 };
@@ -53,7 +53,7 @@ export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
  */
 // TODO(burdon): Based on plugin instance.
 // TODO(burdon): Configure to send more messages.
-export const exchangeMessages = async (swarm1: TestSwarmConnection, swarm2: TestSwarmConnection) => {
-  await swarm1.protocol.testConnection(swarm2.peer.peerId);
-  await swarm2.protocol.testConnection(swarm1.peer.peerId);
+export const exchangeMessages = async (swarm1: TestSwarmConnection, swarm2: TestSwarmConnection, message?: string) => {
+  await swarm1.protocol.testConnection(swarm2.peer.peerId, message);
+  await swarm2.protocol.testConnection(swarm1.peer.peerId, message);
 };

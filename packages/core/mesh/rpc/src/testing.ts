@@ -15,14 +15,14 @@ export const createLinkedPorts = (): [RpcPort, RpcPort] => {
     send: (msg) => port2Received?.(msg),
     subscribe: (cb) => {
       port1Received = cb;
-    }
+    },
   };
 
   const port2: RpcPort = {
     send: (msg) => port1Received?.(msg),
     subscribe: (cb) => {
       port2Received = cb;
-    }
+    },
   };
 
   return [port1, port2];

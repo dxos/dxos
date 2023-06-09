@@ -4,8 +4,10 @@
 
 Public API for MESH services.
 
+
 ## Constructors
 ### [constructor(_serviceProvider)]()
+
 
 
 Returns: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
@@ -14,38 +16,27 @@ Arguments:
 
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
+
 ## Properties
+### [networkStatus]()
+Type: <code>MulticastObservable&lt;NetworkStatus&gt;</code>
+
 
 ## Methods
-### [close()]()
+### [toJSON()]()
 
 
-Returns: <code>Promise&lt;void&gt;</code>
 
-Arguments: none
-### [getNetworkStatus()]()
-
-
-Returns: <code>[ResultSet](/api/@dxos/react-client/classes/ResultSet)&lt;NetworkStatus&gt;</code>
+Returns: <code>object</code>
 
 Arguments: none
-### [open()]()
 
+### [updateConfig(swarm)]()
 
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-### [setConnectionState(state)]()
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`state`: <code>ConnectionState</code>
-### [toJSON()]()
-
-
-Returns: <code>object</code>
-
-Arguments: none
+`swarm`: <code>ConnectionState</code>

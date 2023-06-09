@@ -35,6 +35,10 @@ export class ServiceDescriptor<S> {
     return this._service;
   }
 
+  get name(): string {
+    return this._service.fullName.slice(1);
+  }
+
   createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service & S {
     return new Service(backend, this._service, this._schema, encodingOptions) as Service & S;
   }
@@ -102,7 +106,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     private readonly _serviceDefinition: pb.Service,
     private readonly _schema: Schema<any>,
     private readonly _serviceProvider: ServiceProvider<S>,
-    private readonly _encodingOptions?: EncodingOptions
+    private readonly _encodingOptions?: EncodingOptions,
   ) {}
 
   /**
@@ -122,7 +126,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     return {
       value: responseEncoded,
-      type_url: method.resolvedResponseType!.fullName
+      type_url: method.resolvedResponseType!.fullName,
     };
   }
 
@@ -139,14 +143,14 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
     const responseStream = Stream.unwrapPromise(
-      handlerPromise.then((handler) => handler(requestDecoded) as Stream<unknown>)
+      handlerPromise.then((handler) => handler(requestDecoded) as Stream<unknown>),
     );
     return Stream.map(
       responseStream,
       (data): Any => ({
         value: responseCodec.encode(data, this._encodingOptions),
-        type_url: method.resolvedResponseType!.fullName
-      })
+        type_url: method.resolvedResponseType!.fullName,
+      }),
     );
   }
 

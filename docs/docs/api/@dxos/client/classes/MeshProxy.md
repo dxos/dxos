@@ -4,8 +4,10 @@
 
 Public API for MESH services.
 
+
 ## Constructors
-### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L24)
+### [constructor(_serviceProvider)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L33)
+
 
 
 Returns: <code>[MeshProxy](/api/@dxos/client/classes/MeshProxy)</code>
@@ -14,38 +16,27 @@ Arguments:
 
 `_serviceProvider`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
+
 ## Properties
+### [networkStatus](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L43)
+Type: <code>MulticastObservable&lt;NetworkStatus&gt;</code>
+
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L53)
+### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L37)
 
 
-Returns: <code>Promise&lt;void&gt;</code>
 
-Arguments: none
-### [getNetworkStatus()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L28)
-
-
-Returns: <code>[ResultSet](/api/@dxos/client/classes/ResultSet)&lt;NetworkStatus&gt;</code>
+Returns: <code>object</code>
 
 Arguments: none
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L38)
 
+### [updateConfig(swarm)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L47)
 
-Returns: <code>Promise&lt;void&gt;</code>
-
-Arguments: none
-### [setConnectionState(state)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L57)
 
 
 Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`state`: <code>ConnectionState</code>
-### [toJSON()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/mesh-proxy.ts#L32)
-
-
-Returns: <code>object</code>
-
-Arguments: none
+`swarm`: <code>ConnectionState</code>

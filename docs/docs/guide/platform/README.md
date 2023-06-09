@@ -2,6 +2,7 @@
 dir:
   text: Platform Overview
   order: 2.5
+prev: ../getting-started
 ---
 
 # ECHO Database
@@ -80,6 +81,10 @@ This means that when apps request the user's identity (ask to log in), they are 
 
 ::: note
 For Node.js applications, the vault is implemented by an in-process storage engine that persists to files on disk, and is not isolated from the consuming application the way it is in browser.
+:::
+
+::: warning
+The vault relies on worker ES modules and as such is [not yet functional in Firefox](https://developer.mozilla.org/en-US/docs/Web/API/Worker). The feature is currently under development however, currently behind the `about:config` preference `dom.workers.modules.enabled`. The hope and expectation is that this should be enabled by default in the not-too-distant future.
 :::
 
 ## Next steps

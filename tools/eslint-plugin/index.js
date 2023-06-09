@@ -8,6 +8,6 @@ module.exports = {
     recommended: require('./configs/recommended'),
     react: require('./configs/react'),
     test: require('./configs/test'),
-    typescript: require('./configs/typescript')
-  }
+    typescript: require('./configs/typescript'),
+  },
 };

@@ -13,6 +13,11 @@ export type CreateContextParams = {
   onError?: ContextErrorHandler;
 };
 
+/**
+ * Maximum number of dispose callbacks before we start logging warnings.
+ */
+const MAX_SAFE_DISPOSE_CALLBACKS = 100;
+
 @safeInstanceof('Context')
 export class Context {
   private readonly _onError: ContextErrorHandler;
@@ -26,7 +31,7 @@ export class Context {
 
       // Will generate an unhandled rejection.
       throw error;
-    }
+    },
   }: CreateContextParams = {}) {
     this._onError = onError;
   }
@@ -41,6 +46,8 @@ export class Context {
    * Throwing an error inside the callback will result in the error being logged, but not re-thrown.
    *
    * NOTE: Will call the callback immediately if the context is already disposed.
+   *
+   * @returns A function that can be used to remove the callback from the dispose list.
    */
   onDispose(callback: DisposeCallback) {
     if (this._isDisposed) {
@@ -55,6 +62,19 @@ export class Context {
     }
 
     this._disposeCallbacks.push(callback);
+    if (this._disposeCallbacks.length > MAX_SAFE_DISPOSE_CALLBACKS) {
+      log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', {
+        count: this._disposeCallbacks.length,
+        safeThreshold: MAX_SAFE_DISPOSE_CALLBACKS,
+      });
+    }
+
+    return () => {
+      const index = this._disposeCallbacks.indexOf(callback);
+      if (index !== -1) {
+        this._disposeCallbacks.splice(index, 1);
+      }
+    };
   }
 
   /**
@@ -80,7 +100,7 @@ export class Context {
           } catch (error: any) {
             log.catch(error);
           }
-        })()
+        })(),
       );
     }
     this._disposeCallbacks.length = 0;
@@ -95,7 +115,8 @@ export class Context {
    */
   raise(error: Error): void {
     if (this._isDisposed) {
-      log.warn('Error in disposed context', error);
+      // TODO(dmaretskyi): Don't log those.
+      // log.warn('Error in disposed context', error);
       return;
     }
 
@@ -119,7 +140,7 @@ export class Context {
             this.raise(error);
           }
         }
-      }
+      },
     });
     this.onDispose(() => newCtx.dispose());
     return newCtx;

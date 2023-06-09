@@ -8,13 +8,15 @@ import {
   Gear,
   Graph,
   HardDrive,
+  HardDrives,
   IdentificationBadge,
   Key,
   PaperPlane,
   Queue,
+  Receipt,
   Users,
   UsersThree
-} from 'phosphor-react';
+} from '@phosphor-icons/react';
 import { FC } from 'react';
 
 export type SectionItem = {
@@ -38,12 +40,17 @@ export const useSections = (): SectionItem[] => {
           id: '/client/config',
           title: 'Config',
           Icon: Gear
+        },
+        {
+          id: '/client/storage',
+          title: 'Storage',
+          Icon: HardDrives,
+        },
+        {
+          id: '/client/logs',
+          title: 'Logs',
+          Icon: Receipt
         }
-        // {
-        //   id: '/client/storage',
-        //   title: 'Storage',
-        //   Icon: <StorageIcon />
-        // }
       ]
     },
     {

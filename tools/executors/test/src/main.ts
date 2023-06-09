@@ -15,12 +15,14 @@ import { runSetup } from './util';
 export type MochaExecutorOptions = NodeOptions &
   BrowserOptions &
   PlaywrightOptions & {
-    environments?: (TestEnvironment | 'all')[];
+    environments?: (TestEnvironment | 'all' | 'core')[];
     devEnvironments: TestEnvironment[];
     ciEnvironments: TestEnvironment[];
     serve?: string;
     serveOptions?: { [key: string]: string };
     setup?: string;
+    setupOptions?: Record<string, any>;
+    envVariables?: Record<string, string>;
   };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -40,7 +42,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     outputPath: resolve(context.root, options.outputPath),
     resultsPath: resolve(context.root, options.resultsPath),
     coveragePath: resolve(context.root, options.coveragePath),
-    headless: options.stayOpen ? false : options.headless
+    headless: options.stayOpen ? false : options.headless,
+    envVariables: options.envVariables,
   };
 
   const includesBrowserEnv =
@@ -50,7 +53,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
 
   const [skipBrowserTests] = await Promise.all([
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
-    resolvedOptions.setup && runSetup(resolvedOptions.setup)
+    resolvedOptions.setup && runSetup({ script: resolvedOptions.setup, options: resolvedOptions.setupOptions }),
   ]);
 
   let success = false;
@@ -62,7 +65,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     for await (const { success: _, ...executorResult } of await runExecutor(
       { project, target },
       options.serveOptions ?? {},
-      context
+      context,
     )) {
       try {
         success = await runTests({ ...resolvedOptions, skipBrowserTests, executorResult }, context);
@@ -87,6 +90,8 @@ const getEnvironments = (options: MochaExecutorOptions): TestEnvironment[] => {
   if (options.environments) {
     return options.environments.includes('all')
       ? Array.from(TestEnvironments)
+      : options.environments.includes('core')
+      ? ['nodejs', ...Array.from(BrowserTypes)]
       : (options.environments as TestEnvironment[]);
   } else if (process.env.CI) {
     return options.ciEnvironments;

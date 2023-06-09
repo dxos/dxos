@@ -7,5 +7,5 @@ import type { Plugin } from 'vuepress';
 
 export const telemetryPlugin = (): Plugin => ({
   name: 'dxos-telemetry',
-  clientConfigFile: resolve(__dirname, './client-config.ts')
+  clientConfigFile: resolve(__dirname, './client-config.ts'),
 });

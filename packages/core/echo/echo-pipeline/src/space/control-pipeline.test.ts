@@ -30,9 +30,9 @@ describe('space/control-pipeline', () => {
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     });
 
     const createFeed = async () => {
@@ -45,8 +45,7 @@ describe('space/control-pipeline', () => {
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
-      initialTimeframe: new Timeframe(),
-      feedProvider: (key) => feedStore.openFeed(key)
+      feedProvider: (key) => feedStore.openFeed(key),
     });
 
     const admittedFeeds: PublicKey[] = [];
@@ -72,8 +71,8 @@ describe('space/control-pipeline', () => {
       for (const credential of credentials) {
         await controlPipeline.pipeline.writer?.write({
           credential: {
-            credential
-          }
+            credential,
+          },
         });
       }
 
@@ -95,10 +94,10 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL
-            }
-          })
-        }
+              designation: AdmittedFeed.Designation.CONTROL,
+            },
+          }),
+        },
       });
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
@@ -119,10 +118,10 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.DATA
-            }
-          })
-        }
+              designation: AdmittedFeed.Designation.DATA,
+            },
+          }),
+        },
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
@@ -147,12 +146,12 @@ describe('space/control-pipeline', () => {
                 spaceKey,
                 identityKey,
                 deviceKey,
-                designation: AdmittedFeed.Designation.DATA
-              }
-            })
-          }
+                designation: AdmittedFeed.Designation.DATA,
+              },
+            }),
+          },
         },
-        timeframe: new Timeframe()
+        timeframe: new Timeframe(),
       });
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);

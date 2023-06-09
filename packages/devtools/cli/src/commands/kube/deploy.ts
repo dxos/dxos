@@ -15,19 +15,19 @@ export default class Deploy extends BaseCommand {
     ...BaseCommand.flags,
     hostname: Flags.string({
       description: 'Hostname',
-      required: true
+      required: true,
     }),
     provider: Flags.string({
       description: 'Cloud Provider',
-      default: DEFAULT_PROVIDER
+      default: DEFAULT_PROVIDER,
     }),
     accessToken: Flags.string({
-      description: 'Access token for seeding admin identity'
+      description: 'Access token for seeding admin identity',
     }),
     dev: Flags.boolean({
       description: 'Deploy latest version from dev channel',
-      default: false
-    })
+      default: false,
+    }),
   };
 
   async run(): Promise<any> {
@@ -54,7 +54,7 @@ export default class Deploy extends BaseCommand {
         const kube = await provider.deploy({
           hostname,
           dev,
-          accessToken
+          accessToken,
         });
 
         printKubes([kube]);

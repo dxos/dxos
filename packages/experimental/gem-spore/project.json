@@ -46,9 +46,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/gem-spore/.storybook"
-        },
+        "configDir": "packages/experimental/gem-spore/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

@@ -59,7 +59,7 @@ export class GenericStateMachine extends AgentStateMachine {
     // --- CREATE SPACE ---
     else if (command.createSpace) {
       const id = command.createSpace.id;
-      const space = await this.agent.client.echo.createSpace();
+      const space = await this.agent.client.createSpace();
       if (id) {
         this.spaces.set(id, space);
       }
@@ -69,15 +69,19 @@ export class GenericStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey)
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.from(command.createSpaceInvitation.swarmKey),
       });
     }
     // --- ACCEPT SPACE INVITATIOON ---
     else if (command.acceptSpaceInvitation) {
-      await this.agent.client.echo.acceptInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey)
+      await this.agent.client.acceptInvitation({
+        invitationId: PublicKey.random().toHex(),
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.from(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT,
       });
     }
     // --- SYNC CHANNEL: SRV ---
@@ -90,7 +94,7 @@ export class GenericStateMachine extends AgentStateMachine {
     }
     // --- TEAR DOWN ---
     else if (command.tearDown) {
-      await this.agent.client.echo.close();
+      await this.agent.client.destroy();
     }
     //
     else {

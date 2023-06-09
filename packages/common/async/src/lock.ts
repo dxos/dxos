@@ -23,22 +23,35 @@ import { warnAfterTimeout } from '@dxos/debug';
 export class Lock {
   private _queue = Promise.resolve();
 
+  private _tag: string | null = null;
+
+  get tag() {
+    return this._tag;
+  }
+
   /**
    * Acquires the lock.
    * Caller is responsible for releasing the lock using the returned callback.
    * NOTE: Using `executeSynchronized` is preferred over using `acquire` directly.
    * @returns Release callback
    */
-  async acquire(): Promise<() => void> {
+  async acquire(tag?: string): Promise<() => void> {
     const prev = this._queue;
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
     let release!: () => void;
     this._queue = new Promise((resolve) => {
-      release = resolve;
+      release = () => {
+        this._tag = null;
+        resolve();
+      };
     });
 
     await prev;
+
+    if (tag !== undefined) {
+      this._tag = tag;
+    }
     return release;
   }
 
@@ -73,15 +86,14 @@ interface LockableClass {
 export const synchronized = (
   target: any,
   propertyName: string,
-  descriptor: TypedPropertyDescriptor<(...args: any) => any>
+  descriptor: TypedPropertyDescriptor<(...args: any) => any>,
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function (this: any & LockableClass, ...args: any) {
     const lock: Lock = (this[classLockSymbol] ??= new Lock());
 
-    const release = await warnAfterTimeout(500, `lock on ${target.constructor.name}.${propertyName}`, () =>
-      lock.acquire()
-    );
+    const tag = `${target.constructor.name}.${propertyName}`;
+    const release = await warnAfterTimeout(500, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
 
     try {
       return await method.apply(this, args);

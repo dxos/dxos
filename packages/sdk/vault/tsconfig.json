@@ -1,0 +1,55 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist/types",
+    "types": [
+      "node",
+      "sharedworker"
+    ]
+  },
+  "include": [
+    "src",
+    "src/testing",
+    "testing"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../client-services"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../react-shell"
+    }
+  ]
+}

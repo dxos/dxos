@@ -28,7 +28,7 @@ describe('safeInstanceOf', () => {
       DifferentGroup.forEach((C2) => {
         // instanceof should return true if the constructors are from the SameGroup or are the same
         expect(new C1() instanceof C2).to.eq(C1 === C2 || (SameGroup.includes(C1) && SameGroup.includes(C2)));
-      })
+      }),
     );
   });
 

@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/kube-testing",
+  "version": "0.1.46",
+  "private": true,
+  "description": "KUBE Testing.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "scripts": {
+    "run-tests": "node -r ts-node/register ./src/main.ts"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/messaging": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/signal": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
+    "danfojs-node": "^1.1.2",
+    "redis": "^4.6.6",
+    "seedrandom": "^3.0.5"
+  },
+  "devDependencies": {
+    "@types/faker": "^5.5.9",
+    "@types/node": "^18.11.9",
+    "@types/seedrandom": "^3.0.5",
+    "ts-node": "10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

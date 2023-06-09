@@ -15,8 +15,12 @@ import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './process
 export const processors: { [index: string]: LogProcessor } = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
-  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
+  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
 };
+
+const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+
+export const DEFAULT_PROCESSORS = [IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR];
 
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
   if (typeof filter === 'number') {
@@ -32,8 +36,6 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
   });
 };
 
-const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
-
 export const getConfig = (_options?: LogOptions): LogConfig => {
   let options: LogOptions = defaultsDeep(
     {},
@@ -42,20 +44,17 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
       // TODO(burdon): Node only.
       file: process!.env?.LOG_CONFIG,
       filter: process!.env?.LOG_FILTER,
-      processor: process!.env?.LOG_PROCESSOR
-    }
+      processor: process!.env?.LOG_PROCESSOR,
+    },
   );
 
   // TODO(burdon): Verbose option.
   // console.log(JSON.stringify(options, undefined, 2));
   options = defaultsDeep({}, loadOptions(options.file), options);
-
-  const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
-
   return {
     options,
     filters: parseFilter(options.filter ?? LogLevel.INFO),
-    processor: options.processor ? processors[options.processor] : defaultProcessor,
-    prefix: options.prefix
+    processors: options.processor ? [processors[options.processor]] : DEFAULT_PROCESSORS,
+    prefix: options.prefix,
   };
 };

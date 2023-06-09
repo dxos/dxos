@@ -5,28 +5,30 @@
 import React, { useEffect } from 'react';
 import { generatePath, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
 
-import { IFrameClientServicesProxy, PublicKey } from '@dxos/client';
-import { useClient, useSpace, useSpaces } from '@dxos/react-client';
+import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey } from '@dxos/client';
+import { useClient, useIdentity, useSpace, useSpaces } from '@dxos/react-client';
 
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
   const navigate = useNavigate();
   const { spaceKey } = useParams();
+
+  useIdentity({ login: true });
   const client = useClient();
   const space = useSpace(PublicKey.safeFrom(spaceKey ?? ''));
   const spaces = useSpaces();
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       return client.services.joinedSpace.on((spaceKey) =>
-        navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() }))
+        navigate(generatePath('/:spaceKey', { spaceKey: spaceKey.toHex() })),
       );
     }
   }, []);
 
   useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy) {
+    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       client.services.setSpaceProvider(() => space?.key);
     }
   }, [space]);

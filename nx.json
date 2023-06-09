@@ -19,6 +19,7 @@
           "lint",
           "prebuild",
           "prerelease",
+          "storybook-build",
           "test"
         ],
         "parallel": 6,
@@ -70,6 +71,9 @@
           "env": "DX_ENVIRONMENT"
         },
         {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
           "env": "DX_SENTRY_DESTINATION"
         },
         {
@@ -77,6 +81,9 @@
         },
         {
           "env": "DX_VAULT"
+        },
+        {
+          "env": "SENTRY_RELEASE_AUTH_TOKEN"
         }
       ],
       "dependsOn": [
@@ -84,6 +91,12 @@
         //   Some experimental/deprecated projects still depend on build for transpiling.
         "^build",
         "prebuild"
+      ]
+    },
+    "chromatic": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "storybook-build"
       ]
     },
     "compile": {
@@ -94,7 +107,19 @@
       ]
     },
     "e2e": {
-      "inputs": ["default", "^production"],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_LEVEL"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
       "dependsOn": [
         "prebuild",
         "^compile"
@@ -125,7 +150,7 @@
         "prebuild"
       ]
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",
@@ -133,6 +158,13 @@
       ]
     },
     "storybook": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^compile",
+        "prebuild"
+      ]
+    },
+    "storybook-build": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^compile",
@@ -157,12 +189,6 @@
         "prebuild",
         "^compile"
       ]
-    }
-  },
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
     }
   }
 }

@@ -45,9 +45,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/plexus/.storybook"
-        },
+        "configDir": "packages/experimental/plexus/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

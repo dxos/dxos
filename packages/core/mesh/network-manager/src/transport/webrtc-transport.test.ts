@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from 'expect';
 import { Duplex } from 'stream';
 
 import { sleep, TestStream } from '@dxos/async';
@@ -16,20 +15,12 @@ describe('WebRTCTransport', () => {
     const connection = new WebRTCTransport({
       initiator: true,
       stream: new Duplex(),
-      sendSignal: async () => {}
+      sendSignal: async () => {},
     });
 
-    let callsCounter = 0;
-    const closedCb = () => {
-      callsCounter++;
-    };
-
-    connection.closed.once(closedCb);
-    await sleep(10); // Let simple-peer process events.
+    const wait = connection.closed.waitForCount(1);
     await connection.destroy();
-
-    await sleep(10); // Process events.
-    expect(callsCounter).toEqual(1);
+    await wait;
   })
     .timeout(1_000)
     .retries(3);
@@ -42,7 +33,7 @@ describe('WebRTCTransport', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection2.signal(signal);
-      }
+      },
     });
     afterTest(() => connection1.destroy());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -54,7 +45,7 @@ describe('WebRTCTransport', () => {
       sendSignal: async (signal) => {
         await sleep(10);
         await connection1.signal(signal);
-      }
+      },
     });
     afterTest(() => connection2.destroy());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());

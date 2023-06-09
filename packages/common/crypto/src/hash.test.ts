@@ -24,7 +24,7 @@ test('SHA512', () => {
   const hashed = sha512('Test message');
   expect(hashed).to.equal(
     '48418241a4d779508a6b98e623328a68f7f0bf27fd101bb2c89384827bfc0740' +
-      '3fefd5855576f1824fcd7acd233541514240c2bcf0fa9732ebb8f166a7c38bdf'
+      '3fefd5855576f1824fcd7acd233541514240c2bcf0fa9732ebb8f166a7c38bdf',
   );
 });
 

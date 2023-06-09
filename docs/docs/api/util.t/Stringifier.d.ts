@@ -1,10 +1,10 @@
 import { Reflection, ReflectionKind, JSONOutput as Schema } from 'typedoc';
 import { MdTypeStringifier } from './MdTypeStringifier.js';
 import { TypeStringifier } from './TypeStringifier.js';
-export declare type ClassMemberKind = 'constructors' | 'properties' | 'methods';
-export declare type RenderingStyle = 'list' | 'table';
-export declare type Alignment = 'left' | 'center' | 'right';
-export declare type StringifyOptions = {
+export type ClassMemberKind = 'constructors' | 'properties' | 'methods';
+export type RenderingStyle = 'list' | 'table';
+export type Alignment = 'left' | 'center' | 'right';
+export type StringifyOptions = {
     title?: boolean;
     sources?: boolean;
     comment?: boolean;

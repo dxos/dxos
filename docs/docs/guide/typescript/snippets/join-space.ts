@@ -8,13 +8,13 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // friend decodes the invitation code
   const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
   // accept the invitation
-  const { authenticate, invitation } = client.echo.acceptInvitation(receivedInvitation);
+  const invitation = client.acceptInvitation(receivedInvitation);
   // verify it's secure by sending the second factor authCode
-  await authenticate('<authentication code here>');
+  await invitation.authenticate('<authentication code here>');
   // space joined!
-  const space = client.echo.getSpace(invitation?.spaceKey!);
+  const space = client.getSpace(invitation.get().spaceKey!);
 })();

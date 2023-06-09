@@ -2,46 +2,45 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { Event } from '@dxos/async';
+import { ClientServices } from '@dxos/client-protocol';
+import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 import { describe, test } from '@dxos/test';
 
-import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
+import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
-import { ClientServices } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 
 type TestServices = {
-  SpaceInvitationsService: SpaceInvitationsService;
+  SystemService: SystemService;
 };
 
 const serviceBundle = createServiceBundle<TestServices>({
-  SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService')
+  SystemService: schema.getService('dxos.client.services.SystemService'),
 });
 
 describe('service registry', () => {
   test('builds a service registry', async () => {
+    const remoteSource = 'https://remote.source';
     const serviceContext = createServiceContext();
     await serviceContext.open();
-    await serviceContext.createIdentity();
-
-    assert(serviceContext.dataSpaceManager);
-    assert(serviceContext.spaceInvitations);
-    const space = await serviceContext.dataSpaceManager.createSpace();
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
-      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
-        serviceContext.identityManager,
-        () => serviceContext.spaceInvitations!,
-        () => serviceContext.dataSpaceManager!
-      )
+      SystemService: new SystemServiceImpl({
+        config: new Config({ runtime: { client: { remoteSource } } }),
+        getCurrentStatus: () => SystemStatus.ACTIVE,
+        onReset: () => {},
+        onUpdateStatus: () => {},
+        statusUpdate: new Event(),
+      }),
     });
 
     const [proxyPort, serverPort] = createLinkedPorts();
@@ -50,42 +49,23 @@ describe('service registry', () => {
       requested: serviceRegistry.descriptors,
       exposed: {},
       handlers: {},
-      port: proxyPort
+      port: proxyPort,
     });
 
     const server = createProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
       handlers: serviceRegistry.services as ClientServices,
-      port: serverPort
+      port: serverPort,
     });
 
     log('opening...');
     await Promise.all([proxy.open(), server.open()]);
     log('open');
 
-    const done = new Trigger(); // createRpcServer
-
     {
-      const spaceInvitationsProxy = new SpaceInvitationsProxy(proxy.rpc.SpaceInvitationsService);
-      const observer = spaceInvitationsProxy.createInvitation(space.key);
-      observer.subscribe({
-        onConnecting: (invitation: Invitation) => {
-          log('connecting', invitation);
-          void observer.cancel();
-        },
-        onCancelled: () => {
-          done.wake();
-        },
-        onSuccess: (_invitation: Invitation) => {
-          throw new Error('Not not implemented.');
-        },
-        onError: () => {
-          throw new Error('Not not implemented.');
-        }
-      });
+      const config = await proxy.rpc.SystemService.getConfig();
+      expect(config.runtime?.client?.remoteSource).to.equal(remoteSource);
     }
-
-    await done.wait();
 
     // TODO(burdon): Error handling (create tests).
     //  Uncaught Error: Request was terminated because the RPC endpoint is closed.

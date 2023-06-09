@@ -13,32 +13,32 @@ const main = () => {
     .scriptName('ridoculous')
     .option('autoNumber', {
       description: 'Generate auto-numbered headings',
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('baseDir', {
       description: 'Root directory (otherwise assumes relative)',
-      type: 'string'
+      type: 'string',
     })
     .option('dryRun', {
       description: 'Run without writing files',
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('files', {
       description: 'Markdown files glob',
       type: 'string',
-      default: './docs/**/*.md'
+      default: './docs/**/*.md',
     })
     .option('html', {
       description: 'Output HTML',
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('outDir', {
       description: 'Output directory',
       type: 'string',
-      default: './out'
+      default: './out',
     })
     .option('verbose', {
-      type: 'boolean'
+      type: 'boolean',
     })
     .command({
       command: '*',
@@ -50,7 +50,7 @@ const main = () => {
         files,
         html,
         outDir,
-        verbose
+        verbose,
       }: {
         autoNumber: boolean;
         baseDir: string;
@@ -67,9 +67,9 @@ const main = () => {
           files,
           html,
           outDir,
-          verbose
+          verbose,
         });
-      }
+      },
     })
     .help().argv;
 };

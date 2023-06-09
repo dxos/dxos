@@ -53,14 +53,14 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { lo
   if (verbose) {
     log(`Publishing from: ${publishFolder}`);
   }
-  log('Uploading ...');
+  log('Uploading...');
   const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
   verbose && bar.start(total, 0);
 
   const cid = await uploadToIPFS(publishFolder, config, {
     timeout: timeout || '10m',
     pin,
-    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined
+    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
   });
 
   verbose && bar.update(total);

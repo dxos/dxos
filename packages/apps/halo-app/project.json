@@ -16,24 +16,6 @@
         "{options.outputPath}"
       ]
     },
-    "build-storybook": {
-      "configurations": {
-        "ci": {
-          "quiet": true
-        }
-      },
-      "executor": "@nrwl/storybook:build",
-      "options": {
-        "config": {
-          "configFolder": "packages/apps/halo-app/.storybook"
-        },
-        "outputPath": "packages/apps/halo-app/out/dxos/storybook/halo",
-        "uiFramework": "@storybook/react"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "bundle": {
       "executor": "@nrwl/vite:build",
       "options": {
@@ -43,59 +25,13 @@
         "{options.outputPath}"
       ]
     },
-    "compile": {
-      "dependsOn": [
-        "compile-lib",
-        "compile-node"
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "true"
-        ]
-      }
-    },
-    "compile-lib": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/apps/halo-app/src/index.ts"
-        ],
-        "outputPath": "packages/apps/halo-app/dist/lib",
-        "platforms": [
-          "browser"
-        ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
-    "compile-node": {
-      "dependsOn": [
-        "^compile"
-      ],
-      "executor": "@dxos/esbuild:build",
-      "options": {
-        "entryPoints": [
-          "packages/apps/halo-app/src/testing.ts"
-        ],
-        "outputPath": "packages/apps/halo-app/dist/testing",
-        "platforms": [
-          "node"
-        ]
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
+          "android",
           "chromium",
+          "ios",
           "webkit"
         ],
         "coveragePath": "coverage/packages/apps/halo-app",
@@ -121,7 +57,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/halo-app/**/*.{ts,js}"
+          "packages/apps/halo-app/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
@@ -150,9 +86,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/apps/halo-app/.storybook"
-        },
+        "configDir": "packages/apps/halo-app/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

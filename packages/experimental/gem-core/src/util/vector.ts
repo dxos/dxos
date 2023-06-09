@@ -21,7 +21,7 @@ export class Vector {
    */
   static toVertex = ({ x, y }: { x: Num; y: Num }): Vertex => ({
     x: FractionUtil.toFraction(x),
-    y: FractionUtil.toFraction(y)
+    y: FractionUtil.toFraction(y),
   });
 
   /**
@@ -32,7 +32,7 @@ export class Vector {
     x: FractionUtil.toFraction(x),
     y: FractionUtil.toFraction(y),
     width: FractionUtil.toFraction(width),
-    height: FractionUtil.toFraction(height)
+    height: FractionUtil.toFraction(height),
   });
 
   /**

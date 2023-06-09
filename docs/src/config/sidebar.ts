@@ -5,7 +5,7 @@
 import frontMatter from 'front-matter';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SidebarGroupCollapsible, SidebarItem } from 'vuepress';
+import { SidebarItem, SidebarGroup } from 'vuepress';
 
 import { DOCS_PATH } from '../constants';
 
@@ -16,14 +16,14 @@ const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const item = attributes.label
     ? {
         text: attributes.label,
-        link
+        link,
       }
     : link;
 
   return [attributes.position, item];
 };
 
-type SidebarObject = SidebarGroupCollapsible | SidebarItem | string;
+type SidebarObject = SidebarGroup | SidebarItem | string;
 type NumberedSidebarObject = [number, SidebarObject];
 
 export const sidebarSection = (path: string) =>
@@ -47,8 +47,8 @@ export const sidebarSection = (path: string) =>
         {
           text: sectionInfo.label ?? file,
           collapsible: true,
-          children
-        }
+          children,
+        },
       ];
     })
     .filter((section): section is NumberedSidebarObject => !!section)

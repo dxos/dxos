@@ -32,7 +32,7 @@ export const runPlaywright = async (context: ExecutorContext, options: Playwrigh
     'test',
     '--config',
     options.playwrightConfigPath,
-    { '--debug': options.inspect }
+    { '--debug': options.inspect },
   ]);
   const playwright = getBin(context.root, options.coverage ? 'nyc' : 'playwright');
   const exitCode = await execTool(playwright, args, {
@@ -45,8 +45,8 @@ export const runPlaywright = async (context: ExecutorContext, options: Playwrigh
       OUTPUT_PATH: options.outputPath,
       RESULTS_PATH: options.xmlReport ? options.resultsPath : undefined,
       TIMEOUT: String(options.timeout),
-      WATCH: String(options.watch)
-    }
+      WATCH: String(options.watch),
+    },
   });
 
   return exitCode;
@@ -64,6 +64,6 @@ const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boole
     `${outputPath}/.nyc_output`,
     '--report-dir',
     outputPath,
-    'playwright'
+    'playwright',
   ];
 };

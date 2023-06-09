@@ -7,31 +7,35 @@ import { LogProcessor } from './context';
 /**
  * Standard levels.
  */
+// NOTE: Keep aligned with LogLevel in @dxos/protocols.
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3
+  TRACE = 5,
+  DEBUG = 10,
+  INFO = 11,
+  WARN = 12,
+  ERROR = 13,
 }
 
 export const levels: { [index: string]: LogLevel } = {
+  trace: LogLevel.TRACE,
   debug: LogLevel.DEBUG,
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
-  error: LogLevel.ERROR
+  error: LogLevel.ERROR,
 };
 
 export const shortLevelName = {
+  [LogLevel.TRACE]: 'T',
   [LogLevel.DEBUG]: 'D',
   [LogLevel.INFO]: 'I',
   [LogLevel.WARN]: 'W',
-  [LogLevel.ERROR]: 'E'
+  [LogLevel.ERROR]: 'E',
 };
 
 export enum LogProcessorType {
   CONSOLE = 'console',
   BROWSER = 'browser',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 
 /**
@@ -62,6 +66,6 @@ export type LogOptions = {
 export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
-  processor: LogProcessor;
+  processors: LogProcessor[];
   prefix?: string;
 }

@@ -33,7 +33,7 @@ export interface WireProtocol {
  * @returns
  */
 export const createTeleportProtocolFactory = (
-  onConnection: (teleport: Teleport) => Promise<void>
+  onConnection: (teleport: Teleport) => Promise<void>,
 ): WireProtocolProvider => {
   return (params) => {
     const teleport = new Teleport(params);
@@ -45,7 +45,7 @@ export const createTeleportProtocolFactory = (
       },
       destroy: async () => {
         await teleport.close();
-      }
+      },
     };
   };
 };

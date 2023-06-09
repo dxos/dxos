@@ -4,7 +4,8 @@
 
 import { expect } from 'chai';
 
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
+import { createDefaultModelFactory } from '@dxos/client-protocol';
+import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -18,7 +19,7 @@ import { IdentityManager } from './identity-manager';
 describe('identity/identity-manager', () => {
   const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
-    storage = createStorage({ type: StorageType.RAM })
+    storage = createStorage({ type: StorageType.RAM }),
   }: {
     signalContext?: MemorySignalManagerContext;
     storage?: Storage;
@@ -31,27 +32,30 @@ describe('identity/identity-manager', () => {
         root: storage.createDirectory('feeds'),
         signer: keyring,
         hypercore: {
-          valueEncoding
-        }
-      })
+          valueEncoding,
+        },
+      }),
     });
 
     afterTest(() => feedStore.close());
 
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
+      transportFactory: MemoryTransportFactory,
     });
     const spaceManager = new SpaceManager({
       feedStore,
-      networkManager
+      networkManager,
+      modelFactory: createDefaultModelFactory(),
+      metadataStore: new MetadataStore(storage.createDirectory('metadata')),
+      snapshotStore: new SnapshotStore(storage.createDirectory('snapshots')),
     });
     const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
 
     return {
       identityManager,
       feedStore,
-      keyring
+      keyring,
     };
   };
 
@@ -102,10 +106,10 @@ describe('identity/identity-manager', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             identityKey: identity1.identityKey,
-            deviceKey
-          }
-        })
-      }
+            deviceKey,
+          },
+        }),
+      },
     });
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
@@ -115,7 +119,7 @@ describe('identity/identity-manager', () => {
       haloSpaceKey: identity1.haloSpaceKey,
       haloGenesisFeedKey: identity1.haloGenesisFeedKey,
       controlFeedKey,
-      dataFeedKey
+      dataFeedKey,
     });
 
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.

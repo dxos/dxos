@@ -1,0 +1,31 @@
+{
+  "name": "@braneframe/types",
+  "version": "0.1.46",
+  "description": "Protobuf definitions for Braneframe types.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+  },
+  "dependencies": {
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/node-std": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/echo-typegen": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

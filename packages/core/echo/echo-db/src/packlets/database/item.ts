@@ -31,14 +31,11 @@ import { MutationInQueue, MutationQueue } from './ordering';
  * The state of the model is formed from the following components (in order):
  * - The custom snapshot from the initial state.
  * - The snapshot mutations from the initial state.
- * - The mutatation queue.
+ * - The mutation queue.
  * - Optimistic mutations.
  */
 // TODO(dmaretskyi): Rename to ObjectState.
 export class Item<M extends Model = Model> {
-  // Called whenever item processes mutation.
-  protected readonly _onUpdate = new Event<Item<any>>();
-
   private readonly _pendingWrites = new Set<Promise<any>>();
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
@@ -75,8 +72,9 @@ export class Item<M extends Model = Model> {
 
   /**
    * Model state-machine.
+   * @internal
    */
-  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
+  _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   /**
    * Items are constructed by the `Database` object.
@@ -86,7 +84,7 @@ export class Item<M extends Model = Model> {
    */
   constructor(protected readonly _itemManager: ItemManager, private readonly _id: ItemID) {
     this._initialState = {
-      objectId: _id
+      objectId: _id,
     };
   }
 
@@ -128,7 +126,7 @@ export class Item<M extends Model = Model> {
       objectId: this.id,
       parentId: this.parent,
       deleted: this.deleted,
-      type: this.modelMeta?.type
+      type: this.modelMeta?.type,
     })})`;
   }
 
@@ -190,15 +188,11 @@ export class Item<M extends Model = Model> {
     }
   }
 
-  private _emitUpdate() {
-    this._onUpdate.emit(this);
-  }
-
   private _decodeMutation(mutation: EchoObject.Mutation): MutationInQueue<MutationOf<M>> {
     assert(this.modelMeta);
     return {
       mutation,
-      decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value)
+      decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value),
     };
   }
 
@@ -211,13 +205,18 @@ export class Item<M extends Model = Model> {
 
     this._parent = this._initialState.snapshot?.parentId ?? null;
     this._deleted = this._initialState.snapshot?.deleted ?? false;
-    this._stateMachine = this._modelMeta.stateMachine();
 
     // Apply the snapshot.
     if (this._initialState.snapshot) {
+      if (!this._stateMachine) {
+        this._stateMachine = this._modelMeta.stateMachine();
+      }
+
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.model.value);
       this._stateMachine.reset(decoded);
+    } else {
+      this._stateMachine = this._modelMeta.stateMachine();
     }
 
     // Apply mutations passed with the snapshot.
@@ -240,7 +239,6 @@ export class Item<M extends Model = Model> {
     if (this.initialized) {
       log('Optimistic apply', mutation);
       this._applyMutation(queueEntry);
-      this._emitUpdate();
     }
   }
 
@@ -252,9 +250,9 @@ export class Item<M extends Model = Model> {
     const { reorder, apply } = this._mutationQueue.pushConfirmed(queueEntry);
 
     log('process message', {
-      mutation: queueEntry,
+      mutation: queueEntry.mutation.meta,
       reorder,
-      apply
+      apply,
     });
 
     // Perform state updates.
@@ -264,12 +262,10 @@ export class Item<M extends Model = Model> {
         // Order will be broken, reset the state machine and re-apply all mutations.
         log('Reset due to order change');
         this._resetState();
-        this._emitUpdate();
       } else if (apply) {
         log('Apply', { meta: queueEntry.mutation.meta });
         // Mutation can safely be append at the end preserving order.
         this._applyMutation(queueEntry);
-        this._emitUpdate();
       }
     }
 
@@ -286,13 +282,13 @@ export class Item<M extends Model = Model> {
     const commonSnapshot: EchoObject = {
       objectId: this._id,
       genesis: {
-        modelType: this.modelType
+        modelType: this.modelType,
       },
       snapshot: {
         ...this._initialState.snapshot,
         parentId: this.parent ?? undefined,
-        deleted: this.deleted
-      }
+        deleted: this.deleted,
+      },
     };
 
     if (this.initialized && this.modelMeta!.snapshotCodec && typeof this._stateMachine?.snapshot === 'function') {
@@ -301,16 +297,16 @@ export class Item<M extends Model = Model> {
         ...commonSnapshot,
         snapshot: {
           ...commonSnapshot.snapshot,
-          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot())
-        }
+          model: (this.modelMeta!.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine!.snapshot()),
+        },
       };
     } else {
       return {
         ...commonSnapshot,
         mutations: [
           ...(this._initialState.mutations ?? []),
-          ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation)
-        ]
+          ...this._mutationQueue.getConfirmedMutations().map((entry) => entry.mutation),
+        ],
       };
     }
   }
@@ -330,7 +326,7 @@ export class Item<M extends Model = Model> {
 
     this._initialState = snapshot;
     this._initialStateMutations = (this._initialState.mutations ?? []).map((mutation) =>
-      this._decodeMutation(mutation)
+      this._decodeMutation(mutation),
     );
     log('resetToSnapshot', { needsReset, snapshot });
 
@@ -339,16 +335,11 @@ export class Item<M extends Model = Model> {
 
       if (this.initialized) {
         this._resetState();
-        this._emitUpdate();
       }
     }
   }
-
-  /**
-   * Subscribe for updates.
-   * @param listener
-   */
-  subscribe(listener: (entity: this) => void) {
-    return this._onUpdate.on(listener as any);
-  }
 }
+
+export const getStateMachineFromItem = (item: Item) => {
+  return item._stateMachine;
+};

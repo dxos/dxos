@@ -21,10 +21,25 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/debug"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-shell"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ],
   "ts-node": {

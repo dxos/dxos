@@ -28,12 +28,12 @@ export class WebsocketRpcServer<C, S> {
 
   async open() {
     this._server = new WebSocket.Server({
-      ...this._params
+      ...this._params,
     });
     this._server.on('connection', async (socket, request) => {
       log('connection', { request });
       const info: ConnectionInfo = {
-        request
+        request,
       };
       const { onOpen, onClose, ...options } = await this._params.onConnection(info);
       const rpc = createProtoRpcPeer<C, S>({
@@ -50,8 +50,8 @@ export class WebsocketRpcServer<C, S> {
                 cb(msg.data as any);
               }
             };
-          }
-        }
+          },
+        },
       });
       await rpc.open();
       await onOpen?.(rpc);

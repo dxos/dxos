@@ -8,6 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessenger } from '../signal';
@@ -42,7 +43,7 @@ export enum ConnectionState {
   /**
    * Connection closed.
    */
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
 }
 
 /**
@@ -57,6 +58,8 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
+  public _instanceId = PublicKey.random().toHex();
+
   constructor(
     public readonly topic: PublicKey,
     public readonly ownId: PublicKey, // TODO(burdon): peerID?
@@ -65,7 +68,7 @@ export class Connection {
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
-    private readonly _transportFactory: TransportFactory
+    private readonly _transportFactory: TransportFactory,
   ) {}
 
   get state() {
@@ -86,6 +89,8 @@ export class Connection {
   // TODO(burdon): Make async?
   openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
+    log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
@@ -93,19 +98,24 @@ export class Connection {
       this.errors.raise(err);
     });
 
+    // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
+    this._protocol.stream.on('close', () => {
+      log('protocol stream closed');
+      this.close().catch((err) => this.errors.raise(err));
+    });
+
     assert(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) => {
-        await this._signalMessaging.signal({
+      sendSignal: async (signal) =>
+        this._signalMessaging.signal({
           author: this.ownId,
           recipient: this.remoteId,
           sessionId: this.sessionId,
           topic: this.topic,
-          data: { signal }
-        });
-      }
+          data: { signal },
+        }),
     });
 
     this._transport.connected.once(() => {
@@ -129,6 +139,8 @@ export class Connection {
     }
 
     this._bufferedSignals = [];
+
+    log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
   }
 
   @synchronized
@@ -136,7 +148,6 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-
     this._changeState(ConnectionState.CLOSING);
 
     log('closing...', { peerId: this.ownId });
@@ -181,6 +192,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
+    log('stateChanged', { from: this._state, too: state, peerId: this.ownId });
     assert(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);

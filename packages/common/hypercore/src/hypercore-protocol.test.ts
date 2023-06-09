@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
-import faker from 'faker';
 import ProtocolStream from 'hypercore-protocol';
 
 import { latch } from '@dxos/async';
@@ -25,14 +25,14 @@ describe('ProtocolStream', () => {
       onhandshake: () => {
         log('onhandshake', { key: PublicKey.from(stream1.publicKey) });
         setHandshake();
-      }
+      },
     });
 
     const stream2 = new ProtocolStream(false, {
       onhandshake: () => {
         log('onhandshake', { key: PublicKey.from(stream2.publicKey) });
         setHandshake();
-      }
+      },
     });
 
     const [closed, setClosed] = latch({ count: 2 });
@@ -54,14 +54,14 @@ describe('ProtocolStream', () => {
       onhandshake: () => {
         log('onhandshake', { key: PublicKey.from(stream1.publicKey) });
         setHandshake();
-      }
+      },
     });
 
     const stream2 = new ProtocolStream(false, {
       onhandshake: () => {
         log('onhandshake', { key: PublicKey.from(stream2.publicKey) });
         setHandshake();
-      }
+      },
     });
 
     const [streamClosed, setStreamClosed] = latch({ count: 2 });
@@ -95,20 +95,20 @@ describe('ProtocolStream', () => {
       onmessage: (msg: any) => {
         log('onmessage', {
           key: PublicKey.from(stream1.publicKey),
-          msg: msg.toString()
+          msg: msg.toString(),
         });
         incMessage();
-      }
+      },
     });
 
     const extension2 = stream2.registerExtension('stream-extension', {
       onmessage: (msg: any) => {
         log('onmessage', {
           key: PublicKey.from(stream2.publicKey),
-          msg: msg.toString()
+          msg: msg.toString(),
         });
         incMessage();
-      }
+      },
     });
 
     extension1.send(Buffer.from('message-1'));
@@ -129,7 +129,7 @@ describe('ProtocolStream', () => {
 
       core2.on('sync', () => {
         log('sync', {
-          core: { key: PublicKey.from(core2.key), length: core2.length }
+          core: { key: PublicKey.from(core2.key), length: core2.length },
         });
         expect(core2.length).to.eq(numBlocks);
         setSynced();
@@ -213,7 +213,7 @@ describe('ProtocolStream', () => {
     });
 
     Array.from(Array(numBlocks)).forEach((_, i) => {
-      const [core1] = faker.random.arrayElement(feeds);
+      const [core1] = faker.helpers.arrayElement(feeds);
       core1.append(`block-${i}`, () => {});
     });
 

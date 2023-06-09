@@ -10,7 +10,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   const { react, name, dxosUi, pwa, monorepo } = input;
   const imports = new Imports();
   const reactPlugin = imports.lazy('react', '@vitejs/plugin-react', { isDefault: true });
-  const ThemePlugin = imports.lazy('ThemePlugin', '@dxos/react-components/plugin');
+  const ThemePlugin = imports.lazy('ThemePlugin', '@dxos/aurora-theme/plugin');
   const VitePWA = imports.lazy('VitePWA', 'vite-plugin-pwa');
   const resolve = imports.lazy('resolve', monorepo ? 'node:path' : 'path');
 
@@ -19,7 +19,7 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
       force: true,
       include: [
         '@dxos/client',
-        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/react-components'," : ''}
+        ${react ? "'@dxos/react-client', '@dxos/react-appkit', '@dxos/aurora', '@dxos/aurora-theme'," : ''}
         '@dxos/config'
       ],
       esbuildOptions: {
@@ -54,16 +54,17 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
   return /* javascript */ text`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
+  import { VaultPlugin } from '@dxos/vault/vite-plugin';
   ${() => imports.render(defaultOutputFile)}
 
   // https://vitejs.dev/config/
   export default defineConfig({
-    base: '', // Ensures relative path to assets.
     server: {
       host: true
     },
     ${input.monorepo ? monorepoConfig : basicConfig}
     plugins: [
+      VaultPlugin(),
       ConfigPlugin(),
       ${react ? `${reactPlugin()}(),` : ''}
       ${
@@ -72,8 +73,13 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
         content: [
           ${resolve()}(__dirname, './index.html'),
           ${resolve()}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-          ${dxosUi && text`
-          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`}
+          ${
+            dxosUi &&
+            text`
+          ${resolve()}(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
+          ${resolve()}(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
+          ${resolve()}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
+          }
         ]
       }),`
           : ''

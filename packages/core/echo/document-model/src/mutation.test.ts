@@ -15,7 +15,7 @@ describe('Mutations', () => {
     {
       const message = ValueUtil.createMessage(null);
       expect(message).toStrictEqual({
-        null: true
+        null: true,
       });
     }
 
@@ -25,8 +25,8 @@ describe('Mutations', () => {
         data: {
           value1: 1,
           value2: 2.02,
-          value3: 2 ** 33
-        }
+          value3: 2 ** 33,
+        },
       });
 
       expect(message).toStrictEqual({
@@ -35,8 +35,8 @@ describe('Mutations', () => {
             {
               key: 'name',
               value: {
-                string: 'DXOS'
-              }
+                string: 'DXOS',
+              },
             },
             {
               key: 'data',
@@ -46,27 +46,27 @@ describe('Mutations', () => {
                     {
                       key: 'value1',
                       value: {
-                        int: '1'
-                      }
+                        int: '1',
+                      },
                     },
                     {
                       key: 'value2',
                       value: {
-                        float: 2.02
-                      }
+                        float: 2.02,
+                      },
                     },
                     {
                       key: 'value3',
                       value: {
-                        int: (2 ** 33).toString()
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        }
+                        int: (2 ** 33).toString(),
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
       });
     }
   });
@@ -114,8 +114,8 @@ describe('Mutations', () => {
       version: '0.0.1',
       packages: {
         foo: 1,
-        bar: 2
-      }
+        bar: 2,
+      },
     };
 
     const { module } = ValueUtil.applyValue({}, 'module', ValueUtil.createMessage(object));
@@ -127,7 +127,7 @@ describe('Mutations', () => {
       const data = Buffer.from('Hello');
       const message = ValueUtil.createMessage({
         name: 'DXOS',
-        data
+        data,
       });
 
       expect(message).toStrictEqual({
@@ -136,17 +136,17 @@ describe('Mutations', () => {
             {
               key: 'name',
               value: {
-                string: 'DXOS'
-              }
+                string: 'DXOS',
+              },
             },
             {
               key: 'data',
               value: {
-                bytes: Buffer.from('Hello')
-              }
-            }
-          ]
-        }
+                bytes: Buffer.from('Hello'),
+              },
+            },
+          ],
+        },
       });
     }
 
@@ -173,22 +173,22 @@ describe('Mutations', () => {
             operation: ObjectMutation.Operation.SET,
             key: 'name',
             value: {
-              string: 'DXOS'
-            }
+              string: 'DXOS',
+            },
           },
           {
             operation: ObjectMutation.Operation.SET_ADD,
             key: 'labels',
             value: {
-              string: 'red'
-            }
+              string: 'red',
+            },
           },
           {
             operation: ObjectMutation.Operation.SET_ADD,
             key: 'labels',
             value: {
-              string: 'green'
-            }
+              string: 'green',
+            },
           },
           {
             operation: ObjectMutation.Operation.ARRAY_PUSH,
@@ -199,12 +199,12 @@ describe('Mutations', () => {
                   {
                     key: 'email',
                     value: {
-                      string: 'admin@dxos.org'
-                    }
-                  }
-                ]
-              }
-            }
+                      string: 'admin@dxos.org',
+                    },
+                  },
+                ],
+              },
+            },
           },
           {
             operation: ObjectMutation.Operation.ARRAY_PUSH,
@@ -215,15 +215,15 @@ describe('Mutations', () => {
                   {
                     key: 'email',
                     value: {
-                      string: 'info@dxos.org'
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      }
+                      string: 'info@dxos.org',
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
     );
 
     expect(data1).toEqual({
@@ -232,43 +232,43 @@ describe('Mutations', () => {
         labels: ['red', 'green'],
         contact: [
           {
-            email: 'admin@dxos.org'
+            email: 'admin@dxos.org',
           },
           {
-            email: 'info@dxos.org'
-          }
-        ]
-      }
+            email: 'info@dxos.org',
+          },
+        ],
+      },
     });
 
     const data2 = MutationUtil.applyMutationSet(data1, {
       mutations: [
         {
           operation: ObjectMutation.Operation.DELETE,
-          key: 'contact'
+          key: 'contact',
         },
         {
           operation: ObjectMutation.Operation.SET_ADD,
           key: 'labels',
           value: {
-            string: 'green'
-          }
+            string: 'green',
+          },
         },
         {
           operation: ObjectMutation.Operation.SET_DELETE,
           key: 'labels',
           value: {
-            string: 'red'
-          }
-        }
-      ]
+            string: 'red',
+          },
+        },
+      ],
     });
 
     expect(data2).toEqual({
       data: {
         name: 'DXOS',
-        labels: ['green']
-      }
+        labels: ['green'],
+      },
     });
   });
 });

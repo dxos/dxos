@@ -10,32 +10,32 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
   return !react
     ? text`
     import { Client } from '@dxos/client';
-    import { Config, Defaults, Dynamics } from '@dxos/config';
+    import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 
     ${
       dxosUi &&
       text`
-    // this includes css styles from @dxos/react-components
-    // this must precede all other style imports in the app
+    // This includes css styles from @dxos/aurora-theme.
+    // This must precede all other style imports in the app.
     import '@dxosTheme';`
     }
 
     ${
       !dxosUi &&
       text`
-    // include any css files directly
+    // Include any css files directly.
     import './index.css';`
     }
     
     void (async () => {
-      // grab a configuration with defaults and dynamic values from KUBE
-      const config = new Config(await Dynamics(), Defaults());
-      // create a client
+      // Grab a configuration with defaults and dynamic values from KUBE.
+      const config = new Config(await Dynamics(), Local(), Defaults());
+      // Create a client.
       const client = new Client({ config });
-      // initialize before using
+      // Initialize before using.
       await client.initialize();
     
-      // usage:
+      // Usage:
       console.log(client.toJSON());
 
       const element = document.getElementById('output') ?? document.createElement('pre');

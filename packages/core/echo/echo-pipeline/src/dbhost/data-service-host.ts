@@ -5,11 +5,12 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { tagMutationsInBatch, ItemDemuxer, ItemManager } from '@dxos/echo-db';
+import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -20,13 +21,13 @@ import { ComplexMap } from '@dxos/util';
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
   private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
-    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`
+    ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`,
   );
 
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
-    private readonly _writeStream?: FeedWriter<DataMessage>
+    private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
   /**
@@ -36,45 +37,37 @@ export class DataServiceHost {
     return new Stream(({ next, ctx }) => {
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
-
       next({
         batch: {
-          objects
-        }
+          objects,
+        },
       });
 
       // subscribe to mutations
 
-      this._itemDemuxer.mutation.on(ctx, (mutation) => {
-        log('Object update', { mutation });
+      this._itemDemuxer.mutation.on(ctx, (message) => {
+        const { batch, meta } = message;
+        assert(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
+        log('message', { batch, meta });
 
-        const clientTag = this._clientTagMap.get([mutation.meta.feedKey, mutation.meta.seq]);
-        // TODO(dmaretskyi): Memorąąy leak with _clientTagMap not getting cleared.
+        const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
+        // TODO(dmaretskyi): Memory leak with _clientTagMap not getting cleared.
 
         // Assign feed metadata
-        const batch = {
-          objects: [
-            {
-              ...mutation.data,
-              mutations: mutation.data.mutations?.map((m, mutationIdx) => ({
-                ...m,
-                meta: mutation.meta
-              })),
-              meta: mutation.meta
-            }
-          ]
-        };
+        batch.objects?.forEach((object) => {
+          setMetadataOnObject(object, { ...meta });
+        });
 
         // Assign client tag metadata
         if (clientTag) {
-          tagMutationsInBatch(batch, clientTag);
+          tagMutationsInBatch(batch, clientTag, 0);
         }
 
         next({
           clientTag,
-          feedKey: mutation.meta.feedKey,
-          seq: mutation.meta.seq,
-          batch
+          feedKey: message.meta.feedKey,
+          seq: message.meta.seq,
+          batch,
         });
       });
     });
@@ -82,22 +75,35 @@ export class DataServiceHost {
 
   async write(request: WriteRequest): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
-    assert(request.batch.objects?.length === 1, 'Only single object mutations are supported');
 
-    const receipt = await this._writeStream.write({
-      object: {
-        ...request.batch.objects[0],
-        mutations: request.batch.objects[0].mutations?.map((m) => ({
-          ...m,
-          meta: undefined
-        })),
-        meta: undefined
-      }
+    log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
+
+    // Clear client metadata.
+    const message = createDataMessage(request.batch);
+
+    const receipt = await this._writeStream.write(message, {
+      afterWrite: async (receipt) => {
+        // Runs before the mutation is read from the pipeline.
+        if (request.clientTag) {
+          log('tag', { clientTag: request.clientTag, feedKey: receipt.feedKey, seq: receipt.seq });
+          this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
+        }
+      },
     });
-    if (request.clientTag) {
-      this._clientTagMap.set([receipt.feedKey, receipt.seq], request.clientTag);
-    }
 
     return receipt;
   }
 }
+
+const createDataMessage = (batch: EchoObjectBatch) => ({
+  batch: {
+    objects: batch.objects?.map((object) => ({
+      ...object,
+      mutations: object.mutations?.map((mutation) => ({
+        ...mutation,
+        meta: undefined,
+      })),
+      meta: undefined,
+    })),
+  },
+});

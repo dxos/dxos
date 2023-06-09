@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';
@@ -19,7 +19,7 @@ export type TestItem = {
 
 export const defaultCodec: Codec<any> = {
   encode: (obj: any) => Buffer.from(JSON.stringify(obj)),
-  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
+  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString()),
 };
 
 export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncoding(defaultCodec);
@@ -29,7 +29,7 @@ export type TestBlockGenerator<T> = (i: number) => T;
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
   id: faker.datatype.uuid(),
   index: i,
-  value: faker.lorem.sentence()
+  value: faker.lorem.sentence(),
 });
 
 /**
@@ -47,14 +47,14 @@ export class TestGenerator<T extends {}> {
     writer: FeedWriter<T>,
     {
       count = 1,
-      delay
+      delay,
     }: {
       count?: number;
       delay?: {
         min: number;
         max: number;
       };
-    } = {}
+    } = {},
   ) {
     return await Promise.all(
       Array.from(Array(count)).map(async () => {
@@ -65,7 +65,7 @@ export class TestGenerator<T extends {}> {
         }
 
         return receipt;
-      })
+      }),
     );
   }
 }

@@ -4,8 +4,6 @@
 
 export * from './iframe-host-runtime';
 export * from './iframe-proxy-runtime';
-export * from './services';
-export * from './shell-controller';
 export * from './shell-runtime';
 export * from './vault-resource-lock';
 export * from './worker-runtime';

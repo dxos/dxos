@@ -5,11 +5,10 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { appServiceBundle, AppServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-
-import { AppServiceBundle, appServiceBundle, shellServiceBundle } from './services';
 
 export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;
@@ -68,10 +67,10 @@ export class ShellRuntimeImpl implements ShellRuntime {
             this._invitationCode = request.invitationCode;
             this._spaceKey = request.spaceKey;
             this.layoutUpdate.emit(request);
-          }
-        }
+          },
+        },
       },
-      port: this._port
+      port: this._port,
     });
 
     await this._appRpc.open();

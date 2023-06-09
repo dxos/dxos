@@ -11,10 +11,10 @@ module.exports = {
     type: 'layout',
 
     docs: {
-      description: 'enforce copyright header'
+      description: 'enforce copyright header',
     },
     fixable: 'code',
-    schema: []
+    schema: [],
   },
   create: (context) => {
     return {
@@ -23,10 +23,10 @@ module.exports = {
           context.report({
             node,
             message: 'Missing copyright header',
-            fix: (fixer) => fixer.insertTextBefore(node, TEMPLATE)
+            fix: (fixer) => fixer.insertTextBefore(node, TEMPLATE),
           });
         }
-      }
+      },
     };
-  }
+  },
 };

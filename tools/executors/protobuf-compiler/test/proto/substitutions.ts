@@ -12,10 +12,10 @@ export default {
   ...timestampSubstitutions,
   'example.testing.types.Key': {
     encode: (value: MyKey) => ({ data: value.data }),
-    decode: (value: any) => new MyKey(value.data)
+    decode: (value: any) => new MyKey(value.data),
   },
   'example.testing.types.SubstitutedByInterface': {
     encode: (value: MyInterfaceSubstitution) => value,
-    decode: (value: any): MyInterfaceSubstitution => value
-  }
+    decode: (value: any): MyInterfaceSubstitution => value,
+  },
 };

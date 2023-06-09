@@ -10,20 +10,16 @@ import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,
   SubscribeToFeedBlocksRequest,
-  SubscribeToFeedBlocksResponse
+  SubscribeToFeedBlocksResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
 export const subscribeToFeeds = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKeys }: SubscribeToFeedsRequest
+  { feedKeys }: SubscribeToFeedsRequest,
 ) => {
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
-    if (feedKeys?.length === 0) {
-      return;
-    }
-
     const subscriptions = new EventSubscriptions();
     const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
@@ -35,12 +31,16 @@ export const subscribeToFeeds = (
           if (!feedMap.has(feed.key)) {
             feedMap.set(feed.key, feed);
             feed.on('close', update);
-            subscriptions.add(feed.off('close', update));
+            subscriptions.add(() => feed.off('close', update));
           }
         });
 
       next({
-        feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length }))
+        feeds: Array.from(feedMap.values()).map((feed) => ({
+          feedKey: feed.key,
+          length: feed.properties.length,
+          diskUsage: feed.core.byteLength,
+        })),
       });
     };
 
@@ -55,7 +55,7 @@ export const subscribeToFeeds = (
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest
+  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
 ) => {
   return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {
@@ -81,7 +81,7 @@ export const subscribeToFeedBlocks = (
         }
 
         next({
-          blocks: blocks.slice(-maxBlocks)
+          blocks: blocks.slice(-maxBlocks),
         });
 
         await iterator.close();

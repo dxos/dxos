@@ -94,7 +94,7 @@ describe('Lock', () => {
         },
         () => {
           p1Status = 'rejected';
-        }
+        },
       );
 
     const p2 = lock
@@ -107,7 +107,7 @@ describe('Lock', () => {
         },
         () => {
           p2Status = 'rejected';
-        }
+        },
       );
 
     await p1;

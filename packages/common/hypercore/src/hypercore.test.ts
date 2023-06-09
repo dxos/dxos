@@ -20,7 +20,7 @@ type TestItem = {
 
 const codec: Codec<TestItem> = {
   encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
-  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
+  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString()),
 };
 
 const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
@@ -73,7 +73,7 @@ describe('Hypercore', () => {
       expect(core.length).to.eq(0);
       const seq = await append({
         key: 'test-1',
-        value: 'test'
+        value: 'test',
       });
 
       expect(core.length).to.eq(1);

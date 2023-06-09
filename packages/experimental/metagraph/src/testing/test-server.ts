@@ -27,8 +27,8 @@ export class TestServer {
     res.writeHead(200);
     res.end(
       JSON.stringify({
-        [path]: result
-      })
+        [path]: result,
+      }),
     );
   });
 

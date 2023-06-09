@@ -7,18 +7,33 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { raise } from '@dxos/debug';
+import { Space } from '@dxos/client-protocol';
+import { performInvitation } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { Space } from '../proxies';
+import { Client } from '../client';
+import { SpaceProxy } from '../proxies';
 import { syncItems, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
 
 describe('Client services', () => {
+  test('creates client with local host', async () => {
+    const testBuilder = new TestBuilder();
+
+    const servicesProvider = testBuilder.createLocal();
+    await servicesProvider.open();
+    afterTest(() => servicesProvider.close());
+
+    const client = new Client({ services: servicesProvider });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    expect(client.initialized).to.be.true;
+  });
+
   test('creates client with remote server', async () => {
     const testBuilder = new TestBuilder();
 
@@ -103,54 +118,26 @@ describe('Client services', () => {
       await client1.halo.createIdentity();
     }
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
-
-    const authenticationCode = new Trigger<string>();
-
-    {
-      const observable1 = client1.halo.createInvitation();
-      observable1.subscribe({
-        onConnecting: (invitation) => {
-          const observable2 = client2.halo.acceptInvitation(invitation);
-          observable2.subscribe({
-            onAuthenticating: async () => {
-              await observable2.authenticate(await authenticationCode.wait());
-            },
-            onSuccess: (invitation: Invitation) => {
-              // TODO(burdon): No device.
-              // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
-              success2.wake(invitation);
-            },
-            onError: (err: Error) => raise(new Error(err.message))
-          });
-        },
-        onConnected: (invitation: Invitation) => {
-          assert(invitation.authenticationCode);
-          authenticationCode.wake(invitation.authenticationCode);
-        },
-        onSuccess: (invitation: Invitation) => {
-          success1.wake(invitation);
-        },
-        onCancelled: () => raise(new Error()),
-        onTimeout: (err: Error) => raise(new Error(err.message)),
-        onError: (err: Error) => raise(new Error(err.message))
-      });
-    }
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({
+        host: client1.halo,
+        guest: client2.halo,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
+    );
 
     // Check same identity.
-    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-    expect(invitation1.identityKey).not.to.exist;
-    expect(invitation2.identityKey).to.deep.eq(client1.halo.identity!.identityKey);
-    expect(invitation2.identityKey).to.deep.eq(client2.halo.identity!.identityKey);
-    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
-    expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation!.identityKey).not.to.exist;
+    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
+    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
     await waitForExpect(async () => {
-      expect(client1.halo.getDevices()).to.have.lengthOf(2);
-      expect(client2.halo.getDevices()).to.have.lengthOf(2);
+      expect(client1.halo.devices.get()).to.have.lengthOf(2);
+      expect(client2.halo.devices.get()).to.have.lengthOf(2);
     });
   });
 
@@ -176,77 +163,63 @@ describe('Client services', () => {
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
-    log('initialized');
+    log.info('initialized');
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
     afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
-    const success1 = new Trigger<Invitation>();
-    const success2 = new Trigger<Invitation>();
+    const hostSpace = await client1.createSpace();
+    log.info('createSpace', { key: hostSpace.key });
+    const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
+      performInvitation({
+        host: hostSpace as SpaceProxy,
+        guest: client2,
+        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+      }),
+    );
 
-    const space1 = await client1.echo.createSpace();
-    log('createSpace', { key: space1.key });
-    const observable1 = space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
+    expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
-    observable1.subscribe({
-      onConnecting: (invitation) => {
-        const observable2 = client2.echo.acceptInvitation(invitation);
-        observable2.subscribe({
-          onSuccess: (invitation: Invitation) => {
-            success2.wake(invitation);
-          },
-          onError: (err: Error) => raise(err)
-        });
-      },
-      onSuccess: (invitation) => {
-        log('onSuccess');
-        success1.wake(invitation);
-      },
-      onError: (err) => raise(err)
-    });
-
-    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-    expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
-    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
-
-    log('Invitation complete');
+    log.info('Invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const space2 = client2.echo.getSpace(invitation2.spaceKey!);
-      assert(space2);
-      expect(space2).to.exist;
-      trigger.wake(space2);
+      const guestSpace = client2.getSpace(guestInvitation!.spaceKey!);
+      assert(guestSpace);
+      expect(guestSpace).to.exist;
+      trigger.wake(guestSpace);
     });
 
-    const space2 = await trigger.wait();
+    const guestSpace = await trigger.wait();
 
-    for (const space of [space1, space2]) {
+    for (const space of [hostSpace, guestSpace]) {
       await waitForExpect(() => {
-        expect(space.getMembers()).to.deep.equal([
+        expect(space.members.get()).to.deep.equal([
           {
             identity: {
-              identityKey: client1.halo.identity!.identityKey,
+              identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 1'
-              }
+                displayName: 'Peer 1',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
+            presence: SpaceMember.PresenceState.ONLINE,
           },
           {
             identity: {
-              identityKey: client2.halo.identity!.identityKey,
+              identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
-                displayName: 'Peer 2'
-              }
+                displayName: 'Peer 2',
+              },
             },
-            presence: SpaceMember.PresenceState.ONLINE
-          }
+            presence: SpaceMember.PresenceState.ONLINE,
+          },
         ]);
       }, 3_000);
     }
 
-    await syncItems(space1.internal.db, space2.internal.db);
+    await syncItems(hostSpace.internal.db, guestSpace.internal.db);
   });
 });

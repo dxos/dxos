@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
+import { Button } from '@dxos/aurora';
+import { TreeView, TreeViewItem, Fallback } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
-import { Button, TreeView, TreeViewItem } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
@@ -26,7 +27,7 @@ const Footer = () => {
         onClick={async () => {
           await services?.SystemService.reset();
         }}
-        className='w-full'
+        classNames='w-full'
       >
         <span className='mis-2'>Reset Storage</span>
       </Button>
@@ -58,8 +59,10 @@ export const RootContainer = () => {
       </div>
 
       <div className='flex flex-1 flex-col overflow-hidden bg-white'>
-        <ErrorBoundary>
-          <Outlet />
+        <ErrorBoundary key={pathname}>
+          <Suspense fallback={<Fallback message='Loading...' />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </div>
     </div>

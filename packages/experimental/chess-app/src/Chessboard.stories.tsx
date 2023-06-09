@@ -11,7 +11,7 @@ import { Chessboard, ChessModel, ChessPanel, ChessMove } from './Chessboard';
 
 export default {
   component: Chessboard,
-  argTypes: {}
+  argTypes: {},
 };
 
 const Test = () => {
@@ -35,5 +35,5 @@ const Test = () => {
 };
 
 export const Default = {
-  render: () => <Test />
+  render: () => <Test />,
 };

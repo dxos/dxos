@@ -8,5 +8,5 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  const identity = await client.halo.createProfile();
+  const identity = await client.halo.createIdentity();
 })();

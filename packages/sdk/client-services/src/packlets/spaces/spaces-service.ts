@@ -7,22 +7,28 @@ import { Stream } from '@dxos/codec-protobuf';
 import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { encodeError } from '@dxos/protocols';
 import {
+  CreateEpochRequest,
+  PostMessageRequest,
   QueryCredentialsRequest,
   QuerySpacesResponse,
   Space,
   SpaceMember,
   SpacesService,
-  SpaceStatus,
+  SubscribeMessagesRequest,
   UpdateSpaceRequest,
-  WriteCredentialsRequest
+  WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { humanize, Provider } from '@dxos/util';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { Provider, humanize } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
+
+const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
 
 /**
  *
@@ -32,7 +38,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
-    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>
+    private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
   async createSpace(): Promise<Space> {
@@ -52,29 +58,36 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
       const onUpdate = async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values())
-          // Skip spaces without data service available.
-          .filter((space) => this._dataServiceSubscriptions.getDataService(space.key))
-          .map((space) => this._transformSpace(space));
+        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._transformSpace(space));
         log('update', { spaces });
         next({ spaces });
       };
 
-      setTimeout(async () => {
+      scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
+
         const subscriptions = new EventSubscriptions();
+        ctx.onDispose(() => subscriptions.clear());
+
         // TODO(dmaretskyi): Create a pattern for subscribing to a set of objects.
         const subscribeSpaces = () => {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            if (!this._dataServiceSubscriptions.getDataService(space.key)) {
-              // Skip spaces without data service available.
-              continue;
-            }
-
             subscriptions.add(space.stateUpdate.on(ctx, onUpdate));
             subscriptions.add(space.presence.updated.on(ctx, onUpdate));
+
+            // Pipeline progress.
+            space.inner.controlPipeline.state.timeframeUpdate
+              .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+              .on(ctx, onUpdate);
+            if (space.dataPipeline.pipelineState) {
+              subscriptions.add(
+                space.dataPipeline.pipelineState.timeframeUpdate
+                  .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
+                  .on(ctx, onUpdate),
+              );
+            }
           }
         };
 
@@ -82,17 +95,33 @@ export class SpacesServiceImpl implements SpacesService {
           subscribeSpaces();
           void onUpdate();
         });
+        subscribeSpaces();
 
-        ctx.onDispose(() => subscriptions.clear());
-        scheduleTask(ctx, () => {
-          subscribeSpaces();
-          void onUpdate();
-        });
+        void onUpdate();
       });
 
       if (!this._identityManager.identity) {
         next({ spaces: [] });
       }
+    });
+  }
+
+  async postMessage({ spaceKey, channel, message }: PostMessageRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    await space.postMessage(getChannelId(channel), message);
+  }
+
+  subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest) {
+    return new Stream<GossipMessage>(({ ctx, next }) => {
+      scheduleTask(ctx, async () => {
+        const dataSpaceManager = await this._getDataSpaceManager();
+        const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+        const handle = space.listen(getChannelId(channel), (message) => {
+          next(message);
+        });
+        ctx.onDispose(() => handle.unsubscribe());
+      });
     });
   }
 
@@ -103,7 +132,7 @@ export class SpacesServiceImpl implements SpacesService {
       const processor = space.spaceState.registerProcessor({
         process: async (credential) => {
           next(credential);
-        }
+        },
       });
       ctx.onDispose(() => processor.close());
       scheduleTask(ctx, () => processor.open());
@@ -117,23 +146,46 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
+  async createEpoch({ spaceKey }: CreateEpochRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+    await space.createEpoch();
+  }
+
   private _transformSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
-      status: space.isOpen ? SpaceStatus.ACTIVE : SpaceStatus.INACTIVE,
+      state: space.state,
+      error: space.error ? encodeError(space.error) : undefined,
+      pipeline: {
+        controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
+        currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
+        targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
+        totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
+
+        dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
+        currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
+        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
+        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
+      },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
         identity: {
           identityKey: member.key,
           profile: {
-            displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-          }
+            displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+          },
         },
         presence:
           this._identityManager.identity?.identityKey.equals(member.key) ||
           space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE
-      }))
+            : SpaceMember.PresenceState.OFFLINE,
+      })),
+      cache: space.cache,
+      metrics: space.metrics,
     };
   }
 }
+
+// Add `user-channel` prefix to the channel name, so that it doesn't collide with the internal channels.
+const getChannelId = (channel: string): string => `user-channel/${channel}`;

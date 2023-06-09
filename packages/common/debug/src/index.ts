@@ -18,3 +18,4 @@ export * from './throw';
 export * from './timeout-warning';
 export * from './todo';
 export * from './devtools-formatter';
+export * from './equality';

@@ -2,18 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
+import { iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
+import { Config } from '@dxos/config';
+import { RemoteServiceConnectionError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { WebRTCTransportService } from '@dxos/network-manager';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
-import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type IFrameProxyRuntimeParams = {
+  config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
-  workerAppPort: RpcPort;
-  windowAppPort: RpcPort;
   shellPort?: RpcPort;
 };
 
@@ -21,37 +25,20 @@ export type IFrameProxyRuntimeParams = {
  * Manages the client connection to the shared worker.
  */
 export class IFrameProxyRuntime {
+  private readonly _id = String(Math.floor(Math.random() * 1000000));
+  private readonly _configProvider: IFrameProxyRuntimeParams['config'];
   private readonly _systemPort: RpcPort;
-  private readonly _windowAppPort: RpcPort;
-  private readonly _workerAppPort: RpcPort;
   private readonly _shellPort?: RpcPort;
-  private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
-  private readonly _shellRuntime?: ShellRuntimeImpl;
-  private readonly _transportService = new WebRTCTransportService();
+  private _release = new Trigger();
+  private _config!: Config;
+  private _transportService!: BridgeService;
+  private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
+  private _shellRuntime?: ShellRuntimeImpl;
 
-  constructor({ systemPort, workerAppPort, windowAppPort, shellPort }: IFrameProxyRuntimeParams) {
+  constructor({ config, systemPort, shellPort }: IFrameProxyRuntimeParams) {
+    this._configProvider = config;
     this._systemPort = systemPort;
-    this._windowAppPort = windowAppPort;
-    this._workerAppPort = workerAppPort;
     this._shellPort = shellPort;
-
-    this._systemRpc = createProtoRpcPeer({
-      requested: workerServiceBundle,
-      exposed: iframeServiceBundle,
-      handlers: {
-        BridgeService: this._transportService as BridgeService,
-        IframeService: {
-          async heartbeat() {
-            // Ok.
-          }
-        }
-      },
-      port: this._systemPort,
-      timeout: 200
-    });
-
-    this._workerAppPort.subscribe((msg) => this._windowAppPort.send(msg));
-    this._windowAppPort.subscribe((msg) => this._workerAppPort.send(msg));
 
     if (this._shellPort) {
       this._shellRuntime = new ShellRuntimeImpl(this._shellPort);
@@ -63,14 +50,52 @@ export class IFrameProxyRuntime {
   }
 
   async open(origin: string) {
-    await this._systemRpc.open();
-    await this._systemRpc.rpc.WorkerService.start({ origin });
+    this._config = await getAsyncValue(this._configProvider);
+
+    this._transportService = new WebRTCTransportService({
+      iceServers: this._config.get('runtime.services.ice'),
+    });
+
+    this._systemRpc = createProtoRpcPeer({
+      requested: workerServiceBundle,
+      exposed: iframeServiceBundle,
+      handlers: {
+        BridgeService: this._transportService,
+      },
+      port: this._systemPort,
+      timeout: 200,
+    });
+
+    let lockKey: string | undefined;
+    if (typeof navigator !== 'undefined') {
+      lockKey = this._lockKey(origin);
+      this._release = new Trigger();
+      const ready = new Trigger();
+      void navigator.locks.request(lockKey, async () => {
+        ready.wake();
+        await this._release.wait();
+      });
+      await ready.wait();
+    }
+
+    try {
+      await this._systemRpc.open();
+      await this._systemRpc.rpc.WorkerService.start({ origin, lockKey });
+    } catch (err) {
+      log.catch(err);
+      throw new RemoteServiceConnectionError('Failed to connect to worker');
+    }
     await this._shellRuntime?.open();
   }
 
   async close() {
+    this._release.wake();
     await this._shellRuntime?.close();
     await this._systemRpc.rpc.WorkerService.stop();
     await this._systemRpc.close();
+  }
+
+  private _lockKey(origin: string) {
+    return `${origin}-${this._id}`;
   }
 }

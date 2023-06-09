@@ -21,21 +21,21 @@ export const Identity = () => {
         {
           key: 'property',
           color: 'blue',
-          width: 16
+          width: 16,
         },
         {
-          key: 'value'
-        }
+          key: 'value',
+        },
       ]}
       rows={[
         {
           property: 'Identity key',
-          value: truncateKey(identity.identityKey, 4)
+          value: truncateKey(identity.identityKey),
         },
         {
           property: 'Display name',
-          value: identity.profile
-        }
+          value: identity.profile,
+        },
       ]}
     />
   );

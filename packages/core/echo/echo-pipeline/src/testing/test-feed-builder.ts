@@ -13,7 +13,7 @@ import { valueEncoding } from '../common';
 export class TestFeedBuilder extends TestBuilder<FeedMessage> {
   constructor() {
     super({
-      valueEncoding
+      valueEncoding,
     });
   }
 }

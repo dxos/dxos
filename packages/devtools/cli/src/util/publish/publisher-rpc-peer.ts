@@ -51,7 +51,7 @@ export class PublisherRpcPeer {
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        Publisher: schema.getService('dxos.service.publisher.Publisher')
+        Publisher: schema.getService('dxos.service.publisher.Publisher'),
       },
       exposed: {},
       handlers: {},
@@ -69,8 +69,8 @@ export class PublisherRpcPeer {
               cb(msg.data as any);
             }
           };
-        }
-      }
+        },
+      },
     });
   }
 

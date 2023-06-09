@@ -12,8 +12,8 @@ export const FixMemdownPlugin = (): Plugin => ({
   setup: ({ onResolve }) => {
     onResolve({ filter: /^immediate$/ }, (arg) => {
       return {
-        path: require.resolve(arg.path, { paths: [arg.resolveDir] })
+        path: require.resolve(arg.path, { paths: [arg.resolveDir] }),
       };
     });
-  }
+  },
 });

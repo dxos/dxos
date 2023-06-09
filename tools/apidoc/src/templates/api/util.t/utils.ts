@@ -6,7 +6,7 @@ import { JSONOutput as S, ReflectionKind } from 'typedoc';
 
 export const findReflection = (
   root: S.ContainerReflection,
-  predicate: (node: S.Reflection) => boolean
+  predicate: (node: S.Reflection) => boolean,
 ): S.Reflection | null => {
   if (predicate(root)) {
     return root;
@@ -30,7 +30,7 @@ export const reflectionById = (root: S.Reflection, id: number): S.Reflection | n
 export const pathToReflectionId = (
   root: S.ContainerReflection,
   id: number,
-  pathSoFar: S.Reflection[] = []
+  pathSoFar: S.Reflection[] = [],
 ): S.Reflection[] => {
   if (root.id === id) {
     return pathSoFar;
@@ -54,7 +54,7 @@ export const packageOfReflectionId = (root: S.ContainerReflection, id: number) =
 export const reflectionsOfKind = (p: S.ContainerReflection, ...kind: ReflectionKind[]): S.Reflection[] => {
   return [
     ...((Array.isArray(kind) ? kind : [kind]).indexOf(p.kind) >= 0 ? [p] : []),
-    ...(p.children?.length ? p.children.map((c) => reflectionsOfKind(c, ...kind)).flat() : [])
+    ...(p.children?.length ? p.children.map((c) => reflectionsOfKind(c, ...kind)).flat() : []),
   ];
 };
 

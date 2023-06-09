@@ -33,7 +33,7 @@ export type FeedSetIteratorOptions = {
 };
 
 export const defaultFeedSetIteratorOptions = {
-  stallTimeout: 1000
+  stallTimeout: 1000,
 };
 
 /**
@@ -49,7 +49,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
   constructor(
     private readonly _selector: FeedBlockSelector<T>,
-    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions
+    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions,
   ) {
     super();
     assert(_selector);
@@ -64,7 +64,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     return {
       open: this.isOpen,
       running: this.isRunning,
-      indexes: this.indexes
+      indexes: this.indexes,
     };
   }
 
@@ -79,7 +79,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   get indexes(): FeedIndex[] {
     return Array.from(this._feedQueues.values()).map((feedQueue) => ({
       feedKey: feedQueue.feed.key,
-      index: feedQueue.index
+      index: feedQueue.index,
     }));
   }
 
@@ -94,16 +94,19 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._subscriptions.add(
       queue.updated.on(() => {
         this._trigger.wake();
-      })
+      }),
     );
 
-    // TODO(burdon): Open at index?
     await queue.open({
-      start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index
+      start: this.options.start?.find((index) => index.feedKey.equals(feed.key))?.index,
     });
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
+  }
+
+  hasFeed(feedKey: PublicKey) {
+    return this._feedQueues.has(feedKey);
   }
 
   override async _onOpen(): Promise<void> {
@@ -133,6 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
+        log('selected', { idx, blocks });
         if (idx === undefined) {
           // Timeout if all candidates are rejected.
           if (t === undefined) {

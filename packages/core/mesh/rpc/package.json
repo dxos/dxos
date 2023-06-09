@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "A lightweight, transport-agnostic RPC implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "earljs": "~0.1.10",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "publishConfig": {
     "access": "public"

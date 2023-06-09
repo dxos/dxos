@@ -21,12 +21,14 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const presence1 = peer1.createPresence();
-    const protocol1 = peer1.createSpaceProtocol(topic, presence1);
+    const gossip1 = peer1.createGossip();
+    const presence1 = peer1.createPresence(gossip1);
+    const protocol1 = peer1.createSpaceProtocol(topic, gossip1);
 
     const peer2 = await builder.createPeer();
-    const presence2 = peer2.createPresence();
-    const protocol2 = peer2.createSpaceProtocol(topic, presence2);
+    const gossip2 = peer2.createGossip();
+    const presence2 = peer2.createPresence(gossip2);
+    const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
     await protocol1.start();
     afterTest(() => protocol1.stop());
@@ -35,8 +37,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(presence1.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(presence2.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(presence1.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer2.identityKey);
+      expect(presence2.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer1.identityKey);
     }, 1_000);
   });
 
@@ -49,12 +51,12 @@ describe('space/space-protocol', () => {
       swarmIdentity: {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: async () => false // Reject everyone.
+        credentialAuthenticator: async () => false, // Reject everyone.
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
-        transportFactory: MemoryTransportFactory
-      })
+        transportFactory: MemoryTransportFactory,
+      }),
     });
 
     const protocol2 = new SpaceProtocol({
@@ -62,12 +64,12 @@ describe('space/space-protocol', () => {
       swarmIdentity: {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
-        transportFactory: MemoryTransportFactory
-      })
+        transportFactory: MemoryTransportFactory,
+      }),
     });
 
     await protocol1.start();

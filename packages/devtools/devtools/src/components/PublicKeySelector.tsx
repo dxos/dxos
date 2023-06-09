@@ -2,21 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Select } from '@dxos/react-components';
+import { Select } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
   keys: PublicKey[];
   defaultValue?: PublicKey;
   placeholder?: string;
+  Icon?: FC;
   onChange?: (value: PublicKey) => any;
 };
 
 export const PublicKeySelector = (props: PublicKeySelectorProps) => {
-  const { placeholder, keys, defaultValue, onChange } = props;
+  const { placeholder, keys, defaultValue, Icon, onChange } = props;
   return (
     <Select
       defaultValue={defaultValue?.toHex()}
@@ -27,7 +28,15 @@ export const PublicKeySelector = (props: PublicKeySelectorProps) => {
     >
       {removeDuplicates(keys).map((key) => (
         <Select.Item value={key.toHex()} key={key.toHex()}>
-          {humanize(key)} <span className='text-neutral-250'>{key.truncate(4)}</span>
+          <div className='flex items-center gap-2'>
+            {Icon && (
+              <div className='pr-1'>
+                <Icon />
+              </div>
+            )}
+            {humanize(key)}
+            <span className='text-neutral-250'>{key.truncate(4)}</span>
+          </div>
         </Select.Item>
       ))}
     </Select>

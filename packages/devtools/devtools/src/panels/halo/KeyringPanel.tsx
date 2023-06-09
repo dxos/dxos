@@ -3,16 +3,16 @@
 //
 
 import React from 'react';
-import { Column } from 'react-table';
 
 import { PublicKey } from '@dxos/keys';
+import { TableColumn } from '@dxos/mosaic';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 import { MasterTable } from '../../components';
 
-const columns: Column<KeyRecord>[] = [
+const columns: TableColumn<KeyRecord>[] = [
   {
     Header: 'Pub Key',
     width: 120,

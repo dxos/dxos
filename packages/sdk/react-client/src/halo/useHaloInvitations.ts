@@ -11,8 +11,11 @@ export const useHaloInvitations = () => {
   const client = useClient();
   const invitations =
     useSyncExternalStore(
-      (listener) => client.halo.invitationsUpdate.on(() => listener()),
-      () => client.halo.invitations
+      (listener) => {
+        const subscription = client.halo.invitations.subscribe(() => listener());
+        return () => subscription.unsubscribe();
+      },
+      () => client.halo.invitations.get(),
     ) ?? [];
 
   return invitations;
@@ -21,8 +24,8 @@ export const useHaloInvitations = () => {
 export const useHaloInvitation = (invitationId?: string) => {
   const invitations = useHaloInvitations();
   const invitation = useMemo(
-    () => invitations.find(({ invitation }) => invitation?.invitationId === invitationId),
-    [invitations]
+    () => invitations.find((invitation) => invitation.get().invitationId === invitationId),
+    [invitations],
   );
   return useInvitationStatus(invitation);
 };

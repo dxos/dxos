@@ -41,7 +41,7 @@ const DEFAULTS: TelemetryContext = {
   runtime: `node ${process.version}`,
   os: os.platform(),
   arch: os.arch(),
-  ci: process.env.CI === 'true'
+  ci: process.env.CI === 'true',
 };
 
 export const disableTelemetry = async (configDir: string) => {
@@ -58,7 +58,7 @@ export const disableTelemetry = async (configDir: string) => {
   init({ apiKey: TELEMETRY_API_KEY, batchSize: 1, enable: true });
   event({
     installationId,
-    name: 'cli.telemetry.disable'
+    name: 'cli.telemetry.disable',
   });
   await writeFile(path, '', 'utf-8');
 };

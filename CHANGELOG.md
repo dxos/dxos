@@ -1,5 +1,478 @@
 # Changelog
 
+## [0.1.46](https://github.com/dxos/dxos/compare/v0.1.45...v0.1.46) (2023-06-06)
+
+
+### Features
+
+* Add storage version to metadata ([#3344](https://github.com/dxos/dxos/issues/3344)) ([5ba0d13](https://github.com/dxos/dxos/commit/5ba0d13264a30e5131f3d4b2dfd960ae29673daf))
+* Add test that detects breaking changes in protocol ([#3315](https://github.com/dxos/dxos/issues/3315)) ([04bc008](https://github.com/dxos/dxos/commit/04bc00878a0e713384cff056f7bb47d016bf26f6))
+* **aurora-theme:** Autoresolve, other improvements ([#3320](https://github.com/dxos/dxos/issues/3320)) ([7a841c6](https://github.com/dxos/dxos/commit/7a841c62b87d227268b61af8937dd44ba0b7c0c1))
+* **aurora:** TurboSnap ([#3306](https://github.com/dxos/dxos/issues/3306)) ([ece73bd](https://github.com/dxos/dxos/commit/ece73bdf7539253552bc7cde1b393865e77eb283))
+* **client:** include commit hash in client message if available ([#3312](https://github.com/dxos/dxos/issues/3312)) ([dacb462](https://github.com/dxos/dxos/commit/dacb462fbad9461c4953eb2c49f310d347f2e52d))
+* **composer-extension:** Match Github colors ([#3308](https://github.com/dxos/dxos/issues/3308)) ([97d0a4b](https://github.com/dxos/dxos/commit/97d0a4b0f841d06db7ee70055c69a1baf5786bee))
+* Epochs in multiplayer ([#3296](https://github.com/dxos/dxos/issues/3296)) ([8545aa0](https://github.com/dxos/dxos/commit/8545aa03792c5db0e5dec9d300bdc7bf263b5172))
+* Make devtools link congruent with the app env ([#3324](https://github.com/dxos/dxos/issues/3324)) ([30dcb1b](https://github.com/dxos/dxos/commit/30dcb1b844a7ef218c92f05b6bec9545cff0a649))
+* surfaces experiment ([#3148](https://github.com/dxos/dxos/issues/3148)) ([71a2edd](https://github.com/dxos/dxos/commit/71a2edd79f41893cfa7eba5552a235d30b1f8c1c))
+
+
+### Bug Fixes
+
+* **aurora:** Checkbox icon bug, plugin import path ([#3334](https://github.com/dxos/dxos/issues/3334)) ([efe7b64](https://github.com/dxos/dxos/commit/efe7b64915665d1d5a0bd899e01f9cc227f6298a))
+* **aurora:** TurboSnap ([#3309](https://github.com/dxos/dxos/issues/3309)) ([53f6831](https://github.com/dxos/dxos/commit/53f6831faab3cd44645f23411fe30ca02ede04c5))
+* **cli:** Fix path to default config ([#3322](https://github.com/dxos/dxos/issues/3322)) ([7fd45d4](https://github.com/dxos/dxos/commit/7fd45d4a35593acb97c4c441973639a225579c1c))
+* **composer-app:** `ResolverDialog` height ([#3307](https://github.com/dxos/dxos/issues/3307)) ([7fbc2c6](https://github.com/dxos/dxos/commit/7fbc2c6143df83f187b496236e78b32a0e9c139d))
+* **composer-app:** Overscroll ([#3305](https://github.com/dxos/dxos/issues/3305)) ([084f287](https://github.com/dxos/dxos/commit/084f287f8ddcfb6f5196c233c6b42d6cb58faa8b))
+* **composer-app:** Spacing, alignment, color ([#3343](https://github.com/dxos/dxos/issues/3343)) ([9631503](https://github.com/dxos/dxos/commit/9631503555fb0155fe74dfa1993257645ad0ea32))
+* **composer-extension:** Wait for Space & unbind Space option ([#3319](https://github.com/dxos/dxos/issues/3319)) ([2f942ad](https://github.com/dxos/dxos/commit/2f942ad223b55d7d594e8af02b3d021918a0dc24))
+* Fix root inside publish extension script ([#3297](https://github.com/dxos/dxos/issues/3297)) ([6699d3a](https://github.com/dxos/dxos/commit/6699d3a4d38a97e0703d25a3d77334222c792df1))
+* Fix test signal server port collisions ([#3295](https://github.com/dxos/dxos/issues/3295)) ([834389a](https://github.com/dxos/dxos/commit/834389ae9be7cdc2ee8402b7df85047e021a8394))
+* **sentry:** stop logging display names and full identity keys ([#3339](https://github.com/dxos/dxos/issues/3339)) ([75385e3](https://github.com/dxos/dxos/commit/75385e3a9c88273b94d17bab68dda6935bb51680))
+
+## [0.1.45](https://github.com/dxos/dxos/compare/v0.1.44...v0.1.45) (2023-05-30)
+
+
+### Features
+
+* Epoch creation API and devtools features ([#3272](https://github.com/dxos/dxos/issues/3272)) ([5967acd](https://github.com/dxos/dxos/commit/5967acddc4b5ee39267f6471950c3f20ebb18838))
+
+
+### Bug Fixes
+
+* Fix plural in publish extensions script ([#3282](https://github.com/dxos/dxos/issues/3282)) ([45667d4](https://github.com/dxos/dxos/commit/45667d49b53e5c53cf53812741ab4edae16d5bf8))
+* Fix publish extension script ([#3280](https://github.com/dxos/dxos/issues/3280)) ([51332b9](https://github.com/dxos/dxos/commit/51332b97439ddda54676c5a58031226e0ea1bbc4))
+
+## [0.1.44](https://github.com/dxos/dxos/compare/v0.1.43...v0.1.44) (2023-05-29)
+
+
+### Features
+
+* Add ability to open browser apps with CLI identity ([#3271](https://github.com/dxos/dxos/issues/3271)) ([3437853](https://github.com/dxos/dxos/commit/343785344513c02b0e8636ae7c3c6214e58ac53c))
+* **composer-extension:** Add continuous deployment ([#3260](https://github.com/dxos/dxos/issues/3260)) ([a21716a](https://github.com/dxos/dxos/commit/a21716a99f92c4f52a165cead801f093166ca936))
+* **composer-extension:** Rescue stale Github updates  ([#3254](https://github.com/dxos/dxos/issues/3254)) ([1320718](https://github.com/dxos/dxos/commit/13207184543ef546e8bd63c6b2152ebc6d8eeef4))
+* Devtools storage panel ([#3252](https://github.com/dxos/dxos/issues/3252)) ([1b208e4](https://github.com/dxos/dxos/commit/1b208e4b9018bb064d174181864fddbe1677c629))
+* Error state for spaces ([#3262](https://github.com/dxos/dxos/issues/3262)) ([4654662](https://github.com/dxos/dxos/commit/465466237abe042021a5fdd7124df832a9e08169))
+* List snapshots ([#3263](https://github.com/dxos/dxos/issues/3263)) ([11603ad](https://github.com/dxos/dxos/commit/11603ad91b1ab5021cb07c6a3572db7524fe9032))
+
+
+### Bug Fixes
+
+* **client:** grab inivitation codes in iframe service host ([#3273](https://github.com/dxos/dxos/issues/3273)) ([13323c6](https://github.com/dxos/dxos/commit/13323c69d74afd5316a9875555b2d4809e78f1a0))
+* Disable flaky signal tests ([#3261](https://github.com/dxos/dxos/issues/3261)) ([710f33b](https://github.com/dxos/dxos/commit/710f33bea0df359c6e9a0c30b14a970e00732898))
+* Fix CLI invitations flows ([#3251](https://github.com/dxos/dxos/issues/3251)) ([5712000](https://github.com/dxos/dxos/commit/57120003465ce57404cd8f78bebffe351bf32129))
+
+## [0.1.43](https://github.com/dxos/dxos/compare/v0.1.42...v0.1.43) (2023-05-25)
+
+
+### Features
+
+* **composer-app:** GFM Preview ([#3242](https://github.com/dxos/dxos/issues/3242)) ([beaee1a](https://github.com/dxos/dxos/commit/beaee1a0fb60319e1d9658575f24cab8c6670dbc))
+* **composer-app:** Open in Github ([#3244](https://github.com/dxos/dxos/issues/3244)) ([5844710](https://github.com/dxos/dxos/commit/5844710233c6be3ef7fccf1feed2b7ec913709da))
+* observable object ([#3228](https://github.com/dxos/dxos/issues/3228)) ([15f8522](https://github.com/dxos/dxos/commit/15f8522ed5d9bdb218439a6a5ec27d5dc88832a5))
+
+
+### Bug Fixes
+
+* **composer-app,composer-extension:** Improvements ([#3230](https://github.com/dxos/dxos/issues/3230)) ([ceb3aa8](https://github.com/dxos/dxos/commit/ceb3aa823799d76dcb6419848e0bc9cbb389a9c0))
+
+## [0.1.42](https://github.com/dxos/dxos/compare/v0.1.41...v0.1.42) (2023-05-23)
+
+
+### Features
+
+* Add @dxos/kube-testing ([#3147](https://github.com/dxos/dxos/issues/3147)) ([febd8ad](https://github.com/dxos/dxos/commit/febd8ad5458331c04ad63292fb8169c130b8c617))
+* Add ability to cache Properties in metadata ([#3188](https://github.com/dxos/dxos/issues/3188)) ([a80f8aa](https://github.com/dxos/dxos/commit/a80f8aac9a0a183e0d0f03dc64a424b535cc4e80))
+* Add ability to run signal tests inside multiple processes ([#3145](https://github.com/dxos/dxos/issues/3145)) ([0f295bd](https://github.com/dxos/dxos/commit/0f295bd5c3891d6c09dbb51739df2ab8f6f0f0e9))
+* Add CLI test ([#3212](https://github.com/dxos/dxos/issues/3212)) ([e04c00e](https://github.com/dxos/dxos/commit/e04c00e3b56ae85c5b271041f8c39d0ffd592560))
+* Agent sync barrier ([#3174](https://github.com/dxos/dxos/issues/3174)) ([64c937d](https://github.com/dxos/dxos/commit/64c937d65c2ce1d0f732858ac296e2e90a097b92))
+* **aurora,composer-app:** Sidebar improvements ([#3138](https://github.com/dxos/dxos/issues/3138)) ([313545c](https://github.com/dxos/dxos/commit/313545c4f53e72cd878044278499c96c6a53405b))
+* **aurora:** `useSidebar` ([#3141](https://github.com/dxos/dxos/issues/3141)) ([72779b0](https://github.com/dxos/dxos/commit/72779b0214aeaf33bcfb5df8a0ac286135f271b8))
+* Cache IP data inside Telemetry ([#3128](https://github.com/dxos/dxos/issues/3128)) ([e0c89dd](https://github.com/dxos/dxos/commit/e0c89dd46f99b004439198955574d54c6f67d300))
+* CLI daemon ([#3177](https://github.com/dxos/dxos/issues/3177)) ([e3c8e9c](https://github.com/dxos/dxos/commit/e3c8e9c43d816614b66414f5dd2ad7482017168f))
+* **composer-app:** Tab without a11y regression ([#3207](https://github.com/dxos/dxos/issues/3207)) ([f7acc9d](https://github.com/dxos/dxos/commit/f7acc9d91fc9165d2afc328d51d7d95b042a5b3a))
+* **composer-app:** Unhide Spaces ([#3152](https://github.com/dxos/dxos/issues/3152)) ([21f53bd](https://github.com/dxos/dxos/commit/21f53bdf312ba8ec9c1497c10a0a894a9ae32536))
+* **composer-extension:** embed mode ([#3171](https://github.com/dxos/dxos/issues/3171)) ([5cebcea](https://github.com/dxos/dxos/commit/5cebcea7b79cf1d04705ce78fe35167a607ff1a4))
+* **composer-extension:** Open in Composer main app ([#3192](https://github.com/dxos/dxos/issues/3192)) ([5ec551d](https://github.com/dxos/dxos/commit/5ec551d20ef031327c26c72626e0a5c79b38ab21))
+* **composer-extension:** Space picker badging ([#3198](https://github.com/dxos/dxos/issues/3198)) ([db69b55](https://github.com/dxos/dxos/commit/db69b55e5d164a7e771bbb3e3943514c83519c0d))
+* Composite echo filter match ([#3101](https://github.com/dxos/dxos/issues/3101)) ([1a3797d](https://github.com/dxos/dxos/commit/1a3797de710f2c98c2fb544ed622d5080e2a794d))
+* ECHO types (search, meta, etc.) ([#3109](https://github.com/dxos/dxos/issues/3109)) ([26a4b72](https://github.com/dxos/dxos/commit/26a4b729506ecec4fd986661ea2d401ffe46ba19))
+* Epochs ([#3220](https://github.com/dxos/dxos/issues/3220)) ([8cc9762](https://github.com/dxos/dxos/commit/8cc9762b6c4cbd72285142ae0e38c75d063a77e3))
+* Epochs stage 1 ([#3204](https://github.com/dxos/dxos/issues/3204)) ([5b4731a](https://github.com/dxos/dxos/commit/5b4731a170d932b21884930327dd45b773400536))
+* introduce @braneframe/types ([#3137](https://github.com/dxos/dxos/issues/3137)) ([8f00f55](https://github.com/dxos/dxos/commit/8f00f55143f84cdc17f3e7337e4a7df1bf096f33))
+* introduce @braneframe/types ([#3137](https://github.com/dxos/dxos/issues/3137)) ([458aab1](https://github.com/dxos/dxos/commit/458aab156d87499144b150d8d7492aa769291f0c))
+* introduce composer-extension ([#3168](https://github.com/dxos/dxos/issues/3168)) ([9a47db7](https://github.com/dxos/dxos/commit/9a47db722e30c5111cb4b28d517a9bb0de998243))
+* Kai  restructuring ([#3115](https://github.com/dxos/dxos/issues/3115)) ([b2e85e2](https://github.com/dxos/dxos/commit/b2e85e213b884f8399d867a5c0ea9089c15b6bab))
+* Kai delete objects ([#3098](https://github.com/dxos/dxos/issues/3098)) ([e6d1c09](https://github.com/dxos/dxos/commit/e6d1c0976396668f8f15833691d7367c52decbb6))
+* Kai demo features ([#3135](https://github.com/dxos/dxos/issues/3135)) ([8afb2e8](https://github.com/dxos/dxos/commit/8afb2e85e5e5266eeb6ab2644c6e4f0d7ee7e90e))
+* **kube-testing:** Add multiple peers per process ([#3173](https://github.com/dxos/dxos/issues/3173)) ([86d9a43](https://github.com/dxos/dxos/commit/86d9a43d88735e48f2175f3bed5ddfeb09a1ef99))
+
+
+### Bug Fixes
+
+* `ButtonGroup` context ([#3107](https://github.com/dxos/dxos/issues/3107)) ([a24b152](https://github.com/dxos/dxos/commit/a24b152c1ed46898f31a7bfd58a292d9dab6d29f))
+* **appkit,aurora,halo-app:** Group spacing, HALO Avatar label, Avatar status badging ([#3190](https://github.com/dxos/dxos/issues/3190)) ([7235eb5](https://github.com/dxos/dxos/commit/7235eb5194140e26dab2854e3f6f2844538b8369))
+* **apps:** Linting ([#3200](https://github.com/dxos/dxos/issues/3200)) ([e8584c9](https://github.com/dxos/dxos/commit/e8584c94587a31a81cfd44bf543866c6a1b8ee72))
+* Assigning {} to echo object ([#3159](https://github.com/dxos/dxos/issues/3159)) ([27f409a](https://github.com/dxos/dxos/commit/27f409a086d6fb036b71bebec3908183eb27a520))
+* **aurora-theme:** Input theming ([#3123](https://github.com/dxos/dxos/issues/3123)) ([99f9aee](https://github.com/dxos/dxos/commit/99f9aee94517eb08daf3425ee72ab877591ef738))
+* **aurora-types:** Packaging. ([#3108](https://github.com/dxos/dxos/issues/3108)) ([c7909ca](https://github.com/dxos/dxos/commit/c7909ca836cd396e1a0558c8f5a55d32109bf4de))
+* **aurora:** `nx` outputs typo ([#3136](https://github.com/dxos/dxos/issues/3136)) ([fef8473](https://github.com/dxos/dxos/commit/fef847394e28b41c04e5609470cc149b34df36a6))
+* **aurora:** Avatar props ([#3170](https://github.com/dxos/dxos/issues/3170)) ([7830667](https://github.com/dxos/dxos/commit/783066756b869dea68aebd122a970bc8b915d03b))
+* **aurora:** Facilitate better slotting for `Avatar` ([#3160](https://github.com/dxos/dxos/issues/3160)) ([f2b7ac5](https://github.com/dxos/dxos/commit/f2b7ac5f485cdbc5c8fa253e30687ebfbdfadbd8))
+* **aurora:** Make sidebar swipe-to-dismiss optional ([#3178](https://github.com/dxos/dxos/issues/3178)) ([534767f](https://github.com/dxos/dxos/commit/534767fc015be1dc07ba588fa1ffb80c6620db6d))
+* **aurora:** Message refs ([#3183](https://github.com/dxos/dxos/issues/3183)) ([1a7b3c0](https://github.com/dxos/dxos/commit/1a7b3c013fffca52fba3ed46f30545e3c473cfa4))
+* **aurora:** Missing forwarded refs ([#3153](https://github.com/dxos/dxos/issues/3153)) ([fbb7da4](https://github.com/dxos/dxos/commit/fbb7da4b27c4bd0589efe27e2292b56ccc64a842))
+* **aurora:** Reimplement `useSwipeToDismiss` ([#3209](https://github.com/dxos/dxos/issues/3209)) ([5008a5b](https://github.com/dxos/dxos/commit/5008a5becf49887d210f1cfdef3b0cd90428293c))
+* **aurora:** Try fixing Chess by not binding to `document.body` ([#3175](https://github.com/dxos/dxos/issues/3175)) ([14702d5](https://github.com/dxos/dxos/commit/14702d59d4e83ed40f03cb88bb5c1aad93cdca2d))
+* **aurora:** Use `classNames` ([#3199](https://github.com/dxos/dxos/issues/3199)) ([a2903d7](https://github.com/dxos/dxos/commit/a2903d730b184f60daae3c2674000575607a24b0))
+* **client:** add secure context warning ([#3084](https://github.com/dxos/dxos/issues/3084)) ([e757536](https://github.com/dxos/dxos/commit/e7575367afcb57f346192317dec29912bbda673a))
+* **cli:** Fix package.json paths ([#3211](https://github.com/dxos/dxos/issues/3211)) ([8666851](https://github.com/dxos/dxos/commit/86668511d9a47cb3a561800395d6d9b7980a8800))
+* **composer-app,composer-extension:** Polish items ([#3182](https://github.com/dxos/dxos/issues/3182)) ([9e4b344](https://github.com/dxos/dxos/commit/9e4b344f146df1fbb3797fe80ae844211a5dd799))
+* **composer-app:** Aggressive tooltip ([#3155](https://github.com/dxos/dxos/issues/3155)) ([54bf31d](https://github.com/dxos/dxos/commit/54bf31d8645de2b5df19e8e2d813561ed9b4dd2f))
+* **composer-app:** Icons ([#3150](https://github.com/dxos/dxos/issues/3150)) ([8e78cc2](https://github.com/dxos/dxos/commit/8e78cc2e1e701795c6e5c009ab97325b6e9d55ab))
+* **composer-app:** Sidebar & density polish ([#3213](https://github.com/dxos/dxos/issues/3213)) ([5d4f95b](https://github.com/dxos/dxos/commit/5d4f95b5002ff1333e625a08fa2be8a68842f19c))
+* **composer-app:** Spacing & pending space list items ([#3223](https://github.com/dxos/dxos/issues/3223)) ([d7d077b](https://github.com/dxos/dxos/commit/d7d077bc0350c1194d104caa7ea332dfb406c7bd))
+* **composer-extension:** False negatives ([#3191](https://github.com/dxos/dxos/issues/3191)) ([9e63c64](https://github.com/dxos/dxos/commit/9e63c644fe72a161c310903d22d9514073ffcc82))
+* deduplicate signal connections ([#3208](https://github.com/dxos/dxos/issues/3208)) ([0407c46](https://github.com/dxos/dxos/commit/0407c46498ef78d6be2d43b9cd464333ca868332))
+* Filter out samples for signal test ([#3165](https://github.com/dxos/dxos/issues/3165)) ([440c8fd](https://github.com/dxos/dxos/commit/440c8fdf86145be08dfae6b942fc6391c8222ee8))
+* Fix extension publish script ([#3202](https://github.com/dxos/dxos/issues/3202)) ([1b38077](https://github.com/dxos/dxos/commit/1b380770fd8fcc4a94525966a3f9ab99c41e4e9e))
+* Fix new slide bug (and add placeholder to Markdown composer) ([#3133](https://github.com/dxos/dxos/issues/3133)) ([dc0a1d1](https://github.com/dxos/dxos/commit/dc0a1d125cd6abf8825584c30fe6a7d75c34d272))
+* Fix race condition inside `scheduleTaskInterval` ([#3111](https://github.com/dxos/dxos/issues/3111)) ([d41c81f](https://github.com/dxos/dxos/commit/d41c81f5c2ef1d2f84c0e643794cedea9eb725da))
+* **halo-app:** vault service worker ([#3119](https://github.com/dxos/dxos/issues/3119)) ([a99e5c3](https://github.com/dxos/dxos/commit/a99e5c31c96aa289fd3035034bc52594d02ad394))
+* Kai demo slides. ([#3184](https://github.com/dxos/dxos/issues/3184)) ([8b334fe](https://github.com/dxos/dxos/commit/8b334fea32f93b91bbb2fe1d59f56692f95c70df))
+* **kai-framework:** Stories with Sidebar ([#3140](https://github.com/dxos/dxos/issues/3140)) ([daf40a4](https://github.com/dxos/dxos/commit/daf40a40a1ff4eb3bb246efbf9d7c6a90b0f841c))
+* **kube-testing:** Fix empty array stat ([#3167](https://github.com/dxos/dxos/issues/3167)) ([c069043](https://github.com/dxos/dxos/commit/c069043df6324726e76c0266159066f0df6c2462))
+* **messaging:** throw error when not provided ws url ([#3083](https://github.com/dxos/dxos/issues/3083)) ([76e1006](https://github.com/dxos/dxos/commit/76e1006f439efcb3190ef9a6d6e3af3a91866aad))
+* Prettier trailing commas ([#3189](https://github.com/dxos/dxos/issues/3189)) ([066111c](https://github.com/dxos/dxos/commit/066111ce4666b6190d4d71a852fd93e1611a8680))
+* **react-appkit:** `CompoundButton` `tx` call. ([#3118](https://github.com/dxos/dxos/issues/3118)) ([68afbe0](https://github.com/dxos/dxos/commit/68afbe07982493ec36fb1573b3a7bdc4af2797a0))
+* **react-shell:** `JoinPanel` predicate typo ([#3151](https://github.com/dxos/dxos/issues/3151)) ([31c197c](https://github.com/dxos/dxos/commit/31c197cb75c5ae748cd6925e3cbce3dd3c5d67a2))
+* reset vault ([#3180](https://github.com/dxos/dxos/issues/3180)) ([7b42d0d](https://github.com/dxos/dxos/commit/7b42d0d7940345b4168c6884af7faec16b7d6ccc))
+* unify with version in KUBE repo ([#3105](https://github.com/dxos/dxos/issues/3105)) ([e0157a0](https://github.com/dxos/dxos/commit/e0157a0911d9b86afec8bb3bbd47740f0a6c9de7))
+
+## [0.1.41](https://github.com/dxos/dxos/compare/v0.1.40...v0.1.41) (2023-04-24)
+
+
+### Features
+
+* **client-services:** logging service ([#3050](https://github.com/dxos/dxos/issues/3050)) ([57e722e](https://github.com/dxos/dxos/commit/57e722e6a5a30512a5b41ca09e78549e0e4a18d1))
+* **composer-app:** Github issues ([#3066](https://github.com/dxos/dxos/issues/3066)) ([e983c9e](https://github.com/dxos/dxos/commit/e983c9ed5f30a9a7bf02e9b14d841191d9af0d74))
+* **devtools:** logs panel ([#3071](https://github.com/dxos/dxos/issues/3071)) ([15f554f](https://github.com/dxos/dxos/commit/15f554f066a6f70b915f3e60069e9491b6261273))
+* Experimental feature options ([#3079](https://github.com/dxos/dxos/issues/3079)) ([e5703d4](https://github.com/dxos/dxos/commit/e5703d4aa239edb9f61ef296664170904ff84c3b))
+* Factor out space actions ([#3088](https://github.com/dxos/dxos/issues/3088)) ([495313c](https://github.com/dxos/dxos/commit/495313cdf586d99985018595f326ebf317ef1dc7))
+
+
+### Bug Fixes
+
+* Catch errors when loading spaces ([#3070](https://github.com/dxos/dxos/issues/3070)) ([2bb8e00](https://github.com/dxos/dxos/commit/2bb8e00140094df98265e192cccb823c79bddc95))
+* **client-services:** use ice config ([#3034](https://github.com/dxos/dxos/issues/3034)) ([ca6aafc](https://github.com/dxos/dxos/commit/ca6aafc556518d90be74a22fc2ea61fb9fc522a8))
+* **docs:** make tasks demo functional again ([#3072](https://github.com/dxos/dxos/issues/3072)) ([e7998f3](https://github.com/dxos/dxos/commit/e7998f3295d337717b22befd3e0bf1116a33f671))
+* iOS caret & theme color ([#3063](https://github.com/dxos/dxos/issues/3063)) ([4f68b68](https://github.com/dxos/dxos/commit/4f68b68e2d8dcf97c9a39140b36aac4a6bcce3c5))
+* **vault:** start shell in compatibility mode ([#3094](https://github.com/dxos/dxos/issues/3094)) ([e226e3d](https://github.com/dxos/dxos/commit/e226e3de1c51e73b8500c66a9da051b89d021cc0))
+
+## [0.1.40](https://github.com/dxos/dxos/compare/v0.1.39...v0.1.40) (2023-04-18)
+
+
+### Features
+
+* **composer-app:** Pop a toast when an invitation is ready for an auth code. ([#3039](https://github.com/dxos/dxos/issues/3039)) ([a7768f1](https://github.com/dxos/dxos/commit/a7768f11660d88b9b37bdf082e2c622d4ad51527))
+* **config:** Add multiple signal servers in config ([#2984](https://github.com/dxos/dxos/issues/2984)) ([cb57591](https://github.com/dxos/dxos/commit/cb575918a83f497d9e914e4a3d98c4003cb5a1be))
+* Improve devtools UX ([#3052](https://github.com/dxos/dxos/issues/3052)) ([e5b26e1](https://github.com/dxos/dxos/commit/e5b26e1d1238e4f04099ffc25dba99e6821053b8))
+* Polish sketch demo ([#3046](https://github.com/dxos/dxos/issues/3046)) ([ebb595a](https://github.com/dxos/dxos/commit/ebb595a7391ee23cb68071c747390f0b0fce4d47))
+* Role exchange for invitation extension ([#3042](https://github.com/dxos/dxos/issues/3042)) ([2a467c9](https://github.com/dxos/dxos/commit/2a467c94ebf80d07df0e580a543dc304236fbfdd))
+* Sketch kiosk mode ([#3041](https://github.com/dxos/dxos/issues/3041)) ([7888356](https://github.com/dxos/dxos/commit/7888356cdd48d6faa4c5980358d8af9272f63b5e))
+* Stack scrolling ([#3043](https://github.com/dxos/dxos/issues/3043)) ([a76074b](https://github.com/dxos/dxos/commit/a76074b1bc6e8d78acea9bdc57a444574c2af020))
+
+
+### Bug Fixes
+
+* **composer-app,react-ui:** Restore Webkit tests ([#3038](https://github.com/dxos/dxos/issues/3038)) ([96c0dad](https://github.com/dxos/dxos/commit/96c0dad036bb05f4bb7c76245c9ce1fb8d5cd595))
+* Fix webFS reset ([#3036](https://github.com/dxos/dxos/issues/3036)) ([e21b3b6](https://github.com/dxos/dxos/commit/e21b3b6c393a78bc6cb2a7d6dcdb0a320ff6a932))
+* hello signaling config ([#3061](https://github.com/dxos/dxos/issues/3061)) ([d4d0c5b](https://github.com/dxos/dxos/commit/d4d0c5b0f34664548eca5f73518dfa1eff0341c7))
+* Proper error message when crypto is not available ([#3049](https://github.com/dxos/dxos/issues/3049)) ([521db38](https://github.com/dxos/dxos/commit/521db38ef47244446df4139ae88113809aab8711))
+* proper path to copy proto files ([#3054](https://github.com/dxos/dxos/issues/3054)) ([5cf74c7](https://github.com/dxos/dxos/commit/5cf74c76b9796e4b4a61af19f746b8b84285cfd7))
+* proto sync action ([#2926](https://github.com/dxos/dxos/issues/2926)) ([74fba84](https://github.com/dxos/dxos/commit/74fba84aea160209436b1f67c3a194cfa645ae56))
+* Sketch frame ([#3040](https://github.com/dxos/dxos/issues/3040)) ([75fb41e](https://github.com/dxos/dxos/commit/75fb41e40dee01ddec1bd8f592ea651769b01b00))
+
+## [0.1.39](https://github.com/dxos/dxos/compare/v0.1.38...v0.1.39) (2023-04-14)
+
+
+### Bug Fixes
+
+* Ice config ([#3032](https://github.com/dxos/dxos/issues/3032)) ([d59204f](https://github.com/dxos/dxos/commit/d59204ff2fea165aeea933151cfb30df96df8df9))
+
+## [0.1.38](https://github.com/dxos/dxos/compare/v0.1.37...v0.1.38) (2023-04-14)
+
+
+### Features
+
+* **react-client,composer-app:** Show loading spaces as disabled ([#3025](https://github.com/dxos/dxos/issues/3025)) ([d7fd21c](https://github.com/dxos/dxos/commit/d7fd21c6fcec472ceb943532b9647031b68bb465))
+
+
+### Bug Fixes
+
+* conform READMEs with discord ([#3027](https://github.com/dxos/dxos/issues/3027)) ([d6f700d](https://github.com/dxos/dxos/commit/d6f700d3e0fb3aff073d3ad55f8c0c49ae1890e1))
+* more custom readme gotchas ([#3028](https://github.com/dxos/dxos/issues/3028)) ([53471f8](https://github.com/dxos/dxos/commit/53471f85c45223ea24b126c3a18f06fe14a49d05))
+* **react-ui:** Sidebar no longer blocks pointer events ([#3023](https://github.com/dxos/dxos/issues/3023)) ([4d6feca](https://github.com/dxos/dxos/commit/4d6fecafa004ace69228184dd302578225d939fc))
+
+## [0.1.37](https://github.com/dxos/dxos/compare/v0.1.36...v0.1.37) (2023-04-13)
+
+
+### Features
+
+* Add ability to use multiple signal servers ([#2933](https://github.com/dxos/dxos/issues/2933)) ([78ddbb3](https://github.com/dxos/dxos/commit/78ddbb36037898ae98ea43880a521b2840e9a57e))
+* Add Invitations tracing ([#2986](https://github.com/dxos/dxos/issues/2986)) ([68f7fbb](https://github.com/dxos/dxos/commit/68f7fbb3143c3235a4f2d8d30fcbfd24f1071e68))
+* Add self-check on ipfs upload ([#2981](https://github.com/dxos/dxos/issues/2981)) ([a1644a1](https://github.com/dxos/dxos/commit/a1644a19b8ba4973229fd9c7f5125364b7b067b3))
+* **bare-template:** add error boundary ([#3011](https://github.com/dxos/dxos/issues/3011)) ([e183047](https://github.com/dxos/dxos/commit/e183047ac9bdbdaa831e2fada6e969fee7b3940d))
+* **composer-app:** Import to / export from Space ([#2958](https://github.com/dxos/dxos/issues/2958)) ([774c3dd](https://github.com/dxos/dxos/commit/774c3dde5ceecfdaddcf8fd6ef416997132d1c98))
+* **composer-app:** Restore from backup ([#3015](https://github.com/dxos/dxos/issues/3015)) ([4397591](https://github.com/dxos/dxos/commit/439759172508ac8bf03e3aa445632605fda87a24))
+* Metagraph panel ([#2973](https://github.com/dxos/dxos/issues/2973)) ([72f5465](https://github.com/dxos/dxos/commit/72f54654d7b1cd06295197142d4c05b91b62be4e))
+* **react-appkit:** Affordance for resetting client ([#2994](https://github.com/dxos/dxos/issues/2994)) ([a6bfbf7](https://github.com/dxos/dxos/commit/a6bfbf75d14d9e45c7c19b2a090acf98c418b732))
+* **react-appkit:** Persistent status & warning in corner, invokes Reset dialog ([#2998](https://github.com/dxos/dxos/issues/2998)) ([3e4f5db](https://github.com/dxos/dxos/commit/3e4f5dbae437e5eb995cb0000a568a74a68df63d))
+* **vault:** reset storage ([#3009](https://github.com/dxos/dxos/issues/3009)) ([41339e7](https://github.com/dxos/dxos/commit/41339e7dcdabf200c23936f581ca49df3e8031a1))
+
+
+### Bug Fixes
+
+* add chrome extension devtools to docs ([#2990](https://github.com/dxos/dxos/issues/2990)) ([677bac1](https://github.com/dxos/dxos/commit/677bac1b1eb59f3a61ca75e0919d21c2c219b90d))
+* **client:** revert default remote source ([#2988](https://github.com/dxos/dxos/issues/2988)) ([85ed9c5](https://github.com/dxos/dxos/commit/85ed9c5f2c5fdc9848a3d306bbfed74626f0a3bd))
+* **composer-app:** Typo ([#2996](https://github.com/dxos/dxos/issues/2996)) ([da61156](https://github.com/dxos/dxos/commit/da61156fe697f290da0d45b5e7ebc2650f5e9097))
+* Debounce & storage issues ([#2969](https://github.com/dxos/dxos/issues/2969)) ([d0d6f5c](https://github.com/dxos/dxos/commit/d0d6f5c11588a637696c86653490a53334f90895))
+* do not show non localhost urls after publish for now ([#2989](https://github.com/dxos/dxos/issues/2989)) ([5779b24](https://github.com/dxos/dxos/commit/5779b24f166c0ba3b436bc9c92e39d1727f0c54d))
+* docs cleanup and improved printing of urls in publish cmd to sup… ([#3010](https://github.com/dxos/dxos/issues/3010)) ([f87f7ef](https://github.com/dxos/dxos/commit/f87f7ef3289a36b325409e7d655813dcdacd46b6))
+* Mute invitation warnings ([#2985](https://github.com/dxos/dxos/issues/2985)) ([d480c8c](https://github.com/dxos/dxos/commit/d480c8c197c9417e5c2bb5e4b740d94404f7aef2))
+* print urls after publish command better ([#2997](https://github.com/dxos/dxos/issues/2997)) ([a2d78db](https://github.com/dxos/dxos/commit/a2d78db326adce50cd4e37906b1678154a6082cb))
+* **react-ui:** don't swallow create identity error ([#2987](https://github.com/dxos/dxos/issues/2987)) ([76b77c0](https://github.com/dxos/dxos/commit/76b77c0da5eff57fb5b2a931aeeb29748af5df73))
+* remove incomplete doc ([#3008](https://github.com/dxos/dxos/issues/3008)) ([f13a6f7](https://github.com/dxos/dxos/commit/f13a6f7fe0927c4de04f989bfb0a5bdf0d41094b))
+* **rpc-tunnel:** add exception for ios chrome ([#3004](https://github.com/dxos/dxos/issues/3004)) ([4c1a43f](https://github.com/dxos/dxos/commit/4c1a43ff51dde57f3a9984e9f759017bc6c83e5a))
+* **vault:** avoid double-initializing client services ([#3007](https://github.com/dxos/dxos/issues/3007)) ([f22d90c](https://github.com/dxos/dxos/commit/f22d90c952f1655c5410b26ab6a9d89d9eee4164))
+
+## [0.1.36](https://github.com/dxos/dxos/compare/v0.1.35...v0.1.36) (2023-04-07)
+
+
+### Features
+
+* Add "Open with Kai" link to github ([#2920](https://github.com/dxos/dxos/issues/2920)) ([30ff4ec](https://github.com/dxos/dxos/commit/30ff4ec11a47341c139ab321e89ec09acdd7f08c))
+* Add exponential back-off in NetworkManager ([#2881](https://github.com/dxos/dxos/issues/2881)) ([484d498](https://github.com/dxos/dxos/commit/484d498e5e1fcb42bf4eed72be1ca4e97f07690d))
+* add non pwa kai to ops guide ([#2924](https://github.com/dxos/dxos/issues/2924)) ([5838d86](https://github.com/dxos/dxos/commit/5838d865d2cb5a6b61d7309dfc885f83a6b27f40))
+* Add web file storage ([#2915](https://github.com/dxos/dxos/issues/2915)) ([f24b876](https://github.com/dxos/dxos/commit/f24b876a112d42411bca3282647a0bb33becb8fe))
+* Bot config fix. ([#2903](https://github.com/dxos/dxos/issues/2903)) ([661676b](https://github.com/dxos/dxos/commit/661676b71e50fdd7cc497c1b3ff1b0cd2b5720a9))
+* **composer-app:** Basic e2e tests ([#2923](https://github.com/dxos/dxos/issues/2923)) ([8823a8f](https://github.com/dxos/dxos/commit/8823a8fa023b5e29db9e68fa19afbaa5784b2f11))
+* Fix bot config. ([#2904](https://github.com/dxos/dxos/issues/2904)) ([f39316c](https://github.com/dxos/dxos/commit/f39316c0573873ca82967ca3a134ecb6000f301e))
+* Mosaic blocks ([#2902](https://github.com/dxos/dxos/issues/2902)) ([3793aa1](https://github.com/dxos/dxos/commit/3793aa14f26a680b57ce419a694b9f4285545474))
+* ops guide ([#2911](https://github.com/dxos/dxos/issues/2911)) ([0bff0ef](https://github.com/dxos/dxos/commit/0bff0ef4a1475829d80233303f1cf11d8195ce2c))
+* Protonmail bot config ([#2906](https://github.com/dxos/dxos/issues/2906)) ([5dfe113](https://github.com/dxos/dxos/commit/5dfe11387646c49102b7fd5ce796b6264ddc1384))
+* Protonmail configuration ([#2908](https://github.com/dxos/dxos/issues/2908)) ([2768962](https://github.com/dxos/dxos/commit/2768962d229e92ada7cfcdd2b4b4bdd545ee09db))
+* Storage bench ([#2907](https://github.com/dxos/dxos/issues/2907)) ([1b81d4c](https://github.com/dxos/dxos/commit/1b81d4c7b7c0c3c50b0ca82c02f3414707be6dd4))
+* **vault:** create package ([#2830](https://github.com/dxos/dxos/issues/2830)) ([4dd7ad0](https://github.com/dxos/dxos/commit/4dd7ad024d5ed2ac72e3499091e6d2e6ca039814))
+
+
+### Bug Fixes
+
+* Composer presence themeMode ([#2948](https://github.com/dxos/dxos/issues/2948)) ([bc82300](https://github.com/dxos/dxos/commit/bc82300a168e0fe5f0cdcfddde017ec9aecbc97f))
+* **composer-app:** Markdown Composer size & spacing ([#2900](https://github.com/dxos/dxos/issues/2900)) ([a7f0f08](https://github.com/dxos/dxos/commit/a7f0f081fccf258c1148a3d15d08387bf4f65c6e))
+* **composer-app:** Restore Composer e2e tests ([#2949](https://github.com/dxos/dxos/issues/2949)) ([1c602f9](https://github.com/dxos/dxos/commit/1c602f93de5e30b838159d28207981506e77c2a7))
+* Disable snapshots ([#2880](https://github.com/dxos/dxos/issues/2880)) ([8226e1b](https://github.com/dxos/dxos/commit/8226e1b082014899b64142193a99197a3818bdcb))
+* Fix NetworkManager traces ([#2885](https://github.com/dxos/dxos/issues/2885)) ([3f4093b](https://github.com/dxos/dxos/commit/3f4093bb6133a5f2a2cb7f065bd3b6d5e3e5d56a))
+* Fix port in browser Test runner and storage related tests ([#2928](https://github.com/dxos/dxos/issues/2928)) ([77fdcbc](https://github.com/dxos/dxos/commit/77fdcbc5ee3a4ef4097aa3896c2eb6d806336a72))
+* **hello-template:** remove useOrCreateFirstSpace ([#2935](https://github.com/dxos/dxos/issues/2935)) ([a86f3a6](https://github.com/dxos/dxos/commit/a86f3a6aca1140ef99577800377735f1b4861f7b))
+* Keep a constant max signal reconnect timeout ([#2913](https://github.com/dxos/dxos/issues/2913)) ([df76e91](https://github.com/dxos/dxos/commit/df76e913b58547ba67f7cc67941cb8752e4cfb00))
+* Metadata corruption  ([#2951](https://github.com/dxos/dxos/issues/2951)) ([be39b7a](https://github.com/dxos/dxos/commit/be39b7ad7127045571620102e908a7a903ebe8c7))
+* Race condition in batch confirmation ([#2941](https://github.com/dxos/dxos/issues/2941)) ([1690937](https://github.com/dxos/dxos/commit/1690937ca3d8d86f2fc35a6a1902a14ed0afb9b4))
+* Race conditions in the data pipeline ([#2952](https://github.com/dxos/dxos/issues/2952)) ([f000373](https://github.com/dxos/dxos/commit/f000373221d161c373a8edf0eb4ca0f5c2df46c4))
+* **ras:** Fix storage fall back in browser ([#2943](https://github.com/dxos/dxos/issues/2943)) ([9b703b8](https://github.com/dxos/dxos/commit/9b703b85705418736d82357944934bf1eaf44db3))
+* **react-appkit:** client fallback pending state ([#2942](https://github.com/dxos/dxos/issues/2942)) ([12cf025](https://github.com/dxos/dxos/commit/12cf0258ee6e9177f0e71edb12c4c2e7f6781003))
+* **react-client,composer-app:** Shell & Toast z-indexes. ([#2959](https://github.com/dxos/dxos/issues/2959)) ([c852bc6](https://github.com/dxos/dxos/commit/c852bc69bd61db1e4406b2d2eb905479c173e3e7))
+* **react-client:** don't attempt login if invitation is in progress ([#2944](https://github.com/dxos/dxos/issues/2944)) ([adf89f6](https://github.com/dxos/dxos/commit/adf89f6196a8d04fb5ada856a30e65352513665d))
+* **react-composer:** Composer zebra ([#2901](https://github.com/dxos/dxos/issues/2901)) ([0eb756e](https://github.com/dxos/dxos/commit/0eb756ea62210a1bd31548204bb2c9df7b034af2))
+* **react-ui:** initial layout for in memory shell runtime ([#2947](https://github.com/dxos/dxos/issues/2947)) ([a096b9d](https://github.com/dxos/dxos/commit/a096b9d2a07fb8db2a725828d2c2c73251ebe924))
+* Skip all Composer e2e tests ([#2931](https://github.com/dxos/dxos/issues/2931)) ([54a2c65](https://github.com/dxos/dxos/commit/54a2c65b7e33176f1d3900b3e400123510b1e5af))
+* sync protos between dxos and kube repos ([#2898](https://github.com/dxos/dxos/issues/2898)) ([253f495](https://github.com/dxos/dxos/commit/253f495fd9b0fdf738f137a2c0328e07c97104b5))
+* template use with vault ([#2962](https://github.com/dxos/dxos/issues/2962)) ([ec62a58](https://github.com/dxos/dxos/commit/ec62a583c4dcf6779c9b7389b32ed3798ecba7d4))
+
+## [0.1.35](https://github.com/dxos/dxos/compare/v0.1.34...v0.1.35) (2023-03-30)
+
+
+### Bug Fixes
+
+* **devtools-extension:** Disable sentry release plugin ([#2894](https://github.com/dxos/dxos/issues/2894)) ([3d278cf](https://github.com/dxos/dxos/commit/3d278cf168facfdeb95fb3eaf72c53509f48f405))
+
+## [0.1.34](https://github.com/dxos/dxos/compare/v0.1.33...v0.1.34) (2023-03-30)
+
+
+### Bug Fixes
+
+* Add SENTRY_RELEASE_AUTH_TOKEN env for bundle target ([#2887](https://github.com/dxos/dxos/issues/2887)) ([85c2cd0](https://github.com/dxos/dxos/commit/85c2cd0222b4a3586992ca56d3c6e14bfcd4f513))
+* Fix trace cyclic JSON error ([#2884](https://github.com/dxos/dxos/issues/2884)) ([0f6df47](https://github.com/dxos/dxos/commit/0f6df474f0235392137a15e98fa53f4954c60812))
+
+## [0.1.33](https://github.com/dxos/dxos/compare/v0.1.32...v0.1.33) (2023-03-30)
+
+
+### Features
+
+* **composer-app:** Layout adjustments ([#2870](https://github.com/dxos/dxos/issues/2870)) ([3184290](https://github.com/dxos/dxos/commit/3184290f7885d687576e7932aeb009ce984d69ba))
+* **composer-app:** Restore file I/O for Markdown ([#2869](https://github.com/dxos/dxos/issues/2869)) ([a00cf6d](https://github.com/dxos/dxos/commit/a00cf6dca7f224fd8993e5841717068ba4b24983))
+* Docs and SVG logos, logotypes. ([#2867](https://github.com/dxos/dxos/issues/2867)) ([1f5332d](https://github.com/dxos/dxos/commit/1f5332d318f7978bd743565404a2069bcf29e1d6))
+* Invitation list emoji ([#2864](https://github.com/dxos/dxos/issues/2864)) ([5620fb6](https://github.com/dxos/dxos/commit/5620fb6a0bf3d07881182c325aa0e31414f22770))
+* **react-composer:** Allow Markdown theme to be extended ([#2866](https://github.com/dxos/dxos/issues/2866)) ([159a7d4](https://github.com/dxos/dxos/commit/159a7d40fc3f796931b249cdd2d7a512912252e5))
+* **react-ui:** Copy-Copied button ([#2865](https://github.com/dxos/dxos/issues/2865)) ([b54fe55](https://github.com/dxos/dxos/commit/b54fe55dba1a2a91df765f4593b638b976c8dbb7))
+* Tracing into sentry ([#2837](https://github.com/dxos/dxos/issues/2837)) ([3efe7bf](https://github.com/dxos/dxos/commit/3efe7bfc744711daf8cde1024a7190f724c3d02d))
+
+
+### Bug Fixes
+
+* dx halo credential ([#2753](https://github.com/dxos/dxos/issues/2753)) ([fd22d93](https://github.com/dxos/dxos/commit/fd22d93941742881993e31e29ed9004baddb91e4))
+* Race condition adding data feeds ([#2863](https://github.com/dxos/dxos/issues/2863)) ([21c7c65](https://github.com/dxos/dxos/commit/21c7c65a79fdc3c84cae8c798a631d51006b38fe))
+
+## [0.1.32](https://github.com/dxos/dxos/compare/v0.1.31...v0.1.32) (2023-03-28)
+
+
+### Features
+
+* Add Sentry telemetry in Devtools-Extension ([#2749](https://github.com/dxos/dxos/issues/2749)) ([dfd7644](https://github.com/dxos/dxos/commit/dfd76443cd5913d4e01a8fe1be4b0e232b098402))
+* Basic console layout. ([#2790](https://github.com/dxos/dxos/issues/2790)) ([0840ede](https://github.com/dxos/dxos/commit/0840ede76680f830437e4d3a182c70b3f2280956))
+* bot manager ([#2776](https://github.com/dxos/dxos/issues/2776)) ([9942bf8](https://github.com/dxos/dxos/commit/9942bf85449f6fefdc87b88e8a75aac4065aea06))
+* Chat ([#2808](https://github.com/dxos/dxos/issues/2808)) ([51860ee](https://github.com/dxos/dxos/commit/51860ee2efe2223fc3bff7d4edb1c3d5a447d434))
+* Chat experiment ([#2811](https://github.com/dxos/dxos/issues/2811)) ([c265777](https://github.com/dxos/dxos/commit/c265777ebd366b6d8b3288e1f5c781c76588b3bc))
+* Console config table ([#2833](https://github.com/dxos/dxos/issues/2833)) ([c22bd54](https://github.com/dxos/dxos/commit/c22bd54e2ce3f97e33b8da4969586b44a605e3d6))
+* Don't block UI on pending spaces ([#2829](https://github.com/dxos/dxos/issues/2829)) ([40b8f65](https://github.com/dxos/dxos/commit/40b8f6580366e198a33a54ef717d84a2561ae674))
+* DXOS React icons ([#2832](https://github.com/dxos/dxos/issues/2832)) ([6cf9cf7](https://github.com/dxos/dxos/commit/6cf9cf74b33ed115e8292a80907864e9e8ef9756))
+* Join CLI as device in HALO ([#2795](https://github.com/dxos/dxos/issues/2795)) ([526cd38](https://github.com/dxos/dxos/commit/526cd3882d7d56e1c6199119731d0fc8eb7fce7e))
+* Kai vchat demo ([#2820](https://github.com/dxos/dxos/issues/2820)) ([09407df](https://github.com/dxos/dxos/commit/09407df524f414a23e76125ad7bad4dca723875a))
+* KUBE console ([#2784](https://github.com/dxos/dxos/issues/2784)) ([2a50620](https://github.com/dxos/dxos/commit/2a50620ffd1025a0c300051020ddc348d4c37960))
+* Make Identity wait for timeframe from invitation ([#2813](https://github.com/dxos/dxos/issues/2813)) ([17478da](https://github.com/dxos/dxos/commit/17478daa36ee58aaf9edde5724bb0b8e65e005c8))
+* Only re-create state-machines when needed ([#2787](https://github.com/dxos/dxos/issues/2787)) ([dedd920](https://github.com/dxos/dxos/commit/dedd9205d29d5f24e4f56eb0589bfd4e3c99a6b5))
+* Rename Document to TypedObject (and Expando) ([#2789](https://github.com/dxos/dxos/issues/2789)) ([0d2f2d5](https://github.com/dxos/dxos/commit/0d2f2d5030c02902ccc8d2bc6a2b5a6dcba4acea))
+* Represent inactive spaces in the API ([#2800](https://github.com/dxos/dxos/issues/2800)) ([df33c30](https://github.com/dxos/dxos/commit/df33c30681bd60aba7767ee9399e0353f0a8a578))
+* Restructuring frame registration ([#2778](https://github.com/dxos/dxos/issues/2778)) ([eae4a04](https://github.com/dxos/dxos/commit/eae4a04d5871713730baf2b956e7680aa3308cad))
+* Retryable space intialization ([#2839](https://github.com/dxos/dxos/issues/2839)) ([34d5a40](https://github.com/dxos/dxos/commit/34d5a408e09e8f453f1fd9d3f9fa8b684407da3d))
+* tasks app template ([#2848](https://github.com/dxos/dxos/issues/2848)) ([86f5578](https://github.com/dxos/dxos/commit/86f5578d65834ad31a9312c38b323d80033fad06))
+* Update menubar UX. ([#2781](https://github.com/dxos/dxos/issues/2781)) ([04dcfac](https://github.com/dxos/dxos/commit/04dcfac4806fde416e51dae3a4f02433c10cf6fb))
+
+
+### Bug Fixes
+
+* **client-services:** break infinite loop when starting with resource lock ([#2815](https://github.com/dxos/dxos/issues/2815)) ([f6818ed](https://github.com/dxos/dxos/commit/f6818edbf7491ed49ba3de1ed030f7253e35dc77))
+* **client:** stop over-emitting spaces changes ([#2841](https://github.com/dxos/dxos/issues/2841)) ([70f9b77](https://github.com/dxos/dxos/commit/70f9b775ab15bd048027186fd4d04289678d8230))
+* Console styles ([#2785](https://github.com/dxos/dxos/issues/2785)) ([77dfb46](https://github.com/dxos/dxos/commit/77dfb46b01b6c80227168eafc69c7c7ed7248160))
+* Don’t redeem an invitation code on initial transitions (for now) ([#2842](https://github.com/dxos/dxos/issues/2842)) ([8115a8b](https://github.com/dxos/dxos/commit/8115a8bead7fde318e9fe5775b5aad6d790ad848))
+* **halo-app:** sentry in shared worker ([#2799](https://github.com/dxos/dxos/issues/2799)) ([64e2fff](https://github.com/dxos/dxos/commit/64e2fff44911dbdfcf7ad4234d8442c63aa48eed))
+* include docs snippets in build ([#2809](https://github.com/dxos/dxos/issues/2809)) ([d07133e](https://github.com/dxos/dxos/commit/d07133e282c11bb8ea974b017500b939cf584b34))
+* Kai focus on member at inactive frame ([#2773](https://github.com/dxos/dxos/issues/2773)) ([8581573](https://github.com/dxos/dxos/commit/8581573fcaf603b2402d6e94c4997597153ef2d2))
+* **kai:** dev mode identity creation ([#2810](https://github.com/dxos/dxos/issues/2810)) ([a4cb2f3](https://github.com/dxos/dxos/commit/a4cb2f3a1e1faae285245aa841537a58f660d4ab))
+* **kube-console:** publishing ([#2807](https://github.com/dxos/dxos/issues/2807)) ([f904dba](https://github.com/dxos/dxos/commit/f904dbad222cd57a6158184fda93715a9a475f1d))
+* **react-composer:** Cursor color & size ([#2775](https://github.com/dxos/dxos/issues/2775)) ([73086c9](https://github.com/dxos/dxos/commit/73086c90225085a06998b94459e83c20cd1f9ada))
+* **react-composer:** re-rendering and selection reset issues ([#2805](https://github.com/dxos/dxos/issues/2805)) ([eac005e](https://github.com/dxos/dxos/commit/eac005ee33f53090960711b368b25e66b48d2c7a))
+* **react-composer:** scope cursors to a specific object ([#2816](https://github.com/dxos/dxos/issues/2816)) ([27dde1c](https://github.com/dxos/dxos/commit/27dde1c5f1055358b4135c98f6f96112bb21221c))
+* **react-ui:** Don’t autofocus in iOS on elements that result from a remote event ([#2856](https://github.com/dxos/dxos/issues/2856)) ([d7dc55f](https://github.com/dxos/dxos/commit/d7dc55f3460ccee3769b9467a903e64955b2150a))
+* **react-ui:** Join flow tests ([#2831](https://github.com/dxos/dxos/issues/2831)) ([eae65ea](https://github.com/dxos/dxos/commit/eae65ea76e381912ed0497b65c06ff094585f855))
+* **react-ui:** Usability, tests, and QOL increment ([#2844](https://github.com/dxos/dxos/issues/2844)) ([be99680](https://github.com/dxos/dxos/commit/be99680ff595b4da38692eca241b2e15fd74edd5))
+* Restore missing root `fontFamily` rule. ([#2814](https://github.com/dxos/dxos/issues/2814)) ([47cd260](https://github.com/dxos/dxos/commit/47cd2609b17343dab1e6b6a1d5f9e71d19f31e34))
+* Rework space init sequence ([#2794](https://github.com/dxos/dxos/issues/2794)) ([6897a42](https://github.com/dxos/dxos/commit/6897a42add51931a2cc201905f05019aac5265a2))
+* tailwind ~3.2.7 ([#2860](https://github.com/dxos/dxos/issues/2860)) ([d5a920c](https://github.com/dxos/dxos/commit/d5a920cf3cdf1d7d628f387327db8b670d2cbd33))
+* upgrade to Vite 4.2.0 ([#2752](https://github.com/dxos/dxos/issues/2752)) ([04e7478](https://github.com/dxos/dxos/commit/04e7478904f5255908a905184162b71e491e732a))
+
+## [0.1.31](https://github.com/dxos/dxos/compare/v0.1.30...v0.1.31) (2023-03-17)
+
+
+### Features
+
+* Fix bot resolvers ([#2769](https://github.com/dxos/dxos/issues/2769)) ([31c1eb5](https://github.com/dxos/dxos/commit/31c1eb5f14abf5d1629df267da0e99d8ef28f56b))
+* More colors ([#2768](https://github.com/dxos/dxos/issues/2768)) ([92e0224](https://github.com/dxos/dxos/commit/92e0224d26091e469586bef7ffc21dae82c6be72))
+
+
+### Bug Fixes
+
+* **quickstart:** align template with sdk updates ([#2770](https://github.com/dxos/dxos/issues/2770)) ([7a83678](https://github.com/dxos/dxos/commit/7a836788e8833d9f9bde30fa9d14529400cdb263))
+
+## [0.1.30](https://github.com/dxos/dxos/compare/v0.1.29...v0.1.30) (2023-03-17)
+
+
+### Features
+
+* Add Enums in ECHO typegen ([#2733](https://github.com/dxos/dxos/issues/2733)) ([6ff1c2c](https://github.com/dxos/dxos/commit/6ff1c2c2dd4538e90bfa7916856003c1d6b0d1e8))
+* Add Error event listener ([#2731](https://github.com/dxos/dxos/issues/2731)) ([59df848](https://github.com/dxos/dxos/commit/59df8482b8c0099bf587b5c4f975b0d71a89853f))
+* Add general purpose pub/sub API in Space ([#2681](https://github.com/dxos/dxos/issues/2681)) ([1a9425c](https://github.com/dxos/dxos/commit/1a9425cd6773c4a4123412eb7e85f9ecf70ce65f))
+* Add member focusing in Kai ([#2766](https://github.com/dxos/dxos/issues/2766)) ([64177cf](https://github.com/dxos/dxos/commit/64177cf30633e47861f12432baa0ac29679e8a4b))
+* Add options to fields in EchoSchema ([#2760](https://github.com/dxos/dxos/issues/2760)) ([b29d308](https://github.com/dxos/dxos/commit/b29d308ff131750e2c9eafe503316358c7471c6e))
+* Batches ([#2704](https://github.com/dxos/dxos/issues/2704)) ([3ec6ca8](https://github.com/dxos/dxos/commit/3ec6ca831cd4f7a6906d7adde2ed6eb13f0aaabf))
+* Bots running on KUBE ([#2732](https://github.com/dxos/dxos/issues/2732)) ([7a58386](https://github.com/dxos/dxos/commit/7a5838668f8f00af197a480d6a269b74999ca504))
+* **composer-app:** Github integration ([#2728](https://github.com/dxos/dxos/issues/2728)) ([181aa6c](https://github.com/dxos/dxos/commit/181aa6caa65349c564cf756defe4d04699618ef2))
+* **composer-app:** Sidebar increment ([#2699](https://github.com/dxos/dxos/issues/2699)) ([8b002ba](https://github.com/dxos/dxos/commit/8b002ba09e1d306ed678b673c82a13719754440f))
+* Emit events only after entire batch was processed ([#2751](https://github.com/dxos/dxos/issues/2751)) ([0dfa6b5](https://github.com/dxos/dxos/commit/0dfa6b5543509de312a06b59ac761bb54edaa92a))
+* Fix presentations ([#2757](https://github.com/dxos/dxos/issues/2757)) ([a251547](https://github.com/dxos/dxos/commit/a251547e674f34fcd73be63f9d2bc0658d792588))
+* kai presenter update ([#2743](https://github.com/dxos/dxos/issues/2743)) ([4784cb0](https://github.com/dxos/dxos/commit/4784cb01707d45049ca4e86d3e5685473fca6767))
+* Minor UX fix. ([#2729](https://github.com/dxos/dxos/issues/2729)) ([750bcf6](https://github.com/dxos/dxos/commit/750bcf6916a353501f4d5b6a54f0a1662e4d7d92))
+* Mosaic cards. ([#2712](https://github.com/dxos/dxos/issues/2712)) ([e7d6ff4](https://github.com/dxos/dxos/commit/e7d6ff472793175580e1c11ab8289acc7585be0e))
+* Presenter fix. ([#2758](https://github.com/dxos/dxos/issues/2758)) ([d2d2daf](https://github.com/dxos/dxos/commit/d2d2daf12166e9ea32e462cd456dc959522c9887))
+* Presenter refactoring. ([#2754](https://github.com/dxos/dxos/issues/2754)) ([72a6af7](https://github.com/dxos/dxos/commit/72a6af77068f2c74a932638b9963935e4556c538))
+* **react-composer:** cursors ([#2715](https://github.com/dxos/dxos/issues/2715)) ([ca2383c](https://github.com/dxos/dxos/commit/ca2383ca3e95c47adbc21e41ba28591dfb285aa4))
+* **react-composer:** plain text support ([#2696](https://github.com/dxos/dxos/issues/2696)) ([73bbaef](https://github.com/dxos/dxos/commit/73bbaef9aaaac102692703d0b935aa134670816a))
+* **react-composer:** StackEdit-style Markdown editing experience ([#2713](https://github.com/dxos/dxos/issues/2713)) ([ca8634d](https://github.com/dxos/dxos/commit/ca8634d4d7b7b6b7217d3ee04ee91f6982728bc9))
+* Search frame ([#2661](https://github.com/dxos/dxos/issues/2661)) ([667efee](https://github.com/dxos/dxos/commit/667efee51c7e87f1d17728d2dfc2e344b4a93e16))
+* Simplify list/cards. ([#2725](https://github.com/dxos/dxos/issues/2725)) ([56d20a7](https://github.com/dxos/dxos/commit/56d20a7f2cee09481af603dac29235ef8228be45))
+* Switch presenter orientation ([#2746](https://github.com/dxos/dxos/issues/2746)) ([79499d5](https://github.com/dxos/dxos/commit/79499d59440bc72913592518006143df0d9fe163))
+* **text-model:** support plain text ([#2738](https://github.com/dxos/dxos/issues/2738)) ([35935e3](https://github.com/dxos/dxos/commit/35935e331d0040c8d451fe5d92b4565bc761feed))
+* Travel bot ([#2720](https://github.com/dxos/dxos/issues/2720)) ([e2d0826](https://github.com/dxos/dxos/commit/e2d08269f43f335de6c42792aa49ee5e60125dbb))
+* Update bot manager ([#2759](https://github.com/dxos/dxos/issues/2759)) ([0596618](https://github.com/dxos/dxos/commit/059661823f0f7c85920231a4f2e5174129db0139))
+
+
+### Bug Fixes
+
+* Add controlled value property to Select. ([#2711](https://github.com/dxos/dxos/issues/2711)) ([c573d44](https://github.com/dxos/dxos/commit/c573d44f1cf209a4cd8849be1085c011e6f18dd0))
+* add ice endpoints to cli config. ([#2747](https://github.com/dxos/dxos/issues/2747)) ([5e9dea8](https://github.com/dxos/dxos/commit/5e9dea83a6f4658c2288fc057567eabe5831824b))
+* Add minimum delay between notarizations ([#2748](https://github.com/dxos/dxos/issues/2748)) ([41988d9](https://github.com/dxos/dxos/commit/41988d9b616070f75d913976f32e8d8115a3a047))
+* Close connections when they timeout & recover from network failures ([#2765](https://github.com/dxos/dxos/issues/2765)) ([d5e169b](https://github.com/dxos/dxos/commit/d5e169bbebf62c667ea2de4ebebaf6ac8b4502f3))
+* **composer-app:** Single-character typo ([#2700](https://github.com/dxos/dxos/issues/2700)) ([c195fed](https://github.com/dxos/dxos/commit/c195fed1a20b9840831f1b02fac55a54f29d673a))
+* Creating space on new devices & space properties init ([#2735](https://github.com/dxos/dxos/issues/2735)) ([a3fcb19](https://github.com/dxos/dxos/commit/a3fcb195b0aa496bbf1366f31ceb0f35e1872c8d))
+* Fix bot Docker image overriding ([#2756](https://github.com/dxos/dxos/issues/2756)) ([56a8ced](https://github.com/dxos/dxos/commit/56a8ced723d1f2851f52df3bb8f11f207d2bde28))
+* halo vault pwa cache ([#2709](https://github.com/dxos/dxos/issues/2709)) ([0fb1ad8](https://github.com/dxos/dxos/commit/0fb1ad810d33a354715e8e82634dc33d294f991f))
+* Import referenced documents into DB before setting refs on documents ([#2703](https://github.com/dxos/dxos/issues/2703)) ([0dc1482](https://github.com/dxos/dxos/commit/0dc1482354995970355891089c727dc5004ce2f3))
+* **kai:** enable telemetry ([#2702](https://github.com/dxos/dxos/issues/2702)) ([4b8cb53](https://github.com/dxos/dxos/commit/4b8cb538ad5cce3e8d007fab2982150afe3e6a3f))
+* **react-composer:** concurrency ([#2737](https://github.com/dxos/dxos/issues/2737)) ([087e2e4](https://github.com/dxos/dxos/commit/087e2e439854ef3f0591364a6fd30609fa7c53a5))
+* temporarily disable pwas ([#2705](https://github.com/dxos/dxos/issues/2705)) ([7520d8f](https://github.com/dxos/dxos/commit/7520d8fba3fe789c1c701cdfab969379a2f585f6))
+* ThemePlugin content paths. ([#2717](https://github.com/dxos/dxos/issues/2717)) ([6f0fdd6](https://github.com/dxos/dxos/commit/6f0fdd6818a1414c3f8fd1728d0cf99a37e2dd00))
+* use conventional commits for release merge commits ([#2694](https://github.com/dxos/dxos/issues/2694)) ([257ff77](https://github.com/dxos/dxos/commit/257ff77bc9d40f9c1f69d761230eaa44056362e7))
+
+## [0.1.29](https://github.com/dxos/dxos/compare/v0.1.28...v0.1.29) (2023-03-08)
+
+
+### Features
+
+* Add ability to merge ECHO schemas ([#2620](https://github.com/dxos/dxos/issues/2620)) ([6c68cdc](https://github.com/dxos/dxos/commit/6c68cdc257a31257f39256e60d8493c79e50039e))
+* Add Devtools reset button ([#2611](https://github.com/dxos/dxos/issues/2611)) ([a15a790](https://github.com/dxos/dxos/commit/a15a790ccd0489539353192ff60800d7e4aff835))
+* Add injected type Document to protobufs ([#2632](https://github.com/dxos/dxos/issues/2632)) ([831b405](https://github.com/dxos/dxos/commit/831b40577bc8aa3966d4d4e790fc5ee2ab84ac97))
+* Add plain Records support in EchoArray ([#2672](https://github.com/dxos/dxos/issues/2672)) ([694c1c6](https://github.com/dxos/dxos/commit/694c1c62680f6e4a7d9c347731bbe820329aadec))
+* Add report after webrtc errors ([#2682](https://github.com/dxos/dxos/issues/2682)) ([d4e538a](https://github.com/dxos/dxos/commit/d4e538af663624b6bf770d315ebe10e6efc3e89c))
+* Add specialized RPC implementation for client-services ([#2670](https://github.com/dxos/dxos/issues/2670)) ([3433056](https://github.com/dxos/dxos/commit/34330562c9f74e659c382ae4197cfb45d01f2d7e))
+* Bots prototyping ([#2506](https://github.com/dxos/dxos/issues/2506)) ([8e5f521](https://github.com/dxos/dxos/commit/8e5f521b470f15260de4a92be81449077889cf1b))
+* Clean-up registry ([#2617](https://github.com/dxos/dxos/issues/2617)) ([39fc65e](https://github.com/dxos/dxos/commit/39fc65e1fd6fc83d24fd9c86aee5cb181a3af3bd))
+* **composer-app:** Markdown export & import ([#2650](https://github.com/dxos/dxos/issues/2650)) ([e8d9856](https://github.com/dxos/dxos/commit/e8d98564677ee77fda59407266cfe84ba5e8814a))
+* **composer-app:** Shell & Tree integration ([#2614](https://github.com/dxos/dxos/issues/2614)) ([67579cd](https://github.com/dxos/dxos/commit/67579cd731e0cd3f4c19f1ea2afc86ce6505b75c))
+* **config:** align webpack plugin with other plugins ([#2643](https://github.com/dxos/dxos/issues/2643)) ([d413bca](https://github.com/dxos/dxos/commit/d413bca87384683e1eca32917a3ba88dfbf02d77))
+* Document stacks. ([#2616](https://github.com/dxos/dxos/issues/2616)) ([8b1ce9b](https://github.com/dxos/dxos/commit/8b1ce9ba4634745b0c89eb5b647e5330fe65a3b1))
+* Fix flickering. ([#2585](https://github.com/dxos/dxos/issues/2585)) ([9700acb](https://github.com/dxos/dxos/commit/9700acb7c4800df0a07c555c983c79e81bf853c1))
+* GH bot. ([#2587](https://github.com/dxos/dxos/issues/2587)) ([624c811](https://github.com/dxos/dxos/commit/624c81115f682221af943145e710ac1bc5d17e9b))
+* kai stack sections ([#2635](https://github.com/dxos/dxos/issues/2635)) ([03a7823](https://github.com/dxos/dxos/commit/03a7823d5993578678643abe13f68ade7294d59a))
+* Remove useSubscription and rename useSubscriptionEffect ([#2629](https://github.com/dxos/dxos/issues/2629)) ([7811814](https://github.com/dxos/dxos/commit/781181424757be34df7ec19e60242b8bef2d78f5))
+* Separate host from provider ([#2647](https://github.com/dxos/dxos/issues/2647)) ([4139fab](https://github.com/dxos/dxos/commit/4139fab6a7c9aa5bd73f3b55272861f15a0be12a))
+* Stack sections ([#2623](https://github.com/dxos/dxos/issues/2623)) ([9ecb559](https://github.com/dxos/dxos/commit/9ecb5591fe31dbd70672f344339566d7aa6b8fe1))
+* Tree ([#2610](https://github.com/dxos/dxos/issues/2610)) ([a45a1b8](https://github.com/dxos/dxos/commit/a45a1b8b20217442765763fc2075821fa5180394))
+
+
+### Bug Fixes
+
+* config overrides ([#2684](https://github.com/dxos/dxos/issues/2684)) ([5ee7a86](https://github.com/dxos/dxos/commit/5ee7a8628c2f249a286443faa68c047b27066a84))
+* credentials POC. ([#2522](https://github.com/dxos/dxos/issues/2522)) ([eaeea92](https://github.com/dxos/dxos/commit/eaeea92da8da49b5fcdfbf397fc4bce032241724))
+* Fix Kai notes frame ([#2671](https://github.com/dxos/dxos/issues/2671)) ([336012d](https://github.com/dxos/dxos/commit/336012d3e6722bb718e15fa9a8288ad5e468b438))
+* Import/Export Space in Kai ([#2597](https://github.com/dxos/dxos/issues/2597)) ([f60100a](https://github.com/dxos/dxos/commit/f60100a639337433e2ef186f194059acce1d3967))
+* **random-access-storage:** works in create-react-app ([#2645](https://github.com/dxos/dxos/issues/2645)) ([fed7ed0](https://github.com/dxos/dxos/commit/fed7ed0e6f7bbdcc3f307fc0450696b9d6824429))
+* re-enable react strict mode ([#2621](https://github.com/dxos/dxos/issues/2621)) ([e39a872](https://github.com/dxos/dxos/commit/e39a872b732008685bc7c1df62dbcf5072d21dcc))
+* **react-composer:** a-priori attempt to fix remounting ([#2664](https://github.com/dxos/dxos/issues/2664)) ([b5b06f6](https://github.com/dxos/dxos/commit/b5b06f64f35e6c9be0ffb77e41b9f1a91103d777))
+* **react-composer:** Adjust `useEditor` dependencies & add logging ([#2669](https://github.com/dxos/dxos/issues/2669)) ([75a899e](https://github.com/dxos/dxos/commit/75a899e56a2588a498784a2d6592df85b0a2cb40))
+* **react-composer:** Adjust `useEditor` dependency ([#2665](https://github.com/dxos/dxos/issues/2665)) ([a6ae7b5](https://github.com/dxos/dxos/commit/a6ae7b563016f139497afb69e708195fed7eb39e))
+* **react-composer:** Styles ([#2637](https://github.com/dxos/dxos/issues/2637)) ([36c5f5a](https://github.com/dxos/dxos/commit/36c5f5adff74001425ea8af95cb04ba0078b7ab2))
+* Rewrite useSelection hook ([#2674](https://github.com/dxos/dxos/issues/2674)) ([9de4abc](https://github.com/dxos/dxos/commit/9de4abcb9aa784683b433bc8b53d8fe1b630a784))
+* typos in docs ([#2648](https://github.com/dxos/dxos/issues/2648)) ([896d6a9](https://github.com/dxos/dxos/commit/896d6a9b1a862ff5ab5a0fca6bc4fae8c5fa1238))
+
 ## [0.1.28](https://github.com/dxos/dxos/compare/v0.1.27...v0.1.28) (2023-02-27)
 
 

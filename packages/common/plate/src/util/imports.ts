@@ -33,7 +33,7 @@ export class Imports {
         name,
         dealias: aliasOf,
         from: flatFrom,
-        isDefault: !!isDefault
+        isDefault: !!isDefault,
       };
     });
     return Array.isArray(name) ? names : names[0];
@@ -61,7 +61,7 @@ export class Imports {
 
     const maybe = {
       curly: (s: string) => (s ? `{ ${s} }` : ''),
-      any: <T = any>(s?: T, xform?: (val: T) => string) => (s ? (xform ? xform(s) : s) : '')
+      any: <T = any>(s?: T, xform?: (val: T) => string) => (s ? (xform ? xform(s) : s) : ''),
     };
 
     const format = {
@@ -73,13 +73,13 @@ export class Imports {
       fromGroup: (from: string, symbols: Import[]) =>
         `import ${maybe.any(
           symbols.find((s) => s.isDefault),
-          format.name
+          format.name,
         )}${maybe.curly(
           symbols
             .filter((s) => !s.isDefault)
             .map((i) => format.name(i))
-            .join(', ')
-        )} from '${format.path(from)}';`
+            .join(', '),
+        )} from '${format.path(from)}';`,
     };
 
     return Array.from(groups.entries())

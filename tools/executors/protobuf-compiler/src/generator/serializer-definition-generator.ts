@@ -16,13 +16,12 @@ export const createSerializerDefinition = (
   substitutionsModule: ModuleSpecifier | undefined,
   root: protobufjs.Root,
   outFileDir: string,
-  compress: boolean
+  compress: boolean,
 ): { imports: ts.Statement[]; exports: ts.Statement[] } => {
   const schemaIdentifier = f.createIdentifier('Schema');
   const decompressIdentifier = f.createIdentifier('decompressSchema');
 
   const schemaImport = f.createImportDeclaration(
-    [],
     [],
     f.createImportClause(
       false,
@@ -30,11 +29,11 @@ export const createSerializerDefinition = (
       f.createNamedImports(
         [
           f.createImportSpecifier(false, undefined, schemaIdentifier),
-          compress && f.createImportSpecifier(false, undefined, decompressIdentifier)
-        ].filter(Boolean) as ts.ImportSpecifier[]
-      )
+          compress && f.createImportSpecifier(false, undefined, decompressIdentifier),
+        ].filter(Boolean) as ts.ImportSpecifier[],
+      ),
     ),
-    f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir))
+    f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir)),
   );
 
   const substitutionsIdentifier = f.createIdentifier('substitutions');
@@ -53,16 +52,16 @@ export const createSerializerDefinition = (
                 f.createCallExpression(
                   f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'),
                   undefined,
-                  [f.createStringLiteral(JSON.stringify(compressSchema(serializeSchemaToJson(root))))]
-                )
+                  [f.createStringLiteral(JSON.stringify(compressSchema(serializeSchemaToJson(root))))],
+                ),
               ])
             : f.createCallExpression(f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'), undefined, [
-                f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))
-              ])
-        )
+                f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root))),
+              ]),
+        ),
       ],
-      ts.NodeFlags.Const
-    )
+      ts.NodeFlags.Const,
+    ),
   );
 
   const schemaExport = f.createVariableStatement(
@@ -76,16 +75,16 @@ export const createSerializerDefinition = (
           f.createCallExpression(
             f.createPropertyAccessExpression(schemaIdentifier, 'fromJson'),
             [f.createTypeReferenceNode('TYPES'), f.createTypeReferenceNode('SERVICES')],
-            substitutionsModule ? [schemaJsonIdentifier, substitutionsIdentifier] : [schemaJsonIdentifier]
-          )
-        )
+            substitutionsModule ? [schemaJsonIdentifier, substitutionsIdentifier] : [schemaJsonIdentifier],
+          ),
+        ),
       ],
-      ts.NodeFlags.Const
-    )
+      ts.NodeFlags.Const,
+    ),
   );
 
   return {
     imports: [schemaImport],
-    exports: [schemaJsonExport, schemaExport]
+    exports: [schemaJsonExport, schemaExport],
   };
 };

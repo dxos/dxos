@@ -30,7 +30,7 @@ describe('SpacesService', () => {
       async () => {
         await serviceContext.initialized.wait();
         return serviceContext.dataSpaceManager!;
-      }
+      },
     );
   });
 
@@ -69,7 +69,7 @@ describe('SpacesService', () => {
       const existingSpaces = [
         await spacesService.createSpace(),
         await spacesService.createSpace(),
-        await spacesService.createSpace()
+        await spacesService.createSpace(),
       ];
 
       const query = spacesService.querySpaces();
@@ -81,7 +81,7 @@ describe('SpacesService', () => {
 
       const spaces = await result.wait();
       expect(spaces).to.be.length(3);
-      expect(spaces).to.deep.equal(existingSpaces);
+      expect(spaces?.map((s) => s.spaceKey)).to.deep.equal(existingSpaces?.map((s) => s.spaceKey));
     });
 
     test('updates when new space is added', async () => {

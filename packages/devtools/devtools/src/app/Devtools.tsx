@@ -5,25 +5,31 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { ClientServices } from '@dxos/client-services';
-import { appkitTranslations, Fallback, useTelemetry } from '@dxos/react-appkit';
+import { ClientServices } from '@dxos/client';
+import { appkitTranslations, Fallback, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
 import { Client, ClientContext } from '@dxos/react-client';
-import { ThemeProvider } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../components';
-import { DevtoolsContextProvider, useRoutes } from '../hooks';
+import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
+import { DensityProvider } from '@dxos/aurora';
 
 const Routes = () => {
   return useRoutes();
 };
 
-const Telemetry = () => {
-  useTelemetry({ namespace: 'devtools', router: false });
+const Telemetry = ({ namespace }: { namespace: string }) => {
+  useTelemetry({ namespace });
   return null;
 };
 
 // Entry point that does not have opinion on Client, so it can be reused in extension.
-export const Devtools = ({ context }: { context?: { client: Client; services?: ClientServices } }) => {
+export const Devtools = ({
+  context,
+  namespace = telemetryNamespace
+}: {
+  context?: { client: Client; services?: ClientServices };
+  namespace?: string;
+}) => {
   const fallback = <Fallback message='Loading...' />;
 
   if (!context) {
@@ -32,16 +38,18 @@ export const Devtools = ({ context }: { context?: { client: Client; services?: C
 
   return (
     <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
-      <ErrorBoundary>
-        <ClientContext.Provider value={context}>
-          <DevtoolsContextProvider>
-            <HashRouter>
-              <Telemetry />
-              <Routes />
-            </HashRouter>
-          </DevtoolsContextProvider>
-        </ClientContext.Provider>
-      </ErrorBoundary>
+      <DensityProvider density='fine'>
+        <ErrorBoundary>
+          <ClientContext.Provider value={context}>
+            <DevtoolsContextProvider>
+              <HashRouter>
+                <Telemetry namespace={namespace} />
+                <Routes />
+              </HashRouter>
+            </DevtoolsContextProvider>
+          </ClientContext.Provider>
+        </ErrorBoundary>
+      </DensityProvider>
     </ThemeProvider>
   );
 };

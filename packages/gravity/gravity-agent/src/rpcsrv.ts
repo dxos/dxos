@@ -24,14 +24,14 @@ enum Stage {
   STARTED = 'STARTED',
   STOPPING = 'STOPPING',
   STOPPED = 'STOPPED',
-  DONE = 'DONE'
+  DONE = 'DONE',
 }
 
 export enum On {
   START = 'start',
   DONE = 'done',
   SYNC = 'sync',
-  STOP = 'stop'
+  STOP = 'stop',
 }
 
 export class Server {

@@ -53,14 +53,14 @@ export namespace Remark {
         const pkage = packagesInProject(api)?.find((p) => p.name === packageName);
         if (!pkage) {
           console.warn(
-            `problem in file ${vfile.path}: package ${packageName} not found while processing apidoc directive.`
+            `problem in file ${vfile.path}: package ${packageName} not found while processing apidoc directive.`,
           );
           return tree;
         }
         let symbol = findReflection(pkage, (node) => node.name === symbolName);
         if (!symbol) {
           console.warn(
-            `problem in file ${vfile.path}: symbol ${symbol} of package ${packageName} not found while processing apidoc directive`
+            `problem in file ${vfile.path}: symbol ${symbolName} of package ${packageName} not found while processing apidoc directive`,
           );
           return tree;
         }
@@ -72,15 +72,15 @@ export namespace Remark {
         if (!symbol) {
           console.warn(
             `problem in file ${vfile.path}: member '${restMembers.join(
-              '.'
-            )}' of ${symbolName} of package ${packageName} not found while processing apidoc directive`
+              '.',
+            )}' of ${symbolName} of package ${packageName} not found while processing apidoc directive`,
           );
           return tree;
         }
         const content = stringifier.stringify(symbol, {
           subset: node.attributes?.class,
           level: node?.attributes?.level ? Number(node?.attributes?.level) : undefined,
-          headers: !!node?.attributes.headers
+          headers: !!node?.attributes.headers,
         });
         const insertedAst = await unified().use(remarkParse).use(remarkPrettier).parse(content);
         node.children = [directiveLabelNode, ...insertedAst.children];
@@ -109,7 +109,7 @@ export namespace MarkdownIt {
         inlineContentStart: any,
         inlineContentEnd: any,
         directiveStartLine: any,
-        directiveEndLine: any
+        directiveEndLine: any,
       ) => {
         const token = state.push('html_block', '', 0);
         token.map = [directiveStartLine, directiveEndLine];
@@ -132,7 +132,7 @@ export namespace MarkdownIt {
         return renderer(tokens, idx, ...args);
       }
 
-      const demo = /(?<=\/)[a-zA-Z]+(?=\.tsx)/.exec(file);
+      const example = /(?<=\/)[a-zA-Z]+(?=\.tsx)/.exec(file);
       const attrs = info.reduce((acc, attr) => {
         const [key, value] = attr.split('=');
         if (key === 'peers') {
@@ -140,7 +140,7 @@ export namespace MarkdownIt {
         }
 
         return `${acc} :${key}="[${value.split(',').map((v) => `'${v}'`)}]"`;
-      }, `language="${language}" demo="${demo}"`);
+      }, `language="${language}" example="${example}" :darkMode="$isDarkmode"`);
 
       return `<Showcase ${attrs} />\n${renderer(tokens, idx, ...args)}`;
     };

@@ -20,6 +20,7 @@ export const MetagraphContext: Context<MetagraphContextType | undefined> = creat
 
 export const MetagraphProvider: FC<{ children?: ReactNode; value?: MetagraphContextType }> = ({ children, value }) => {
   const config = useConfig();
+
   return (
     <MetagraphContext.Provider value={value ?? { client: new MetagraphClient(config) }}>
       {children}
@@ -72,7 +73,7 @@ export const useModules = (query: Query, { polling }: UseModulesOptions = {}): M
           // TODO(burdon): Check still mounted.
           log('modules query', { modules });
           setModules(modules);
-        }
+        },
       });
 
       if (polling) {

@@ -3,10 +3,10 @@
 //
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { createTestBroker } = require('@dxos/signal');
+const { runTestSignalServer } = require('@dxos/signal');
 
 module.exports = {
-  setup: async () => {
-    await createTestBroker(4000);
-  }
+  setup: async ({ port = 4000 }) => {
+    await runTestSignalServer({ port });
+  },
 };

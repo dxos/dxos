@@ -11,7 +11,7 @@ import {
   createIndexSourceFile,
   createNamespaceSourceFile,
   getFileNameForNamespace,
-  generatePackageExports
+  generatePackageExports,
 } from './generator';
 import { Logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
@@ -27,7 +27,7 @@ export const parseAndGenerateSchema = async (
   packageRoot: string,
   exportPath?: string,
   compress?: boolean,
-  verbose = false
+  verbose = false,
 ) => {
   const logger = new Logger({ verbose });
   logger.logCompilationOptions(protoFiles, baseDirPath, outDirPath);
@@ -51,7 +51,7 @@ export const parseAndGenerateSchema = async (
     outDir: outDirPath,
     packageRoot,
     exportPath,
-    compress
+    compress,
   });
 };
 
@@ -82,7 +82,7 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
       options.outDir,
       namespace,
       options.substitutions?.module,
-      Array.from(namespaces.keys())
+      Array.from(namespaces.keys()),
     );
 
     const outFile = join(options.outDir, getFileNameForNamespace(namespace));
@@ -100,8 +100,8 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
       options.schema,
       options.outDir,
       Array.from(namespaces.keys()),
-      options.compress ?? false
-    )
+      options.compress ?? false,
+    ),
   );
   writeFileSync(join(options.outDir, 'index.ts'), source);
 
@@ -109,7 +109,7 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
     generatePackageExports({
       packageRoot: options.packageRoot,
       exportFrom: options.exportPath,
-      namespaces: Array.from(namespaces.keys())
+      namespaces: Array.from(namespaces.keys()),
     });
   }
 };

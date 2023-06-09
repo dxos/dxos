@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/client-protocol",
+  "version": "0.1.46",
+  "description": "Core DXOS Client API.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/document-model": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "base-x": "~3.0.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

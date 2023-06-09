@@ -7,23 +7,23 @@ order: 6
 Objects returned from `query` are automatically tracked by the `Client` and direct manipulation of them will result in writes being dispatched over the network to listening peers in the space.
 
 ```ts file=./snippets/write-items.ts#L5-
-import { Client, DocumentModel } from '@dxos/client';
+import { Client } from '@dxos/client';
 
 const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile()
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // grab an object
-  const result = space.experimental.db.query({ type: 'task' });
+  const result = space.db.query({ type: 'task' });
   const object = result.objects[0];
   // mutate the object directly
   object.isCompleted = true;
-})()
+})();
 ```
 
 The mutation will queue up inside the `Client` and begin propagating to listening peers on the next tick.
@@ -34,29 +34,28 @@ To insert an object into an ECHO space, simply construct it and call the `add` m
 
 ### Untyped
 
-Without strong types, the generic `Document` class can be used:
+Without strong types, the generic `Expando` class can be used:
 
 ```tsx file=./snippets/create-objects.ts#L5-
-import { Client, Document } from '@dxos/client';
+import { Client, Expando } from '@dxos/client';
 
 const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
 
-  const { value: spaces } = client.echo.querySpaces();
-  const space = spaces[0];
+  const space = client.spaces.get()[0];
 
-  const object = new Document({ type: 'task', title: 'buy milk' });
+  const object = new Expando({ type: 'task', title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
 ```
 
 ### Typed
 
-If strong types are desired, an instance of a specific `Document` descendant should be used:
+If strong types are desired, an instance of a specific `TypedObject` descendant should be used:
 
 ```tsx file=./snippets/create-objects-typed.ts#L5-
 import { Client } from '@dxos/client';
@@ -66,14 +65,13 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
 
-  const { value: spaces } = client.echo.querySpaces();
-  const space = spaces[0];
+  const space = client.spaces.get()[0];
 
   const object = new Task({ title: 'buy milk' });
 
-  await space.experimental.db.add(object);
+  await space.db.add(object);
 })();
 ```
 
@@ -82,7 +80,7 @@ const client = new Client();
 To delete an object (typed or untyped) call the `delete` API on a space.
 
 ```ts
-await space.experimental.db.delete(object);
+await space.db.delete(object);
 ```
 
 ::: note

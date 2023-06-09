@@ -17,7 +17,8 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/chess-app/src/index.ts"
+          "packages/experimental/chess-app/src/index.ts",
+          "packages/experimental/chess-app/src/proto/index.ts"
         ],
         "outputPath": "packages/experimental/chess-app/dist/lib"
       },
@@ -60,9 +61,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/chess-app/.storybook"
-        },
+        "configDir": "packages/experimental/chess-app/.storybook",
         "uiFramework": "@storybook/react"
       }
     },
@@ -72,9 +71,9 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/experimental/kai",
-        "outputPath": "tmp/mocha/packages/experimental/kai",
-        "resultsPath": "test-results/packages/experimental/kai",
+        "coveragePath": "coverage/packages/experimental/chess-app",
+        "outputPath": "tmp/mocha/packages/experimental/chess-app",
+        "resultsPath": "test-results/packages/experimental/chess-app",
         "testPatterns": [
           "packages/experimental/chess-app/src/**/*.test.{ts,js}"
         ],

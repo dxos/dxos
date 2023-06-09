@@ -47,7 +47,7 @@ describe('PublicKey', () => {
     expect(PublicKey.from(Buffer.from(TEST_KEY_HEX, 'hex')).toHex()).to.equal(TEST_KEY_HEX);
 
     expect(PublicKey.from(new Uint8Array(32)).toHex()).to.equal(
-      '0000000000000000000000000000000000000000000000000000000000000000'
+      '0000000000000000000000000000000000000000000000000000000000000000',
     );
   });
 

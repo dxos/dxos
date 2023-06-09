@@ -32,9 +32,9 @@ export const Routes = () => {
           children: [
             {
               path: '/',
-              element: <SpacesPage />
-            }
-          ]
+              element: <SpacesPage />,
+            },
+          ],
         },
         {
           path: '/spaces/:spaceKey',
@@ -42,9 +42,9 @@ export const Routes = () => {
           children: [
             {
               path: '/spaces/:spaceKey',
-              element: <SpacePage />
-            }
-          ]
+              element: <SpacePage />,
+            },
+          ],
         },
         {
           path: '/spaces/:spaceKey/settings',
@@ -52,12 +52,12 @@ export const Routes = () => {
           children: [
             {
               path: '/spaces/:spaceKey/settings',
-              element: <ManageSpacePage />
-            }
-          ]
-        }
-      ]
-    }
+              element: <ManageSpacePage />,
+            },
+          ],
+        },
+      ],
+    },
   ]);
 
   // Allow the client to auto-create an identity if env DX_VAULT=false

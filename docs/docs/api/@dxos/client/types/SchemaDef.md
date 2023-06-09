@@ -4,9 +4,11 @@
 
 
 
+
 ## Properties
 ### [fields]()
 Type: <code>[SchemaField](/api/@dxos/client/types/SchemaField)[]</code>
+
 
 ### [schema]()
 Type: <code>string</code>

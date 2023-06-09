@@ -14,17 +14,19 @@ test.describe('Basic test', () => {
 
   // TODO(wittjosiah): Currently not running in Firefox.
   //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
-  test.beforeAll(({ browser, browserName }) => {
+  test.beforeAll(async ({ browser, browserName }) => {
     host = new AppManager(browser);
+    await host.init();
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
     //   https://github.com/microsoft/playwright/issues/2973
     guest = browserName === 'chromium' ? new AppManager(browser) : host;
+    if (browserName === 'chromium') {
+      await guest.init();
+    }
   });
 
   test.describe('Default space', () => {
     test('create identity', async () => {
-      await host.init();
-
       expect(await host.kaiIsVisible()).to.be.false;
 
       await host.shell.createIdentity('host');
@@ -40,15 +42,15 @@ test.describe('Basic test', () => {
         return;
       }
 
-      await guest.init();
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      await guest.showSpaceList();
       await guest.openJoinSpace();
-      const [authenticationCode] = await Promise.all([
-        host.shell.getAuthenticationCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode)
+      const [authCode] = await Promise.all([
+        host.shell.getAuthCode(),
+        guest.shell.acceptSpaceInvitation(invitationCode),
       ]);
-      await guest.shell.authenticate(authenticationCode);
+      await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 
       // Wait for redirect.

@@ -13,14 +13,20 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     import React from 'react';
     import { createRoot } from 'react-dom/client';
 
-    ${dxosUi && text`
-    // this includes css styles from @dxos/react-components
-    // this must precede all other style imports in the app
-    import '@dxosTheme';`}
+    ${
+      dxosUi &&
+      text`
+    // This includes css styles from @dxos/aurora-theme.
+    // This must precede all other style imports in the app.
+    import '@dxosTheme';`
+    }
 
-    ${!dxosUi && text`
-    // include any css files directly
-    import './index.css';`}
+    ${
+      !dxosUi &&
+      text`
+    // Include any css files directly.
+    import './index.css';`
+    }
 
     import { App } from './App';
 

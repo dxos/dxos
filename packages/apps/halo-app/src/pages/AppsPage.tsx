@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Heading, Loading, useTranslation } from '@dxos/react-components';
+import { useTranslation } from '@dxos/aurora';
+import { Heading, Loading } from '@dxos/react-appkit';
 import { useModules } from '@dxos/react-metagraph';
 
 import { AppList, AppProps } from '../components';
@@ -17,9 +18,9 @@ const AppsPage = () => {
       modules.map((module) => ({
         module,
         // TODO(burdon): KUBE should add url to Module def.
-        launchUrl: `https://${module.name}.dxos.org`
+        launchUrl: `https://${module.name}.dxos.org`,
       })),
-    [modules]
+    [modules],
   );
 
   return (

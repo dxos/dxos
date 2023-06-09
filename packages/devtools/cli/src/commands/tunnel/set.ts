@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import assert from 'node:assert';
 
 import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, printTunnels } from '../../util';
+import { TunnelRpcPeer, printTunnels } from '../../util';
 
 export default class Set extends BaseCommand {
   static override enableJsonFlag = true;
@@ -16,14 +16,14 @@ export default class Set extends BaseCommand {
     ...BaseCommand.flags,
     app: Flags.string({
       description: 'Application name',
-      required: true
+      required: true,
     }),
     enabled: Flags.boolean({
-      description: 'Enable tunnel.'
+      description: 'Enable tunnel.',
     }),
     disabled: Flags.boolean({
-      description: 'Disable tunnel.'
-    })
+      description: 'Disable tunnel.',
+    }),
   };
 
   async run(): Promise<any> {
@@ -33,8 +33,8 @@ export default class Set extends BaseCommand {
       if (!!enabled === !!disabled) {
         throw new Error('Specify either --enabled or --disabled.');
       }
-      return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
-        const tunnelResponse = await publisher.rpc.tunnel({ name: app, enabled: enabled && !disabled });
+      return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
+        const tunnelResponse = await tunnel.rpc.tunnel({ name: app, enabled: enabled && !disabled });
         assert(tunnelResponse, 'Unable to set tunnel.');
         printTunnels([tunnelResponse], flags);
       });

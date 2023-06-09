@@ -20,8 +20,8 @@ describe('SnapshotStore', () => {
       spaceKey: PublicKey.random().asBuffer(),
       timeframe: new Timeframe(),
       database: {
-        items: []
-      }
+        items: [],
+      },
     };
 
     const key = await store.saveSnapshot(snapshot);

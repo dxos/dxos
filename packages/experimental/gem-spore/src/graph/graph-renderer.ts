@@ -189,8 +189,8 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
           initSource ?? source.last ?? [source.x, source.y],
           initTarget ?? target.last ?? [target.x, target.y],
           source.r,
-          target.r
-        )
+          target.r,
+        ),
       );
     });
 };
@@ -245,7 +245,7 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
       .join(
         (enter) => enter.append('circle').attr('r', 0),
         (update) => update,
-        (exit) => exit.transition().duration(500).attr('r', 0).remove()
+        (exit) => exit.transition().duration(500).attr('r', 0).remove(),
       )
       .attr('class', (d) => d.classes?.circle)
       .attr('cx', (d) => d.cx)

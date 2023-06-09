@@ -13,8 +13,10 @@ filter:
   # - feed-store:debug
   # - control-pipeline:debug
   # - state-manager:debug
-  - feed-store:debug
-  - client-services:debug
+  # - feed-store:debug
+  # - client-services:debug
+  # - space.ts:debug
+  - space.ts:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug
@@ -27,7 +29,8 @@ filter:
   # - auth:debug
   # - control-pipeline:debug
   # - notarization:debug
-  # - pipeline:debug
+  - pipeline:debug
+  - iterator:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

@@ -12,7 +12,7 @@ type Context = [
   ModuleState,
   (state: ModuleState) => void,
   // Currently rendered modules.
-  Set<string>
+  Set<string>,
 ];
 
 const ModuleContext = createContext<Context | undefined>(undefined);

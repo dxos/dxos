@@ -5,24 +5,23 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "strict": false
+    "outDir": "dist/types"
   },
-  "exclude": [
-    "**/*.test.ts"
-  ],
   "include": [
     "src"
   ],
   "references": [
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }

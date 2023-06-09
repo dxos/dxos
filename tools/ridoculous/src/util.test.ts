@@ -13,7 +13,7 @@ test('visit', () => {
   const tree = u('tree', [
     u('text', { value: 'hello' }),
     u('html', { value: '<!-- @test -->' }),
-    u('text', { value: 'world' })
+    u('text', { value: 'world' }),
   ]);
 
   let nodes = 0;
@@ -28,7 +28,7 @@ test('visitDirectives', () => {
   const tree = u('tree', [
     u('text', { value: 'hello' }),
     u('html', { value: '<!-- @test -->' }),
-    u('text', { value: 'world' })
+    u('text', { value: 'world' }),
   ]);
 
   let directives = 0;
@@ -46,7 +46,7 @@ test('visitAndReplace', () => {
     u('html', { value: '<!-- @replace(2) -->' }),
     u('text', { value: '3' }),
     u('text', { value: '4' }),
-    u('html', { value: '<!-- @replace -->' })
+    u('html', { value: '<!-- @replace -->' }),
   ]);
 
   // TODO(burdon): Pass in optional filter/test method.

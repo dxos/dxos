@@ -2,19 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
 import type { ItemID } from '@dxos/protocols';
 
-import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
+import { ModelMeta, MutationWriter, MutationWriteReceipt } from './types';
 
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
 export abstract class Model<TState = any, TMutation = any> {
-  // TODO(dmaretskyi): Never fired.
-  public readonly update = new Event<Model<TState, TMutation>>();
-
   /**
    * @param _meta Metadata definitions.
    * @param _itemId Parent item.
@@ -25,7 +21,7 @@ export abstract class Model<TState = any, TMutation = any> {
     private readonly _meta: ModelMeta,
     private readonly _itemId: ItemID,
     protected readonly _getState: () => TState,
-    private readonly _mutationWriter?: MutationWriter<TMutation>
+    private readonly _mutationWriter?: MutationWriter<TMutation>,
   ) {}
 
   toString() {
@@ -35,7 +31,7 @@ export abstract class Model<TState = any, TMutation = any> {
   toJSON() {
     return {
       id: this.itemId,
-      type: this._meta.type
+      type: this._meta.type,
     };
   }
 
@@ -49,10 +45,6 @@ export abstract class Model<TState = any, TMutation = any> {
 
   get readOnly(): boolean {
     return this._mutationWriter === undefined;
-  }
-
-  subscribe(listener: (result: this) => void) {
-    return this.update.on(listener as any);
   }
 
   /**

@@ -16,7 +16,7 @@ const LOG_FN = 'log';
  * TypeScript transformer that augments every log function with metadata.
  * Executed during the package build process.
  */
-export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.TransformationContext) => {
+export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.TransformationContext): ts.SourceFile => {
   // console.log('-', sourceFile.fileName);
   let enabled = false;
 
@@ -42,7 +42,7 @@ export const transformSourceFile = (sourceFile: ts.SourceFile, context: ts.Trans
     return ts.visitEachChild(node, visitor, context);
   };
 
-  return ts.visitNode(sourceFile, visitor);
+  return ts.visitNode(sourceFile, visitor) as ts.SourceFile;
 };
 /**
  * `import * from '@dxos/log'`
@@ -60,7 +60,7 @@ const isLoggerImportDeclaration = (node: ts.Node): node is ts.ImportDeclaration 
  */
 const isLoggerImportDeclarationWithLog = (
   node: ts.Node,
-  context: ts.TransformationContext
+  context: ts.TransformationContext,
 ): node is ts.ImportDeclaration => {
   let hasLog = false;
   if (isLoggerImportDeclaration(node)) {
@@ -99,7 +99,7 @@ const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root
       f.createPropertyAssignment('file', f.createStringLiteral(relative(root, sourceFile.fileName))),
       f.createPropertyAssignment(
         'line',
-        f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1)
+        f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1),
       ),
       f.createPropertyAssignment('scope', f.createThis()),
       f.createPropertyAssignment('bugcheck', f.createStringLiteral(BUGCHECK_STRING)),
@@ -110,16 +110,16 @@ const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root
           undefined,
           [
             f.createParameterDeclaration(undefined, undefined, 'fn'),
-            f.createParameterDeclaration(undefined, undefined, 'args')
+            f.createParameterDeclaration(undefined, undefined, 'args'),
           ],
           undefined,
           undefined,
           f.createCallExpression(f.createIdentifier('fn'), undefined, [
-            f.createSpreadElement(f.createIdentifier('args'))
-          ])
-        )
-      )
+            f.createSpreadElement(f.createIdentifier('args')),
+          ]),
+        ),
+      ),
     ],
-    false
+    false,
   );
 };

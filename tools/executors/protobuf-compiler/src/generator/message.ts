@@ -17,7 +17,6 @@ const f = ts.factory;
  */
 export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorContext) => {
   const declaration = f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,
@@ -30,12 +29,12 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
         isRequired ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
-        getFieldType(field, ctx.subs)
+        getFieldType(field, ctx.subs),
       );
 
       const docComment = getFieldDocComment(field);
       return docComment ? attachDocComment(signature, docComment) : signature;
-    })
+    }),
   );
 
   const commentSections = type.comment ? [type.comment] : [];
@@ -62,7 +61,7 @@ const getFieldDocComment = (field: protobufjs.Field) => {
       'Options:\n' +
         Object.entries(field.options)
           .map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`)
-          .join('\n')
+          .join('\n'),
     );
   }
 

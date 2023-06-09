@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import update from 'immutability-helper';
 
 import { useStateRef } from '@dxos/gem-core';
@@ -14,7 +14,7 @@ import { TestNode } from './types';
 export type ObjectMutator<T> = [
   T, // Current value.
   (data: T) => void, // Set value.
-  (mutation: any) => T // Apply update mutation.
+  (mutation: any) => T, // Apply update mutation.
 ];
 
 /**
@@ -39,7 +39,7 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
     (mutation: any): T => {
       setData((current) => update<T>(current, mutation));
       return dataRef.current;
-    }
+    },
   ];
 };
 
@@ -52,19 +52,19 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
   let interval;
 
   const mutator = () => {
-    const parent = data.nodes.length ? faker.random.arrayElement(data.nodes) : undefined;
+    const parent = data.nodes.length ? faker.helpers.arrayElement(data.nodes) : undefined;
     const node = createNode();
 
     updateData({
       nodes: {
-        $push: [node]
+        $push: [node],
       },
       links: Object.assign(
         {},
         parent && {
-          $push: [createLink(parent as TestNode, node)]
-        }
-      )
+          $push: [createLink(parent as TestNode, node)],
+        },
+      ),
     });
   };
 
@@ -72,7 +72,7 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
     const { count = 0 } = options;
     setData({
       nodes: [],
-      links: []
+      links: [],
     });
 
     for (let i = 0; i < count; i++) {
@@ -98,6 +98,6 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
     mutator,
     reset,
     start,
-    stop
+    stop,
   };
 };

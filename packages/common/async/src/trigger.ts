@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { TimeoutError } from './errors';
 import { asyncTimeout } from './timeout';
 
 /**
@@ -53,7 +54,7 @@ export class Trigger<T = void> {
    */
   async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
     if (timeout) {
-      return asyncTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
+      return asyncTimeout(this._promise, timeout, new TimeoutError(timeout));
     } else {
       return this._promise;
     }

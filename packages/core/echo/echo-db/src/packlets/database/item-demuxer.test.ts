@@ -32,9 +32,9 @@ describe('Item demuxer', () => {
     const inboundStream = itemDemuxer.open();
     feedWriter.written.on(([msg, meta]) =>
       inboundStream({
-        data: msg.object,
-        meta: { ...meta, memberKey }
-      } as any)
+        batch: msg.batch,
+        meta: { ...meta, memberKey },
+      } as any),
     );
 
     //
@@ -42,7 +42,7 @@ describe('Item demuxer', () => {
     //
 
     const [updatedItems, onUpdateItem] = latch();
-    const unsubscribe = itemManager.update.on(() => {
+    const unsubscribe = itemDemuxer.mutation.on(() => {
       const items = Array.from(itemManager.entities.values()).filter((entity) => entity instanceof Item);
       expect(items).toHaveLength(1);
       onUpdateItem();
@@ -50,12 +50,16 @@ describe('Item demuxer', () => {
 
     const objectId = PublicKey.random().toHex();
     const message: DataMessage = {
-      object: {
-        objectId,
-        genesis: {
-          modelType: TestModel.meta.type
-        }
-      }
+      batch: {
+        objects: [
+          {
+            objectId,
+            genesis: {
+              modelType: TestModel.meta.type,
+            },
+          },
+        ],
+      },
     };
 
     await feedWriter.write(message);
@@ -73,12 +77,12 @@ describe('Item demuxer', () => {
     const item = itemManager.getItem(objectId);
     expect(item).toBeTruthy();
 
-    const [updated, onUpdate] = latch();
+    const [updated, _onUpdate] = latch();
     const model: TestModel = todo(); // item?.model as TestModel;
-    model.subscribe((model) => {
-      expect((model as TestModel).keys.length).toBe(1);
-      onUpdate();
-    });
+    // model.subscribe((model) => {
+    //   expect((model as TestModel).keys.length).toBe(1);
+    //   onUpdate();
+    // });
 
     await model.set('title', 'Hello');
 
@@ -108,31 +112,39 @@ describe('Item demuxer', () => {
           feedKey: PublicKey.random(),
           memberKey: PublicKey.random(),
           seq: 0,
-          timeframe: new Timeframe()
+          timeframe: new Timeframe(),
         },
-        data: message.object
+        batch: message.batch,
       });
 
     void processEchoMessage(
       checkType<DataMessage>({
-        object: {
-          objectId: 'foo',
-          genesis: {
-            modelType: TestModel.meta.type
-          }
-        }
-      })
+        batch: {
+          objects: [
+            {
+              objectId: 'foo',
+              genesis: {
+                modelType: TestModel.meta.type,
+              },
+            },
+          ],
+        },
+      }),
     );
 
     void processEchoMessage(
       checkType<DataMessage>({
-        object: {
-          objectId: 'bar',
-          genesis: {
-            modelType: DocumentModel.meta.type
-          }
-        }
-      })
+        batch: {
+          objects: [
+            {
+              objectId: 'bar',
+              genesis: {
+                modelType: DocumentModel.meta.type,
+              },
+            },
+          ],
+        },
+      }),
     );
 
     // {

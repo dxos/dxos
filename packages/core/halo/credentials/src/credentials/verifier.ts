@@ -18,7 +18,7 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
     if (!credential.proof.chain) {
       return {
         kind: 'fail',
-        errors: ['Delegated credential is missing credential chain.']
+        errors: ['Delegated credential is missing credential chain.'],
       };
     }
 
@@ -44,7 +44,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
   if (credential.proof.type !== SIGNATURE_TYPE_ED25519) {
     return {
       kind: 'fail',
-      errors: [`Invalid signature type: ${credential.proof.type}`]
+      errors: [`Invalid signature type: ${credential.proof.type}`],
     };
   }
 
@@ -62,7 +62,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
 export const verifyChain = async (
   chain: Chain,
   authority: PublicKey,
-  subject: PublicKey
+  subject: PublicKey,
 ): Promise<VerificationResult> => {
   const result = await verifyCredential(chain.credential);
   if (result.kind === 'fail') {
@@ -72,7 +72,7 @@ export const verifyChain = async (
   if (!isValidAuthorizedDeviceCredential(chain.credential, authority, subject)) {
     return {
       kind: 'fail',
-      errors: [`Invalid credential chain: invalid assertion for key: ${subject}`]
+      errors: [`Invalid credential chain: invalid assertion for key: ${subject}`],
     };
   }
 

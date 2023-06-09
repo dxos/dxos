@@ -17,7 +17,8 @@ import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } fr
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
-const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+const port = process.env.SIGNAL_PORT ?? 4000;
+const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space/space-protocol', () => {
   test('two peers discover each other', async () => {
@@ -26,12 +27,14 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const presence1 = peer1.createPresence();
-    const protocol1 = peer1.createSpaceProtocol(topic, presence1);
+    const gossip1 = peer1.createGossip();
+    const presence1 = peer1.createPresence(gossip1);
+    const protocol1 = peer1.createSpaceProtocol(topic, gossip1);
 
     const peer2 = await builder.createPeer();
-    const presence2 = peer2.createPresence();
-    const protocol2 = peer2.createSpaceProtocol(topic, presence2);
+    const gossip2 = peer2.createGossip();
+    const presence2 = peer2.createPresence(gossip2);
+    const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
     await protocol1.start();
     await protocol2.start();
@@ -40,8 +43,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(presence1.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer2.deviceKey);
-      expect(presence2.getPeersOnline().map(({ peerId }) => peerId)).toContainEqual(peer1.deviceKey);
+      expect(presence1.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer2.identityKey);
+      expect(presence2.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer1.identityKey);
     });
   });
 
@@ -91,7 +94,7 @@ describe('space/space-protocol', () => {
   test('replicates a feed through a webrtc connection', async () => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
-      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
+      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
     afterTest(async () => await builder.close());
 

@@ -25,7 +25,7 @@ class TestBuilder {
       timeout: this._timeout,
       retries: this._retries,
       tags: this._tags,
-      environments: this._environments
+      environments: this._environments,
     };
   }
 
@@ -56,7 +56,9 @@ class TestBuilder {
 }
 
 interface TestFunction {
-  (name: string, body: Func | AsyncFunc): Test;
+  (name: string, body: Func): Test;
+  (name: string, body: AsyncFunc): Test;
+
   only: TestFunction;
   skip: TestFunction;
 

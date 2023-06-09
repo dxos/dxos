@@ -4,8 +4,7 @@
 
 import { useState } from 'react';
 
-import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
-import { ClientServices } from '@dxos/client-services';
+import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame, fromHost, fromSocket } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContextProps } from '@dxos/react-client';
@@ -29,12 +28,12 @@ const createClientContext = async (): Promise<ClientContextProps> => {
   const fromRemoteSource = async (remoteSource?: string) => {
     const remoteSourceConfig = remoteSource
       ? {
-          runtime: {
-            client: {
-              remoteSource
-            }
-          }
-        }
+        runtime: {
+          client: {
+            remoteSource,
+          },
+        },
+      }
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
@@ -47,21 +46,31 @@ const createClientContext = async (): Promise<ClientContextProps> => {
 
   const targetResolvers: Record<string, (remoteSource?: string) => Promise<ClientContextProps>> = {
     local: () => fromRemoteSource(),
-    vault: (remoteSource) => {
-      if (!remoteSource) {
+    vault: (target) => {
+      if (!target) {
         throw new Error('Vault URL is required target=vault:<vault URL>');
       }
-      return fromRemoteSource(remoteSource);
-    }
+
+      return fromRemoteSource(target.slice(target.indexOf(':') + 1));
+    },
+    ws: async (target) => {
+      if(!target) {
+        throw new Error('WebSocket URL is required target=ws:<ws URL>');
+      }
+      
+      const client = new Client({ config: new Config(), services: fromSocket(target) });
+      await client.initialize();
+
+      return { client, services: client.services.services as ClientServices };
+    },
   };
 
   const searchParams = new URLSearchParams(window.location.search);
   const target = searchParams.get('target') ?? DEFAULT_TARGET;
   const [protocol, ...rest] = target.split(':');
-  const remoteSource = rest.join(':');
   if (!(protocol in targetResolvers)) {
     throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
   }
 
-  return targetResolvers[protocol](remoteSource);
+  return targetResolvers[protocol](target);
 };

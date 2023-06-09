@@ -32,6 +32,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/observable-object"
+    },
+    {
       "path": "../../../common/util"
     },
     {

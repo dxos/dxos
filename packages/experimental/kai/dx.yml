@@ -21,6 +21,7 @@ package:
         command: pnpm -w nx bundle kai --outputPath packages/experimental/kai/out/kai-web
         env:
           VITE_DEV: true
+          DX_VAULT: false
 
 runtime:
   client:
@@ -29,8 +30,9 @@ runtime:
 
   # TODO(burdon): Are these provided by KUBE?
   services:
-    signal:
-      server: wss://kube.dxos.org/.well-known/dx/signal
+    signaling:
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,6 +9,7 @@
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/loaders/index.ts": "./src/loaders/browser.js",
+    "./src/plugin/index.ts": false,
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",

@@ -4,6 +4,7 @@
 
 import { subtleCrypto } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
+import { StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 
@@ -11,7 +12,7 @@ export class SnapshotStore {
   // prettier-ignore
   constructor(
     private readonly _directory: Directory
-  ) {}
+  ) { }
 
   async saveSnapshot(snapshot: SpaceSnapshot): Promise<string> {
     const encoded = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot);
@@ -41,5 +42,19 @@ export class SnapshotStore {
     } finally {
       await file.close();
     }
+  }
+
+  async listSnapshots(): Promise<StoredSnapshotInfo[]> {
+    const entries = await this._directory.list();
+
+    return await Promise.all(
+      entries.map(async (key) => {
+        const { size } = await this._directory.getOrCreateFile(key).stat();
+        return {
+          key,
+          size,
+        };
+      }),
+    );
   }
 }

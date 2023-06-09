@@ -3,6 +3,7 @@
 //
 
 import './dxos';
+import './forever';
 import './hypercore';
 import './hypercore-crypto';
 import './hypercore-protocol';
@@ -14,3 +15,4 @@ import './nanoresource';
 import './nanoresource-promise';
 import './random-access-storage';
 import './streamx';
+import './zen-push';

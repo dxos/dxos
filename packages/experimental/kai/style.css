@@ -2,8 +2,6 @@
  * Copyright 2022 DXOS.org
  */
 
-/* TODO(burdon): Remove custom CSS. */
-
 html, body, #root {
   height: 100%;
 }
@@ -14,36 +12,37 @@ body {
   @apply font-body font-normal text-base;
 }
 
-/**
- * Composer
+/*
+ * TODO(burdon): Factor out (kai-framework).
  */
-.kai-composer {}
-.kai-composer p {
-  @apply text-gray-600;
+
+/**
+ * Highlight
+ */
+.hljs-title {}
+.hljs-title.class_ {
+  @apply text-blue-500;
 }
-.kai-composer h1, h2, h3 {
+.hljs-title.function_ {
+  @apply text-blue-500;
+}
+.hljs-keyword {
+  @apply text-orange-400;
+}
+.hljs-params {
   @apply text-black;
 }
-.kai-composer h1 {
-  @apply text-2xl;
+.hljs-string {
+  @apply text-green-500;
 }
-.kai-composer h2 {
-  @apply text-xl;
+.hljs-number {
+  @apply text-blue-500;
 }
-.kai-composer h2 {
-  @apply text-lg;
+.hljs-tag {
+  @apply text-teal-500;
 }
-.kai-composer ul {
-  @apply ml-8 list-square;
-}
-.kai-composer ul li p {
-  @apply ml-1;
-}
-.kai-composer ol {
-  @apply ml-8 list-decimal;
-}
-.kai-composer ol li p {
-  @apply ml-1;
+.hljs-built_in {
+  @apply text-red-500;
 }
 
 /**
@@ -80,8 +79,14 @@ body {
 .rbc-agenda-table {
   border: none !important;
 }
+.rbc-agenda-date-cell {
+  @apply text-sm pl-0 pt-2 !important;
+}
 .rbc-agenda-time-cell {
+  @apply text-sm pt-2 !important;
   padding: 5px 0 5px 0 !important;
+}
+.rbc-agenda-event-cell {
 }
 .rbc-agenda-table td {
   border: none !important;

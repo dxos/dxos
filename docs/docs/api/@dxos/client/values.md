@@ -3,29 +3,110 @@ title: Values
 ---
 # Values 
 
-### [`DEFAULT_CLIENT_CHANNEL`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L7)
+### [`AUTHENTICATION_CODE_LENGTH`]()
+Type: "6"
+
+### [`AUTH_TIMEOUT`]()
+Type: "30000"
+
+Timeout for the device to be added to the trusted set during auth.
+
+### [`CREATE_SPACE_TIMEOUT`]()
+Type: "3000"
+
+Timeout for creating new spaces.
+
+### [`DEFAULT_CLIENT_CHANNEL`]()
 Type: "dxos:app"
-### [`DEFAULT_CLIENT_ORIGIN`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L11)
+
+### [`DEFAULT_CLIENT_ORIGIN`]()
 Type: "https://halo.dxos.org/vault.html"
-### [`DEFAULT_SHELL_CHANNEL`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L8)
+
+### [`DEFAULT_DX_PROFILE`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L14)
+Type: "dxos-default"
+
+### [`DEFAULT_INTERNAL_CHANNEL`]()
+Type: "dxos:vault"
+
+### [`DEFAULT_SHELL_CHANNEL`]()
 Type: "dxos:shell"
+
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/client/types/ConvertVisitors)
-### [`Document`]()
-Type: function
-### [`EXPECTED_CONFIG_VERSION`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L13)
+
+### [`EXPECTED_CONFIG_VERSION`]()
 Type: "1"
+
+### [`Expando`]()
+Type: ExpandoConstructor
+
+### [`INVITATION_TIMEOUT`]()
+Type: number
+
+### [`LOAD_CONTROL_FEEDS_TIMEOUT`]()
+Type: "3000"
+
+Timeout for loading of control feeds.
+
+### [`LOAD_PROPERTIES_TIMEOUT`]()
+Type: "3000"
+
+Timeout for space properties to be loaded in the set of tracked items.
+Accounts for latency between SpaceService reporting the space as READY and DataService streaming the item states.
+
+### [`ON_CLOSE_DELAY`]()
+Type: "1000"
+
+### [`PROXY_CONNECTION_TIMEOUT`]()
+Type: "30000"
+
+Timeout for making rpc connections from remote proxies.
+
+### [`RESOURCE_LOCK_TIMEOUT`]()
+Type: "3000"
+
+Timeout for waiting before stealing resource lock.
+
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
+
+### [`TypedObject`]()
+Type: TypedObjectConstructor
+
+### [`appServiceBundle`]()
+Type: ServiceBundle&lt;[AppServiceBundle](/api/@dxos/client/types/AppServiceBundle)&gt;
+
 ### [`base`]()
 Type: unique symbol
+
+### [`clientServiceBundle`]()
+Type: ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;
+
+Services supported by host.
+
 ### [`data`]()
 Type: unique symbol
+
 ### [`db`]()
 Type: unique symbol
-### [`defaultConfig`](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/config.ts#L15)
+
+### [`defaultConfig`]()
 Type: ConfigProto
+
+### [`iframeServiceBundle`]()
+Type: ServiceBundle&lt;[IframeServiceBundle](/api/@dxos/client/types/IframeServiceBundle)&gt;
+
 ### [`proxy`]()
 Type: unique symbol
+
+### [`readOnly`]()
+Type: unique symbol
+
 ### [`schema`]()
 Type: unique symbol
+
+### [`shellServiceBundle`]()
+Type: ServiceBundle&lt;[ShellServiceBundle](/api/@dxos/client/types/ShellServiceBundle)&gt;
+
+### [`workerServiceBundle`]()
+Type: ServiceBundle&lt;[WorkerServiceBundle](/api/@dxos/client/types/WorkerServiceBundle)&gt;

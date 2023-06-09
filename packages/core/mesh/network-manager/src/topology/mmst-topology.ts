@@ -101,5 +101,5 @@ export class MMSTTopology implements Topology {
 
 const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] =>
   keys.sort((a, b) =>
-    distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer()))
+    distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer())),
   );

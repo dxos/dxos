@@ -6,9 +6,19 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/src",
+    "rootDirs": [
+      // Noli me tangere
+      "./src", // <-- KEEP "./src" FIRST
+      "./notebooks"
+    ],
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
   "include": [
+    "notebooks",
     "src",
     "src/util/telemetryrc.json"
   ],
@@ -29,6 +39,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -36,6 +49,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
     },
     {
       "path": "../../common/plate"
@@ -47,7 +63,13 @@
       "path": "../../common/telemetry"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"
@@ -61,5 +83,8 @@
     {
       "path": "../../sdk/config"
     }
-  ]
+  ],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }

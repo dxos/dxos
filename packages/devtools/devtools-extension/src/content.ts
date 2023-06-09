@@ -15,9 +15,9 @@ port.onMessage.addListener((message) => {
   window.postMessage(
     {
       data: message.data,
-      source: 'content-script'
+      source: 'content-script',
     },
-    '*'
+    '*',
   );
 });
 

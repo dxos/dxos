@@ -1,0 +1,33 @@
+{
+  "name": "@dxos/kube-publishing",
+  "version": "0.1.46",
+  "private": true,
+  "description": "KUBE Publishing Testing.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
+    "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "scripts": {
+    "run-tests": "node -r ts-node/register ./src/main.ts"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/cli": "workspace:*",
+    "@types/node": "^18.11.9",
+    "ts-node": "10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

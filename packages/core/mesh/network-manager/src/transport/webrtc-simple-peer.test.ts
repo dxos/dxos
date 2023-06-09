@@ -16,11 +16,10 @@ describe('Node WebRTC and simple-peer', () => {
     .skip('open and close', async () => {
       const peer = new SimplePeerConstructor({
         initiator: true,
-        wrtc
+        wrtc,
       });
 
       await sleep(1);
-
       await peer.destroy();
     })
     .timeout(3_000);

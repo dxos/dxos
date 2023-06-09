@@ -15,7 +15,7 @@ test('services', async () => {
   const service = schema.getService('example.testing.service.TestService');
   const server = service.createServer({
     countTasks: async (tasks) => ({ count: tasks.tasks?.length ?? 0 }),
-    subscribeTasks: () => new Stream(() => {})
+    subscribeTasks: () => new Stream(() => {}),
   });
 
   const client = service.createClient(server);
@@ -24,9 +24,9 @@ test('services', async () => {
       {
         id: 'task-1',
         key: new MyKey(new Uint8Array([1, 2, 3])),
-        type: TaskType.COMPLETED
-      }
-    ]
+        type: TaskType.COMPLETED,
+      },
+    ],
   });
 
   expect(response.count).toEqual(1);

@@ -18,37 +18,17 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/braneframe/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/composer-app/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/apps/composer-extension/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/halo-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/assets/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-appkit/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/patterns/react-ui/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -88,7 +68,7 @@
         },
         {
           "type": "json",
-          "path": "packages/bots/bot-lab/package.json",
+          "path": "packages/apps/types/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -153,6 +133,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/observable-object/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -164,11 +149,6 @@
         {
           "type": "json",
           "path": "packages/common/react-async/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/react-components/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -278,12 +258,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/teleport-extension-object-sync/package.json",
+          "path": "packages/core/mesh/teleport-extension-gossip/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/mesh/teleport-extension-presence/package.json",
+          "path": "packages/core/mesh/teleport-extension-object-sync/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -318,12 +298,17 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/bare/package.json",
+          "path": "packages/devtools/initializers/create/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create/package.json",
+          "path": "packages/devtools/initializers/create-bare/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/initializers/create-tasks/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -333,12 +318,12 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/chess-app/package.json",
+          "path": "packages/experimental/bot-lab/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/experimental/framebox/package.json",
+          "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -358,7 +343,37 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/kai-bots/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-frames/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-framework/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-sandbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/kodama/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kube-console/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -388,6 +403,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/surface/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-agent/package.json",
           "jsonpath": "$.version"
         },
@@ -398,7 +418,27 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/kube-publishing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/kube-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/proto-guard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client-protocol/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -418,7 +458,67 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/examples/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/react-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-shell/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/vault/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/aurora-types/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/primitives/react-hooks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/primitives/react-input/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/primitives/react-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-icons/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -463,7 +563,7 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/serve-with-halo/package.json",
+          "path": "tools/executors/serve-with-vault/package.json",
           "jsonpath": "$.version"
         },
         {

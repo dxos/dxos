@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -25,7 +25,7 @@ describe('FeedStore', () => {
         const feedKey = PublicKey.random();
         await feedStore.openFeed(feedKey);
         return feedKey;
-      })
+      }),
     );
 
     {
@@ -100,7 +100,7 @@ describe('FeedStore', () => {
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append({
           id: String(i),
-          value: faker.lorem.sentence()
+          value: faker.lorem.sentence(),
         });
       }
 

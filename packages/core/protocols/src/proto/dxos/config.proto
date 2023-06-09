@@ -6,8 +6,15 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/descriptor.proto";
 
 package dxos.config;
+
+option go_package = "github.com/dxos/kube/proto/def/dxos/config";
+
+extend google.protobuf.FieldOptions {
+    optional string env_var = 1000;
+}
 
 message Config {
   optional int32 version = 1;
@@ -52,11 +59,17 @@ message Module {
   optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
   optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos:type/frame' vs. 'dxos.type.frame')
 
+  // TODO(burdon): Developer info message.
+
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
   optional bytes bundle = 6;
+
+  // TODO(burdon): Remove.
   optional bool tunnel = 7;
+
+  repeated Module deps = 10;  // TODO(burdon): E.g., types.
 
   optional Build build = 100;
   repeated Repo repos = 101;
@@ -75,6 +88,7 @@ message Runtime {
         CHROME = 2;
         FIREFOX = 3;
         NODE = 4;
+        WEBFS = 5;
 
         // Key storage only
         LEVELJS = 11;
@@ -88,8 +102,8 @@ message Runtime {
     }
 
     message Log {
-      optional string filter = 1 [(env) = "LOG_FILTER"];
-      optional string prefix = 2 [(env) = "LOG_PREFIX"];
+      optional string filter = 1 [(env_var) = "LOG_FILTER"];
+      optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
     }
 
     optional Log log = 1;
@@ -120,7 +134,7 @@ message Runtime {
     optional string org = 1;
     optional string theme = 2;
     optional string website = 3;
-    optional string public_url = 4 [(env) = "PUBLIC_URL"];
+    optional string public_url = 4 [(env_var) = "PUBLIC_URL"];
 
     optional BuildInfo build = 100;
     optional google.protobuf.Struct env = 101;
@@ -167,23 +181,24 @@ message Runtime {
   //
   message Kube {
     message Autoupdate {
-      optional bool enabled = 1;
+      bool enabled = 1;
       /// Seconds
-      optional int64 interval = 2;
+      int32 interval = 2;
     }
 
     message Https {
-      optional bool enabled = 1;
-      optional string port = 2;
-      optional string email = 3;
-      optional string certfile = 4;
-      optional string keyfile = 5;
-      optional string dnsprovider = 6;
+      bool enabled = 1;
+      string port = 2;
+      string email = 3;
+      string certfile = 4;
+      string keyfile = 5;
+      string dnsprovider = 6; // TODO(burdon): dns_provider.
     }
 
     message P2P {
-      optional string private_key = 1;
-      optional string port = 2;
+      // TODO(egorgripasov): private_key
+      string privatekey = 1;
+      string port = 2;
       repeated string bootstrap = 3;
     }
 
@@ -191,7 +206,7 @@ message Runtime {
       bool enabled = 1;
       string endpoint = 2;
       /// Seconds
-      int64 interval = 3;
+      int32 interval = 3;
     }
 
     message Trace {
@@ -209,25 +224,33 @@ message Runtime {
     }
 
     message AppTunneling {
-      optional bool enabled = 1;
-      optional string command_template = 2;
-      optional string output_re = 3;
-      optional string port = 4;
+      bool enabled = 1;
+      string command_template = 2;
+      string output_re = 3;
+      string port = 4;
     }
 
-    optional string host = 1;
-    optional string port = 2;
-    optional Autoupdate autoupdate = 3;
-    optional Https https = 4;
-    optional P2P p2p = 5;
-    optional string confhost = 6;
+    message Bots {
+      bool enabled = 1;
+      /// Refresh interval - Seconds
+      int32 interval = 2;
+    }
+
+    // TODO(burdon): Needs documentation/
+    string host = 1;
+    string port = 2;
+    Autoupdate autoupdate = 3;
+    Https https = 4;
+    P2P p2p = 5;
+    string confhost = 6; // TODO(burdon): ?
     repeated string env = 7;
     repeated string alias = 8;
-    optional Monitoring monitoring = 9;
-    optional Trace trace = 10;
-    optional Telemetry telemetry = 11;
-    optional Gravity gravity = 12;
-    optional AppTunneling app_tunneling = 13;
+    Monitoring monitoring = 9;
+    Trace trace = 10;
+    Telemetry telemetry = 11;
+    Gravity gravity = 12;
+    AppTunneling app_tunneling = 13;
+    Bots bots = 14;
   }
 
   //
@@ -235,7 +258,6 @@ message Runtime {
   //
   message Services {
     message Kube {
-
       message Endpoints {
         optional string logs = 1;
         optional string services = 2;
@@ -251,7 +273,7 @@ message Runtime {
       optional string server = 2;
     }
 
-    // TODO(burdon): Delete.
+    // TODO(burdon): Delete/Rename DMG.
     message Dxns {
       /// DXNS endpoint.
       optional string server = 1;
@@ -283,7 +305,7 @@ message Runtime {
     }
 
     message Signal {
-      optional string server = 1;
+      string server = 1;
       optional string api = 2;
       optional string status = 3;
     }
@@ -302,31 +324,41 @@ message Runtime {
       optional string npm_access_token = 5;
     }
 
-    message BotFactory {
-      optional string topic = 1;
-      optional bool persistent = 2;
-      optional int32 retry_attempts = 3;
-      optional int32 retry_interval = 4;
+    message BotHost { // TODO(burdon): Add Service suffix to all?
+      optional string proxy = 1;
     }
 
-    message Publisher {
+    message Publisher { // TODO(burdon): Publishing.
       optional string server = 1;
     }
 
-    message Supervisor {
+    message Tunneling {
       optional string server = 1;
+    }
+
+    message Supervisor { // TODO(burdon): Is this a service?
+      optional string server = 1;
+    }
+
+    message Faasd {
+      optional string gateway = 1;
+      optional string username = 2;
+      optional string password = 3;
+      optional string daemon_url = 4;
     }
 
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
     optional Ipfs ipfs = 4;
-    optional Signal signal = 5;
+    repeated Signal signaling = 5;
     repeated Ice ice = 6;
     optional Machine machine = 7;
-    optional BotFactory bot = 8;
+    optional BotHost bot = 8;
     optional Publisher publisher = 9;
-    optional Supervisor supervisor = 10;
+    optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
+    optional Tunneling tunneling = 11;
+    optional Faasd faasd = 12;
   }
 
   message Keys {

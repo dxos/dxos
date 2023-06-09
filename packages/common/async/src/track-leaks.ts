@@ -54,7 +54,7 @@ export const trackLeaks =
       target.prototype[open] = async function (this: any, ...args: any) {
         this[handleSymbol] = trackResource({
           name: target.name,
-          openStack: new StackTrace()
+          openStack: new StackTrace(),
         });
 
         return openMethod.apply(this, args);

@@ -5,9 +5,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { SingleInputStep } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/aurora';
+import { Heading, SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const RecoverIdentityPage = () => {
   const { t } = useTranslation('appkit');
@@ -23,7 +23,7 @@ const RecoverIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
 
   const onNext = useCallback(() => {
@@ -48,7 +48,7 @@ const RecoverIdentityPage = () => {
           inputPlaceholder: t('seed phrase placeholder'),
           onChange: ({ target: { value } }) => setSeedphrase(value),
           onNext,
-          onBack: () => history.back()
+          onBack: () => history.back(),
         }}
       />
     </main>

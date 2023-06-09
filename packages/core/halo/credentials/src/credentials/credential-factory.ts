@@ -41,7 +41,7 @@ export const createCredential = async ({
   assertion,
   signingKey,
   chain,
-  nonce
+  nonce,
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
   assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
@@ -56,15 +56,15 @@ export const createCredential = async ({
     issuanceDate: new Date(),
     subject: {
       id: subject,
-      assertion
+      assertion,
     },
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
       signer: signingKey ?? issuer,
       value: new Uint8Array(),
-      nonce
-    }
+      nonce,
+    },
   };
 
   // Set proof after creating signature.
@@ -83,7 +83,7 @@ export const createCredential = async ({
 export const createCredentialMessage = (credential: Credential) => {
   return {
     '@type': 'dxos.echo.feed.CredentialsMessage',
-    credential
+    credential,
   };
 };
 
@@ -104,8 +104,8 @@ export const createCredentialSignerWithKey = (signer: Signer, issuer: PublicKey)
       issuer,
       subject,
       assertion,
-      nonce
-    })
+      nonce,
+    }),
 });
 
 /**
@@ -114,7 +114,7 @@ export const createCredentialSignerWithKey = (signer: Signer, issuer: PublicKey)
 export const createCredentialSignerWithChain = (
   signer: Signer,
   chain: Chain,
-  signingKey: PublicKey
+  signingKey: PublicKey,
 ): CredentialSigner => ({
   getIssuer: () => chain.credential.issuer,
   createCredential: ({ subject, assertion, nonce }) =>
@@ -125,6 +125,6 @@ export const createCredentialSignerWithChain = (
       chain,
       subject,
       assertion,
-      nonce
-    })
+      nonce,
+    }),
 });

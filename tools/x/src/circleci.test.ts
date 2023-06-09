@@ -18,13 +18,13 @@ describe('CI tests', () => {
   const config = {
     vcs: 'gh',
     username: 'dxos',
-    project: 'dxos'
+    project: 'dxos',
   };
 
   const projectSlug = `${config.vcs}/${config.username}/${config.project}`;
 
   const headers = {
-    'Circle-Token': '85b5f69e4bf1abbad3f13a48cf55bc5ad49bb2c8'
+    'Circle-Token': '85b5f69e4bf1abbad3f13a48cf55bc5ad49bb2c8',
   };
 
   // TODO(burdon): Don't run tests in CI.

@@ -7,7 +7,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Device, DeviceKind, DevicesService, QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { IdentityManager } from '../identity/identity-manager';
+import { IdentityManager } from '../identity';
 
 export class DevicesServiceImpl implements DevicesService {
   constructor(private readonly _identityManager: IdentityManager) {}
@@ -26,8 +26,8 @@ export class DevicesServiceImpl implements DevicesService {
           next({
             devices: Array.from(deviceKeys.values()).map((key) => ({
               deviceKey: key,
-              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED
-            }))
+              kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
+            })),
           });
         }
       };
@@ -41,10 +41,10 @@ export class DevicesServiceImpl implements DevicesService {
             subscriptions.add(
               this._identityManager.identity.stateUpdate.on(() => {
                 update();
-              })
+              }),
             );
           }
-        })
+        }),
       );
 
       update();

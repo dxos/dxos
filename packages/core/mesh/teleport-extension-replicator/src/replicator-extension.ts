@@ -12,9 +12,9 @@ import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
@@ -30,7 +30,7 @@ export class ReplicatorExtension implements TeleportExtension {
     onError: (err) => {
       log.catch(err);
       this._extensionContext?.close(err);
-    }
+    },
   });
 
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
@@ -40,7 +40,7 @@ export class ReplicatorExtension implements TeleportExtension {
   private _extensionContext?: ExtensionContext;
 
   private _options: ReplicationOptions = {
-    upload: false
+    upload: false,
   };
 
   private readonly _updateTask = new DeferredTask(this._ctx, async () => {
@@ -50,8 +50,8 @@ export class ReplicatorExtension implements TeleportExtension {
           feeds: Array.from(this._feeds.values()).map((feed) => ({
             feedKey: feed.key,
             download: true,
-            upload: this._options.upload
-          }))
+            upload: this._options.upload,
+          })),
         });
       } else if (this._extensionContext!.initiator === true) {
         await this._reevaluateFeeds();
@@ -70,7 +70,7 @@ export class ReplicatorExtension implements TeleportExtension {
       initiator: this._extensionContext?.initiator,
       localPeerId: this._extensionContext?.localPeerId,
       remotePeerId: this._extensionContext?.remotePeerId,
-      feeds: Array.from(this._feeds.keys())
+      feeds: Array.from(this._feeds.keys()),
     };
   }
 
@@ -97,10 +97,10 @@ export class ReplicatorExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService')
+        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
       },
       exposed: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService')
+        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
       },
       handlers: {
         ReplicatorService: {
@@ -115,7 +115,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
             const streamTag = await this._acceptReplication(info);
             return {
-              streamTag
+              streamTag,
             };
           },
           stopReplication: async ({ info }) => {
@@ -124,12 +124,12 @@ export class ReplicatorExtension implements TeleportExtension {
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
             await this._stopReplication(info.feedKey);
-          }
-        }
+          },
+        },
       },
       port: context.createPort('rpc', {
-        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
-      })
+        contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+      }),
     });
     await this._rpc.open();
 
@@ -167,7 +167,7 @@ export class ReplicatorExtension implements TeleportExtension {
         await this._initiateReplication({
           feedKey,
           download: true,
-          upload: this._options.upload
+          upload: this._options.upload,
         });
       }
     }
@@ -211,14 +211,14 @@ export class ReplicatorExtension implements TeleportExtension {
 
     const feed = this._feeds.get(info.feedKey) ?? failUndefined();
     const networkStream = this._extensionContext!.createStream(streamTag, {
-      contentType: 'application/x-hypercore'
+      contentType: 'application/x-hypercore',
     });
     const replicationStream = feed.replicate(true, {
       live: true,
       upload: info.upload,
       download: info.download,
       noise: false,
-      encrypted: false
+      encrypted: false,
     });
 
     // left for testing
@@ -244,7 +244,7 @@ export class ReplicatorExtension implements TeleportExtension {
       streamTag,
       networkStream,
       replicationStream,
-      info
+      info,
     });
 
     networkStream.pipe(replicationStream as any).pipe(networkStream);

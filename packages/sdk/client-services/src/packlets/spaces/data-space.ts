@@ -2,84 +2,99 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trackLeaks } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { AUTH_TIMEOUT } from '@dxos/client-protocol';
+import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import {
-  DataPipelineControllerImpl,
-  MetadataStore,
-  Space,
-  SigningContext,
-  createMappedFeedWriter,
-  SnapshotManager
-} from '@dxos/echo-pipeline';
+import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
+import { CancelledError, SystemError } from '@dxos/errors';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory } from '@dxos/model-factory';
+import { log } from '@dxos/log';
+import { SpaceState, Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Presence } from '@dxos/teleport-extension-presence';
+import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
+import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 
-const AUTH_TIMEOUT = 30000;
+export type DataSpaceCallbacks = {
+  /**
+   * Called before transitioning to the ready state.
+   */
+  beforeReady?: () => Promise<void>;
+
+  /**
+   * Called after transitioning to the ready state.
+   */
+  afterReady?: () => Promise<void>;
+};
 
 export type DataSpaceParams = {
   inner: Space;
-  modelFactory: ModelFactory;
   metadataStore: MetadataStore;
-  snapshotManager: SnapshotManager;
+  gossip: Gossip;
   presence: Presence;
   keyring: Keyring;
   feedStore: FeedStore<FeedMessage>;
   signingContext: SigningContext;
-  memberKey: PublicKey;
-  snapshotId?: string | undefined;
+  callbacks?: DataSpaceCallbacks;
+  cache?: SpaceCache;
 };
 
-const CONTROL_PIPELINE_READY_TIMEFRAME = 3000;
 @trackLeaks('open', 'close')
 export class DataSpace {
   private readonly _ctx = new Context();
-  private readonly _dataPipelineController: DataPipelineControllerImpl;
   private readonly _inner: Space;
+  private readonly _gossip: Gossip;
   private readonly _presence: Presence;
   private readonly _keyring: Keyring;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _callbacks: DataSpaceCallbacks;
+  private readonly _cache?: SpaceCache;
+
+  private _state = SpaceState.CLOSED;
+
+  /**
+   * Error for _state === SpaceState.ERROR.
+   */
+  public error: Error | undefined = undefined;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
+  public readonly stateUpdate = new Event();
+
+  public metrics: SpaceProto.Metrics = {};
 
   constructor(params: DataSpaceParams) {
     this._inner = params.inner;
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
+
+    this._gossip = params.gossip;
     this._presence = params.presence;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
-    this._dataPipelineController = new DataPipelineControllerImpl({
-      modelFactory: params.modelFactory,
-      metadataStore: params.metadataStore,
-      snapshotManager: params.snapshotManager,
-      memberKey: params.memberKey,
-      spaceKey: this._inner.key,
-      feedInfoProvider: (feedKey) => this._inner.spaceState.feeds.get(feedKey),
-      snapshotId: params.snapshotId
-    });
+    this._callbacks = params.callbacks ?? {};
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, Array.from(this._inner.spaceState.members.keys())),
       update: this._inner.stateUpdate,
-      authTimeout: AUTH_TIMEOUT
+      authTimeout: AUTH_TIMEOUT,
     });
 
     this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
+    this._cache = params.cache;
   }
 
   get key() {
@@ -90,17 +105,17 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
+  get state(): SpaceState {
+    return this._state;
+  }
+
   // TODO(burdon): Can we mark this for debugging only?
   get inner() {
     return this._inner;
   }
 
-  get dataPipelineController(): DataPipelineControllerImpl {
-    return this._dataPipelineController;
-  }
-
-  get stateUpdate() {
-    return this._inner.stateUpdate;
+  get dataPipeline(): DataPipeline {
+    return this._inner.dataPipeline;
   }
 
   get presence() {
@@ -111,13 +126,20 @@ export class DataSpace {
     return this._notarizationPluginConsumer.processor;
   }
 
+  get cache() {
+    return this._cache;
+  }
+
   async open() {
     await this.notarizationPlugin.open();
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
+    this._state = SpaceState.INACTIVE;
+    this.metrics.open = new Date();
   }
 
   async close() {
+    this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
 
     await this.authVerifier.close();
@@ -129,22 +151,88 @@ export class DataSpace {
     await this._presence.destroy();
   }
 
+  async postMessage(channel: string, message: any) {
+    return this._gossip.postMessage(channel, message);
+  }
+
+  listen(channel: string, callback: (message: GossipMessage) => void) {
+    return this._gossip.listen(channel, callback);
+  }
+
+  /**
+   * Initialize the data pipeline in a separate task.
+   */
+  initializeDataPipelineAsync() {
+    scheduleTask(this._ctx, async () => {
+      try {
+        this.metrics.pipelineInitBegin = new Date();
+        await this.initializeDataPipeline();
+      } catch (err) {
+        if (err instanceof CancelledError) {
+          log('Data pipeline initialization cancelled', err);
+          return;
+        }
+
+        log.error('Error initializing data pipeline', err);
+        this._state = SpaceState.ERROR;
+        this.error = err as Error;
+        this.stateUpdate.emit();
+      } finally {
+        this.metrics.ready = new Date();
+      }
+    });
+  }
+
   async initializeDataPipeline() {
+    if (this._state !== SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+    this._state = SpaceState.INITIALIZING;
+
+    // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      timeout: CONTROL_PIPELINE_READY_TIMEFRAME
+      ctx: this._ctx,
+      breakOnStall: false,
     });
 
+    this.metrics.controlPipelineReady = new Date();
+
     await this._createWritableFeeds();
+    log('Writable feeds created');
+    this.stateUpdate.emit();
+
     this.notarizationPlugin.setWriter(
       createMappedFeedWriter<Credential, FeedMessage.Payload>(
         (credential) => ({
-          credential: { credential }
+          credential: { credential },
         }),
-        this._inner.controlPipeline.writer
-      )
+        this._inner.controlPipeline.writer,
+      ),
     );
 
-    await this._inner.initDataPipeline(this._dataPipelineController);
+    await this._inner.initializeDataPipeline();
+
+    this.metrics.dataPipelineOpen = new Date();
+
+    // Wait for the first epoch.
+    await cancelWithContext(this._ctx, this._inner.dataPipeline.ensureEpochInitialized());
+
+    log('waiting for data pipeline to reach target timeframe');
+    // Wait for the data pipeline to catch up to its desired timeframe.
+    await this._inner.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe({
+      ctx: this._ctx,
+      breakOnStall: false,
+    });
+
+    this.metrics.dataPipelineReady = new Date();
+
+    log('data pipeline ready');
+    await this._callbacks.beforeReady?.();
+
+    this._state = SpaceState.READY;
+    this.stateUpdate.emit();
+
+    await this._callbacks.afterReady?.();
   }
 
   @timed(10_000)
@@ -162,9 +250,9 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL
-          }
-        })
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+        }),
       );
     }
     if (!this.inner.dataFeedKey) {
@@ -179,17 +267,41 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.DATA
-          }
-        })
+            designation: AdmittedFeed.Designation.DATA,
+          },
+        }),
       );
     }
 
     if (credentials.length > 0) {
-      await this.notarizationPlugin.notarize(credentials);
+      // Never times out
+      await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
     }
 
     // Set this after credentials are notarized so that on failure we will retry.
     await this._metadataStore.setWritableFeedKeys(this.key, this.inner.controlFeedKey!, this.inner.dataFeedKey!);
+  }
+
+  async createEpoch() {
+    const epoch = await this.dataPipeline.createEpoch();
+
+    await this.inner.controlPipeline.writer.write({
+      credential: {
+        credential: await this._signingContext.credentialSigner.createCredential({
+          subject: this.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.Epoch',
+            ...epoch,
+          },
+        }),
+      },
+    });
+
+    for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
+      const indexBeforeEpoch = epoch.timeframe.get(feed.key);
+      if (indexBeforeEpoch) {
+        await feed.clear(0, indexBeforeEpoch + 1);
+      }
+    }
   }
 }

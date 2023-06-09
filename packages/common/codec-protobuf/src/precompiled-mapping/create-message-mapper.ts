@@ -16,7 +16,7 @@ export const createMessageMapper = (type: pb.Type, substitutions: MapingDescript
 const createMessageMapperCached = (
   type: pb.Type,
   substitutions: MapingDescriptors,
-  cache: Record<string, { map: Mapper }>
+  cache: Record<string, { map: Mapper }>,
 ) => {
   if (!cache[type.fullName]) {
     // Indirection to allow for recursive message types.
@@ -32,7 +32,7 @@ const createMessageMapperCached = (
             if (substitution) {
               const context: TypeMapperContext = {
                 messageName: type.fullName.slice(1),
-                fieldName: field.name
+                fieldName: field.name,
               };
               c`${ref(substitution)}(${value}, ${ref(context)}, ...extraArgs)`;
             } else if (field.resolvedType && field.resolvedType instanceof pb.Type) {

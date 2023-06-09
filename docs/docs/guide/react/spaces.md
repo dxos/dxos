@@ -21,7 +21,7 @@ Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
 
 Arguments:
 
-`meta`: <code>[PropertiesOptions](/api/@dxos/react-client/types/PropertiesOptions)</code>
+`meta`: <code>[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)</code>
 :::
 
 ```tsx{10} file=./snippets/create-spaces.tsx#L5-
@@ -34,7 +34,7 @@ export const App = () => {
   return (
     <button
       onClick={async () => {
-        const space = await client.echo.createSpace();
+        const space = await client.createSpace();
       }}
     ></button>
   );
@@ -53,7 +53,7 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L18)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L17)
 
 Get a specific Space using its key. Returns undefined when no spaceKey is
 available. Requires a ClientProvider somewhere in the parent tree.
@@ -66,26 +66,17 @@ Arguments:
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L59)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L35)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
+By default, only ready spaces are returned.
 
 Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)\[]</code>
 
-Arguments: none
-:::
+Arguments:
 
-:::apidoc[@dxos/react-client.useOrCreateFirstSpace]
-### [useOrCreateFirstSpace()](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L29)
-
-Returns the first space in the current spaces array. If none exist,  `null`
-will be returned at first, then the hook will re-run and return a space once
-it has been created. Requires a ClientProvider somewhere in the parent tree.
-
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
-
-Arguments: none
+`options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
 :::
 
 ### Example
@@ -95,27 +86,24 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useSpaces,
+  Space,
+  useQuery,
   useSpace,
-  useOrCreateFirstSpace,
-  useQuery
+  useSpaces
 } from '@dxos/react-client';
 
 export const App = () => {
-  // usually space IDs are in the URL like in params.id: 
+  // Usually space IDs are in the URL like in params.spaceKey.
   const space1 = useSpace('<space_key_goes_here>');
   
-  // get all spaces
+  // Get all spaces.
   const spaces = useSpaces();
-  const space2 = spaces?.[0]; // spaces may be null at first
+  const space2: Space | undefined = spaces[0]; // Spaces may be an empty list.
   
-  // get or create a first space:
-  const space3 = useOrCreateFirstSpace();
-  
-  // get objects from the space as an array of JS objects
-  const objects = useQuery(space3);
+  // Get objects from the space as an array of JS objects.
+  const objects = useQuery(space2);
 
-  return <>{objects?.length}</>;
+  return <>{objects.length}</>;
 };
 
 const root = createRoot(document.getElementById('root')!);

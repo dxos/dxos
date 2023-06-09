@@ -5,21 +5,31 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Event, synchronized, Trigger, UnsubscribeCallback } from '@dxos/async';
-import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
+import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import {
+  AuthenticatingInvitationObservable,
+  ClientServicesProvider,
+  createDefaultModelFactory,
+  Space,
+} from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
+import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { trace } from '@dxos/protocols';
+import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { isNode } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
+import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
-import { fromIFrame, fromHost } from './utils';
+import { fromHost, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -50,12 +60,18 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
-  private readonly _statusUpdate = new Event<SystemStatus | undefined>();
+  // TODO(wittjosiah): Make `null` status part of enum.
+  private readonly _statusUpdate = new Event<SystemStatus | null>();
 
   private _initialized = false;
   private _statusStream?: Stream<SystemStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
-  private _status?: SystemStatus;
+  private _status = MulticastObservable.from(this._statusUpdate, null);
+
+  /**
+   * Unique id of the Client, local to the current peer.
+   */
+  private readonly _instanceId = PublicKey.random().toHex();
 
   // prettier-ignore
   constructor({
@@ -63,15 +79,26 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol !== 'https:' &&
+      !window.location.origin.includes('localhost')
+    ) {
+      console.warn(`DXOS Client will not work in non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`);
+    }
+
     this._config = config ?? new Config();
-    this._services = services ?? (typeof window !== 'undefined' ? fromIFrame(this._config) : fromHost(this._config));
+    this._services = services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config));
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 
     this._halo = new HaloProxy(this._services);
-    this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
+    this._echo = new EchoProxy(this._services, this._modelFactory);
     this._mesh = new MeshProxy(this._services);
+    this._halo._traceParent = this._instanceId;
+    this._echo._traceParent = this._instanceId;
+    this._mesh._traceParent = this._instanceId;
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = this.config.get('runtime.client.log.filter');
@@ -88,9 +115,9 @@ export class Client {
   toJSON() {
     return {
       initialized: this.initialized,
-      echo: this.echo,
-      halo: this.halo,
-      mesh: this.mesh
+      echo: this._echo,
+      halo: this._halo,
+      mesh: this._mesh,
     };
   }
 
@@ -117,28 +144,63 @@ export class Client {
   }
 
   /**
+   * Client services system status.
+   */
+  get status(): MulticastObservable<SystemStatus | null> {
+    return this._status;
+  }
+
+  /**
    * HALO credentials.
    */
   get halo(): HaloProxy {
-    assert(this._initialized, 'Client not initialized.');
     return this._halo;
   }
 
   /**
-   * ECHO database.
+   * MESH networking.
    */
-  get echo(): EchoProxy {
-    assert(this._initialized, 'Client not initialized.');
-    // if (!this.halo.identity) {
-    //   throw new ApiError('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
-    // }
-
-    return this._echo;
+  get mesh(): MeshProxy {
+    return this._mesh;
   }
 
-  get mesh(): MeshProxy {
-    assert(this._initialized, 'Client not initialized.');
-    return this._mesh;
+  /**
+   * @deprecated
+   */
+  get dbRouter(): DatabaseRouter {
+    return this._echo.dbRouter;
+  }
+
+  /**
+   * ECHO spaces.
+   */
+  get spaces(): MulticastObservable<Space[]> {
+    return this._echo.spaces;
+  }
+
+  addSchema(schema: EchoSchema): void {
+    return this._echo.addSchema(schema);
+  }
+
+  /**
+   * Creates a new space.
+   */
+  createSpace(meta?: PropertiesProps): Promise<Space> {
+    return this._echo.createSpace(meta);
+  }
+
+  /**
+   * Get an existing space by its key.
+   */
+  getSpace(spaceKey: PublicKey): Space | undefined {
+    return this._echo.getSpace(spaceKey);
+  }
+
+  /**
+   * Accept an invitation to a space.
+   */
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+    return this._echo.acceptInvitation(invitation);
   }
 
   /**
@@ -150,6 +212,8 @@ export class Client {
     if (this._initialized) {
       return;
     }
+
+    log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     await this._services.open();
 
@@ -167,19 +231,16 @@ export class Client {
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
-        this._status = status;
-        this._statusUpdate.emit(this._status);
+        this._statusUpdate.emit(status);
 
         this._statusTimeout = setTimeout(() => {
-          this._status = undefined;
-          this._statusUpdate.emit(this._status);
+          this._statusUpdate.emit(null);
         }, 5000);
       },
       (err) => {
         trigger.wake(err);
-        this._status = undefined;
-        this._statusUpdate.emit(this._status);
-      }
+        this._statusUpdate.emit(null);
+      },
     );
 
     const err = await trigger.wait();
@@ -188,11 +249,12 @@ export class Client {
     }
 
     // TODO(wittjosiah): Promise.all?
-    await this._halo.open();
+    await this._halo._open();
     await this._echo.open();
-    await this._mesh.open();
+    await this._mesh._open();
 
     this._initialized = true;
+    log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
   }
 
   /**
@@ -205,26 +267,15 @@ export class Client {
       return;
     }
 
-    await this._halo.close();
+    await this._halo._close();
     await this._echo.close();
-    await this._mesh.close();
+    await this._mesh._close();
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
     await this._services.close();
 
     this._initialized = false;
-  }
-
-  getStatus(): SystemStatus | undefined {
-    return this._status;
-  }
-
-  /**
-   * Observe the system status.
-   */
-  subscribeStatus(callback: (status: SystemStatus | undefined) => void): UnsubscribeCallback {
-    return this._statusUpdate.on(callback);
   }
 
   /**
@@ -253,6 +304,9 @@ export class Client {
     this._initialized = false;
   }
 
+  /**
+   * @deprecated
+   */
   createSerializer() {
     return new SpaceSerializer(this._echo);
   }

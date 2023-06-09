@@ -54,10 +54,10 @@ export class Multiplexer {
             log('send', { id: this._id, feedKey: PublicKey.from(feedKey), payload: data.length });
             next(null, {
               feedKey: core.key,
-              payload: data
+              payload: data,
             });
-          }
-        })
+          },
+        }),
       )
       .pipe(this.output, () => {
         log('pipeline closed', { id: this._id });
@@ -82,8 +82,8 @@ export class Multiplexer {
           log('recv', { id: this._id, feedKey: PublicKey.from(feedKey), payload: (payload as Buffer).length });
           feedStream.write(payload);
           next();
-        }
-      })
+        },
+      }),
     );
 
     log('opened');

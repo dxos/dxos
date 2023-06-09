@@ -36,7 +36,7 @@ describe('Agent', () => {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent({ config });
     await agent.initialize();
-    const space = await agent.client!.echo.createSpace();
+    const space = await agent.client!.createSpace();
     expect(space.key).to.exist;
     expect(space.properties).to.exist;
     await agent.destroy();
@@ -52,27 +52,27 @@ describe('Agent', () => {
       startSequence: {
         commands: [
           {
-            createProfile: {}
-          }
-        ]
+            createProfile: {},
+          },
+        ],
       },
       testSequences: [
         {
           commands: [
             {
               createSpace: {
-                id: 'space-1'
-              }
+                id: 'space-1',
+              },
             },
             {
               createSpaceInvitation: {
                 id: 'space-1',
-                swarmKey: swarmKey.toHex()
-              }
-            }
-          ]
-        }
-      ]
+                swarmKey: swarmKey.toHex(),
+              },
+            },
+          ],
+        },
+      ],
     };
 
     const spec2: AgentSpec = {
@@ -80,21 +80,21 @@ describe('Agent', () => {
       startSequence: {
         commands: [
           {
-            createProfile: {}
-          }
-        ]
+            createProfile: {},
+          },
+        ],
       },
       testSequences: [
         {
           commands: [
             {
               acceptSpaceInvitation: {
-                swarmKey: swarmKey.toHex()
-              }
-            }
-          ]
-        }
-      ]
+                swarmKey: swarmKey.toHex(),
+              },
+            },
+          ],
+        },
+      ],
     };
 
     // TODO(burdon): Capture logs/stats.
@@ -107,13 +107,13 @@ describe('Agent', () => {
       config,
       services: testBuilder.createLocal(),
       spec: spec1,
-      stateMachine: testStateMachineFactory(spec1.stateMachine!)
+      stateMachine: testStateMachineFactory(spec1.stateMachine!),
     });
     const agent2 = new Agent({
       config,
       services: testBuilder.createLocal(),
       spec: spec2,
-      stateMachine: testStateMachineFactory(spec2.stateMachine!)
+      stateMachine: testStateMachineFactory(spec2.stateMachine!),
     });
 
     // Initialize.
@@ -125,10 +125,10 @@ describe('Agent', () => {
     const space2 = new Trigger<Space>();
 
     agent1.sequenceComplete.once(() => {
-      space1.wake(agent1.client.echo.getSpaces()[0]!);
+      space1.wake(agent1.client.spaces.get()[0]!);
     });
     agent2.sequenceComplete.once(() => {
-      space2.wake(agent2.client.echo.getSpaces()[0]!);
+      space2.wake(agent2.client.spaces.get()[0]!);
     });
 
     // Test invitation happened.
@@ -175,7 +175,7 @@ class HostAgentStateMachine extends AgentStateMachine {
       await this.agent.client.halo.createIdentity();
     } else if (command.createSpace) {
       const id = command.createSpace.id;
-      const space = await this.agent.client.echo.createSpace();
+      const space = await this.agent.client.createSpace();
       if (id) {
         this.spaces.set(id, space);
       }
@@ -183,19 +183,21 @@ class HostAgentStateMachine extends AgentStateMachine {
       const id = command.createSpaceInvitation.id;
       const space = this.spaces.get(id)!;
       const observable = await space.createInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey)
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.fromHex(command.createSpaceInvitation.swarmKey),
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
-        }
-      });
+        },
+      );
 
       await trigger.wait();
     } else {
@@ -212,20 +214,26 @@ class GuestAgentStateMachine extends AgentStateMachine {
     if (command.createProfile) {
       await this.agent.client.halo.createIdentity();
     } else if (command.acceptSpaceInvitation) {
-      const observable = await this.agent.client.echo.acceptInvitation({
-        type: Invitation.Type.INTERACTIVE_TESTING,
-        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey)
+      const observable = await this.agent.client.acceptInvitation({
+        invitationId: PublicKey.random().toHex(),
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: Invitation.AuthMethod.NONE,
+        swarmKey: PublicKey.fromHex(command.acceptSpaceInvitation.swarmKey),
+        state: Invitation.State.INIT,
       });
 
       const trigger = new Trigger();
-      observable.subscribe({
-        onSuccess(invitation: Invitation) {
-          trigger.wake();
+      observable.subscribe(
+        (invitation: Invitation) => {
+          if (invitation.state === Invitation.State.SUCCESS) {
+            trigger.wake();
+          }
         },
-        onError(err: Error) {
+        (err: Error) => {
           throw err;
-        }
-      });
+        },
+      );
 
       await trigger.wait();
     } else {

@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Document } from '@dxos/client';
+import { Client, TypedObject } from '@dxos/client';
 
 const client = new Client();
 
-class Task extends Document {
+class Task extends TypedObject {
   public declare type: 'task';
   public declare isCompleted: boolean;
 }
@@ -14,9 +14,11 @@ class Task extends Document {
 async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // get items that match a filter
-  const tasks = space.experimental.db.query<Task>({ type: 'task' });
+  // TODO(wittjosiah): Fix type inference.
+  // @ts-ignore
+  const tasks = space.db.query<Task>({ type: 'task' });
 };

@@ -13,6 +13,6 @@ test('expectToThrow', async () => {
         setTimeout(() => {
           reject(new Error());
         }, 100);
-      })
+      }),
   );
 });

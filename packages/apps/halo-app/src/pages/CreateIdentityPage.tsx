@@ -5,9 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { SingleInputStep } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/aurora';
+import { log } from '@dxos/log';
+import { Heading, SingleInputStep } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { Heading, useTranslation } from '@dxos/react-components';
 
 const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');
@@ -23,12 +24,15 @@ const CreateIdentityPage = () => {
       redirectUrl?.startsWith('http')
         ? window.location.replace(redirectUrl)
         : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
-    [redirectUrl]
+    [redirectUrl],
   );
 
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createIdentity({ displayName }).then(redirect, (_rejection) => setPending(false));
+    void client.halo.createIdentity({ displayName }).then(redirect, (rejection) => {
+      log.catch(rejection);
+      setPending(false);
+    });
   }, [displayName, redirect]);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ const CreateIdentityPage = () => {
           inputPlaceholder: t('displayName placeholder'),
           onChange: ({ target: { value } }) => setDisplayName(value),
           onNext,
-          onBack: () => history.back()
+          onBack: () => history.back(),
         }}
       />
     </main>

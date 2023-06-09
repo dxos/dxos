@@ -3,17 +3,18 @@
 //
 
 import React, { useEffect, useState } from 'react';
-import { Column } from 'react-table';
 
 import { PublicKey } from '@dxos/keys';
+import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { humanize } from '@dxos/util';
 
 import { MasterTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages, useSpacesInfo } from '../../hooks';
+import { Rows } from '@phosphor-icons/react';
 
-const columns: Column<SubscribeToFeedBlocksResponse.Block>[] = [
+const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
     Header: 'FeedKey',
     width: 120,
@@ -31,7 +32,9 @@ const columns: Column<SubscribeToFeedBlocksResponse.Block>[] = [
 
 const FeedsPanel = () => {
   const setContext = useDevtoolsDispatch();
-  const { spaceInfo: metadata, feedKey } = useDevtoolsState();
+  const { space, feedKey } = useDevtoolsState();
+  const spacesInfo = useSpacesInfo();
+  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
 
   const [feeds, setFeeds] = useState<PublicKey[]>([]);
   useEffect(() => {
@@ -52,7 +55,7 @@ const FeedsPanel = () => {
     <div className='flex flex-col overflow-hidden'>
       <SpaceToolbar>
         <div className='w-[400px]'>
-          <PublicKeySelector keys={feeds} defaultValue={feedKey} placeholder={'Select feed'} onChange={handleSelect} />
+          <PublicKeySelector keys={feeds} Icon={Rows} defaultValue={feedKey} placeholder={'Select feed'} onChange={handleSelect} />
         </div>
       </SpaceToolbar>
       <div className='flex flex-1 overflow-hidden'>

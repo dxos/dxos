@@ -67,10 +67,12 @@ describe('NotarizationPlugin', () => {
     const credential = await generator.createFeedAdmission(
       await keyring.createKey(),
       await keyring.createKey(),
-      AdmittedFeed.Designation.CONTROL
+      AdmittedFeed.Designation.CONTROL,
     );
 
-    const notarized = peer2.notarizationPlugin.notarize([credential]);
+    const notarized = peer2.notarizationPlugin.notarize({
+      credentials: [credential],
+    });
 
     await testBuilder.connect(peer1, peer2);
     await notarized;

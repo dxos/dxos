@@ -20,7 +20,7 @@ export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, de
         if (err) {
           log.catch(err);
         }
-      }
+      },
     );
 
     return () => {

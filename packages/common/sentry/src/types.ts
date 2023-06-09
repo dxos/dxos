@@ -10,7 +10,11 @@ export type InitOptions = {
   installationId?: string;
   release?: string;
   environment?: string;
+  tracing?: boolean;
   sampleRate?: number;
+  replay?: boolean;
+  replaySampleRate?: number;
+  replaySampleRateOnError?: number;
   scrubFilenames?: boolean;
   properties?: object;
   transport?: () => Transport;

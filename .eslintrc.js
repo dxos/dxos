@@ -54,6 +54,6 @@ module.exports = {
       extends: [
         'plugin:@dxos/test'
       ]
-    }
+    },
   ]
 };

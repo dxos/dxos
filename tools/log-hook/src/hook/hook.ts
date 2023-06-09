@@ -40,7 +40,7 @@ export const register = () => {
           writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
           if (sourceMap) {
             writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap!, {
-              encoding: 'utf-8'
+              encoding: 'utf-8',
             });
           }
         }
@@ -52,8 +52,8 @@ export const register = () => {
       }
     },
     {
-      extensions: ['.ts']
-    }
+      extensions: ['.ts'],
+    },
   );
 
   const getSourceMap = (filename: string): string | undefined => {

@@ -31,8 +31,8 @@ const useStatus = () => {
         endpoint: KUBE_ENDPOINT,
         services: services.map(({ name, status }: any) => ({
           name,
-          status
-        }))
+          status,
+        })),
       });
     } catch (err) {
       if (!isMounted()) {
@@ -40,7 +40,7 @@ const useStatus = () => {
       }
 
       setStatus({
-        error: String(err)
+        error: String(err),
       });
     }
   }, []);

@@ -21,7 +21,7 @@ export type ZoomOptions = {
 export const defaultOptions: ZoomOptions = {
   enabled: true,
   extent: [1 / 2, 2],
-  onDblClick: (zoom: ZoomHandler) => zoom.reset()
+  onDblClick: (zoom: ZoomHandler) => zoom.reset(),
 };
 
 /**
@@ -35,7 +35,7 @@ export class ZoomHandler {
   constructor(
     private readonly _ref: RefObject<SVGGElement | undefined>,
     private readonly _context: SVGContext,
-    options: ZoomOptions
+    options: ZoomOptions,
   ) {
     this._options = defaultsDeep({}, options, defaultOptions);
     this._enabled = this._options.enabled ?? true;
@@ -73,7 +73,7 @@ export class ZoomHandler {
             ? () => {
                 this._options?.onDblClick!(this);
               }
-            : null
+            : null,
         );
     } else {
       d3.select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.

@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
-import faker from 'faker';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
@@ -134,7 +134,7 @@ describe('Replication', () => {
       batch((next, i, remaining) => {
         const size = faker.datatype.number({
           min: 1,
-          max: Math.min(10, remaining)
+          max: Math.min(10, remaining),
         });
         for (let j = 0; j < size; j++) {
           core1.append(JSON.stringify(createDataItem(i + j)), noop);
@@ -213,7 +213,7 @@ describe('Replication', () => {
       setTimeout(async () => {
         for (const _ of Array.from(Array(numBlocks))) {
           const block = {
-            text: faker.lorem.sentence()
+            text: faker.lorem.sentence(),
           };
 
           core1.append(JSON.stringify(block), noop);

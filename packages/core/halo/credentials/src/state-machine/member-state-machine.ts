@@ -52,19 +52,19 @@ export class MemberStateMachine {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
     assert(assertion.spaceKey.equals(this._spaceKey));
-    assert(!this._members.has(credential.subject.id));
+    assert(!this._members.has(credential.subject.id), `Duplicate SpaceMember credential: ${credential.subject.id}`);
 
     const info: MemberInfo = {
       key: credential.subject.id,
       credential,
-      assertion
+      assertion,
     };
     this._members.set(credential.subject.id, info);
     log('member added', {
       member: credential.subject.id,
       space: this._spaceKey,
       role: assertion.role,
-      profile: assertion.profile
+      profile: assertion.profile,
     });
     await this.onMemberAdmitted.callIfSet(info);
   }

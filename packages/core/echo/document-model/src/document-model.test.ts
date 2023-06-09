@@ -12,6 +12,7 @@ import { OrderedArray } from './ordered-array';
 import { Reference } from './reference';
 import { validateKey } from './util';
 
+// TODO(dmaretskyi): Move to database unit tests in echo-pipeline.
 describe.skip('DocumentModel', () => {
   test('checks valid keys', () => {
     const valid = ['x', 'foo', 'foo_bar', 'foo.bar', '@type', '$type', 'foo$bar'];
@@ -194,7 +195,7 @@ describe.skip('DocumentModel', () => {
 
       const array = [
         { foo: 'bar' },
-        { nested: { foo: 'bar', bar: 2, ref: new Reference('123'), none: null, zero: 0 } } // TODO(mykola): new Date() fails.
+        { nested: { foo: 'bar', bar: 2, ref: new Reference('123'), none: null, zero: 0 } }, // TODO(mykola): new Date() fails.
       ];
       await peer1.model.set('tags', OrderedArray.fromValues(array));
       expect(peer1.model.get('tags').toArray()).toEqual(array);
@@ -242,6 +243,23 @@ describe.skip('DocumentModel', () => {
       // Both variants are a valid way to resolve the conflict.
       // What's important is that the final state is consistent between peers.
       expect(peer1.model.get('tags').toArray()).toEqual(peer2.model.get('tags').toArray());
+    });
+
+    test('assign and push', async () => {
+      const testBuilder = new TestBuilder(new ModelFactory().registerModel(DocumentModel), DocumentModel);
+      const peer1 = testBuilder.createPeer();
+
+      await peer1.model
+        .builder()
+        .set('tags', OrderedArray.fromValues(['red']))
+        .commit();
+      expect(peer1.model.get('tags').toArray()).toHaveLength(1);
+
+      await peer1.model.builder().set('tags', OrderedArray.fromValues([])).commit();
+      expect(peer1.model.get('tags').toArray()).toHaveLength(0);
+
+      await peer1.model.builder().arrayPush('tags', ['green']).commit();
+      expect(peer1.model.get('tags').toArray()).toHaveLength(1);
     });
   });
 });

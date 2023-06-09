@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
+import { Browser, devices, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
 import type { BrowserContext, Page } from 'playwright';
 import { v4 } from 'uuid';
 
 import { getBrowser } from './browser';
-import { BrowserType } from './types';
+import { BrowserType, MobileType } from './types';
 import { Lock } from './util';
 
 export type { BrowserType } from './types';
@@ -27,9 +27,9 @@ export const getPersistentContext = (browserType: BrowserType) => {
       process.env.EXTENSION_PATH && process.env.HEADLESS === 'false'
         ? [
             `--disable-extensions-except=${process.env.EXTENSION_PATH}`,
-            `--load-extension=${process.env.EXTENSION_PATH}`
+            `--load-extension=${process.env.EXTENSION_PATH}`,
           ]
-        : undefined
+        : undefined,
   };
 
   return getBrowser(browserType).launchPersistentContext(`/tmp/playwright/${v4()}`, options);
@@ -94,29 +94,51 @@ export const extensionId = async (context: BrowserContext) => {
   return extensionId;
 };
 
+const getProject = (browser: BrowserType | MobileType): Project => {
+  switch (browser) {
+    case 'chromium':
+    case 'firefox':
+    case 'webkit':
+      return {
+        name: browser,
+        use: {
+          browserName: browser,
+        },
+      };
+
+    case 'android':
+      return {
+        name: 'android',
+        use: {
+          ...devices['Pixel 5'],
+        },
+      };
+
+    case 'ios':
+      return {
+        name: 'ios',
+        use: {
+          ...devices['iPhone SE'],
+        },
+      };
+  }
+};
+
 export const defaultPlaywrightConfig: PlaywrightTestConfig = {
   testDir: '.',
   outputDir: process.env.OUTPUT_PATH,
-  timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : 30_000,
+  timeout: process.env.TIMEOUT ? Number(process.env.TIMEOUT) : undefined,
   forbidOnly: !!process.env.CI,
-  retries: 2,
+  retries: process.env.CI ? 2 : 0,
   reporter:
     process.env.WATCH === 'true'
       ? [['dot']]
       : process.env.RESULTS_PATH
-      ? [['dot'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
+      ? [['list'], ['junit', { outputFile: process.env.RESULTS_PATH }]]
       : [['list']],
   use: {
     headless: process.env.HEADLESS !== 'false',
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure',
   },
-  projects: process.env.BROWSERS?.split(',').map(
-    (browser) =>
-      ({
-        name: browser,
-        use: {
-          browserName: browser
-        }
-      } as Project)
-  )
+  projects: process.env.BROWSERS?.split(',').map((browser) => getProject(browser as BrowserType)),
 };

@@ -12,7 +12,7 @@ import {
   IdentityService,
   QueryIdentityResponse,
   RecoverIdentityRequest,
-  SignPresentationRequest
+  SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -49,7 +49,7 @@ export class IdentityServiceImpl implements IdentityService {
     return {
       identityKey: this._serviceContext.identityManager.identity.identityKey,
       spaceKey: this._serviceContext.identityManager.identity.space.key,
-      profile: this._serviceContext.identityManager.identity.profileDocument
+      profile: this._serviceContext.identityManager.identity.profileDocument,
     };
   }
 
@@ -61,7 +61,7 @@ export class IdentityServiceImpl implements IdentityService {
       signer: this._serviceContext.keyring,
       signerKey: this._serviceContext.identityManager.identity.deviceKey,
       chain: this._serviceContext.identityManager.identity.deviceCredentialChain,
-      nonce
+      nonce,
     });
   }
 }

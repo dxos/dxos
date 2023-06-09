@@ -40,7 +40,7 @@ describe('SystemService', () => {
       },
       onReset: () => {
         reset.wake(true);
-      }
+      },
     });
   });
 

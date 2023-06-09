@@ -1,23 +1,36 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/packlets/testing/index.mjs",
+      "import": "./dist/lib/browser/packlets/testing/index.mjs",
+      "require": "./dist/lib/node/packlets/testing/index.cjs",
+      "node": "./dist/lib/node/packlets/testing/index.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/packlets/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
-    "shell.css",
     "src"
   ],
   "scripts": {
@@ -25,6 +38,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -47,14 +61,19 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/websocket-rpc": "workspace:*",
+    "base-x": "~3.0.9",
     "debug": "^4.3.3",
-    "lodash.isequal": "^4.5.0"
+    "lodash.isequal": "^4.5.0",
+    "lodash.isequalwith": "^4.4.0"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
+    "@types/lodash.isequalwith": "^4.4.0",
     "@types/node": "^18.11.9",
+    "fast-check": "~3.3.0",
     "source-map-support": "^0.5.12"
   },
   "engines": {

@@ -53,8 +53,8 @@ runtime:
     ipfs:
       server: http://localhost:5001/
       gateway: http://localhost:8888/ipfs
-    signal:
-      server: ws://localhost/.well-known/dx/signal
+    signaling:
+      - server: ws://localhost/.well-known/dx/signal
     ice:
       - urls: turn:localhost:3478
         username: dxos

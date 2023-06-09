@@ -5,14 +5,11 @@
 import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
-import React, { PropsWithChildren, useState } from 'react';
+import React, { PropsWithChildren, ReactNode, useState } from 'react';
 
-import { Trigger } from '@dxos/async';
-import { EchoSchema, Invitation, Space } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
-import { raise } from '@dxos/debug';
-import { log } from '@dxos/log';
-import { Loading } from '@dxos/react-components';
+import { Client, EchoSchema, PublicKey, Space, SpaceProxy } from '@dxos/client';
+import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
 
@@ -23,38 +20,12 @@ const services = () => testBuilder.createLocal();
 const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSpace: Space; schema?: EchoSchema }>) => {
   return (
     <ClientProvider
-      fallback={() => <Loading label='Loading…' />}
+      fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
         await client.halo.createIdentity({ displayName: faker.name.firstName() });
-        schema && client.echo.addSchema(schema);
-
-        const success1 = new Trigger<Invitation>();
-        const success2 = new Trigger<Invitation>();
-
-        const observable1 = rootSpace.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-        log('invitation created');
-        observable1.subscribe({
-          onConnecting: (invitation) => {
-            const observable2 = client.echo.acceptInvitation(invitation);
-            log('invitation accepted');
-
-            observable2.subscribe({
-              onSuccess: (invitation: Invitation) => {
-                success2.wake(invitation);
-                log('invitation success2');
-              },
-              onError: (err: Error) => raise(err)
-            });
-          },
-          onSuccess: (invitation) => {
-            success1.wake(invitation);
-            log('invitation success1');
-          },
-          onError: (err) => raise(err)
-        });
-
-        await Promise.all([success1.wait(), success2.wait()]);
+        schema && client.addSchema(schema);
+        await performInvitation({ host: rootSpace as SpaceProxy, guest: client });
       }}
     >
       {children}
@@ -62,43 +33,72 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
   );
 };
 
-export type ClientSpaceDecoratorOptions = {
-  schema?: EchoSchema;
+export type PeersInSpaceProps = {
   count?: number;
+  schema?: EchoSchema;
+  onCreateSpace?: (space: Space) => MaybePromise<void>;
+  children: (id: number, spaceKey: PublicKey) => ReactNode;
 };
 
 /**
+ * Sets up identity for n peers and join them into a single space.
+ * Child is function which recieves an id and a space key.
+ * The child is rendered n times, once for each peer.
+ */
+export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: PeersInSpaceProps) => {
+  const [space, setSpace] = useState<Space>();
+
+  return (
+    <div className='flex' style={{ display: 'flex' }}>
+      <ClientProvider
+        fallback={() => <p>Loading</p>}
+        services={services}
+        onInitialized={async (client) => {
+          await client.halo.createIdentity({ displayName: faker.name.firstName() });
+          schema && client.addSchema(schema);
+          const space = await client.createSpace({ name: faker.animal.bird() });
+          await onCreateSpace?.(space);
+          setSpace(space);
+        }}
+      >
+        {space && children(0, space.key)}
+      </ClientProvider>
+
+      {space &&
+        [...Array(count - 1)].map((_, index) => (
+          <ChildClient key={index} rootSpace={space} schema={schema}>
+            {children(index + 1, space.key)}
+          </ChildClient>
+        ))}
+    </div>
+  );
+};
+
+// TODO(wittjosiah): This isn't working with latest storybook.
+//   https://github.com/storybookjs/storybook/issues/15223
+/**
  * Storybook decorator to setup identity for n peers and join them into a single space.
  * The story is rendered n times, once for each peer and the space is passed to the story as an arg.
- *
- * @param {number} count Number of peers to join.
- * @returns {DecoratorFunction}
  */
+// prettier-ignore
 export const ClientSpaceDecorator =
-  ({ schema, count = 1 }: ClientSpaceDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> =>
-  (Story, context) => {
-    const [space, setSpace] = useState<Space>();
-
-    return (
-      <div className='flex' style={{ display: 'flex' }}>
-        <ClientProvider
-          fallback={() => <Loading label='Loading…' />}
-          services={services}
-          onInitialized={async (client) => {
-            await client.halo.createIdentity({ displayName: faker.name.firstName() });
-            schema && client.echo.addSchema(schema);
-            const space = await client.echo.createSpace({ name: faker.animal.bird() });
-            setSpace(space);
-          }}
-        >
-          <Story args={{ spaceKey: space?.key, id: 0, ...context.args }} />
-        </ClientProvider>
-        {space &&
-          [...Array(count - 1)].map((_, index) => (
-            <ChildClient key={index} rootSpace={space} schema={schema}>
-              <Story args={{ spaceKey: space?.key, id: index + 1, ...context.args }} />
-            </ChildClient>
-          ))}
-      </div>
+  (options: Omit<PeersInSpaceProps, 'children'> = {}): DecoratorFunction<ReactRenderer, any> => {
+    return (Story, context) => (
+      <PeersInSpace {...options}>
+        {(id, spaceKey) => <Story args={{ spaceKey, id, ...context.args }} />}
+      </PeersInSpace>
     );
   };
+
+export const setupPeersInSpace = async (options: Omit<PeersInSpaceProps, 'children'> = {}) => {
+  const { count = 1, schema, onCreateSpace } = options;
+  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
+  await Promise.all(clients.map((client) => client.initialize()));
+  await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.name.firstName() })));
+  schema && clients.map((client) => client.addSchema(schema));
+  const space = await clients[0].createSpace({ name: faker.animal.bird() });
+  await onCreateSpace?.(space);
+  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client })));
+
+  return { spaceKey: space.key, clients };
+};

@@ -36,13 +36,19 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-services"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../halo-app"
+      "path": "../../sdk/vault"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }

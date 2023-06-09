@@ -1,5 +1,6 @@
 # Type `SerializedSpace`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/serializer.d.ts:6]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/serializer.d.ts:11]()</sub>
+
 
 
 

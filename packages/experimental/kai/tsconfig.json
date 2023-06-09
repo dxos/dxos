@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -19,31 +18,13 @@
   ],
   "references": [
     {
-      "path": "../../apps/halo-app"
-    },
-    {
-      "path": "../../apps/patterns/assets"
-    },
-    {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
-      "path": "../../apps/patterns/react-composer"
-    },
-    {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -55,19 +36,10 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-typegen"
     },
     {
       "path": "../../core/mesh/rpc"
@@ -79,40 +51,46 @@
       "path": "../../core/mesh/websocket-rpc"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../chess-app"
+      "path": "../../sdk/react-shell"
     },
     {
-      "path": "../framebox"
+      "path": "../../sdk/vault"
     },
     {
-      "path": "../gem-core"
+      "path": "../../ui/aurora"
     },
     {
-      "path": "../gem-spore"
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../../ui/react-icons"
+    },
+    {
+      "path": "../kai-frames"
+    },
+    {
+      "path": "../kai-framework"
+    },
+    {
+      "path": "../kai-types"
     },
     {
       "path": "../metagraph"
     },
     {
       "path": "../mosaic"
-    },
-    {
-      "path": "../plexus"
     },
     {
       "path": "../react-metagraph"

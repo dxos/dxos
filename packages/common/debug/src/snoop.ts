@@ -5,7 +5,7 @@
 export enum SnoopLevel {
   DEFAULT = 0,
   VERBOSE = 1,
-  BOLD = 2
+  BOLD = 2,
 }
 
 /**

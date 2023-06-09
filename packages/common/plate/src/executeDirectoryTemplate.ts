@@ -13,7 +13,7 @@ import {
   Files,
   isTemplateFile,
   LoadTemplateOptions,
-  TemplateContext
+  TemplateContext,
 } from './executeFileTemplate';
 import { File } from './file';
 import { filterIncludeExclude } from './util/filterIncludeExclude';
@@ -50,7 +50,7 @@ export type DirectoryTemplateResult = {
 };
 
 export const executeDirectoryTemplate = async <TInput>(
-  options: ExecuteDirectoryTemplateOptions<TInput>
+  options: ExecuteDirectoryTemplateOptions<TInput>,
 ): Promise<DirectoryTemplateResult> => {
   const { templateDirectory } = options;
   const mergedOptions = {
@@ -63,7 +63,7 @@ export const executeDirectoryTemplate = async <TInput>(
     overwrite: false,
     printMessage: true,
     ...options,
-    ...(await loadConfig(templateDirectory, { verbose: options?.verbose, overrides: options }))
+    ...(await loadConfig(templateDirectory, { verbose: options?.verbose, overrides: options })),
   };
   const {
     parallel,
@@ -92,7 +92,7 @@ export const executeDirectoryTemplate = async <TInput>(
   let input = mergedOptions.input;
   if (inputShape && executeFileTemplates) {
     if (interactive) {
-      input = await acquireInput<TInput>(inputShape, input, inputQuestions, verbose);
+      input = await acquireInput<TInput>(inputShape, { ...mergedOptions.defaults, ...input }, inputQuestions, verbose);
     } else {
       const parse = inputShape.safeParse(input);
       if (!parse.success) {
@@ -110,20 +110,20 @@ export const executeDirectoryTemplate = async <TInput>(
           interactive: false,
           executeFileTemplates,
           input,
-          printMessage: false
+          printMessage: false,
         })
       : undefined;
   const allFiles = await readDir(
     templateDirectory,
     forceFilter(exclude, input).map((x) =>
-      x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x
-    )
+      x instanceof RegExp ? (entry) => x.test(entry.replace(templateDirectory, '')) : x,
+    ),
   );
   debug(`${allFiles.length} files discovered`);
   const filteredFiles = filterIncludeExclude(allFiles, {
     include: forceFilter(include, input),
     exclude: forceFilter(exclude, input),
-    transform: (s) => s.replace(templateDirectory, '').replace(/^\//, '')
+    transform: (s) => s.replace(templateDirectory, '').replace(/^\//, ''),
   });
   debug(`${filteredFiles.length}/${allFiles.length} files included`);
   const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
@@ -143,7 +143,7 @@ export const executeDirectoryTemplate = async <TInput>(
       templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       input,
-      overwrite
+      overwrite,
     });
   });
   const runner = runPromises({
@@ -152,7 +152,7 @@ export const executeDirectoryTemplate = async <TInput>(
     },
     after: (_p, i) => {
       debug(`${templateFiles[Number(i)]} done`);
-    }
+    },
   });
   const templateOutputs = await (parallel
     ? runner.inParallel(templatingPromises)
@@ -169,10 +169,10 @@ export const executeDirectoryTemplate = async <TInput>(
           new File<string, TemplateContext>({
             path: path.join(outputDirectory, r.slice(templateDirectory.length).replace(/\/$/, '')),
             copyFrom: r,
-            overwrite
-          })
+            overwrite,
+          }),
       ),
-    ...flatten(templateOutputs)
+    ...flatten(templateOutputs),
   ].filter(Boolean);
   debug(`${flatOutput.length} templating results`);
   const inheritedOutputMinusFlatOutput = inherited
@@ -193,7 +193,7 @@ export const executeDirectoryTemplate = async <TInput>(
         ...mergedOptions,
         results,
         input: { ...input },
-        inheritedMessage: msg
+        inheritedMessage: msg,
       });
       msg = currentmsg ?? msg;
     });
@@ -204,7 +204,12 @@ export const executeDirectoryTemplate = async <TInput>(
     files: results,
     message: outputMessage,
     save: async (opts) => {
-      const { dry, printMessage, printFiles } = { printMessage: true, printFiles: true, dry: false, ...opts };
+      const { dry, printMessage, printFiles } = {
+        printMessage: true,
+        printFiles: verbose,
+        dry: false,
+        ...opts,
+      };
       const errors: Error[] = [];
       let filesWritten = 0;
       await Promise.all(
@@ -224,7 +229,7 @@ export const executeDirectoryTemplate = async <TInput>(
             info('\n');
             errors.push(err);
           }
-        })
+        }),
       );
       if (errors.length) {
         info(`${errors.length} errors`);
@@ -233,7 +238,7 @@ export const executeDirectoryTemplate = async <TInput>(
         info(os.EOL + outputMessage + os.EOL);
       }
       return { errors, filesWritten };
-    }
+    },
   };
 };
 
@@ -241,14 +246,14 @@ const acquireInput = async <TInput>(
   inputShape: InquirableZodType,
   input?: Partial<TInput> | undefined,
   questionOptions?: QuestionOptions<TInput>,
-  verbose?: boolean
+  verbose?: boolean,
 ) => {
   const log = logger(!!verbose);
   const parse = unDefault(inputShape).safeParse(input);
   if (!parse.success) {
     const inquired = (await inquire(inputShape, {
       initialAnswers: input,
-      questions: questionOptions
+      questions: questionOptions,
     })) as TInput;
     log('inquired result:');
     log(inquired);

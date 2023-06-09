@@ -20,7 +20,7 @@ test.describe('Smoke test', () => {
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: storybookUrl('client-clientcontext--primary'),
-      waitFor: (page) => page.isVisible(':has-text("initialized")')
+      waitFor: (page) => page.isVisible(':has-text("initialized")'),
     });
 
     page = result.page;

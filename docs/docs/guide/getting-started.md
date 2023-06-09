@@ -1,6 +1,7 @@
 ---
 order: 2
 title: Getting started
+next: ./platform
 ---
 
 # Getting started
@@ -27,26 +28,35 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 This guide will walk you through creating and deploying a `react` app.
 
-Initialize an empty folder with `npm init` like this:
+Ensure `node -v` is at version 18 or higher (recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
+
+First, create a new empty folder
 
 ```bash
-npm init @dxos
+mkdir hello
+cd hello
 ```
 
-Then:
+Initialize the app with `npm init` like this:
+
+```bash
+npm init @dxos@latest
+```
+
+::: note
+If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node versions are out of date. Ensure `node -v` is 18 or higher and `npm -v` is 9 or higher.
+:::
+
+Then, use your favorite package manager such as `yarn`, `npm` or `pnpm`:
 
 ```bash
 pnpm install
 pnpm serve
 ```
 
-::: note
-Only [`pnpm`](https://pnpm.io/) is supported for now: `npm i -g pnpm`.
-:::
+This will start the development server and print its URL 🚀.
 
-This will start the development server 🚀.
-
-You should be able to open two windows pointed at the dev server and see reactive updates like in the video below.
+Now it should be possible to open two windows to that URL and see reactive updates like in the video below.
 
 <video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video> <video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 
@@ -84,19 +94,19 @@ import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
   useIdentity,
-  useOrCreateFirstSpace,
   useQuery,
+  useSpaces
 } from '@dxos/react-client';
 
 const Component = () => {
-  // get the user to log in before a space can be obtained
+  // Get the user to log in before a space can be obtained.
   const identity = useIdentity({ login: true });
-  // create or use the first space
-  const space = useOrCreateFirstSpace();
-  // grab everything in the space
+  // Get the first available space, created with the identity.
+  const [space] = useSpaces();
+  // Grab everything in the space.
   const objects = useQuery(space, {});
-  // show the id of the first object returned
-  return <>{objects?.[0]?.id}</>;
+  // Show the id of the first object returned.
+  return <>{objects[0]?.id}</>;
 };
 
 const App = () => (
@@ -116,12 +126,26 @@ To see an example without `react` see the [TypeScript Guide](./typescript/)
 
 Any objects coming from [`query`](typescript/queries) or [`useQuery`](react/queries) are **tracked**. Manipulate them directly:
 
-```ts
-const objects = useQuery(space, {});
+```tsx{13-15} file=./snippets/react-mutate.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
 
-const object = objects[0];
-object.counter = 0;
-object.name = 'example';
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  const objects = useQuery(space, {});
+
+  return (
+    <div
+      onClick={() => {
+        // mutate objects directly and they will be replicated to all peers
+        const object = objects[0];
+        object.counter = 0;
+        object.name = 'example';
+      }}
+    ></div>
+  );
+};
 ```
 
 The above writes will start propagating to connected peers in the space on the next tick.
@@ -130,13 +154,27 @@ The changes will also cause any subscribed UI components in the app to re-render
 
 Creating new objects:
 
-```ts
-import { Document } from '@dxos/react-client';
+```tsx{12,13,16} file=./snippets/react-create.tsx#L5-
+import React from 'react';
+import { useQuery, useSpace } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client';
 
-const newThing = new Document();
-newThing.someProperty = 'example';
-
-space.experimental.db.save(newThing);
+// ensure there is a ClientProvider somewhere in the tree above
+export const Component = () => {
+  const space = useSpace('<space-key>');
+  return (
+    <div
+      onClick={() => {
+        // create an Expando object for storing arbitrary JavaScript objects
+        const note = new Expando({ title: 'example' });
+        note.description = 'Expandos can have any additional properties.';
+        // call this once per object
+        // subsequent mutations will be replicated to all peers
+        space!.db.add(note);
+      }}
+    ></div>
+  );
+};
 ```
 
 This will begin tracking further changes on the object and replicating them to other peers.
@@ -219,7 +257,7 @@ Using DXOS:
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
 *   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-*   DXOS [repository on GitHub](https:/github.com/dxos/dxos)
-*   File a bug or idea in [Issues](https:/github.com/dxos/dxos/issues)
+*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
+*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀

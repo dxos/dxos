@@ -6,7 +6,7 @@ import { Event, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
-import type { FeedWriter, WriteReceipt } from '../feed-writer';
+import type { FeedWriter, WriteOptions, WriteReceipt } from '../feed-writer';
 
 /**
  * Mock writer collects and emits messages.
@@ -20,13 +20,15 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
     readonly feedKey = PublicKey.random()
   ) {}
 
-  async write(data: T): Promise<WriteReceipt> {
+  async write(data: T, { afterWrite }: WriteOptions = {}): Promise<WriteReceipt> {
     this.messages.push(data);
 
     const receipt: WriteReceipt = {
       feedKey: this.feedKey,
-      seq: this.messages.length - 1
+      seq: this.messages.length - 1,
     };
+
+    await afterWrite?.(receipt);
 
     scheduleTask(new Context(), () => {
       this.written.emit([data, receipt]);

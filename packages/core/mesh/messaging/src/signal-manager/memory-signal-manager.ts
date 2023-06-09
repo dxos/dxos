@@ -51,7 +51,7 @@ export class MemorySignalManager implements SignalManager {
 
   /**  Will be used to emit SwarmEvents on .open() and .close() */
   private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
-    ({ topic, peerId }) => topic.toHex() + peerId.toHex()
+    ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
   );
 
   private _ctx!: Context;
@@ -82,7 +82,7 @@ export class MemorySignalManager implements SignalManager {
     // save copy of joined swarms.
     const joinedSwarmsCopy = new ComplexSet<{ topic: PublicKey; peerId: PublicKey }>(
       ({ topic, peerId }) => topic.toHex() + peerId.toHex(),
-      [...this._joinedSwarms.values()]
+      [...this._joinedSwarms.values()],
     );
 
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
@@ -112,9 +112,9 @@ export class MemorySignalManager implements SignalManager {
       swarmEvent: {
         peerAvailable: {
           peer: peerId.asUint8Array(),
-          since: new Date()
-        }
-      }
+          since: new Date(),
+        },
+      },
     });
 
     // Emitting swarm events for each peer.
@@ -125,9 +125,9 @@ export class MemorySignalManager implements SignalManager {
           swarmEvent: {
             peerAvailable: {
               peer: peerId.asUint8Array(),
-              since: new Date()
-            }
-          }
+              since: new Date(),
+            },
+          },
         });
       });
     }
@@ -146,8 +146,8 @@ export class MemorySignalManager implements SignalManager {
 
     const swarmEvent: SwarmEvent = {
       peerLeft: {
-        peer: peerId.asUint8Array()
-      }
+        peer: peerId.asUint8Array(),
+      },
     };
 
     this._context.swarmEvent.emit({ topic, swarmEvent });
@@ -169,12 +169,10 @@ export class MemorySignalManager implements SignalManager {
   async subscribeMessages(peerId: PublicKey) {
     log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
+  }
 
-    return {
-      unsubscribe: async () => {
-        log('unsubscribing', { peerId });
-        this._context.connections.delete(peerId);
-      }
-    };
+  async unsubscribeMessages(peerId: PublicKey) {
+    log('unsubscribing', { peerId });
+    this._context.connections.delete(peerId);
   }
 }

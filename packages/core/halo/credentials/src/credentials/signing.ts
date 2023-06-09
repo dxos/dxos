@@ -16,8 +16,8 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     proof: {
       ...credential.proof,
       value: new Uint8Array(),
-      chain: undefined
-    }
+      chain: undefined,
+    },
   };
   delete copy.id; // ID is not part of the signature payload.
 
@@ -54,5 +54,5 @@ export const canonicalStringify = (obj: any) =>
       }
 
       return value;
-    }
+    },
   });

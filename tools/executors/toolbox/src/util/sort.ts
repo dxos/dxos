@@ -8,6 +8,8 @@ const isPlainObject = (obj: any) => {
   return Object.prototype.toString.call(obj) === '[object Object]';
 };
 
+// TODO(burdon): Replace with npm package?
+
 // Custom key sorter, or array of fixed keys to prefix the naturally sorted list.
 type Sorter = string[] | ((value: any) => any);
 
@@ -76,7 +78,7 @@ const createValueSorter = (key: string, { map }: SortOptions) => {
  * Options enable custom sorting (e.g., partially fixed order).
  */
 export const sortJson = (src: any, options: SortOptions = {}, key = '.'): any => {
-  let out: { [key: string]: any };
+  let out: Record<string, any>;
 
   if (Array.isArray(src)) {
     let values = src.map((src, i) => sortJson(src, options, `${key}[${i}]`));

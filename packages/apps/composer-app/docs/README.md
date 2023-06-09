@@ -23,9 +23,9 @@ subgraph apps [apps]
   subgraph patterns [patterns]
     style patterns fill:transparent
     dxos/react-appkit("@dxos/react-appkit"):::def
-    click dxos/react-appkit "dxos/dxos/tree/main/packages/apps/patterns/react-appkit/docs"
-    dxos/react-composer("@dxos/react-composer"):::def
-    click dxos/react-composer "dxos/dxos/tree/main/packages/apps/patterns/react-composer/docs"
+    click dxos/react-appkit "dxos/dxos/tree/main/packages/ui/react-appkit/docs"
+    dxos/aurora-composer("@dxos/aurora-composer"):::def
+    click dxos/aurora-composer "dxos/dxos/tree/main/packages/ui/aurora-composer/docs"
   end
 end
 
@@ -190,9 +190,9 @@ dxos/react-client --> dxos/react-async
 dxos/react-appkit --> @dxos/react-components
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
-dxos/composer-app --> dxos/react-composer
-dxos/react-composer --> @dxos/react-components
-dxos/react-composer --> dxos/vite-plugin
+dxos/composer-app --> dxos/aurora-composer
+dxos/aurora-composer --> @dxos/react-components
+dxos/aurora-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config
 ```
 
@@ -231,7 +231,7 @@ dxos/vite-plugin --> dxos/config
 | [`@dxos/react-appkit`](../../patterns/react-appkit/docs/README.md) | &check; |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) |  |
 | [`@dxos/react-client`](../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-composer`](../../patterns/react-composer/docs/README.md) | &check; |
+| [`@dxos/aurora-composer`](../../patterns/aurora-composer/docs/README.md) | &check; |
 | [`@@dxos/react-components`](../../../common/react-components/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |

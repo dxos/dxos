@@ -12,5 +12,5 @@ export const attachDocComment = <T extends ts.Node>(node: T, comment: string): T
       .split('\n')
       .map((line) => ` * ${line}`)
       .join('\n')}\n `,
-    true
+    true,
   );

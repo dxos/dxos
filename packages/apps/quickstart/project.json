@@ -30,7 +30,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/quickstart/**/*.{ts,js,tsx,jsx}"
+          "packages/apps/quickstart/**/*.{ts,js}?(x)"
         ]
       },
       "outputs": [
@@ -43,7 +43,7 @@
         "buildTarget": "quickstart:bundle"
       }
     },
-    "serve-with-halo": {
+    "serve-with-vault": {
       "dependsOn": [
         "^build"
       ],
@@ -68,9 +68,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/common/react-components/.storybook"
-        },
+        "configDir": "packages/ui/aurora/.storybook",
         "uiFramework": "@storybook/react"
       }
     }

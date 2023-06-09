@@ -55,6 +55,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/errors"
+    },
+    {
       "path": "../../halo/credentials"
     },
     {
@@ -73,10 +76,10 @@
       "path": "../../mesh/teleport"
     },
     {
-      "path": "../../mesh/teleport-extension-object-sync"
+      "path": "../../mesh/teleport-extension-gossip"
     },
     {
-      "path": "../../mesh/teleport-extension-presence"
+      "path": "../../mesh/teleport-extension-object-sync"
     },
     {
       "path": "../../mesh/teleport-extension-replicator"

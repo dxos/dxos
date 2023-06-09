@@ -21,7 +21,7 @@ test('remarkSnippets with remark', async () => {
   const processor = remark().use(remarkSnippets);
 
   processor.data({
-    config: { baseDir: path.join(process.cwd(), './testing/docs') }
+    config: { baseDir: path.join(process.cwd(), './testing/docs') },
   });
 
   const { value } = await processor.process(original);

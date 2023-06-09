@@ -12,15 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
-      "path": "../../apps/patterns/react-composer"
-    },
-    {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -42,7 +33,10 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
@@ -75,7 +69,7 @@
       "path": "../../experimental/gem-spore"
     },
     {
-      "path": "../../experimental/kai"
+      "path": "../../experimental/mosaic"
     },
     {
       "path": "../../experimental/mosaic"
@@ -94,6 +88,24 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-shell"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
     }
   ]
 }

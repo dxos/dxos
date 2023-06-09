@@ -11,8 +11,8 @@ module.exports = {
       'error',
       {
         namedComponents: 'arrow-function',
-        unnamedComponents: 'arrow-function'
-      }
+        unnamedComponents: 'arrow-function',
+      },
     ],
     'react/jsx-first-prop-new-line': ['error', 'multiline-multiprop'],
     'react/jsx-tag-spacing': [
@@ -21,18 +21,18 @@ module.exports = {
         closingSlash: 'never',
         beforeSelfClosing: 'always',
         afterOpening: 'never',
-        beforeClosing: 'never'
-      }
+        beforeClosing: 'never',
+      },
     ],
     'react/jsx-wrap-multilines': 'off',
-    'react/prop-types': 'off'
+    'react/prop-types': 'off',
   },
   settings: {
     react: {
-      version: 'detect'
-    }
+      version: 'detect',
+    },
   },
   env: {
-    browser: true
-  }
+    browser: true,
+  },
 };

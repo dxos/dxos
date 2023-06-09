@@ -3,5 +3,5 @@
 //
 
 export const tasks = {
-  'current app name': 'Tasks'
+  'current app name': 'Tasks',
 };

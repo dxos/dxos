@@ -14,7 +14,7 @@ export default class Halo extends BaseCommand {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const identity = client.halo.identity;
+      const identity = client.halo.identity.get();
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
         //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
@@ -25,7 +25,7 @@ export default class Halo extends BaseCommand {
         this.log(`Display name: ${profile?.displayName}`);
         return {
           identityKey: identityKey.toHex(),
-          profile
+          profile,
         };
       }
     });

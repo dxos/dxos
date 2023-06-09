@@ -33,13 +33,13 @@ export const getNewBrowserContext = async (browserType: BrowserType, options: Br
   const browserRunner = getBrowser(browserType);
   const context = await browserRunner.launchPersistentContext(userDataDir, {
     headless: options.headless,
-    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])]
+    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
   });
   const page = await context.newPage();
 
   return {
     browserType,
     context,
-    page
+    page,
   };
 };

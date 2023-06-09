@@ -67,7 +67,7 @@ export class Muxer {
   createStream(tag: string, opts: CreateChannelOpts = {}): Duplex {
     const channel = this._getOrCreateStream({
       tag,
-      contentType: opts.contentType
+      contentType: opts.contentType,
     });
     assert(!channel.push, `Channel already open: ${tag}`);
 
@@ -77,7 +77,7 @@ export class Muxer {
         // TODO(dmaretskyi): Should we error if sending data has errored?
         callback();
       },
-      read: () => {} // No-op. We will push data when we receive it.
+      read: () => {}, // No-op. We will push data when we receive it.
     });
 
     channel.push = (data) => {
@@ -93,8 +93,8 @@ export class Muxer {
       openChannel: {
         id: channel.id,
         tag: channel.tag,
-        contentType: channel.contentType
-      }
+        contentType: channel.contentType,
+      },
     });
 
     return stream;
@@ -109,7 +109,7 @@ export class Muxer {
   createPort(tag: string, opts: CreateChannelOpts = {}): RpcPort {
     const channel = this._getOrCreateStream({
       tag,
-      contentType: opts.contentType
+      contentType: opts.contentType,
     });
     assert(!channel.push, `Channel already open: ${tag}`);
 
@@ -139,7 +139,7 @@ export class Muxer {
           cb(data);
         }
         inboundBuffer = [];
-      }
+      },
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -147,8 +147,8 @@ export class Muxer {
       openChannel: {
         id: channel.id,
         tag: channel.tag,
-        contentType: channel.contentType
-      }
+        contentType: channel.contentType,
+      },
     });
 
     return port;
@@ -165,8 +165,8 @@ export class Muxer {
 
     this._sendCommand({
       destroy: {
-        error: err?.message
-      }
+        error: err?.message,
+      },
     });
     this._dispose();
   }
@@ -201,7 +201,7 @@ export class Muxer {
     if (cmd.openChannel) {
       const channel = this._getOrCreateStream({
         tag: cmd.openChannel.tag,
-        contentType: cmd.openChannel.contentType
+        contentType: cmd.openChannel.contentType,
       });
       channel.remoteId = cmd.openChannel.id;
 
@@ -210,8 +210,8 @@ export class Muxer {
         this._sendCommand({
           data: {
             channelId: channel.remoteId,
-            data
-          }
+            data,
+          },
         });
       }
       channel.buffer = [];
@@ -243,7 +243,7 @@ export class Muxer {
         contentType: params.contentType,
         buffer: [],
         push: null,
-        destroy: null
+        destroy: null,
       };
       this._channelsByTag.set(channel.tag, channel);
       this._channelsByLocalId.set(channel.id, channel);
@@ -259,8 +259,8 @@ export class Muxer {
       this._sendCommand({
         data: {
           channelId: channel.remoteId,
-          data
-        }
+          data,
+        },
       });
     }
   }

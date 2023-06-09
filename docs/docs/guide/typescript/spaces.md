@@ -20,9 +20,9 @@ const client = new Client();
 (async () => {
   await client.initialize();
   // ensure an identity exists:
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space:
-  const space = await client.echo.createSpace();
+  const space = await client.createSpace();
 })();
 ```
 
@@ -38,7 +38,7 @@ const client = new Client();
 (async () => {
   await client.initialize();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
 })()
 ```
 
@@ -54,21 +54,18 @@ const client = new Client();
 (async () => {
   await client.initialize();
   // ensure an identity exists
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // create a space
-  const space = await client.echo.createSpace();
+  const space = await client.createSpace();
   // create an invitation to join the space
-  const { invitation } = space.createInvitation();
-  if (invitation) {
-    // share this code with a friend, it will be used to locate the peer and
-    // establish a secure connection
-    const code = InvitationEncoder.encode(invitation);
-
-    // later we will pass this second authentication code to our friend over a
-    // side-channel and they'll send it to us over the new connection which
-    // will verify that it's secure.
-    const authCode = invitation.authenticationCode;
-  }
+  const invitation = space.createInvitation();
+  // share this code with a friend, it will be used to locate the peer and
+  // establish a secure connection
+  const code = InvitationEncoder.encode(invitation.get());
+  // later we will pass this second authentication code to our friend over a
+  // side-channel and they'll send it to us over the new connection which
+  // will verify that it's secure.
+  const authCode = invitation.get().authCode;
 })()
 ```
 
@@ -83,15 +80,15 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile();
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // friend decodes the invitation code
   const receivedInvitation = InvitationEncoder.decode('<invitation code here>');
   // accept the invitation
-  const { authenticate, invitation } = client.echo.acceptInvitation(receivedInvitation);
+  const invitation = client.acceptInvitation(receivedInvitation);
   // verify it's secure by sending the second factor authCode
-  await authenticate('<authentication code here>');
+  await invitation.authenticate('<authentication code here>');
   // space joined!
-  const space = client.echo.getSpace(invitation?.spaceKey!);
+  const space = client.getSpace(invitation.get().spaceKey!);
 })();
 ```
 

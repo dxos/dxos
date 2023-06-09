@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesProvider } from '@dxos/client-services';
+import { ClientServicesProvider } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
@@ -21,9 +21,9 @@ const port: RpcPort = {
     window.postMessage(
       {
         data: Array.from(message),
-        source: 'dxos-client'
+        source: 'dxos-client',
       },
-      '*'
+      '*',
     ),
 
   subscribe: (callback) => {
@@ -42,7 +42,7 @@ const port: RpcPort = {
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }
+  },
 };
 
 export const createDevtoolsRpcServer = async (client: Client, clientServices: ClientServicesProvider) => {
@@ -59,7 +59,7 @@ export const createDevtoolsRpcServer = async (client: Client, clientServices: Cl
       server = createBundledRpcServer({
         services: clientServices.descriptors,
         handlers: clientServices.services,
-        port
+        port,
       });
 
       await server.open().catch((err) => {
@@ -69,6 +69,6 @@ export const createDevtoolsRpcServer = async (client: Client, clientServices: Cl
 
       log('Opened devtools client RPC server.');
       return true;
-    }
+    },
   };
 };

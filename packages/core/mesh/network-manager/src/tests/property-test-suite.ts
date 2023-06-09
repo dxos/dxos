@@ -51,7 +51,7 @@ export const propertyTestSuite = () => {
                 const context = {
                   peerId: peer.presence.peerId,
                   expectedPeerId: expectedPeerId.truncate(),
-                  connectedPeerIds: actuallyConnectedPeers.map((key: any) => key.toString('hex'))
+                  connectedPeerIds: actuallyConnectedPeers.map((key: any) => key.toString('hex')),
                 };
 
                 throw new Error(`Expected peer to be in the list of joined peers: ${context}`);
@@ -64,7 +64,7 @@ export const propertyTestSuite = () => {
       real.peers.forEach((peer) =>
         peer.networkManager.topics.forEach((topic) => {
           peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
-        })
+        }),
       );
     };
 
@@ -124,7 +124,7 @@ export const propertyTestSuite = () => {
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
           protocolProvider: todo(),
-          topology: new FullyConnectedTopology()
+          topology: new FullyConnectedTopology(),
           // presence
         });
 
@@ -160,7 +160,7 @@ export const propertyTestSuite = () => {
       peerId1.map((x) => new CreatePeerCommand(x)),
       peerId1.map((x) => new RemovePeerCommand(x)),
       peerId1.map((p) => new JoinTopicCommand(p)),
-      peerId1.map((p) => new LeaveTopicCommand(p))
+      peerId1.map((p) => new LeaveTopicCommand(p)),
     ];
 
     await fc.assert(
@@ -169,11 +169,11 @@ export const propertyTestSuite = () => {
           model: {
             topic: PublicKey.random(),
             peers: new ComplexSet(PublicKey.hash),
-            joinedPeers: new ComplexSet(PublicKey.hash)
+            joinedPeers: new ComplexSet(PublicKey.hash),
           },
           real: {
-            peers: new ComplexMap(PublicKey.hash)
-          }
+            peers: new ComplexMap(PublicKey.hash),
+          },
         });
 
         await fc.asyncModelRun(setup, cmds);
@@ -189,8 +189,8 @@ export const propertyTestSuite = () => {
               new LeaveTopicCommand(peerIds[0]),
               new LeaveTopicCommand(peerIds[1]),
               new RemovePeerCommand(peerIds[0]),
-              new RemovePeerCommand(peerIds[1])
-            ]
+              new RemovePeerCommand(peerIds[1]),
+            ],
           ],
           [
             [
@@ -199,8 +199,8 @@ export const propertyTestSuite = () => {
               new CreatePeerCommand(peerIds[1]),
               new RemovePeerCommand(peerIds[0]),
               new JoinTopicCommand(peerIds[1]),
-              new RemovePeerCommand(peerIds[1])
-            ]
+              new RemovePeerCommand(peerIds[1]),
+            ],
           ],
           [
             [
@@ -210,11 +210,11 @@ export const propertyTestSuite = () => {
               new CreatePeerCommand(peerIds[1]),
               new JoinTopicCommand(peerIds[1]),
               new CreatePeerCommand(peerIds[2]),
-              new JoinTopicCommand(peerIds[2])
-            ]
-          ]
-        ]
-      }
+              new JoinTopicCommand(peerIds[2]),
+            ],
+          ],
+        ],
+      },
     );
   });
 };

@@ -25,6 +25,7 @@ export type BrowserOptions = {
   headless: boolean;
   debug: boolean;
   browserArgs?: string[];
+  envVariables?: Record<string, string>;
 };
 
 export const runBrowser = async (context: ExecutorContext, options: BrowserOptions) => {
@@ -35,12 +36,12 @@ export const runBrowser = async (context: ExecutorContext, options: BrowserOptio
   const exitCode = await outputResults(results, {
     name: context.projectName!,
     browserType: options.browser,
-    outDir: options.xmlReport ? options.resultsPath : undefined
+    outDir: options.xmlReport ? options.resultsPath : undefined,
   });
 
   if (options.stayOpen) {
     console.log(
-      `\nCompleted with ${exitCode === 0 ? chalk`{green success}` : chalk`{red failure}`}. Browser window stays open.`
+      `\nCompleted with ${exitCode === 0 ? chalk`{green success}` : chalk`{red failure}`}. Browser window stays open.`,
     );
 
     await new Promise((resolve) => {
@@ -76,7 +77,8 @@ export const runBrowserBuild = async (options: BrowserOptions) => {
     outDir,
     timeout: options.timeout,
     checkLeaks: options.checkLeaks,
-    tags: options.tags
+    tags: options.tags,
+    envVariables: options.envVariables,
   });
 
   return false;

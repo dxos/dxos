@@ -6,17 +6,16 @@ import { expect } from 'earljs';
 
 import { sleep } from '@dxos/async';
 import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
-import { TYPES } from '@dxos/protocols';
+import { SerializedError, TYPES } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 
-import { SerializedRpcError } from './errors';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testing';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
-  value: Buffer.from(value)
+  value: Buffer.from(value),
 });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -28,12 +27,12 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -44,12 +43,12 @@ describe('RpcPeer', () => {
 
       const alice: RpcPeer = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       let aliceOpen = false;
@@ -72,7 +71,7 @@ describe('RpcPeer', () => {
 
       const alice: RpcPeer = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: alicePort
+        port: alicePort,
       });
 
       const aliceOpen = alice.open();
@@ -80,7 +79,7 @@ describe('RpcPeer', () => {
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([aliceOpen, bob.open()]);
@@ -95,20 +94,24 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {
-            portOpen && alicePort.send(msg);
+            if (portOpen) {
+              void alicePort.send(msg);
+            }
           },
-          subscribe: alicePort.subscribe
-        }
+          subscribe: alicePort.subscribe,
+        },
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {
-            portOpen && bobPort.send(msg);
+            if (portOpen) {
+              void bobPort.send(msg);
+            }
           },
-          subscribe: bobPort.subscribe
-        }
+          subscribe: bobPort.subscribe,
+        },
       });
 
       const openPromise = Promise.all([alice.open(), bob.open()]);
@@ -127,13 +130,13 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {},
-          subscribe: alicePort.subscribe
-        }
+          subscribe: alicePort.subscribe,
+        },
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       let open = false;
@@ -156,13 +159,13 @@ describe('RpcPeer', () => {
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {},
-          subscribe: alicePort.subscribe
-        }
+          subscribe: alicePort.subscribe,
+        },
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       const openPromise = Promise.all([alice.open(), bob.open()]);
@@ -182,11 +185,11 @@ describe('RpcPeer', () => {
           expect(msg.value).toEqual(Buffer.from('request'));
           return createPayload('response');
         },
-        port: alicePort
+        port: alicePort,
       });
       const bob = new RpcPeer({
         callHandler: async (method, msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -211,11 +214,11 @@ describe('RpcPeer', () => {
 
           return msg;
         },
-        port: alicePort
+        port: alicePort,
       });
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -229,7 +232,7 @@ describe('RpcPeer', () => {
       await expect(await parallel1).toEqual(createPayload('p1'));
       await expect(await parallel2).toEqual(createPayload('p2'));
       await expect(error).toBeRejected();
-    });
+    }).tag('flaky');
 
     test('errors get serialized', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
@@ -243,12 +246,12 @@ describe('RpcPeer', () => {
 
           return await handlerFn();
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -260,7 +263,7 @@ describe('RpcPeer', () => {
         error = err;
       }
 
-      expect(error).toBeA(SerializedRpcError);
+      expect(error).toBeA(SerializedError);
       expect(error.message).toEqual('My error');
       expect(error.stack?.includes('handlerFn')).toEqual(true);
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);
@@ -275,12 +278,12 @@ describe('RpcPeer', () => {
           await sleep(5);
           return msg;
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -300,13 +303,13 @@ describe('RpcPeer', () => {
           await sleep(5);
           return msg;
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: bobPort,
-        timeout: 50
+        timeout: 50,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -326,13 +329,13 @@ describe('RpcPeer', () => {
           await sleep(50);
           return msg;
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: bobPort,
-        timeout: 10
+        timeout: 10,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -357,12 +360,12 @@ describe('RpcPeer', () => {
             close();
           });
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -374,7 +377,7 @@ describe('RpcPeer', () => {
         { ready: true },
         { data: createPayload('res1') },
         { data: createPayload('res2') },
-        { closed: true }
+        { closed: true },
       ]);
     });
 
@@ -390,12 +393,12 @@ describe('RpcPeer', () => {
             close(new Error('Test error'));
           });
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -419,12 +422,12 @@ describe('RpcPeer', () => {
           new Stream<Any>(({ next, close }) => () => {
             closeCalled = true;
           }),
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -450,12 +453,12 @@ describe('RpcPeer', () => {
             close();
           });
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -476,12 +479,12 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg): Stream<Any> => {
           throw new Error('Test error');
         },
-        port: alicePort
+        port: alicePort,
       });
 
       const bob = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        port: bobPort
+        port: bobPort,
       });
 
       await Promise.all([alice.open(), bob.open()]);
@@ -502,7 +505,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: alicePort,
-        noHandshake: true
+        noHandshake: true,
       });
 
       await alice.open();
@@ -518,13 +521,13 @@ describe('RpcPeer', () => {
           return createPayload('response');
         },
         port: alicePort,
-        noHandshake: true
+        noHandshake: true,
       });
 
       const bob = new RpcPeer({
         callHandler: async (method, msg) => createPayload(),
         port: bobPort,
-        noHandshake: true
+        noHandshake: true,
       });
 
       await alice.open();

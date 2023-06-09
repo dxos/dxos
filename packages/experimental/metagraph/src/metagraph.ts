@@ -4,7 +4,7 @@
 
 import fetch from 'cross-fetch';
 
-import { Observable, ObservableProvider } from '@dxos/async';
+import { ObservableValue, ObservableProvider } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
@@ -15,7 +15,7 @@ export interface QueryEvents<T> {
 }
 
 // TODO(burdon): Observable pattern?
-export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
+export interface QueryObservable<T> extends ObservableValue<QueryEvents<T>> {
   get results(): T[];
   fetch(): void;
 }
@@ -45,20 +45,20 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
 }
 
 export type Query = {
-  type: string;
+  type?: string;
   tags?: string[];
 };
 
 export interface ServiceApi<T> {
-  query(query: Query): Promise<QueryObservable<T>>;
+  query(query?: Query): Promise<QueryObservable<T>>;
 }
 
 export interface Metagraph {
   get modules(): ServiceApi<Module>;
 }
 
-const moduleFilter = (query: Query) => (module: Module) => {
-  if (query.type !== module.type) {
+const moduleFilter = (query?: Query) => (module: Module) => {
+  if (query?.type !== undefined && query.type !== module.type) {
     return false;
   }
 
@@ -80,7 +80,7 @@ export class MetagraphClient implements Metagraph {
 
   get modules(): ServiceApi<Module> {
     return {
-      query: async (query: Query) => {
+      query: async (query: Query = {}) => {
         const observable = new QueryObservableProvider<Module>(async () => {
           // TODO(burdon): Replace fetch with dxRPC?
           const response = await fetch(this._serverUrl);
@@ -90,11 +90,12 @@ export class MetagraphClient implements Metagraph {
 
         await observable.fetch();
         return observable;
-      }
+      },
     };
   }
 }
 
+// TODO(burdon): Move to /testing.
 export class MetagraphClientFake implements Metagraph {
   constructor(private readonly _modules: Module[] = []) {}
 
@@ -107,7 +108,7 @@ export class MetagraphClientFake implements Metagraph {
 
         await observable.fetch();
         return observable;
-      }
+      },
     };
   }
 }

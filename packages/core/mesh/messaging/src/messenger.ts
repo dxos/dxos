@@ -4,23 +4,24 @@
 
 import assert from 'node:assert';
 
+import { scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, trace } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
-import { ComplexMap, ComplexSet, exponentialBackoffInterval } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
+import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
 export interface MessengerOptions {
   signalManager: SignalManager;
   retryDelay?: number;
-  timeout?: number;
 }
 
 /**
@@ -30,7 +31,7 @@ export class Messenger {
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
   private readonly _listeners = new ComplexMap<{ peerId: PublicKey; payloadType: string }, Set<OnMessage>>(
-    ({ peerId, payloadType }) => peerId.toHex() + payloadType
+    ({ peerId, payloadType }) => peerId.toHex() + payloadType,
   );
 
   // peerId => listeners set
@@ -43,12 +44,10 @@ export class Messenger {
   private _ctx!: Context;
   private _closed = true;
   private readonly _retryDelay: number;
-  private readonly _timeout: number;
 
-  constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
+  constructor({ signalManager, retryDelay = 100 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._retryDelay = retryDelay;
-    this._timeout = timeout;
 
     this.open();
   }
@@ -57,16 +56,19 @@ export class Messenger {
     if (!this._closed) {
       return;
     }
+    const traceId = PublicKey.random().toHex();
+    log.trace('dxos.mesh.messenger.open', trace.begin({ id: traceId }));
     this._ctx = new Context({
-      onError: (err) => log.catch(err)
+      onError: (err) => log.catch(err),
     });
     this._ctx.onDispose(
       this._signalManager.onMessage.on(async (message) => {
         log('received message', { from: message.author });
         await this._handleMessage(message);
-      })
+      }),
     );
     this._closed = false;
+    log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
 
   async close() {
@@ -79,43 +81,57 @@ export class Messenger {
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     assert(!this._closed, 'Closed');
+    const messageContext = this._ctx.derive();
 
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
-      payload
+      payload,
     };
-
-    log('sent message', { messageId: reliablePayload.messageId, author, recipient });
-
-    // Setting retry interval if signal was not acknowledged.
-    const cancelRetry = exponentialBackoffInterval(async () => {
-      log('retrying message', { messageId: reliablePayload.messageId });
-      try {
-        await this._encodeAndSend({ author, recipient, reliablePayload });
-      } catch (error) {
-        log.error('failed to send message', { error });
-      }
-    }, this._retryDelay);
-
-    const timeout = setTimeout(() => {
-      log('message not delivered', { messageId: reliablePayload.messageId });
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
-      cancelRetry();
-    }, this._timeout);
-
     assert(!this._onAckCallbacks.has(reliablePayload.messageId!));
-    this._onAckCallbacks.set(reliablePayload.messageId, () => {
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
-      cancelRetry();
-      clearTimeout(timeout);
+    log('send message', { messageId: reliablePayload.messageId, author, recipient });
+
+    let messageReceived: () => void;
+    let timeoutHit: (err: Error) => void;
+
+    const promise = new Promise<void>((resolve, reject) => {
+      messageReceived = resolve;
+      timeoutHit = reject;
     });
 
-    this._ctx.onDispose(() => {
-      cancelRetry();
-      clearTimeout(timeout);
+    // Setting retry interval if signal was not acknowledged.
+    scheduleExponentialBackoffTaskInterval(
+      messageContext,
+      async () => {
+        log('retrying message', { messageId: reliablePayload.messageId });
+        try {
+          await this._encodeAndSend({ author, recipient, reliablePayload });
+        } catch (error) {
+          log.error('failed to send message', { error });
+        }
+      },
+      this._retryDelay,
+    );
+
+    scheduleTask(
+      messageContext,
+      () => {
+        log('message not delivered', { messageId: reliablePayload.messageId });
+        this._onAckCallbacks.delete(reliablePayload.messageId!);
+        timeoutHit(new Error(`message not delivered ${reliablePayload.messageId.toHex()}`));
+        void messageContext.dispose();
+      },
+      MESSAGE_TIMEOUT,
+    );
+
+    this._onAckCallbacks.set(reliablePayload.messageId, () => {
+      messageReceived();
+      this._onAckCallbacks.delete(reliablePayload.messageId!);
+      void messageContext.dispose();
     });
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
+
+    return promise;
   }
 
   /**
@@ -125,7 +141,7 @@ export class Messenger {
   async listen({
     peerId,
     payloadType,
-    onMessage
+    onMessage,
   }: {
     peerId: PublicKey;
     payloadType?: string;
@@ -155,14 +171,14 @@ export class Messenger {
     return {
       unsubscribe: async () => {
         listeners!.delete(onMessage);
-      }
+      },
     };
   }
 
   private async _encodeAndSend({
     author,
     recipient,
-    reliablePayload
+    reliablePayload,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -175,8 +191,8 @@ export class Messenger {
         type_url: 'dxos.mesh.messaging.ReliablePayload',
         value: schema
           .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-          .encode(reliablePayload, { preserveAny: true })
-      }
+          .encode(reliablePayload, { preserveAny: true }),
+      },
     });
   }
 
@@ -208,27 +224,27 @@ export class Messenger {
     await this._sendAcknowledgement({
       author,
       recipient,
-      messageId: reliablePayload.messageId
+      messageId: reliablePayload.messageId,
     });
 
     await this._callListeners({
       author,
       recipient,
-      payload: reliablePayload.payload
+      payload: reliablePayload.payload,
     });
   }
 
   private async _handleAcknowledgement({ payload }: { payload: Any }) {
     assert(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(
-      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId
+      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId,
     )?.();
   }
 
   private async _sendAcknowledgement({
     author,
     recipient,
-    messageId
+    messageId,
   }: {
     author: PublicKey;
     recipient: PublicKey;
@@ -241,8 +257,8 @@ export class Messenger {
       recipient: author,
       payload: {
         type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId })
-      }
+        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId }),
+      },
     });
   }
 
@@ -259,7 +275,7 @@ export class Messenger {
     {
       const listenerMap = this._listeners.get({
         peerId: message.recipient,
-        payloadType: message.payload.type_url
+        payloadType: message.payload.type_url,
       });
       if (listenerMap) {
         for (const listener of listenerMap) {

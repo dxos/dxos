@@ -10,9 +10,9 @@ import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, RpcClosedError } from '@dxos/protocols';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
@@ -33,7 +33,7 @@ export class Teleport {
       void this.destroy(err).catch(() => {
         log.error('Error during destroy', err);
       });
-    }
+    },
   });
 
   private readonly _muxer = new Muxer();
@@ -43,7 +43,7 @@ export class Teleport {
     heartbeatTimeout: 3000,
     onTimeout: () => {
       this.destroy(new Error('Connection timed out')).catch((err) => log.catch(err));
-    }
+    },
   });
 
   private readonly _extensions = new Map<string, TeleportExtension>();
@@ -178,7 +178,7 @@ export class Teleport {
         void runInContextAsync(this._ctx, async () => {
           await this.close(err);
         });
-      }
+      },
     };
 
     await extension.onOpen(context);
@@ -213,7 +213,7 @@ class ControlExtension implements TeleportExtension {
   private readonly _ctx = new Context({
     onError: (err) => {
       this._extensionContext.close(err);
-    }
+    },
   });
 
   private _extensionContext!: ExtensionContext;
@@ -230,10 +230,10 @@ class ControlExtension implements TeleportExtension {
     // TODO(dmaretskyi): Allow overwriting the timeout on individual RPC calls?
     this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
       requested: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService')
+        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
       },
       exposed: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService')
+        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
       },
       handlers: {
         Control: {
@@ -242,12 +242,12 @@ class ControlExtension implements TeleportExtension {
           },
           heartbeat: async (request) => {
             // Ok.
-          }
-        }
+          },
+        },
       },
       port: extensionContext.createPort('rpc', {
-        contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"'
-      })
+        contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"',
+      }),
     });
 
     await this._rpc.open();
@@ -261,7 +261,7 @@ class ControlExtension implements TeleportExtension {
           this.opts.onTimeout();
         }
       },
-      this.opts.heartbeatInterval
+      this.opts.heartbeatInterval,
     );
   }
 

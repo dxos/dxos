@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, DocumentModel } from '@dxos/client';
+import { Client } from '@dxos/client';
 
 const client = new Client();
 
 (async () => {
   await client.initialize();
-  if (!client.halo.profile) await client.halo.createProfile()
+  if (!client.halo.identity.get()) await client.halo.createIdentity();
   // get a list of all spaces
-  const { value: spaces } = client.echo.querySpaces();
+  const spaces = client.spaces.get();
   // grab a space
   const space = spaces[0];
   // grab an object
-  const result = space.experimental.db.query({ type: 'task' });
+  const result = space.db.query({ type: 'task' });
   const object = result.objects[0];
   // mutate the object directly
   object.isCompleted = true;
-})()
+})();

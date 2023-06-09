@@ -53,7 +53,7 @@ export const logs = (name: any) => {
       } else {
         error(err, ...rest);
       }
-    }
+    },
   };
 };
 

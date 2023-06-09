@@ -6,14 +6,15 @@ import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { SignalState, SignalStatus } from '@dxos/messaging';
+import { SignalStatus } from '@dxos/messaging';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 const getColor = (state: SignalState) => {
   switch (state) {
     case SignalState.CONNECTING:
-    case SignalState.RE_CONNECTING:
+    case SignalState.RECONNECTING:
       return 'orange';
     case SignalState.CONNECTED:
       return 'green';
@@ -28,24 +29,13 @@ export interface SignalStatusProps {
   status: SignalStatus[];
 }
 
-const stringToState = (state: string): SignalState => {
-  const dict: Record<string, SignalState> = {
-    CONNECTING: SignalState.CONNECTING,
-    RE_CONNECTING: SignalState.RE_CONNECTING,
-    CONNECTED: SignalState.CONNECTED,
-    DISCONNECTED: SignalState.DISCONNECTED,
-    CLOSED: SignalState.CLOSED
-  };
-  return dict[state];
-};
-
 const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,
     reconnectIn: server.reconnectIn!,
     host: server.host!,
-    state: stringToState(server.state!)
+    state: server.state!
   };
 };
 

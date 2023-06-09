@@ -4,15 +4,14 @@
 
 import { expect } from 'chai';
 
+import { latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { DocumentModel } from '@dxos/document-model';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
-import { test, describe } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
-import { createSigningContext, syncItems, TestBuilder } from '../testing';
+import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
 
 describe('DataSpaceManager', () => {
@@ -27,10 +26,10 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer.keyring,
       identity,
-      new ModelFactory().registerModel(DocumentModel),
       peer.feedStore,
-      peer.snapshotStore
     );
+    await dataSpaceManager.open();
+    afterTest(() => dataSpaceManager.close());
     const space = await dataSpaceManager.createSpace();
 
     // Process all written mutations.
@@ -53,10 +52,10 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer1.keyring,
       identity1,
-      new ModelFactory().registerModel(DocumentModel),
       peer1.feedStore,
-      peer1.snapshotStore
     );
+    await dataSpaceManager1.open();
+    afterTest(() => dataSpaceManager1.close());
 
     const peer2 = builder.createPeer();
     const identity2 = await createSigningContext(peer2.keyring);
@@ -66,10 +65,10 @@ describe('DataSpaceManager', () => {
       new DataServiceSubscriptions(),
       peer2.keyring,
       identity2,
-      new ModelFactory().registerModel(DocumentModel),
       peer2.feedStore,
-      peer1.snapshotStore
     );
+    await dataSpaceManager2.open();
+    afterTest(() => dataSpaceManager2.close());
 
     const space1 = await dataSpaceManager1.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -81,29 +80,30 @@ describe('DataSpaceManager', () => {
         identity1.credentialSigner,
         identity2.identityKey,
         space1.key,
-        space1.inner.genesisFeedKey
-      )
+        space1.inner.genesisFeedKey,
+      ),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await dataSpaceManager2.acceptSpace({
       spaceKey: space1.key,
-      genesisFeedKey: space1.inner.genesisFeedKey
+      genesisFeedKey: space1.inner.genesisFeedKey,
     });
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
 
     log('', {
       peer1: {
         identity: identity1.identityKey,
         device: identity1.deviceKey,
         control: space1.inner.controlFeedKey,
-        data: space1.inner.dataFeedKey
+        data: space1.inner.dataFeedKey,
       },
       peer2: {
         identity: identity2.identityKey,
         device: identity2.deviceKey,
         control: space2.inner.controlFeedKey,
-        data: space2.inner.dataFeedKey
-      }
+        data: space2.inner.dataFeedKey,
+      },
     });
 
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -112,20 +112,83 @@ describe('DataSpaceManager', () => {
     log('', {
       space1: {
         timeframe: space1.inner.controlPipeline.state.timeframe,
-        endTimeframe: space1.inner.controlPipeline.state.endTimeframe
+        endTimeframe: space1.inner.controlPipeline.state.endTimeframe,
       },
       space2: {
         timeframe: space2.inner.controlPipeline.state.timeframe,
-        endTimeframe: space2.inner.controlPipeline.state.endTimeframe
-      }
+        endTimeframe: space2.inner.controlPipeline.state.endTimeframe,
+      },
     });
     log.break();
 
-    await syncItems(space1.dataPipelineController, space2.dataPipelineController);
+    await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
     expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
     expect(space2.inner.protocol.sessions.get(identity1.deviceKey)).to.exist;
     expect(space2.inner.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+  });
+
+  test('pub/sub API', async () => {
+    const builder = new TestBuilder();
+
+    const peer1 = builder.createPeer();
+    const identity1 = await createSigningContext(peer1.keyring);
+    const dataSpaceManager1 = new DataSpaceManager(
+      peer1.spaceManager,
+      peer1.metadataStore,
+      new DataServiceSubscriptions(),
+      peer1.keyring,
+      identity1,
+      peer1.feedStore,
+    );
+    await dataSpaceManager1.open();
+    afterTest(() => dataSpaceManager1.close());
+
+    const peer2 = builder.createPeer();
+    const identity2 = await createSigningContext(peer2.keyring);
+    const dataSpaceManager2 = new DataSpaceManager(
+      peer2.spaceManager,
+      peer2.metadataStore,
+      new DataServiceSubscriptions(),
+      peer2.keyring,
+      identity2,
+      peer2.feedStore,
+    );
+    await dataSpaceManager2.open();
+    afterTest(() => dataSpaceManager2.close());
+
+    const space1 = await dataSpaceManager1.createSpace();
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    // Admit peer2 to space1.
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials(
+        identity1.credentialSigner,
+        identity2.identityKey,
+        space1.key,
+        space1.inner.genesisFeedKey,
+      ),
+    );
+
+    // Accept must be called after admission so that the peer can authenticate for notarization.
+    const space2 = await dataSpaceManager2.acceptSpace({
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+    });
+
+    // Coincidentally, this also waits until a P2P connection is established between peers.
+    // TODO(dmaretskyi): Refine this to wait for connection specifically.
+    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
+
+    const [receivedMessage, inc] = latch({ count: 1 });
+    space2.listen('test', (message) => {
+      expect(message.channelId).to.equal('test');
+      inc();
+    });
+
+    await space1.postMessage('test', { '@type': 'google.protobuf.Any', test: true });
+    await receivedMessage();
   });
 });

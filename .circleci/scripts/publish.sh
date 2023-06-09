@@ -1,12 +1,13 @@
 #!/bin/bash
 
 APPS=(
+  ./packages/apps/composer-app
   ./packages/apps/halo-app
   ./packages/apps/tasks-app
-  ./packages/apps/composer-app
   ./packages/apps/todomvc
   ./packages/devtools/devtools
   ./packages/experimental/kai
+  ./packages/experimental/kube-console
   ./docs
 )
 
@@ -15,18 +16,18 @@ ROOT=$(git rev-parse --show-toplevel)
 
 for APP in "${APPS[@]}"; do
   pushd $APP
-  
+
   PACKAGE=${PWD##*/}
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
-
-  eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
-  eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
   if [ $BRANCH = "production" ]; then
     export DX_ENVIRONMENT=production
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")
+
+    eval "export DX_SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
+    eval "export DX_TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 
     $ROOT/packages/devtools/cli/bin/run app publish \
       --config=$DX_CONFIG \

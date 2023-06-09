@@ -64,7 +64,10 @@
         "outputPath": "tmp/playwright/packages/experimental/kai",
         "playwrightConfigPath": "packages/experimental/kai/src/playwright/playwright.config.ts",
         "resultsPath": "test-results/packages/experimental/kai",
-        "serve": "kai:preview",
+        "serve": "kai:serve-with-vault",
+        "serveOptions": {
+          "serveTarget": "preview"
+        },
         "testPatterns": [
           "packages/experimental/kai/src/playwright/**/*.spec.{ts,js}"
         ],
@@ -90,15 +93,6 @@
         "{options.outputFile}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "packages/experimental/kai/src/proto/gen"
-      ]
-    },
     "preview": {
       "executor": "@nrwl/web:file-server",
       "options": {
@@ -112,6 +106,9 @@
         "buildTarget": "kai:bundle"
       }
     },
+    "serve-with-vault": {
+      "executor": "@dxos/serve-with-vault:run"
+    },
     "storybook": {
       "configurations": {
         "ci": {
@@ -120,9 +117,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "config": {
-          "configFolder": "packages/experimental/kai/.storybook"
-        },
+        "configDir": "packages/experimental/kai/.storybook",
         "uiFramework": "@storybook/react"
       }
     },

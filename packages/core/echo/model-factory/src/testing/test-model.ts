@@ -25,8 +25,8 @@ class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutat
     return {
       keys: Array.from(this._state.entries()).map(([key, value]) => ({
         key,
-        value
-      }))
+        value,
+      })),
     };
   }
 
@@ -41,7 +41,7 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
     type: 'dxos:model/test',
     stateMachine: () => new TestModelStateMachine(),
     mutationCodec: schema.getCodecForType('example.testing.data.TestItemMutation'),
-    snapshotCodec: schema.getCodecForType('example.testing.data.TestItemSnapshot')
+    snapshotCodec: schema.getCodecForType('example.testing.data.TestItemSnapshot'),
   };
 
   get keys() {
@@ -60,8 +60,8 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
     const receipt = await this.write(
       checkType<TestItemMutation>({
         key,
-        value
-      })
+        value,
+      }),
     );
 
     await receipt.waitToBeProcessed();

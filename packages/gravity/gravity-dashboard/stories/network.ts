@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 // God's eye view.
 
@@ -61,7 +61,7 @@ export class Generator {
       if (faker.datatype.number(10) > 3) {
         kube.bots = [
           ...kube.bots.map((bot) => (faker.datatype.number(10) > 3 ? bot : undefined)).filter(Boolean),
-          ...(faker.datatype.number(10) > 3 ? [this.createBot()] : [])
+          ...(faker.datatype.number(10) > 3 ? [this.createBot()] : []),
         ];
       }
     });
@@ -72,7 +72,7 @@ export class Generator {
   addKubes({ min = 1, max = 5 }) {
     this._kubes = [
       ...this._kubes,
-      ...Array.from({ length: faker.datatype.number({ min: 0, max: 5 }) }).map(() => this.createKube())
+      ...Array.from({ length: faker.datatype.number({ min: 0, max: 5 }) }).map(() => this.createKube()),
     ];
 
     return this;
@@ -82,14 +82,14 @@ export class Generator {
     return {
       id: faker.datatype.uuid(),
       bots: Array.from({
-        length: faker.datatype.number({ min: 0, max: 5 })
-      }).map(() => this.createBot())
+        length: faker.datatype.number({ min: 0, max: 5 }),
+      }).map(() => this.createBot()),
     };
   }
 
   createBot(): Bot {
     return {
-      id: faker.datatype.uuid()
+      id: faker.datatype.uuid(),
     };
   }
 }

@@ -18,27 +18,39 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useOrCreateFirstSpace,
+  Expando,
   useIdentity,
   useQuery,
-  Document
+  useSpaces
 } from '@dxos/react-client';
 
 export const App = () => {
   useIdentity({ login: true });
-  const space = useOrCreateFirstSpace();
+  const [space] = useSpaces();
   const tasks = useQuery(space, { type: 'task' });
-  return <>
-    {tasks?.map((task) => (
-      <div key={task.id} onClick={() => {
-        task.completed = true;
-      }}>{task.title} - {task.completed}</div>
-    ))}
-    <button name="add" onClick={() => {
-      const task = new Document({ title: 'buy milk' });
-      space.experimental.db.add(task);
-    }}>Add a task</button>
-  </>;
+  return (
+    <>
+      {tasks.map((task) => (
+        <div
+          key={task.id}
+          onClick={() => {
+            task.completed = true;
+          }}
+        >
+          {task.title} - {task.completed}
+        </div>
+      ))}
+      <button
+        name="add"
+        onClick={() => {
+          const task = new Expando({ title: 'buy milk' });
+          space?.db.add(task);
+        }}
+      >
+        Add a task
+      </button>
+    </>
+  );
 };
 
 const root = createRoot(document.getElementById('root')!);
@@ -54,7 +66,7 @@ root.render(
 To create (insert) a new object, simply construct a `new Document` and pass any initial values into the constructor (line 23 above).
 
 ::: note Tip
-Calling `space.experimental.db.save(task)` (line 24 above) needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
+Calling `space.db.add(task)` (line 24 above) needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
 :::
 
 ## Typed Mutations
@@ -70,28 +82,40 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
-  useOrCreateFirstSpace,
   useIdentity,
-  useQuery
+  useQuery,
+  useSpaces
 } from '@dxos/react-client';
 
 import { Task } from './schema';
 
 export const App = () => {
   useIdentity({ login: true });
-  const space = useOrCreateFirstSpace();
+  const [space] = useSpaces();
   const tasks = useQuery<Task>(space, Task.filter());
-  return <>
-    {tasks?.map((task) => (
-      <div key={task.id} onClick={() => {
-        task.completed = true;
-      }}>{task.title} - {task.completed}</div>
-    ))}
-    <button name="add" onClick={() => {
-      const task = new Task({ title: 'buy milk' });
-      space.experimental.db.add(task);
-    }}>Add a task</button>
-  </>;
+  return (
+    <>
+      {tasks.map((task) => (
+        <div
+          key={task.id}
+          onClick={() => {
+            task.completed = true;
+          }}
+        >
+          {task.title} - {task.completed}
+        </div>
+      ))}
+      <button
+        name="add"
+        onClick={() => {
+          const task = new Task({ title: 'buy milk' });
+          space?.db.add(task);
+        }}
+      >
+        Add a task
+      </button>
+    </>
+  );
 };
 
 const root = createRoot(document.getElementById('root')!);
@@ -111,7 +135,7 @@ To create (insert) a new object, simply construct a `new` one with the appropria
 To delete an object (typed or untyped) call the `delete` API on a space.
 
 ```ts
-await space.experimental.db.delete(task)
+await space.db.delete(task)
 ```
 
 ::: note

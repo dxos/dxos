@@ -262,7 +262,7 @@ const DEFAULT_WORDLIST = [
   'yankee',
   'yellow',
   'zebra',
-  'zulu'
+  'zulu',
 ];
 
 /**

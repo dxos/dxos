@@ -1,17 +1,30 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./proto": {
+      "browser": "./dist/lib/browser/proto/index.mjs",
+      "node": "./dist/lib/node/proto/index.cjs"
+    }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "./dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "proto": [
+        "dist/types/src/proto"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
@@ -20,9 +33,10 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "chess.js": "^1.0.0-alpha.0",
-    "phosphor-react": "^1.4.1",
+    "@phosphor-icons/react": "^2.0.5",
+    "chess.js": "1.0.0-alpha.0",
     "react": "^18.2.0",
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",
@@ -31,11 +45,11 @@
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
     "@types/chess.js": "^0.13.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "typescript": "^4.8.4",
-    "vite": "4.0.4"
+    "typescript": "^5.0.4",
+    "vite": "^4.3.9"
   }
 }

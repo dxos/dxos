@@ -2,4 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DocumentLayout';
+export * from './StandaloneLayout';
+export * from './EmbeddedLayout';
+export * from './OutletContext';
+export * from './Root';

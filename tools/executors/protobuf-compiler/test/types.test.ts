@@ -14,7 +14,7 @@ import {
   Scalars,
   TaskList,
   TaskType,
-  WithTimestamp
+  WithTimestamp,
 } from './proto/gen/example/testing/types';
 import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 
@@ -33,16 +33,16 @@ describe('Schema', () => {
           type: TaskType.COMPLETED,
           googleAny: {
             '@type': 'example.testing.types.SubstitutedByInterface',
-            data: 'test'
-          }
+            data: 'test',
+          },
         },
         {
           id: 'task-2',
           title: 'Task Two',
           key: new MyKey(Buffer.from('task-1')),
-          type: TaskType.IN_PROGRESS
-        }
-      ]
+          type: TaskType.IN_PROGRESS,
+        },
+      ],
     };
 
     const encoded = codec.encode(initial);
@@ -81,30 +81,30 @@ describe('Schema', () => {
       requiredField: new MyKey(Buffer.from('foo')),
       mappedField: {
         foo: new MyKey(Buffer.from('foo')),
-        bar: new MyKey(Buffer.from('foo'))
+        bar: new MyKey(Buffer.from('foo')),
       },
       inner: {
         bar: ComplexFields.InnerEnum.BAR,
-        foo: 'foo'
+        foo: 'foo',
       },
       myAny: {
-        foo: 'foo'
+        foo: 'foo',
       },
       googleAny: {
         '@type': 'example.testing.types.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS
+        type: TaskType.IN_PROGRESS,
       },
       undecodedAny: {
         '@type': 'google.protobuf.Any',
         type_url: 'bar',
-        value: Buffer.from('foo')
+        value: Buffer.from('foo'),
       },
       importedAny: {
-        bar: 123
-      }
+        bar: 123,
+      },
     };
 
     const encoded = codec.encode(initial);
@@ -122,26 +122,26 @@ describe('Schema', () => {
       requiredField: new MyKey(Buffer.from('foo')),
       inner: {
         bar: ComplexFields.InnerEnum.BAR,
-        foo: 'foo'
+        foo: 'foo',
       },
       myAny: {
-        foo: 'foo'
+        foo: 'foo',
       },
       googleAny: {
         '@type': 'example.testing.types.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS
+        type: TaskType.IN_PROGRESS,
       },
       undecodedAny: {
         '@type': 'google.protobuf.Any',
         type_url: 'bar',
-        value: Buffer.from('foo')
+        value: Buffer.from('foo'),
       },
       importedAny: {
-        bar: 123
-      }
+        bar: 123,
+      },
     };
 
     const encoded = codec.encode(initial);
@@ -170,7 +170,7 @@ describe('Schema', () => {
         sfixed64Field: '312313123',
         boolField: true,
         stringField: 'hello',
-        bytesField: Buffer.from('world')
+        bytesField: Buffer.from('world'),
       };
 
       const encoded = codec.encode(initial);
@@ -198,7 +198,7 @@ describe('Schema', () => {
         sfixed64Field: '0',
         boolField: false,
         stringField: '',
-        bytesField: Buffer.from('')
+        bytesField: Buffer.from(''),
       };
 
       const encoded = codec.encode(initial);
@@ -226,7 +226,7 @@ describe('Schema', () => {
         sfixed64Field: '0',
         boolField: false,
         stringField: '',
-        bytesField: new Uint8Array()
+        bytesField: new Uint8Array(),
       };
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
@@ -250,7 +250,7 @@ describe('Schema', () => {
         sfixed64Field: '312313123',
         boolField: true,
         stringField: 'hello',
-        bytesField: Buffer.from('world')
+        bytesField: Buffer.from('world'),
       };
 
       const encoded = codec.encode(initial);
@@ -287,8 +287,8 @@ describe('Schema', () => {
 
     const expected: Outer = {
       inner: {
-        num: 0
-      }
+        num: 0,
+      },
     };
 
     const decoded = codec.decode(Buffer.from(''));
@@ -299,7 +299,7 @@ describe('Schema', () => {
     const codec = schema.getCodecForType('example.testing.types.WithTimestamp');
 
     const initial: WithTimestamp = {
-      timestamp: new Date('2021-09-17T09:46:04Z')
+      timestamp: new Date('2021-09-17T09:46:04Z'),
     };
 
     const encoded = codec.encode(initial);

@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus } from 'phosphor-react';
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { HeadingWithActions } from '@dxos/react-appkit';
-import { useTranslation, Button, getSize, defaultDisabled, Group, mx } from '@dxos/react-components';
+import { useTranslation, Button } from '@dxos/aurora';
+import { getSize, defaultDisabled, mx } from '@dxos/aurora-theme';
+import { HeadingWithActions, Group } from '@dxos/react-appkit';
 
 const ContactsPage = () => {
   const { t } = useTranslation('halo');
@@ -16,18 +17,18 @@ const ContactsPage = () => {
         className='mlb-4'
         heading={{ children: t('contacts label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1'>
+          <Button variant='primary' classNames='grow flex gap-1'>
             <Plus className={getSize(5)} />
             {t('add contact label', { ns: 'appkit' })}
           </Button>
         }
       />
       <Group
-        className='mlb-4'
+        className='mlb-4 p-2 rounded'
         label={{
           level: 2,
           children: t('empty contacts message'),
-          className: mx('text-xl', defaultDisabled)
+          className: mx('text-xl', defaultDisabled),
         }}
         elevation='base'
       />

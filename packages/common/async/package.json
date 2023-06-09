@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,7 +19,12 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "zen-observable": "^0.10.0",
+    "zen-push": "^0.3.1"
+  },
+  "devDependencies": {
+    "@types/zen-observable": "^0.8.3"
   },
   "publishConfig": {
     "access": "public"

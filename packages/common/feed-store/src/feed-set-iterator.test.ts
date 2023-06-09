@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
-import faker from 'faker';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -64,7 +64,7 @@ describe('FeedSetIterator', () => {
         const feed = await feedStore.openFeed(key, { writable: true });
         await iterator.addFeed(feed);
         return feed;
-      })
+      }),
     );
 
     const [done, received] = latch({ count: numBlocks });
@@ -80,9 +80,9 @@ describe('FeedSetIterator', () => {
 
       // Write block.
       setTimeout(async () => {
-        const feed = faker.random.arrayElement(feeds);
+        const feed = faker.helpers.arrayElement(feeds);
         await builder.generator.writeBlocks(feed.createFeedWriter(), {
-          count: numBlocks
+          count: numBlocks,
         });
       }, 100);
     }
@@ -113,15 +113,15 @@ describe('FeedSetIterator', () => {
           const feed = await feedStore.openFeed(key, { writable: true });
           await iterator.addFeed(feed);
           return feed.createFeedWriter();
-        })
+        }),
       );
 
       expect(iterator.size).to.eq(numFeeds);
 
       for (const _ of Array.from(Array(numBlocks))) {
-        const writer = faker.random.arrayElement(writers);
+        const writer = faker.helpers.arrayElement(writers);
         const receipts = await builder.generator.writeBlocks(writer, {
-          count: 1
+          count: 1,
         });
         log('wrote', receipts);
       }
@@ -153,7 +153,7 @@ describe('FeedSetIterator', () => {
     const written = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
     const feeds = feedStore.feeds.map((feed) => ({
       feedKey: feed.key,
-      length: feed.properties.length
+      length: feed.properties.length,
     }));
 
     log('written', { feeds, written });
@@ -175,15 +175,15 @@ describe('FeedSetIterator', () => {
       start: [
         {
           feedKey: feed.key,
-          index: 2
-        }
-      ]
+          index: 2,
+        },
+      ],
     });
     await iterator.open();
     await iterator.addFeed(feed);
 
     await builder.generator.writeBlocks(feed.createFeedWriter(), {
-      count: 10
+      count: 10,
     });
 
     let index = 2;

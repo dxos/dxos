@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/react-icons",
+  "version": "0.1.46",
+  "private": true,
+  "description": "DXOS assets.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/lib/browser/index.mjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "assets"
+  ],
+  "devDependencies": {
+    "@dxos/aurora-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "@storybook/addons": "^7.0.6",
+    "@storybook/api": "^7.0.6",
+    "@storybook/components": "^7.0.6",
+    "@storybook/core-events": "^7.0.6",
+    "@storybook/theming": "^7.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

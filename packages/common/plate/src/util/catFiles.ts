@@ -39,7 +39,7 @@ export const catFiles = async (fileNames: string[], options?: LoadOptions): Prom
   const squashed = loadedParts.reduce((memo, next) => merge(memo, next), {});
   if (Object.keys(squashed).length < 1) {
     throw new Error(
-      [`unable to load inputs from ${fileNames.join(', ')}`, ...errors?.map((e) => e.toString())].join('\n')
+      [`unable to load inputs from ${fileNames.join(', ')}`, ...errors?.map((e) => e.toString())].join('\n'),
     );
   }
   return squashed;

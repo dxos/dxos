@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ClientServices, ClientServicesProvider } from '@dxos/client-protocol';
 import { ServiceBundle } from '@dxos/rpc';
 
-import { ClientServices, ClientServicesProvider } from './service-definitions';
 import { ClientServicesHost, ClientServicesHostParams } from './service-host';
 
 /**
@@ -23,6 +23,10 @@ export class LocalClientServices implements ClientServicesProvider {
 
   get services(): Partial<ClientServices> {
     return this._host.services;
+  }
+
+  get host(): ClientServicesHost {
+    return this._host;
   }
 
   async open(): Promise<void> {

@@ -22,9 +22,11 @@ export class Keyring implements Signer {
 
   constructor(
     private readonly _storage: Directory = createStorage({
-      type: StorageType.RAM
-    }).createDirectory('keyring')
-  ) {}
+      type: StorageType.RAM,
+    }).createDirectory('keyring'),
+  ) {
+    assert(subtleCrypto, 'SubtleCrypto not available in this environment.');
+  }
 
   async sign(key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
     const keyPair = await this._getKey(key);
@@ -33,11 +35,11 @@ export class Keyring implements Signer {
       await subtleCrypto.sign(
         {
           name: 'ECDSA',
-          hash: 'SHA-256'
+          hash: 'SHA-256',
         },
         keyPair.privateKey,
-        message
-      )
+        message,
+      ),
     );
   }
 
@@ -45,10 +47,10 @@ export class Keyring implements Signer {
     const keyPair = await subtleCrypto.generateKey(
       {
         name: 'ECDSA',
-        namedCurve: 'P-256'
+        namedCurve: 'P-256',
       },
       true,
-      ['sign', 'verify']
+      ['sign', 'verify'],
     );
 
     await this._setKey(keyPair);
@@ -78,21 +80,21 @@ export class Keyring implements Signer {
           record.publicKey,
           {
             name: 'ECDSA',
-            namedCurve: 'P-256'
+            namedCurve: 'P-256',
           },
           true,
-          ['verify']
+          ['verify'],
         ),
         privateKey: await subtleCrypto.importKey(
           'pkcs8',
           record.privateKey,
           {
             name: 'ECDSA',
-            namedCurve: 'P-256'
+            namedCurve: 'P-256',
           },
           true,
-          ['sign']
-        )
+          ['sign'],
+        ),
       };
 
       this._keyCache.set(publicKey, keyPair);
@@ -108,7 +110,7 @@ export class Keyring implements Signer {
 
     const record: KeyRecord = {
       publicKey: publicKey.asUint8Array(),
-      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey))
+      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)),
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
@@ -122,9 +124,9 @@ export class Keyring implements Signer {
     return todo('We need a method to delete a file.');
   }
 
-  list(): KeyRecord[] {
+  async list(): Promise<KeyRecord[]> {
     const keys: KeyRecord[] = [];
-    for (const path of this._storage.getFiles().keys()) {
+    for (const path of await this._storage.list()) {
       const fileName = path.split('/').pop(); // get last portion of the path
       assert(fileName, 'Invalid file name');
       keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });

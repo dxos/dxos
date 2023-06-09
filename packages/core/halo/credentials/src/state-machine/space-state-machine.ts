@@ -79,7 +79,7 @@ export class SpaceStateMachine implements SpaceState {
       },
       async () => {
         this._credentialProcessors = this._credentialProcessors.filter((p) => p !== processor);
-      }
+      },
     );
 
     this._credentialProcessors.push(processor);
@@ -98,7 +98,7 @@ export class SpaceStateMachine implements SpaceState {
       if (this._processedCredentials.has(credential.id)) {
         log.warn('duplicate credential', {
           id: credential.id,
-          type: getCredentialAssertion(credential)['@type']
+          type: getCredentialAssertion(credential)['@type'],
         });
         return false;
       }

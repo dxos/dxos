@@ -17,7 +17,7 @@ const createArrow =
     const path = d3.line()([
       start ? [length, height] : [-length, -height],
       [0, 0],
-      start ? [length, -height] : [-length, height]
+      start ? [length, -height] : [-length, height],
     ]);
 
     el.attr('markerWidth', length * 2)
@@ -54,18 +54,18 @@ export const createMarkers =
         {
           id: 'marker-arrow-start',
           generator: createArrow(arrowSize, -0.5, true),
-          className: 'arrow'
+          className: 'arrow',
         },
         {
           id: 'marker-arrow-end',
           generator: createArrow(arrowSize, 0.5, false),
-          className: 'arrow'
+          className: 'arrow',
         },
         {
           id: 'marker-dot',
           generator: createDot(8),
-          className: 'dot'
-        }
+          className: 'dot',
+        },
       ])
       .join('marker')
       .attr('id', (d) => d.id)

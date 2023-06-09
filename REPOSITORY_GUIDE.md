@@ -42,13 +42,30 @@ Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
 | `pnpm nx serve halo` | Runs the `halo` app in dev mode |
-| `pnpm nx serve-with-halo tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
-| `pnpm nx serve-with-halo composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve-with-vault tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
+| `pnpm nx serve-with-vault composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
+
+## Test commands:
+
+Examples of ways to run different test workloads:
+| Command | Description |
+| :-- | :-- |
+| `pnpm nx test client-services` | Runs the unit tests for `client-services` |
+| `pnpm nx test network-manager --tags flaky` | Runs the tests for `network-manager` which were tagged as flaky |
+| `pnpm nx test echo-db --watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `pnpm nx test echo-db --environments nodejs,webkit` | Runs the tests for `echo-db` in `nodejs` and `webkit` environments |
+| `pnpm nx test echo-db --inspect` | Attach to the VSCode debugger |
+| `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
+| `pnpm nx e2e halo-app --inspect` | Runs tests with playwright inspector |
+
+### Playwright
+
+Playwright tests are written using these [guidelines](./tools/executors/test/PLAYWRIGHT.md).
 
 ## Adding new dependencies
 
-Currently you must manually edit the individual `package.json` files to add packages. When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
+Currently, you must manually edit the individual `package.json` files to add packages. When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
 
 Once the required changes have been made, re-run `pnpm i`.
 
@@ -63,6 +80,10 @@ pnpm nx serve halo-app
 ```
 
 `nx` executes the target, and is aliased as an npm script `pnpm nx` (to avoid an unexpressed global dependency on an `nx` version). See [`nx run`](https://nx.dev/packages/nx/documents/run) for more syntax.
+
+> NOTE: Most `nx` incantations assume you're at the root of the repository. 
+> They may not work if `cwd` is a nested folder. 
+> To force execution from the root while deeper in the repo, you can use `pnpm -w ...` such as `pnpm -w nx build tasks-app`.
 
 ## Tasks in `scripts`
 
@@ -113,6 +134,34 @@ Packages may also declare scripts in their `package.json` `scripts` field as is 
 *   All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
 *   All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
 
+### Apps
+
+The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
+In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
+
+## CI
+
+### CircleCI
+- The main CI engine for the repo is CircleCI
+- The config for CircleCI can be found at `.circleci/config.yml`
+
+#### Running jobs locally
+
+- CircleCI has a cli which can be used to validate the config as well as to run jobs locally
+- Install instructions can be found here: https://circleci.com/docs/local-cli/
+- Here is a relevant tutorial about local execution: https://circleci.com/blog/local-pipeline-development/
+
+The `check` job can be run as such:
+
+```bash
+circleci local execute check
+```
+
+### Github Actions
+- Github Actions are used for compatibility purposes
+- Release Please publishes a Github action, plus releases are published to Github, so release creation is done as an action
+- Likewise PR title validation is an existing Github action
+
 ## Branch Diagram
 
 ![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
@@ -127,11 +176,11 @@ Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branc
 *   main/production maintain history
 
 | branch       | purpose                                                                               |
-| :----------- | :------------------------------------------------------------------------------------ |
+|:-------------| :------------------------------------------------------------------------------------ |
 | `main`       | the only feature integration branch                                                   |
 | `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
 | `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
-| `release-*`  | release branches created from main and to merge with `production` or `stating`        |
+| `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
 | `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
 
 
@@ -143,29 +192,21 @@ Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix
 
 Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
 
-## Tips
+### ESLint errors in vscode
 
-### running scripts at the root
+To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
 
-Most `nx` incantations assume you're at the root of the repository. They may not work if `cwd` is a nested folder. To force execution from the root while deeper in the repo, you can use `pnpm -w ...` such as `pnpm -w nx build tasks-app`.
-
-### conflicts in `package-lock.yaml`
-
-While rebasing, you can skip dealing with it during the rebase, just be sure to finalize with a `pnpm install` to regenerate the file at the end.
-
-```
-git checkout --ours pnpm-lock.yaml && git add pnpm-lock.yaml && git rebase --continue
+```json
+  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
 ```
 
-finally
+Alternatively to autofix all lint errors on save add the following config:
 
+```json
+  "editor.codeActionsOnSave": {"source.fixAll": true}
 ```
-pnpm i
-```
 
-to regenerate the `pnpm-lock.yaml` on the new `HEAD`.
-
-### Helpful aliases
+## Helpful aliases
 
 ```bash
 alias px="pnpm -w nx"
@@ -177,15 +218,7 @@ More custom shell aliases can be included in your shell config via:
 source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 ```
 
-### ESLint errors in vscode
-
-To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
-
-```json
-  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }]
-```
-
-### Storybook
+## Storybook
 
 ```
 Cannot GET /` when running 'pnpm run storybook'
@@ -199,7 +232,7 @@ pnpm run storybook --no-manager-cache
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
 
-### Mobile development
+## Mobile development
 
 Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough. For example, you may want other devices on your local network to be able to access your dev server (particularly useful when debugging issues on mobile devices). In this case you would be accessing the app via the ip address of your host machine rather than `localhost`. IP addresses are not a secure context unless they are served with https and a certificate. The apps in this repo are setup to serve the dev server with https when `HTTPS=true`. What follows are instructions on how to setup the certificate for your devices to make this work as expected:
 
@@ -225,7 +258,7 @@ Modern browsers treat `localhost` as a secure context, allowing secure apis such
 
 Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there. Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
 
-### Proxying using https://srv.us
+## Proxying using https://srv.us
 
 `srv.us` is easier to setup but will lead to longer loading times.
 
@@ -235,3 +268,31 @@ Given this, the recommended setup is to run `serve` from the repo root and keep 
     # The session-specific link will be printed.
 
 > NOTE: The amount of files that are needed to be loaded (more then 800 in dev mode) is causing srv.us to bottlenek. On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
+
+## Creating and running Bots
+
+NOTE: Bots are rapidly evolving experimental features with limited documentation.
+
+To get started follow the [instructions in the bot-lab README](./packages/experimental/bot-lab/README.md).
+
+## Service Workers
+
+Observations of service worker behavior related to using apps w/ DXOS vault
+
+| Page load method                                                                     | In IFrame | Service worker behavior                                                                                 |
+| :----------------------------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------ |
+| New tab                                                                              | N/A       | New version waiting for activation is activated                                                         |
+| Reload                                                                               | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
+| Reload                                                                               | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |
+| [Hard reload](https://web.dev/service-worker-lifecycle/#shift-reload)                | N/A       | New version waiting for activation is activated                                                         |
+| [Update & reload](https://vite-plugin-pwa.netlify.app/frameworks/#prompt-for-update) | N/A       | New version waiting for activation is activated                                                         |
+
+Recommended reading for better understanding the service worker lifecycle: https://web.dev/service-worker-lifecycle.
+
+### Vite
+
+The easiest way to setup a PWA with Vite is to use this plugin https://vite-plugin-pwa.netlify.app/.
+
+At present the recommendation would be to avoid the [`autoUpdate` strategy](https://vite-plugin-pwa.netlify.app/guide/auto-update.html) as it does not provide any predictability to users for when the app will update.
+
+NOTE: the [prompt for update strategy](https://vite-plugin-pwa.netlify.app/guide/prompt-for-update.html) can be used without actually providing prompts and the app will update along the lines of the table above. This is currently how the HALO vault's service worker is setup (though it will likely evolve later to [handle migrations](https://web.dev/service-worker-lifecycle/#activate-2)).

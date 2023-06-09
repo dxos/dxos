@@ -6,7 +6,7 @@ import {
   ClassDeclarationStructure,
   ImportDeclarationStructure,
   PropertyDeclarationStructure,
-  SourceFile
+  SourceFile,
 } from 'ts-morph';
 
 //

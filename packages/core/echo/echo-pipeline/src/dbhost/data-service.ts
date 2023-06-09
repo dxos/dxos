@@ -13,7 +13,7 @@ import {
   MutationReceipt,
   SubscribeRequest,
   EchoEvent,
-  WriteRequest
+  WriteRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 

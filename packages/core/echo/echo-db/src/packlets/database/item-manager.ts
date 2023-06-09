@@ -4,7 +4,6 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelFactory, ModelType } from '@dxos/model-factory';
@@ -23,13 +22,6 @@ export type ItemConstructionOptions = {
  * Manages the creation and indexing of items.
  */
 export class ItemManager {
-  /**
-   * Fired immediately after any update in the entities.
-   *
-   * If the information about which Item got updated is not required prefer using `debouncedItemUpdate`.
-   */
-  readonly update = new Event<Item<Model>>();
-
   /**
    * Map of active items.
    * @private
@@ -68,15 +60,6 @@ export class ItemManager {
     assert(!this._entities.has(item.id));
     this._entities.set(item.id, item);
     log('New Item:', String(item));
-
-    // Notify Item was udpated.
-    // TODO(burdon): Update the item directly?
-    this.update.emit(item);
-
-    // TODO(telackey): Unsubscribe?
-    item.subscribe(() => {
-      this.update.emit(item);
-    });
   }
 
   /**
@@ -111,7 +94,6 @@ export class ItemManager {
     assert(item);
 
     item.processMessage(mutation);
-    this.update.emit(item);
   }
 
   /**
@@ -150,7 +132,5 @@ export class ItemManager {
     assert(model, 'Model not registered');
 
     item.initialize(model.constructor);
-
-    this.update.emit(item);
   }
 }

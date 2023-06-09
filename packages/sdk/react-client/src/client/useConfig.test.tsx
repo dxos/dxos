@@ -7,7 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config, fromHost, SystemStatus } from '@dxos/client';
+import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from './ClientContext';
@@ -26,7 +26,7 @@ describe('Config hook', () => {
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
@@ -36,16 +36,16 @@ describe('Config hook', () => {
       runtime: {
         client: {
           storage: {
-            persistent: false
-          }
-        }
-      }
+            persistent: false,
+          },
+        },
+      },
     });
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(() => waitForCondition(() => client.getStatus() === SystemStatus.ACTIVE));
+    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });

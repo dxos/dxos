@@ -29,7 +29,7 @@ export class PortMuxer {
     }
   }
 
-  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe'>) {
+  createWorkerPort(options: Omit<WorkerPortOptions, 'port' | 'subscribe' | 'channel'> & { channel: string }) {
     if (!this._messagePort) {
       throw new Error('Message port is required to create worker ports');
     }
@@ -40,7 +40,7 @@ export class PortMuxer {
       subscribe: (callback) => {
         this._activeChannels.set(options.channel, callback);
         return () => this._activeChannels.delete(options.channel);
-      }
+      },
     });
     this._rpcPorts.set(options.channel, port);
 
@@ -58,7 +58,7 @@ export class PortMuxer {
     const message = event.data;
     log.debug('Recieved message from worker port', {
       channel: message.channel,
-      payload: message.payload
+      payload: message.payload,
     });
 
     const callback = this._activeChannels.get(message.channel);
@@ -69,7 +69,7 @@ export class PortMuxer {
     const message = event.data;
     log.debug('Recieved message from window', {
       channel: message.channel,
-      payload: message.payload
+      payload: message.payload,
     });
   }
 }

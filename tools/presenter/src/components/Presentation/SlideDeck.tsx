@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { HashRouter, Navigate, useRoutes } from 'react-router-dom';
 
@@ -54,7 +54,6 @@ export const SlideDeck: FC<PresentationProps> = ({ title, slides }) => {
   }, []);
 
   // Scaled props.
-  const contentRef = useRef<HTMLDivElement>(null);
   const [props, setProps] = useState({});
 
   // https://www.npmjs.com/package/react-resize-detector
@@ -115,7 +114,6 @@ export const SlideDeck: FC<PresentationProps> = ({ title, slides }) => {
     >
       {Object.keys(props).length !== 0 &&
         <div
-          ref={contentRef}
           className='bg-slide'
           style={{
             position: 'absolute',

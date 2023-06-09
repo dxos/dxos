@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import uniq from 'uniq';
@@ -20,7 +20,7 @@ const clean = (array: string[]) => {
 };
 
 const select = (array: string[], n: number) => {
-  const unique = faker.random.arrayElements(array, n);
+  const unique = faker.helpers.arrayElements(array, n);
   unique.sort();
   return unique;
 };
@@ -31,19 +31,19 @@ const parse = (source: string, target: string) => {
 
   const cleaned = {
     animals: clean(animals),
-    adjectives: clean(adjectives)
+    adjectives: clean(adjectives),
   };
 
   const selected = {
     animals: select(cleaned.animals, 256),
-    adjectives: select(cleaned.adjectives, 256)
+    adjectives: select(cleaned.adjectives, 256),
   };
 
   console.log(
     JSON.stringify({
       animals: selected.animals.length,
-      adjectives: selected.adjectives.length
-    })
+      adjectives: selected.adjectives.length,
+    }),
   );
 
   fs.writeFileSync(source, JSON.stringify(cleaned, undefined, 2));

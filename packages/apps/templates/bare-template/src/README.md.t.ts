@@ -12,26 +12,26 @@ export default defineTemplate<typeof config>(({ input }) => {
   ${dxosUi && `- [x] DXOS UI System`}
   ${storybook && `- [x] Storybook`}
 
-  Run the app with \`pnpm\`:
+  Run the app with \`npm\`:
   \`\`\`bash
-  pnpm install
-  pnpm serve
+  npm install
+  npm run serve
   \`\`\`
 
   Build the app to the \`out\` folder:
   \`\`\`bash
-  pnpm build
+  npm run build
   \`\`\`
 
   Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube):
   \`\`\`bash
-  pnpm run deploy
+  npm run deploy
   \`\`\`
 
   ${storybook && text`
   Run storybook in this project
   \`\`\`bash
-  pnpm storybook
+  npm run storybook
   \`\`\`
   `}
 

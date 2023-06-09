@@ -18,8 +18,8 @@ export const getFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): t
     return f.createTypeReferenceNode('Partial', [
       f.createTypeReferenceNode('Record', [
         f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-        getScalarFieldType(field, subs)
-      ])
+        getScalarFieldType(field, subs),
+      ]),
     ]);
   } else {
     return getScalarFieldType(field, subs);

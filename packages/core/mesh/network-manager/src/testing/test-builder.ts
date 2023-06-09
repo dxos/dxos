@@ -3,9 +3,15 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  SignalManager,
+  WebsocketSignalManager,
+} from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -16,15 +22,18 @@ import {
   TransportFactory,
   WebRTCTransport,
   WebRTCTransportProxyFactory,
-  WebRTCTransportService
+  WebRTCTransportService,
 } from '../transport';
 import { TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
-export const TEST_SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+const port = process.env.SIGNAL_PORT ?? 4000;
+export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
+  { server: `ws://localhost:${port}/.well-known/dx/signal` },
+];
 
 export type TestBuilderOptions = {
-  signalHosts?: string[];
+  signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
 };
 
@@ -60,12 +69,18 @@ export class TestPeer {
   /**
    * @internal
    */
+  readonly _signalManager: SignalManager;
+
+  /**
+   * @internal
+   */
   readonly _networkManager: NetworkManager;
 
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
   constructor(private readonly testBuilder: TestBuilder) {
+    this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager();
   }
 
@@ -81,41 +96,42 @@ export class TestPeer {
         this._proxy = createProtoRpcPeer({
           port: proxyPort,
           requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         this._service = createProtoRpcPeer({
           port: servicePort,
           exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
           },
           handlers: { BridgeService: new WebRTCTransportService() },
           noHandshake: true,
           encodingOptions: {
-            preserveAny: true
-          }
+            preserveAny: true,
+          },
         });
 
         transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
       } else {
         transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params)
+          createTransport: (params) => new WebRTCTransport(params),
         };
       }
     }
 
     return new NetworkManager({
-      signalManager: this.testBuilder.createSignalManager(),
-      transportFactory
+      signalManager: this._signalManager,
+      transportFactory,
     });
   }
 
   async open() {
+    await this._networkManager.open();
     await this._proxy?.open();
     await this._service?.open();
   }
@@ -175,7 +191,7 @@ export class TestSwarmConnection {
       topic: this.topic,
       peerId: this.peer.peerId,
       protocolProvider: this.protocol.factory,
-      topology
+      topology,
     });
 
     return this;

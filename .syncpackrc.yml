@@ -27,6 +27,11 @@ versionGroups:
       - '@dxos/log-hook'
     dependencies:
       - '@swc/core'
+  - packages:
+      - '@dxos/*-monitor'
+      - 'dxos-example-template'
+    dependencies:
+      - '@dxos/*'
 sortFirst:
   - name
   - version

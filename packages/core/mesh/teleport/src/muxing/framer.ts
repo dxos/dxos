@@ -42,7 +42,7 @@ export class Framer {
           callback();
         };
       }
-    }
+    },
   });
 
   public readonly port: RpcPort = {
@@ -57,7 +57,7 @@ export class Framer {
       return () => {
         this._messageCb = undefined;
       };
-    }
+    },
   };
 
   get stream(): Duplex {
@@ -112,7 +112,7 @@ export const decodeFrame = (buffer: Buffer, offset: number): { payload: Buffer; 
 
     return {
       payload,
-      bytesConsumed: tagLength + frameLength
+      bytesConsumed: tagLength + frameLength,
     };
   } catch (err) {
     if (err instanceof RangeError) {

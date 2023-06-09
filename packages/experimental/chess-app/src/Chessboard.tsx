@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { Chess, Color } from 'chess.js';
-import { ArrowURightDown, Circle } from 'phosphor-react';
 import React, { FC } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 
-import { getSize, mx } from '@dxos/react-components';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { customPieces, phosphorPieces, riohachaPieces } from './media';
 
@@ -15,20 +15,20 @@ export enum ChessPieces {
   STANDARD = 0,
   CUSTOM = 1,
   FUTURE = 2,
-  RIOHACHA = 3
+  RIOHACHA = 3,
 }
 
 const chessPieces = {
   [ChessPieces.STANDARD]: undefined,
   [ChessPieces.CUSTOM]: customPieces,
   [ChessPieces.FUTURE]: phosphorPieces,
-  [ChessPieces.RIOHACHA]: riohachaPieces
+  [ChessPieces.RIOHACHA]: riohachaPieces,
 };
 
 const props = {
   customDarkSquareStyle: { backgroundColor: '#dcdcdc' },
   customLightSquareStyle: { backgroundColor: '#ffffff' },
-  customDropSquareStyle: { boxShadow: 'inset 0 0 1px 4px rgba(80, 80, 80, 0.75)' }
+  customDropSquareStyle: { boxShadow: 'inset 0 0 1px 4px rgba(80, 80, 80, 0.75)' },
 };
 
 export type ChessModel = {
@@ -58,7 +58,7 @@ export const Chessboard: FC<ChessboardProps> = ({
   orientation = 'w',
   readonly = false,
   pieces = ChessPieces.STANDARD,
-  onUpdate
+  onUpdate,
 }) => {
   const handleDrop = (source: any, target: any, piece: any) => {
     // TODO(burdon): Select promotion piece.
@@ -72,6 +72,8 @@ export const Chessboard: FC<ChessboardProps> = ({
     if (result) {
       onUpdate?.(move);
       return true;
+    } else {
+      return false;
     }
   };
 

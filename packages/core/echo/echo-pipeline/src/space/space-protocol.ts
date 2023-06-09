@@ -12,7 +12,7 @@ import {
   SwarmConnection,
   WireProtocol,
   WireProtocolParams,
-  WireProtocolProvider
+  WireProtocolProvider,
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
@@ -40,6 +40,7 @@ export type SpaceProtocolOptions = {
    * Additional extensions can be added here.
    */
   onSessionAuth?: (session: Teleport) => void;
+  onAuthFailure?: (session: Teleport) => void;
 };
 
 /**
@@ -49,6 +50,7 @@ export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
+  private readonly _onAuthFailure?: (session: Teleport) => void;
 
   @logInfo
   private readonly _topic: PublicKey;
@@ -71,10 +73,11 @@ export class SpaceProtocol {
     return this._swarmIdentity.peerKey;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, onSessionAuth }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
+    this._onAuthFailure = onAuthFailure;
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -101,7 +104,7 @@ export class SpaceProtocol {
     const topologyConfig = {
       originateConnections: 4,
       maxPeers: 10,
-      sampleSize: 20
+      sampleSize: 20,
     };
 
     log('starting...');
@@ -110,7 +113,7 @@ export class SpaceProtocol {
       peerId: this._swarmIdentity.peerKey,
       topic: this._topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._topic}`
+      label: `Protocol swarm: ${this._topic}`,
     });
 
     log('started');
@@ -129,7 +132,8 @@ export class SpaceProtocol {
       const session = new SpaceProtocolSession({
         wireParams,
         swarmIdentity: this._swarmIdentity,
-        onSessionAuth: this._onSessionAuth
+        onSessionAuth: this._onSessionAuth,
+        onAuthFailure: this._onAuthFailure,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -150,12 +154,14 @@ export type SpaceProtocolSessionParams = {
    * Additional extensions can be added here.
    */
   onSessionAuth?: (session: Teleport) => void;
+
+  onAuthFailure?: (session: Teleport) => void;
 };
 
 export enum AuthStatus {
   INITIAL = 'INITIAL',
   SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE'
+  FAILURE = 'FAILURE',
 }
 
 // TODO(dmaretskyi): Move to a separate file.
@@ -167,6 +173,7 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly _wireParams: WireProtocolParams;
 
   private readonly _onSessionAuth?: (session: Teleport) => void;
+  private readonly _onAuthFailure?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
 
   private readonly _teleport: Teleport;
@@ -182,10 +189,11 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, onSessionAuth }: SpaceProtocolSessionParams) {
+  constructor({ wireParams, swarmIdentity, onSessionAuth, onAuthFailure }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
+    this._onAuthFailure = onAuthFailure;
 
     this._teleport = new Teleport(wireParams);
   }
@@ -202,16 +210,16 @@ export class SpaceProtocolSession implements WireProtocol {
         provider: this._swarmIdentity.credentialProvider,
         verifier: this._swarmIdentity.credentialAuthenticator,
         onAuthSuccess: () => {
-          this._authStatus = AuthStatus.SUCCESS;
           log('Peer authenticated');
+          this._authStatus = AuthStatus.SUCCESS;
           this._onSessionAuth?.(this._teleport);
           // TODO(dmaretskyi): Configure replicator to upload.
         },
         onAuthFailure: () => {
-          log.warn('Auth failed');
           this._authStatus = AuthStatus.FAILURE;
-        }
-      })
+          this._onAuthFailure?.(this._teleport);
+        },
+      }),
     );
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }

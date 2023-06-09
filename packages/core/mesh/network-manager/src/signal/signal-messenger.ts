@@ -24,7 +24,6 @@ export interface SignalMessage {
 /**
  * Signal peer messaging interface.
  */
-// TODO(burdon): Rename SignalMessenger.
 export interface SignalMessenger {
   /**
    * Offer/answer RPC.

@@ -9,7 +9,7 @@ import { executeDirectoryTemplate } from '@dxos/plate';
 import packageJson from '../package.json';
 import { configs } from './configs';
 
-const OUTPUT_FOLDER = 'out';
+const OUTPUT_FOLDER = '../testdist';
 
 const main = async () => {
   console.log('executing', configs.length, 'configurations');
@@ -21,9 +21,9 @@ const main = async () => {
       templateDirectory,
       outputDirectory,
       input: { ...config, monorepo: false, name: `${packageJson.name}-${config.name}` },
-      interactive: true
+      interactive: true,
     });
-    return Promise.all(results.map((r) => r.save()));
+    await results.save();
   });
   await Promise.all(promises);
   console.log('done');

@@ -37,9 +37,25 @@ export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>;
  * Manages state and state transitions vis mutations.
  */
 export interface StateMachine<TState, TMutation, TSnapshot> {
+  /**
+   * @returns Current state.
+   */
   getState(): TState;
+  /**
+   * Resets the state to the given snapshot.
+   * @param snapshot Snapshot to reset to.
+   */
   reset(snapshot: TSnapshot): void;
+
+  /**
+   * Applies a mutation to the state.
+   * @param mutation Mutation to apply.
+   */
   process(mutation: TMutation): void;
+
+  /**
+   * @returns Snapshot of the current state.
+   */
   snapshot(): TSnapshot;
 }
 
@@ -58,17 +74,6 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
 
   // Manages state and state transitions vis mutations.
   stateMachine: () => StateMachine<TState, TMutation, TSnasphot>;
-
-  /**
-   * A way to initialize the model upon item creation.
-   * Must return a mutation that will initialize the model.
-   * This mutation will be applied in the same processing step as the item creation.
-   *
-   * @param props User-defined props required for initialization. Forwarded from `database.createItem` call.
-   * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
-   */
-  // TODO(burdon): Remove from meta? Make generic.
-  getInitMutation?(props: any): any | null;
 };
 
 /**
@@ -78,7 +83,7 @@ export type ModelConstructor<M extends Model> = (new (
   meta: ModelMeta,
   itemId: ItemID,
   getState: () => StateOf<M>,
-  MutationWriter?: MutationWriter<MutationOf<M>>
+  MutationWriter?: MutationWriter<MutationOf<M>>,
 ) => M) & {
   meta: ModelMeta;
 };

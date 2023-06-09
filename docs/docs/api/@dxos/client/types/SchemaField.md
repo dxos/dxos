@@ -4,15 +4,19 @@
 
 
 
+
 ## Properties
 ### [key]()
 Type: <code>string</code>
 
+
 ### [ref]()
 Type: <code>[SchemaRef](/api/@dxos/client/types/SchemaRef)</code>
 
+
 ### [required]()
 Type: <code>boolean</code>
+
 
 ### [type]()
 Type: <code>FieldType</code>

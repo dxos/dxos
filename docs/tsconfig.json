@@ -9,18 +9,17 @@
     "outDir": "dist",
     "types": [
       "@vuepress/client/types",
-      "node"
+      "node",
+      "vite/client"
     ]
   },
   "include": [
+    "**/*.vue",
+    "docs",
     "src",
-    "typings.d.ts",
     "vuepress.config.ts"
   ],
   "references": [
-    {
-      "path": "../packages/apps/patterns/react-appkit"
-    },
     {
       "path": "../packages/common/async"
     },
@@ -31,16 +30,10 @@
       "path": "../packages/common/log"
     },
     {
-      "path": "../packages/common/react-components"
-    },
-    {
       "path": "../packages/common/telemetry"
     },
     {
       "path": "../packages/core/echo/echo-schema"
-    },
-    {
-      "path": "../packages/core/echo/echo-typegen"
     },
     {
       "path": "../packages/core/protocols"
@@ -49,10 +42,28 @@
       "path": "../packages/sdk/client"
     },
     {
+      "path": "../packages/sdk/client-services"
+    },
+    {
       "path": "../packages/sdk/config"
     },
     {
+      "path": "../packages/sdk/examples"
+    },
+    {
       "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../packages/sdk/vault"
+    },
+    {
+      "path": "../packages/ui/aurora"
+    },
+    {
+      "path": "../packages/ui/aurora-theme"
+    },
+    {
+      "path": "../packages/ui/react-appkit"
     },
     {
       "path": "../tools/apidoc"

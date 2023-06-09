@@ -17,7 +17,7 @@ describe('useSpaces', () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity();
-    await client.echo.createSpace();
+    await client.createSpace();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>

@@ -28,12 +28,12 @@ describe('SpaceStateMachine', () => {
           subject: space,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            spaceKey: space
+            spaceKey: space,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     expect(
@@ -45,12 +45,12 @@ describe('SpaceStateMachine', () => {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
             role: SpaceMember.Role.ADMIN,
-            genesisFeedKey: feed
+            genesisFeedKey: feed,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     const chain: Chain = {
@@ -58,12 +58,12 @@ describe('SpaceStateMachine', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device,
-          identityKey: identity
+          identityKey: identity,
         },
         subject: device,
         issuer: identity,
-        signer: keyring
-      })
+        signer: keyring,
+      }),
     };
 
     expect(
@@ -76,14 +76,14 @@ describe('SpaceStateMachine', () => {
             spaceKey: space,
             identityKey: identity,
             deviceKey: device,
-            designation: AdmittedFeed.Designation.CONTROL
+            designation: AdmittedFeed.Designation.CONTROL,
           },
           signer: keyring,
           signingKey: device,
-          chain
+          chain,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     expect(spaceState.genesisCredential).toBeDefined();
@@ -92,9 +92,9 @@ describe('SpaceStateMachine', () => {
         key: identity,
         assertion: {
           spaceKey: space,
-          role: SpaceMember.Role.ADMIN
-        }
-      }
+          role: SpaceMember.Role.ADMIN,
+        },
+      },
     ]);
     expect(Array.from(spaceState.feeds.values())).toMatchObject([
       {
@@ -103,9 +103,9 @@ describe('SpaceStateMachine', () => {
           spaceKey: space,
           identityKey: identity,
           deviceKey: device,
-          designation: AdmittedFeed.Designation.CONTROL
-        }
-      }
+          designation: AdmittedFeed.Designation.CONTROL,
+        },
+      },
     ]);
     expect(spaceState.credentials).toHaveLength(3);
   });
@@ -128,12 +128,12 @@ describe('SpaceStateMachine', () => {
           subject: space,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            spaceKey: space
+            spaceKey: space,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Create the space member credential.
@@ -146,12 +146,12 @@ describe('SpaceStateMachine', () => {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
             role: SpaceMember.Role.ADMIN,
-            genesisFeedKey: feed
+            genesisFeedKey: feed,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     const chain: Chain = {
@@ -159,12 +159,12 @@ describe('SpaceStateMachine', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device,
-          identityKey: identity
+          identityKey: identity,
         },
         subject: device,
         issuer: identity,
-        signer: keyring
-      })
+        signer: keyring,
+      }),
     };
 
     expect(
@@ -176,14 +176,14 @@ describe('SpaceStateMachine', () => {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
             role: SpaceMember.Role.MEMBER,
-            genesisFeedKey: feed
+            genesisFeedKey: feed,
           },
           signer: keyring,
           signingKey: device,
-          chain
+          chain,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     expect(spaceState.genesisCredential).toBeDefined();
@@ -192,16 +192,16 @@ describe('SpaceStateMachine', () => {
         key: identity,
         assertion: {
           spaceKey: space,
-          role: SpaceMember.Role.ADMIN
-        }
+          role: SpaceMember.Role.ADMIN,
+        },
       },
       {
         key: identity2,
         assertion: {
           spaceKey: space,
-          role: SpaceMember.Role.MEMBER
-        }
-      }
+          role: SpaceMember.Role.MEMBER,
+        },
+      },
     ]);
     expect(Array.from(spaceState.feeds.values())).toMatchObject([]);
     expect(spaceState.credentials).toHaveLength(3);
@@ -225,12 +225,12 @@ describe('SpaceStateMachine', () => {
           subject: haloSpace,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            spaceKey: haloSpace
+            spaceKey: haloSpace,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Admit the identity to the space.
@@ -243,12 +243,12 @@ describe('SpaceStateMachine', () => {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: haloSpace,
             role: SpaceMember.Role.ADMIN,
-            genesisFeedKey: feed
+            genesisFeedKey: feed,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Assign the HALO space to the identity.
@@ -260,12 +260,12 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.HaloSpace',
             identityKey: identity,
-            haloKey: haloSpace
+            haloKey: haloSpace,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Admit device2 to the identity.
@@ -275,14 +275,14 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device1,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device1,
           issuer: identity,
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Admit device1 to the identity.
@@ -292,7 +292,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device2,
-            identityKey: identity
+            identityKey: identity,
           },
           subject: device2,
           issuer: identity,
@@ -302,13 +302,13 @@ describe('SpaceStateMachine', () => {
             credential: haloState.credentials.find(
               (c) =>
                 c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
-                c.subject.id.equals(device1)
-            )!
+                c.subject.id.equals(device1),
+            )!,
           },
-          signer: keyring
+          signer: keyring,
         }),
-        feed
-      )
+        feed,
+      ),
     ).toEqual(true);
 
     // Issue a feed admit credential using the chain,
@@ -318,7 +318,7 @@ describe('SpaceStateMachine', () => {
         spaceKey: haloSpace,
         deviceKey: device2,
         designation: AdmittedFeed.Designation.CONTROL,
-        identityKey: identity
+        identityKey: identity,
       },
       issuer: identity,
       signer: keyring,
@@ -328,9 +328,9 @@ describe('SpaceStateMachine', () => {
       chain: {
         credential: haloState.credentials.find(
           (c) =>
-            c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device2)
-        )!
-      }
+            c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device2),
+        )!,
+      },
     });
 
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });

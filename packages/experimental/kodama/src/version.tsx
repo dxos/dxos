@@ -12,6 +12,6 @@ export const showVersion = (name: string, version: string) => {
       <Text>
         Update: <Text color='yellow'>npm -g up {name}</Text> or <Text color='yellow'>yarn global upgrade {name}</Text>
       </Text>
-    </Box>
+    </Box>,
   );
 };

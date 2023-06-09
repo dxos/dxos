@@ -21,10 +21,10 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../gem-core"

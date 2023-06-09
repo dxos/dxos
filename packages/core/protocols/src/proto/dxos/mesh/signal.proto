@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 
 package dxos.mesh.signal;
 
-option go_package = "github.com/dxos/kube/go/signal/pb";
+option go_package = "github.com/dxos/kube/proto/def/dxos/mesh/signal";
 
 message JoinRequest {
   bytes swarm = 1;
@@ -58,8 +58,12 @@ message SwarmEvent {
 
 /// Goes on a Pub/Sub host topic.
 message HostEvent {
+  message AnnounceBack {
+      bytes swarm = 1;
+      SwarmEvent.PeerAvailable peer_available = 2;
+  }
   oneof event {
-    SwarmEvent.PeerAvailable peer_available = 1;
+      AnnounceBack announce_back = 1;
   }
 }
 
@@ -68,6 +72,21 @@ message PeerEvent {
   oneof event {
     Message message = 1;
   }
+}
+
+enum SignalState {
+  /// Connection is being established.
+  CONNECTING = 0;
+  /// Connection is being re-established.
+  RECONNECTING = 1;
+  /// Connected.
+  CONNECTED = 2;
+  /// Server terminated the connection. Socket will be reconnected.
+  DISCONNECTED = 3;
+  /// Server terminated the connection with an ERROR. Socket will be reconnected.
+  ERROR = 4;
+  /// Socket was closed.
+  CLOSED = 5;
 }
 
 // TOOD(burdon): Rename.

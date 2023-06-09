@@ -5,20 +5,26 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-components/plugin';
-import { kaiThemeExtension } from '@dxos/kai/theme-extensions';
-import { osThemeExtension } from '@dxos/react-ui/theme-extensions';
+import { ThemePlugin } from '@dxos/aurora-theme/plugin';
+import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
-    host: true
+    host: true,
+    fs: {
+      allow: [
+        // TODO(wittjosiah): Not detecting pnpm-workspace?
+        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        searchForWorkspaceRoot(process.cwd()),
+      ],
+    },
   },
   build: {
     sourcemap: true,
@@ -26,26 +32,20 @@ export default defineConfig({
       output: {
         manualChunks: {
           highlighter: ['react-syntax-highlighter'],
-          vendor: ['react', 'react-router-dom', 'react-dom']
-        }
-      }
-    }
+          vendor: ['react', 'react-router-dom', 'react-dom'],
+        },
+      },
+    },
   },
   plugins: [
     ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'] }),
     ThemePlugin({
+      root: __dirname,
       content: [
         resolve(__dirname, './*.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-components/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/kai/dist/**/*.mjs')
       ],
-      extensions: [osThemeExtension, kaiThemeExtension]
     }),
     ReactPlugin(),
     VitePWA({
@@ -53,7 +53,7 @@ export default defineConfig({
       selfDestroying: true,
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
+        maximumFileSizeToCacheInBytes: 30000000,
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
@@ -65,15 +65,15 @@ export default defineConfig({
           {
             src: 'icons/icon-32.png',
             sizes: '32x32',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'icons/icon-256.png',
             sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     }),
     /**
      * Bundle fonts.
@@ -90,7 +90,7 @@ export default defineConfig({
           'DM Sans',
           'DM Mono',
           'Montserrat'
-        ]
+        ],
       },
 
       custom: {
@@ -99,10 +99,10 @@ export default defineConfig({
         families: [
           {
             name: 'Sharp Sans',
-            src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
-          }
-        ]
-      }
+            src: 'node_modules/@dxos/react-icons/assets/fonts/sharp-sans/*.ttf',
+          },
+        ],
+      },
     }),
     // https://www.bundle-buddy.com/rollup
     {
@@ -123,7 +123,7 @@ export default defineConfig({
           mkdirSync(outDir);
         }
         writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-      }
-    }
-  ]
+      },
+    },
+  ],
 });

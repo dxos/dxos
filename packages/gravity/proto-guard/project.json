@@ -1,0 +1,63 @@
+{
+  "sourceRoot": "packages/gravity/proto-guard/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gravity/proto-guard/src/index.ts",
+        "outputPath": "packages/gravity/proto-guard/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/gravity/proto-guard/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/proto-guard/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storage": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "storage"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/gravity/proto-guard",
+        "environments": [
+          "nodejs"
+        ],
+        "outputPath": "tmp/mocha/packages/gravity/proto-guard",
+        "resultsPath": "test-results/packages/gravity/proto-guard",
+        "testPatterns": [
+          "packages/gravity/proto-guard/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/proto-guard/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  }
+}

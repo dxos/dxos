@@ -14,7 +14,7 @@ export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   longs: String,
 
   // Will set empty repeated fields to [] instead of undefined.
-  arrays: true
+  arrays: true,
 };
 
 /**
@@ -35,7 +35,7 @@ export class ProtoCodec<T = any> implements Codec<T> {
   constructor(
     private readonly _type: protobufjs.Type,
     private readonly _mapping: BidirectionalMapingDescriptors,
-    private readonly _schema: Schema<any>
+    private readonly _schema: Schema<any>,
   ) {
     this._encodeMapper = createMessageMapper(this._type, this._mapping.encode);
     this._decodeMapper = createMessageMapper(this._type, this._mapping.decode);
@@ -74,7 +74,7 @@ export class ProtoCodec<T = any> implements Codec<T> {
     return {
       '@type': 'google.protobuf.Any',
       type_url: this._type.fullName.slice(1),
-      value: this.encode(value, options)
+      value: this.encode(value, options),
     };
   }
 

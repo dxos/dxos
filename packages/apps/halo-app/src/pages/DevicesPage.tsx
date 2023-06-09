@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus } from 'phosphor-react';
+import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
+import { Button, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable } from '@dxos/client';
-import { DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
+import { Heading, DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
-import { Heading, Button, useTranslation, getSize } from '@dxos/react-components';
 
 import { createInvitationUrl } from '../util';
 
@@ -22,17 +23,13 @@ const DevicesPage = () => {
     client.halo.createInvitation();
   }, []);
 
-  const handleRemove = useCallback((id: string) => {
-    void client.halo.removeInvitation(id);
-  }, []);
-
   return (
     <>
       <HeadingWithActions
         className='mlb-4'
         heading={{ children: t('devices label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1' onClick={handleCreateInvitation}>
+          <Button variant='primary' classNames='grow flex gap-1' onClick={handleCreateInvitation}>
             <Plus className={getSize(5)} />
             {t('add device label')}
           </Button>
@@ -45,7 +42,7 @@ const DevicesPage = () => {
       <InvitationList
         invitations={invitations as unknown as CancellableInvitationObservable[] | undefined}
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
-        onClickRemove={handleRemove}
+        onClickRemove={(invitation) => invitation.cancel()}
       />
     </>
   );

@@ -9,7 +9,6 @@ import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/h
 
 export type DevtoolsContextType = {
   space?: Space;
-  spaceInfo?: SubscribeToSpacesResponse.SpaceInfo;
   feedKey?: PublicKey;
 };
 

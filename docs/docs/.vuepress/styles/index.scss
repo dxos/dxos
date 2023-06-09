@@ -1,9 +1,139 @@
+@use "sass:color";
 @use "sass:map";
 @import './tailwind-colors.scss';
 @import './palette.scss';
 
+/**
+ * Main content area.
+ */
 .page {
-  transition: none;
+  transition: none !important;
+}
+
+#message-container .message {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+html[data-theme=light] {
+  .hint-container {
+    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  }
+}
+
+/**
+ * Navbar (header)
+ */
+.navbar {
+  .site-name {
+    display: none;
+  }
+
+  .logo {
+    height: 48px;
+    opacity: 0.9;
+  }
+
+  nav {
+    &.nav-links {
+      margin-left: 2rem !important;
+    }
+
+    .nav-item > .nav-link:hover::after,
+    .nav-item > .nav-link.active::after {
+      bottom: -16px;
+    }
+  }
+}
+
+/**
+ * Hero
+ */
+.home.project {
+  .hero-info-wrapper {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 2rem;
+
+    .hero-info {
+      #main-title {
+        // Hide the title (cannot be blank since used in browser title).
+        display: none;
+      }
+
+      .description {
+        max-width: 25rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .actions {
+        margin: 3rem 0;
+      }
+    }
+  }
+
+  .feature-panel {
+    .feature-item:hover {
+      transform: none;
+      box-shadow: none;
+      background-color: transparent;
+
+      &:before {
+        display: none;
+      }
+    }
+  }
+}
+
+html[data-theme=dark] .home.project .hero-info-wrapper {
+  img.dark {
+    opacity: 0.9 !important;
+  }
+  h1 {
+    color: white;
+  }
+}
+
+html[data-theme=light] .home.project .hero-info-wrapper {
+  img.light {
+    opacity: 0.9 !important;
+  }
+  h1 {
+    color: black;
+  }
+}
+
+.custom-container {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  ul {
+    li {
+      margin-bottom: 0.62em;
+    }
+  }
+
+  .custom-container-title {
+    font-weight: 500;
+  }
+}
+
+html[data-theme=dark] {
+  .custom-container.note,
+  .hint-container.note {
+    background-color: darken($zinc-800, 3%);
+  }
+}
+
+/**
+ * Misc.
+ */
+
+// Rich text formatting.
+h2,h3,h4,h5,h6 {
+  >a:first-child {
+    margin-left: -1.1em;
+  }
 }
 
 html[data-theme=light] {
@@ -13,18 +143,32 @@ html[data-theme=light] {
 }
 
 html[data-theme=dark] {
+  tr:nth-child(2n) {
+    background-color: transparent;
+  }
   th, td {
     border-color: $zinc-700;
   }
 }
 
-html[data-theme=dark] tr:nth-child(2n) {
-  background-color: transparent;
+.theme-hope-content figure img {
+  border-radius: 0;
+  &[tabindex]:hover {
+    box-shadow: none;
+  }
 }
 
-.home.project .feature:hover {
-  transform: none;
-  box-shadow: none;
+/**
+ * Code
+ */
+
+code {
+  background-color: color.adjust($zinc-200, $lightness: 3%);
+}
+
+a code, p a code {
+  color: $emerald-500;
+  font-weight: 600;
 }
 
 div[class^="language-"] {
@@ -42,44 +186,17 @@ div[class^="language-error"] code {
   }
 }
 
-#message-container .message {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+// Code highlight v height adjustment for font
+div[class*=language-] .highlight-lines {
+  line-height: 1.376;
 }
 
-.custom-container .custom-container-title {
-  font-weight: 500;
-}
-
-.custom-container {
-  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
-}
-
-.home.project .feature h2 {
-  font-weight: 500;
-}
-
-.home.project .hero {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-.home.project .hero img {
-  opacity: 0.8 !important;
-}
-
-.home.project .hero .description {
-  max-width: 40rem;
-}
-
-.navbar nav.nav-links {
-  margin-left: 2rem !important;
-}
-
-code {
-  background-color: $zinc-200;
+div[class*=language-] > button.copy-code-button:not(.fancy) {
+  top: auto;
+  bottom: 0;
+  right: 0;
+  margin: 0.5em;
+  border-radius: 0.25em;
 }
 
 html[data-theme=light] {
@@ -87,7 +204,7 @@ html[data-theme=light] {
     background-color: $zinc-300;
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
-      background-color: map.get($theme-color, 'light');
+      background-color: $theme-color; // map.get($theme-color, 'light');
     }
   }
 }
@@ -100,7 +217,7 @@ html[data-theme=dark] {
     }
     box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
     &:hover {
-      background-color: map.get($theme-color, 'dark');
+      background-color: $theme-color; // map.get($theme-color, 'dark');
       .copy-icon {
         color: $zinc-800;
       }
@@ -108,67 +225,7 @@ html[data-theme=dark] {
   }
 }
 
-.navbar .nav-item > .nav-link:hover::after, .navbar .nav-item > .nav-link.active::after {
-  bottom: -16px;
-}
-
-html[data-theme=dark] .home.project .hero {
-  img.dark {
-    // opacity: 0.8 !important;
-  }
-  h1 {
-    color: white;
-  }
-}
-
-html[data-theme=light] .home.project .hero {
-  img.dark {
-    // opacity: 0.8 !important;
-  }
-  h1 {
-    color: black;
-  }
-}
-
-html[data-theme=dark] .custom-container.note {
-  background-color: darken($zinc-800, 3%);
-}
-
-.peer-a {
-  color: $orange-500;
-}
-
-.peer-b {
-  color: $violet-500;
-}
-
-.theme-hope-content figure img {
-  border-radius: 0;
-  &[tabindex]:hover {
-    box-shadow: none;
-  }
-}
-
-.custom-container {
-  ul {
-    li {
-      margin-bottom: 0.62em;
-    }
-  }
-}
-
-// Rich text formatting
-h2,h3,h4,h5,h6 {
-  >a:first-child {
-    margin-left: -1.1em;
-  }
-}
-
-// code highlight v height adjustment for font
-div[class*=language-] .highlight-lines {
-  line-height: 1.376;
-}
-
+// dark and light video versions
 video.dark {
   display: none;
 }
@@ -179,5 +236,36 @@ html[data-theme=dark] {
   }
   video.light {
     display: none;
+  }
+}
+
+// showcase component
+.peer-a {
+  color: $orange-500;
+}
+
+.peer-b {
+  color: $violet-500;
+}
+
+// discord button
+.home.project .hero-info-wrapper {
+  html[data-theme=dark] & {
+    .action-button.discord {
+      background-color: #6A5ACD;
+      color: var(--white);
+      &:hover {
+        background-color: #7a6bdb;
+      }
+    }
+  }
+  html[data-theme=light] & {
+    .action-button.discord {
+      background-color: #7289DA;
+      color: white;
+      &:hover {
+        background-color: #8b9fe9;
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-storage",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Multiple random storage types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,9 +17,11 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "del": "^5.1.0",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
@@ -30,6 +32,8 @@
   },
   "devDependencies": {
     "@types/pify": "^3.0.2",
+    "@types/randombytes": "^2.0.0",
+    "randombytes": "^2.1.0",
     "source-map-support": "^0.5.12"
   },
   "publishConfig": {

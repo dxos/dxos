@@ -15,14 +15,14 @@ export class TestStream extends Duplex {
   static async assertConnectivity(
     stream1: TestStream,
     stream2: TestStream,
-    { timeout = 200 }: { timeout?: number } = {}
+    { timeout = 200 }: { timeout?: number } = {},
   ) {
     stream1.push('ping');
     stream2.push('pong');
 
     await Promise.all([
       stream2.assertReceivedAsync('ping', { timeout }),
-      stream1.assertReceivedAsync('pong', { timeout })
+      stream1.assertReceivedAsync('pong', { timeout }),
     ]);
   }
 
@@ -43,7 +43,7 @@ export class TestStream extends Duplex {
     const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
     return asyncTimeout(
       this._onWrite.waitForCondition(() => this._received.equals(dataBuffer)),
-      timeout
+      timeout,
     );
   }
 }

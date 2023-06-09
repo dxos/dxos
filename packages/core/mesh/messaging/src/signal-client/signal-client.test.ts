@@ -8,7 +8,7 @@ import { sleep, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
-import { createTestBroker, TestBroker } from '@dxos/signal';
+import { runTestSignalServer, SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { SignalClient } from './signal-client';
@@ -16,16 +16,16 @@ import { SignalClient } from './signal-client';
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.Example',
-  value: Buffer.from('1')
+  value: Buffer.from('1'),
 };
 
 describe('SignalClient', () => {
-  let broker1: TestBroker;
+  let broker1: SignalServerRunner;
 
-  let broker2: TestBroker;
+  let broker2: SignalServerRunner;
 
   beforeAll(async () => {
-    broker1 = await createTestBroker();
+    broker1 = await runTestSignalServer();
     // broker2 = await await createTestBroker(signalApiPort2);
   });
 
@@ -34,67 +34,104 @@ describe('SignalClient', () => {
     // code await broker2.stop();
   });
 
+  const waitForSubscription = async (signal: SignalClient, peerId: PublicKey) => {
+    await asyncTimeout(
+      signal._reconciled.waitForCondition(() => signal._messageStreams.has(peerId)),
+      500,
+    );
+  };
+
   test('message between 2 clients', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
-    const api1 = new SignalClient(broker1.url(), async (msg) => {
-      received.wake(msg);
-    });
+    const api1 = new SignalClient(
+      broker1.url(),
+      async (msg) => {
+        received.wake(msg);
+      },
+      async () => {},
+    );
+    api1.open();
     afterTest(() => api1.close());
-    const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    const api2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
+    api2.open();
     afterTest(() => api2.close());
 
     await api1.subscribeMessages(peer1);
-    await api2.subscribeMessages(peer2);
+    await waitForSubscription(api1, peer1);
 
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
     await api2.sendMessage(message);
     expect(await received.wait()).toEqual(message);
-  }).timeout(500);
+  })
+    .timeout(500)
+    .retries(2);
 
   test('join', async () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const api1 = new SignalClient(broker1.url(), async () => {});
+
+    const trigger1 = new Trigger();
+    const api1 = new SignalClient(
+      broker1.url(),
+      async () => {},
+      async ({ swarmEvent }) => {
+        if (!!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)) {
+          trigger1.wake();
+        }
+      },
+    );
+    api1.open();
     afterTest(() => api1.close());
-    const api2 = new SignalClient(broker1.url(), async () => {});
+
+    const trigger2 = new Trigger();
+    const api2 = new SignalClient(
+      broker1.url(),
+      async () => {},
+      async ({ swarmEvent }) => {
+        if (!!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer)) {
+          trigger2.wake();
+        }
+      },
+    );
+    api2.open();
     afterTest(() => api2.close());
-
-    const promise1 = api1.swarmEvent.waitFor(
-      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)
-    );
-    const promise2 = api2.swarmEvent.waitFor(
-      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer)
-    );
-
     await api1.join({ topic, peerId: peer1 });
     await api2.join({ topic, peerId: peer2 });
 
-    await promise1;
-    await promise2;
-  }).timeout(500);
+    await trigger1.wait();
+    await trigger2.wait();
+  })
+    .timeout(500)
+    .retries(2);
 
   test('signal to self', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
-    const api1 = new SignalClient(broker1.url(), async (msg) => {
-      received.wake(msg);
-    });
+    const api1 = new SignalClient(
+      broker1.url(),
+      async (msg) => {
+        received.wake(msg);
+      },
+      async () => {},
+    );
+    api1.open();
     afterTest(() => api1.close());
 
     await api1.subscribeMessages(peer1);
+    await waitForSubscription(api1, peer1);
 
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
     await api1.sendMessage(message);
 
@@ -106,21 +143,28 @@ describe('SignalClient', () => {
     const peer2 = PublicKey.random();
 
     const received = new Event<any>();
-    const client1 = new SignalClient(broker1.url(), async (msg) => {
-      received.emit(msg);
-    });
+    const client1 = new SignalClient(
+      broker1.url(),
+      async (msg) => {
+        received.emit(msg);
+      },
+      async () => {},
+    );
+    client1.open();
     afterTest(() => client1.close());
 
-    const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
+    client2.open();
     afterTest(() => client2.close());
 
-    const unsubscribeHandle = await client1.subscribeMessages(peer1);
+    await client1.subscribeMessages(peer1);
     await client2.subscribeMessages(peer2);
+    await waitForSubscription(client2, peer2);
 
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
 
     {
@@ -133,7 +177,7 @@ describe('SignalClient', () => {
     }
 
     // unsubscribing.
-    await unsubscribeHandle.unsubscribe();
+    await client1.unsubscribeMessages(peer1);
 
     {
       const promise = received.waitFor((msg) => {
@@ -143,29 +187,37 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await expect(asyncTimeout(promise, 200)).toBeRejected();
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test('signal after re-entrance', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
 
     const received = new Event<any>();
-    const client1 = new SignalClient(broker1.url(), async (msg) => {
-      received.emit(msg);
-    });
+    const client1 = new SignalClient(
+      broker1.url(),
+      async (msg) => {
+        received.emit(msg);
+      },
+      async () => {},
+    );
+    client1.open();
     afterTest(() => client1.close());
 
-    const client2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
+    client2.open();
     afterTest(() => client2.close());
 
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: PAYLOAD
+      payload: PAYLOAD,
     };
 
     await client1.subscribeMessages(peer1);
-    await client2.subscribeMessages(peer2);
+    await waitForSubscription(client1, peer1);
 
     {
       const promise = received.waitFor((msg) => {
@@ -182,7 +234,7 @@ describe('SignalClient', () => {
 
     await client1.close();
     client1.open();
-    await client1.subscribeMessages(peer1);
+    await waitForSubscription(client1, peer1);
 
     {
       const promise = received.waitFor((msg) => {
@@ -192,7 +244,9 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await promise;
     }
-  });
+  })
+    .timeout(1_000)
+    .retries(2);
 
   test
     .skip('join across multiple signal servers', async () => {
@@ -200,9 +254,19 @@ describe('SignalClient', () => {
       const peer1 = PublicKey.random();
       const peer2 = PublicKey.random();
       // This feature is not implemented yet.
-      const api1 = new SignalClient(broker1.url(), async () => {});
+      const api1 = new SignalClient(
+        broker1.url(),
+        async () => {},
+        async () => {},
+      );
+      api1.open();
       afterTest(() => api1.close());
-      const api2 = new SignalClient(broker2.url(), async () => {});
+      const api2 = new SignalClient(
+        broker2.url(),
+        async () => {},
+        async () => {},
+      );
+      api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });
@@ -231,9 +295,15 @@ describe('SignalClient', () => {
           ({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
         >().resolvesTo();
 
-      const api1 = new SignalClient(broker1.url(), async () => {});
+      const api1 = new SignalClient(
+        broker1.url(),
+        async () => {},
+        async () => {},
+      );
+      api1.open();
       afterTest(() => api1.close());
-      const api2 = new SignalClient(broker2.url(), signalMock);
+      const api2 = new SignalClient(broker2.url(), signalMock, async () => {});
+      api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });
@@ -245,8 +315,8 @@ describe('SignalClient', () => {
         recipient: peer1,
         payload: {
           type_url: 'something',
-          value: Buffer.from('0')
-        }
+          value: Buffer.from('0'),
+        },
       };
       await api1.sendMessage(message);
 

@@ -21,9 +21,9 @@ const main = async () => {
       templateDirectory,
       outputDirectory,
       input: { ...config, monorepo: false, name: `${packageJson.name}-${config.name}` },
-      interactive: true
+      interactive: true,
     });
-    return Promise.all(results.map((r) => r.save()));
+    await results.save();
   });
   await Promise.all(promises);
   console.log('done');

@@ -19,7 +19,7 @@ export const TextInput: FC<{
   const { focus: setFocus, isFocused } = useFocus({
     id: focusId,
     isActive: focus,
-    autoFocus: true
+    autoFocus: true,
   });
   const { focusPrevious, focusNext } = useFocusManager();
 
@@ -38,7 +38,7 @@ export const TextInput: FC<{
         focusNext();
       }
     },
-    { isActive: isFocused }
+    { isActive: isFocused },
   );
 
   return (

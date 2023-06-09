@@ -66,7 +66,7 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     packageRoot,
     options.exportPath,
     options.compress,
-    context.isVerbose
+    context.isVerbose,
   );
 
   return { success: true };

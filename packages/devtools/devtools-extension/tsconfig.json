@@ -16,12 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/react-appkit"
-    },
-    {
-      "path": "../../apps/patterns/react-ui"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -34,7 +28,7 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-components"
+      "path": "../../common/sentry"
     },
     {
       "path": "../../core/mesh/rpc"
@@ -43,7 +37,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/kai"
+      "path": "../../experimental/kai-framework"
     },
     {
       "path": "../../sdk/client"
@@ -56,6 +50,15 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-shell"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-theme"
     },
     {
       "path": "../devtools"

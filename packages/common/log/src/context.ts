@@ -57,11 +57,11 @@ const matchFilter = (filter: LogFilter, level: LogLevel, path: string) => {
 /**
  * Determines if the current line should be logged (called by the processor).
  */
-export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {
-  if (config.filters === undefined) {
+export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
+  if (filters === undefined) {
     return true;
   } else {
-    return config.filters.some((filter) => matchFilter(filter, level, path));
+    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? ''));
   }
 };
 

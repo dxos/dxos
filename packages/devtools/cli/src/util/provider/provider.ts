@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
+import { ux } from '@oclif/core';
 
 export const KUBE_TAG = 'kube';
 
@@ -32,23 +32,23 @@ export interface MachineryProvider {
 export const mapKubes = (kubes: KUBE[]) => {
   return kubes.map((kube) => ({
     key: kube.hostname,
-    ipAddress: kube.ipAddress
+    ipAddress: kube.ipAddress,
   }));
 };
 
 export const printKubes = (kubes: KUBE[], flags = {}) => {
-  CliUx.ux.table(
+  ux.table(
     mapKubes(kubes),
     {
       key: {
-        header: 'Hostname'
+        header: 'Hostname',
       },
       ipAddress: {
-        header: 'IP Address'
-      }
+        header: 'IP Address',
+      },
     },
     {
-      ...flags
-    }
+      ...flags,
+    },
   );
 };

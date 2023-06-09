@@ -10,11 +10,12 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { Messenger } from '@dxos/messaging';
+import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
+import { SwarmMessenger, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
@@ -38,7 +39,7 @@ export class Swarm {
    */
   readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
 
-  private readonly _swarmMessenger: MessageRouter;
+  private readonly _swarmMessenger: SwarmMessenger;
 
   private _ctx = new Context();
 
@@ -46,7 +47,7 @@ export class Swarm {
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
    */
   @logInfo
-  readonly instanceId = PublicKey.random();
+  readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * New connection to a peer is started.
@@ -78,25 +79,31 @@ export class Swarm {
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
-    private readonly _label: string | undefined
+    private readonly _label: string | undefined,
   ) {
+    log.trace(
+      'dxos.mesh.swarm.constructor',
+      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peerId: this._ownPeerId.toHex() } }),
+    );
     log('creating swarm', { peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
-    this._swarmMessenger = new MessageRouter({
+    this._swarmMessenger = new SwarmMessenger({
       sendMessage: async (msg) => await this._messenger.sendMessage(msg),
       onSignal: async (msg) => await this.onSignal(msg),
       onOffer: async (msg) => await this.onOffer(msg),
-      topic: this._topic
+      topic: this._topic,
     });
 
     this._messenger
       .listen({
         peerId: this._ownPeerId,
         payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: async (message) => await this._swarmMessenger.receiveMessage(message)
+        onMessage: async (message) => await this._swarmMessenger.receiveMessage(message),
       })
       .catch((error) => log.catch(error));
+
+    log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
 
   get connections() {
@@ -138,7 +145,7 @@ export class Swarm {
     }
     log('setting topology', {
       previous: getClassName(this._topology),
-      topology: getClassName(topology)
+      topology: getClassName(topology),
     });
 
     await this._topology.destroy();
@@ -211,7 +218,7 @@ export class Swarm {
     }
     assert(
       message.recipient?.equals(this._ownPeerId),
-      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
+      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`,
     );
     assert(message.topic?.equals(this._topic));
     assert(message.author);
@@ -270,8 +277,11 @@ export class Swarm {
           },
           onOffer: (remoteId) => {
             return this._topology.onOffer(remoteId);
-          }
-        }
+          },
+          onPeerAvailable: () => {
+            this._topology.update();
+          },
+        },
       );
       this._peers.set(peerId, peer);
     }
@@ -293,8 +303,8 @@ export class Swarm {
           .filter((peer) => peer.connection)
           .map((peer) => peer.id),
         candidates: Array.from(this._peers.values())
-          .filter((peer) => !peer.connection && peer.advertizing)
-          .map((peer) => peer.id)
+          .filter((peer) => !peer.connection && peer.advertizing && peer.availableToConnect)
+          .map((peer) => peer.id),
       }),
       connect: (peer) => {
         if (this._ctx.disposed) {
@@ -306,7 +316,7 @@ export class Swarm {
           try {
             await this._initiateConnection(peer);
           } catch (err: any) {
-            log.warn('initiation error', err);
+            log('initiation error', err);
           }
         });
       },
@@ -320,7 +330,7 @@ export class Swarm {
           await this._closeConnection(peer);
           this._topology.update();
         });
-      }
+      },
     };
   }
 

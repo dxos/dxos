@@ -13,14 +13,13 @@ package:
 
 runtime:
   client:
-    log:
-      filter: client:debug,warn
     storage:
       persistent: true
 
   services:
-    signal:
-      server: wss://kube.dxos.org/.well-known/dx/signal
+    signaling:
+      - server: wss://kube.dxos.org/.well-known/dx/signal
+      - server: wss://dev.kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos

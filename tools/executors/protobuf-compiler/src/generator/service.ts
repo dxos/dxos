@@ -18,12 +18,12 @@ const f = ts.factory;
 const getRpcTypes = (
   method: protobufjs.Method,
   service: protobufjs.Service,
-  subs: SubstitutionsMap
+  subs: SubstitutionsMap,
 ): [ts.TypeNode, ts.TypeNode] => {
   method.resolve();
   return [
     types(method.resolvedRequestType ?? method.requestType, service, subs),
-    types(method.resolvedResponseType ?? method.responseType, service, subs)
+    types(method.resolvedResponseType ?? method.responseType, service, subs),
   ];
 };
 
@@ -36,14 +36,13 @@ const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Serv
 
   return f.createFunctionTypeNode(
     undefined,
-    [f.createParameterDeclaration(undefined, undefined, undefined, 'request', undefined, requestType)],
-    f.createTypeReferenceNode(outputTypeMonad, [responseType])
+    [f.createParameterDeclaration(undefined, undefined, 'request', undefined, requestType)],
+    f.createTypeReferenceNode(outputTypeMonad, [responseType]),
   );
 };
 
 export const createServiceDeclaration = (type: protobufjs.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,
@@ -55,11 +54,11 @@ export const createServiceDeclaration = (type: protobufjs.Service, ctx: Generato
           undefined,
           mapRpcMethodName(method.name),
           undefined,
-          createRpcMethodType(method, type, ctx.subs)
+          createRpcMethodType(method, type, ctx.subs),
         );
 
         return method.comment ? attachDocComment(sig, method.comment) : sig;
-      })
+      }),
   );
 
   const commentSections = type.comment ? [type.comment] : [];
@@ -87,7 +86,6 @@ function* getServices(root: protobufjs.NamespaceBase): Generator<protobufjs.Serv
 
 export const createServicesDictionary = (root: protobufjs.NamespaceBase) =>
   f.createInterfaceDeclaration(
-    undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     'SERVICES',
     undefined,
@@ -99,9 +97,9 @@ export const createServicesDictionary = (root: protobufjs.NamespaceBase) =>
           undefined,
           f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
           undefined,
-          getTypeReference(type)
-        )
-      )
+          getTypeReference(type),
+        ),
+      ),
   );
 
 const mapRpcMethodName = (name: string) => name[0].toLocaleLowerCase() + name.substring(1);

@@ -1,108 +1,143 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 import { expect } from 'chai';
 
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
-import { AsyncEvents, TimeoutError } from './errors';
-import { latch } from './latch';
-import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable';
+import { Event } from './events';
+import { MulticastObservable, Observable, PushStream } from './observable';
+import { Trigger } from './trigger';
 
-interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnected(connectionId: string): void;
-}
+describe('multicast observable', () => {
+  test('gets current value', () => {
+    const observable = MulticastObservable.of(1);
+    expect(observable.get()).to.equal(1);
+  });
 
-type ConnectionObservable = CancellableObservable<ConnectionEvents>;
+  test('subscribe fires most recent value', async () => {
+    const observable = MulticastObservable.of(1);
+    const trigger = new Trigger();
+    const subscription = observable.subscribe((value) => {
+      expect(value).to.equal(1);
+      trigger.wake();
+    });
+    afterTest(() => subscription.unsubscribe());
+    await trigger.wait();
+  });
 
-describe('observable', () => {
-  /**
-   * Sets up a race between:
-   * a) succeeding
-   * b) being cancelled
-   * c) timing out
-   */
-  const runTest = async (connectionDelay: number, cancelDelay: number, timeoutDelay: number) => {
-    const [done, setDone] = latch();
+  test('updates multiple observers', async () => {
+    const event = new Event<object>();
+    const initialValue = { example: 'test' };
+    const observable = MulticastObservable.from(event, initialValue);
 
-    const openConnection = (): ConnectionObservable => {
-      const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
-        clearTimeout(timeout);
-        clearTimeout(connectTimeout);
-      });
+    const trigger1 = new Trigger<object>();
+    const trigger2 = new Trigger<object>();
 
-      const timeout = setTimeout(() => {
-        clearTimeout(connectTimeout);
-        observable.callback.onTimeout?.(new TimeoutError(timeoutDelay));
-      }, timeoutDelay);
-
-      const connectTimeout = setTimeout(() => {
-        clearTimeout(timeout);
-        observable.callback.onConnected('connection-1');
-      }, connectionDelay);
-
-      return observable;
-    };
-
-    let connected = false;
-    let cancelled = false;
-    let failed: Error | undefined;
-
-    const observable = openConnection();
-
-    const unsubscribe = observable.subscribe({
-      onConnected: () => {
-        connected = true;
-        setDone();
-      },
-      onCancelled: () => {
-        cancelled = true;
-        setDone();
-      },
-      onTimeout: (err) => {
-        failed = err;
-        setDone();
-      },
-      onError: (err) => {
-        failed = err;
-        setDone();
+    const subscription1 = observable.subscribe((value) => {
+      if (value !== initialValue) {
+        trigger1.wake(value);
+      }
+    });
+    const subscription2 = observable.subscribe((value) => {
+      if (value !== initialValue) {
+        trigger2.wake(value);
       }
     });
 
-    {
-      const cancelTimeout = setTimeout(async () => {
-        await observable.cancel();
-      }, cancelDelay);
+    afterTest(() => subscription1.unsubscribe());
+    afterTest(() => subscription2.unsubscribe());
 
-      await done();
+    const next = { new: 'value' };
+    event.emit(next);
 
-      clearTimeout(cancelTimeout);
-    }
+    const result1 = await trigger1.wait();
+    const result2 = await trigger2.wait();
 
-    unsubscribe();
-
-    return { connected, cancelled, failed };
-  };
-
-  test('succeeds before cancelled', async () => {
-    const { connected, cancelled, failed } = await runTest(20, 50, 100);
-    expect(failed).to.be.undefined;
-    expect(connected).to.be.true;
-    expect(cancelled).to.be.false;
+    expect(result1).to.equal(next);
+    expect(result2).to.equal(next);
+    expect(result1).to.equal(result2);
   });
 
-  test('cancelled before succeeds', async () => {
-    const { connected, cancelled, failed } = await runTest(50, 20, 100);
-    expect(failed).to.be.undefined;
-    expect(connected).to.be.false;
-    expect(cancelled).to.be.true;
+  test('forEach', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const result: number[] = [];
+    await observable.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3]);
   });
 
-  test('times out', async () => {
-    const { connected, cancelled, failed } = await runTest(50, 30, 20);
-    expect(failed).to.exist;
-    expect(connected).to.be.false;
-    expect(cancelled).to.be.false;
+  test('map', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const mapped = observable.map((value) => value * 2);
+    const result: number[] = [];
+    await mapped.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([2, 4, 6]);
+  });
+
+  test('map stream', async () => {
+    const stream = new PushStream<number>();
+    const observable = new MulticastObservable(stream.observable);
+    const mapped = observable.map((value) => value * 2);
+    stream.next(1);
+    stream.next(2);
+    stream.next(3);
+    const result = new Trigger<number>();
+    const subscription = mapped.subscribe((value) => {
+      result.wake(value);
+    });
+    afterTest(() => subscription.unsubscribe());
+    expect(await result.wait()).to.deep.equal(6);
+  });
+
+  test('filter', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const filtered = observable.filter((value) => value % 2 === 0);
+    const result: number[] = [];
+    await filtered.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([2]);
+  });
+
+  test('reduce', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const reduced = observable.reduce((previousValue, currentValue) => previousValue + currentValue);
+    const result = new Trigger<number>();
+    const subscription = reduced.subscribe((value) => {
+      result.wake(value);
+    });
+    afterTest(() => subscription.unsubscribe());
+    expect(await result.wait()).to.deep.equal(6);
+  });
+
+  test('flatMap', async () => {
+    const observable = MulticastObservable.from([[1], [2, 3]]);
+    const flatMapped = observable.flatMap((value) => MulticastObservable.from(value));
+    const result: number[] = [];
+    await flatMapped.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3]);
+  });
+
+  test('concat', async () => {
+    const observable = MulticastObservable.from([1, 2, 3]);
+    const concat = observable.concat(Observable.from([4, 5, 6]));
+    const result: number[] = [];
+    await concat.forEach((value) => {
+      result.push(value);
+    });
+    expect(result).to.deep.equal([1, 2, 3, 4, 5, 6]);
+  });
+
+  test('lossless concat', async () => {
+    const observable = MulticastObservable.of([1, 2, 3]);
+    const concat = observable.losslessConcat((a, b) => a.concat(...b), MulticastObservable.of([4, 5, 6]));
+    expect(concat.get()).to.deep.equal([1, 2, 3, 4, 5, 6]);
   });
 });

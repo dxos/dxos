@@ -3,6 +3,7 @@
 
 Defined in:
    file://./../../dxos/config.proto
+
 ## Properties
 ### [serve]()
 Type: <code>[Serve](/api/@dxos/config/interfaces/Serve)</code>

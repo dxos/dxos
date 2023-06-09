@@ -80,7 +80,7 @@ export type TemplateContext<TInput = {}, TSlots extends TemplateSlotMap = {}> = 
   input: TInput;
   defaultOutputFile: string;
   outputDirectory: string;
-  slots?: { [key in keyof TSlots]: TemplateSlotContent };
+  slots?: { [key in keyof TSlots]?: TemplateSlotContent };
 };
 
 // export type TemplateResultMetadata = {
@@ -101,7 +101,7 @@ export type ExtractNonConfig<TConfig> = TConfig extends ConfigDeclaration<any, a
 
 export const defineTemplate = <TInput = any, TSlots extends TemplateSlotMap<TInput> = {}>(
   fun: TemplateFunction<ExtractInput<TInput>, TSlots>,
-  options?: { slots?: TSlots; config?: ExtractConfig<TInput> }
+  options?: { slots?: TSlots; config?: ExtractConfig<TInput> },
 ) => (options?.slots ? (o: TemplateContext<ExtractInput<TInput>, TSlots>) => fun({ slots: options.slots, ...o }) : fun);
 
 export type Functor<TInput = void, TOutput = void> = (input: TInput) => MaybePromise<TOutput>;
@@ -115,7 +115,7 @@ export type TemplateFunction<TInput = void, TSlots extends TemplateSlotMap = {}>
 export const executeFileTemplate = async <TInput>(options: ExecuteFileTemplateOptions<TInput>): Promise<Files> => {
   const { templateFile, outputDirectory, templateRelativeTo, overwrite } = {
     outputDirectory: process.cwd(),
-    ...options
+    ...options,
   };
   const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
@@ -134,7 +134,7 @@ export const executeFileTemplate = async <TInput>(options: ExecuteFileTemplateOp
       inherited: options.inherited,
       ...(templateRelativeTo
         ? { templateRelativeTo: absoluteTemplateRelativeTo }
-        : { templateRelativeTo: path.dirname(templateFullPath) })
+        : { templateRelativeTo: path.dirname(templateFullPath) }),
     };
     const result = await promise(templateFunction(templateContext));
     return result === null
@@ -146,9 +146,9 @@ export const executeFileTemplate = async <TInput>(options: ExecuteFileTemplateOp
             path: nominalOutputPath,
             ...(typeof overwrite !== 'undefined' ? { overwrite: !!overwrite } : {}),
             metadata: {
-              templateFile
-            }
-          })
+              templateFile,
+            },
+          }),
         ]
       : result.map((outfile) => {
           if (overwrite === false) {

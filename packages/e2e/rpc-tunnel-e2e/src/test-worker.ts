@@ -26,10 +26,10 @@ const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
 
   const server = createProtoRpcPeer({
     exposed: {
-      TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
     },
     handlers: client.handlers,
-    port
+    port,
   });
 
   await server.open();

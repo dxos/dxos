@@ -43,6 +43,11 @@ aliases:
   - &store_test_results
     store_test_results:
       path: test-results
+  # https://docs.datadoghq.com/continuous_integration/tests/junit_upload/
+  - &install_datadog
+    run:
+      name: Install Datadog
+      command: npm install -g @datadog/datadog-ci 
 
 jobs:
   #
@@ -88,6 +93,8 @@ jobs:
   e2e:
     docker:
       - *docker_image
+    # TODO(wittjosiah): Using because of kai bundling memory usage.
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
@@ -95,13 +102,18 @@ jobs:
       - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=chromatic
       # TODO(wittjosiah): Apps can't be bundled in parallel currently due to memory usage.
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite apps.
-            NODE_OPTIONS: --max_old_space_size=6144
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
+            NODE_OPTIONS: --max_old_space_size=10240
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=1 --xmlReport
+          environment:
+            # TODO(wittjosiah): Remove. Currently need because e2e seems to be re-running bundling.
+            NODE_OPTIONS: --max_old_space_size=10240
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
@@ -131,6 +143,8 @@ jobs:
   publish:
     docker:
       - *docker_image
+    # TODO(wittjosiah): Using because of kai bundling memory usage.
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
@@ -141,14 +155,49 @@ jobs:
           command: ./.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=6144
+            NODE_OPTIONS: --max_old_space_size=10240
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
             NODE_ENV: production
 
+  messaging_monitor:
+    docker:
+      - *docker_image
+    parameters:
+      dx_environment:
+        type: string
+    steps:
+      - checkout
+      - *install_datadog
+      - run:
+          command: npm run start
+          working_directory: ./tools/monitors/messaging-monitor
+          environment:
+            DX_ENVIRONMENT: << parameters.dx_environment >>
+      - run:
+          name: Upload results to Datadog
+          command: datadog-ci junit upload --service dxos ./tools/monitors/messaging-monitor/test-results.xml
+          when: always
+          environment:
+            DD_TAGS: env:<< parameters.dx_environment >>
+
+parameters:
+  run_daily_workflow:
+    type: boolean
+    default: false
+
+  run_hourly_workflow:
+    type: boolean
+    default: false
+
 workflows:
   default:
+    when:
+      not:
+        or:
+          - << pipeline.parameters.run_daily_workflow >>
+          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - check:
           context:
@@ -156,11 +205,13 @@ workflows:
       - e2e:
           context:
             - Github
-      - flaky:
-          context:
-            - Github
 
   deploy:
+    when:
+      not:
+        or:
+          - << pipeline.parameters.run_daily_workflow >>
+          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - publish:
           filters:
@@ -171,5 +222,19 @@ workflows:
                 - staging
           context:
             - Github
+
+  hourly:
+    when: << pipeline.parameters.run_hourly_workflow >>
+    jobs:
+      - messaging_monitor:
+          context:
+            - Datadog
+            - Github
+          matrix:
+            parameters:
+              dx_environment:
+                - development
+                - production
+                - staging
 
 # VS Code Extension Version: 1.5.1

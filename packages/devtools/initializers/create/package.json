@@ -1,6 +1,6 @@
 {
   "name": "@dxos/create",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Creates a mostly empty DXOS application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "publishConfig": {
     "access": "public"

@@ -19,7 +19,7 @@ test('remarkHeadings', () => {
     u('html', { value: '<!-- @toc -->' }),
     u('heading', { depth: 2 }, [u('text', { value: 'HALO' })]),
     u('heading', { depth: 2 }, [u('text', { value: 'ECHO' })]),
-    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })])
+    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })]),
   ]);
 
   // Process content.
@@ -47,7 +47,7 @@ test('remarkHeadings with remark', () => {
   const tree = u('root', [
     u('heading', { depth: 2 }, [u('text', { value: 'HALO' })]),
     u('heading', { depth: 2 }, [u('text', { value: 'ECHO' })]),
-    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })])
+    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })]),
   ]);
 
   // Process content.

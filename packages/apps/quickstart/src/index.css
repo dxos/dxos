@@ -1,3 +1,7 @@
+.dxos img {
+  opacity: 0.05;
+}
+
 .dxos h1,
 .dxos p,
 .dxos pre {
@@ -31,8 +35,4 @@
 
 .dxos .demo {
   @apply rounded bg-zinc-200 dark:bg-zinc-900 p-6 text-center;
-}
-
-.dxos img {
-  opacity: 0.05;
 }

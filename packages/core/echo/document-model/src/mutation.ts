@@ -13,7 +13,7 @@ import {
   ObjectMutation,
   ObjectMutationSet,
   KeyValueObject,
-  Value
+  Value,
 } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { OrderedArray } from './ordered-array';
@@ -47,7 +47,7 @@ enum Type {
   REFERENCE = 'reference',
   OBJECT = 'object',
 
-  YJS = 'yjs'
+  YJS = 'yjs',
 }
 
 const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
@@ -64,7 +64,7 @@ export class KeyValueUtil {
     return {
       key,
       // eslint-disable-next-line no-use-before-define
-      value: ValueUtil.createMessage(value)
+      value: ValueUtil.createMessage(value),
     };
   }
 }
@@ -158,8 +158,8 @@ export class ValueUtil {
   static object(value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
-        properties: Object.keys(value).map((key) => KeyValueUtil.createMessage(key, value[key]))
-      }
+        properties: Object.keys(value).map((key) => KeyValueUtil.createMessage(key, value[key])),
+      },
     };
   }
 
@@ -309,12 +309,12 @@ export class MutationUtil {
       ? {
           // NOTE: `null` is a legitimate value.
           operation: ObjectMutation.Operation.DELETE,
-          key
+          key,
         }
       : {
           operation: ObjectMutation.Operation.SET,
           key,
-          value: ValueUtil.createMessage(value)
+          value: ValueUtil.createMessage(value),
         };
   }
 

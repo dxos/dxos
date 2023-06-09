@@ -18,65 +18,65 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
           main: `packages/apps/${name}/src/index.ts`,
           outputPath: `packages/apps/${name}/dist`,
           transformers: ['@dxos/log-hook/transformer'],
-          tsConfig: `packages/apps/${name}/tsconfig.json`
+          tsConfig: `packages/apps/${name}/tsconfig.json`,
         },
-        outputs: ['{options.outputPath}']
+        outputs: ['{options.outputPath}'],
       },
       bundle: {
         executor: '@nrwl/vite:build',
         options: {
-          outputPath: `packages/apps/${name}/out/${name}`
+          outputPath: `packages/apps/${name}/out/${name}`,
         },
-        outputs: ['{options.outputPath}']
+        outputs: ['{options.outputPath}'],
       },
       lint: {
         executor: '@nrwl/linter:eslint',
         options: {
           format: 'unix',
-          lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js,tsx,jsx}`]
+          lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js}?(x)`],
         },
-        outputs: ['{options.outputFile}']
+        outputs: ['{options.outputFile}'],
       },
       serve: {
         executor: '@nrwl/vite:dev-server',
         options: {
-          buildTarget: `${name}:bundle`
-        }
+          buildTarget: `${name}:bundle`,
+        },
       },
-      'serve-with-halo': {
+      'serve-with-vault': {
         dependsOn: ['^build'],
         executor: 'nx:run-commands',
         options: {
           commands: [
             {
-              command: 'nx serve halo-app'
+              command: 'nx serve halo-app',
             },
             {
-              command: `nx serve ${name}`
-            }
+              command: `nx serve ${name}`,
+            },
           ],
-          parallel: true
-        }
+          parallel: true,
+        },
       },
       ...(storybook
         ? {
             storybook: {
               configurations: {
                 ci: {
-                  quiet: true
-                }
+                  quiet: true,
+                },
               },
               executor: '@nrwl/storybook:storybook',
               options: {
                 config: {
-                  configFolder: 'packages/common/react-components/.storybook'
+                  configFolder: 'packages/ui/aurora/.storybook',
                 },
-                uiFramework: '@storybook/react'
-              }
-            }
+                uiFramework: '@storybook/react',
+              },
+            },
           }
-        : {})
-    }
+        : {}),
+    },
   };
 
   return monorepo ? JSON.stringify(projectJson, null, 2) : null;

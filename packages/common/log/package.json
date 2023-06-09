@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log",
-  "version": "0.1.28",
+  "version": "0.1.46",
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,14 +25,14 @@
   },
   "devDependencies": {
     "@swc-node/sourcemap-support": "^0.2.0",
-    "@swc/core": "^1.3.21",
+    "@swc/core": "1.3.21",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.pickby": "^4.6.7",
     "@types/node": "^18.11.9",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "publishConfig": {
     "access": "public"

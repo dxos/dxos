@@ -30,7 +30,7 @@ describe('Context', () => {
     const ctx = new Context({
       onError: (err) => {
         error = err;
-      }
+      },
     });
 
     ctx.raise(new Error('test'));

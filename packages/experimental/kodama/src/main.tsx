@@ -31,20 +31,20 @@ const main = async () => {
     .option('config', {
       description: 'Config file',
       type: 'string',
-      default: `${process.cwd()}/config/config.yml`
+      default: `${process.cwd()}/config/config.yml`,
     })
     .option('debug', {
       description: 'Debug mode (run in-memory)',
-      type: 'boolean'
+      type: 'boolean',
     })
     .option('displayName', {
       description: 'Create initial display name',
-      type: 'string'
+      type: 'string',
     })
     .option('skip-version-check', {
       description: "Don't check for new NPM version",
       type: 'boolean',
-      default: false
+      default: false,
     })
     .command({
       command: '*',
@@ -52,7 +52,7 @@ const main = async () => {
         config: configFile,
         displayName,
         debug,
-        skipVersionCheck
+        skipVersionCheck,
       }: {
         config: string;
         displayName: string;
@@ -80,7 +80,7 @@ const main = async () => {
         clear();
         await start(client, { debug });
         process.exit();
-      }
+      },
     })
     .help().argv;
 };

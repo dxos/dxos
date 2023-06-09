@@ -29,6 +29,7 @@ export type NodeOptions = {
   trackLeakedResources: boolean;
   grep?: string;
   bail?: boolean;
+  envVariables?: Record<string, string>;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -37,6 +38,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
+      ...options.envVariables,
       FORCE_COLOR: '2',
       MOCHA_TAGS: options.tags.join(','),
       MOCHA_ENV: 'nodejs',
@@ -45,8 +47,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
-      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]])
-    }
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]]),
+    },
   });
 
   return exitCode;
@@ -73,9 +75,9 @@ const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
       '--checkLeaks': options.checkLeaks,
       '--exit': options.forceExit,
       '--inspect': options.inspect,
-      '--bail': options.bail
+      '--bail': options.bail,
     },
-    options.grep && ['--grep', options.grep]
+    options.grep && ['--grep', options.grep],
   ]);
 };
 
@@ -99,8 +101,8 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
     reporterEnabled: 'spec, mocha-junit-reporter',
     mochaJunitReporterReporterOptions: {
       mochaFile: join(options.resultsPath, 'nodejs.xml'),
-      testsuitesTitle: `${name} nodejs Tests`
-    }
+      testsuitesTitle: `${name} nodejs Tests`,
+    },
   };
 
   await mkdir(options.outputPath, { recursive: true });
@@ -110,7 +112,7 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
     '--reporter',
     options.reporter ?? 'mocha-multi-reporters',
     '--reporter-options',
-    `configFile=${reporterConfigFile}`
+    `configFile=${reporterConfigFile}`,
   ];
 };
 
@@ -128,7 +130,7 @@ const getSetupArgs = (root: string, domRequired: boolean, trackLeakedResources: 
     'mocha-env',
     'catch-unhandled-rejections',
     ...(trackLeakedResources ? ['trackLeakedResources'] : []),
-    ...(domRequired ? ['react-setup'] : [])
+    ...(domRequired ? ['react-setup'] : []),
   ];
 
   return scripts
@@ -157,6 +159,6 @@ const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boole
     `${outputPath}/.nyc_output`,
     '--report-dir',
     outputPath,
-    'mocha'
+    'mocha',
   ];
 };

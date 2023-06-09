@@ -167,7 +167,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
     }
 
     this._keys.forEach((key, primitive) =>
-      callbackfn(this._values.get(primitive) ?? raise(new Error('Map corrupted.')), key, this)
+      callbackfn(this._values.get(primitive) ?? raise(new Error('Map corrupted.')), key, this),
     );
   }
 

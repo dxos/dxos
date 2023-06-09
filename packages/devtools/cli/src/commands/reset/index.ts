@@ -10,11 +10,16 @@ export default class Reset extends BaseCommand {
   static override description = 'Reset all data.';
 
   async run(): Promise<any> {
+    const params = await this.parse(Reset);
     // TODO(burdon): Warning prompt.
     const path = this.clientConfig?.get('runtime.client.storage.path');
     if (path) {
-      fs.rmSync(path, { recursive: true });
+      fs.rmSync(path, { recursive: true, force: true });
       this.ok();
     }
+
+    await this.execWithDaemon(async (daemon) => daemon.restart(params.flags.profile));
+
+    this.log('Reset finished');
   }
 }
