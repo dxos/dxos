@@ -20,13 +20,15 @@ import { log } from '@dxos/log';
 import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationGuestExtension, InvitationHostExtension } from './invitation-extension';
+import {
+  InvitationGuestExtension,
+  InvitationHostExtension,
+  isAuthenticationRequired,
+  MAX_OTP_ATTEMPTS,
+} from './invitation-extension';
 import { InvitationProtocol } from './invitation-protocol';
-
-const MAX_OTP_ATTEMPTS = 3;
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -101,77 +103,26 @@ export class InvitationsHandler {
 
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
-      const success = new Trigger<PublicKey>();
-      let guestProfile: ProfileDocument | undefined;
-      let authenticationPassed = false;
-      let authenticationRetry = 0;
-
       const extension = new InvitationHostExtension({
-        introduce: async ({ profile }) => {
-          log('guest introduced itself', {
-            guestProfile: profile,
-            ...protocol.toJSON(),
-          });
-
-          guestProfile = profile;
-
-          // TODO(dmaretskyi): Should we expose guest's profile in this callback?
+        onStateUpdate: (invitation) => {
           stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
-
-          // TODO(wittjosiah): Make when the space details are revealed configurable.
-          //   Spaces may want to have public details (name, member count, etc.) or hide that until guest is authed.
-          return {
-            spaceKey: authMethod === Invitation.AuthMethod.NONE ? protocol.getInvitationContext().spaceKey : undefined,
-            authMethod,
-          };
         },
 
-        authenticate: async ({ authCode: code }) => {
-          log('received authentication request', { authCode: code });
-          let status = AuthenticationResponse.Status.OK;
-
-          switch (invitation.authMethod) {
-            case Invitation.AuthMethod.NONE: {
-              log('authentication not required');
-              return { status: AuthenticationResponse.Status.OK };
-            }
-
-            case Invitation.AuthMethod.SHARED_SECRET: {
-              if (invitation.authCode) {
-                if (authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
-                } else if (code !== invitation.authCode) {
-                  status = AuthenticationResponse.Status.INVALID_OTP;
-                } else {
-                  authenticationPassed = true;
-                }
-              }
-              break;
-            }
-
-            default: {
-              log.error('invalid authentication method', { authMethod: invitation.authMethod });
-              status = AuthenticationResponse.Status.INTERNAL_ERROR;
-              break;
-            }
+        resolveInvitation: async ({ invitationId }) => {
+          if (invitationId && invitationId !== invitation.invitationId) {
+            return undefined;
           }
-
-          return { status };
+          return invitation;
         },
 
         admit: async (admissionRequest) => {
           try {
-            // Check authenticated.
-            if (isAuthenticationRequired(invitation) && !authenticationPassed) {
-              throw new Error('Not authenticated');
-            }
-
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             assert(deviceKey);
-            const admissionResponse = await protocol.admit(admissionRequest, guestProfile);
+            const admissionResponse = await protocol.admit(admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
-            success.wake(deviceKey);
+            extension.completedTrigger.wake(deviceKey);
 
             return admissionResponse;
           } catch (err: any) {
@@ -188,7 +139,7 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
-              const deviceKey = await success.wait({ timeout });
+              const deviceKey = await extension.completedTrigger.wait({ timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
@@ -426,5 +377,3 @@ export class InvitationsHandler {
     return observable;
   }
 }
-
-const isAuthenticationRequired = (invitation: Invitation) => invitation.authMethod !== Invitation.AuthMethod.NONE;

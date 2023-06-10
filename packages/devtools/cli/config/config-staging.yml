@@ -22,3 +22,5 @@ runtime:
       server: 'wss://staging.kube.dxos.org/.well-known/dx/deploy'
     supervisor:
       server: wss://staging.kube.dxos.org/.well-known/dx/supervisor
+    tunneling:
+      server: wss://staging.kube.dxos.org/.well-known/dx/tunnel

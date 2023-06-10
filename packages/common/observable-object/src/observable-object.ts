@@ -31,8 +31,9 @@ class ObservableObjectImpl<T> implements ObservableObject {
       },
       set: (_target, property, value, receiver) => {
         logObjectAccess(this);
+        const result = Reflect.set(this, property, value, receiver);
         this._emitUpdate();
-        return Reflect.set(this, property, value, receiver);
+        return result;
       },
     });
   }
@@ -64,8 +65,9 @@ class ObservableArray<T> extends Array<T> implements ObservableObject {
       },
       set: (_target, property, value, receiver) => {
         logObjectAccess(this);
+        const result = Reflect.set(this, property, value, receiver);
         this._emitUpdate();
-        return Reflect.set(this, property, value, receiver);
+        return result;
       },
     });
   }

@@ -13,7 +13,7 @@ import { TypedObject } from './typed-object';
 
 describe('Text', () => {
   test('basic', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
     const text = new Text();
     db.add(text);
     await db.flush();
@@ -26,7 +26,7 @@ describe('Text', () => {
   });
 
   test('text property', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
     const task = new TypedObject();
     db.add(task);
     await db.flush();

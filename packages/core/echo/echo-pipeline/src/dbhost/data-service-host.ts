@@ -10,6 +10,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
@@ -46,6 +47,7 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
+        assert(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
         log('message', { batch, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
@@ -53,12 +55,12 @@ export class DataServiceHost {
 
         // Assign feed metadata
         batch.objects?.forEach((object) => {
-          setMetadataOnObject(object, meta);
+          setMetadataOnObject(object, { ...meta });
         });
 
         // Assign client tag metadata
         if (clientTag) {
-          tagMutationsInBatch(batch, clientTag);
+          tagMutationsInBatch(batch, clientTag, 0);
         }
 
         next({
@@ -77,18 +79,8 @@ export class DataServiceHost {
     log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
 
     // Clear client metadata.
-    const message: DataMessage = {
-      batch: {
-        objects: request.batch.objects?.map((object) => ({
-          ...object,
-          mutations: object.mutations?.map((mutation) => ({
-            ...mutation,
-            meta: undefined,
-          })),
-          meta: undefined,
-        })),
-      },
-    };
+    const message = createDataMessage(request.batch);
+
     const receipt = await this._writeStream.write(message, {
       afterWrite: async (receipt) => {
         // Runs before the mutation is read from the pipeline.
@@ -102,3 +94,16 @@ export class DataServiceHost {
     return receipt;
   }
 }
+
+const createDataMessage = (batch: EchoObjectBatch) => ({
+  batch: {
+    objects: batch.objects?.map((object) => ({
+      ...object,
+      mutations: object.mutations?.map((mutation) => ({
+        ...mutation,
+        meta: undefined,
+      })),
+      meta: undefined,
+    })),
+  },
+});

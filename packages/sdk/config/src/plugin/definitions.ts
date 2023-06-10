@@ -16,14 +16,22 @@ import { ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();
 
-export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl = '', env }: ConfigPluginOpts) => {
+export const definitions = ({
+  configPath,
+  envPath,
+  devPath,
+  mode = process.env.NODE_ENV,
+  publicUrl = '',
+  env,
+}: ConfigPluginOpts) => {
   const KEYS_TO_FILE = {
     __CONFIG_DEFAULTS__: configPath ?? resolve(CWD, 'dx.yml'),
     __CONFIG_ENVS__: envPath ?? resolve(CWD, 'dx-env.yml'),
-    // Dev config is supplied in place of dynamics locally.
-    // When deployed with dynamic=true it is overridden by KUBE config.
-    __CONFIG_DYNAMICS__: devPath ?? resolve(CWD, 'dx-dev.yml'),
-  };
+  } as { [key: string]: string };
+
+  if (mode !== 'production') {
+    KEYS_TO_FILE.__CONFIG_LOCAL__ = devPath ?? resolve(CWD, 'dx-local.yml');
+  }
 
   return Object.entries(KEYS_TO_FILE).reduce(
     (prev, [key, value]) => {
@@ -67,10 +75,10 @@ export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl =
       };
     },
     {
-      __DXOS_CONFIG__: { dynamic, publicUrl },
+      __DXOS_CONFIG__: { dynamic: mode === 'production', publicUrl },
       __CONFIG_DEFAULTS__: {},
       __CONFIG_ENVS__: {},
-      __CONFIG_DYNAMICS__: {},
+      __CONFIG_LOCAL__: {},
     },
   );
 };

@@ -3,6 +3,7 @@
 //
 
 import assert from 'node:assert';
+import { inspect, CustomInspectFunction } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
@@ -304,6 +305,12 @@ export class EchoArray<T> implements Array<T> {
 
     return this.length;
   }
+
+  [inspect.custom]: CustomInspectFunction = (depth, options) => {
+    const data = this.slice();
+
+    return inspect(data, { ...options, depth: typeof options.depth === 'number' ? options.depth - 1 : options.depth });
+  };
 
   //
   // Impl.

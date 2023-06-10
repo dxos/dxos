@@ -4,13 +4,20 @@
 
 import React from 'react';
 
-import { Client, ClientProvider, Config } from '@dxos/react-client';
+import {
+  Client,
+  ClientProvider,
+  Config,
+  IFrameClientServicesHost,
+  IFrameClientServicesProxy,
+  ShellController,
+} from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
-import { GraphPluginProvides } from './ListViewPlugin';
 
-export type ClientPluginProvides = GraphPluginProvides & {
+export type ClientPluginProvides = {
   client: Client;
+  setLayout: ShellController['setLayout'];
 };
 
 export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
@@ -25,25 +32,15 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
 
     return {
       client,
-      context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
-      graph: {
-        actions: (_, parent) => {
-          if (parent) {
-            return [];
-          }
-          // TODO(wittjosiah): This is probably not a graph node action, just to expose it in the story for the moment.
-          return [
-            {
-              id: 'dxos:CreateIdentity',
-              label: 'Create identity',
-              invoke: async () => {
-                const identity = await client.halo.createIdentity();
-                console.log(identity);
-              },
-            },
-          ];
-        },
+      setLayout: async (layout, options) => {
+        if (
+          client.services instanceof IFrameClientServicesProxy ||
+          client.services instanceof IFrameClientServicesHost
+        ) {
+          await client.services.setLayout(layout, options);
+        }
       },
+      context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
     };
   },
 });
