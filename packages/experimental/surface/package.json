@@ -1,6 +1,6 @@
 {
   "name": "@dxos/surface",
-  "version": "0.1.46",
+  "version": "0.1.47",
   "private": true,
   "description": "A react framework for making extensible interfaces.",
   "homepage": "https://dxos.org",
