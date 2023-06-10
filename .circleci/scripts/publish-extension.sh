@@ -18,6 +18,10 @@ if [ $BRANCH = "production" ]; then
     PACKAGE_CAPS=${PACKAGE^^}
     PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
+    echo ---------------------------------------------------
+    echo "${PACKAGE_ENV}: bundel"
+    eval "pnpm -w nx bundle $PACKAGE"
+    
     eval "CLIENT_ID=$"${PACKAGE_ENV}_CLIENT_ID""
     eval "CLIENT_SECRET=$"${PACKAGE_ENV}_CLIENT_SECRET""
     eval "REFRESH_TOKEN=$"${PACKAGE_ENV}_REFRESH_TOKEN""

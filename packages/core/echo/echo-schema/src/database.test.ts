@@ -15,7 +15,7 @@ import { TypedObject } from './typed-object';
 
 describe('Database', () => {
   test('adding and querying objects', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const n = 10;
     for (const _ of Array.from({ length: n })) {
@@ -29,7 +29,7 @@ describe('Database', () => {
   });
 
   test('get/set properties', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const obj = new TypedObject();
     obj.title = 'Test title';
@@ -52,7 +52,7 @@ describe('Database', () => {
   });
 
   test('get/set properties after save', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const obj = new TypedObject();
     db.add(obj);
@@ -66,7 +66,7 @@ describe('Database', () => {
   });
 
   test('get/set reference after save', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const obj = new TypedObject();
     db.add(obj);
@@ -77,7 +77,7 @@ describe('Database', () => {
   });
 
   test('object constructor', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const obj = new TypedObject({ title: 'Test title', description: 'Test description' });
     expect(obj.title).toEqual('Test title');
@@ -91,7 +91,7 @@ describe('Database', () => {
   });
 
   test('object refs', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const task = new TypedObject({ title: 'Fix bugs' });
     const john = new TypedObject({ name: 'John Doe' });
@@ -110,7 +110,7 @@ describe('Database', () => {
   });
 
   test('nested props', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const task = new TypedObject({ title: 'Fix bugs' });
     db.add(task);
@@ -123,7 +123,7 @@ describe('Database', () => {
   });
 
   test('toJSON', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const task = new TypedObject({
       title: 'Main task',
@@ -146,7 +146,7 @@ describe('Database', () => {
   });
 
   test('inspect', async () => {
-    const db = await createDatabase();
+    const { db } = await createDatabase();
 
     const task = new TypedObject({
       title: 'Main task',

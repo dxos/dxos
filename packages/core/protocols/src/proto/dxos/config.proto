@@ -332,8 +332,19 @@ message Runtime {
       optional string server = 1;
     }
 
+    message Tunneling {
+      optional string server = 1;
+    }
+
     message Supervisor { // TODO(burdon): Is this a service?
       optional string server = 1;
+    }
+
+    message Faasd {
+      optional string gateway = 1;
+      optional string username = 2;
+      optional string password = 3;
+      optional string daemon_url = 4;
     }
 
     optional Kube kube = 1;
@@ -346,6 +357,8 @@ message Runtime {
     optional BotHost bot = 8;
     optional Publisher publisher = 9;
     optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
+    optional Tunneling tunneling = 11;
+    optional Faasd faasd = 12;
   }
 
   message Keys {

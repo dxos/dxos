@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
-import { getInsertionIndex, MutationInQueue } from './ordering';
+import { getInsertionIndex, MutationInQueue, MutationQueue } from './ordering';
 
 describe('Ordering', () => {
   // feedA < feedB
@@ -62,15 +62,80 @@ describe('Ordering', () => {
       ),
     ).toEqual(1);
   });
+
+  describe('MutationQueue', () => {
+    test('new mutations get applied', () => {
+      const queue = new MutationQueue();
+
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: false, apply: true });
+      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe()))).toEqual({ reorder: false, apply: true });
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), 'unk'))).toEqual({
+        reorder: false,
+        apply: true,
+      });
+      expect(queue.pushConfirmed(createMutation(feedA, 2, new Timeframe()))).toEqual({ reorder: true, apply: true });
+
+      expect(queue.getMutations().length).toEqual(4);
+    });
+
+    test('confirming optimistic mutations', () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation('1'));
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe(), '1'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
+
+      queue.pushOptimistic(createOptimisticMutation('2'));
+      expect(queue.pushConfirmed(createMutation(feedA, 1, new Timeframe(), '2'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
+
+      expect(queue.getMutations().length).toEqual(2);
+    });
+
+    test('push confirmed under optimistic', () => {
+      const queue = new MutationQueue();
+
+      queue.pushOptimistic(createOptimisticMutation('1'));
+      expect(queue.pushConfirmed(createMutation(feedA, 0, new Timeframe()))).toEqual({ reorder: true, apply: true });
+      expect(queue.pushConfirmed(createMutation(feedB, 0, new Timeframe(), '1'))).toEqual({
+        reorder: false,
+        apply: false,
+      });
+
+      expect(queue.getMutations().length).toEqual(2);
+    });
+  });
 });
 
-const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): MutationInQueue => ({
+const createMutation = (
+  feedKey: PublicKey,
+  seq: number,
+  timeframe: Timeframe,
+  clientTag?: string,
+): MutationInQueue => ({
   mutation: {
     meta: {
       feedKey,
       memberKey: feedKey,
       seq,
       timeframe,
+      clientTag,
+    },
+    model: {
+      type_url: 'test',
+      value: new Uint8Array(),
+    },
+  },
+});
+
+const createOptimisticMutation = (clientTag: string): MutationInQueue => ({
+  mutation: {
+    meta: {
+      clientTag,
     },
     model: {
       type_url: 'test',

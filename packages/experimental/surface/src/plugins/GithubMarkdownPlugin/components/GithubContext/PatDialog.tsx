@@ -2,46 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { Dialog, Input } from '@dxos/react-appkit';
+import { useTranslation } from '@dxos/aurora';
+import { Input } from '@dxos/react-appkit';
 
+import { useSplitViewContext } from '../../../SplitViewPlugin';
 import { useOctokitContext } from './OctokitProvider';
 
-export type PatDialogProps = {
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  title?: string;
-  description?: string;
-};
-
-export const PatDialog = ({ open, setOpen, title, description }: PatDialogProps) => {
+export const PatDialog = () => {
   const { t } = useTranslation('composer');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
+  const { dialogOpen } = useSplitViewContext();
 
   useEffect(() => {
     setPatValue(pat);
   }, [pat]);
 
+  useEffect(() => {
+    if (!dialogOpen) {
+      void setPat(patValue);
+    }
+  }, [dialogOpen]);
+
   return (
-    <Dialog
-      title={title ?? t('profile settings label')}
-      {...(description && { description })}
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (!nextOpen) {
-          void setPat(patValue);
-        }
-      }}
-      closeTriggers={[
-        <Button key='a1' variant='primary' data-testid='composer.closeUserSettingsDialog'>
-          {t('done label', { ns: 'os' })}
-        </Button>,
-      ]}
-    >
+    <>
       <Input
         label={t('github pat label')}
         value={patValue}
@@ -52,6 +38,6 @@ export const PatDialog = ({ open, setOpen, title, description }: PatDialogProps)
           input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
         }}
       />
-    </Dialog>
+    </>
   );
 };

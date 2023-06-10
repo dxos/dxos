@@ -26,6 +26,8 @@ message Options {
 message IntroductionRequest {
   /// Guest's profile.
   optional halo.credentials.ProfileDocument profile = 1;
+
+  optional string invitation_id = 2;
 }
 
 message IntroductionResponse {

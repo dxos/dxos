@@ -4,19 +4,21 @@
 
 /* THIS FILE WILL BE LOADED BY CONTEXT REPLACEMENT PLUGIN IN BROWSER ENVS. */
 
-/* global __DXOS_CONFIG__ __CONFIG_DYNAMICS__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ */
+/* global __DXOS_CONFIG__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ __CONFIG_LOCAL__ */
 
 import { log } from '@dxos/log';
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
-export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage.getItem(item) || '{}');
+export const Local = () => {
+  return __CONFIG_LOCAL__;
+};
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
   if (!dynamic) {
-    log('dynamics disabled', __CONFIG_DYNAMICS__);
-    return __CONFIG_DYNAMICS__;
+    log('dynamics disabled');
+    return {};
   }
 
   log('fetching config...', { publicUrl });

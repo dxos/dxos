@@ -126,8 +126,11 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
       this._runEffects();
     }
 
-    ctx.onDispose(() => this.off(callback));
-    return () => this.off(callback);
+    const clearDispose = ctx.onDispose(() => this.off(callback));
+    return () => {
+      clearDispose();
+      this.off(callback);
+    };
   }
 
   /**

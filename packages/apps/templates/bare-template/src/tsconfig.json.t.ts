@@ -9,7 +9,7 @@ import path from 'path';
 
 // TODO(wittjosiah): Nx executor to execute in place.
 export default defineTemplate<typeof config>(async ({ input, outputDirectory }) => {
-  const { monorepo } = input;
+  const { monorepo, pwa } = input;
   const info = monorepo ? await getDxosRepoInfo() : null;
 
   const rootTsConfig = monorepo && info?.isDxosMonorepo ? await getTsConfig(info.repositoryRootPath) : {};
@@ -18,7 +18,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
     emitDeclarationOnly: false,
     lib: ['DOM', 'ESNext'],
     outDir: 'dist',
-    types: ['node']
+    types: ['node', ...(pwa ? ['vite-plugin-pwa/client'] : [])]
   };
 
   const include = ['src'];

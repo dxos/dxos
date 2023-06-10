@@ -14,10 +14,10 @@ import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { runTestSignalServer } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
-import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messenger';
+import { SwarmMessenger } from './swarm-messenger';
 
-describe('MessageRouter', () => {
+describe('SwarmMessenger', () => {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof runTestSignalServer>>;
@@ -57,7 +57,7 @@ describe('MessageRouter', () => {
       onMessage: async (message) => await router.receiveMessage(message),
     });
 
-    const router: MessageRouter = new MessageRouter({
+    const router: SwarmMessenger = new SwarmMessenger({
       // todo(mykola): added catch to avoid not finished request.
       sendMessage: async (message) => await messenger.sendMessage(message),
       onSignal,
