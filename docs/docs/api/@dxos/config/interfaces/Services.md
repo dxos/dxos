@@ -23,6 +23,12 @@ Type: <code>[Dxns](/api/@dxos/config/interfaces/Dxns)</code>
 Options:
   - proto3_optional = true
 
+### [faasd]()
+Type: <code>[Faasd](/api/@dxos/config/interfaces/Faasd)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [ice]()
 Type: <code>[Ice](/api/@dxos/config/interfaces/Ice)[]</code>
 
@@ -55,6 +61,12 @@ Type: <code>[Signal](/api/@dxos/config/interfaces/Signal)[]</code>
 
 ### [supervisor]()
 Type: <code>[Supervisor](/api/@dxos/config/interfaces/Supervisor)</code>
+
+Options:
+  - proto3_optional = true
+
+### [tunneling]()
+Type: <code>[Tunneling](/api/@dxos/config/interfaces/Tunneling)</code>
 
 Options:
   - proto3_optional = true
