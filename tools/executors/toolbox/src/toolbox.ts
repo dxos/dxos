@@ -62,6 +62,7 @@ type TsConfigJson = {
   references: {
     path: string;
   }[];
+  compilerOptions: any;
 };
 
 type ToolboxOptions = {
@@ -268,6 +269,11 @@ class Toolbox {
             '.references': (value: any) => value.path,
           },
         });
+
+        // Preserve root dir order.
+        if (tsConfigJson.compilerOptions?.rootDirs) {
+          updated.compilerOptions.rootDirs = tsConfigJson.compilerOptions.rootDirs;
+        }
 
         await saveJson(tsConfigPath, updated, this.options.verbose);
       }

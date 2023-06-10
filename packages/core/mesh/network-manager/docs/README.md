@@ -35,7 +35,7 @@ class Swarm {
   onSignal()
 }
 Swarm *-- "Map" Peer : _peers
-Swarm --> MessageRouter : _swarmMessenger
+Swarm --> SwarmMessenger : _swarmMessenger
 Swarm --> Topology : _topology
 Swarm --> TransportFactory : _transportFactory
 class Peer {
@@ -90,19 +90,19 @@ class PeerCallbacks {
   onAccepted
   onRejected
 }
-class MessageRouter {
+class SwarmMessenger {
   receiveMessage()
   signal()
   offer()
 }
-MessageRouter *-- "Map" OfferRecord : _offerRecords
-MessageRouter --> MessageRouterOptions : { sendMessage, onSignal, onOffer, topic }
+SwarmMessenger *-- "Map" OfferRecord : _offerRecords
+SwarmMessenger --> SwarmMessengerOptions : { sendMessage, onSignal, onOffer, topic }
 class OfferRecord {
   <interface>
   resolve
   reject
 }
-class MessageRouterOptions {
+class SwarmMessengerOptions {
   <interface>
   sendMessage
   onOffer

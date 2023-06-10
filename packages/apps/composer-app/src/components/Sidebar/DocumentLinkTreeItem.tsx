@@ -60,7 +60,7 @@ export const DocumentLinkTreeItem = observer(
         >
           <Link
             to={linkTo}
-            data-testid='composer.documentTreeItem.Heading'
+            data-testid='composer.documentTreeItemHeading'
             {...(!sidebarOpen && { tabIndex: -1 })}
             onClick={() => !isLg && closeSidebar()}
           >

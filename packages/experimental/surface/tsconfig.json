@@ -27,10 +27,16 @@
       "path": "../../common/observable-object"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../../core/echo/text-model"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-shell"
     },
     {
       "path": "../../ui/aurora"

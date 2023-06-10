@@ -8,8 +8,7 @@ import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
-  const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
-  const contents = Object.entries(definitions({ ...options, dynamic }))
+  const contents = Object.entries(definitions({ ...options, mode: process.env.NODE_ENV }))
     .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
     .join('\n');
 

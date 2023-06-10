@@ -16,7 +16,7 @@ export const VaultPlugin = ({ config = {} }: StartVaultOptions = {}): Plugin => 
   configureServer: () => {
     const configPath = root && resolve(root, config.configPath ?? 'dx.yml');
     const envPath = root && resolve(root, config.envPath ?? 'dx-env.yml');
-    const devPath = root && resolve(root, config.devPath ?? 'dx-dev.yml');
-    void startVault({ config: { configPath, envPath, devPath } });
+    const devPath = root && resolve(root, config.devPath ?? 'dx-local.yml');
+    void startVault({ config: { ...config, configPath, envPath, devPath } });
   },
 });

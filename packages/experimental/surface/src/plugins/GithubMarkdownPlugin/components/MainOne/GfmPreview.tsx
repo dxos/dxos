@@ -9,7 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { Button, useTranslation } from '@dxos/aurora';
 import { Loading } from '@dxos/react-appkit';
 
-import { useOctokitContext, PatDialog } from '../../components';
+import { useSplitViewContext } from '../../../SplitViewPlugin';
+import { useOctokitContext } from '../../components';
 
 const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
   ALLOWED_TAGS: [
@@ -77,7 +78,7 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   const [html, setHtml] = useState('');
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('composer');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const splitViewContext = useSplitViewContext();
 
   useEffect(() => {
     if (octokit && markdown) {
@@ -103,12 +104,18 @@ export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
     </>
   ) : (
     <div role='none' className='mli-auto max-bs-[300px] text-center'>
-      <PatDialog open={dialogOpen} setOpen={setDialogOpen} />
       {!octokit && <p className='mlb-4'>{t('empty github pat message')}</p>}
       {octokit ? (
         <Loading label={t('loading preview message')} />
       ) : (
-        <Button onClick={() => setDialogOpen(true)}>{t('set github pat label')}</Button>
+        <Button
+          onClick={() => {
+            splitViewContext.dialogOpen = true;
+            splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
+          }}
+        >
+          {t('set github pat label')}
+        </Button>
       )}
     </div>
   );
