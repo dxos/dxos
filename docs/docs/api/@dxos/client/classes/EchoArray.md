@@ -1,5 +1,5 @@
 # Class `EchoArray`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/array.d.ts:5]()</sub>
+<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/array.d.ts:7]()</sub>
 
 
 Array of complex or scalar values.
@@ -20,6 +20,9 @@ Arguments:
 ## Properties
 ### [[base]]()
 Type: <code>[EchoArray](/api/@dxos/client/classes/EchoArray)&lt;T&gt;</code>
+
+### [[custom]]()
+Type: <code>CustomInspectFunction</code>
 
 ### [[unscopables]]()
 Type: <code>any</code>
