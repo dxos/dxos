@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [Defaults(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L52)
+### [Defaults(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L51)
 
 
 
@@ -15,7 +15,7 @@ Arguments:
 
 `basePath`: <code>string</code>
 
-### [Dynamics()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L39)
+### [Dynamics()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L38)
 
 
 
@@ -26,7 +26,7 @@ Returns: <code>T</code>
 
 Arguments: none
 
-### [Envs(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L44)
+### [Envs(basePath)](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L43)
 
 
 
@@ -39,11 +39,11 @@ Arguments:
 
 `basePath`: <code>string</code>
 
-### [LocalStorage()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L34)
+### [Local()](https://github.com/dxos/dxos/blob/main/packages/sdk/config/src/loaders/index.ts#L33)
 
 
 
-File storage.
+Development config.
 
 
 Returns: <code>T</code>
