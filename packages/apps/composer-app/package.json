@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.1.46",
+  "version": "0.1.47",
   "private": true,
   "description": "DXOS composer application.",
   "homepage": "https://dxos.org",

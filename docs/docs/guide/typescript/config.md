@@ -158,10 +158,10 @@ If your app is being hosted on a KUBE, use `Dynamics` to receive more specific c
 
 ```ts file=./snippets/create-with-dynamics.ts#L5-
 import { Client, Config } from '@dxos/client';
-import { Defaults, Dynamics } from '@dxos/config';
+import { Defaults, Dynamics, Local } from '@dxos/config';
 
 const client = new Client({
-  config: new Config(await Dynamics(), Defaults())
+  config: new Config(await Dynamics(), Local(), Defaults())
 });
 ```
 
@@ -179,10 +179,10 @@ The config plugin provides an easy way to map environment variables to config va
 
 ```ts file=./snippets/create-with-envs.ts#L5-
 import { Client, Config } from '@dxos/client';
-import { Defaults, Dynamics, Envs } from '@dxos/config';
+import { Defaults, Dynamics, Envs, Local } from '@dxos/config';
 
 const client = new Client({
-  config: new Config(await Dynamics(), await Envs(), Defaults())
+  config: new Config(await Dynamics(), await Envs(), Local(), Defaults())
 });
 ```
 
