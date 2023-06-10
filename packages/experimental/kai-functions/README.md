@@ -102,8 +102,6 @@ dx space invite SPACE_KEY
 - Join Space from kai (Open Space list info panel in sidebar).
 
 
-
-
 ## OpenFaaS (faasd)
 
 ### Overview
