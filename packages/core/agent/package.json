@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/echo-agent",
+  "version": "0.1.45",
+  "description": "DXOS CLI",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "dx-agentd": "./bin/dx-agentd"
+  },
+  "files": [
+    "/bin",
+    "/config",
+    "/dist"
+  ],
+  "scripts": {
+    "start": "tsc ./src/server.ts"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@dxos/websocket-rpc": "workspace:*",
+    "express": "4.17.1"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/express": "^4.17.17",
+    "@types/faker": "^5.5.9",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/node": "^18.11.9",
+    "@types/node-fetch": "^2.5.10",
+    "nodemon": "^2.0.22",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
