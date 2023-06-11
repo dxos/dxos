@@ -62,14 +62,14 @@ export OPENFAAS_URL="http://$IP:8080"
 
 ```bash
 dx-dev daemon list
-DX_PROFILE=test dx-dev daemon start
+DX_PROFILE=test dx-dev agent start
 ```
 
 NOTE: Must invoke run to listen on socket (for functions an devtools).
 
 ```bash
 dx-dev daemon list
-DX_PROFILE=test dx-dev daemon run --listen=unix:///tmp/dx/run/daemon/test.sock --listen=ws://localhost:4567 --profile=test
+DX_PROFILE=test dx-dev agent run --listen=unix:///tmp/dx/run/agent/test.sock --listen=ws://localhost:4567 --profile=test
 ```
 
 Test via the CLI:

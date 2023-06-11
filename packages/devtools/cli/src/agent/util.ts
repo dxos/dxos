@@ -9,7 +9,8 @@ import { DX_RUNTIME } from '@dxos/client-protocol';
 
 const START_TIMEOUT = 5_000;
 
-export const getUnixSocket = (profile: string, protocol = 'unix') => `${protocol}://${DX_RUNTIME}/daemon/${profile}.sock`;
+export const getUnixSocket = (profile: string, protocol = 'unix') =>
+  `${protocol}://${DX_RUNTIME}/agent/${profile}.sock`;
 
 export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
 
