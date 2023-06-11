@@ -21,8 +21,8 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { Agent } from './agent';
 import { ForeverDaemon } from './agent/forever';
-import { Daemon } from './daemon';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -255,7 +255,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
-  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
+  async execWithDaemon<T>(callback: (agent: Agent) => Promise<T | undefined>): Promise<T | undefined> {
     try {
       const daemon = new ForeverDaemon();
       await daemon.connect();
