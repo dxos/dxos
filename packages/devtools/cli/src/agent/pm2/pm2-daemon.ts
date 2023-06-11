@@ -4,12 +4,12 @@
 
 import assert from 'node:assert';
 import { promisify } from 'node:util';
+import { Agent, ProcessDescription } from 'packages/devtools/cli/src/agent/agent';
 import pm2, { Proc } from 'pm2';
 
 import { Trigger } from '@dxos/async';
 import { DX_DATA } from '@dxos/client-protocol';
 
-import { Daemon, ProcessDescription } from '../daemon';
 import { getUnixSocket } from '../util';
 
 const PM2_ROOT = `${DX_DATA}/daemon/pm2`;
@@ -19,7 +19,7 @@ const PM2_ROOT = `${DX_DATA}/daemon/pm2`;
  *
  * @deprecated because stalls process after command finishes.
  */
-export class Pm2Daemon implements Daemon {
+export class Pm2Daemon implements Agent {
   private _pm2?: Pm2;
 
   async connect() {

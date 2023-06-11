@@ -4,7 +4,7 @@
 
 export type ProcessDescription = { profile?: string; pid?: number; isRunning?: boolean };
 
-export interface Daemon {
+export interface Agent {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 

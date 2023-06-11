@@ -4,9 +4,10 @@
 
 import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
+import { Agent, ProcessDescription } from 'packages/devtools/cli/src/agent/agent';
 
 import { DX_DATA } from '@dxos/client-protocol';
-import { Daemon, ProcessDescription } from '../daemon';
+
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
 const FOREVER_ROOT = `${DX_DATA}/daemon/forever`;
@@ -14,7 +15,8 @@ const FOREVER_ROOT = `${DX_DATA}/daemon/forever`;
 /**
  * Manager of daemon processes started with Forever.
  */
-export class ForeverDaemon implements Daemon {
+// TODO(burdon): Rename?
+export class ForeverDaemon implements Agent {
   async connect(): Promise<void> {
     initForever();
   }
