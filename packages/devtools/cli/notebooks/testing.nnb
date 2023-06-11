@@ -3,7 +3,7 @@
         {
             "language": "typescript",
             "source": [
-                "import { Client, fromCliEnv, } from '@dxos/client'\n\nconst client = new Client({ services: fromCliEnv({ profile: 'default' })})\n\nawait client.initialize()"
+                "import { Client, fromAgent, } from '@dxos/client'\n\nconst client = new Client({ services: fromAgent({ profile: 'default' })})\n\nawait client.initialize()"
             ],
             "outputs": []
         },
@@ -31,7 +31,7 @@
         {
             "language": "typescript",
             "source": [
-                "import { Client, fromCliEnv, } from '@dxos/client'\n\nconst client1 = new Client({ services: fromCliEnv({ profile: 'test-1' })})\nawait client1.initialize()\nconst client2 = new Client({ services: fromCliEnv({ profile: 'test-2' })})\nawait client2.initialize()\n\nimport { performInvitation } from '@dxos/client-services/testing';\n\nawait performInvitation({\n  host: client1.spaces.get()[0],\n  guest: client2,\n})"
+                "import { Client, fromAgent, } from '@dxos/client'\n\nconst client1 = new Client({ services: fromAgent({ profile: 'test-1' })})\nawait client1.initialize()\nconst client2 = new Client({ services: fromAgent({ profile: 'test-2' })})\nawait client2.initialize()\n\nimport { performInvitation } from '@dxos/client-services/testing';\n\nawait performInvitation({\n  host: client1.spaces.get()[0],\n  guest: client2,\n})"
             ],
             "outputs": []
         },

@@ -3,7 +3,7 @@
         {
             "language": "typescript",
             "source": [
-                "import { Client, fromCliEnv, } from '@dxos/client'\n\n// Create client from default profile.\n// NOTE: Start daemon:\n// DX_PROFILE=test dx-dev daemon run --listen=unix:///tmp/dx/run/daemon/test.sock --listen=ws://localhost:4567\nconst client = new Client({ services: fromCliEnv({ profile: 'test' })})\nawait client.initialize()\n\n// Create identity.\nif (!client.halo.identity.get()) {\n  await client.halo.createIdentity();\n}\n\n// Verify HALO.\nconsole.log('identity =', client.halo.identity.get().identityKey.toHex())\n\n// List spaces.\nconsole.log('spaces =', client.spaces.get().map(space => space.key.toHex()))"
+                "import { Client, fromAgent, } from '@dxos/client'\n\n// Create client from default profile.\n// NOTE: Start daemon:\n// DX_PROFILE=test dx-dev daemon run --listen=unix:///tmp/dx/run/daemon/test.sock --listen=ws://localhost:4567\nconst client = new Client({ services: fromAgent({ profile: 'test' })})\nawait client.initialize()\n\n// Create identity.\nif (!client.halo.identity.get()) {\n  await client.halo.createIdentity();\n}\n\n// Verify HALO.\nconsole.log('identity =', client.halo.identity.get().identityKey.toHex())\n\n// List spaces.\nconsole.log('spaces =', client.spaces.get().map(space => space.key.toHex()))"
             ],
             "outputs": [
                 {

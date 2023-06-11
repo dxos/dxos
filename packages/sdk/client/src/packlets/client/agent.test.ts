@@ -4,12 +4,12 @@
 
 import { afterTest, test } from '@dxos/test';
 
-import { fromCliEnv } from './cli-env';
+import { fromAgent } from './agent';
 import { Client } from './client';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {
-  const client = new Client({ services: fromCliEnv() });
+  const client = new Client({ services: fromAgent() });
   await client.initialize();
   afterTest(() => client.destroy());
 

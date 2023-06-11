@@ -22,7 +22,7 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L19)
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L19)
 
 
 
@@ -33,7 +33,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServi
 
 Arguments: 
 
-`options`: <code>[FromCliEnvOptions](/api/@dxos/client/types/FromCliEnvOptions)</code>
+`options`: <code>[fromAgentOptions](/api/@dxos/client/types/fromAgentOptions)</code>
 
 ### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
 

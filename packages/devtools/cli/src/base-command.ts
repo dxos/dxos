@@ -12,7 +12,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Client, fromCliEnv, Config } from '@dxos/client';
+import { Client, fromAgent, Config } from '@dxos/client';
 import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -229,7 +229,7 @@ export abstract class BaseCommand extends Command {
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromCliEnv(flags.profile) });
+      this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
       await this._client.initialize();
       log('Initialized');
     }
