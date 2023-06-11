@@ -1,3 +1,4 @@
-build
-setup
-template
+build/
+setup/
+template/
+cloud-config.txt

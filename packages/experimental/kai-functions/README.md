@@ -10,12 +10,20 @@
 
 ## Getting Started
 
+### Install Docker Desktop
+
+[Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) is required to build Docker images.
+
 ### Install Faasd on Multipass
 
 Faasd must run in a VM since it will create its own `containerd` runtime.
 [Multipass](https://github.com/openfaas/faasd/blob/master/docs/MULTIPASS.md) supports Ubuntu VMs for OSX.
 
 ```bash
+brew install --cask multipass
+
+# Download cloud-config and update ssh key:
+# curl -sSLO https://raw.githubusercontent.com/openfaas/faasd/master/cloud-config.txt
 multipass launch --name faasd --cloud-init ./setup/cloud-config.txt -d 10G
 multipass info faasd
 ```

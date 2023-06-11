@@ -54,13 +54,15 @@ export abstract class BaseCommand extends Command {
   private _client?: Client;
   private _startTime: Date;
   private _failing = false;
+  private readonly _stdin?: string;
+
   protected _telemetryContext?: TelemetryContext;
 
-  private _stdin?: string;
   public static override enableJsonFlag = true;
+
   static override flags = {
     profile: Flags.string({
-      description: 'DXOS profile name, each profile runs separate daemon with isolated environment.',
+      description: 'User profile',
       default: ENV_DX_PROFILE_DEFAULT,
       env: ENV_DX_PROFILE,
     }),
@@ -71,6 +73,8 @@ export abstract class BaseCommand extends Command {
       // TODO(burdon): Factor out.
       default: async (context: any) => {
         const profile = context?.flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
+        console.log('>>>>>>>>>', profile, process.env[ENV_DX_PROFILE]);
+        console.log('<<<<', context);
         return join((context.config as OclifConfig).configDir, `profile/${profile}.yml`);
       },
       dependsOn: ['profile'],
