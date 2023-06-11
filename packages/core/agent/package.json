@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-agent",
+  "name": "@dxos/agent",
   "version": "0.1.45",
   "description": "DXOS CLI",
   "homepage": "https://dxos.org",
@@ -17,7 +17,7 @@
     "/dist"
   ],
   "scripts": {
-    "start": "tsc ./src/server.ts"
+    "start": "ts-node --esm src/echo-proxy.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -45,6 +45,7 @@
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
     "nodemon": "^2.0.22",
+    "ts-node": "10.9.1",
     "typescript": "^5.0.4"
   },
   "engines": {
