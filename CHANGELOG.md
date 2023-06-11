@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.1.47](https://github.com/dxos/dxos/compare/v0.1.46...v0.1.47) (2023-06-10)
+
+
+### Features
+
+* OpenFaas support ([#3355](https://github.com/dxos/dxos/issues/3355)) ([439287f](https://github.com/dxos/dxos/commit/439287fa3e81a7938d95b2fb4798da1be9a4a7dd))
+* **surface:** add space actions ([#3372](https://github.com/dxos/dxos/issues/3372)) ([c7df0ee](https://github.com/dxos/dxos/commit/c7df0ee6b71547bc01924cecdbb619ff398348c4))
+* **surface:** Icons, dialogs, other harmonizations ([#3373](https://github.com/dxos/dxos/issues/3373)) ([6798ba8](https://github.com/dxos/dxos/commit/6798ba8ba03883026f9eede6bd7017846715e320))
+* **surface:** introduce tree view plugin ([#3358](https://github.com/dxos/dxos/issues/3358)) ([388e591](https://github.com/dxos/dxos/commit/388e5916e714c02fe1dfd98a3eaf065bc8bfe9ea))
+* **surface:** More Composer functionality ([#3360](https://github.com/dxos/dxos/issues/3360)) ([7f38e43](https://github.com/dxos/dxos/commit/7f38e430970d865099bbb945998bb8897e7d4674))
+
+
+### Bug Fixes
+
+* Add bundle command in publish script for extensions ([#3367](https://github.com/dxos/dxos/issues/3367)) ([09d9a9d](https://github.com/dxos/dxos/commit/09d9a9df7f5ae43f3ce62b74628490758d584f6e))
+* **cli:** missing dependency ([#3359](https://github.com/dxos/dxos/issues/3359)) ([e0fe462](https://github.com/dxos/dxos/commit/e0fe4623b189c151423785df5789dcc6b249e973))
+* **config:** exclude local config from production builds ([#3389](https://github.com/dxos/dxos/issues/3389)) ([fa1c20d](https://github.com/dxos/dxos/commit/fa1c20d07b4c95307f5c55de97bdceb86e8dce52))
+* Encode unknown types as null ([#3369](https://github.com/dxos/dxos/issues/3369)) ([38b9025](https://github.com/dxos/dxos/commit/38b9025a959806d18a60a618fe97c7918e308607))
+* factor out tunnel service ([#3335](https://github.com/dxos/dxos/issues/3335)) ([4c4ae1e](https://github.com/dxos/dxos/commit/4c4ae1edc088326c964ca85cecee62f22c7e760b))
+* Fix stale connection init process ([#3354](https://github.com/dxos/dxos/issues/3354)) ([689d275](https://github.com/dxos/dxos/commit/689d2759ecce231a496094032cd7db71e930fce6))
+* Memory leak in context dispose callbacks ([#3386](https://github.com/dxos/dxos/issues/3386)) ([c52d109](https://github.com/dxos/dxos/commit/c52d109cb81018ea9d7057758d3044f2a7366264))
+* **network-manager:** Add error handlers in swarm messaging ([#3362](https://github.com/dxos/dxos/issues/3362)) ([5138b8c](https://github.com/dxos/dxos/commit/5138b8c7f5b1d6c875a64e8396473d4405757c37))
+* **network-manager:** Fix race condition in webRTC test ([#3368](https://github.com/dxos/dxos/issues/3368)) ([97c8f6a](https://github.com/dxos/dxos/commit/97c8f6a69d068a0bdee2a1e5f2465a6d213d6d3e))
+* templates type error ([#3347](https://github.com/dxos/dxos/issues/3347)) ([776aaef](https://github.com/dxos/dxos/commit/776aaef195d9ce0a23f63320956e431e95f14d03))
+
+## [0.1.46](https://github.com/dxos/dxos/compare/v0.1.45...v0.1.46) (2023-06-06)
+
+
+### Features
+
+* Add storage version to metadata ([#3344](https://github.com/dxos/dxos/issues/3344)) ([5ba0d13](https://github.com/dxos/dxos/commit/5ba0d13264a30e5131f3d4b2dfd960ae29673daf))
+* Add test that detects breaking changes in protocol ([#3315](https://github.com/dxos/dxos/issues/3315)) ([04bc008](https://github.com/dxos/dxos/commit/04bc00878a0e713384cff056f7bb47d016bf26f6))
+* **aurora-theme:** Autoresolve, other improvements ([#3320](https://github.com/dxos/dxos/issues/3320)) ([7a841c6](https://github.com/dxos/dxos/commit/7a841c62b87d227268b61af8937dd44ba0b7c0c1))
+* **aurora:** TurboSnap ([#3306](https://github.com/dxos/dxos/issues/3306)) ([ece73bd](https://github.com/dxos/dxos/commit/ece73bdf7539253552bc7cde1b393865e77eb283))
+* **client:** include commit hash in client message if available ([#3312](https://github.com/dxos/dxos/issues/3312)) ([dacb462](https://github.com/dxos/dxos/commit/dacb462fbad9461c4953eb2c49f310d347f2e52d))
+* **composer-extension:** Match Github colors ([#3308](https://github.com/dxos/dxos/issues/3308)) ([97d0a4b](https://github.com/dxos/dxos/commit/97d0a4b0f841d06db7ee70055c69a1baf5786bee))
+* Epochs in multiplayer ([#3296](https://github.com/dxos/dxos/issues/3296)) ([8545aa0](https://github.com/dxos/dxos/commit/8545aa03792c5db0e5dec9d300bdc7bf263b5172))
+* Make devtools link congruent with the app env ([#3324](https://github.com/dxos/dxos/issues/3324)) ([30dcb1b](https://github.com/dxos/dxos/commit/30dcb1b844a7ef218c92f05b6bec9545cff0a649))
+* surfaces experiment ([#3148](https://github.com/dxos/dxos/issues/3148)) ([71a2edd](https://github.com/dxos/dxos/commit/71a2edd79f41893cfa7eba5552a235d30b1f8c1c))
+
+
+### Bug Fixes
+
+* **aurora:** Checkbox icon bug, plugin import path ([#3334](https://github.com/dxos/dxos/issues/3334)) ([efe7b64](https://github.com/dxos/dxos/commit/efe7b64915665d1d5a0bd899e01f9cc227f6298a))
+* **aurora:** TurboSnap ([#3309](https://github.com/dxos/dxos/issues/3309)) ([53f6831](https://github.com/dxos/dxos/commit/53f6831faab3cd44645f23411fe30ca02ede04c5))
+* **cli:** Fix path to default config ([#3322](https://github.com/dxos/dxos/issues/3322)) ([7fd45d4](https://github.com/dxos/dxos/commit/7fd45d4a35593acb97c4c441973639a225579c1c))
+* **composer-app:** `ResolverDialog` height ([#3307](https://github.com/dxos/dxos/issues/3307)) ([7fbc2c6](https://github.com/dxos/dxos/commit/7fbc2c6143df83f187b496236e78b32a0e9c139d))
+* **composer-app:** Overscroll ([#3305](https://github.com/dxos/dxos/issues/3305)) ([084f287](https://github.com/dxos/dxos/commit/084f287f8ddcfb6f5196c233c6b42d6cb58faa8b))
+* **composer-app:** Spacing, alignment, color ([#3343](https://github.com/dxos/dxos/issues/3343)) ([9631503](https://github.com/dxos/dxos/commit/9631503555fb0155fe74dfa1993257645ad0ea32))
+* **composer-extension:** Wait for Space & unbind Space option ([#3319](https://github.com/dxos/dxos/issues/3319)) ([2f942ad](https://github.com/dxos/dxos/commit/2f942ad223b55d7d594e8af02b3d021918a0dc24))
+* Fix root inside publish extension script ([#3297](https://github.com/dxos/dxos/issues/3297)) ([6699d3a](https://github.com/dxos/dxos/commit/6699d3a4d38a97e0703d25a3d77334222c792df1))
+* Fix test signal server port collisions ([#3295](https://github.com/dxos/dxos/issues/3295)) ([834389a](https://github.com/dxos/dxos/commit/834389ae9be7cdc2ee8402b7df85047e021a8394))
+* **sentry:** stop logging display names and full identity keys ([#3339](https://github.com/dxos/dxos/issues/3339)) ([75385e3](https://github.com/dxos/dxos/commit/75385e3a9c88273b94d17bab68dda6935bb51680))
+
 ## [0.1.45](https://github.com/dxos/dxos/compare/v0.1.44...v0.1.45) (2023-05-30)
 
 

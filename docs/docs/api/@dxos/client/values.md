@@ -6,6 +6,16 @@ title: Values
 ### [`AUTHENTICATION_CODE_LENGTH`]()
 Type: "6"
 
+### [`AUTH_TIMEOUT`]()
+Type: "30000"
+
+Timeout for the device to be added to the trusted set during auth.
+
+### [`CREATE_SPACE_TIMEOUT`]()
+Type: "3000"
+
+Timeout for creating new spaces.
+
 ### [`DEFAULT_CLIENT_CHANNEL`]()
 Type: "dxos:app"
 
@@ -33,8 +43,29 @@ Type: ExpandoConstructor
 ### [`INVITATION_TIMEOUT`]()
 Type: number
 
+### [`LOAD_CONTROL_FEEDS_TIMEOUT`]()
+Type: "3000"
+
+Timeout for loading of control feeds.
+
+### [`LOAD_PROPERTIES_TIMEOUT`]()
+Type: "3000"
+
+Timeout for space properties to be loaded in the set of tracked items.
+Accounts for latency between SpaceService reporting the space as READY and DataService streaming the item states.
+
 ### [`ON_CLOSE_DELAY`]()
 Type: "1000"
+
+### [`PROXY_CONNECTION_TIMEOUT`]()
+Type: "30000"
+
+Timeout for making rpc connections from remote proxies.
+
+### [`RESOURCE_LOCK_TIMEOUT`]()
+Type: "3000"
+
+Timeout for waiting before stealing resource lock.
 
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
