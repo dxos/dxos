@@ -234,7 +234,6 @@ export class FaasConnector {
     const installedFunctions = await this._getFunctions();
 
     const installedFunction = installedFunctions.find((func) => func.name === event.trigger.function.name);
-
     if (!installedFunction) {
       log.warn('function not found', { function: event.trigger.function.name });
       return;
@@ -247,9 +246,9 @@ export class FaasConnector {
       },
     };
 
-    log.info('invoking function', { function: installedFunction.name });
+    log.info('calling', { function: installedFunction.name });
     const result = await this._invokeFunction(installedFunction.name, data);
-    log.info('function result', { result });
+    log.info('result', { function: installedFunction.name, result });
   }
 
   private async _invokeFunction(functionName: string, data: InvocationData) {

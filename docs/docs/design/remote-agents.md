@@ -2,7 +2,9 @@
 
 ## Overview
 
-**Remote Agents** are long-lived peers running on network infrastructure that instantiate DXOS Client Services.
+> "Your own, personal, Agent. Something to hear your prayers, something that cares."
+
+**Remote Agents** are long-lived peers running on network infrastructure that operate DXOS Client Services and provide runtime APIs.
 
 **Remote Functions** are event-driven functions that have access to a DXOS Client (HALO, Spaces, etc.) connected to a Remote Agent.
 

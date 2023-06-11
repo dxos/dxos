@@ -1,8 +1,16 @@
 # Kai Remote Functions
 
+
+# TODO(burdon):
+- stack.yml files
+- Function namespace (OpenFaaS).
+- Deploy from URL (yml file in GH, package in GHCR).
+- Local docker/package registry for offline/perf.
+
+
 ## Getting Started
 
-### Install Multipass
+### Install Faasd on Multipass
 
 Faasd must run in a VM since it will create its own `containerd` runtime.
 [Multipass](https://github.com/openfaas/faasd/blob/master/docs/MULTIPASS.md) supports Ubuntu VMs for OSX.
@@ -49,9 +57,7 @@ export OPENFAAS_URL="http://$IP:8080"
 
 ### Running the CLI Daemon
 
-TODO(burdon): Change to test everywhere.
-
-1. Configure `$HOME/.config/dx/profile/test.yml` (Set client persistence and Faasd Gateway.)
+1. Configure `$HOME/.config/dx/profile/test.yml` (Set client persistence and OpenFaaS Gateway.)
 2. From the CLI directory start the daemon:
 
 ```bash
