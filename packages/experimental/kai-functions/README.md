@@ -35,13 +35,20 @@ brew install faas-cli
 faas-cli template store list --verbose
 ```
 
+## Admin
+
+Open the Faasd console (username=admin): 
+
+```bash
+. ./scripts/env.sh
+open http://$IP:8080
+```
 
 ## Build and deploy functions to Faasd
 
 ```bash
 ./scripts/deploy.sh
 ```
-
 
 ## Development
 
