@@ -7,9 +7,6 @@ import { expect } from 'chai';
 import { Bool, Op, Query } from './query';
 import { QueryProcessor } from './query-processor';
 
-// TODO(burdon): Drive from demo.
-// TODO(burdon): Unify with ECHO query and typedefs.
-
 const q1: Query = {
   root: {
     op: Bool.OR,

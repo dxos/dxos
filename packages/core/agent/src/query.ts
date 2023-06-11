@@ -3,6 +3,8 @@
 //
 
 // TODO(burdon): Convert to protobuf.
+// TODO(burdon): Reconcile with ECHO query API.
+// TODO(burdon): Convert JSON query def to query object.
 
 export enum Op {
   EQ = 0,
