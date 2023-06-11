@@ -4,13 +4,13 @@
 
 import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
-import { Agent, ProcessDescription } from 'packages/devtools/cli/src/agent/agent';
 
 import { DX_DATA } from '@dxos/client-protocol';
 
+import { Agent, ProcessDescription } from '../agent';
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
 
-const FOREVER_ROOT = `${DX_DATA}/daemon/forever`;
+const FOREVER_ROOT = `${DX_DATA}/agent/forever`;
 
 /**
  * Manager of daemon processes started with Forever.
@@ -33,7 +33,7 @@ export class ForeverDaemon implements Agent {
     if (!(await this.isRunning(profile))) {
       const socket = getUnixSocket(profile);
       forever.startDaemon(process.argv[1], {
-        args: ['daemon', 'run', `--listen=${socket}`, '--profile=' + profile],
+        args: ['agent', 'run', `--listen=${socket}`, '--profile=' + profile],
         uid: profile,
         logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
         outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout

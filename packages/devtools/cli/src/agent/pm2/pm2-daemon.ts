@@ -4,12 +4,12 @@
 
 import assert from 'node:assert';
 import { promisify } from 'node:util';
-import { Agent, ProcessDescription } from 'packages/devtools/cli/src/agent/agent';
 import pm2, { Proc } from 'pm2';
 
 import { Trigger } from '@dxos/async';
 import { DX_DATA } from '@dxos/client-protocol';
 
+import { Agent, ProcessDescription } from '../agent';
 import { getUnixSocket } from '../util';
 
 const PM2_ROOT = `${DX_DATA}/daemon/pm2`;
@@ -51,7 +51,7 @@ export class Pm2Daemon implements Agent {
       this._pm2.start(
         {
           script: process.argv[1],
-          args: ['daemon', 'run', `--listen=${getUnixSocket(profile)}`, '--profile=' + profile],
+          args: ['agent', 'run', `--listen=${getUnixSocket(profile)}`, '--profile=' + profile],
           name: profile,
         },
         (err, proc) => {

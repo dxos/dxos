@@ -28,7 +28,7 @@ export const printAgents = (daemons: any[], flags = {}) => {
 
 export default class List extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'List agent processes.';
+  static override description = 'List agents.';
 
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {

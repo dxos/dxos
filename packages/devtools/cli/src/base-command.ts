@@ -21,8 +21,8 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { ForeverDaemon } from './agent/forever';
 import { Daemon } from './daemon';
-import { ForeverDaemon } from './daemon/forever';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
