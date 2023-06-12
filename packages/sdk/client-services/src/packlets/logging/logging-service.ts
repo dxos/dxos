@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { log, LogEntry as NaturalLogEntry, LogProcessor, shouldLog } from '@dxos/log';
+import { log, LogEntry as NaturalLogEntry, LogProcessor, shouldLog, getContextFromEntry } from '@dxos/log';
 import { LoggingService, LogEntry, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify } from '@dxos/util';
 
@@ -39,12 +39,8 @@ export class LoggingServiceImpl implements LoggingService {
         if (shouldLog(entry, filters)) {
           const record = {
             ...entry,
-            timestamp: Date.now(),
-            meta: {
-              ...entry.meta,
-            },
             context: jsonify(getContextFromEntry(entry)),
-          };
+          } satisfies NaturalLogEntry;
           delete record.meta?.bugcheck;
           delete record.meta?.scope;
           next(record);
