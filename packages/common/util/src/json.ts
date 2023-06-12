@@ -37,27 +37,31 @@ export function jsonReplacer(this: any, key: string, value: any): any {
 /**
  * Recursively converts an object into a JSON-compatible object.
  */
-export const jsonify = (value: any, handles = new WeakSet<any>()): any => {
+export const jsonify = (value: any, visitedObjects = new WeakSet<any>()): any => {
   if (typeof value === 'function') {
     return null;
   } else if (typeof value === 'object' && value !== null) {
-    if (handles.has(value)) {
+    if (visitedObjects.has(value)) {
       return null;
     }
-    handles.add(value);
+    visitedObjects.add(value);
 
-    if (value instanceof Uint8Array) {
-      return Buffer.from(value).toString('hex');
-    } else if (Array.isArray(value)) {
-      return value.map((x) => jsonify(x, handles));
-    } else if (typeof value.toJSON === 'function') {
-      return value.toJSON();
-    } else {
-      const res: any = {};
-      for (const key of Object.keys(value)) {
-        res[key] = jsonify(value[key], handles);
+    try {
+      if (value instanceof Uint8Array) {
+        return Buffer.from(value).toString('hex');
+      } else if (Array.isArray(value)) {
+        return value.map((x) => jsonify(x, visitedObjects));
+      } else if (typeof value.toJSON === 'function') {
+        return value.toJSON();
+      } else {
+        const res: any = {};
+        for (const key of Object.keys(value)) {
+          res[key] = jsonify(value[key], visitedObjects);
+        }
+        return res;
       }
-      return res;
+    } finally {
+      visitedObjects.delete(value);
     }
   } else {
     return value;
