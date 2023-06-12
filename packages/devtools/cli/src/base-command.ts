@@ -60,29 +60,30 @@ export abstract class BaseCommand extends Command {
 
   public static override enableJsonFlag = true;
 
+  // Hack required to provide access to flags parser.
+  private static _configDir: string;
+
   static override flags = {
     profile: Flags.string({
-      description: 'User profile',
+      description: 'User profile.',
       default: ENV_DX_PROFILE_DEFAULT,
       env: ENV_DX_PROFILE,
     }),
 
     config: Flags.string({
       env: ENV_DX_CONFIG,
-      description: 'Specify config file',
-      // TODO(burdon): Factor out.
-      default: async (context: any) => {
-        const profile = context?.flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
-        console.log('>>>>>>>>>', profile, process.env[ENV_DX_PROFILE]);
-        console.log('<<<<', context);
-        return join((context.config as OclifConfig).configDir, `profile/${profile}.yml`);
+      description: 'Specify config file.',
+      async default({ flags }: { flags: any }) {
+        // TODO(burdon): Create if doesn't exist?
+        const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
+        return join(BaseCommand._configDir, `profile/${profile}.yml`);
       },
       dependsOn: ['profile'],
       aliases: ['c'],
     }),
 
     timeout: Flags.integer({
-      description: 'Timeout in seconds',
+      description: 'Timeout in seconds.',
       default: 30,
       aliases: ['t'],
     }),
@@ -92,6 +93,7 @@ export abstract class BaseCommand extends Command {
 
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
+    BaseCommand._configDir = config.configDir;
 
     try {
       this._stdin = fs.readFileSync(0, 'utf8');
