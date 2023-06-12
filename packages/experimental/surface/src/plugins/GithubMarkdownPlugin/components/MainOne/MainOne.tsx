@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { Dialog as AppkitDialog, Input } from '@dxos/react-appkit';
 import { Space, useIdentity } from '@dxos/react-client';
 
-import { PatDialog, useOctokitContext } from '../GithubContext';
+import { PatInput, useOctokitContext } from '../GithubContext';
 import { GfmPreview } from './GfmPreview';
 import { StandaloneDocumentPage } from './StandaloneDocumentPage';
 import { useTextFile } from './useTextFile';
@@ -415,7 +415,7 @@ export const MainOne = ({ data }: { data: [Space, Document] }) => {
             <Dialog.Content>
               <Dialog.Title>{t('stale rescue title')}</Dialog.Title>
               <Dialog.Description>{t('stale rescue description')}</Dialog.Description>
-              <PatDialog />
+              <PatInput />
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Overlay>

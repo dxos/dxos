@@ -63,7 +63,7 @@ export const TreeViewContainer = observer(() => {
               {Object.entries(graph.roots).map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
-                  <TreeView key={key} items={items} />
+                  <TreeView key={key} items={items} parent='root' />
                 </TreeItem.Root>
               ))}
             </Tree.Root>
@@ -75,16 +75,16 @@ export const TreeViewContainer = observer(() => {
                     <Button
                       variant='ghost'
                       key={action.id}
-                      onClick={action.invoke}
+                      onClick={(event) => action.invoke(t, event)}
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!sidebarOpen && { tabIndex: -1 })}
                     >
-                      <span className='sr-only'>{action.label}</span>
+                      <span className='sr-only'>{t(...action.label)}</span>
                       {action.icon ? <action.icon className={getSize(4)} /> : <Placeholder className={getSize(4)} />}
                     </Button>
                   </Tooltip.Trigger>
                   <Tooltip.Content classNames='z-[31]'>
-                    {action.label}
+                    {t(...action.label)}
                     <Tooltip.Arrow />
                   </Tooltip.Content>
                 </Tooltip.Root>

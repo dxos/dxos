@@ -2,12 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft, EyeSlash, Intersect, PaperPlane, PencilSimple, Planet, Plus } from '@phosphor-icons/react';
+import {
+  ArrowLineLeft,
+  Download,
+  EyeSlash,
+  Intersect,
+  PaperPlane,
+  PencilSimple,
+  Planet,
+  Plus,
+  Trash,
+  Upload,
+} from '@phosphor-icons/react';
 import { FC, useEffect } from 'react';
 import React, { useNavigate, useParams } from 'react-router';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
+import { useTranslation } from '@dxos/aurora';
+import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 import {
@@ -17,7 +30,6 @@ import {
   PublicKey,
   ShellLayout,
   Space,
-  SpaceProxy,
   TypedObject,
 } from '@dxos/react-client';
 
@@ -29,8 +41,11 @@ import { RouterPluginProvides } from '../RoutesPlugin';
 import { SplitViewProvides } from '../SplitViewPlugin';
 import { TreeViewProvides, useTreeView } from '../TreeViewPlugin';
 import { DialogRenameSpace } from './DialogRenameSpace';
+import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
 import { FullSpaceTreeItem } from './FullSpaceTreeItem';
+import { backupSpace } from './backup';
+import { getSpaceDisplayName } from './getSpaceDisplayName';
 
 export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
 
@@ -48,8 +63,25 @@ export const SpaceMain: FC<{}> = observer(() => {
   const childNode = parentNode?.children?.find((node) => node.id === childId);
 
   const data = parentNode ? (childNode ? [parentNode.data, childNode.data] : [parentNode.data]) : null;
-  return data ? <Surface data={data} role='main' /> : <p>…</p>;
+  return <Surface data={data} role='main' />;
 });
+
+export const SpaceMainEmpty = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+      <p
+        role='alert'
+        className={mx(
+          defaultDescription,
+          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
+        )}
+      >
+        {t('first run message')}
+      </p>
+    </div>
+  );
+};
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
   return objects.map((obj) => ({
@@ -62,7 +94,8 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
     actions: [
       {
         id: 'delete',
-        label: 'Delete',
+        label: ['delete document label', { ns: 'composer' }],
+        icon: Trash,
         invoke: async () => {
           parent.data?.db.remove(obj);
         },
@@ -75,6 +108,36 @@ const nodes = createStore<GraphNode[]>([]);
 const nodeAttributes = new Map<string, { [key: string]: any }>();
 const rootObjects = new Map<string, GraphNode[]>();
 const subscriptions = new EventSubscriptions();
+
+const EmptyTree = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div
+      role='none'
+      className={mx(
+        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
+        defaultDescription,
+      )}
+    >
+      {t('empty tree message')}
+    </div>
+  );
+};
+
+const EmptySpace = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div
+      role='none'
+      className={mx(
+        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
+        defaultDescription,
+      )}
+    >
+      {t('empty space message')}
+    </div>
+  );
+};
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
@@ -105,7 +168,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             actions: [
               {
                 id: 'create-doc',
-                label: 'Create document',
+                label: ['create document label', { ns: 'composer' }],
                 icon: Plus,
                 invoke: async () => {
                   const document = space.db.add(new Document());
@@ -116,7 +179,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'rename-space',
-                label: 'Rename space',
+                label: ['rename space label', { ns: 'composer' }],
                 icon: PencilSimple,
                 invoke: async () => {
                   if (splitViewPlugin?.provides.splitView) {
@@ -127,7 +190,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'view-invitations',
-                label: 'View invitations',
+                label: ['view invitations label', { ns: 'composer' }],
                 icon: PaperPlane,
                 invoke: async () => {
                   await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
@@ -135,7 +198,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               },
               {
                 id: 'hide-space',
-                label: 'Hide space',
+                label: ['hide space label', { ns: 'composer' }],
                 icon: EyeSlash,
                 invoke: async () => {
                   if (identity) {
@@ -150,6 +213,31 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                     if (treeViewPlugin?.provides.treeView.selected[0] === id) {
                       treeViewPlugin.provides.treeView.selected = [];
                     }
+                  }
+                },
+              },
+              {
+                id: 'backup-space',
+                label: ['download all docs in space label', { ns: 'composer' }],
+                icon: Download,
+                invoke: async (t) => {
+                  const backupBlob = await backupSpace(space, t('untitled document title'));
+                  const url = URL.createObjectURL(backupBlob);
+                  const element = document.createElement('a');
+                  element.setAttribute('href', url);
+                  element.setAttribute('download', `${getSpaceDisplayName(t, space)} backup.zip`);
+                  element.setAttribute('target', 'download');
+                  element.click();
+                },
+              },
+              {
+                id: 'restore-space',
+                label: ['upload all docs in space label', { ns: 'composer' }],
+                icon: Upload,
+                invoke: async () => {
+                  if (splitViewPlugin?.provides.splitView) {
+                    splitViewPlugin.provides.splitView.dialogOpen = true;
+                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:SpacePlugin/RestoreSpaceDialog', space];
                   }
                 },
               },
@@ -293,7 +381,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         case 'main':
           switch (true) {
             case isSpace(datum):
-              return () => <pre>{JSON.stringify((datum as SpaceProxy).properties)}</pre>;
+              return SpaceMainEmpty;
             default:
               return null;
           }
@@ -306,12 +394,27 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             default:
               return null;
           }
-        case 'dialog':
+        case 'tree--empty':
           switch (true) {
-            case Array.isArray(datum) && datum[0] === 'dxos:SpacePlugin/RenameSpaceDialog':
-              return DialogRenameSpace;
+            case datum === 'root':
+              return EmptyTree;
+            case isSpace(datum?.data):
+              return EmptySpace;
             default:
               return null;
+          }
+        case 'dialog':
+          if (Array.isArray(datum)) {
+            switch (datum[0]) {
+              case 'dxos:SpacePlugin/RenameSpaceDialog':
+                return DialogRenameSpace;
+              case 'dxos:SpacePlugin/RestoreSpaceDialog':
+                return DialogRestoreSpace;
+              default:
+                return null;
+            }
+          } else {
+            return null;
           }
         default:
           return null;
@@ -333,7 +436,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         return [
           {
             id: 'create-space',
-            label: 'Create space',
+            label: ['create space label', { ns: 'os' }],
             icon: Planet,
             invoke: async () => {
               await clientPlugin.provides.client.createSpace();
@@ -341,7 +444,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           },
           {
             id: 'join-space',
-            label: 'Join space',
+            label: ['join space label', { ns: 'os' }],
             icon: Intersect,
             invoke: async () => {
               await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
@@ -349,7 +452,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           },
           {
             id: 'close-sidebar',
-            label: 'Close sidebar',
+            label: ['close sidebar label', { ns: 'os' }],
             icon: ArrowLineLeft,
             invoke: async () => {
               if (splitViewPlugin?.provides.splitView) {
