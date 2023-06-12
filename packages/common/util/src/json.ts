@@ -33,3 +33,33 @@ export function jsonReplacer(this: any, key: string, value: any): any {
   return value;
   // code }
 }
+
+/**
+ * Recursively converts an object into a JSON-compatible object.
+ */
+export const jsonify = (value: any, handles = new WeakSet<any>()): any => {
+  if (typeof value === 'function') {
+    return null;
+  } else if (typeof value === 'object' && value !== null) {
+    if (handles.has(value)) {
+      return null;
+    }
+    handles.add(value);
+
+    if (value instanceof Uint8Array) {
+      return Buffer.from(value).toString('hex');
+    } else if (Array.isArray(value)) {
+      return value.map((x) => jsonify(x, handles));
+    } else if (typeof value.toJSON === 'function') {
+      return value.toJSON();
+    } else {
+      const res: any = {};
+      for (const key of Object.keys(value)) {
+        res[key] = jsonify(value[key], handles);
+      }
+      return res;
+    }
+  } else {
+    return value;
+  }
+};
