@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// NOTE: Specify --no-warnings in production script.
 
 const oclif = require('@oclif/core')
 

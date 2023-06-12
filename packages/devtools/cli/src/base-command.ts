@@ -2,10 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Config as OclifConfig, Flags } from '@oclif/core';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import oclifHandler from '@oclif/core/handle';
+import { Command, Config as OclifConfig, Flags, Interfaces } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
@@ -51,12 +48,23 @@ const exists = async (...args: string[]): Promise<boolean> => {
   }
 };
 
-export abstract class BaseCommand extends Command {
+export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+/**
+ * Custom base command.
+ * https://oclif.io/docs/base_class#docsNav
+ * Ref: https://github.com/salesforcecli/sf-plugins-core/blob/main/src/sfCommand.ts
+ */
+export abstract class BaseCommand<T extends typeof Command = any> extends Command {
   private _clientConfig?: Config;
   private _client?: Client;
   private _startTime: Date;
   private _failing = false;
   private readonly _stdin?: string;
+
+  protected flags!: Flags<T>;
+  protected args!: Args<T>;
 
   protected _telemetryContext?: TelemetryContext;
 
@@ -123,12 +131,27 @@ export abstract class BaseCommand extends Command {
    */
   override async init(): Promise<void> {
     await super.init();
+    await this._initTelemetry();
 
+    const { args, flags } = await this.parse({
+      flags: this.ctor.flags,
+      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+      args: this.ctor.args,
+      strict: this.ctor.strict,
+    });
+
+    this.flags = flags as Flags<T>;
+    this.args = args as Args<T>;
+
+    // Load user config file.
+    await this._loadConfig(flags);
+  }
+
+  private async _initTelemetry() {
     this._telemetryContext = await getTelemetryContext(this.config.configDir);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
-
     if (group === 'dxos') {
-      this.log(chalk`✨ {bgMagenta You're using the CLI as an internal user} ✨\n`);
+      this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
     }
 
     if (SENTRY_DESTINATION && mode !== 'disabled') {
@@ -158,23 +181,17 @@ export abstract class BaseCommand extends Command {
 
     this.addToTelemetryContext({ command: this.id });
 
-    setTimeout(async () => {
-      try {
-        const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
-        const data = await res.json();
-        const { city, region, country, latitude, longitude } = data;
-        this.addToTelemetryContext({ city, region, country, latitude, longitude });
-      } catch (err) {
-        captureException(err);
-      }
-    });
-
-    // Load user config file.
-    await this._loadConfig();
+    try {
+      const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
+      const data = await res.json();
+      const { city, region, country, latitude, longitude } = data;
+      this.addToTelemetryContext({ city, region, country, latitude, longitude });
+    } catch (err) {
+      captureException(err);
+    }
   }
 
-  private async _loadConfig() {
-    const { flags } = await this.parse(this.constructor as any);
+  private async _loadConfig(flags: any) {
     const { config: configFile } = flags;
 
     const configExists = await exists(configFile);
@@ -197,11 +214,18 @@ export abstract class BaseCommand extends Command {
     this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 
+  override warn(err: string | Error) {
+    const message = typeof err === 'string' ? err : err.message;
+    this.logToStderr('WARNING:', message);
+    return err;
+  }
+
   // https://oclif.io/docs/error_handling
+  // NOTE: Full stack trace is displayed if `oclif.settings.debug = true` (see bin script).
   override async catch(err: Error) {
     this._failing = true;
     Sentry.captureException(err);
-    return oclifHandler(err);
+    return super.catch(err);
   }
 
   // Called after each run.
@@ -244,9 +268,17 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in client object.
    */
-  async execWithClient<T>(callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
+  async execWithClient<T>(
+    callback: (client: Client) => Promise<T | undefined>,
+    checkHalo = false,
+  ): Promise<T | undefined> {
     try {
       const client = await this.getClient();
+      if (checkHalo && !client.halo.identity.get()) {
+        this.warn('HALO not initialized; run `dx halo create`');
+        process.exit(1);
+      }
+
       const value = await callback(client);
       log('Destroying...');
       await client.destroy();
@@ -259,6 +291,7 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  // TODO(burdon): Check running (otherwise run CLI in daemon mode).
   async execWithDaemon<T>(callback: (agent: Agent) => Promise<T | undefined>): Promise<T | undefined> {
     try {
       const daemon = new ForeverDaemon(`${DX_DATA}/agent`);

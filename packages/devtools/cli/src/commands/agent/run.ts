@@ -18,7 +18,7 @@ export default class Run extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     listen: Flags.string({
-      description: 'Expose services.',
+      description: 'RPC endpoints.',
       required: true,
       multiple: true,
     }),
@@ -28,8 +28,9 @@ export default class Run extends BaseCommand {
     const {
       flags: { listen },
     } = await this.parse(Run);
+
     assert(this.clientConfig);
     await runServices({ listen, config: this.clientConfig });
-    this.log('agent started');
+    this.log('agent started...');
   }
 }

@@ -84,7 +84,7 @@ NOTE: Must invoke run to listen on socket (for functions an devtools).
 
 ```bash
 dx-dev daemon list
-DX_PROFILE=test dx-dev agent run --listen=unix:///tmp/dx/run/agent/test.sock --listen=ws://localhost:4567 --profile=test
+DX_PROFILE=test dx-dev agent run --listen=ws://localhost:4567 --listen=unix:///tmp/dx/run/agent/test.sock --profile=test
 ```
 
 Test via the CLI:

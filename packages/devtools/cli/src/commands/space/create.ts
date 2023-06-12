@@ -32,6 +32,6 @@ export default class Create extends BaseCommand {
 
       this.log(`Created: ${data.key}`);
       return data;
-    });
+    }, true);
   }
 }
