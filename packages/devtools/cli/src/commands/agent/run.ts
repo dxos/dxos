@@ -7,7 +7,8 @@
 import { Flags } from '@oclif/core';
 import assert from 'node:assert';
 
-import { runServices } from '../../agent';
+import { runServices } from '@dxos/agent';
+
 import { BaseCommand } from '../../base-command';
 
 export default class Run extends BaseCommand {

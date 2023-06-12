@@ -1361,6 +1361,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
@@ -1373,7 +1374,9 @@ importers:
       '@types/node': ^18.11.9
       '@types/node-fetch': ^2.5.10
       express: 4.17.1
+      forever: ^4.0.3
       nodemon: ^2.0.22
+      pm2: ^5.3.0
       ts-node: 10.9.1
       typescript: ^5.0.4
     dependencies:
@@ -1387,12 +1390,15 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/protocols': link:../protocols
       '@dxos/rpc': link:../mesh/rpc
       '@dxos/sentry': link:../../common/sentry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
       express: 4.17.1
+      forever: 4.0.3
+      pm2: 5.3.0
     devDependencies:
       '@types/debug': 4.1.8
       '@types/express': 4.17.17
@@ -2154,6 +2160,7 @@ importers:
 
   packages/devtools/cli:
     specifiers:
+      '@dxos/agent': workspace:*
       '@dxos/async': workspace:*
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
@@ -2193,7 +2200,6 @@ importers:
       cli-progress: ^3.11.2
       debug: ^4.3.3
       do-wrapper: ^4.5.1
-      forever: ^4.0.3
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
       globby: ^11.1.0
@@ -2206,7 +2212,6 @@ importers:
       nodemon: ^2.0.22
       oclif: ^3.7.0
       pkg-up: ^3.1.0
-      pm2: ^5.3.0
       react: ^18.2.0
       shx: ^0.3.3
       tempy: ^1.0.1
@@ -2214,6 +2219,7 @@ importers:
       uuid: ^8.3.2
       ws: ^7.4.4
     dependencies:
+      '@dxos/agent': link:../../core/agent
       '@dxos/async': link:../../common/async
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
@@ -2244,7 +2250,6 @@ importers:
       cli-progress: 3.12.0
       debug: 4.3.4
       do-wrapper: 4.5.1
-      forever: 4.0.3
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
       inquirer: 8.2.5
@@ -2255,7 +2260,6 @@ importers:
       node-fetch: 2.6.11
       oclif: 3.9.0_3s2huiyc3qmqotrkeoiteqprtm
       pkg-up: 3.1.0
-      pm2: 5.3.0
       react: 18.2.0
       tempy: 1.0.1
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
@@ -18070,7 +18074,7 @@ packages:
   /axios/0.21.4_debug@4.3.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
     dev: false
@@ -24081,6 +24085,7 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
+    dev: true
 
   /fontkit/2.0.2:
     resolution: {integrity: sha512-jc4k5Yr8iov8QfS6u8w2CnHWVmbOGtdBtOXMze5Y+QD966Rx6PEVWXSEGwXlsDlKtu1G12cJjcsybnqhSk/+LA==}
@@ -24133,7 +24138,7 @@ packages:
     dependencies:
       async: 1.5.2
       chokidar: 2.1.8
-      eventemitter2: 6.4.4
+      eventemitter2: 6.4.9
       minimatch: 3.1.2
       ps-tree: 1.2.0
     transitivePeerDependencies:

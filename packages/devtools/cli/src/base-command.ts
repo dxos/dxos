@@ -15,6 +15,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
+import { Agent, ForeverDaemon } from '@dxos/agent';
 import { Client, fromAgent, Config } from '@dxos/client';
 import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
@@ -24,8 +25,6 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { Agent } from './agent';
-import { ForeverDaemon } from './agent/forever';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,

@@ -30,12 +30,15 @@
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "express": "4.17.1"
+    "express": "4.17.1",
+    "forever": "^4.0.3",
+    "pm2": "^5.3.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

@@ -30,6 +30,7 @@
     "readme": "oclif readme"
   },
   "dependencies": {
+    "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -60,7 +61,6 @@
     "cli-progress": "^3.11.2",
     "debug": "^4.3.3",
     "do-wrapper": "^4.5.1",
-    "forever": "^4.0.3",
     "fs-extra": "^8.1.0",
     "get-folder-size": "^2.0.1",
     "inquirer": "^8.2.0",
@@ -71,7 +71,6 @@
     "node-fetch": "^2.6.0",
     "oclif": "^3.7.0",
     "pkg-up": "^3.1.0",
-    "pm2": "^5.3.0",
     "react": "^18.2.0",
     "tempy": "^1.0.1",
     "uuid": "^8.3.2",
