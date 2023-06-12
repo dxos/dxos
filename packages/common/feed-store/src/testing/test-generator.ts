@@ -3,7 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { AbstractValueEncoding } from 'hypercore';
+import type { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';
 import { Codec } from '@dxos/codec-protobuf';
