@@ -5,20 +5,21 @@
 import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
 
-import { DX_DATA } from '@dxos/client-protocol';
-
 import { Agent, ProcessDescription } from '../agent';
 import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
-
-const FOREVER_ROOT = `${DX_DATA}/agent/forever`;
 
 /**
  * Manager of daemon processes started with Forever.
  */
-// TODO(burdon): Rename?
 export class ForeverDaemon implements Agent {
+  private readonly _rootDir: string;
+
+  constructor(rootDir: string) {
+    this._rootDir = path.join(rootDir, 'forever');
+  }
+
   async connect(): Promise<void> {
-    initForever();
+    initForever(this._rootDir);
   }
 
   async disconnect() {
@@ -35,9 +36,9 @@ export class ForeverDaemon implements Agent {
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'run', `--listen=${socket}`, '--profile=' + profile],
         uid: profile,
-        logFile: path.join(FOREVER_ROOT, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
-        outFile: path.join(FOREVER_ROOT, `${profile}-out.log`), // Path to log output from child stdout
-        errFile: path.join(FOREVER_ROOT, `${profile}-err.log`), // Path to log output from child stderr
+        logFile: path.join(this._rootDir, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
+        outFile: path.join(this._rootDir, `${profile}-out.log`), // Path to log output from child stdout
+        errFile: path.join(this._rootDir, `${profile}-err.log`), // Path to log output from child stderr
       });
     }
 
@@ -88,6 +89,6 @@ const foreverToProcessDescription = (details: ForeverProcess): ProcessDescriptio
   pid: details?.foreverPid,
 });
 
-const initForever = () => {
-  forever.load({ root: FOREVER_ROOT });
+const initForever = (rootDir: string) => {
+  forever.load({ root: rootDir });
 };

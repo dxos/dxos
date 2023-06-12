@@ -1,23 +1,20 @@
 {
   "name": "@dxos/agent",
   "version": "0.1.45",
-  "description": "DXOS CLI",
+  "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "bin": {
-    "dx-agentd": "./bin/dx-agentd"
-  },
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "/bin",
     "/config",
     "/dist"
   ],
   "scripts": {
-    "start": "ts-node --esm src/echo-proxy.ts"
+    "echo-proxy": "ts-node --esm src/echo-proxy.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -30,6 +27,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",

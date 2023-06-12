@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Agent, ForeverDaemon } from '@dxos/agent';
-import { Client, fromAgent, Config } from '@dxos/client';
+import { Client, fromAgent, Config, DX_DATA } from '@dxos/client';
 import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -261,7 +261,7 @@ export abstract class BaseCommand extends Command {
 
   async execWithDaemon<T>(callback: (agent: Agent) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      const daemon = new ForeverDaemon();
+      const daemon = new ForeverDaemon(`${DX_DATA}/agent`);
       await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');

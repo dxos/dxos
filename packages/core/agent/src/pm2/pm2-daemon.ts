@@ -3,16 +3,14 @@
 //
 
 import assert from 'node:assert';
+import path from 'node:path';
 import { promisify } from 'node:util';
 import pm2, { Proc } from 'pm2';
 
 import { Trigger } from '@dxos/async';
-import { DX_DATA } from '@dxos/client-protocol';
 
 import { Agent, ProcessDescription } from '../agent';
 import { getUnixSocket } from '../util';
-
-const PM2_ROOT = `${DX_DATA}/agent/pm2`;
 
 /**
  * Manager of daemon processes started with PM2.
@@ -20,10 +18,15 @@ const PM2_ROOT = `${DX_DATA}/agent/pm2`;
  * @deprecated because stalls process after command finishes.
  */
 export class Pm2Daemon implements Agent {
+  private readonly _rootDir: string;
   private _pm2?: Pm2;
 
+  constructor(rootDir: string) {
+    this._rootDir = path.join(rootDir, 'pm2');
+  }
+
   async connect() {
-    this._pm2 = await getPm2();
+    this._pm2 = await getPm2(this._rootDir);
   }
 
   async disconnect() {
@@ -117,9 +120,9 @@ type Pm2 = typeof pm2;
 
 const Pm2Api: new (params?: Pm2Params) => Pm2 = (pm2 as any).custom;
 
-const getPm2 = async () => {
+const getPm2 = async (rootDir: string) => {
   const instance = new Pm2Api({
-    pm2_home: `${PM2_ROOT}/pm2`,
+    pm2_home: `${rootDir}/pm2`,
   });
 
   const connected = new Trigger();
