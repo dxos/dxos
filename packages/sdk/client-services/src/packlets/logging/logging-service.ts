@@ -37,7 +37,17 @@ export class LoggingServiceImpl implements LoggingService {
         }
 
         if (shouldLog(entry, filters)) {
-          next(jsonify(entry));
+          const record = {
+            ...entry,
+            timestamp: Date.now(),
+            meta: {
+              ...entry.meta,
+            },
+            context: jsonify(getContextFromEntry(entry)),
+          };
+          delete record.meta?.bugcheck;
+          delete record.meta?.scope;
+          next(record);
         }
       };
 
