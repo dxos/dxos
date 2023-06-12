@@ -68,11 +68,11 @@ export class SwarmMessenger implements SignalMessenger {
     log('received', { from: author, to: recipient, msg: message });
 
     if (message.data?.offer) {
-      await this._handleOffer({ author, recipient, message });
+      return this._handleOffer({ author, recipient, message });
     } else if (message.data?.answer) {
-      await this._resolveAnswers(message);
+      return this._resolveAnswers(message);
     } else if (message.data?.signal) {
-      await this._handleSignal({ author, recipient, message });
+      return this._handleSignal({ author, recipient, message });
     }
   }
 
@@ -155,7 +155,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
-    await this._sendReliableMessage({
+    return this._sendReliableMessage({
       author: recipient,
       recipient: author,
       message: {
@@ -163,7 +163,7 @@ export class SwarmMessenger implements SignalMessenger {
         sessionId: message.sessionId,
         data: { answer },
       },
-    }).catch((err) => log.catch(err));
+    });
   }
 
   private async _handleSignal({
@@ -184,6 +184,6 @@ export class SwarmMessenger implements SignalMessenger {
       data: { signal: message.data.signal },
     };
 
-    await this._onSignal(signalMessage);
+    return this._onSignal(signalMessage);
   }
 }
