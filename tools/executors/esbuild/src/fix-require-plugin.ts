@@ -49,5 +49,5 @@ const processOutput = (output: string) => {
     return acc.replace(m[0], next);
   }, withDefaultImports);
 
-  return `${defaultImports}\n${namedImports}\n${withNamedImports}`;
+  return [defaultImports, namedImports, withNamedImports].filter((str) => str.length > 0).join('\n');
 };
