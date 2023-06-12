@@ -10,6 +10,7 @@ import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
 
 export interface EsbuildExecutorOptions {
@@ -94,6 +95,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
               });
             },
           },
+          fixRequirePlugin(),
           nodeExternalsPlugin({
             packagePath,
             allowList: options.bundlePackages,
