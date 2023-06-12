@@ -3,12 +3,15 @@
 //
 
 import { Command, Config as OclifConfig, Flags } from '@oclif/core';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import oclifHandler from '@oclif/core/handle';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
 import fs from 'node:fs';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -175,35 +178,31 @@ export abstract class BaseCommand extends Command {
     const { flags } = await this.parse(this.constructor as any);
     const { config: configFile } = flags;
 
-    try {
-      const configExists = await exists(configFile);
-      if (!configExists) {
-        const defaultConfigPath = join(
-          dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
-          'config/config-default.yml',
-        );
+    const configExists = await exists(configFile);
+    if (!configExists) {
+      const defaultConfigPath = join(
+        dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+        'config/config-default.yml',
+      );
 
-        const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
-        if (yamlConfig.runtime?.client?.storage?.path) {
-          // Isolate DX_PROFILE storages.
-          yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
-        }
-
-        await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
+      const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
+      if (yamlConfig.runtime?.client?.storage?.path) {
+        // Isolate DX_PROFILE storages.
+        yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
       }
 
-      this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
-    } catch (err) {
-      Sentry.captureException(err);
-      log.error(`Invalid config file: ${configFile}`, err);
-      process.exit(1);
+      await mkdir(dirname(configFile), { recursive: true });
+      await writeFile(configFile, yaml.dump(yamlConfig), 'utf-8');
     }
+
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 
+  // https://oclif.io/docs/error_handling
   override async catch(err: Error) {
     this._failing = true;
     Sentry.captureException(err);
-    this.error(err);
+    return oclifHandler(err);
   }
 
   // Called after each run.
