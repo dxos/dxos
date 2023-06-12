@@ -8,6 +8,8 @@ import { PublicKey } from '@dxos/keys';
 
 import { humanize } from './human-hash';
 
+const MAX_DEPTH = 5;
+
 /**
  * JSON.stringify replacer.
  */
@@ -37,8 +39,10 @@ export function jsonReplacer(this: any, key: string, value: any): any {
 /**
  * Recursively converts an object into a JSON-compatible object.
  */
-export const jsonify = (value: any, visitedObjects = new WeakSet<any>()): any => {
-  if (typeof value === 'function') {
+export const jsonify = (value: any, depth = 0, visitedObjects = new WeakSet<any>()): any => {
+  if (depth > MAX_DEPTH) {
+    return null;
+  } else if (typeof value === 'function') {
     return null;
   } else if (typeof value === 'object' && value !== null) {
     if (visitedObjects.has(value)) {
@@ -50,13 +54,13 @@ export const jsonify = (value: any, visitedObjects = new WeakSet<any>()): any =>
       if (value instanceof Uint8Array) {
         return Buffer.from(value).toString('hex');
       } else if (Array.isArray(value)) {
-        return value.map((x) => jsonify(x, visitedObjects));
+        return value.map((x) => jsonify(x, depth + 1, visitedObjects));
       } else if (typeof value.toJSON === 'function') {
         return value.toJSON();
       } else {
         const res: any = {};
         for (const key of Object.keys(value)) {
-          res[key] = jsonify(value[key], visitedObjects);
+          res[key] = jsonify(value[key], depth + 1, visitedObjects);
         }
         return res;
       }
