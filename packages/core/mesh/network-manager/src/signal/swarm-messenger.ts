@@ -82,7 +82,7 @@ export class SwarmMessenger implements SignalMessenger {
       author: message.author,
       recipient: message.recipient,
       message,
-    }).catch((err) => log.catch(err));
+    });
   }
 
   async offer(message: OfferMessage): Promise<Answer> {

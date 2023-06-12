@@ -109,13 +109,19 @@ export class Connection {
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) =>
-        this._signalMessaging.signal({
-          author: this.ownId,
-          recipient: this.remoteId,
-          sessionId: this.sessionId,
-          topic: this.topic,
-          data: { signal },
-        }),
+        this._signalMessaging
+          .signal({
+            author: this.ownId,
+            recipient: this.remoteId,
+            sessionId: this.sessionId,
+            topic: this.topic,
+            data: { signal },
+          })
+          .catch(async (err) => {
+            // If signal fails treat connection as failed
+            log('Signal failed', { err });
+            await this.close();
+          }),
     });
 
     this._transport.connected.once(() => {
