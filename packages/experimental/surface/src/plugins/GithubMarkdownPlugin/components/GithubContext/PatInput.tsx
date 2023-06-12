@@ -4,13 +4,12 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { Input } from '@dxos/react-appkit';
+import { Input, useTranslation } from '@dxos/aurora';
 
 import { useSplitViewContext } from '../../../SplitViewPlugin';
 import { useOctokitContext } from './OctokitProvider';
 
-export const PatDialog = () => {
+export const PatInput = () => {
   const { t } = useTranslation('composer');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
@@ -27,17 +26,17 @@ export const PatDialog = () => {
   }, [dialogOpen]);
 
   return (
-    <>
-      <Input
-        label={t('github pat label')}
-        value={patValue}
-        data-testid='composer.githubPat'
-        onChange={({ target: { value } }) => setPatValue(value)}
-        slots={{
-          root: { className: 'mlb-2' },
-          input: { autoFocus: true, spellCheck: false, className: 'font-mono' },
-        }}
-      />
-    </>
+    <Input.Root>
+      <div role='none' className='mlb-2'>
+        <Input.Label>{t('github pat label')}</Input.Label>
+        <Input.TextInput
+          autoFocus
+          spellCheck={false}
+          classNames='font-mono'
+          value={patValue}
+          onChange={({ target: { value } }) => setPatValue(value)}
+        />
+      </div>
+    </Input.Root>
   );
 };

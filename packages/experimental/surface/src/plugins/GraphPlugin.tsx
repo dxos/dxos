@@ -5,6 +5,8 @@
 import { IconProps } from '@phosphor-icons/react';
 import React, { UIEvent, FC, createContext, useContext } from 'react';
 
+import type { TFunction } from '@dxos/aurora';
+
 import { definePlugin, Plugin } from '../framework';
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -23,9 +25,10 @@ export type GraphNode<TDatum = any> = {
 
 export type GraphNodeAction = {
   id: string;
-  label: string;
+  // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
+  label: [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
-  invoke: (event: UIEvent) => MaybePromise<void>;
+  invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };
 
 export type GraphProvides = {

@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
 import { observer } from '@dxos/observable-object/react';
 
 import { definePlugin } from '../framework';
@@ -50,6 +50,7 @@ export const useListViewContext = () => useContext(Context);
 export const ListViewContainer = observer(() => {
   const graph = useGraphContext();
   const { setSelected } = useListViewContext();
+  const { t } = useTranslation('composer');
 
   const actions = Object.values(graph.actions).reduce((acc, actions) => [...acc, ...actions], []);
 
@@ -57,8 +58,8 @@ export const ListViewContainer = observer(() => {
     <div>
       <div>
         {actions?.map((action) => (
-          <Button variant='ghost' key={action.id} onClick={action.invoke}>
-            {action.label}
+          <Button variant='ghost' key={action.id} onClick={(event) => action.invoke(t, event)}>
+            {t(...action.label)}
           </Button>
         ))}
       </div>
