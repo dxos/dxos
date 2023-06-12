@@ -16,6 +16,11 @@
     "compile": {
       "executor": "@dxos/esbuild:build",
       "options": {
+        "bundlePackages": [
+          "hypercore",
+          "hypercore-protocol",
+          "noise-protocol"
+        ],
         "entryPoints": [
           "packages/common/hypercore/src/index.ts"
         ],
