@@ -117,7 +117,7 @@ export class Messenger {
       () => {
         log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
-        timeoutHit(new Error(`message not delivered ${reliablePayload.messageId.toHex()}`));
+        timeoutHit(new Error(`message not delivered: ${reliablePayload.messageId.toHex()}`));
         void messageContext.dispose();
       },
       MESSAGE_TIMEOUT,
