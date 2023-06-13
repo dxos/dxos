@@ -25,7 +25,7 @@ import {
 } from '@dxos/react-client';
 
 export const App = () => {
-  useIdentity({ login: true });
+  useIdentity();
   const [space] = useSpaces();
   const tasks = useQuery(space, { type: 'task' });
   return (
@@ -90,7 +90,7 @@ import {
 import { Task } from './schema';
 
 export const App = () => {
-  useIdentity({ login: true });
+  useIdentity();
   const [space] = useSpaces();
   const tasks = useQuery<Task>(space, Task.filter());
   return (

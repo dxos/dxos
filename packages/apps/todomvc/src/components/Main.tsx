@@ -14,7 +14,7 @@ export const Main = () => {
   const navigate = useNavigate();
   const { spaceKey } = useParams();
 
-  useIdentity({ login: true });
+  useIdentity();
   const client = useClient();
   const space = useSpace(PublicKey.safeFrom(spaceKey ?? ''));
   const spaces = useSpaces();

@@ -46,6 +46,7 @@ export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
     name: member.identity.profile?.displayName,
+    presence: member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline',
   }));
 };
 
@@ -58,6 +59,9 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
       },
       name: {
         header: 'Display name',
+      },
+      presence: {
+        header: 'Presence state',
       },
     },
     {
