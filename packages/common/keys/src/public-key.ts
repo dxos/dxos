@@ -71,6 +71,7 @@ export class PublicKey implements Equatable {
       hex = hex.slice(2);
     }
 
+    // TODO(burdon): Test if key.
     return new PublicKey(new Uint8Array(Buffer.from(hex, 'hex')));
   }
 

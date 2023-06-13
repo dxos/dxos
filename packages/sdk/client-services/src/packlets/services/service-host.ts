@@ -17,6 +17,8 @@ import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 
+import { ServiceContext } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
@@ -27,8 +29,6 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
-import { ServiceContext } from './service-context';
-import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
   /**
@@ -182,6 +182,7 @@ export class ClientServicesHost {
     if (this._open) {
       return;
     }
+
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
 

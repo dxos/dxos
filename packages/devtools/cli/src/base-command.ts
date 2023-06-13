@@ -225,7 +225,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override async catch(err: Error) {
     this._failing = true;
     Sentry.captureException(err);
-    return super.catch(err);
+    throw err;
   }
 
   // Called after each run.
