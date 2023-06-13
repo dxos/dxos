@@ -7,12 +7,12 @@ import React, { Dispatch, HTMLAttributes, PropsWithChildren, ReactNode, SetState
 import { FileUploader } from 'react-drag-drop-files';
 
 import { Document } from '@braneframe/types';
-import { Button, DropdownMenu, ThemeContext, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, ThemeContext, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Dialog, Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
 
-export const StandaloneDocumentPage = observer(
+export const StandaloneLayout = observer(
   ({
     children,
     document,
@@ -30,7 +30,7 @@ export const StandaloneDocumentPage = observer(
     const { t } = useTranslation('composer');
     const themeContext = useThemeContext();
     return (
-      <>
+      <Main.Content classNames='min-bs-full'>
         <div role='none' className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white dark:bg-neutral-925 flex flex-col'>
           <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
             <Input
@@ -92,7 +92,7 @@ export const StandaloneDocumentPage = observer(
             </Dialog>
           )}
         </ThemeContext.Provider>
-      </>
+      </Main.Content>
     );
   },
 );

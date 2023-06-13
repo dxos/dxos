@@ -30,12 +30,14 @@
     "@dxos/text-model": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/dompurify": "^3.0.2",
+    "@types/lodash.update": "^4.10.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",
     "jszip": "^3.10.1",
+    "lodash.update": "^4.10.2",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -60,6 +62,7 @@
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",
     "jszip": "^3.10.1",
+    "lodash.update": "^4.10.2",
     "octokit": "^2.0.14",
     "react-drag-drop-files": "^2.3.8"
   }

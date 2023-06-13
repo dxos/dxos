@@ -94,7 +94,7 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
             <Tooltip.Trigger asChild>
               <Button
                 variant='ghost'
-                classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                classNames='shrink-0 pli-2 pointer-fine:pli-1 self-start'
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
                 <DotsThreeVertical className={getSize(4)} />
