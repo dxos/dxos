@@ -5,23 +5,21 @@
 import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { useSidebar, useTranslation, TreeItem, Tooltip, DropdownMenu, Button } from '@dxos/aurora';
+import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, getSize } from '@dxos/aurora-theme';
-import { SpaceState } from '@dxos/client';
-import { useMulticastObservable } from '@dxos/react-async';
-import { Space, observer } from '@dxos/react-client';
-import { GraphNode, TreeView } from '@dxos/react-surface';
+import { observer } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from './getSpaceDisplayName';
+import { Surface } from '../../framework';
+import { GraphNode } from '../GraphPlugin';
+import { TreeView } from './TreeView';
 
-export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Space> }) => {
-  const space = item.data!;
-  const [primaryAction, ...actions] = item.actions ?? [];
+export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
+  const [primaryAction, ...actions] = node.actions ?? [];
+  // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
   const hasActiveDocument = false;
-  const spaceSate = useMulticastObservable(space.state);
-  const disabled = spaceSate !== SpaceState.READY;
-  const error = spaceSate === SpaceState.ERROR;
+  const disabled = node.attributes?.disabled;
+  const error = node.attributes?.error;
   const { sidebarOpen } = useSidebar();
 
   const suppressNextTooltip = useRef<boolean>(false);
@@ -31,10 +29,8 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
   const [open, setOpen] = useState(true /* todo(thure): Open if document within is selected */);
 
   useEffect(() => {
-    // todo(thure): Open if document within is selected
+    // todo(thure): Open if child within is selected
   }, []);
-
-  const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
@@ -63,7 +59,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
           ]}
           onClick={() => setOpen(!open)}
         >
-          {spaceDisplayName}
+          <Surface role='treeitem' data={node} />
         </TreeItem.Heading>
         <Tooltip.Root
           open={optionsTooltipOpen}
@@ -154,7 +150,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={item.children} parent={item} />
+        <TreeView items={node.children} parent={node} />
       </TreeItem.Body>
     </TreeItem.Root>
   );
