@@ -66,7 +66,7 @@ export default class Stats extends BaseCommand {
           const stream = host.subscribeToSpaces({});
           stream?.subscribe(async (msg) => {
             data.spaces = msg.spaces!.map((info) => {
-              const type = info.key.equals(identity.spaceKey) ? 'halo' : 'echo';
+              const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
               const space = client.getSpace(info.key);
               const result = space?.db.query();
 
