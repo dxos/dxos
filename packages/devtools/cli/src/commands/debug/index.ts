@@ -34,7 +34,6 @@ export default class Debug extends BaseCommand {
         }));
       }
 
-      console.log('debug', data);
       return data;
     });
   }
