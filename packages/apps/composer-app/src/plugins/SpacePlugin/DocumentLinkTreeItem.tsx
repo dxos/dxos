@@ -50,7 +50,9 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
         )}
       >
         <button
+          role='link'
           {...(!sidebarOpen && { tabIndex: -1 })}
+          data-itemid={item.id}
           onClick={() => {
             treeView.selected = [item.parent!.id, item.id];
             !isLg && closeSidebar();
