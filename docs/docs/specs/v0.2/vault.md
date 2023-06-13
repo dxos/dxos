@@ -1,6 +1,6 @@
 # Vault Application
 
-The HALO Vault is a Progressive Web App which stores and manages the user's HALO 0identity and ECHO data. It's most similar to a "wallet" or a "password manager".
+The HALO Vault is a Progressive Web App which stores and manages the user's HALO identity and ECHO data. It's most similar to a "wallet" or a "password manager".
 
 The HALO Vault also provides the DXOS Shell for use when logging into an application, and managing access to ECHO spaces. Shell UI is designed to be consumed via an iframe owned by the DXOS Client SDK.
 
