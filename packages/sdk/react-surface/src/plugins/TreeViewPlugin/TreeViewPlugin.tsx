@@ -44,7 +44,7 @@ export const useTreeView = () => useContext(Context);
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
 
-  const identity = useIdentity();
+  const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const themeContext = useThemeContext();
   const { t } = useTranslation('composer');

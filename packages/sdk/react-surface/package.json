@@ -13,6 +13,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "react-router": "^6.4.0",

@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { Config, Defaults, Local } from '@dxos/config';
 import {
   Client,
-  ClientProvider,
-  Config,
+  ClientContext,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
   ShellController,
+  SystemStatus,
 } from '@dxos/react-client';
 
 import { definePlugin } from '../framework';
@@ -20,14 +21,13 @@ export type ClientPluginProvides = {
   setLayout: ShellController['setLayout'];
 };
 
+const client = new Client({ config: new Config(Local(), Defaults()) });
+
 export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
   meta: {
     id: 'dxos:ClientPlugin',
   },
   init: async () => {
-    const client = new Client({
-      config: new Config({ runtime: { client: { remoteSource: 'https://halo.dev.dxos.org/vault.html' } } }),
-    });
     await client.initialize();
 
     return {
@@ -40,7 +40,23 @@ export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
           await client.services.setLayout(layout, options);
         }
       },
-      context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
+      context: ({ children }) => {
+        const [status, setStatus] = useState<SystemStatus | null>(null);
+
+        useEffect(() => {
+          if (!client) {
+            return;
+          }
+
+          const subscription = client.status.subscribe((status) => setStatus(status));
+          return () => subscription.unsubscribe();
+        }, [client, setStatus]);
+
+        return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
+      },
     };
+  },
+  unload: async () => {
+    await client.destroy();
   },
 });

@@ -30,6 +30,9 @@
       "path": "../../ui/aurora-theme"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../react-client"
     }
   ],
