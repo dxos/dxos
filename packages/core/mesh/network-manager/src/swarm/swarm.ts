@@ -99,7 +99,11 @@ export class Swarm {
       .listen({
         peerId: this._ownPeerId,
         payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: async (message) => await this._swarmMessenger.receiveMessage(message),
+        onMessage: async (message) => {
+          await this._swarmMessenger
+            .receiveMessage(message)
+            .catch((err) => log('Error while receiving message', { err }));
+        },
       })
       .catch((error) => log.catch(error));
 

@@ -85,7 +85,7 @@ importers:
       chai-dom: ^1.11.0
       chalk: ^4.1.0
       esbuild: ^0.16.14
-      esbuild-node-externals: ^1.6.0
+      esbuild-node-externals: ^1.7.0
       esbuild-plugin-raw: ^0.1.7
       esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.41.0
@@ -193,7 +193,7 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
-      esbuild-node-externals: 1.6.0_esbuild@0.16.14
+      esbuild-node-externals: 1.7.0_esbuild@0.16.14
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -991,7 +991,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       debug: ^4.3.3
-      hypercore: ^9.12.0
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
     dependencies:
@@ -1007,7 +1006,6 @@ importers:
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
       debug: 4.3.4
-      hypercore: 9.12.0
       random-access-storage: 3.0.0
       streamx: 2.12.5
     devDependencies:
@@ -1037,8 +1035,11 @@ importers:
       debug: ^4.3.3
       hypercore: ^9.12.0
       hypercore-protocol: ^8.0.7
+      noise-protocol: 3.0.1
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
+      sodium-native: ^3.2.0
+      sodium-universal: ^3.0.2
       streamx: ^2.12.5
     dependencies:
       '@dxos/async': link:../async
@@ -1048,9 +1049,9 @@ importers:
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
-      hypercore: 9.12.0
-      hypercore-protocol: 8.0.7
       readable-stream: 3.6.0
+      sodium-native: 3.4.1
+      sodium-universal: 3.1.0
       streamx: 2.12.5
     devDependencies:
       '@dxos/log': link:../log
@@ -1061,6 +1062,9 @@ importers:
       '@types/randombytes': 2.0.0
       '@types/readable-stream': 2.3.14
       debug: 4.3.4
+      hypercore: 9.12.0
+      hypercore-protocol: 8.0.7
+      noise-protocol: 3.0.1
       random-access-memory: 4.1.0
 
   packages/common/keys:
@@ -1079,6 +1083,7 @@ importers:
   packages/common/log:
     specifiers:
       '@dxos/node-std': workspace:*
+      '@dxos/util': workspace:*
       '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': 1.3.21
       '@types/js-yaml': ^4.0.5
@@ -1094,6 +1099,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/node-std': link:../node-std
+      '@dxos/util': link:../util
       chalk: 4.1.2
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
@@ -2263,6 +2269,7 @@ importers:
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
+      localforage: ^1.10.0
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -2305,6 +2312,7 @@ importers:
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/bytes': 3.1.1
       bytes: 3.1.2
+      localforage: 1.10.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -3891,11 +3899,14 @@ importers:
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/dompurify': ^3.0.2
+      '@types/lodash.update': ^4.10.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       dompurify: ^3.0.3
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
+      jszip: ^3.10.1
+      lodash.update: ^4.10.2
       octokit: ^2.0.14
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3919,6 +3930,8 @@ importers:
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
+      jszip: 3.10.1
+      lodash.update: 4.10.2
       octokit: 2.0.14
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
     devDependencies:
@@ -3926,6 +3939,7 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/log': link:../../common/log
       '@dxos/react-shell': link:../../sdk/react-shell
+      '@types/lodash.update': 4.10.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -18402,6 +18416,7 @@ packages:
     resolution: {integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==}
     dependencies:
       codecs: 2.2.0
+    dev: true
 
   /abstract-leveldown/6.2.3:
     resolution: {integrity: sha512-BsLm5vFMRUrrLeCcRc+G0t2qOaTzpoJQLOubq2XM72eNpjF5UdU5o/5NvlNhx95XHcAvcl8OMXr4mlg/fRgUXQ==}
@@ -19217,7 +19232,7 @@ packages:
 
   /atomic-batcher/1.0.2:
     resolution: {integrity: sha512-EFGCRj4kLX1dHv1cDzTk+xbjBFj1GnJDpui52YmEcxxHHEWjYyT6l51U7n6WQ28osZH4S9gSybxe56Vm7vB61Q==}
-    dev: false
+    dev: true
 
   /atomic-sleep/1.0.0:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
@@ -19795,7 +19810,7 @@ packages:
     dependencies:
       buffer-alloc-unsafe: 1.1.0
       varint: 4.0.1
-    dev: false
+    dev: true
 
   /bl/0.9.5:
     resolution: {integrity: sha512-njlCs8XLBIK7LCChTWfzWuIAxkpmmLXcL7/igCofFT1B039Sz0IPnAmosN5QaO22lU4qr8LcUz2ojUlE6pLkRQ==}
@@ -21106,6 +21121,7 @@ packages:
 
   /codecs/2.2.0:
     resolution: {integrity: sha512-+xi2ENsvchtUNa8oBUU58gHgmyN6BEEeZ8NIEgeQ0XnC+AoyihivgZYe+OOiNi+fLy/NUowugwV5gP8XWYDm0Q==}
+    dev: true
 
   /codem-isoboxer/0.3.6:
     resolution: {integrity: sha512-LuO8/7LW6XuR5ERn1yavXAfodGRhuY2yP60JTZIw5yNYMCE5lUVbk3NFUCJxjnphQH+Xemp5hOGb1LgUXm00Xw==}
@@ -21691,7 +21707,7 @@ packages:
 
   /count-trailing-zeros/1.0.1:
     resolution: {integrity: sha512-ZnX7MMZDpu7R1aMwQRe0P1RGvfnXHibhTE+Oe/BHOCAZ/Mrp0Nv8VwaZ3G5cfFHMl5RrZ9s3HxnYoaVNB2gzgA==}
-    dev: false
+    dev: true
 
   /crc-32/1.2.2:
     resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
@@ -23653,15 +23669,15 @@ packages:
     dev: true
     optional: true
 
-  /esbuild-node-externals/1.6.0_esbuild@0.16.14:
-    resolution: {integrity: sha512-LmQnnDVMVTvMmPBpBDrCtub7CVW9aavBvF4ZjOLRNy/+ODoHz3kLjvDdMS/UKn1eJ5WrlAImiYsD3hF4YKyGkw==}
+  /esbuild-node-externals/1.7.0_esbuild@0.16.14:
+    resolution: {integrity: sha512-nfY3hxtO2anCTZ87LgfzCTfBuyG6de+NyiCNMF1mgrBufS0NgoYlBwF77HHuOInsJLxsAJf0BfLeV6ekZ3hRuA==}
     engines: {node: '>=12'}
     peerDependencies:
-      esbuild: 0.12 - 0.16
+      esbuild: 0.12 - 0.17
     dependencies:
       esbuild: 0.16.14
       find-up: 5.0.0
-      tslib: 2.4.1
+      tslib: 2.5.0
     dev: true
 
   /esbuild-openbsd-64/0.14.54:
@@ -24831,7 +24847,7 @@ packages:
     resolution: {integrity: sha512-t8HYqkuE3YEqNcyWlAfh55479aTxO+GpYwvQvJppYqyBfSmRdNIhzY2m09FKN/MENTzq4wH6heHOIvsPyMAwvQ==}
     dependencies:
       count-trailing-zeros: 1.0.1
-    dev: false
+    dev: true
 
   /fast-check/3.3.0:
     resolution: {integrity: sha512-Zu6tZ4g0T4H9Tiz3tdNPEHrSbuICj7yhdOM9RCZKNMkpjZ9avDV3ORklXaEmh4zvkX24/bGZ9DxKKqWfXttUqw==}
@@ -25307,7 +25323,7 @@ packages:
 
   /flat-tree/1.9.0:
     resolution: {integrity: sha512-WRu5/q9fcdL9f7L6Ahq8fR153e5Zr5aU6plPHupN6JDWuvEJbMjrEQprge3/I7ytndHC6/GUNg5Rg8XEisuv5w==}
-    dev: false
+    dev: true
 
   /flat/5.0.2:
     resolution: {integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==}
@@ -25635,7 +25651,7 @@ packages:
     dependencies:
       napi-macros: 2.0.0
       node-gyp-build: 4.5.0
-    dev: false
+    dev: true
     optional: true
 
   /fsevents/1.2.13:
@@ -26567,6 +26583,7 @@ packages:
       nanoassert: 1.1.0
       sodium-native: 3.4.1
       sodium-universal: 3.1.0
+    dev: true
 
   /hmac-drbg/1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
@@ -26949,7 +26966,7 @@ packages:
 
   /hypercore-cache/1.0.2:
     resolution: {integrity: sha512-AJ/q7y6EOrXnOH/4+DVcfDygsh1ZXMRGvNc67GBNqwCt22oSCOWhRI6EJ+3HEJciM9M2oSm1WX3qg6kgRhT/Gw==}
-    dev: false
+    dev: true
 
   /hypercore-crypto/2.3.2:
     resolution: {integrity: sha512-GzHgVOfr5utdiJG5QNcQZ0oo+/YQNbekpg429x00YpUobBraX2qEL3E+iH/EFEIdCQSiGHfToWyYw+OpznSjww==}
@@ -26963,7 +26980,7 @@ packages:
       random-access-file: 2.2.1
     optionalDependencies:
       fsctl: 1.0.0
-    dev: false
+    dev: true
 
   /hypercore-protocol/8.0.7:
     resolution: {integrity: sha512-b5TXhqXUZ+Z7M/5/PlCTgElfufDRa3EzACd7y7BA7owLkxQreaUQ58wUO7nzJppDP1bnC2Hz6Hg7nlRPc75bKw==}
@@ -26979,12 +26996,13 @@ packages:
       timeout-refresh: 1.0.3
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /hypercore-streams/1.0.1:
     resolution: {integrity: sha512-OcN2zq9DEoArC84q9VCSrf9Hx1QUkR6ineCOwyOwhE4v/8aUTOx87mAk1nyjMOf76DQmF+tl2vnS2FssLx5N+Q==}
     dependencies:
       streamx: 2.12.5
-    dev: false
+    dev: true
 
   /hypercore/9.12.0:
     resolution: {integrity: sha512-wIlM4Iwl618NcmsY+1O/X08Cx/bY6ti3LXmQhRnPZFGQPqAeX0x53hASckW082IIAVWzXD3zcmREw5yEINzb4w==}
@@ -27015,7 +27033,7 @@ packages:
       unordered-set: 2.0.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
+    dev: true
 
   /hyperlinker/1.0.0:
     resolution: {integrity: sha512-Ty8UblRWFEcfSuIaajM34LdPXIhbs1ajEX/BBPv24J+enSVaEVY63xQ6lTO9VRYS5LAoghIG0IDJ+p+IPzKUQQ==}
@@ -27350,6 +27368,7 @@ packages:
 
   /inspect-custom-symbol/1.1.1:
     resolution: {integrity: sha512-GOucsp9EcdlLdhPUyOTvQDnbFJtp2WBWZV1Jqe+mVnkJQBL3w96+fB84C+JL+EKXOspMdB0eMDQPDp5w9fkfZA==}
+    dev: true
 
   /interface-datastore/6.1.1:
     resolution: {integrity: sha512-AmCS+9CT34pp2u0QQVXjKztkuq3y5T+BIciuiHDDtDZucZD8VudosnSdUyXJV6IsRkN5jc4RFDhCk1O6Q3Gxjg==}
@@ -29712,7 +29731,7 @@ packages:
 
   /last-one-wins/1.0.4:
     resolution: {integrity: sha512-t+KLJFkHPQk8lfN6WBOiGkiUXoub+gnb2XTYI2P3aiISL+94xgZ1vgz1SXN/N4hthuOoLXarXfBZPUruyjQtfA==}
-    dev: false
+    dev: true
 
   /latest-version/7.0.0:
     resolution: {integrity: sha512-KvNT4XqAMzdcL6ka6Tl3i2lYeFDgXNCuIX+xNx6ZMVR1dFq+idXd9FLKNMOIx0t9mJ9/HudyX4oZWXZQ0UJHeg==}
@@ -31036,7 +31055,7 @@ packages:
 
   /memory-pager/1.5.0:
     resolution: {integrity: sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==}
-    dev: false
+    dev: true
 
   /merge-descriptors/1.0.1:
     resolution: {integrity: sha512-cCi6g3/Zr1iqQi6ySbseM1Xvooa98N0w31jzUYrXPX2xqObmFGHJ0tQ5u74H3mVh7wLouTseZyYIq39g8cNp1w==}
@@ -31060,7 +31079,7 @@ packages:
     dependencies:
       flat-tree: 1.9.0
       streamx: 2.12.5
-    dev: false
+    dev: true
 
   /mermaid/10.0.2:
     resolution: {integrity: sha512-slwoB9WdNUT+/W9VhxLYRLZ0Ey12fIE+cAZjm3FmHTD+0F1uoJETfsNbVS1POnvQZhFYzfT6/z6hJZXgecqVBA==}
@@ -31966,6 +31985,7 @@ packages:
 
   /nanoassert/1.1.0:
     resolution: {integrity: sha512-C40jQ3NzfkP53NsO8kEOFd79p4b9kDXQMwgiY1z8ZwrDZgUyom0AHwGegF4Dm99L+YoYhuaB0ceerUcXmqr1rQ==}
+    dev: true
 
   /nanoassert/2.0.0:
     resolution: {integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==}
@@ -31982,6 +32002,7 @@ packages:
 
   /nanoguard/1.3.0:
     resolution: {integrity: sha512-K/ON5wyflyPyZskdeT3m7Y2gJVkm3QLdKykMCquAbK8A2erstyMpZUc3NG8Nz5jKdfatiYndONrlmLF8+pGl+A==}
+    dev: true
 
   /nanoid/3.1.20:
     resolution: {integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==}
@@ -32047,11 +32068,10 @@ packages:
     resolution: {integrity: sha512-OI5dswqipmlYfyL3k/YMm7mbERlh4Bd1KuKdMHpeoVD1iVxqxaTMKleB4qaA2mbQZ6/zMNSxCXv9M9P/YbqTuQ==}
     dependencies:
       inherits: 2.0.4
-    dev: false
+    dev: true
 
   /napi-macros/2.0.0:
     resolution: {integrity: sha512-A0xLykHtARfueITVDernsAWdtIMbOJgKgcluwENp3AlsKN/PloyO10HtmoqnFAQAcxPkgZN7wdfPfEd0zNGxbg==}
-    dev: false
 
   /native-fetch/3.0.0_hmwa7nplpltavckpkeobtw6pv4:
     resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
@@ -32377,6 +32397,7 @@ packages:
       hmac-blake2b: 2.0.0
       nanoassert: 2.0.0
       sodium-universal: 3.1.0
+    dev: true
 
   /noms/0.0.0:
     resolution: {integrity: sha512-lNDU9VJaOPxUmXcLb+HQFeUgQQPtMI24Gt6hgfuMHRJgMRHMF/qZ4HJD3GDru4sSw9IQl2jPjAYnQrdIeLbwow==}
@@ -34228,6 +34249,7 @@ packages:
 
   /pretty-hash/1.0.1:
     resolution: {integrity: sha512-2jybsj3Vz6wLSyOtlRWgbUmQ/K4ROta4iR4voYeC3tgJekeWTn9NcwTVFlhqVVPB2qvVOtLTvUF6yMtG3SUIZA==}
+    dev: true
 
   /pretty-hrtime/1.0.3:
     resolution: {integrity: sha512-66hKPCr+72mlfiSjlEB1+45IjXSqvVAIy6mocupoww4tBFE9R9IhwwUGoI4G++Tc9Aq+2rxOt0RFU6gPcrte0A==}
@@ -34587,6 +34609,7 @@ packages:
       b4a: 1.6.0
       signed-varint: 2.0.1
       varint: 5.0.0
+    dev: true
 
   /protocol-buffers-schema/3.6.0:
     resolution: {integrity: sha512-TdDRD+/QNdrCGCE7v8340QyuXd4kIWIgapsE2+n/SaGiSSbomYl4TjHlvIoCWRpE7wFt02EpB35VVA2ImcBVqw==}
@@ -34836,7 +34859,6 @@ packages:
     dependencies:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.3
-    dev: false
 
   /random-access-idb-mutable-file/0.3.0:
     resolution: {integrity: sha512-CdVAoFNNDn5uAgYOJ8J3ICSaFzaMOa95XnYcX+taj4jirJuRASiTyQSOGR+Z0K8ZkBGuj0A8ivyeRAWuxRCgQA==}
@@ -37037,12 +37059,14 @@ packages:
     resolution: {integrity: sha512-abgDPg1106vuZZOvw7cFwdCABddfJRz5akcCcchzTbhyhYnsG31y4AlZEgp315T7W3nQq5P4xeOm186ZiPVFzw==}
     dependencies:
       varint: 5.0.2
+    dev: true
 
   /simple-handshake/3.0.0:
     resolution: {integrity: sha512-8Te0vlxvhpNCMgwnWFTbRR6Re2l8hq8wyXQc3lY9dPYXFxYwVkh79LhDQHFCOWRavmbiOdfqq1l5HT/73Rn2/w==}
     dependencies:
       nanoassert: 2.0.0
       noise-protocol: 3.0.1
+    dev: true
 
   /simple-hypercore-protocol/2.1.2:
     resolution: {integrity: sha512-zCwEMw/Evd5iDPkVEjO+1T3OJqbuDukJSuZtMZ7A7Wfn0RxmaJFbwngfUnDNyQFbPMxiINNxGBMD85fFJF8ghA==}
@@ -37054,11 +37078,13 @@ packages:
       simple-message-channels: 1.2.1
       varint: 5.0.2
       xsalsa20-universal: 1.0.0
+    dev: true
 
   /simple-message-channels/1.2.1:
     resolution: {integrity: sha512-knSr69GKW9sCjzpoy817xQelpOASUQ53TXCBcSLDKLE7GTGpUAhZzOZYrdbX2Ig//m+8AIrNp7sM7HDNHBRzXw==}
     dependencies:
       varint: 5.0.2
+    dev: true
 
   /simple-peer/9.11.0:
     resolution: {integrity: sha512-qvdNu/dGMHBm2uQ7oLhQBMhYlrOZC1ywXNCH/i8I4etxR1vrjCnU6ZSQBptndB1gcakjo2+w4OHo7Sjza1SHxg==}
@@ -37446,7 +37472,7 @@ packages:
     resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}
     dependencies:
       memory-pager: 1.5.0
-    dev: false
+    dev: true
 
   /spawn-command/0.0.2-1:
     resolution: {integrity: sha512-n98l9E2RMSJ9ON1AKisHzz7V42VDiBQGY6PB1BwRglz99wpVsSuGzQ+jOi6lFXBGVTCrRpltvjm+/XA+tpeJrg==}
@@ -38629,6 +38655,7 @@ packages:
 
   /timeout-refresh/1.0.3:
     resolution: {integrity: sha512-Mz0CX4vBGM5lj8ttbIFt7o4ZMxk/9rgudJRh76EvB7xXZMur7T/cjRiH2w4Fmkq0zxf2QpM8IFvOSRn8FEu3gA==}
+    dev: true
 
   /timers-browserify/2.0.12:
     resolution: {integrity: sha512-9phl76Cqm6FhSX9Xe1ZUAMLtm1BLkKj2Qd5ApyWkXzsMRaA7dgr81kf4wJmQf/hAvg8EEyJxDo3du/0KlhPiKQ==}
@@ -39250,7 +39277,7 @@ packages:
     resolution: {integrity: sha512-9QqdvpGQTXgxthP+lY4e/gIBy+RuqcBaC6JVwT5I3bDLgT/btL6twZMR0pI3/Fgah9G/pdwzIprE5gL6v9UvyQ==}
     dependencies:
       buffer-alloc: 1.2.0
-    dev: false
+    dev: true
 
   /uint64be/3.0.0:
     resolution: {integrity: sha512-mliiCSrsE29aNBI7O9W5gGv6WmA9kBR8PtTt6Apaxns076IRdYrrtFhXHEWMj5CSum3U7cv7/pi4xmi4XsIOqg==}
@@ -39561,11 +39588,11 @@ packages:
 
   /unordered-array-remove/1.0.2:
     resolution: {integrity: sha512-45YsfD6svkgaCBNyvD+dFHm4qFX9g3wRSIVgWVPtm2OCnphvPxzJoe20ATsiNpNJrmzHifnxm+BN5F7gFT/4gw==}
-    dev: false
+    dev: true
 
   /unordered-set/2.0.1:
     resolution: {integrity: sha512-eUmNTPzdx+q/WvOHW0bgGYLWvWHNT3PTKEQLg0MAQhc0AHASHVHoP/9YytYd4RBVariqno/mEUhVZN98CmD7bg==}
-    dev: false
+    dev: true
 
   /unpipe/1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
@@ -39947,10 +39974,11 @@ packages:
 
   /varint/4.0.1:
     resolution: {integrity: sha512-vu4cpCqZHA4u77jWdOZlXtXHJofIIyq51DtzstbrvI9e1I1ELseAJLxYr47N/DdLPFGfYMLY1HqAURSTKKJ6ww==}
-    dev: false
+    dev: true
 
   /varint/5.0.0:
     resolution: {integrity: sha512-gC13b/bWrqQoKY2EmROCZ+AR0jitc6DnDGaQ6Ls9QpKmuSgJB1eQ7H3KETtQm7qSdMWMKCmsshyCmUwMLh3OAA==}
+    dev: true
 
   /varint/5.0.2:
     resolution: {integrity: sha512-lKxKYG6H03yCZUpAGOPOsMcGxd1RHCu1iKvEHYDPmTyq2HueGhD73ssNBqqQWfvYs04G9iUFRvmAVLW20Jw6ow==}
@@ -42012,6 +42040,7 @@ packages:
     dependencies:
       sodium-native: 3.4.1
       xsalsa20: 1.2.0
+    dev: true
 
   /xsalsa20/1.2.0:
     resolution: {integrity: sha512-FIr/DEeoHfj7ftfylnoFt3rAIRoWXpx2AoDfrT2qD2wtp7Dp+COajvs/Icb7uHqRW9m60f5iXZwdsJJO3kvb7w==}

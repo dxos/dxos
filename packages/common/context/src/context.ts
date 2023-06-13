@@ -142,7 +142,8 @@ export class Context {
         }
       },
     });
-    this.onDispose(() => newCtx.dispose());
+    const clearDispose = this.onDispose(() => newCtx.dispose());
+    newCtx.onDispose(clearDispose);
     return newCtx;
   }
 }
