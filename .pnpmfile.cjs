@@ -95,6 +95,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'simple-handshake': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      break;
+    }
+
     case 'storybook-addon-react-router-v6': {
       packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
       packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
