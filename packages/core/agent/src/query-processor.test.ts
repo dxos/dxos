@@ -4,6 +4,8 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 import { Bool, Op, Query } from './query';
 import { QueryProcessor } from './query-processor';
 

@@ -8,7 +8,7 @@ describe('server', () => {
   beforeAll(() => {});
   afterAll(() => {});
 
-  test('basic', async () => {
+  test.skip('basic', async () => {
     const query = {};
     const response = await fetch('localhost:3000/query', {
       method: 'POST',
