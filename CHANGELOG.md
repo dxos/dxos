@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.48](https://github.com/dxos/dxos/compare/v0.1.47...v0.1.48) (2023-06-13)
+
+
+### Features
+
+* **devtools:** Make debug link congruent with env ([e004f3c](https://github.com/dxos/dxos/commit/e004f3cecb8a97c06b6318a200d9553649c0d95f))
+* **surface:** Composer’s embedded functionality ([#3450](https://github.com/dxos/dxos/issues/3450)) ([bf62bb6](https://github.com/dxos/dxos/commit/bf62bb63781a22952f5ef845144e92233491966f))
+* **surface:** Empty states, Document actions, Space backup & restore ([#3390](https://github.com/dxos/dxos/issues/3390)) ([5a1dfdc](https://github.com/dxos/dxos/commit/5a1dfdc2e4389421146f1bafc01422e2462f1670))
+
+
+### Bug Fixes
+
+* Context derive memory leak ([#3446](https://github.com/dxos/dxos/issues/3446)) ([bd3cb81](https://github.com/dxos/dxos/commit/bd3cb81ce959e97a491b4a6f6131241f1806761a))
+* **devtools-extension:** Delete localStorage usage ([0f6b7be](https://github.com/dxos/dxos/commit/0f6b7be0a9bf1e17124cb0815ecf3fa9e34d4da9))
+* Drop connection if signal fails ([#3445](https://github.com/dxos/dxos/issues/3445)) ([f3de843](https://github.com/dxos/dxos/commit/f3de843c485af12477583d7120855f241e69a65c))
+* **hypercore:** bundle hypercore and pin noise-protocol ([#3379](https://github.com/dxos/dxos/issues/3379)) ([e832858](https://github.com/dxos/dxos/commit/e832858e22d751e77559acae82cdd887b812a01d))
+
 ## [0.1.47](https://github.com/dxos/dxos/compare/v0.1.46...v0.1.47) (2023-06-10)
 
 
