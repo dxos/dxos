@@ -77,7 +77,6 @@ export class FaasConnector {
 
   async open() {
     await this._client.initialize();
-
     await this._watchTriggers();
     await this._remountTask.schedule();
   }
@@ -93,7 +92,6 @@ export class FaasConnector {
 
     const update = () => {
       const spaces = this._client.spaces.get();
-
       for (const space of spaces) {
         if (observedSpaces.has(space)) {
           continue;
@@ -150,7 +148,6 @@ export class FaasConnector {
 
   private async _unmountTriggers() {
     const oldTriggers = this._mountedTriggers.splice(0, this._mountedTriggers.length);
-
     for (const { clear, trigger } of oldTriggers) {
       await clear();
       log.info('unmounted trigger', { trigger: trigger.id });
@@ -161,7 +158,6 @@ export class FaasConnector {
     await this._unmountTriggers();
 
     const triggers = await this._getTriggers();
-
     log.info('discovered triggers', { triggers: triggers.length });
 
     await Promise.all(
@@ -192,8 +188,8 @@ export class FaasConnector {
     if (this._ctx.disposed) {
       return;
     }
-    const updatedIds = new Set<string>();
 
+    const updatedIds = new Set<string>();
     const invoker = new DeferredTask(ctx, async () => {
       const updatedObjects = Array.from(updatedIds);
       updatedIds.clear();
@@ -232,7 +228,6 @@ export class FaasConnector {
 
   private async _dispatch(event: DatabaseEvent) {
     const installedFunctions = await this._getFunctions();
-
     const installedFunction = installedFunctions.find((func) => func.name === event.trigger.function.name);
     if (!installedFunction) {
       log.warn('function not found', { function: event.trigger.function.name });
@@ -264,7 +259,6 @@ export class FaasConnector {
     });
 
     const body = await res.text();
-
     return { body, status: res.status };
   }
 
@@ -278,7 +272,6 @@ export class FaasConnector {
     });
 
     const functions: FunctionListEntry[] = await res.json();
-
     return functions;
   }
 }

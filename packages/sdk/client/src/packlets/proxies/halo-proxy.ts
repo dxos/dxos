@@ -170,6 +170,8 @@ export class HaloProxy implements Halo {
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
     this._identityChanged.emit(identity);
 
+    console.log('???');
+
     return identity;
   }
 

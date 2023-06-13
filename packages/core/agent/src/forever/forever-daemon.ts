@@ -51,6 +51,7 @@ export class ForeverDaemon implements Agent {
     if (await this.isRunning(profile)) {
       forever.stop(profile);
     }
+
     removeSocketFile(profile);
     return this._getProcess(profile);
   }
@@ -71,10 +72,13 @@ export class ForeverDaemon implements Agent {
       forever.list(false, (err, processes) => {
         if (err) {
           reject(err);
+          return;
         }
+
         resolve(processes ?? []);
       });
     });
+
     return result.map((details) => foreverToProcessDescription(details));
   }
 

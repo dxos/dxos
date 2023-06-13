@@ -257,8 +257,16 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     assert(this._clientConfig);
     if (!this._client) {
       log('Creating client...');
-      this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
-      await this._client.initialize();
+      try {
+        log('Connecting to agent...', { profile: flags.profile });
+        this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
+        await this._client.initialize();
+      } catch (err) {
+        // TODO(burdon): Test if agent is running; Revert to monolithic.
+        log('Creating local client services...', { profile: flags.profile });
+        this._client = new Client({ config: this._clientConfig });
+        await this._client.initialize();
+      }
       log('Initialized');
     }
 
