@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Requires ClientContext to be set via ClientProvider.
  */
 export const useIdentity = (options?: { login?: boolean }) => {
-  const { login } = { login: false, ...options };
+  const { login } = { login: true, ...options };
 
   const client = useClient();
   const identity = useSyncExternalStore(

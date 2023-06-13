@@ -46,7 +46,7 @@ const InvitationToast = ({
 export const StandaloneLayout = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace });
-  useIdentity({ login: true });
+  useIdentity();
 
   const { spaceKey, docKey } = useParams();
   const allSpaces = useSpaces({ all: true });
