@@ -6,8 +6,9 @@ import { PublicKey } from '@dxos/keys';
 
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
+import { EchoTestPlan } from './plan/echo-spec';
 
-void runPlan({
+const runSignal = () => runPlan({
   plan: new SignalTestPlan(),
   spec: {
     servers: 1,
@@ -35,3 +36,22 @@ void runPlan({
     //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
   },
 });
+
+const runEcho = () => runPlan({
+  plan: new EchoTestPlan(),
+  spec: {
+    agents: 10,
+    duration: 20_000,
+    signalArguments: [
+      'globalsubserver',
+    ]
+  },
+  options: {
+    staggerAgents: 5,
+    randomSeed: PublicKey.random().toHex(),
+    // repeatAnalysis:
+    //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+  },
+});
+
+runEcho();
