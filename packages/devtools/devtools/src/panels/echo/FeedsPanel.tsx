@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Rows } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +13,6 @@ import { humanize } from '@dxos/util';
 import { MasterTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages, useSpacesInfo } from '../../hooks';
-import { Rows } from '@phosphor-icons/react';
 
 const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
@@ -20,14 +20,14 @@ const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
     width: 120,
     accessor: (block) => {
       const feedKey = block.feedKey;
-      return `${feedKey.truncate(4)} (${humanize(feedKey)})`;
-    }
+      return `${feedKey.truncate()} (${humanize(feedKey)})`;
+    },
   },
   {
     Header: 'Sequence',
     width: 120,
-    accessor: 'seq'
-  }
+    accessor: 'seq',
+  },
 ];
 
 const FeedsPanel = () => {
@@ -55,7 +55,13 @@ const FeedsPanel = () => {
     <div className='flex flex-col overflow-hidden'>
       <SpaceToolbar>
         <div className='w-[400px]'>
-          <PublicKeySelector keys={feeds} Icon={Rows} defaultValue={feedKey} placeholder={'Select feed'} onChange={handleSelect} />
+          <PublicKeySelector
+            keys={feeds}
+            Icon={Rows}
+            defaultValue={feedKey}
+            placeholder={'Select feed'}
+            onChange={handleSelect}
+          />
         </div>
       </SpaceToolbar>
       <div className='flex flex-1 overflow-hidden'>
