@@ -68,17 +68,17 @@ export class SwarmMessenger implements SignalMessenger {
     log('received', { from: author, to: recipient, msg: message });
 
     if (message.data?.offer) {
-      return this._handleOffer({ author, recipient, message });
+      await this._handleOffer({ author, recipient, message });
     } else if (message.data?.answer) {
-      return this._resolveAnswers(message);
+      await this._resolveAnswers(message);
     } else if (message.data?.signal) {
-      return this._handleSignal({ author, recipient, message });
+      await this._handleSignal({ author, recipient, message });
     }
   }
 
   async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    return this._sendReliableMessage({
+    await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
       message,
@@ -116,7 +116,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    return this._sendMessage({
+    await this._sendMessage({
       author,
       recipient,
       payload: {
@@ -155,7 +155,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
-    return this._sendReliableMessage({
+    await this._sendReliableMessage({
       author: recipient,
       recipient: author,
       message: {
@@ -184,6 +184,6 @@ export class SwarmMessenger implements SignalMessenger {
       data: { signal: message.data.signal },
     };
 
-    return this._onSignal(signalMessage);
+    await this._onSignal(signalMessage);
   }
 }
