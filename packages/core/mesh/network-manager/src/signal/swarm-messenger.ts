@@ -78,11 +78,11 @@ export class SwarmMessenger implements SignalMessenger {
 
   async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    return this._sendReliableMessage({
+    await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
       message,
-    }).catch((err) => log.catch(err));
+    });
   }
 
   async offer(message: OfferMessage): Promise<Answer> {
@@ -116,7 +116,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    return this._sendMessage({
+    await this._sendMessage({
       author,
       recipient,
       payload: {
@@ -163,7 +163,7 @@ export class SwarmMessenger implements SignalMessenger {
         sessionId: message.sessionId,
         data: { answer },
       },
-    }).catch((err) => log.catch(err));
+    });
   }
 
   private async _handleSignal({
