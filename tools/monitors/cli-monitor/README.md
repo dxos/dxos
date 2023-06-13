@@ -1,5 +1,7 @@
 # @dxos/cli-monitor
 
+Used for testing releases by installing `@dxos/cli` from npm and verifying it works as expected.
+
 ## Installation
 
 ```bash
