@@ -31,3 +31,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
         with:
           branch: ${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
+
+      - name: Push to Staging
+        run: |
+          BRANCH="${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}"
+          git checkout $BRANCH
+          git checkout staging
+          git reset --hard $BRANCH
+          git push --force staging
