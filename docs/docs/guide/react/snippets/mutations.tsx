@@ -13,7 +13,7 @@ import {
 } from '@dxos/react-client';
 
 export const App = () => {
-  useIdentity({ login: true });
+  useIdentity();
   const [space] = useSpaces();
   const tasks = useQuery(space, { type: 'task' });
   return (
