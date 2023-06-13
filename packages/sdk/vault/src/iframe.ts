@@ -92,8 +92,12 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     return;
   } else {
+    const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
+
     console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${window.location.href}`,
+      `%cTo inspect this application, click here:\nhttps://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${
+        window.location.href
+      }`,
       cssStyle,
     );
   }
