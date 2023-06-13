@@ -22,11 +22,12 @@ export const MyComponent = () => {
 
 The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
 
-The `{ login: true }` tells HALO to log the user in using the [HALO vault](../typescript/vault).
-When `login` is set to `true` it will signal the HALO vault to open it's shell and allow the user to create an identity.
+By default `useIdentity` will tell HALO to log the user in using the [HALO vault](../typescript/vault), it will signal to the vault to open it's shell and allow the user to create an identity.
+The options `{ login: false }` can be passed to `useIdentity` in order to avoid opening the shell when no identity exists.
+This is useful for checking if an identity exists yet without being forced to create one.
 
 ::: note
-When using `{ login: true }` the hook will fire twice. Once with `null`, and then again with an identity when one has been established.
+When first creating an identity, the `useIdentity` hook will fire twice. Once with `null`, and then again with an identity when one has been established.
 :::
 
 ::: details Using with React Router
