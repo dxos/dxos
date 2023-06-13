@@ -76,7 +76,11 @@ export const SpaceMain: FC<{}> = observer(() => {
 export const SpaceMainEmpty = () => {
   const { t } = useTranslation('composer');
   return (
-    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+    <div
+      role='none'
+      className='min-bs-screen is-full flex items-center justify-center p-8'
+      data-testid='composer.firstRunMessage'
+    >
       <p
         role='alert'
         className={mx(
@@ -175,6 +179,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             actions: [
               {
                 id: 'create-doc',
+                testId: 'spacePlugin.createDocument',
                 label: ['create document label', { ns: 'composer' }],
                 icon: Plus,
                 invoke: async () => {
@@ -443,6 +448,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         return [
           {
             id: 'create-space',
+            testId: 'spacePlugin.createSpace',
             label: ['create space label', { ns: 'os' }],
             icon: Planet,
             invoke: async () => {
@@ -451,6 +457,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           },
           {
             id: 'join-space',
+            testId: 'spacePlugin.joinSpace',
             label: ['join space label', { ns: 'os' }],
             icon: Intersect,
             invoke: async () => {

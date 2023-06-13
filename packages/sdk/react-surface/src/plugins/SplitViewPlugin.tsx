@@ -87,7 +87,11 @@ export type SplitViewProvides = {
 export const SplitViewMainContentEmpty = () => {
   const { t } = useTranslation('composer');
   return (
-    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+    <div
+      role='none'
+      className='min-bs-screen is-full flex items-center justify-center p-8'
+      data-testid='splitViewPlugin.firstRunMessage'
+    >
       <p
         role='alert'
         className={mx(

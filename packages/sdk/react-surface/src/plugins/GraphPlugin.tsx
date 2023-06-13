@@ -25,6 +25,7 @@ export type GraphNode<TDatum = any> = {
 
 export type GraphNodeAction = {
   id: string;
+  testId?: string;
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
   label: [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;

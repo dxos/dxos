@@ -55,6 +55,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
           />
         </TreeItem.OpenTrigger>
         <TreeItem.Heading
+          data-testId='spacePlugin.spaceTreeItemHeading'
           classNames={[
             'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
             error && 'text-error-700 dark:text-error-300',
@@ -96,7 +97,6 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
               <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
-                  data-testid='composer.openSpaceMenu'
                   classNames='shrink-0 pli-2 pointer-fine:pli-1'
                   {...(!sidebarOpen && { tabIndex: -1 })}
                 >
@@ -137,9 +137,9 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
             <Tooltip.Trigger asChild>
               <Button
                 variant='ghost'
-                data-testid='composer.createDocument'
                 classNames='shrink-0 pli-2 pointer-fine:pli-1'
                 onClick={(event) => primaryAction.invoke(t, event)}
+                {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
                 <span className='sr-only'>{t(...primaryAction.label)}</span>

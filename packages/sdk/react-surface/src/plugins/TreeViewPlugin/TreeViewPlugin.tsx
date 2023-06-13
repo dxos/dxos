@@ -75,6 +75,7 @@ export const TreeViewContainer = observer(() => {
                     <Button
                       variant='ghost'
                       key={action.id}
+                      {...(action.testId && { 'data-testid': action.testId })}
                       onClick={(event) => action.invoke(t, event)}
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!sidebarOpen && { tabIndex: -1 })}

@@ -41,6 +41,7 @@ export const DocumentLinkTreeItem = observer(({ data: item }: { data: GraphNode<
     <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
       <TreeItem.Heading
         asChild
+        data-testid='spacePlugin.documentTreeItemHeading'
         classNames={appTx(
           'button.root',
           'tree-item__heading--link',
