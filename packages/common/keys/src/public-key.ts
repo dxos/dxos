@@ -156,8 +156,8 @@ export class PublicKey implements Equatable {
     }
   }
 
-  truncate(length = 8) {
-    return truncateKey(this, { length });
+  truncate(length = undefined) {
+    return truncateKey(this, length);
   }
 
   toString(): string {

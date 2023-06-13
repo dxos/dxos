@@ -18,12 +18,12 @@ const columns: TableColumn<SpaceMember>[] = [
     width: 120,
     accessor: (member) => {
       const identityKey = member.identity.identityKey;
-      return identityKey.truncate(4);
-    }
+      return identityKey.truncate();
+    },
   },
   {
     Header: 'name',
-    accessor: (member) => member.identity.profile?.displayName
+    accessor: (member) => member.identity.profile?.displayName,
   },
   {
     Header: 'status',
@@ -34,8 +34,8 @@ const columns: TableColumn<SpaceMember>[] = [
         case SpaceMember.PresenceState.OFFLINE:
           return 'offline';
       }
-    }
-  }
+    },
+  },
 ];
 
 const MembersPanel = () => {

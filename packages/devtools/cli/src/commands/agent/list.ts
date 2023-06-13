@@ -11,13 +11,13 @@ export const printAgents = (daemons: any[], flags = {}) => {
     daemons,
     {
       profile: {
-        header: 'Profile',
+        header: 'profile',
       },
       pid: {
-        header: 'Process',
+        header: 'process',
       },
       isRunning: {
-        header: 'Running',
+        header: 'running',
       },
     },
     {
