@@ -6,7 +6,7 @@ import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
 import React, { PropsWithChildren, createContext, useContext } from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
-import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
+import { defaultDescription, fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 
@@ -84,6 +84,23 @@ export type SplitViewProvides = {
   splitView: SplitViewContextValue;
 };
 
+export const SplitViewMainContentEmpty = () => {
+  const { t } = useTranslation('composer');
+  return (
+    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+      <p
+        role='alert'
+        className={mx(
+          defaultDescription,
+          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
+        )}
+      >
+        {t('first run message')}
+      </p>
+    </div>
+  );
+};
+
 export const SplitViewPlugin = definePlugin<RouterPluginProvides & SplitViewProvides>({
   meta: {
     id: 'dxos:SplitViewPlugin',
@@ -96,14 +113,17 @@ export const SplitViewPlugin = definePlugin<RouterPluginProvides & SplitViewProv
           element: (
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{ sidebar: { component: 'dxos:TreeViewPlugin/TreeView' } }}
+              surfaces={{
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
+              }}
             />
           ),
         },
       ],
     },
     context: (props: PropsWithChildren) => <Context.Provider value={store}>{props.children}</Context.Provider>,
-    components: { SplitView },
+    components: { SplitView, SplitViewMainContentEmpty },
     splitView: store,
   },
 });

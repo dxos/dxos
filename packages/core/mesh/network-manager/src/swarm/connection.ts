@@ -108,14 +108,21 @@ export class Connection {
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) =>
-        this._signalMessaging.signal({
-          author: this.ownId,
-          recipient: this.remoteId,
-          sessionId: this.sessionId,
-          topic: this.topic,
-          data: { signal },
-        }),
+      sendSignal: async (signal) => {
+        try {
+          await this._signalMessaging.signal({
+            author: this.ownId,
+            recipient: this.remoteId,
+            sessionId: this.sessionId,
+            topic: this.topic,
+            data: { signal },
+          });
+        } catch (err) {
+          // If signal fails treat connection as failed
+          log('Signal failed', { err });
+          await this.close();
+        }
+      },
     });
 
     this._transport.connected.once(() => {
