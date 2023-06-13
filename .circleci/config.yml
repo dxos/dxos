@@ -161,43 +161,8 @@ jobs:
           environment:
             NODE_ENV: production
 
-  messaging_monitor:
-    docker:
-      - *docker_image
-    parameters:
-      dx_environment:
-        type: string
-    steps:
-      - checkout
-      - *install_datadog
-      - run:
-          command: npm run start
-          working_directory: ./tools/monitors/messaging-monitor
-          environment:
-            DX_ENVIRONMENT: << parameters.dx_environment >>
-      - run:
-          name: Upload results to Datadog
-          command: datadog-ci junit upload --service dxos ./tools/monitors/messaging-monitor/test-results.xml
-          when: always
-          environment:
-            DD_TAGS: env:<< parameters.dx_environment >>
-
-parameters:
-  run_daily_workflow:
-    type: boolean
-    default: false
-
-  run_hourly_workflow:
-    type: boolean
-    default: false
-
 workflows:
   default:
-    when:
-      not:
-        or:
-          - << pipeline.parameters.run_daily_workflow >>
-          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - check:
           context:
@@ -207,11 +172,6 @@ workflows:
             - Github
 
   deploy:
-    when:
-      not:
-        or:
-          - << pipeline.parameters.run_daily_workflow >>
-          - << pipeline.parameters.run_hourly_workflow >>
     jobs:
       - publish:
           filters:
@@ -222,19 +182,5 @@ workflows:
                 - staging
           context:
             - Github
-
-  hourly:
-    when: << pipeline.parameters.run_hourly_workflow >>
-    jobs:
-      - messaging_monitor:
-          context:
-            - Datadog
-            - Github
-          matrix:
-            parameters:
-              dx_environment:
-                - development
-                - production
-                - staging
 
 # VS Code Extension Version: 1.5.1

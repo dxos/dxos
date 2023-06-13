@@ -1,11 +1,11 @@
-# @dxos/messaging-monitor
+# @dxos/cli-monitor
 
-Used for testing releases by installing `@dxos/messaging` from npm and verifying it works as expected.
+Used for testing releases by installing `@dxos/cli` from npm and verifying it works as expected.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/messaging-monitor
+pnpm i @dxos/cli-monitor
 ```
 
 ## DXOS Resources
