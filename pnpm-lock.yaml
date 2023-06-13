@@ -18128,7 +18128,7 @@ packages:
   /axios/1.4.0_debug@4.3.4:
     resolution: {integrity: sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -34407,15 +34407,17 @@ packages:
       - supports-color
     dev: false
 
-  /react-motion/0.5.2_react@18.2.0:
+  /react-motion/0.5.2_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-9q3YAvHoUiWlP3cK0v+w1N5Z23HXMj4IF4YuvjvWegWqNPfLXsOBE/V7UvQGpXxHFKRQQcNcVQE31g9SB/6qgQ==}
     peerDependencies:
       react: ^18.0.0
+      react-dom: ^18.0.0
     dependencies:
       performance-now: 0.2.0
       prop-types: 15.8.1
       raf: 3.4.1
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react-native-fetch-api/3.0.0:
@@ -34596,7 +34598,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=6.13.0'}
     peerDependencies:
       react: ^18.0.0
-      react-dom: ^16.8.3
+      react-dom: ^18.0.0
     dependencies:
       d3-array: 3.2.4
       d3-collection: 1.0.7
@@ -34616,7 +34618,7 @@ packages:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-motion: 0.5.2_react@18.2.0
+      react-motion: 0.5.2_biqbaboplfbrettd7655fr4n2y
     dev: false
 
   /react/18.2.0:
@@ -36178,7 +36180,7 @@ packages:
     resolution: {integrity: sha512-zCwEMw/Evd5iDPkVEjO+1T3OJqbuDukJSuZtMZ7A7Wfn0RxmaJFbwngfUnDNyQFbPMxiINNxGBMD85fFJF8ghA==}
     dependencies:
       hypercore-crypto: 2.3.2
-      noise-protocol: 3.0.2
+      noise-protocol: 3.0.1
       protocol-buffers-encodings: 1.2.0
       simple-handshake: 3.0.0
       simple-message-channels: 1.2.1
