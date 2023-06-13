@@ -1,5 +1,7 @@
 # @dxos/messaging-monitor
 
+Used for testing releases by installing `@dxos/messaging` from npm and verifying it works as expected.
+
 ## Installation
 
 ```bash
