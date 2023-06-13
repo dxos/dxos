@@ -103,11 +103,9 @@ export class Messenger {
       messageContext,
       async () => {
         log('retrying message', { messageId: reliablePayload.messageId });
-        try {
-          await this._encodeAndSend({ author, recipient, reliablePayload });
-        } catch (error) {
-          log.error('failed to send message', { error });
-        }
+        await this._encodeAndSend({ author, recipient, reliablePayload }).catch((err) =>
+          log.error('failed to send message', { err }),
+        );
       },
       this._retryDelay,
     );
