@@ -35,7 +35,6 @@ const FeedsPanel = () => {
   const { space, feedKey } = useDevtoolsState();
   const spacesInfo = useSpacesInfo();
   const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
-
   const [feeds, setFeeds] = useState<PublicKey[]>([]);
   useEffect(() => {
     if (!metadata) {
