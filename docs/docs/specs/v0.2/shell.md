@@ -10,5 +10,5 @@
 5. Developers use the DXOS Shell to guide users through identity creation/acquisition during login
 6. Developers use the DXOS Shell to guide users through joining a space
 7. Developers use the DXOS Shell to guide users through inviting others to their spaces
-8. Dvelopers can use a paper key or passphrase to recover a HALO identity on a new device
+8. Developers can use a paper key or passphrase to recover a HALO identity on a new device
 
