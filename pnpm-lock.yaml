@@ -2269,6 +2269,7 @@ importers:
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
+      localforage: ^1.10.0
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -2311,6 +2312,7 @@ importers:
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/bytes': 3.1.1
       bytes: 3.1.2
+      localforage: 1.10.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
