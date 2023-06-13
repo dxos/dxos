@@ -5,6 +5,8 @@
 import { appendFileSync, mkdirSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+import { jsonify } from '@dxos/util';
+
 import { LogLevel } from '../config';
 import { LogProcessor, getContextFromEntry } from '../context';
 
@@ -46,30 +48,3 @@ const getLogFilePath = () => {
 };
 
 export const FILE_PROCESSOR: LogProcessor = createFileProcessor({ path: getLogFilePath(), level: LogLevel.TRACE });
-
-/**
- * Recursively converts an object into a JSON-compatible object.
- */
-export const jsonify = (value: any): any => {
-  if (typeof value === 'function') {
-    return null;
-  } else if (typeof value === 'object' && value !== null) {
-    if (value instanceof Uint8Array) {
-      return Buffer.from(value).toString('hex');
-    }
-    if (Array.isArray(value)) {
-      return value.map(jsonify);
-    } else {
-      if (typeof value.toJSON === 'function') {
-        return value.toJSON();
-      }
-      const res: any = {};
-      for (const key of Object.keys(value)) {
-        res[key] = jsonify(value[key]);
-      }
-      return res;
-    }
-  } else {
-    return value;
-  }
-};
