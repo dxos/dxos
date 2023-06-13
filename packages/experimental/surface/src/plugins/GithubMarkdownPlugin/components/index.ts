@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './GithubContext';
-export * from './MainOne';
-export * from './MainAll';
+export * from './GithubApiProviders';
+export * from './GithubEchoResolverProviders';
+export * from './StandaloneMain';
+export * from './EmbeddedMain';
