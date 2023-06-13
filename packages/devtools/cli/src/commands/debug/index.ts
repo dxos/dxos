@@ -12,12 +12,15 @@ type DataDump = {
   };
   spaces?: {
     key: string;
+    stats: {
+      items: number;
+    };
   }[];
 };
 
 export default class Debug extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'Debug.';
+  static override description = 'Debug info.';
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
@@ -28,10 +31,17 @@ export default class Debug extends BaseCommand {
           identityKey: identity?.identityKey?.toHex(),
         };
 
-        // TODO(burdon): Stats.
-        data.spaces = client.spaces.get().map((space) => ({
-          key: space.key.toHex(),
-        }));
+        // TODO(burdon): Stats (feed lengths, snapshot).
+        data.spaces = client.spaces.get().map((space) => {
+          const result = space.db.query();
+
+          return {
+            key: space.key.toHex(),
+            stats: {
+              items: result.objects.length,
+            },
+          };
+        });
       }
 
       return data;
