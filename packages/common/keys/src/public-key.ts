@@ -114,7 +114,7 @@ export class PublicKey implements Equatable {
   }
 
   /**
-   * @param Hex string representation of key.
+   * @param str string representation of key.
    * @return Key buffer.
    * @deprecated All keys should be represented as instances of PublicKey.
    */
@@ -127,7 +127,7 @@ export class PublicKey implements Equatable {
   }
 
   /**
-   * @param Public key like data structure (but not PublicKey which should use toString).
+   * @param key key like data structure (but not PublicKey which should use toString).
    * @return Hex string representation of key.
    * @deprecated All keys should be represented as instances of PublicKey.
    */
@@ -156,21 +156,20 @@ export class PublicKey implements Equatable {
     }
   }
 
-  truncate(length = undefined) {
-    return truncateKey(this, length);
-  }
-
   toString(): string {
     return this.toHex();
   }
 
-  // TODO(burdon): How is this used?
   toJSON() {
     return this.toHex();
   }
 
   toHex(): string {
     return this.asBuffer().toString('hex');
+  }
+
+  truncate(length = undefined) {
+    return truncateKey(this, length);
   }
 
   asBuffer(): Buffer {
