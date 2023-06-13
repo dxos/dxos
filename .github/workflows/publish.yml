@@ -94,3 +94,6 @@ jobs:
         env:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Monitor Release
+        run: node .github/workflows/scripts/monitor.js

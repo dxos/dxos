@@ -18,6 +18,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "chalk": "^4.1.0",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
