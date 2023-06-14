@@ -56,7 +56,9 @@ export const composer = {
   'unhide space label': 'Un-hide space',
   'empty space message': 'No documents – click plus ☝ to get started',
   'empty tree message': 'No spaces – click the planet ☝ to get started',
-  'resolver tree label': 'Choose a Space to collaborate on documents in this repository',
+  'resolver tree label': 'Choose a Space',
+  'resolver tree description':
+    'To collaborate on documents in this repository, choose the Space that will store and control access to the documents.',
   'resolver no spaces message': 'You aren’t in any spaces yet',
   'resolver create space label': 'Create a space for this repository',
   'save and close label': 'Save & close',
@@ -81,4 +83,7 @@ export const composer = {
   'embedded options label': 'Options',
   'unset repo space label': 'Select a different space for this repository',
   'rename space label': 'Rename space',
+  'active space label': 'Active space:',
+  'select label': 'Select',
+  'selected label': 'Selected',
 };

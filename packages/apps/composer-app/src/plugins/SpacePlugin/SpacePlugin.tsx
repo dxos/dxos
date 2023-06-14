@@ -8,7 +8,7 @@ import {
   EyeSlash,
   Intersect,
   PaperPlane,
-  PencilSimple,
+  PencilSimpleLine,
   Planet,
   Plus,
   Trash,
@@ -192,7 +192,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
               {
                 id: 'rename-space',
                 label: ['rename space label', { ns: 'composer' }],
-                icon: PencilSimple,
+                icon: PencilSimpleLine,
                 invoke: async () => {
                   if (splitViewPlugin?.provides.splitView) {
                     splitViewPlugin.provides.splitView.dialogOpen = true;
