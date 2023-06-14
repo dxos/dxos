@@ -35,7 +35,7 @@ export const PublicKeySelector = (props: PublicKeySelectorProps) => {
               </div>
             )}
             {humanize(key)}
-            <span className='text-neutral-250'>{key.truncate(4)}</span>
+            <span className='text-neutral-250'>{key.truncate()}</span>
           </div>
         </Select.Item>
       ))}

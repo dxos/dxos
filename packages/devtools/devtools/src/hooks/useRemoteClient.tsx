@@ -28,12 +28,12 @@ const createClientContext = async (): Promise<ClientContextProps> => {
   const fromRemoteSource = async (remoteSource?: string) => {
     const remoteSourceConfig = remoteSource
       ? {
-        runtime: {
-          client: {
-            remoteSource,
+          runtime: {
+            client: {
+              remoteSource,
+            },
           },
-        },
-      }
+        }
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
@@ -54,10 +54,10 @@ const createClientContext = async (): Promise<ClientContextProps> => {
       return fromRemoteSource(target.slice(target.indexOf(':') + 1));
     },
     ws: async (target) => {
-      if(!target) {
+      if (!target) {
         throw new Error('WebSocket URL is required target=ws:<ws URL>');
       }
-      
+
       const client = new Client({ config: new Config(), services: fromSocket(target) });
       await client.initialize();
 
@@ -67,7 +67,7 @@ const createClientContext = async (): Promise<ClientContextProps> => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const target = searchParams.get('target') ?? DEFAULT_TARGET;
-  const [protocol, ...rest] = target.split(':');
+  const [protocol, ..._rest] = target.split(':');
   if (!(protocol in targetResolvers)) {
     throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
   }

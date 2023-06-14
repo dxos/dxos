@@ -16,6 +16,7 @@ type CommonOptions = {
 };
 
 export type PageOptions = CommonOptions & {
+  installationId?: string;
   name?: string;
   category?: string;
 };

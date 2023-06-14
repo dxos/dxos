@@ -36,7 +36,7 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
-### [fromCliEnv(\[options\])]()
+### [fromAgent(\[options\])]()
 
 
 
@@ -47,7 +47,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/Clien
 
 Arguments: 
 
-`options`: <code>[FromCliEnvOptions](/api/@dxos/react-client/types/FromCliEnvOptions)</code>
+`options`: <code>[fromAgentOptions](/api/@dxos/react-client/types/fromAgentOptions)</code>
 
 ### [fromHost(\[config\])]()
 

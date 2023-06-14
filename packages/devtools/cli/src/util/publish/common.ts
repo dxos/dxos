@@ -23,10 +23,10 @@ export const printModules = (modules: PackageModule[], flags = {}) => {
     mapModules(modules),
     {
       key: {
-        header: 'Name',
+        header: 'name',
       },
       bundle: {
-        header: 'Bundle',
+        header: 'bundle',
       },
     },
     {
