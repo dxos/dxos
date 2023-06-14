@@ -22,6 +22,8 @@ const DEFAULT_SUCCESS_DELAY = 1_000;
 
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
+const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET'
+
 export type NotarizeParams = {
   /**
    * For cancellation.
@@ -141,8 +143,10 @@ export class NotarizationPlugin implements CredentialProcessor {
         });
         log('success');
         await sleep(successDelay); // wait before trying with a new peer
-      } catch (err) {
-        log.warn('error notarizing (recoverable)', err);
+      } catch (err: any) {
+        if(!err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
+          log.warn('error notarizing (recoverable)', err);
+        }
         notarizeTask.schedule(); // retry immediately with next peer
       }
     });
@@ -187,7 +191,7 @@ export class NotarizationPlugin implements CredentialProcessor {
    */
   private async _onNotarize(request: NotarizeRequest) {
     if (!this._writer) {
-      throw new Error('Writer not set');
+      throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
     for (const credential of request.credentials ?? []) {
       assert(credential.id, 'Credential must have an id');
