@@ -302,7 +302,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   // TODO(burdon): Check running (otherwise run CLI in daemon mode).
   async execWithDaemon<T>(callback: (agent: Agent) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      const daemon = new ForeverDaemon(`${DX_DATA}/agent`);
+      const daemon = new ForeverDaemon(`${DX_DATA}/${this.flags.profile}/agent`);
       await daemon.connect();
       const value = await callback(daemon);
       log('Disconnecting...');

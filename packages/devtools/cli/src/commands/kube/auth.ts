@@ -60,7 +60,6 @@ export default class Auth extends BaseCommand {
       const identity = client.halo.identity;
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
-        //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Profile not initialized.}`);
       } else {
         const { credential, token } = await this.presentAuthCredentials(client);

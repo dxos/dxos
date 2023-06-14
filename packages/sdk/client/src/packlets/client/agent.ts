@@ -16,7 +16,7 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 // TODO(burdon): Duplicated from CLI. Change to /agent/
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
-  `${protocol}://${DX_RUNTIME}/agent/${profile}.sock`;
+  `${protocol}://${DX_RUNTIME}/${profile}/agent.sock`;
 
 export type fromAgentOptions = {
   profile?: string;

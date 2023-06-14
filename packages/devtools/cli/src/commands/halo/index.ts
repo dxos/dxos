@@ -17,7 +17,6 @@ export default class Halo extends BaseCommand {
       const identity = client.halo.identity.get();
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
-        //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Identity not initialized.}`);
         return {};
       } else {
