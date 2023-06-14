@@ -67,4 +67,5 @@ export const os = {
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
   'settings dialog title': 'Settings',
+  'target blank description': 'Link opens in a new tab.',
 };
