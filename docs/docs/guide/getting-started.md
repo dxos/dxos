@@ -8,8 +8,6 @@ next: ./platform
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 
-Learn about the [mission](why).
-
 In this guide, we'll cover:
 
 - Starting a `react` project using a [DXOS app template](#create-an-app).
@@ -30,9 +28,9 @@ mkdir hello
 cd hello
 ```
 
-We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions to get you going quickly.
+We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
 
-We're going to use the [`bare`](./cli/app-templates.md#bare-template) template. Initialize the app with `npm init`:
+For this guide, we're going to start with the [`bare`](./cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm init`:
 
 ```bash
 npm init @dxos/bare
@@ -79,12 +77,16 @@ export const App = () => {
 
 There's a lot going on here! Let's walk through it.
 
-DXOS apps enable users to control their data and identity by storing it in what we call a [vault](./platform/README.md#local-vault-topology). In a browser-based environment like a React app, that data is stored in persistent storage owned by the vault. The vault runs inside of a [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) which is loaded into the DXOS app via an iFrame. The `ClientProvider` bootstraps the vault and iFrame, enabling the application to access the user's identity and data information.
+### Bootstrap the DXOS Client
+
+DXOS apps enable users to control their data and identity by storing it in a [vault](./platform/README.md#local-vault-topology) separated from the application. In a browser-based environment like this React app, data is stored in persistent browser storage owned by the vault. The vault runs inside of a [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) which is loaded into the DXOS app via an iFrame. The `ClientProvider` bootstraps the vault and iFrame, enabling the application to access the user's identity and data information.
+
+### React Helpers
 
 The other wrapper components are part of DXOS's [`react-appkit`](./react/ui.md):
 
 - The `<ServiceWorkerToastContainer>` allows the vault to send messages in the form of Toasts to the application.
-- `<ErrorBoundary>` and `<ResetDialog>` catch errors that bubble up from the application and provide a user-friendly way to refresh the application in the event of a crash. They are part of DXOS's react-appkit
+- `<ErrorBoundary>` and `<ResetDialog>` catch errors that bubble up from the application and provide a user-friendly way to refresh the application in the event of a crash.
 - `<ThemeProvider>` and the `<GenericFallback>` give you the DXOS styles along with a loading indicator.
 
 ## Create a User Identity
@@ -108,11 +110,11 @@ export const Counter = () => {
 
 `useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, the user will be [prompted](./platform/halo.md#establishing-user-identity) to create a new one or link to an existing authed device.
 
-`useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers. Spaces can be created and joined programmatically, but a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first one.
+`useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
 
 ## Update UI state from ECHO
 
-Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. In the `Counter` component, replace the return with the following:
+Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. In the `Counter` component, replace the `return` with the following:
 
 ```tsx
 const [counter] = useQuery(space, { type: 'counter' });
@@ -134,7 +136,7 @@ return (
 
 `useQuery` allows you to search the database for objects that match the query. In our case, we are searching for objects that have a key and value of `type: 'counter'`. The first time this query executes, there is no object that matches it.
 
-Let's create an empty counter. Above the `return` statement, add the following lines:
+We need an empty counter that we can increment. Above the `return` statement, add the following lines:
 
 ```tsx
 if (space && !counter) {
@@ -147,13 +149,15 @@ if (space && !counter) {
 
 When the app refreshes, you should now see "Clicked 0 times."
 
-`Expando` is a DXOS wrapper class for storing _untyped_ data in ECHO. An `Expando` is just a plain ol' JavaScript object that you can add fields to and manipulate directly. We also offer robust tooling around [typed data](./react/mutations.md#typed-mutations).
+### Expando for Untyped Data
+
+`Expando` is a DXOS wrapper class for storing [untyped data](./react/mutations.md#untyped-mutations) in ECHO. An `Expando` is just a plain ol' JavaScript object that you can add fields to and manipulate directly. We also offer robust tooling around [typed data](./react/mutations.md#typed-mutations) that we recommend for more complex applications.
 
 ## Update the Counter
 
 Let's add a button to update the count of the counter.
 
-At this point, your `Counter` component should look like this:
+At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
 ```tsx{18-25}
 import { Expando, useIdentity, useQuery, useSpaces } from "@dxos/react-client";
@@ -191,13 +195,21 @@ export const Counter = () => {
 };
 ```
 
-When you click the button, you should see the count increase. Notice how we updated the `counter`'s value: we simply pushed elements onto the array directly. `counter` is tracked. Changes to it's value are automatically persisted to ECHO and reactively update the UI.
+Every time you click the button, you should see the count increase by 1. Notice how we updated the `counter`'s value: we simply pushed elements onto the array directly. We instantiated the `counter` variable from `useQuery`, so it's value is tracked: changes to it's value are automatically persisted to ECHO and reactively update the UI.
 
-The counter's data is stored locally, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) which works offline. Try it out. Refresh the app. Quit your browser and re-open it. The counter's count remains. It even works offline.
+### Local-first
+
+The counter's data is stored locally, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) which works offline. Try it out. Refresh the app. Quit your browser and re-open it. The counter's count remains. You can even update the count offline.
 
 ## Connect another peer
 
-Now open another window and load the localhost URL. The two windows should now be in sync. You can also connect another. What's going on here? The two peers are communicating directly, peer-to-peer, over secure WebRTC connections.
+Now let's test out connecting multiple peers. Open another window and load the localhost URL. The two windows should now be in sync. You can also connect a peer on a different device.
+
+### Peer-to-peer over WebRTC
+
+What's going on behind the scenes? The two peers are communicating directly, peer-to-peer, over secure WebRTC connections.
+
+### CRDTs for Consistency
 
 You may wonder why we chose to represent a counter as an array when an integer would work just as well.
 
