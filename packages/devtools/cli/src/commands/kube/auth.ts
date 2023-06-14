@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { BaseCommand } from '../../base-command';
 import { SupervisorRpcPeer, queryCredentials } from '../../util';
 
-export default class Auth extends BaseCommand {
+export default class Auth extends BaseCommand<typeof Auth> {
   static override enableJsonFlag = true;
   static override description = 'Authenticate with KUBE.';
 

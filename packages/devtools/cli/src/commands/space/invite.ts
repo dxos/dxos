@@ -12,13 +12,12 @@ import { BaseCommand } from '../../base-command';
 import { selectSpace, hostInvitation } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
-export default class Invite extends BaseCommand {
+export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
   static override args = { key: Args.string({ required: true }) };
 
   async run(): Promise<any> {
-    const { args } = await this.parse(Invite);
-    let { key } = args;
+    let { key } = this.args;
 
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();

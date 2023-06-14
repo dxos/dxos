@@ -27,7 +27,7 @@ const isDirEmpty = async (dirpath: string) => {
   return !!done;
 };
 
-export default class Create extends BaseCommand {
+export default class Create extends BaseCommand<typeof Create> {
   static override description = 'Create a DXOS project.';
 
   static override args = {
@@ -58,12 +58,10 @@ export default class Create extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { args, flags } = await this.parse(Create);
-    const { name } = args;
-    const { template, interactive, verbose } = flags;
+    const { name } = this.args;
+    const { template, interactive, verbose } = this.flags;
 
     const outputDirectory = `${cwd()}/${name}`;
-
     const outputDirExists = await exists(outputDirectory);
     const isOutputEmpty = outputDirExists && (await isDirEmpty(outputDirectory));
     if (outputDirExists && !isOutputEmpty) {

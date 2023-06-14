@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { DEFAULT_PROVIDER, DigitalOceanProvider, MachineryProvider, printKubes } from '../../util/provider';
 
-export default class Deploy extends BaseCommand {
+export default class Deploy extends BaseCommand<typeof Deploy> {
   static override description = 'Deploy KUBE.';
   static override flags = {
     ...BaseCommand.flags,
@@ -31,8 +31,7 @@ export default class Deploy extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Deploy);
-    const { hostname, provider: providerName, dev, accessToken } = flags;
+    const { hostname, provider: providerName, dev, accessToken } = this.flags;
 
     try {
       return await this.execWithClient(async (client: Client) => {

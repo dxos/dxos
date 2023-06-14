@@ -12,7 +12,7 @@ import { range } from '@dxos/util';
 import { BaseCommand } from '../../base-command';
 import { hostInvitation } from '../../util';
 
-export default class Open extends BaseCommand {
+export default class Open extends BaseCommand<typeof Open> {
   static override enableJsonFlag = true;
   static override description = 'Opens app with provided url and process device invitation.';
 
@@ -42,19 +42,18 @@ export default class Open extends BaseCommand {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
       }
-      const { args, flags } = await this.parse(Open);
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       // const { chromium } = require('playwright');
 
       const browser = await chromium.launch({ headless: false });
       const pages = await Promise.all(
-        range(flags.instances).map(async () => {
+        range(this.flags.instances).map(async () => {
           const context = await browser.newContext();
           return await context.newPage();
         }),
       );
 
-      if (flags.invite) {
+      if (this.flags.invite) {
         const observable = client.halo.createInvitation({
           type: Invitation.Type.MULTIUSE,
           authMethod: Invitation.AuthMethod.NONE,
@@ -67,7 +66,7 @@ export default class Open extends BaseCommand {
             onConnecting: async () => {
               const invitationCode = InvitationEncoder.encode(observable.get());
               pages.forEach(async (page) => {
-                const url = new URL(args.url);
+                const url = new URL(this.args.url);
                 url.searchParams.append('deviceInvitationCode', invitationCode);
                 await page.goto(url.href);
               });
@@ -75,13 +74,13 @@ export default class Open extends BaseCommand {
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
             },
           },
-          peersNumber: flags.instances,
+          peersNumber: this.flags.instances,
         });
         ux.action.start('Waiting for peers to connect');
         await invitationSuccess;
         ux.action.stop();
       } else {
-        pages.forEach(async (page) => await page.goto(args.url));
+        pages.forEach(async (page) => await page.goto(this.args.url));
       }
     });
   }

@@ -9,7 +9,7 @@ import { runServices } from '@dxos/agent';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Run extends BaseCommand {
+export default class Run extends BaseCommand<typeof Run> {
   static override enableJsonFlag = true;
   static override description = 'Run agent.';
 
@@ -23,12 +23,8 @@ export default class Run extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const {
-      flags: { listen },
-    } = await this.parse(Run);
-
     assert(this.clientConfig);
-    await runServices({ listen, config: this.clientConfig });
+    await runServices({ listen: this.flags.listen, config: this.clientConfig });
     this.log('Agent started... (ctrl-c to exit)');
   }
 }

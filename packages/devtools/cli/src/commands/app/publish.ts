@@ -11,7 +11,7 @@ import { captureException } from '@dxos/sentry';
 import { BaseCommand } from '../../base-command';
 import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
 
-export default class Publish extends BaseCommand {
+export default class Publish extends BaseCommand<typeof Publish> {
   static override description = 'Publish apps.';
   static override flags = {
     ...BaseCommand.flags,
@@ -35,8 +35,7 @@ export default class Publish extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Publish);
-    const { accessToken, configPath, skipExisting, verbose, version } = flags;
+    const { accessToken, configPath, skipExisting, verbose, version } = this.flags;
 
     try {
       const moduleConfig = await loadConfig(configPath);

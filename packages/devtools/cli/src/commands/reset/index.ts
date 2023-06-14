@@ -11,7 +11,7 @@ import { DX_CACHE, DX_DATA, DX_RUNTIME, DX_STATE } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Reset extends BaseCommand {
+export default class Reset extends BaseCommand<typeof Reset> {
   static override description = 'Reset user data.';
   static override flags = {
     ...BaseCommand.flags,
@@ -21,22 +21,21 @@ export default class Reset extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const params = await this.parse(Reset);
-    const {
-      flags: { dryRun, force, profile },
-    } = params;
+    const profile = this.flags.profile;
 
     const paths = [
       path.join(DX_CACHE, profile),
       path.join(DX_DATA, profile),
       path.join(DX_STATE, profile),
       path.join(DX_RUNTIME, profile),
-      this.clientConfig?.get('runtime.client.storage.path'), // TODO(burdon): Should match DX_RUNTIME.
+      this.clientConfig?.get('runtime.client.storage.path'),
     ].filter(Boolean) as string[];
 
-    const dry = dryRun || !(force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
+    const dry =
+      this.flags['dry-run'] ||
+      !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
     if (!dry) {
-      await this.execWithDaemon(async (daemon) => daemon.stop(params.flags.profile));
+      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile));
 
       this.warn('Deleting files...');
       paths.forEach((path) => {
@@ -44,7 +43,7 @@ export default class Reset extends BaseCommand {
         this.ok();
       });
 
-      await this.execWithDaemon(async (daemon) => daemon.restart(params.flags.profile));
+      await this.maybeStartDaemon();
     }
 
     return paths;

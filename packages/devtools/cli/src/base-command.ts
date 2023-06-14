@@ -91,16 +91,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
-    dryRun: Flags.boolean({
+    'dry-run': Flags.boolean({
       description: 'Dry run.',
       default: false,
-      aliases: ['dry-run'],
     }),
 
-    noAgent: Flags.boolean({
+    'no-agent': Flags.boolean({
       description: 'Disable agent auto-start.',
       default: false,
-      aliases: ['no-agent'],
     }),
 
     timeout: Flags.integer({
@@ -275,33 +273,33 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
+  async maybeStartDaemon() {
+    if (!this.flags['no-agent']) {
+      await this.execWithDaemon(async (daemon) => {
+        const running = await daemon.isRunning(this.flags.profile);
+        if (!running) {
+          this.log('Starting agent...');
+          await daemon.start(this.flags.profile);
+        }
+      });
+    }
+  }
+
   /**
    * Lazily create the client.
    */
   async getClient() {
-    const { flags } = await this.parse(this.constructor as any);
-
     if (!this._client) {
-      if (!flags.noAgent) {
-        // Auto-start daemon.
-        await this.execWithDaemon(async (daemon) => {
-          const running = await daemon.isRunning(flags.profile);
-          if (!running) {
-            this.log('Starting agent...');
-            await daemon.start(flags.profile);
-          }
-        });
-      }
-
+      await this.maybeStartDaemon();
       assert(this._clientConfig);
-      if (flags.noAgent) {
+      if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
-        this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
+        this._client = new Client({ config: this._clientConfig, services: fromAgent(this.flags.profile) });
       }
 
       await this._client.initialize();
-      log('Client initialized', { profile: flags.profile });
+      log('Client initialized', { profile: this.flags.profile });
     }
 
     return this._client;
