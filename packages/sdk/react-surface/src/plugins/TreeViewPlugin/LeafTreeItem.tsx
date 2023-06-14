@@ -30,7 +30,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const treeView = useTreeView();
 
-  const active = node.id === treeView.selected[1];
+  const active = node.id === treeView.selected.at(-1);
   const Icon = node.icon ?? Placeholder;
 
   const suppressNextTooltip = useRef<boolean>(false);
@@ -54,7 +54,8 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           {...(!sidebarOpen && { tabIndex: -1 })}
           data-itemid={node.id}
           onClick={() => {
-            treeView.selected = [node.parent!.id, node.id];
+            // TODO(wittjosiah): Make recursive.
+            treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
             !isLg && closeSidebar();
           }}
           className='text-start flex gap-2'

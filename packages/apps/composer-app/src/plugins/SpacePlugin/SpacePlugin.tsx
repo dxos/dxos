@@ -16,21 +16,20 @@ import {
   Trash,
   Upload,
 } from '@phosphor-icons/react';
-import React, { FC, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { FC } from 'react';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { useTranslation } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { defaultDescription, mx } from '@dxos/aurora-theme';
+import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 import {
   EchoDatabase,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
-  PublicKey,
   ShellLayout,
   Space,
   SpaceState,
@@ -152,9 +151,18 @@ const EmptySpace = () => {
   );
 };
 
+// TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
+const getSpaceId = (spaceKey: PublicKeyLike) => {
+  if (spaceKey instanceof PublicKey) {
+    spaceKey = spaceKey.toHex();
+  }
+
+  return `${SpacePlugin.meta.id}/${spaceKey}`;
+};
+
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
-    id: 'dxos:SpacePlugin',
+    id: 'dxos:space',
   },
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
@@ -171,7 +179,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         0,
         nodes.length,
         ...spaces.map((space) => {
-          const id = space.key.toHex();
+          const id = getSpaceId(space.key);
           const node: GraphNode<Space> = {
             id,
             label: space.properties.name ?? 'Untitled space',
@@ -198,7 +206,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                 invoke: async () => {
                   if (splitViewPlugin?.provides.splitView) {
                     splitViewPlugin.provides.splitView.dialogOpen = true;
-                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:SpacePlugin/RenameSpaceDialog', space];
+                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RenameSpaceDialog', space];
                   }
                 },
               },
@@ -251,7 +259,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                 invoke: async () => {
                   if (splitViewPlugin?.provides.splitView) {
                     splitViewPlugin.provides.splitView.dialogOpen = true;
-                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:SpacePlugin/RestoreSpaceDialog', space];
+                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RestoreSpaceDialog', space];
                   }
                 },
               },
@@ -324,72 +332,47 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     router: {
       routes: () => [
         {
-          path: '/space/:spaceId',
+          path: '/dxos/space/:spaceId',
           element: (
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
                 sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:SpacePlugin/SpaceMain' },
+                main: { component: 'dxos:space/SpaceMain' },
               }}
             />
           ),
         },
         {
-          path: '/space/:spaceId/:objectId',
+          path: '/dxos/space/:spaceId/:objectId',
           element: (
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
                 sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:SpacePlugin/SpaceMain' },
+                main: { component: 'dxos:space/SpaceMain' },
               }}
             />
           ),
         },
       ],
-      useNavigator: () => {
-        // TODO(wittjosiah): Should come from plugin provides.
-        const navigate = useNavigate();
-        const params = useParams();
-        const { spaceId, objectId } = params;
-        const treeView = useTreeView();
+      current: (params): string[] | null => {
+        const spaceKey = PublicKey.safeFrom(params.spaceId);
+        const spaceId = spaceKey && getSpaceId(spaceKey);
+        if (spaceId && params.objectId) {
+          return [spaceId, params.objectId];
+        } else if (spaceId) {
+          return [spaceId];
+        } else {
+          return null;
+        }
+      },
+      next: (path, params): string[] | null => {
+        if (!path.startsWith('/dxos/space/')) {
+          return null;
+        }
 
-        useEffect(() => {
-          const handle = createSubscription(() => {
-            if (treeView.selected.length > 0) {
-              return;
-            }
-
-            const space = nodes.find((node) => node.id === spaceId);
-            const object = space?.children?.find((node) => {
-              return node.id === objectId;
-            });
-            const node = space && object ? [space.id, object.id] : null;
-            if (node) {
-              treeView.selected = node;
-            }
-          });
-          handle.update([treeView, nodes]);
-
-          return () => handle.unsubscribe();
-        }, [treeView, nodes, spaceId, objectId]);
-
-        useEffect(() => {
-          if (!treeView.selected.length) {
-            return;
-          }
-
-          // TODO(wittjosiah): Check if space.
-          if (treeView.selected.length === 1 && treeView.selected[0] !== spaceId) {
-            navigate(`/space/${treeView.selected[0]}`);
-          }
-
-          // TODO(wittjosiah): Check if object.
-          if (treeView.selected.length === 2 && treeView.selected[1] !== objectId) {
-            navigate(`/space/${treeView.selected[0]}/${treeView.selected[1]}`);
-          }
-        }, [treeView.selected, spaceId, objectId]);
+        return SpacePlugin.provides!.router.current!(params);
       },
     },
     component: (datum, role) => {
@@ -420,9 +403,9 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         case 'dialog':
           if (Array.isArray(datum)) {
             switch (datum[0]) {
-              case 'dxos:SpacePlugin/RenameSpaceDialog':
+              case 'dxos:space/RenameSpaceDialog':
                 return DialogRenameSpace;
-              case 'dxos:SpacePlugin/RestoreSpaceDialog':
+              case 'dxos:space/RestoreSpaceDialog':
                 return DialogRestoreSpace;
               default:
                 return null;
