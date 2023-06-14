@@ -37,7 +37,7 @@ export class Gossip {
 
   public readonly connectionClosed = new Event<PublicKey>();
 
-  constructor(private readonly _params: GossipParams) {}
+  constructor(private readonly _params: GossipParams) { }
 
   getConnections() {
     return Array.from(this._connections.keys());
@@ -75,19 +75,17 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
-    return Promise.all(
-      [...this._connections.values()].map((extension) =>
-        extension
-          .sendAnnounce({
-            peerId: this._params.localPeerId,
-            messageId: PublicKey.random(),
-            channelId: channel,
-            timestamp: new Date(),
-            payload,
-          })
-          .catch((err) => log.warn(err)),
-      ),
-    );
+    for (const extension of this._connections.values()) {
+      void extension
+        .sendAnnounce({
+          peerId: this._params.localPeerId,
+          messageId: PublicKey.random(),
+          channelId: channel,
+          timestamp: new Date(),
+          payload,
+        })
+        .catch((err) => log(err))
+    }
   }
 
   listen(channel: string, callback: (message: GossipMessage) => void) {
