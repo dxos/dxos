@@ -81,4 +81,5 @@ export const composer = {
   'embedded options label': 'Options',
   'unset repo space label': 'Select a different space for this repository',
   'rename space label': 'Rename space',
+  'active space label': 'Active space:',
 };
