@@ -8,6 +8,7 @@ export * from './Dialogs';
 export * from './DropdownMenu';
 export * from './Input';
 export * from './Lists';
+export * from './Link';
 export * from './Main';
 export * from './Message';
 export * from './Tag';

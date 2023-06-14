@@ -63,6 +63,7 @@ const EmbeddedLayoutImpl = () => {
   }, [shell, space]);
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
+  const isPreviewing = editorViewState === 'preview';
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -101,19 +102,15 @@ const EmbeddedLayoutImpl = () => {
             <Tooltip.Trigger asChild>
               <Toggle
                 disabled={!(space && document)}
-                pressed={editorViewState === 'preview'}
+                pressed={isPreviewing}
                 onPressedChange={(nextPressed) => setEditorViewState(nextPressed ? 'preview' : 'editor')}
               >
-                <span className='sr-only'>{t('preview gfm label')}</span>
-                {editorViewState === 'preview' ? (
-                  <PencilSimpleLine className={getSize(5)} />
-                ) : (
-                  <Eye className={getSize(5)} />
-                )}
+                <span className='sr-only'>{t(isPreviewing ? 'exit gfm preview label' : 'preview gfm label')}</span>
+                {isPreviewing ? <PencilSimpleLine className={getSize(5)} /> : <Eye className={getSize(5)} />}
               </Toggle>
             </Tooltip.Trigger>
             <Tooltip.Content {...overlayAttrs}>
-              {t('preview gfm label')}
+              {t(isPreviewing ? 'exit gfm preview label' : 'preview gfm label')}
               <Tooltip.Arrow />
             </Tooltip.Content>
           </Tooltip.Root>
