@@ -21,7 +21,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(private readonly path: string) {}
+  constructor(public readonly path: string) {}
 
   public get size() {
     return this._files.size;
