@@ -14,8 +14,7 @@ import { observer, useQuery } from '@dxos/react-client';
 
 import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { DocumentTreeItem } from './DocumentTreeItem';
-import { ResolverProps } from './ResolverProps';
-import { bindSpace, matchSpace } from './spaceResolvers';
+import { matchSpace } from './spaceResolvers';
 
 export const SpacePickerTreeItem = observer(
   ({
@@ -24,7 +23,15 @@ export const SpacePickerTreeItem = observer(
     source,
     id,
     setSpace,
-  }: Pick<ResolverProps, 'setSpace'> & { identityHex: string; space: Space; source: string; id: string }) => {
+    selected,
+  }: {
+    identityHex: string;
+    space: Space;
+    setSpace: (nextSpace: Space | null) => void;
+    source: string;
+    id: string;
+    selected?: boolean;
+  }) => {
     const { t } = useTranslation('composer');
     const spaceSate = useMulticastObservable(space.state);
     const disabled = spaceSate !== SpaceState.READY;
@@ -81,17 +88,8 @@ export const SpacePickerTreeItem = observer(
               </Tooltip.Portal>
             </Tooltip.Root>
           )}
-          <Button
-            density='fine'
-            classNames='shrink-0'
-            onClick={() => {
-              if (identityHex) {
-                bindSpace(space, identityHex, source, id);
-                setSpace(space);
-              }
-            }}
-          >
-            Select
+          <Button disabled={selected} density='fine' classNames='shrink-0' onClick={() => setSpace(space)}>
+            {t(selected ? 'selected label' : 'select label')}
           </Button>
         </div>
         <TreeItem.Body>

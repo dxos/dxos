@@ -2,21 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { Button, Tree, useId, useTranslation } from '@dxos/aurora';
-import { observer, useClient, useSpaces } from '@dxos/react-client';
+import { observer, useClient, useSpaces, Space } from '@dxos/react-client';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';
-import { bindSpace } from './spaceResolvers';
+import { bindSpace, unbindSpace } from './spaceResolvers';
 
 export const ResolverTree = observer(() => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
-  const { setSpace, source, id, identityHex } = useContext(SpaceResolverContext);
+  const {
+    space: selectedSpace,
+    setSpace: setSelectedSpace,
+    source,
+    id,
+    identityHex,
+  } = useContext(SpaceResolverContext);
+  const setSpace = useCallback(
+    (nextSpace: Space | null) => {
+      if (identityHex && source && id) {
+        selectedSpace && unbindSpace(selectedSpace, identityHex, source, id);
+        nextSpace && bindSpace(nextSpace, identityHex, source, id);
+      }
+      setSelectedSpace(nextSpace);
+    },
+    [selectedSpace, setSelectedSpace, identityHex, source, id],
+  );
   return spaces.length ? (
     <>
       {' '}
@@ -33,7 +49,14 @@ export const ResolverTree = observer(() => {
           return (
             <SpacePickerTreeItem
               key={space.key.toHex()}
-              {...{ space, setSpace, identityHex: identityHex!, source: source!, id: id! }}
+              {...{
+                space,
+                selected: selectedSpace === space,
+                setSpace,
+                identityHex: identityHex!,
+                source: source!,
+                id: id!,
+              }}
             />
           );
         })}

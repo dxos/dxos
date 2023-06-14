@@ -26,7 +26,7 @@ import {
   Tooltip,
   useJdenticonHref,
 } from '@dxos/aurora';
-import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
+import { defaultDescription, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useShell } from '@dxos/react-shell';
 
@@ -69,6 +69,7 @@ const EmbeddedLayoutImpl = () => {
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
 
   const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
 
@@ -180,14 +181,7 @@ const EmbeddedLayoutImpl = () => {
                   <span className='grow'>{t('rename space label')}</span>
                   <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
                 </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  onClick={() => {
-                    // if (space && identityHex && source && id) {
-                    //   unbindSpace(space, identityHex, source, id);
-                    //   setSpace(null);
-                    // }
-                  }}
-                >
+                <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
                   <span className='grow'>{t('unset repo space label')}</span>
                   <Option className={mx('shrink-0', getSize(5))} />
                 </DropdownMenu.Item>
@@ -228,7 +222,21 @@ const EmbeddedLayoutImpl = () => {
         {space && document ? (
           <MarkdownDocument {...{ layout: 'embedded', space, document, editorViewState, setEditorViewState }} />
         ) : source && id && identityHex ? (
-          <ResolverDialog />
+          <DensityProvider density='fine'>
+            <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+              <div
+                role='none'
+                className={osTx(
+                  'dialog.content',
+                  'dialog--resolver__content',
+                  {},
+                  'p-2 bs-72 flex flex-col shadow-none bg-transparent',
+                )}
+              >
+                <ResolverDialog />
+              </div>
+            </div>
+          </DensityProvider>
         ) : null}
         {space && (
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
@@ -239,6 +247,13 @@ const EmbeddedLayoutImpl = () => {
             </Dialog.Overlay>
           </Dialog.Root>
         )}
+        <Dialog.Root open={resolverDialogOpen} onOpenChange={setResolverDialogOpen}>
+          <Dialog.Overlay>
+            <Dialog.Content>
+              <ResolverDialog />
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Root>
       </DensityProvider>
     </>
   );

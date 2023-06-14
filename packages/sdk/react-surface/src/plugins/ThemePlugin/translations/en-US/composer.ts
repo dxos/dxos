@@ -82,4 +82,6 @@ export const composer = {
   'unset repo space label': 'Select a different space for this repository',
   'rename space label': 'Rename space',
   'active space label': 'Active space:',
+  'select label': 'Select',
+  'selected label': 'Selected',
 };
