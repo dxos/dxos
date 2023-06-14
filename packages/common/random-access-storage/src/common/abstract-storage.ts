@@ -25,7 +25,7 @@ export abstract class AbstractStorage implements Storage {
   public abstract readonly type: StorageType;
 
   // TODO(burdon): Make required.
-  constructor(protected readonly path: string) {}
+  constructor(public readonly path: string) {}
 
   [inspect.custom]() {
     return inspectObject(this);
