@@ -55,7 +55,7 @@ export const FullSpaceTreeItem = observer(({ data: item }: { data: GraphNode<Spa
           />
         </TreeItem.OpenTrigger>
         <TreeItem.Heading
-          data-testId='spacePlugin.spaceTreeItemHeading'
+          data-testid='spacePlugin.spaceTreeItemHeading'
           classNames={[
             'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
             error && 'text-error-700 dark:text-error-300',

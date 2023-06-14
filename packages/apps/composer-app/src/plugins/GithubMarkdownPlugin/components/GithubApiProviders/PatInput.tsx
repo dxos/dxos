@@ -50,7 +50,7 @@ export const PatInput = () => {
         <Input.TextInput
           autoFocus
           spellCheck={false}
-          classNames='font-mono'
+          classNames='font-mono mlb-1'
           value={patValue}
           onChange={({ target: { value } }) => setPatValue(value)}
         />

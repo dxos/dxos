@@ -79,7 +79,7 @@ export const composer = {
   'delete document label': 'Delete',
   'loading preview message': 'Loading preview…',
   'preview gfm label': 'Preview Markdown',
-  'exit gfm preview label': 'Edit Markdown',
+  'exit gfm preview label': 'Exit preview',
   'open in github label': 'Open in GitHub',
   'stale rescue title': 'Set a personal access token',
   'stale rescue description':
