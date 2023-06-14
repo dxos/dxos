@@ -32,11 +32,10 @@ test.describe('Basic test', () => {
       });
     });
 
-    test('create space, document is created by default, is displayed in tree', async () => {
+    test('create space, which is displayed in tree', async () => {
       await host.createSpace();
       await waitForExpect(async () => {
         expect(await host.getSpaceItemsCount()).to.equal(2);
-        expect(await host.getDocumentItemsCount()).to.equal(1);
       });
     });
 
@@ -45,7 +44,7 @@ test.describe('Basic test', () => {
       const textBox = await host.getMarkdownTextbox();
       const title = await host.getDocumentTitleInput();
       await waitForExpect(async () => {
-        expect(await host.getDocumentItemsCount()).to.equal(2);
+        expect(await host.getDocumentItemsCount()).to.equal(1);
         expect(await textBox.isEditable()).to.be.true;
         expect(await title.isEditable()).to.be.true;
       });
@@ -77,16 +76,9 @@ test.describe('Basic test', () => {
     test('guest can see same documents on join', async ({ browserName }) => {
       test.skip(platform() !== 'darwin' && browserName === 'webkit');
 
-      const hostLinks = await Promise.all([
-        host.getDocumentLinks().nth(0).getAttribute('href'),
-        host.getDocumentLinks().nth(1).getAttribute('href'),
-      ]);
-      const guestLinks = await Promise.all([
-        guest.getDocumentLinks().nth(0).getAttribute('href'),
-        guest.getDocumentLinks().nth(1).getAttribute('href'),
-      ]);
+      const hostLinks = await Promise.all([host.getDocumentLinks().nth(0).getAttribute('data-itemid')]);
+      const guestLinks = await Promise.all([guest.getDocumentLinks().nth(0).getAttribute('data-itemid')]);
       expect(hostLinks[0]).to.equal(guestLinks[0]);
-      expect(hostLinks[1]).to.equal(guestLinks[1]);
     });
 
     test('host and guest can see each others’ presence when same document is in focus', async ({ browserName }) => {

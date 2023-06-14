@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 
 const composerId = '__DXOS_COMPOSER__';
+const baseUrl = new URL(import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
 
 const srOnly = Object.entries({
   clip: 'rect(0 0 0 0)',
@@ -24,6 +25,20 @@ const composerStyles = Object.entries({
   'min-height': '30rem',
   'margin-bottom': '-5px',
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
+
+let composer: HTMLIFrameElement;
+const getComposerIFrame = (): HTMLIFrameElement => {
+  if (!composer) {
+    console.log('Creating composer iframe...');
+    composer = document.createElement('iframe');
+    composer.setAttribute('id', composerId);
+    composer.setAttribute('src', `${baseUrl.href}embedded?location=${window.location.href}`);
+    composer.setAttribute('style', composerStyles);
+    composer.setAttribute('allow', 'clipboard-write *');
+  }
+
+  return composer;
+};
 
 const setupComposer = () => {
   if (document.getElementById(composerId)) {
@@ -49,12 +64,7 @@ const setupComposer = () => {
   }) as HTMLDivElement | undefined;
 
   if (commentForm) {
-    const composer = document.createElement('iframe');
-    const baseUrl = new URL(import.meta.env.VITE_COMPOSER_URL ?? 'https://composer.dxos.org');
-    composer.setAttribute('id', composerId);
-    composer.setAttribute('src', `${baseUrl.href}embedded?location=${window.location.href}`);
-    composer.setAttribute('style', composerStyles);
-    composer.setAttribute('allow', 'clipboard-write *');
+    const composer = getComposerIFrame();
     Array.from(commentForm.children).forEach((element) => element.setAttribute('style', srOnly));
 
     let stale = false;
@@ -115,6 +125,10 @@ const setupComposer = () => {
 };
 
 const port = browser.runtime.connect({ name: 'content' });
-port.onMessage.addListener(() => setupComposer());
+port.onMessage.addListener(() => {
+  setupComposer();
+  const composerObserver = new MutationObserver(() => setupComposer());
+  composerObserver.observe(document.body, { subtree: true, childList: true });
+});
 
 console.log('Content script initialized.');
