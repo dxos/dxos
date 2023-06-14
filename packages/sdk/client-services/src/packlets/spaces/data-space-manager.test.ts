@@ -49,7 +49,7 @@ describe('DataSpaceManager', () => {
     const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
-    const identity = await createSigningContext(peer1.keyring);
+    const identity1 = await createSigningContext(peer1.keyring);
     const dataSpaceManager1 = new DataSpaceManager(
       peer1.spaceManager,
       peer1.metadataStore,
