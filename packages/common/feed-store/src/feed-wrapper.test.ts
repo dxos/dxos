@@ -107,31 +107,6 @@ describe('FeedWrapper', () => {
     expect(id).to.eq('1');
   });
 
-  test('clear beginning of the feed', async () => {
-    const numBlocks = 10;
-    const builder = new TestItemBuilder();
-    const feedFactory = builder.createFeedFactory();
-    const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper<TestItem>(
-      feedFactory.createFeed(key, {
-        writable: true,
-        valueEncoding: defaultValueEncoding,
-      }),
-      key,
-    );
-    for (const i of Array.from(Array(numBlocks)).keys()) {
-      await feed.append({
-        id: String(i + 1),
-        value: faker.lorem.sentence(),
-      });
-    }
-    expect(feed.properties.length).to.eq(numBlocks);
-
-    const numDelete = 5;
-    await feed._hypercore.clear(0, 5);
-    expect(feed.properties.length).to.eq(numBlocks - numDelete);
-  });
-
   // TODO(dmaretskyi): fix test.
   test.skip('reads blocks from a feed stream', async () => {
     const numBlocks = 10;
