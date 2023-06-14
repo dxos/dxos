@@ -38,10 +38,9 @@ export class ForeverDaemon implements Daemon {
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
         uid: profile,
-        // TODO(burdon): log vs out?
-        logFile: path.join(this._rootDir, 'daemon.log'), // Forever process (when daemonized).
-        outFile: path.join(this._rootDir, 'process-out.log'), // Child stdout.
-        errFile: path.join(this._rootDir, 'process-err.log'), // Child stderr.
+        logFile: path.join(this._rootDir, `${profile}-daemon.log`), // Forever daemon process.
+        outFile: path.join(this._rootDir, `${profile}-out.log`), // Child stdout.
+        errFile: path.join(this._rootDir, `${profile}-err.log`), // Child stderr.
       });
     }
 
