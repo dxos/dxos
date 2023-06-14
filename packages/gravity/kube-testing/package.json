@@ -26,6 +26,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/signal": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "danfojs-node": "^1.1.2",

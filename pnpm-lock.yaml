@@ -4064,6 +4064,7 @@ importers:
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
@@ -4084,6 +4085,7 @@ importers:
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
       '@dxos/signal': link:../../core/mesh/signal
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 7.6.0
       danfojs-node: 1.1.2_seedrandom@3.0.5

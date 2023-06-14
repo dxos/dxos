@@ -3,21 +3,31 @@
 //
 
 
-import { range } from '@dxos/util';
+import { randomInt, range } from '@dxos/util';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder } from '@dxos/client/testing'
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { Client, Config, Expando, Invitation, Space } from '@dxos/client'
+import { Client, Config, Expando, Invitation, Space, Text } from '@dxos/client'
 import assert from 'node:assert';
 import { log } from '@dxos/log';
 import { Context } from '@dxos/context';
 import { scheduleTaskInterval, sleep } from '@dxos/async';
+import { randomBytes } from 'node:crypto';
+import { Timeframe } from '@dxos/timeframe'
+
+import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { failUndefined } from '@dxos/debug';
 
 export type EchoTestSpec = {
   agents: number;
   duration: number;
+  iterationDelay: number;
+
+  insertionSize: number,
+  operationCount: number
+
   signalArguments: string[];
 };
 
@@ -48,7 +58,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     this.builder.config = new Config({
       runtime: {
-        services: { 
+        services: {
           signaling: [{
             server: signalUrl
           }],
@@ -56,7 +66,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       }
     })
 
-    const client = new Client({ services: this.builder.createLocal() });
+    const services = this.builder.createLocal();
+    const client = new Client({ services });
     await client.initialize();
     await client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
 
@@ -86,6 +97,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     }
 
     assert(space);
+    const spaceBackend = services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
+
+
     log.info(`space joined`, { agentIdx, spaceKey: space.key });
     await env.syncBarrier(`space joined`)
 
@@ -93,21 +107,54 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     log.info(`space ready`, { agentIdx, spaceKey: space.key });
     await env.syncBarrier(`space ready`)
 
+    const obj = space.db.add(new Text('', TextKind.PLAIN))
+    await space.db.flush()
+
+
+
     let iter = 0;
+    let lastTimeframe = spaceBackend.dataPipeline.pipelineState!.timeframe;
+    let lastTime = Date.now();
     const ctx = new Context()
     scheduleTaskInterval(ctx, async () => {
       log.info('iter', { iter, agentIdx })
+
+      await env.redis.set(`${env.params.testId}:timeframe:${env.params.agentId}`, serializeTimeframe(spaceBackend.dataPipeline.pipelineState!.timeframe))
+
       await env.syncBarrier(`iter ${iter}`)
 
-      space.db.add(new Expando({
-        text: '123'
-      }))
+      // compute lag
+      const timeframes = await Promise.all(Object.keys(env.params.agents).map(agentId => env.redis.get(`${env.params.testId}:timeframe:${agentId}`).then(timeframe => timeframe ? deserializeTimeframe(timeframe) : new Timeframe())))
+      const maximalTimeframe = Timeframe.merge(...timeframes)
+      const lag = maximalTimeframe.newMessages(spaceBackend.dataPipeline.pipelineState!.timeframe)
+
+      // compute throughput
+      const mutationsSinceLastIter = spaceBackend.dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+      const timeSinceLastIter = Date.now() - lastTime;
+      lastTime = Date.now()
+      const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000))
+      
+      log.info('stats', { lag, mutationsPerSec, agentIdx })
+
+      // TODO(dmaretskyi): Replace with timeframe lag.
+      let totalTextLength = 0
+      for (const obj of space.db.objects) {
+        if (obj instanceof Text) {
+          totalTextLength += obj.text.length;
+        }
+      }
+
+      for(const _ of range(spec.operationCount)) {
+        // TODO: extract size and random seed
+        obj.model!.content.insert(randomInt(obj.text.length, 0), randomBytes(spec.insertionSize).toString('hex') as any)
+        if (obj.text.length > 100) {
+          obj.model!.content.delete(randomInt(obj.text.length, 0), randomInt(obj.text.length, 100))
+        }
+      }
+
       await space.db.flush()
-
-      log.info('iter complete', { itemCount: space.db.objects.length})
-
       iter++;
-    }, 500);
+    }, spec.iterationDelay);
 
     await sleep(spec.duration);
     ctx.dispose();
@@ -115,6 +162,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
-
   }
 }
+
+
+const serializeTimeframe = (timeframe: Timeframe) => JSON.stringify(Object.fromEntries(timeframe.frames().map(([k, v]) => [k.toHex(), v])))
+
+const deserializeTimeframe = (timeframe: string) => new Timeframe(Object.entries(JSON.parse(timeframe)).map(([k, v]) => [PublicKey.from(k), v as number]))
