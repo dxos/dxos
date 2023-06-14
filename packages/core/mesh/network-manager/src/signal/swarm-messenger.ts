@@ -73,11 +73,15 @@ export class SwarmMessenger implements SignalMessenger {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
       await this._handleSignal({ author, recipient, message });
+    } else if (message.data?.signalBatch) {
+      await this._handleSignal({ author, recipient, message });
+    } else {
+      log.warn('unknown message', { message });
     }
   }
 
   async signal(message: SignalMessage): Promise<void> {
-    assert(message.data?.signal);
+    assert(message.data?.signal || message.data?.signalBatch, 'Invalid message');
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
@@ -176,12 +180,15 @@ export class SwarmMessenger implements SignalMessenger {
     message: SwarmMessage;
   }): Promise<void> {
     assert(message.messageId);
-    assert(message.data.signal, 'No Signal');
+    assert(message.data.signal || message.data.signalBatch, 'Invalid message');
     const signalMessage: SignalMessage = {
       author,
       recipient,
       ...message,
-      data: { signal: message.data.signal },
+      data: { 
+        signal: message.data.signal,
+        signalBatch: message.data.signalBatch,
+      },
     };
 
     await this._onSignal(signalMessage);

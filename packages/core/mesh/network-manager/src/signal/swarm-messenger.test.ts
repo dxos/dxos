@@ -36,7 +36,7 @@ describe('SwarmMessenger', () => {
 
   const createSignalClientAndMessageRouter = async ({
     signalApiUrl,
-    onSignal = (async () => {}) as any,
+    onSignal = (async () => { }) as any,
     onOffer = async () => ({ accept: true }),
     topic,
   }: {
@@ -99,7 +99,10 @@ describe('SwarmMessenger', () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: 'Some info' } } },
+      data: {
+        signal: { payload: { msg: 'Some info' } },
+        signalBatch: undefined,
+      },
     };
     await router2.signal(msg);
 
@@ -115,13 +118,13 @@ describe('SwarmMessenger', () => {
       peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => {}) as any,
+      onSignal: (async () => { }) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
     const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => {}) as any,
+      onSignal: (async () => { }) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
@@ -192,7 +195,7 @@ describe('SwarmMessenger', () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '1to3' } } },
+      data: { signal: { payload: { msg: '1to3' } }, signalBatch: undefined },
     };
     await router1.signal(msg1to3);
     await waitForExpect(() => {
@@ -205,7 +208,7 @@ describe('SwarmMessenger', () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '2to3' } } },
+      data: { signal: { payload: { msg: '2to3' } }, signalBatch: undefined },
     };
     await router2.signal(msg2to3);
     await waitForExpect(() => {
@@ -218,7 +221,7 @@ describe('SwarmMessenger', () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '3to1' } } },
+      data: { signal: { payload: { msg: '3to1' } }, signalBatch: undefined },
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
@@ -233,7 +236,7 @@ describe('SwarmMessenger', () => {
       peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => {}) as any,
+      onSignal: (async () => { }) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
@@ -243,7 +246,7 @@ describe('SwarmMessenger', () => {
       peerId: peer2,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => {}) as any,
+      onSignal: (async () => { }) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });

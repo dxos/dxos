@@ -112,6 +112,7 @@ describe('Signal Integration Test', () => {
         sessionId: PublicKey.random(),
         data: {
           signal: { payload: { message: 'Hello world!' } },
+          signalBatch: undefined
         },
       };
       await peerNetworking1.messageRouter.signal(message);
@@ -129,6 +130,7 @@ describe('Signal Integration Test', () => {
         sessionId: PublicKey.random(),
         data: {
           signal: { payload: { foo: 'bar' } },
+          signalBatch: undefined
         },
       };
       await peerNetworking2.messageRouter.signal(message);

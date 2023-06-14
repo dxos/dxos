@@ -131,7 +131,7 @@ export class Swarm {
         onMessage: async (message) => {
           await this._swarmMessenger
             .receiveMessage(message)
-            .catch((err) => log('Error while receiving message', { err }));
+            .catch((err) => log.warn('Error while receiving message', { err }));
         },
       });
   }
