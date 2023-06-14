@@ -36,7 +36,9 @@ export const ResolverTree = observer(() => {
   return spaces.length ? (
     <>
       {' '}
-      <Dialog.Title classNames='shrink-0'>{t('resolver tree label')}</Dialog.Title>
+      <Dialog.Title tabIndex={-1} classNames='shrink-0'>
+        {t('resolver tree label')}
+      </Dialog.Title>
       <Dialog.Description>{t('resolver tree description')}</Dialog.Description>
       <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-1' />
       <Tree.Root
