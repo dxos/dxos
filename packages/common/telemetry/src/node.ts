@@ -40,7 +40,7 @@ export const page = ({ installationId: anonymousId, identityId: userId, ...optio
     analytics?.page({
       ...options,
       userId,
-      anonymousId,
+      anonymousId: anonymousId!,
     });
   } catch (err) {
     log.catch('Failed to track page', err);
@@ -59,7 +59,7 @@ export const event = ({ installationId: anonymousId, identityId: userId, name: e
     analytics?.track({
       ...options,
       userId,
-      anonymousId,
+      anonymousId: anonymousId!,
       event,
     });
   } catch (err) {

@@ -178,6 +178,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/document-model/package.json",
           "jsonpath": "$.version"
         },

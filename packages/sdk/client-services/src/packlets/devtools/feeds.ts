@@ -39,7 +39,7 @@ export const subscribeToFeeds = (
         feeds: Array.from(feedMap.values()).map((feed) => ({
           feedKey: feed.key,
           length: feed.properties.length,
-          diskUsage: feed.core.byteLength,
+          bytes: feed.core.byteLength,
         })),
       });
     };

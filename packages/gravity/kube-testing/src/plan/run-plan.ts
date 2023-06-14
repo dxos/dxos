@@ -184,4 +184,4 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   }
 };
 
-const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().toHex().slice(0, 4)}`;
+const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;

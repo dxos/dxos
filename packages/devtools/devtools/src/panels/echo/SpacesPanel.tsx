@@ -26,7 +26,7 @@ const SpacesPanel = () => {
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
-  console.log(space)
+  console.log(space);
 
   const object = useMemo(() => {
     if (!metadata) {
@@ -35,13 +35,16 @@ const SpacesPanel = () => {
 
     // TODO(burdon): List feeds and nav.
     return {
-      id: metadata.key.truncate(4),
+      id: metadata.key.truncate(),
       name: humanize(metadata?.key),
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
       genesisFeed: humanize(metadata?.genesisFeed),
       controlFeed: humanize(metadata?.controlFeed),
       dataFeed: humanize(metadata?.dataFeed),
-      startupTime: space?.internal.data?.metrics.open && space?.internal.data?.metrics.ready && (space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime()),
+      startupTime:
+        space?.internal.data?.metrics.open &&
+        space?.internal.data?.metrics.ready &&
+        space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime(),
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
@@ -72,34 +75,34 @@ const columns: TableColumn<PipelineTableRow>[] = [
     width: 120,
     accessor: (block) => {
       const feedKey = block.feedKey;
-      return `${feedKey.truncate(8)}`;
-    }
+      return `${feedKey.truncate()}`;
+    },
   },
   {
     Header: 'Type',
     width: 80,
-    accessor: 'type'
+    accessor: 'type',
   },
   {
     Header: 'Processed',
     width: 80,
-    accessor: 'processed'
+    accessor: 'processed',
   },
   {
     Header: 'Target',
     width: 80,
-    accessor: 'target'
+    accessor: 'target',
   },
   {
     Header: 'Total',
     width: 80,
-    accessor: 'total'
+    accessor: 'total',
   },
   {
     Header: 'Known',
     width: 80,
-    accessor: 'known'
-  }
+    accessor: 'known',
+  },
 ];
 
 const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
@@ -110,11 +113,11 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
         state.currentControlTimeframe ?? new Timeframe(),
         state.targetControlTimeframe ?? new Timeframe(),
         state.totalControlTimeframe ?? new Timeframe(),
-        state.knownControlTimeframe ?? new Timeframe()
+        state.knownControlTimeframe ?? new Timeframe(),
       )
         .frames()
-        .map(([key]) => key)
-    ])
+        .map(([key]) => key),
+    ]),
   );
 
   const dataKeys = Array.from(
@@ -124,11 +127,11 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
         state.currentDataTimeframe ?? new Timeframe(),
         state.targetDataTimeframe ?? new Timeframe(),
         state.totalDataTimeframe ?? new Timeframe(),
-        state.knownDataTimeframe ?? new Timeframe()
+        state.knownDataTimeframe ?? new Timeframe(),
       )
         .frames()
-        .map(([key]) => key)
-    ])
+        .map(([key]) => key),
+    ]),
   );
 
   const data: PipelineTableRow[] = [
@@ -138,8 +141,8 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
         type: 'control',
         processed: state.currentControlTimeframe?.get(feedKey),
         target: state.targetControlTimeframe?.get(feedKey),
-        total: state.totalControlTimeframe?.get(feedKey)
-      })
+        total: state.totalControlTimeframe?.get(feedKey),
+      }),
     ),
     ...dataKeys.map(
       (feedKey): PipelineTableRow => ({
@@ -147,9 +150,9 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
         type: 'data',
         processed: state.currentDataTimeframe?.get(feedKey),
         target: state.targetDataTimeframe?.get(feedKey),
-        total: state.totalDataTimeframe?.get(feedKey)
-      })
-    )
+        total: state.totalDataTimeframe?.get(feedKey),
+      }),
+    ),
   ];
 
   return <Table columns={columns} data={data} />;
@@ -160,7 +163,7 @@ const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
     state.currentControlTimeframe ?? new Timeframe(),
     state.targetControlTimeframe ?? new Timeframe(),
     state.totalControlTimeframe ?? new Timeframe(),
-    state.knownControlTimeframe ?? new Timeframe()
+    state.knownControlTimeframe ?? new Timeframe(),
   )
     .frames()
     .map(([key]) => key);
@@ -169,7 +172,7 @@ const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
     state.currentDataTimeframe ?? new Timeframe(),
     state.targetDataTimeframe ?? new Timeframe(),
     state.totalDataTimeframe ?? new Timeframe(),
-    state.knownDataTimeframe ?? new Timeframe()
+    state.knownDataTimeframe ?? new Timeframe(),
   )
     .frames()
     .map(([key]) => key);
@@ -214,7 +217,7 @@ const FeedView = ({ feedKey, processed = 0, target = 0 }: FeedViewProps) => {
   const total = Math.max(processed);
   return (
     <div className='flex flex-row overflow-auto gap-0.5'>
-      <div>{feedKey.truncate(8)}</div>
+      <div>{feedKey.truncate()}</div>
       {range(total).map((i) => {
         const color = i <= processed ? 'bg-green-400' : i <= target ? 'bg-orange-400' : 'bg-gray-400';
 
