@@ -15,7 +15,7 @@ In this guide, we'll cover:
 - Using [HALO](#how-to-use-echo) for decentralized identity.
 - Deploying the app.
 
-## Create a DXOS app
+## Creating a DXOS app
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react), but in this guide we will walk you through creating and deploying a `react` app.
 
@@ -24,8 +24,8 @@ Ensure `node -v` is at version 18 or higher (we recommend [Node Version Manager]
 First, create a new empty folder:
 
 ```bash
-mkdir hello
-cd hello
+mkdir shared-counter
+cd shared-counter
 ```
 
 We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
@@ -89,7 +89,7 @@ The other wrapper components are part of DXOS's [`react-appkit`](./react/ui.md):
 - `<ErrorBoundary>` and `<ResetDialog>` catch errors that bubble up from the application and provide a user-friendly way to refresh the application in the event of a crash.
 - `<ThemeProvider>` and the `<GenericFallback>` give you the DXOS styles along with a loading indicator.
 
-## Create a User Identity
+## Creating a User Identity
 
 Before an application can read or write user data, the device must be authenticated. The first time a user runs a DXOS application, they won't have an identity yet. The application needs to prompt them to create one.
 
@@ -112,7 +112,7 @@ export const Counter = () => {
 
 `useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
 
-## Update UI state from ECHO
+## Updating UI state from ECHO
 
 Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. In the `Counter` component, replace the `return` with the following:
 
@@ -153,7 +153,7 @@ When the app refreshes, you should now see "Clicked 0 times."
 
 `Expando` is a DXOS wrapper class for storing [untyped data](./react/mutations.md#untyped-mutations) in ECHO. An `Expando` is just a plain ol' JavaScript object that you can add fields to and manipulate directly. We also offer robust tooling around [typed data](./react/mutations.md#typed-mutations) that we recommend for more complex applications.
 
-## Update the Counter
+## Updating the Counter
 
 Let's add a button to update the count of the counter.
 
@@ -201,7 +201,7 @@ Every time you click the button, you should see the count increase by 1. Notice 
 
 The counter's data is stored locally, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) which works offline. Try it out. Refresh the app. Quit your browser and re-open it. The counter's count remains. You can even update the count offline.
 
-## Connect another peer
+## Connecting another peer
 
 Now let's test out connecting multiple peers. Open another window and load the localhost URL. The two windows should now be in sync. You can also connect a peer on a different device.
 
@@ -216,6 +216,7 @@ You may wonder why we chose to represent a counter as an array when an integer w
 - Because CRDTs
   - LWW could screw this up.
 
+<<<<<<< HEAD
 ::: info Why this is cool:
 
 - State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
@@ -335,70 +336,29 @@ export const Component = () => {
 
 This will begin tracking further changes on the object and replicating them to other peers.
 
+=======
+>>>>>>> 8eab9b46d (Add static deployment guide)
 ### Recap
 
 - A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
 - Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
 - The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
-### Next steps
+## Deploying the app
 
-Continue reading below about how to deploy and host the app, or jump to:
+DXOS apps are static apps that rely on peer-to-peer networking and client-side resources for storage and computation. There are no servers or backends. However, the static assets for the app need to be hosted somewhere in order to access them from a web browser.
 
-- ECHO with [React](./react)
-- ECHO with [TypeScript](./typescript)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+We offer a sophisticated self-hosting appliance called [KUBE](./kube/README.md) that you can also use to [deploy your app's assets to IPFS](./kube/deploying.md). While this process is not as simple as a plain static asset host, it avoids reliance on centralized hosts.
 
-## Starting a KUBE
+For the sake of speed and this guide, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
-[KUBE](kube/overview) hosts and serves applications and provides supporting services like peer network discovery.
+1. Go to "Add new site" in Netlify, and click "Import an existing project."
+2. Link to your application's repository.
+   - Set the build command to `npm run build`
+   - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+3. Publish!
 
-Install KUBE:
-
-```bash file=./snippets/install-kube.sh
-sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"
-```
-
-Then:
-
-```bash
-sudo kube start # start the service in the background
-kube status # verify it's running
-```
-
-Once KUBE is running, applications can be deployed to it. 🚀
-
-Learn more about what [services](platform/kube) KUBE provides.
-
-## Deploying apps to KUBE
-
-To deploy to KUBE, first ensure a [KUBE](#starting-a-kube) is running as above.
-
-If using a [DXOS application template](#create-an-app):
-
-```bash
-pnpm run deploy
-```
-
-Otherwise, to deploy any static application:
-
-- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
-- Run `dx app publish`
-
-The app will be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
-
-For example, and app created with `dx app create hello`, the app will be on [`hello.localhost`](http://hello.localhost) by default.
-
-::: warning Caution
-Your app will now always be available on your machine until KUBE or the specific app is stopped.
-:::
-
-### Tunneling
-
-KUBE can expose apps to the world wide web and provide URLs that can be used to reach them from anywhere on the internet.
-
-Simply set `tunnel: true` in `dx.yml` and redeploy. Read more about KUBE [`tunneling`](./kube/tunneling).
+That's it.
 
 ## Next steps
 
