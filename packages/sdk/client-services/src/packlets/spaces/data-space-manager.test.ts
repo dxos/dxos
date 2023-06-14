@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import path from 'node:path';
 
 import { latch } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
@@ -10,7 +11,9 @@ import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
+import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
 import { DataSpaceManager } from './data-space-manager';
@@ -194,10 +197,11 @@ describe('DataSpaceManager', () => {
   });
 
   describe('Epochs', () => {
-    test.skip('Epoch truncates feeds', async () => {
+    test('Epoch truncates feeds', async () => {
       const builder = new TestBuilder();
+      afterTest(async () => builder.destroy());
 
-      const peer = builder.createPeer();
+      const peer = builder.createPeer({ storageType: StorageType.NODE });
       const identity = await createSigningContext(peer.keyring);
       const dataSpaceManager = new DataSpaceManager(
         peer.spaceManager,
@@ -212,13 +216,20 @@ describe('DataSpaceManager', () => {
       const space = await dataSpaceManager.createSpace();
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
-      log.info('feeds', { feeds: space.inner.dataPipeline.pipelineState?.feeds.map((feed) => feed) });
-      await testLocalDatabase(space.dataPipeline);
-      await testLocalDatabase(space.dataPipeline);
-      await testLocalDatabase(space.dataPipeline);
-      await testLocalDatabase(space.dataPipeline);
+      const feedDataPath = path.join(space.inner.dataPipeline.pipelineState!.feeds[0].key.toHex(), 'data');
+      const directory = peer.storage.createDirectory('feeds');
+      const file = directory.getOrCreateFile(feedDataPath);
+      afterTest(() => file.close());
+
+      expect((await file.stat()).size === 0).to.be.true;
+
+      for (const _ in range(10)) {
+        await testLocalDatabase(space.dataPipeline);
+      }
+
+      expect((await file.stat()).size !== 0).to.be.true;
       await space.createEpoch();
-      log.info('feeds', { feeds: space.inner.dataPipeline.pipelineState?.feeds.map((feed) => feed.length) });
+      expect((await file.stat()).size === 0).to.be.true;
     });
   });
 });
