@@ -33,6 +33,7 @@ import {
   PublicKey,
   ShellLayout,
   Space,
+  SpaceState,
   TypedObject,
 } from '@dxos/react-client';
 import {
@@ -269,6 +270,8 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             handle.update([space.properties]);
             subscriptions.add(handle.unsubscribe);
           }
+          attributes.disabled = space.state.get() !== SpaceState.READY;
+          attributes.error = space.state.get() === SpaceState.ERROR;
           node.attributes = attributes ?? {};
 
           let children = rootObjects.get(id);

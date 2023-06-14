@@ -52,7 +52,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
         <button
           role='link'
           {...(!sidebarOpen && { tabIndex: -1 })}
-          data-itemid={item.id}
+          data-itemid={node.id}
           onClick={() => {
             treeView.selected = [node.parent!.id, node.id];
             !isLg && closeSidebar();
