@@ -31,6 +31,10 @@ export const composer = {
   'hide space label': 'Hide this space',
   'profile settings label': 'Profile settings',
   'github pat label': 'GitHub personal access token',
+  'github pat description':
+    'Composer needs this in order to communicate with GitHub. <docsLink>GitHub’s documentation describes how to create a token.</docsLink> Composer only needs write access to issues, contents, and pull requests.',
+  'github pat description href':
+    'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
   'empty github pat message': 'Set a GitHub personal access token to continue',
   'set github pat label': 'Set GitHub token',
   'error github pat message': 'There was a problem authenticating with GitHub using the personal access token provided',
@@ -75,7 +79,7 @@ export const composer = {
   'delete document label': 'Delete',
   'loading preview message': 'Loading preview…',
   'preview gfm label': 'Preview Markdown',
-  'exit gfm preview label': 'Edit Markdown',
+  'exit gfm preview label': 'Exit preview',
   'open in github label': 'Open in GitHub',
   'stale rescue title': 'Set a personal access token',
   'stale rescue description':
