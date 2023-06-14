@@ -3,14 +3,35 @@
 //
 import './embedded.css';
 
-import { ArrowSquareOut, CaretDown, DotsThreeVertical, Eye, Option, UserPlus } from '@phosphor-icons/react';
+import {
+  ArrowSquareOut,
+  CaretDown,
+  DotsThreeVertical,
+  Eye,
+  Option,
+  PencilSimpleLine,
+  UserPlus,
+} from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { Button, ButtonGroup, DensityProvider, Toggle, useTranslation, DropdownMenu, Tooltip } from '@dxos/aurora';
-import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
+import {
+  Avatar,
+  Button,
+  ButtonGroup,
+  DensityProvider,
+  Dialog,
+  Toggle,
+  useTranslation,
+  DropdownMenu,
+  Tooltip,
+  useJdenticonHref,
+} from '@dxos/aurora';
+import { defaultDescription, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useShell } from '@dxos/react-shell';
 
+import { DialogRenameSpace } from '../../../SpacePlugin/DialogRenameSpace';
+import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,
@@ -18,7 +39,6 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
-import { unbindSpace } from '../GithubEchoResolverProviders/spaceResolvers';
 import { MarkdownDocument } from '../MarkdownDocument';
 import { EditorViewState } from '../props';
 
@@ -26,7 +46,7 @@ const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation('composer');
-  const { space, source, id, identityHex, setSpace } = useContext(SpaceResolverContext);
+  const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const shell = useShell();
 
@@ -48,6 +68,11 @@ const EmbeddedLayoutImpl = () => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
+
+  const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
+
   return (
     <>
       <style type='text/css'>{`
@@ -59,7 +84,7 @@ const EmbeddedLayoutImpl = () => {
         }
       `}</style>
       <DensityProvider density='fine'>
-        <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
+        <div role='none' className='fixed inline-end-2 block-end-2 z-10 flex gap-2'>
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Button disabled={!space} onClick={handleInvite}>
@@ -80,7 +105,11 @@ const EmbeddedLayoutImpl = () => {
                 onPressedChange={(nextPressed) => setEditorViewState(nextPressed ? 'preview' : 'editor')}
               >
                 <span className='sr-only'>{t('preview gfm label')}</span>
-                <Eye className={getSize(5)} />
+                {editorViewState === 'preview' ? (
+                  <PencilSimpleLine className={getSize(5)} />
+                ) : (
+                  <Eye className={getSize(5)} />
+                )}
               </Toggle>
             </Tooltip.Trigger>
             <Tooltip.Content {...overlayAttrs}>
@@ -101,6 +130,7 @@ const EmbeddedLayoutImpl = () => {
           >
             <DropdownMenu.Root
               {...{
+                modal: false,
                 open: optionsMenuOpen,
                 onOpenChange: (nextOpen: boolean) => {
                   if (!nextOpen) {
@@ -111,8 +141,8 @@ const EmbeddedLayoutImpl = () => {
               }}
             >
               <Tooltip.Trigger asChild>
-                <DropdownMenu.Trigger asChild>
-                  <Button disabled={!(space && document)}>
+                <DropdownMenu.Trigger asChild disabled={!(space && document)}>
+                  <Button>
                     <span className='sr-only'>{t('embedded options label')}</span>
                     <DotsThreeVertical className={getSize(5)} />
                   </Button>
@@ -125,7 +155,7 @@ const EmbeddedLayoutImpl = () => {
                     rel='noreferrer'
                     href={
                       space && document
-                        ? `${location.origin}/document/${space?.key.toHex() ?? 'never'}/${document.id}`
+                        ? `${location.origin}/space/${space?.key.toHex() ?? 'never'}/${document.id}`
                         : '#'
                     }
                   >
@@ -133,14 +163,25 @@ const EmbeddedLayoutImpl = () => {
                     <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
                   </a>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  onClick={() => {
-                    if (space && identityHex && source && id) {
-                      unbindSpace(space, identityHex, source, id);
-                      setSpace(null);
-                    }
-                  }}
-                >
+                <DropdownMenu.Separator />
+                <DropdownMenu.GroupLabel>
+                  {t('active space label')}
+                  <Avatar.Root size={5} variant='circle'>
+                    <div role='none' className='flex gap-1 mlb-1 items-center'>
+                      <Avatar.Frame>
+                        <Avatar.Fallback href={spaceJdenticon} />
+                      </Avatar.Frame>
+                      <Avatar.Label classNames='text-sm text-[--surface-text]'>
+                        {space && getSpaceDisplayName(t, space)}
+                      </Avatar.Label>
+                    </div>
+                  </Avatar.Root>
+                </DropdownMenu.GroupLabel>
+                <DropdownMenu.Item onClick={() => setRenameDialogOpen(true)}>
+                  <span className='grow'>{t('rename space label')}</span>
+                  <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
                   <span className='grow'>{t('unset repo space label')}</span>
                   <Option className={mx('shrink-0', getSize(5))} />
                 </DropdownMenu.Item>
@@ -157,8 +198,8 @@ const EmbeddedLayoutImpl = () => {
               {t('save and close label')}
             </Button>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button disabled={!(space && document)}>
+              <DropdownMenu.Trigger asChild disabled={!(space && document)}>
+                <Button>
                   <CaretDown />
                 </Button>
               </DropdownMenu.Trigger>
@@ -181,8 +222,38 @@ const EmbeddedLayoutImpl = () => {
         {space && document ? (
           <MarkdownDocument {...{ layout: 'embedded', space, document, editorViewState, setEditorViewState }} />
         ) : source && id && identityHex ? (
-          <ResolverDialog />
+          <Dialog.Root open onOpenChange={() => true}>
+            <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+              <div
+                role='none'
+                className={osTx(
+                  'dialog.content',
+                  'dialog--resolver__content',
+                  {},
+                  'p-2 bs-72 flex flex-col shadow-none bg-transparent',
+                )}
+              >
+                <ResolverDialog />
+              </div>
+            </div>
+          </Dialog.Root>
         ) : null}
+        {space && (
+          <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+            <Dialog.Overlay classNames='backdrop-blur'>
+              <Dialog.Content>
+                <DialogRenameSpace data={['dxos:SpacePlugin/RenameSpaceDialog', space]} />
+              </Dialog.Content>
+            </Dialog.Overlay>
+          </Dialog.Root>
+        )}
+        <Dialog.Root open={resolverDialogOpen} onOpenChange={setResolverDialogOpen}>
+          <Dialog.Overlay classNames='backdrop-blur'>
+            <Dialog.Content>
+              <ResolverDialog />
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Root>
       </DensityProvider>
     </>
   );

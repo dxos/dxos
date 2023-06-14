@@ -2,38 +2,62 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 
-import { Button, Tree, useId, useTranslation } from '@dxos/aurora';
-import { observer, useClient, useSpaces } from '@dxos/react-client';
+import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
+import { observer, useClient, useSpaces, Space } from '@dxos/react-client';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';
-import { bindSpace } from './spaceResolvers';
+import { bindSpace, unbindSpace } from './spaceResolvers';
 
 export const ResolverTree = observer(() => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
   const treeLabel = useId('treeLabel');
   const { t } = useTranslation('composer');
-  const { setSpace, source, id, identityHex } = useContext(SpaceResolverContext);
+  const {
+    space: selectedSpace,
+    setSpace: setSelectedSpace,
+    source,
+    id,
+    identityHex,
+  } = useContext(SpaceResolverContext);
+  const setSpace = useCallback(
+    (nextSpace: Space | null) => {
+      if (identityHex && source && id) {
+        selectedSpace && unbindSpace(selectedSpace, identityHex, source, id);
+        nextSpace && bindSpace(nextSpace, identityHex, source, id);
+      }
+      setSelectedSpace(nextSpace);
+    },
+    [selectedSpace, setSelectedSpace, identityHex, source, id],
+  );
   return spaces.length ? (
     <>
       {' '}
-      <h1 className='shrink-0 text-lg font-system-normal' id={treeLabel}>
+      <Dialog.Title tabIndex={-1} classNames='shrink-0'>
         {t('resolver tree label')}
-      </h1>
-      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-2' />
+      </Dialog.Title>
+      <Dialog.Description>{t('resolver tree description')}</Dialog.Description>
+      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-1' />
       <Tree.Root
-        aria-labelledby={treeLabel}
+        aria-label={t('resolver tree label')}
         data-testid='composer.sidebarTree'
-        classNames='overflow-y-auto -mli-2 pli-2'
+        classNames='overflow-y-auto -mli-2 p-2'
       >
         {spaces.map((space) => {
           return (
             <SpacePickerTreeItem
               key={space.key.toHex()}
-              {...{ space, setSpace, identityHex: identityHex!, source: source!, id: id! }}
+              {...{
+                space,
+                selected: selectedSpace === space,
+                setSpace,
+                identityHex: identityHex!,
+                source: source!,
+                id: id!,
+              }}
             />
           );
         })}
