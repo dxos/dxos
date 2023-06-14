@@ -18,17 +18,14 @@ export type RunServicesParams = {
 };
 
 export const runServices = async (params: RunServicesParams) => {
-  log.info('faasd', {
-    gateway: params.config.values.runtime?.services?.faasd?.gateway,
-  });
-
+  log('running', { gateway: params.config.values.runtime?.services?.faasd?.gateway });
   const services = fromHost(params.config);
 
   // Global hook for debuggers;
   ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
 
   await services.open();
-  log.info('open');
+  log('open');
 
   const httpServer = http.createServer();
 
@@ -43,16 +40,16 @@ export const runServices = async (params: RunServicesParams) => {
         server: httpServer,
         onConnection: async () => {
           const id = PublicKey.random().toHex();
-          log.info('connection', { id });
+          log('connection', { id });
 
           return {
             exposed: services.descriptors,
             handlers: services.services as ClientServices,
             onOpen: async () => {
-              log.info('open', { id });
+              log('open', { id });
             },
             onClose: async () => {
-              log.info('close', { id });
+              log('close', { id });
             },
           };
         },
@@ -66,16 +63,16 @@ export const runServices = async (params: RunServicesParams) => {
         port: parseInt(port),
         onConnection: async () => {
           const id = PublicKey.random().toHex();
-          log.info('connection', { id });
+          log('connection', { id });
 
           return {
             exposed: services.descriptors,
             handlers: services.services as ClientServices,
             onOpen: async () => {
-              log.info('open', { id });
+              log('open', { id });
             },
             onClose: async () => {
-              log.info('close', { id });
+              log('close', { id });
             },
           };
         },
@@ -87,13 +84,13 @@ export const runServices = async (params: RunServicesParams) => {
     }
   }
 
-  log.info('listening', { socket: params.listen });
+  log('listening', { socket: params.listen });
 
   const faasConfig = params.config.values.runtime?.services?.faasd;
   if (faasConfig) {
     const { FaasConnector } = await import('./faas/connector');
     const connector = new FaasConnector(faasConfig, services);
     await connector.open();
-    log.info('connected to OpenFASS', { gateway: faasConfig.gateway });
+    log('connected', { gateway: faasConfig.gateway });
   }
 };

@@ -37,9 +37,9 @@ export default class Auth extends BaseCommand {
       );
 
       if (!kubeAccessCreds.length) {
-        this.log(chalk`{gray No kube access credentials - requesting..}`);
+        this.log(chalk`{gray No KUBE access credentials - requesting..}`);
       } else {
-        this.log(chalk`{gray Kube access credentials found - requesting session token..}`);
+        this.log(chalk`{gray KUBE access credentials found - requesting session token..}`);
       }
 
       const credsToPresent = [authDeviceCreds[0].id, kubeAccessCreds[0]?.id].filter(Boolean);

@@ -4,10 +4,9 @@
 
 import { Flags } from '@oclif/core';
 
-import { Client } from '@dxos/client';
+import { Client, diagnostics } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { diagnostics } from '../../util';
 
 /**
  * DX_PROFILE=test dx-dev debug stats --json

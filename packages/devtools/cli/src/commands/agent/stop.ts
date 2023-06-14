@@ -12,8 +12,7 @@ export default class Stop extends BaseCommand {
     return await this.execWithDaemon(async (daemon) => {
       const params = await this.parse(Stop);
       await daemon.stop(params.flags.profile);
-
-      this.log('Stopped');
+      this.log('Agent stopped');
     });
   }
 }

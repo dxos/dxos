@@ -23,10 +23,8 @@ export default class Reset extends BaseCommand {
   async run(): Promise<any> {
     const params = await this.parse(Reset);
     const {
-      flags: { force, profile },
+      flags: { dryRun, force, profile },
     } = params;
-
-    console.log('::::::::::::', profile);
 
     const paths = [
       path.join(DX_CACHE, profile),
@@ -36,15 +34,16 @@ export default class Reset extends BaseCommand {
       this.clientConfig?.get('runtime.client.storage.path'), // TODO(burdon): Should match DX_RUNTIME.
     ].filter(Boolean) as string[];
 
-    const go = force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`));
-    if (!go) {
+    const dry = dryRun || !(force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
+    if (!dry) {
+      await this.execWithDaemon(async (daemon) => daemon.stop(params.flags.profile));
+
       this.warn('Deleting files...');
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
         this.ok();
       });
 
-      // TODO(burdon): Daemon life-cycle.
       await this.execWithDaemon(async (daemon) => daemon.restart(params.flags.profile));
     }
 

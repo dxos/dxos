@@ -29,6 +29,6 @@ export default class Run extends BaseCommand {
 
     assert(this.clientConfig);
     await runServices({ listen, config: this.clientConfig });
-    this.log('agent started...');
+    this.log('Agent started... (ctrl-c to exit)');
   }
 }

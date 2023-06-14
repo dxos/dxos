@@ -12,7 +12,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Agent, ForeverDaemon } from '@dxos/agent';
+import { Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, fromAgent, Config, DX_DATA } from '@dxos/client';
 import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
@@ -84,7 +84,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       env: ENV_DX_CONFIG,
       description: 'Specify config file.',
       async default({ flags }: { flags: any }) {
-        // TODO(burdon): Create if doesn't exist?
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
         return join(BaseCommand._configDir, `profile/${profile}.yml`);
       },
@@ -92,13 +91,23 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
+    dryRun: Flags.boolean({
+      description: 'Dry run.',
+      default: false,
+      aliases: ['dry-run'],
+    }),
+
+    noAgent: Flags.boolean({
+      description: 'Disable agent auto-start.',
+      default: false,
+      aliases: ['no-agent'],
+    }),
+
     timeout: Flags.integer({
       description: 'Timeout in seconds.',
       default: 30,
       aliases: ['t'],
     }),
-
-    // TODO(mykola): Implement JSON args.
   };
 
   constructor(argv: string[], config: OclifConfig) {
@@ -123,7 +132,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   ok() {
-    this.log('ok');
+    log('ok');
   }
 
   /**
@@ -151,7 +160,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this._telemetryContext = await getTelemetryContext(this.config.configDir);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
     if (group === 'dxos') {
-      this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
+      log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
     }
 
     if (SENTRY_DESTINATION && mode !== 'disabled') {
@@ -214,21 +223,44 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
   }
 
+  // TODO(burdon): Reconcile internal/external logging.
+
+  /**
+   * Use this method for user-facing messages.
+   * Use @dxos/logger for internal messages.
+   */
+  override log(message: string, ...args: any[]) {
+    super.log(message, ...args);
+  }
+
+  /**
+   * Use this method for user-facing warnings.
+   * Use @dxos/logger for internal messages.
+   */
   override warn(err: string | Error) {
     const message = typeof err === 'string' ? err : err.message;
-    this.logToStderr('WARNING:', message);
+    super.logToStderr(chalk`{red Warning}: ${message}`);
+    // NOTE: Default method displays stack trace.
+    // super.warn(err);
     return err;
   }
 
-  // https://oclif.io/docs/error_handling
-  // NOTE: Full stack trace is displayed if `oclif.settings.debug = true` (see bin script).
-  override async catch(err: Error) {
-    this._failing = true;
+  /**
+   * Use this method for user-facing errors.
+   * Use @dxos/logger for internal messages.
+   * NOTE: Full stack trace is displayed if `oclif.settings.debug = true` (see bin script).
+   * https://oclif.io/docs/error_handling
+   */
+  override error(err: string | Error, options?: any): never;
+  override error(err: string | Error, options?: any): void {
+    super.error(err, options as any);
     Sentry.captureException(err);
-    throw err;
+    this._failing = true;
   }
 
-  // Called after each run.
+  /**
+   * Called after each command run.
+   */
   override async finally() {
     const endTime = new Date();
 
@@ -248,26 +280,28 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   async getClient() {
     const { flags } = await this.parse(this.constructor as any);
-    await this.execWithDaemon(async (daemon) => {
-      if (!(await daemon.isRunning(flags.profile))) {
-        await daemon.start(flags.profile);
-      }
-    });
 
-    assert(this._clientConfig);
     if (!this._client) {
-      log('Creating client...');
-      try {
-        log('Connecting to agent...', { profile: flags.profile });
-        this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
-        await this._client.initialize();
-      } catch (err) {
-        // TODO(burdon): Test if agent is running; Revert to monolithic.
-        log('Creating local client services...', { profile: flags.profile });
-        this._client = new Client({ config: this._clientConfig });
-        await this._client.initialize();
+      if (!flags.noAgent) {
+        // Auto-start daemon.
+        await this.execWithDaemon(async (daemon) => {
+          const running = await daemon.isRunning(flags.profile);
+          if (!running) {
+            this.log('Starting agent...');
+            await daemon.start(flags.profile);
+          }
+        });
       }
-      log('Initialized');
+
+      assert(this._clientConfig);
+      if (flags.noAgent) {
+        this._client = new Client({ config: this._clientConfig });
+      } else {
+        this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
+      }
+
+      await this._client.initialize();
+      log('Client initialized', { profile: flags.profile });
     }
 
     return this._client;
@@ -280,60 +314,41 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     callback: (client: Client) => Promise<T | undefined>,
     checkHalo = false,
   ): Promise<T | undefined> {
-    try {
-      const client = await this.getClient();
-      if (checkHalo && !client.halo.identity.get()) {
-        this.warn('HALO not initialized; run `dx halo create`');
-        process.exit(1);
-      }
-
-      const value = await callback(client);
-      log('Destroying...');
-      await client.destroy();
-
-      log('Done');
-      return value;
-    } catch (err: any) {
-      Sentry.captureException(err);
-      this.error(err);
+    const client = await this.getClient();
+    if (checkHalo && !client.halo.identity.get()) {
+      this.warn('HALO not initialized; run `dx halo create --help`');
+      process.exit(1);
     }
-  }
 
-  // TODO(burdon): Check running (otherwise run CLI in daemon mode).
-  async execWithDaemon<T>(callback: (agent: Agent) => Promise<T | undefined>): Promise<T | undefined> {
-    try {
-      const daemon = new ForeverDaemon(`${DX_DATA}/${this.flags.profile}/agent`);
-      await daemon.connect();
-      const value = await callback(daemon);
-      log('Disconnecting...');
-      await daemon.disconnect();
-
-      log('Done');
-      return value;
-    } catch (err: any) {
-      Sentry.captureException(err);
-      this.error(err);
-    }
+    const value = await callback(client);
+    await client.destroy();
+    return value;
   }
 
   /**
-   * Convenience function to wrap command passing in kube publisher.
+   * Convenience function to wrap starting the agent.
+   */
+  async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
+    const daemon = new ForeverDaemon(`${DX_DATA}/${this.flags.profile}/agent`);
+    await daemon.connect();
+    const value = await callback(daemon);
+    await daemon.disconnect();
+    return value;
+  }
+
+  /**
+   * Convenience function to wrap command passing in KUBE publisher.
    */
   async execWithPublisher<T>(callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: PublisherRpcPeer | undefined;
     try {
       assert(this._clientConfig);
-
       const wsEndpoint = this._clientConfig.get('runtime.services.publisher.server');
       assert(wsEndpoint);
-
       rpc = new PublisherRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
-
-      const value = await callback(rpc);
-      return value;
+      return await callback(rpc);
     } catch (err: any) {
-      Sentry.captureException(err);
       this.error(err);
     } finally {
       if (rpc) {
@@ -346,17 +361,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     let rpc: TunnelRpcPeer | undefined;
     try {
       assert(this._clientConfig);
-
       const wsEndpoint = this._clientConfig.get('runtime.services.tunneling.server');
       assert(wsEndpoint);
-
       rpc = new TunnelRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
-
-      const value = await callback(rpc);
-      return value;
+      return await callback(rpc);
     } catch (err: any) {
-      Sentry.captureException(err);
       this.error(err);
     } finally {
       if (rpc) {
@@ -369,18 +379,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     let rpc: SupervisorRpcPeer | undefined;
     try {
       assert(this._clientConfig);
-
       const wsEndpoint = this._clientConfig.get('runtime.services.supervisor.server');
       assert(wsEndpoint);
-
       rpc = new SupervisorRpcPeer(wsEndpoint);
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
-
-      const value = await callback(rpc);
-      return value;
+      return await callback(rpc);
     } catch (err: any) {
-      // TODO(egorgripasov): Move Sentry into this.error?
-      Sentry.captureException(err);
       this.error(err);
     } finally {
       if (rpc) {

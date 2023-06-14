@@ -10,14 +10,14 @@ import pm2, { Proc } from 'pm2';
 import { Trigger } from '@dxos/async';
 import { getUnixSocket } from '@dxos/client';
 
-import { Agent, ProcessDescription } from '../agent';
+import { Daemon, ProcessDescription } from '../daemon';
 
 /**
  * Manager of daemon processes started with PM2.
  *
  * @deprecated because stalls process after command finishes.
  */
-export class Pm2Daemon implements Agent {
+export class Pm2Daemon implements Daemon {
   private readonly _rootDir: string;
   private _pm2?: Pm2;
 

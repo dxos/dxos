@@ -4,7 +4,10 @@
 
 export type ProcessDescription = { profile?: string; pid?: number; isRunning?: boolean };
 
-export interface Agent {
+/**
+ * Manages life cycle of agent processes.
+ */
+export interface Daemon {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 

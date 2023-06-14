@@ -3,10 +3,12 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
+import { PublicKey } from '@dxos/keys';
 import { Device, Identity, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { humanize } from '@dxos/util';
+
+import { Client } from './client';
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
@@ -32,7 +34,6 @@ export type DiagnosticOptions = {
   humanize?: boolean;
 };
 
-// TODO(burdon): Factor out to Client.
 export const diagnostics = async (client: Client, options: DiagnosticOptions) => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<ClientStats> = {};

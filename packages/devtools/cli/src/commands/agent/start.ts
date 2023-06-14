@@ -11,8 +11,8 @@ export default class Start extends BaseCommand {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const params = await this.parse(Start);
-      const process = await daemon.start(params.flags.profile);
-      this.log('Started:', process);
+      await daemon.start(params.flags.profile);
+      this.log('Agent started');
     });
   }
 }

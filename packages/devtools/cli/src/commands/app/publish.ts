@@ -42,7 +42,6 @@ export default class Publish extends BaseCommand {
       const moduleConfig = await loadConfig(configPath);
 
       assert(moduleConfig.values.package, 'Missing package definition in dx.yml');
-
       for (const module of moduleConfig.values.package!.modules ?? []) {
         await build({ verbose }, { log: (...args) => this.log(...args), module });
         const cid = await publish(

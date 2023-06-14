@@ -7,13 +7,13 @@ import path from 'node:path';
 
 import { getUnixSocket } from '@dxos/client';
 
-import { Agent, ProcessDescription } from '../agent';
+import { Daemon, ProcessDescription } from '../daemon';
 import { removeSocketFile, waitForDaemon } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
  */
-export class ForeverDaemon implements Agent {
+export class ForeverDaemon implements Daemon {
   private readonly _rootDir: string;
 
   constructor(rootDir: string) {
