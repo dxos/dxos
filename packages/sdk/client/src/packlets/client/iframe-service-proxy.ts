@@ -44,9 +44,9 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
   private _iframe?: HTMLIFrameElement;
   private _appPort!: RpcPort;
+  private _iframeController: IFrameController;
   private _clientServicesProxy?: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
-  private _iframeController!: IFrameController;
   private _shellController?: ShellController;
   private readonly _source: string;
   private readonly _shell: string | boolean;
@@ -71,6 +71,48 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     this._vault = vault;
     this._logFilter = parseFilter(logFilter);
     this._timeout = timeout;
+
+    const loaded = new Trigger();
+    const ready = new Trigger<MessagePort>();
+    this._iframeController = new IFrameController({
+      // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
+      //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
+      source: new URL(
+        typeof this._shell === 'string' ? this._source : `${this._source}#disableshell`,
+        window.location.origin,
+      ),
+      onOpen: async () => {
+        await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
+
+        this._iframeController.iframe?.contentWindow?.postMessage(
+          {
+            channel: this._vault,
+            payload: 'init',
+          },
+          this._iframeController.source.origin,
+        );
+
+        const port = await asyncTimeout(
+          ready.wait(),
+          this._timeout,
+          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort'),
+        );
+
+        this._appPort = createWorkerPort({ port });
+      },
+      onMessage: async (event) => {
+        const { channel, payload } = event.data;
+        if (channel !== this._vault) {
+          return;
+        }
+
+        if (payload === 'loaded') {
+          loaded.wake();
+        } else if (payload?.command === 'init') {
+          ready.wake(payload.port);
+        }
+      },
+    });
   }
 
   get proxy() {
@@ -108,51 +150,7 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     log.trace('dxos.sdk.iframe-client-services-proxy', trace.begin({ id: this._instanceId }));
 
-    // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
-    //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
-    const source = new URL(
-      typeof this._shell === 'string' ? this._source : `${this._source}#disableshell`,
-      window.location.origin,
-    );
-    const loaded = new Trigger();
-    const ready = new Trigger<MessagePort>();
-    this._iframeController = new IFrameController({
-      source,
-      onOpen: async () => {
-        await asyncTimeout(loaded.wait(), this._timeout, new RemoteServiceConnectionTimeout('Vault failed to load'));
-
-        this._iframeController.iframe?.contentWindow?.postMessage(
-          {
-            channel: this._vault,
-            payload: 'init',
-          },
-          this._iframeController.source.origin,
-        );
-
-        const port = await asyncTimeout(
-          ready.wait(),
-          this._timeout,
-          new RemoteServiceConnectionTimeout('Vault failed to provide MessagePort'),
-        );
-
-        this._appPort = createWorkerPort({ port });
-      },
-      onMessage: async (event) => {
-        const { channel, payload } = event.data;
-        if (channel !== this._vault) {
-          return;
-        }
-
-        if (payload === 'loaded') {
-          loaded.wake();
-        } else if (payload?.command === 'init') {
-          ready.wake(payload.port);
-        }
-      },
-    });
-
     await this._iframeController.open();
-
     this._clientServicesProxy = new ClientServicesProxy(this._appPort);
     await this._clientServicesProxy.open();
 
