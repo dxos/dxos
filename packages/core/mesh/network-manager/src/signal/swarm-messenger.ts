@@ -159,15 +159,19 @@ export class SwarmMessenger implements SignalMessenger {
     };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
-    await this._sendReliableMessage({
-      author: recipient,
-      recipient: author,
-      message: {
-        topic: message.topic,
-        sessionId: message.sessionId,
-        data: { answer },
-      },
-    });
+    try {
+      await this._sendReliableMessage({
+        author: recipient,
+        recipient: author,
+        message: {
+          topic: message.topic,
+          sessionId: message.sessionId,
+          data: { answer },
+        },
+      });
+    } catch(err)  {
+      log.warn('error sending answer', { err })
+    }
   }
 
   private async _handleSignal({
