@@ -74,10 +74,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   private static _configDir: string;
 
   static override flags = {
-    profile: Flags.string({
-      description: 'User profile.',
-      default: ENV_DX_PROFILE_DEFAULT,
-      env: ENV_DX_PROFILE,
+    'dry-run': Flags.boolean({
+      description: 'Dry run.',
+      default: false,
     }),
 
     config: Flags.string({
@@ -91,13 +90,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
-    'dry-run': Flags.boolean({
-      description: 'Dry run.',
-      default: false,
+    profile: Flags.string({
+      description: 'User profile.',
+      default: ENV_DX_PROFILE_DEFAULT,
+      env: ENV_DX_PROFILE,
     }),
 
+    // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Disable agent auto-start.',
+      description: 'Auto-start agent.',
       default: false,
     }),
 
