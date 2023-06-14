@@ -84,7 +84,7 @@ export class SignalServerRunner {
     });
 
     server.stderr.on('data', (data) => {
-      // log.warn(`TestServer stderr: ${data}`);
+      log.warn(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {

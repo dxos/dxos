@@ -63,6 +63,7 @@ export class Context {
 
     this._disposeCallbacks.push(callback);
     if (this._disposeCallbacks.length > MAX_SAFE_DISPOSE_CALLBACKS) {
+      debugger; 
       log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', {
         count: this._disposeCallbacks.length,
         safeThreshold: MAX_SAFE_DISPOSE_CALLBACKS,
