@@ -4,6 +4,8 @@
 
 import {
   ArrowLineLeft,
+  Article,
+  ArticleMedium,
   Download,
   EyeSlash,
   Intersect,
@@ -20,6 +22,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { useTranslation } from '@dxos/aurora';
+import { TextKind } from '@dxos/aurora-composer';
 import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
@@ -30,6 +33,7 @@ import {
   PublicKey,
   ShellLayout,
   Space,
+  SpaceState,
   TypedObject,
 } from '@dxos/react-client';
 import {
@@ -46,11 +50,9 @@ import {
   useTreeView,
 } from '@dxos/react-surface';
 
-import { isDocument } from '../GithubMarkdownPlugin';
 import { DialogRenameSpace } from './DialogRenameSpace';
 import { DialogRestoreSpace } from './DialogRestoreSpace';
-import { DocumentLinkTreeItem } from './DocumentLinkTreeItem';
-import { FullSpaceTreeItem } from './FullSpaceTreeItem';
+import { SpaceTreeItem } from './SpaceTreeItem';
 import { backupSpace } from './backup';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
 
@@ -99,7 +101,7 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
     id: obj.id,
     label: obj.title ?? 'Untitled',
     description: obj.description,
-    icon: obj.icon,
+    icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
     data: obj,
     parent,
     actions: [
@@ -268,6 +270,8 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             handle.update([space.properties]);
             subscriptions.add(handle.unsubscribe);
           }
+          attributes.disabled = space.state.get() !== SpaceState.READY;
+          attributes.error = space.state.get() === SpaceState.ERROR;
           node.attributes = attributes ?? {};
 
           let children = rootObjects.get(id);
@@ -400,9 +404,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         case 'treeitem':
           switch (true) {
             case isSpace(datum?.data):
-              return FullSpaceTreeItem;
-            case isDocument(datum?.data):
-              return DocumentLinkTreeItem;
+              return SpaceTreeItem;
             default:
               return null;
           }
@@ -465,6 +467,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             },
           },
           {
+            // TODO(wittjosiah): Move to SplitViewPlugin.
             id: 'close-sidebar',
             label: ['close sidebar label', { ns: 'os' }],
             icon: ArrowLineLeft,
