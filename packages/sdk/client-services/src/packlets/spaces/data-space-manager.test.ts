@@ -201,7 +201,9 @@ describe('DataSpaceManager', () => {
       const builder = new TestBuilder();
       afterTest(async () => builder.destroy());
 
-      const peer = builder.createPeer({ storageType: StorageType.NODE });
+      const peer = builder.createPeer({
+        storageType: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
+      });
       const identity = await createSigningContext(peer.keyring);
       const dataSpaceManager = new DataSpaceManager(
         peer.spaceManager,
@@ -230,6 +232,6 @@ describe('DataSpaceManager', () => {
       expect((await file.stat()).size !== 0).to.be.true;
       await space.createEpoch();
       expect((await file.stat()).size === 0).to.be.true;
-    });
+    }).onlyEnvironments('nodejs', 'chromium', 'firefox');
   });
 });
