@@ -61,7 +61,7 @@ export class SpaceProxy implements Space {
   private readonly _internal!: SpaceInternal;
   private readonly _dbBackend?: DatabaseProxy;
   private readonly _itemManager?: ItemManager;
-  private readonly _invitationProxy: InvitationsProxy;
+  private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
@@ -80,7 +80,7 @@ export class SpaceProxy implements Space {
     databaseRouter: DatabaseRouter
   ) {
     assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
-    this._invitationProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
+    this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
       spaceKey: this.key
     }));
@@ -165,7 +165,7 @@ export class SpaceProxy implements Space {
    * @inheritdoc
    */
   get invitations() {
-    return this._invitationProxy.created;
+    return this._invitationsProxy.created;
   }
 
   /**
@@ -228,7 +228,7 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initializing = true;
 
-    await this._invitationProxy.open();
+    await this._invitationsProxy.open();
 
     await this._dbBackend!.open(this._itemManager!, this._modelFactory);
     log('ready');
@@ -276,7 +276,7 @@ export class SpaceProxy implements Space {
   async _destroy() {
     log('destroying...');
     await this._ctx.dispose();
-    await this._invitationProxy.close();
+    await this._invitationsProxy.close();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
@@ -331,7 +331,7 @@ export class SpaceProxy implements Space {
    */
   createInvitation(options?: Partial<Invitation>) {
     log('create invitation', options);
-    return this._invitationProxy.createInvitation(options);
+    return this._invitationsProxy.createInvitation(options);
   }
 
   /**

@@ -33,7 +33,7 @@ export const remarkDocumentation = async (config: Config) => {
         .use(Remark.apiDocGenerateDirective)
         .use([codeImport])
         .use([remarkPrettier])
-        .use([remarkStringify])
+        .use([remarkStringify as any]) // TODO(burdon): Hack.
         .process(
           new VFile({
             path: file,

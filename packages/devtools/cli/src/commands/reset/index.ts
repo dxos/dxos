@@ -7,7 +7,7 @@ import fs from 'fs';
 import { BaseCommand } from '../../base-command';
 
 export default class Reset extends BaseCommand {
-  static override description = 'Reset all data.';
+  static override description = 'Reset user data.';
 
   async run(): Promise<any> {
     const params = await this.parse(Reset);

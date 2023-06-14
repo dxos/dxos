@@ -38,7 +38,7 @@ service DevtoolsHost {
   rpc ResetStorage(ResetStorageRequest) returns (google.protobuf.Empty);
 
   rpc GetSnapshots(google.protobuf.Empty) returns (GetSnapshotsResponse);
-  
+
   // TODO(burdon): Single RPC with action.
   rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
   rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
@@ -91,7 +91,7 @@ message StorageInfo {
   string type = 1;
   uint32 storage_usage = 2;
   uint32 origin_usage = 3;
-  uint32 usage_quota = 4; 
+  uint32 usage_quota = 4;
 }
 
 //
@@ -197,7 +197,7 @@ message SubscribeToFeedsResponse {
   message Feed {
     dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
-    int32 disk_usage = 3;
+    int32 bytes = 3;
   }
 
   repeated Feed feeds = 1;

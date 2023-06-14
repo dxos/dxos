@@ -79,12 +79,24 @@ function readPackage(packageJson, context) {
     case 'react-vis':
     case 'react-motion': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react-dom'] = '^18.0.0'
       break;
     }
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
       packageJson.peerDependencies['vite'] = '^4.3.0'
+      break;
+    }
+
+    // https://github.com/dxos/dxos/issues/3330
+    case 'simple-hypercore-protocol': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      break;
+    }
+
+    case 'simple-handshake': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
       break;
     }
 

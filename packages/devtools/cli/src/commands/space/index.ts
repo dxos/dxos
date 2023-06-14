@@ -9,6 +9,7 @@ export default class Space extends BaseCommand {
   static override description = 'List spaces.';
 
   async run(): Promise<void> {
+    // TODO(burdon): Should this run by default?
     return List.run([]);
   }
 }
