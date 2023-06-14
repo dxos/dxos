@@ -84,7 +84,7 @@ const EmbeddedLayoutImpl = () => {
         }
       `}</style>
       <DensityProvider density='fine'>
-        <div role='none' className='fixed inline-end-2 block-end-2 z-[70] flex gap-2'>
+        <div role='none' className='fixed inline-end-2 block-end-2 z-10 flex gap-2'>
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Button disabled={!space} onClick={handleInvite}>
@@ -222,7 +222,7 @@ const EmbeddedLayoutImpl = () => {
         {space && document ? (
           <MarkdownDocument {...{ layout: 'embedded', space, document, editorViewState, setEditorViewState }} />
         ) : source && id && identityHex ? (
-          <DensityProvider density='fine'>
+          <Dialog.Root open onOpenChange={() => true}>
             <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
               <div
                 role='none'
@@ -236,11 +236,11 @@ const EmbeddedLayoutImpl = () => {
                 <ResolverDialog />
               </div>
             </div>
-          </DensityProvider>
+          </Dialog.Root>
         ) : null}
         {space && (
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-            <Dialog.Overlay>
+            <Dialog.Overlay classNames='backdrop-blur'>
               <Dialog.Content>
                 <DialogRenameSpace data={['dxos:SpacePlugin/RenameSpaceDialog', space]} />
               </Dialog.Content>
@@ -248,7 +248,7 @@ const EmbeddedLayoutImpl = () => {
           </Dialog.Root>
         )}
         <Dialog.Root open={resolverDialogOpen} onOpenChange={setResolverDialogOpen}>
-          <Dialog.Overlay>
+          <Dialog.Overlay classNames='backdrop-blur'>
             <Dialog.Content>
               <ResolverDialog />
             </Dialog.Content>

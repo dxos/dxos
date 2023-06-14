@@ -4,7 +4,7 @@
 
 import React, { useCallback, useContext } from 'react';
 
-import { Button, Tree, useId, useTranslation } from '@dxos/aurora';
+import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
 import { observer, useClient, useSpaces, Space } from '@dxos/react-client';
 
 import { SpaceResolverContext } from './ResolverContext';
@@ -36,14 +36,13 @@ export const ResolverTree = observer(() => {
   return spaces.length ? (
     <>
       {' '}
-      <h1 className='shrink-0 text-lg font-system-normal' id={treeLabel}>
-        {t('resolver tree label')}
-      </h1>
-      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-2' />
+      <Dialog.Title classNames='shrink-0'>{t('resolver tree label')}</Dialog.Title>
+      <Dialog.Description>{t('resolver tree description')}</Dialog.Description>
+      <div role='separator' className='shrink-0 bs-px bg-neutral-500/20 mlb-1' />
       <Tree.Root
-        aria-labelledby={treeLabel}
+        aria-label={t('resolver tree label')}
         data-testid='composer.sidebarTree'
-        classNames='overflow-y-auto -mli-2 pli-2'
+        classNames='overflow-y-auto -mli-2 p-2'
       >
         {spaces.map((space) => {
           return (

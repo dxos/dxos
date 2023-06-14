@@ -92,7 +92,7 @@ export const SpacePickerTreeItem = observer(
             {t(selected ? 'selected label' : 'select label')}
           </Button>
         </div>
-        <TreeItem.Body>
+        <TreeItem.Body className='pis-4'>
           {hasDocuments && (
             <Tree.Branch>
               {documents.map((document) => (
