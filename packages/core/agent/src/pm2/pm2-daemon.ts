@@ -8,9 +8,9 @@ import { promisify } from 'node:util';
 import pm2, { Proc } from 'pm2';
 
 import { Trigger } from '@dxos/async';
+import { getUnixSocket } from '@dxos/client';
 
 import { Agent, ProcessDescription } from '../agent';
-import { getUnixSocket } from '../util';
 
 /**
  * Manager of daemon processes started with PM2.
