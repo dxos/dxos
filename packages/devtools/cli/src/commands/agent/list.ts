@@ -16,7 +16,7 @@ export const printAgents = (daemons: any[], flags = {}) => {
       pid: {
         header: 'process',
       },
-      isRunning: {
+      running: {
         header: 'running',
       },
     },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export type ProcessDescription = { profile?: string; pid?: number; isRunning?: boolean };
+export type ProcessDescription = { profile?: string; pid?: number; running?: boolean };
 
 /**
  * Manages life cycle of agent processes.

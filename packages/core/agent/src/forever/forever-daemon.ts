@@ -21,7 +21,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async connect(): Promise<void> {
-    initForever(this._rootDir);
+    forever.load({ root: this._rootDir });
   }
 
   async disconnect() {
@@ -29,7 +29,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.isRunning);
+    return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
   async start(profile: string): Promise<ProcessDescription> {
@@ -46,7 +46,6 @@ export class ForeverDaemon implements Daemon {
     }
 
     await waitForDaemon(profile);
-
     return this._getProcess(profile);
   }
 
@@ -85,17 +84,13 @@ export class ForeverDaemon implements Daemon {
     return result.map((details) => foreverToProcessDescription(details));
   }
 
-  async _getProcess(profile: string) {
-    return (await this.list()).find((process) => process.profile === profile) ?? {};
+  async _getProcess(profile?: string) {
+    return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
 
-const foreverToProcessDescription = (details: ForeverProcess): ProcessDescription => ({
-  profile: details?.uid,
-  isRunning: details?.running,
-  pid: details?.foreverPid,
+const foreverToProcessDescription = ({ uid, running, foreverPid }: ForeverProcess): ProcessDescription => ({
+  profile: uid,
+  running,
+  pid: foreverPid,
 });
-
-const initForever = (rootDir: string) => {
-  forever.load({ root: rootDir });
-};
