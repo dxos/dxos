@@ -169,6 +169,8 @@ export class NetworkManager {
     this._signalConnection.join({ topic, peerId }).catch((error) => log.catch(error));
     this._mappers.set(topic, new SwarmMapper(swarm));
 
+    await swarm.open();
+
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
