@@ -19,7 +19,7 @@ export const defaultConfig: ConfigProto = { version: 1 };
 // https://wiki.archlinux.org/title/XDG_Base_Directory
 // TODO(burdon): Change to ~/.config or XDG_CONFIG_HOME
 
-const HOME = typeof process !== 'undefined' ? process?.env?.HOME : '';
+const HOME = typeof process !== 'undefined' ? process?.env?.HOME : 'tmp';
 
 // TODO(burdon): Generalize since currently NodeJS only.
 export const DX_CONFIG = `${HOME}/.config/dx`;
