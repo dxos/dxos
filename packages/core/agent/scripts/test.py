@@ -34,4 +34,6 @@ if len(spaces):
   spaceKey = spaces[0]['key']
   insert_objects(spaceKey, [{ "title": "object-" + str(random.randrange(0, 100)) }])
   objects = query_objects(spaceKey)
-  print(json.dumps(objects, indent=2))
+  data = { "spaceKey": spaceKey[:8], "objects": len(objects) }
+  print(json.dumps(data))
+#   print(json.dumps(objects, indent=2))

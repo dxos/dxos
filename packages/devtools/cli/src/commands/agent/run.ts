@@ -10,7 +10,7 @@ import { BaseCommand } from '../../base-command';
 
 export default class Run extends BaseCommand<typeof Run> {
   static override enableJsonFlag = true;
-  static override description = 'Run agent in foreground process.';
+  static override description = 'Run agent as foreground process.';
 
   static override flags = {
     ...BaseCommand.flags,
@@ -19,14 +19,18 @@ export default class Run extends BaseCommand<typeof Run> {
       required: true,
       multiple: true,
     }),
+    leader: Flags.boolean({
+      description: 'Leader to manage epochs.',
+    }),
   };
 
   async run(): Promise<any> {
     const agent = new Agent(this.clientConfig, { listen: this.flags.listen });
     await agent.start();
 
-    // TODO(burdon): Option.
-    await agent.manageEpochs();
+    if (this.flags.leader) {
+      await agent.manageEpochs();
+    }
 
     this.log('Agent started... (ctrl-c to exit)');
   }

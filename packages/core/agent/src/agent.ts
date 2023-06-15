@@ -189,18 +189,24 @@ export class Agent {
                   if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
                     info.ownerKey = credential.subject.assertion.identityKey;
                     if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
+                      log('leader', { space: space.key });
+
                       // TODO(burdon): Subscribe to event instead?
                       const result = space.db.query();
                       info.subscription = result.subscribe(async (result) => {
                         // TODO(burdon): Get and compare current timeframe.
-                        console.log('update', {
-                          space: space.key,
-                          totalDataTimeframe: space.internal.data.pipeline?.totalDataTimeframe,
-                        });
+                        if (info.timeframe) {
+                          const epochCount = info.timeframe.totalMessages();
+                          const currentCount = space.internal.data.pipeline?.totalDataTimeframe?.totalMessages() ?? 0;
+                          log('update', { epochCount, currentCount });
 
-                        const triggerEpoch = false;
-                        if (triggerEpoch) {
-                          await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
+                          const threshold = 10;
+                          const triggerEpoch = currentCount - epochCount > threshold;
+                          if (triggerEpoch) {
+                            log('trigger epoch', { space: space.key });
+                            info.timeframe = undefined; // Reset to prevent triggering again.
+                            await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
+                          }
                         }
                       });
                     }
@@ -208,10 +214,11 @@ export class Agent {
                   break;
                 }
 
+                // TODO(burdon): Epochs should be numbered?
                 // TODO(burdon): Watch for epochs (current/target/total?)
                 case 'dxos.halo.credentials.Epoch': {
                   info.timeframe = credential.subject.assertion.timeframe;
-                  console.log('>>>', space.internal.data.pipeline);
+                  log('epoch', { timeframe: info.timeframe?.totalMessages() });
                   break;
                 }
               }
