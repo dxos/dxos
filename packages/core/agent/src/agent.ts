@@ -200,11 +200,12 @@ export class Agent {
                           const currentCount = space.internal.data.pipeline?.totalDataTimeframe?.totalMessages() ?? 0;
                           log('update', { epochCount, currentCount });
 
+                          // TODO(burdon): Config.
                           const threshold = 10;
                           const triggerEpoch = currentCount - epochCount > threshold;
                           if (triggerEpoch) {
                             log('trigger epoch', { space: space.key });
-                            info.timeframe = undefined; // Reset to prevent triggering again.
+                            info.timeframe = undefined; // Reset to prevent triggering until new epoch processed.
                             await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
                           }
                         }
