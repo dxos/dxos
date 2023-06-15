@@ -5,9 +5,38 @@
 import { ux } from '@oclif/core';
 
 import { Space, SpaceMember } from '@dxos/client';
+import { Device } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { maybeTruncateKey } from './util';
+
+//
+// Devices
+//
+
+export const mapDevices = (devices: Device[], truncateKeys = false) => {
+  return devices.map((device) => ({
+    key: maybeTruncateKey(device.deviceKey, truncateKeys),
+    kind: device.kind,
+  }));
+};
+
+export const printDevices = (devices: Device[], flags = {}) => {
+  ux.table(
+    mapDevices(devices, true),
+    {
+      key: {
+        header: 'key',
+      },
+      kind: {
+        header: 'kind',
+      },
+    },
+    {
+      ...flags,
+    },
+  );
+};
 
 //
 // Spaces

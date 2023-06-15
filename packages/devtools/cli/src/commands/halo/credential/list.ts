@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../../base-command';
 import { queryCredentials, printCredentials, mapCredentials } from '../../../util';
 
-export default class List extends BaseCommand {
+export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List HALO credentials.';
   static override flags = {
@@ -20,8 +20,7 @@ export default class List extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(List);
-    const { type, json } = flags;
+    const { type, json } = this.flags;
 
     return await this.execWithClient(async (client: Client) => {
       const identity = client.halo.identity;
@@ -30,7 +29,7 @@ export default class List extends BaseCommand {
       } else {
         const credentials = await queryCredentials(client, type);
         if (!json) {
-          printCredentials(credentials, flags);
+          printCredentials(credentials, this.flags);
         }
 
         return mapCredentials(credentials);

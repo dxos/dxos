@@ -71,10 +71,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   public static override enableJsonFlag = true;
 
   static override flags = {
-    profile: Flags.string({
-      description: 'User profile.',
-      default: ENV_DX_PROFILE_DEFAULT,
-      env: ENV_DX_PROFILE,
+    'dry-run': Flags.boolean({
+      description: 'Dry run.',
+      default: false,
+    }),
+
+    verbose: Flags.boolean({
+      char: 'v',
+      description: 'Verbose output',
+      default: false,
     }),
 
     config: Flags.string({
@@ -88,16 +93,16 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
-    dryRun: Flags.boolean({
-      description: 'Dry run.',
-      default: false,
-      aliases: ['dry-run'],
+    profile: Flags.string({
+      description: 'User profile.',
+      default: ENV_DX_PROFILE_DEFAULT,
+      env: ENV_DX_PROFILE,
     }),
 
-    noAgent: Flags.boolean({
-      description: 'Disable agent auto-start.',
+    // TODO(burdon): '--no-' prefix is not working.
+    'no-agent': Flags.boolean({
+      description: 'Auto-start agent.',
       default: false,
-      aliases: ['no-agent'],
     }),
 
     timeout: Flags.integer({
@@ -271,33 +276,33 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
+  async maybeStartDaemon() {
+    if (!this.flags['no-agent']) {
+      await this.execWithDaemon(async (daemon) => {
+        const running = await daemon.isRunning(this.flags.profile);
+        if (!running) {
+          this.log('Starting agent...');
+          await daemon.start(this.flags.profile);
+        }
+      });
+    }
+  }
+
   /**
    * Lazily create the client.
    */
   async getClient() {
-    const { flags } = await this.parse(this.constructor as any);
-
     if (!this._client) {
-      if (!flags.noAgent) {
-        // Auto-start daemon.
-        await this.execWithDaemon(async (daemon) => {
-          const running = await daemon.isRunning(flags.profile);
-          if (!running) {
-            this.log('Starting agent...');
-            await daemon.start(flags.profile);
-          }
-        });
-      }
-
+      await this.maybeStartDaemon();
       assert(this._clientConfig);
-      if (flags.noAgent) {
+      if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
-        this._client = new Client({ config: this._clientConfig, services: fromAgent(flags.profile) });
+        this._client = new Client({ config: this._clientConfig, services: fromAgent(this.flags.profile) });
       }
 
       await this._client.initialize();
-      log('Client initialized', { profile: flags.profile });
+      log('Client initialized', { profile: this.flags.profile });
     }
 
     return this._client;
@@ -325,7 +330,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Convenience function to wrap starting the agent.
    */
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new ForeverDaemon(`${DX_DATA}/${this.flags.profile}/agent`);
+    const daemon = new ForeverDaemon(`${DX_DATA}/agent`);
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();

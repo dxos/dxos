@@ -3,6 +3,7 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { getUnixSocket } from '@dxos/client';
@@ -21,7 +22,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async connect(): Promise<void> {
-    initForever(this._rootDir);
+    forever.load({ root: this._rootDir });
   }
 
   async disconnect() {
@@ -29,23 +30,24 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.isRunning);
+    return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
   async start(profile: string): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
       const socket = getUnixSocket(profile);
+      const logDir = path.join(this._rootDir, profile);
+      mkdirSync(logDir, { recursive: true });
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
         uid: profile,
-        logFile: path.join(this._rootDir, 'daemon.log'), // Forever daemon process.
-        outFile: path.join(this._rootDir, 'process-out.log'), // Child stdout.
-        errFile: path.join(this._rootDir, 'process-err.log'), // Child stderr.
+        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
+        outFile: path.join(logDir, 'out.log'), // Child stdout.
+        errFile: path.join(logDir, 'err.log'), // Child stderr.
       });
     }
 
     await waitForDaemon(profile);
-
     return this._getProcess(profile);
   }
 
@@ -84,17 +86,13 @@ export class ForeverDaemon implements Daemon {
     return result.map((details) => foreverToProcessDescription(details));
   }
 
-  async _getProcess(profile: string) {
-    return (await this.list()).find((process) => process.profile === profile) ?? {};
+  async _getProcess(profile?: string) {
+    return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
 
-const foreverToProcessDescription = (details: ForeverProcess): ProcessDescription => ({
-  profile: details?.uid,
-  isRunning: details?.running,
-  pid: details?.foreverPid,
+const foreverToProcessDescription = ({ uid, running, foreverPid }: ForeverProcess): ProcessDescription => ({
+  profile: uid,
+  running,
+  pid: foreverPid,
 });
-
-const initForever = (rootDir: string) => {
-  forever.load({ root: rootDir });
-};

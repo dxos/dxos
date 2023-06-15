@@ -96,7 +96,7 @@ export class Pm2Daemon implements Daemon {
     return list.map((proc) => ({
       profile: proc.name,
       pid: proc.pid,
-      isRunning: !!proc.monit?.cpu || !!proc.monit?.memory,
+      running: !!proc.monit?.cpu || !!proc.monit?.memory,
     }));
   }
 }
@@ -135,6 +135,5 @@ const getPm2 = async (rootDir: string) => {
   });
 
   await connected;
-
   return instance;
 };

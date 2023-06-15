@@ -11,7 +11,7 @@ import { BaseCommand } from '../../base-command';
 /**
  * DX_PROFILE=test dx-dev debug stats --json
  */
-export default class Stats extends BaseCommand {
+export default class Stats extends BaseCommand<typeof Stats> {
   static override enableJsonFlag = true;
   static override description = 'Output debug stats.';
   static override flags = {
@@ -25,9 +25,8 @@ export default class Stats extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Stats);
     return await this.execWithClient(async (client: Client) => {
-      return diagnostics(client, { humanize: flags.humanize, truncate: flags.truncate });
+      return diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate });
     });
   }
 }

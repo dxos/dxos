@@ -10,8 +10,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { selectSpace } from '../../util';
 
-// TODO(burdon): Rename.
-export default class Epoch extends BaseCommand {
+export default class Epoch extends BaseCommand<typeof Epoch> {
   static override enableJsonFlag = true;
   static override description = 'Create new epoch.';
   static override flags = {
@@ -22,8 +21,7 @@ export default class Epoch extends BaseCommand {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
-    const { args } = await this.parse(Epoch);
-    let { key } = args;
+    let { key } = this.args;
 
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();

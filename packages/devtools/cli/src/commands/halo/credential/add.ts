@@ -10,23 +10,19 @@ import { schema } from '@dxos/protocols';
 
 import { BaseCommand } from '../../../base-command';
 
-export default class Add extends BaseCommand {
+export default class Add extends BaseCommand<typeof Add> {
   static override description = 'Import credential into HALO.';
   static override args = {
     credential: Args.string({ description: 'credential', required: false }),
   };
 
   async run(): Promise<any> {
-    const res = await this.parse(Add);
-    const { args } = res;
-    let { credential: credentialHex } = args;
-
+    let { credential: credentialHex } = this.args;
     if (!credentialHex) {
       credentialHex = await this.stdin;
     }
 
     assert(credentialHex, 'Invalid credential.');
-
     return await this.execWithClient(async (client: Client) => {
       const identity = client.halo.identity;
       if (!identity) {
