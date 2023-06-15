@@ -21,7 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../experimental/surface"
+      "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/aurora"
