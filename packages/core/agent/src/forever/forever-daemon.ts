@@ -3,6 +3,7 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { getUnixSocket } from '@dxos/client';
@@ -35,12 +36,14 @@ export class ForeverDaemon implements Daemon {
   async start(profile: string): Promise<ProcessDescription> {
     if (!(await this.isRunning(profile))) {
       const socket = getUnixSocket(profile);
+      const logDir = path.join(this._rootDir, profile);
+      mkdirSync(logDir, { recursive: true });
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
         uid: profile,
-        logFile: path.join(this._rootDir, `${profile}-daemon.log`), // Forever daemon process.
-        outFile: path.join(this._rootDir, `${profile}-out.log`), // Child stdout.
-        errFile: path.join(this._rootDir, `${profile}-err.log`), // Child stderr.
+        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
+        outFile: path.join(logDir, 'out.log'), // Child stdout.
+        errFile: path.join(logDir, 'err.log'), // Child stderr.
       });
     }
 

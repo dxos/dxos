@@ -135,6 +135,5 @@ const getPm2 = async (rootDir: string) => {
   });
 
   await connected;
-
   return instance;
 };
