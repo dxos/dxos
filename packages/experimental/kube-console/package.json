@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-console",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "private": true,
   "description": "KUBE Console.",
   "homepage": "https://dxos.org",

@@ -182,6 +182,7 @@ export class ClientServicesHost {
     if (this._open) {
       return;
     }
+
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
 

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { BaseCommand } from '../../base-command';
 import { TunnelRpcPeer, printTunnels } from '../../util';
 
@@ -16,7 +14,9 @@ export default class List extends BaseCommand {
     try {
       return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
         const listResponse = await tunnel.rpc.listTunnels();
-        assert(listResponse.tunnels!, 'Unable to list tunnels.');
+        if (!listResponse.tunnels) {
+          throw new Error();
+        }
         printTunnels(listResponse.tunnels!, flags);
       });
     } catch (err: any) {

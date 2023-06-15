@@ -346,11 +346,14 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-shell': workspace:*
+      '@dxos/react-surface': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vault': workspace:*
@@ -390,11 +393,14 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-shell': link:../../sdk/react-shell
+      '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -1355,6 +1361,69 @@ importers:
     devDependencies:
       '@dxos/crypto': link:../crypto
 
+  packages/core/agent:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/util': workspace:*
+      '@dxos/websocket-rpc': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/express': ^4.17.17
+      '@types/faker': ^5.5.9
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/node': ^18.11.9
+      '@types/node-fetch': ^2.5.10
+      express: 4.17.1
+      forever: ^4.0.3
+      nodemon: ^2.0.22
+      pm2: ^5.3.0
+      ts-node: 10.9.1
+      typescript: ^5.0.4
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-protocol': link:../../sdk/client-protocol
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/context': link:../../common/context
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/observable-object': link:../../common/observable-object
+      '@dxos/protocols': link:../protocols
+      '@dxos/rpc': link:../mesh/rpc
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/util': link:../../common/util
+      '@dxos/websocket-rpc': link:../mesh/websocket-rpc
+      express: 4.17.1
+      forever: 4.0.3
+      pm2: 5.3.0
+    devDependencies:
+      '@types/debug': 4.1.7
+      '@types/express': 4.17.17
+      '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/node': 18.11.9
+      '@types/node-fetch': 2.6.2
+      nodemon: 2.0.22
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
+      typescript: 5.0.4
+
   packages/core/echo/document-model:
     specifiers:
       '@dxos/async': workspace:*
@@ -2107,9 +2176,11 @@ importers:
 
   packages/devtools/cli:
     specifiers:
+      '@dxos/agent': workspace:*
       '@dxos/async': workspace:*
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
@@ -2145,7 +2216,6 @@ importers:
       cli-progress: ^3.11.2
       debug: ^4.3.3
       do-wrapper: ^4.5.1
-      forever: ^4.0.3
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
       globby: ^11.1.0
@@ -2158,7 +2228,6 @@ importers:
       nodemon: ^2.0.22
       oclif: ^3.7.0
       pkg-up: ^3.1.0
-      pm2: ^5.3.0
       react: ^18.2.0
       shx: ^0.3.3
       tempy: ^1.0.1
@@ -2166,9 +2235,11 @@ importers:
       uuid: ^8.3.2
       ws: ^7.4.4
     dependencies:
+      '@dxos/agent': link:../../core/agent
       '@dxos/async': link:../../common/async
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-protocol': link:../../sdk/client-protocol
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
@@ -2195,7 +2266,6 @@ importers:
       cli-progress: 3.11.2
       debug: 4.3.4
       do-wrapper: 4.5.1
-      forever: 4.0.3
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
       inquirer: 8.2.4
@@ -2206,7 +2276,6 @@ importers:
       node-fetch: 2.6.7
       oclif: 3.7.0_d2gyhxeuxd6tnmgqdyixls47tq
       pkg-up: 3.1.0
-      pm2: 5.3.0
       react: 18.2.0
       tempy: 1.0.1
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
@@ -2319,7 +2388,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
-      react-vis: 1.11.12_react@18.2.0
+      react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/aurora-composer': link:../../ui/aurora-composer
@@ -3886,68 +3955,6 @@ importers:
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4
 
-  packages/experimental/surface:
-    specifiers:
-      '@braneframe/types': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-composer': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/text-model': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@types/dompurify': ^3.0.2
-      '@types/lodash.update': ^4.10.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      dompurify: ^3.0.3
-      github-markdown-css: ^5.2.0
-      isomorphic-fetch: ^3.0.0
-      jszip: ^3.10.1
-      lodash.update: ^4.10.2
-      octokit: ^2.0.14
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-drag-drop-files: ^2.3.8
-      react-is: ^18.2.0
-      react-router: ^6.4.0
-      react-router-dom: ^6.4.0
-    dependencies:
-      '@dxos/observable-object': link:../../common/observable-object
-      '@dxos/react-client': link:../../sdk/react-client
-      react-router: 6.4.2_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    optionalDependencies:
-      '@braneframe/types': link:../../apps/types
-      '@dxos/aurora-composer': link:../../ui/aurora-composer
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/text-model': link:../../core/echo/text-model
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/dompurify': 3.0.2
-      dompurify: 3.0.3
-      github-markdown-css: 5.2.0
-      isomorphic-fetch: 3.0.0
-      jszip: 3.10.1
-      lodash.update: 4.10.2
-      octokit: 2.0.14
-      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
-    devDependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/log': link:../../common/log
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@types/lodash.update': 4.10.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-is: 18.2.0
-
   packages/gravity/gravity-agent:
     specifiers:
       '@dxos/client': workspace:*
@@ -4523,6 +4530,39 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
+
+  packages/sdk/react-surface:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-client': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-is: ^18.2.0
+      react-router: ^6.4.0
+      react-router-dom: ^6.4.0
+    dependencies:
+      '@dxos/config': link:../config
+      '@dxos/observable-object': link:../../common/observable-object
+      '@dxos/react-client': link:../react-client
+      react-router: 6.4.2_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/log': link:../../common/log
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-is: 18.2.0
 
   packages/sdk/vault:
     specifiers:
@@ -16327,6 +16367,7 @@ packages:
     resolution: {integrity: sha512-YBL4ziFebbbfQfH5mlC+QTJsvh0oJUrWbmxKMyEdL7emlHJqGR2Qb34TEFKj+VCayBvjKy3xczMFNhugThUsfQ==}
     dependencies:
       '@types/trusted-types': 2.0.2
+    dev: true
 
   /@types/download/8.0.1:
     resolution: {integrity: sha512-t5DjMD6Y1DxjXtEHl7Kt+nQn9rOmVLYD8p4Swrcc5QpgyqyqR2gXTIK6RwwMnNeFJ+ZIiIW789fQKzCrK7AOFA==}
@@ -17150,6 +17191,7 @@ packages:
 
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
+    dev: true
 
   /@types/turndown/5.0.1:
     resolution: {integrity: sha512-N8Ad4e3oJxh9n9BiZx9cbe/0M3kqDpOTm2wzj13wdDUxDPjfjloWIJaquZzWE1cYTAHpjOH3rcTnXQdpEfS/SQ==}
@@ -17501,7 +17543,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -35307,15 +35349,17 @@ packages:
       - supports-color
     dev: false
 
-  /react-motion/0.5.2_react@18.2.0:
+  /react-motion/0.5.2_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-9q3YAvHoUiWlP3cK0v+w1N5Z23HXMj4IF4YuvjvWegWqNPfLXsOBE/V7UvQGpXxHFKRQQcNcVQE31g9SB/6qgQ==}
     peerDependencies:
       react: ^18.0.0
+      react-dom: ^18.0.0
     dependencies:
       performance-now: 0.2.0
       prop-types: 15.8.1
       raf: 3.4.1
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react-native-fetch-api/2.0.0:
@@ -35504,11 +35548,12 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /react-vis/1.11.12_react@18.2.0:
+  /react-vis/1.11.12_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-WuYZrwrH/cXgxKcynciuwZ6+6V9a5N43qa4Wwfgll/tyLq+ACcJ5m8fHFXQk7fQBK80RAp61Oc+a+T64woorvw==}
     engines: {node: '>=0.10.0', npm: '>=3.0'}
     peerDependencies:
       react: ^18.0.0
+      react-dom: ^18.0.0
     dependencies:
       d3-array: 1.2.4
       d3-collection: 1.0.7
@@ -35528,7 +35573,8 @@ packages:
       hoek: 4.2.1
       prop-types: 15.8.1
       react: 18.2.0
-      react-motion: 0.5.2_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-motion: 0.5.2_biqbaboplfbrettd7655fr4n2y
     dev: false
 
   /react/18.2.0:
@@ -40157,7 +40203,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.20.4
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

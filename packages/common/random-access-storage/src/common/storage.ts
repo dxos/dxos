@@ -22,6 +22,7 @@ export type DiskInfo = {
 };
 
 export interface Storage {
+  readonly path: string;
   readonly type: StorageType;
   readonly size: number;
 

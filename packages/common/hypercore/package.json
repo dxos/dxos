@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,5 +44,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "pnpm": {
+    "overrides": {
+      "noise-protocol": "3.0.1"
+    }
   }
 }

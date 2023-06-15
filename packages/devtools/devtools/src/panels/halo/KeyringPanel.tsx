@@ -16,16 +16,16 @@ const columns: TableColumn<KeyRecord>[] = [
   {
     Header: 'Pub Key',
     width: 120,
-    accessor: (record) => PublicKey.from(record.publicKey).truncate(4)
+    accessor: (record) => PublicKey.from(record.publicKey).truncate(),
   },
   {
     Header: 'Humanized Pub Key',
-    accessor: (record) => humanize(record.publicKey)
+    accessor: (record) => humanize(record.publicKey),
   },
   {
     Header: 'Private Key',
-    accessor: (record) => record.privateKey && PublicKey.from(record.privateKey).truncate(4)
-  }
+    accessor: (record) => record.privateKey && PublicKey.from(record.privateKey).truncate(),
+  },
 ];
 
 const KeyringPanel = () => {

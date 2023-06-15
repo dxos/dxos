@@ -220,22 +220,28 @@ const Component = () => {
         switch (type) {
           case 'circle': {
             const { style, pos, text } = data;
-            el.selectAll('circle').data([0]).join('circle').call(updateCircle, scale, data);
+            el.selectAll('circle')
+              .data([0])
+              .join('circle')
+              .call(updateCircle, scale, data as any);
             el.selectAll('text')
               .data(text ? [1] : [])
               .join('text')
-              .call(updateText, scale, { style, pos, text });
+              .call(updateText, scale, { style, pos, text } as any);
             break;
           }
 
           case 'rect': {
             const { style, bounds, text } = data;
             const pos = Vector.center(bounds as Bounds);
-            el.selectAll('rect').data([0]).join('rect').call(updateRect, scale, data);
+            el.selectAll('rect')
+              .data([0])
+              .join('rect')
+              .call(updateRect, scale, data as any);
             el.selectAll('text')
               .data(text ? [1] : [])
               .join('text')
-              .call(updateText, scale, { style, pos, text });
+              .call(updateText, scale, { style, pos, text } as any);
             break;
           }
 
@@ -244,13 +250,16 @@ const Component = () => {
             el.selectAll('text')
               .data(text ? [1] : [])
               .join('text')
-              .call(updateText, scale, { style, bounds, text });
+              .call(updateText, scale, { style, bounds, text } as any);
             break;
           }
 
           case 'path': {
             const { points } = data;
-            el.selectAll('path').data([0]).join('path').call(updatePath, scale, data);
+            el.selectAll('path')
+              .data([0])
+              .join('path')
+              .call(updatePath, scale, data as any);
             el.selectAll('circle')
               .data(points as any[])
               .join('circle')
