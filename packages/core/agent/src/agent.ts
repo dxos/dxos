@@ -190,7 +190,7 @@ export class Agent {
     }, 5_000); // TODO(burdon): Hack to allow all epochs to be processed.
   }
 
-  // TODO(burdon): Detect if multiple agents are running (esp. after reset).
+  // TODO(burdon): Detect if multiple agents are running (esp. after reset; otherwise halo create will fail due to contentino).
 
   monitorEpoch(space: Space): CurrentEpoch {
     const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
