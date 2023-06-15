@@ -14,7 +14,7 @@ import pkgUp from 'pkg-up';
 
 import { Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, fromAgent, Config, DX_DATA } from '@dxos/client';
-import { ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -70,9 +70,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   public static override enableJsonFlag = true;
 
-  // Hack required to provide access to flags parser.
-  private static _configDir: string;
-
   static override flags = {
     profile: Flags.string({
       description: 'User profile.',
@@ -85,7 +82,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       description: 'Specify config file.',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
-        return join(BaseCommand._configDir, `profile/${profile}.yml`);
+        return join(DX_CONFIG, `profile/${profile}.yml`);
       },
       dependsOn: ['profile'],
       aliases: ['c'],
@@ -112,7 +109,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
-    BaseCommand._configDir = config.configDir;
 
     try {
       this._stdin = fs.readFileSync(0, 'utf8');
@@ -157,7 +153,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   private async _initTelemetry() {
-    this._telemetryContext = await getTelemetryContext(this.config.configDir);
+    this._telemetryContext = await getTelemetryContext(DX_DATA);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
     if (group === 'dxos') {
       log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
@@ -179,7 +175,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     if (TELEMETRY_API_KEY) {
-      mode === 'disabled' && (await disableTelemetry(this.config.configDir));
+      mode === 'disabled' && (await disableTelemetry(DX_DATA));
 
       Telemetry.init({
         apiKey: TELEMETRY_API_KEY,
