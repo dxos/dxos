@@ -28,7 +28,7 @@ const isDirEmpty = async (dirpath: string) => {
 };
 
 export default class Create extends BaseCommand<typeof Create> {
-  static override description = 'Create a DXOS project.';
+  static override description = 'Manage applications.';
 
   static override args = {
     name: Args.string({ required: true, description: 'Name of the project' }),
