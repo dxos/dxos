@@ -17,11 +17,13 @@ export type RunServicesParams = {
   config: Config;
 };
 
+export class Agent {}
+
 export const runServices = async (params: RunServicesParams) => {
   log('running', { gateway: params.config.values.runtime?.services?.faasd?.gateway });
   const services = fromHost(params.config);
 
-  // Global hook for debuggers;
+  // Global hook for debuggers.
   ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
 
   await services.open();
@@ -29,6 +31,7 @@ export const runServices = async (params: RunServicesParams) => {
 
   const httpServer = http.createServer();
 
+  // Sockets.
   for (const listenAddr of params.listen) {
     if (listenAddr.startsWith('unix://')) {
       const socketAddr = addrFromSocket(listenAddr);
@@ -86,6 +89,7 @@ export const runServices = async (params: RunServicesParams) => {
 
   log('listening', { socket: params.listen });
 
+  // OpenFaaS connector.
   const faasConfig = params.config.values.runtime?.services?.faasd;
   if (faasConfig) {
     const { FaasConnector } = await import('./faas/connector');

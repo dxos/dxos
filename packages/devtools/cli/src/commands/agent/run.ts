@@ -11,7 +11,7 @@ import { BaseCommand } from '../../base-command';
 
 export default class Run extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'Run agent.';
+  static override description = 'Run agent in foreground process.';
 
   static override flags = {
     ...BaseCommand.flags,

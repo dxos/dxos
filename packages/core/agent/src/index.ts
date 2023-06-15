@@ -5,5 +5,6 @@
 export * from './daemon';
 export * from './forever';
 export * from './pm2';
+export * from './proxy';
 export * from './run-services';
 export * from './util';
