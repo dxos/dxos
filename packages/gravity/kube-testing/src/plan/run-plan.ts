@@ -112,7 +112,16 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
       const childProcess = fork(process.argv[1], {
-        execArgv: options.profile ? ['--cpu-prof', '--cpu-prof-dir', agentParams.outDir, '--cpu-prof-name', 'agent.cpuprofile', ...process.execArgv] : [...process.execArgv],
+        execArgv: options.profile
+          ? [
+              '--cpu-prof',
+              '--cpu-prof-dir',
+              agentParams.outDir,
+              '--cpu-prof-name',
+              'agent.cpuprofile',
+              ...process.execArgv,
+            ]
+          : [...process.execArgv],
         env: {
           ...process.env,
           GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),

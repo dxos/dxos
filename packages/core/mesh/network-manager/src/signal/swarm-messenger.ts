@@ -169,8 +169,8 @@ export class SwarmMessenger implements SignalMessenger {
           data: { answer },
         },
       });
-    } catch(err)  {
-      log.warn('error sending answer', { err })
+    } catch (err) {
+      log.warn('error sending answer', { err });
     }
   }
 
@@ -189,7 +189,7 @@ export class SwarmMessenger implements SignalMessenger {
       author,
       recipient,
       ...message,
-      data: { 
+      data: {
         signal: message.data.signal,
         signalBatch: message.data.signalBatch,
       },

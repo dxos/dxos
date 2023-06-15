@@ -4,18 +4,18 @@
 
 import assert from 'node:assert';
 
-import { DeferredTask, Event, Trigger, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { CancelledError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { CancelledError } from '@dxos/errors';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 import { WireProtocol } from '../wire-protocol';
-import { Context, cancelWithContext } from '@dxos/context';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
@@ -73,8 +73,7 @@ export class Connection {
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
     await this._flushSignalBuffer();
-  })
-
+  });
 
   constructor(
     public readonly topic: PublicKey,
@@ -85,7 +84,7 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
-  ) { }
+  ) {}
 
   get state() {
     return this._state;
@@ -187,7 +186,7 @@ export class Connection {
   }
 
   private async _flushSignalBuffer() {
-    if(this._outgoingSignalBuffer.length === 0) {
+    if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
 
@@ -205,7 +204,7 @@ export class Connection {
         data: { signalBatch: { signals } },
       });
     } catch (err) {
-      if(err instanceof CancelledError) {
+      if (err instanceof CancelledError) {
         return;
       }
 
@@ -228,9 +227,9 @@ export class Connection {
     assert(msg.author?.equals(this.remoteId));
     assert(msg.recipient?.equals(this.ownId));
 
-    const signals = !!msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
+    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
     for (const signal of signals) {
-      if(!signal) {
+      if (!signal) {
         continue;
       }
 

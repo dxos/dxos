@@ -124,21 +124,20 @@ export class Swarm {
 
   async open() {
     assert(!this._listeningHandle);
-    this._listeningHandle = await this._messenger
-      .listen({
-        peerId: this._ownPeerId,
-        payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: async (message) => {
-          await this._swarmMessenger
-            .receiveMessage(message)
-            .catch((err) => log.warn('Error while receiving message', { err }));
-        },
-      });
+    this._listeningHandle = await this._messenger.listen({
+      peerId: this._ownPeerId,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async (message) => {
+        await this._swarmMessenger
+          .receiveMessage(message)
+          .catch((err) => log.warn('Error while receiving message', { err }));
+      },
+    });
   }
 
   async destroy() {
     log('destroying...');
-    this._listeningHandle?.unsubscribe();
+    await this._listeningHandle?.unsubscribe();
     this._listeningHandle = undefined;
 
     await this._ctx.dispose();

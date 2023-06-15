@@ -36,7 +36,7 @@ describe('SwarmMessenger', () => {
 
   const createSignalClientAndMessageRouter = async ({
     signalApiUrl,
-    onSignal = (async () => { }) as any,
+    onSignal = (async () => {}) as any,
     onOffer = async () => ({ accept: true }),
     topic,
   }: {
@@ -118,13 +118,13 @@ describe('SwarmMessenger', () => {
       peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => { }) as any,
+      onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
     const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => { }) as any,
+      onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
@@ -236,7 +236,7 @@ describe('SwarmMessenger', () => {
       peerId: peer1,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => { }) as any,
+      onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
@@ -246,7 +246,7 @@ describe('SwarmMessenger', () => {
       peerId: peer2,
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
-      onSignal: (async () => { }) as any,
+      onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });

@@ -85,7 +85,10 @@ export class Timeframe implements Equatable {
    * Returns a total amount of messages that are present in this timeframe but are missing in `base`.
    */
   newMessages(base: Timeframe) {
-    return Array.from(this._frames.entries()).reduce((result, [key, seq]) => result + Math.max(seq - (base.get(key) ?? -1), 0), 0);
+    return Array.from(this._frames.entries()).reduce(
+      (result, [key, seq]) => result + Math.max(seq - (base.get(key) ?? -1), 0),
+      0,
+    );
   }
 
   /**
@@ -140,6 +143,4 @@ export class Timeframe implements Equatable {
 
     return result;
   }
-
-
 }

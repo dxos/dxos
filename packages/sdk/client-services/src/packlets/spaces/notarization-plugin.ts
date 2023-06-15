@@ -22,7 +22,7 @@ const DEFAULT_SUCCESS_DELAY = 1_000;
 
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
-const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET'
+const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
 export type NotarizeParams = {
   /**
@@ -144,7 +144,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         log('success');
         await sleep(successDelay); // wait before trying with a new peer
       } catch (err: any) {
-        if(!err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
+        if (!err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
           log.warn('error notarizing (recoverable)', err);
         }
         notarizeTask.schedule(); // retry immediately with next peer

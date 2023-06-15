@@ -37,7 +37,7 @@ export class Gossip {
 
   public readonly connectionClosed = new Event<PublicKey>();
 
-  constructor(private readonly _params: GossipParams) { }
+  constructor(private readonly _params: GossipParams) {}
 
   getConnections() {
     return Array.from(this._connections.keys());
@@ -84,7 +84,7 @@ export class Gossip {
           timestamp: new Date(),
           payload,
         })
-        .catch((err) => log(err))
+        .catch((err) => log(err));
     }
   }
 
