@@ -6,9 +6,6 @@ import json
 import random
 import requests
 
-# TODO(burdon): Setup?
-# python3 -m pip install requests
-
 baseUrl = "http://localhost:3000"
 
 def query_spaces():
