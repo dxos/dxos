@@ -215,7 +215,7 @@ export class Agent {
 
                   // TODO(burdon): Config.
                   const threshold = 10;
-                  const triggerEpoch = totalMessages - epochMessages > threshold;
+                  const triggerEpoch = totalMessages - epochMessages >= threshold;
                   if (triggerEpoch) {
                     log('trigger epoch', { space: space.key });
                     info.lastEpoch = undefined; // Reset to prevent triggering until new epoch processed.
