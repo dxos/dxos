@@ -135,17 +135,17 @@ const createServer = (services: ClientServicesProvider, options: WebSocket.Serve
   return new WebsocketRpcServer<{}, ClientServices>({
     ...options,
     onConnection: async () => {
-      const id = PublicKey.random().toHex();
-      log('connection', { id });
-
+      let start = 0;
+      const connection = PublicKey.random().toHex();
       return {
         exposed: services.descriptors,
         handlers: services.services as ClientServices,
         onOpen: async () => {
-          log('open', { id });
+          start = Date.now();
+          log('open', { connection });
         },
         onClose: async () => {
-          log('close', { id });
+          log('close', { connection, time: Date.now() - start });
         },
       };
     },
