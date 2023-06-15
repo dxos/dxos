@@ -8,9 +8,9 @@ import { Trigger } from '@dxos/async';
 import { DevicesService, Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { DevicesServiceImpl } from './devices-service';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+import { DevicesServiceImpl } from './devices-service';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;

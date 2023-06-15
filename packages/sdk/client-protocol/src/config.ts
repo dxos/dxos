@@ -29,6 +29,7 @@ export const DX_CONFIG = `${HOME}/.config/dx`;
 // XDG_CACHE_HOME (Analogous to /var/cache).
 export const DX_CACHE = `${HOME}/.cache/dx`;
 
+// TODO(burdon): Storage should use this by default (make path optional).
 // XDG_DATA_HOME (Analogous to /usr/share).
 export const DX_DATA = `${HOME}/.local/share/dx`;
 

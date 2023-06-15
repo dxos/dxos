@@ -8,9 +8,9 @@ import { Trigger } from '@dxos/async';
 import { NetworkService, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
-import { NetworkServiceImpl } from './network-service';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+import { NetworkServiceImpl } from './network-service';
 
 describe('NetworkService', () => {
   let serviceContext: ServiceContext;

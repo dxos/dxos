@@ -21,9 +21,9 @@ import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction } from '@dxos/util';
 
+import { createAuthProvider } from '../identity';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
-import { createAuthProvider } from '../identity';
 
 export interface SigningContext {
   identityKey: PublicKey;

@@ -8,8 +8,8 @@ import { Keyring } from '@dxos/keyring';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationProtocol } from './invitation-protocol';
 import { Identity, JoinIdentityParams } from '../identity';
+import { InvitationProtocol } from './invitation-protocol';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(

@@ -15,8 +15,8 @@ import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { DataSpaceManager } from './data-space-manager';
 import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
+import { DataSpaceManager } from './data-space-manager';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
