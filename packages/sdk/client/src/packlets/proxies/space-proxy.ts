@@ -25,6 +25,7 @@ import { InvitationsProxy } from './invitations-proxy';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
+
   /**
    * @internal
    * To update the space query when a space changes.
@@ -124,19 +125,6 @@ export class SpaceProxy implements Space {
     return this._data.state === SpaceState.READY && this._initialized;
   }
 
-  /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
-   */
-  private get _currentState(): SpaceState {
-    if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INITIALIZING;
-    } else {
-      return this._data.state;
-    }
-  }
-
   get db() {
     return this._db;
   }
@@ -185,6 +173,19 @@ export class SpaceProxy implements Space {
 
   get error(): Error | undefined {
     return this._error;
+  }
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  private get _currentState(): SpaceState {
+    if (this._data.state === SpaceState.READY && !this._initialized) {
+      return SpaceState.INITIALIZING;
+    } else {
+      return this._data.state;
+    }
   }
 
   /**

@@ -18,6 +18,7 @@ message Document {
   Meta meta = 1000;
 }
 
+// TODO(burdon): Move into object.
 message Meta {
   message ForeignKey {
     string source = 1;

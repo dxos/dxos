@@ -22,7 +22,12 @@ export default class Run extends BaseCommand<typeof Run> {
   };
 
   async run(): Promise<any> {
-    await new Agent(this.clientConfig, { listen: this.flags.listen }).start();
+    const agent = new Agent(this.clientConfig, { listen: this.flags.listen });
+    await agent.start();
+
+    // TODO(burdon): Option.
+    await agent.manageEpochs();
+
     this.log('Agent started... (ctrl-c to exit)');
   }
 }

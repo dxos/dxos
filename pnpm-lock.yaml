@@ -1378,6 +1378,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@types/debug': ^4.1.7
@@ -1410,6 +1411,7 @@ importers:
       '@dxos/protocols': link:../protocols
       '@dxos/rpc': link:../mesh/rpc
       '@dxos/sentry': link:../../common/sentry
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
       express: 4.17.1
