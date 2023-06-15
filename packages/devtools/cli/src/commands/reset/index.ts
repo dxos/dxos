@@ -40,7 +40,6 @@ export default class Reset extends BaseCommand<typeof Reset> {
       this.warn('Deleting files...');
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
-        this.ok();
       });
 
       await this.maybeStartDaemon();

@@ -125,14 +125,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   get clientConfig() {
-    return this._clientConfig;
+    assert(this._clientConfig);
+    return this._clientConfig!;
   }
 
   get stdin() {
     return this._stdin;
   }
 
-  ok() {
+  done() {
     log('ok');
   }
 

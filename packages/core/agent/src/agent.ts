@@ -19,6 +19,9 @@ export type AgentOptions = {
   listen: string[];
 };
 
+/**
+ * The remote agent exposes Client services via multiple transports.
+ */
 export class Agent {
   // prettier-ignore
   constructor(
