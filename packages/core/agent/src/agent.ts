@@ -187,7 +187,7 @@ export class Agent {
           });
         }),
       );
-    }, 5_000); // TODO(burdon): Hack to allow epochs to be processed.
+    }, 5_000); // TODO(burdon): Hack to allow all epochs to be processed.
   }
 
   // TODO(burdon): Detect if multiple agents are running (esp. after reset).
@@ -209,13 +209,13 @@ export class Agent {
               info.subscription = space.pipeline.subscribe(async (pipeline) => {
                 if (info.lastEpoch) {
                   // TODO(burdon): Get and compare current timeframe.
-                  const epochCount = info.lastEpoch.totalMessages();
-                  const currentCount = space.internal.data.pipeline?.totalDataTimeframe?.totalMessages() ?? 0;
-                  log('update', { epochCount, currentCount });
+                  const epochMessages = info.lastEpoch.totalMessages();
+                  const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
+                  log('update', { space: space.key, epochMessages, totalMessages });
 
                   // TODO(burdon): Config.
                   const threshold = 10;
-                  const triggerEpoch = currentCount - epochCount > threshold;
+                  const triggerEpoch = totalMessages - epochMessages > threshold;
                   if (triggerEpoch) {
                     log('trigger epoch', { space: space.key });
                     info.lastEpoch = undefined; // Reset to prevent triggering until new epoch processed.
@@ -228,15 +228,12 @@ export class Agent {
           break;
         }
 
-        // TODO(burdon): Process all epochs before processing data.
-        // TODO(burdon): Epochs should be numbered?
-        // TODO(burdon): Watch for epochs (current/target/total?)
         case 'dxos.halo.credentials.Epoch': {
           info.lastEpoch = credential.subject.assertion.timeframe;
           log('epoch', {
             spaceKey: space.key,
             timeframe: info.lastEpoch,
-            count: info.lastEpoch?.totalMessages(),
+            totalMessages: info.lastEpoch?.totalMessages(),
           });
           break;
         }
