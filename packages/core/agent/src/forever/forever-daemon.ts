@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { getUnixSocket } from '@dxos/client';
 
-import { Daemon, ProcessDescription } from '../daemon';
+import { Daemon, ProcessInfo } from '../daemon';
 import { removeSocketFile, waitForDaemon } from '../util';
 
 /**
@@ -33,7 +33,7 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
-  async start(profile: string): Promise<ProcessDescription> {
+  async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const socket = getUnixSocket(profile);
       const logDir = path.join(this._rootDir, profile);
@@ -51,7 +51,7 @@ export class ForeverDaemon implements Daemon {
     return this._getProcess(profile);
   }
 
-  async stop(profile: string): Promise<ProcessDescription> {
+  async stop(profile: string): Promise<ProcessInfo> {
     if (await this.isRunning(profile)) {
       forever.stop(profile);
     }
@@ -60,7 +60,7 @@ export class ForeverDaemon implements Daemon {
     return this._getProcess(profile);
   }
 
-  async restart(profile: string): Promise<ProcessDescription> {
+  async restart(profile: string): Promise<ProcessInfo> {
     if ((await this._getProcess(profile)).profile === profile) {
       removeSocketFile(profile);
       forever.restart(profile);
@@ -71,7 +71,7 @@ export class ForeverDaemon implements Daemon {
     return await this._getProcess(profile);
   }
 
-  async list(): Promise<ProcessDescription[]> {
+  async list(): Promise<ProcessInfo[]> {
     const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
       forever.list(false, (err, processes) => {
         if (err) {
@@ -83,7 +83,7 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map((details) => foreverToProcessDescription(details));
+    return result.map((details) => mapProcessInfo(details));
   }
 
   async _getProcess(profile?: string) {
@@ -91,7 +91,7 @@ export class ForeverDaemon implements Daemon {
   }
 }
 
-const foreverToProcessDescription = ({ uid, running, foreverPid }: ForeverProcess): ProcessDescription => ({
+const mapProcessInfo = ({ uid, running, foreverPid }: ForeverProcess): ProcessInfo => ({
   profile: uid,
   running,
   pid: foreverPid,

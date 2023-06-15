@@ -17,8 +17,8 @@ export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
 export const waitForDaemon = async (profile: string) => {
   let slept = 0;
   const inc = 100;
-  const sockAddr = addrFromSocket(getUnixSocket(profile));
 
+  const sockAddr = addrFromSocket(getUnixSocket(profile));
   while (!fs.existsSync(sockAddr)) {
     await sleep(inc);
     slept += inc;

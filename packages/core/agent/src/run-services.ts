@@ -2,92 +2,66 @@
 // Copyright 2023 DXOS.org
 //
 
+import WebSocket from 'isomorphic-ws';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { ClientServices, Config, PublicKey, fromHost } from '@dxos/client';
+import { ClientServices, Config, PublicKey, fromHost, ClientServicesProvider } from '@dxos/client';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { addrFromSocket } from './util';
+
+// TODO(burdon): Create class.
+export class Agent {}
 
 export type RunServicesParams = {
   listen: string[];
   config: Config;
 };
 
-export class Agent {}
-
 export const runServices = async (params: RunServicesParams) => {
-  log('running', { gateway: params.config.values.runtime?.services?.faasd?.gateway });
+  log('starting...', { gateway: params.config.values.runtime?.services?.faasd?.gateway });
+
+  // Create client services.
   const services = fromHost(params.config);
 
   // Global hook for debuggers.
   ((globalThis as any).__DXOS__ ??= {}).host = (services as any)._host;
 
   await services.open();
-  log('open');
 
-  const httpServer = http.createServer();
+  // Create socket servers.
+  // TODO(burdon): Create map and enable clean shutdown.
+  for (const address of params.listen) {
+    const protocol = address.split('://')[0];
+    switch (protocol) {
+      case 'unix': {
+        const socketAddr = addrFromSocket(address);
+        mkdirSync(dirname(socketAddr), { recursive: true });
+        rmSync(socketAddr, { force: true });
+        const httpServer = http.createServer();
+        httpServer.listen(socketAddr);
+        const server = createServer(services, { server: httpServer });
+        await server.open();
+        break;
+      }
 
-  // Sockets.
-  for (const listenAddr of params.listen) {
-    if (listenAddr.startsWith('unix://')) {
-      const socketAddr = addrFromSocket(listenAddr);
-      mkdirSync(dirname(socketAddr), { recursive: true });
-      rmSync(socketAddr, { force: true });
-      httpServer.listen(socketAddr);
+      case 'ws': {
+        const { port } = new URL(address);
+        const server = createServer(services, { port: parseInt(port) });
+        await server.open();
+        break;
+      }
 
-      const server = new WebsocketRpcServer<{}, ClientServices>({
-        server: httpServer,
-        onConnection: async () => {
-          const id = PublicKey.random().toHex();
-          log('connection', { id });
-
-          return {
-            exposed: services.descriptors,
-            handlers: services.services as ClientServices,
-            onOpen: async () => {
-              log('open', { id });
-            },
-            onClose: async () => {
-              log('close', { id });
-            },
-          };
-        },
-      });
-
-      await server.open();
-    } else if (listenAddr.startsWith('ws://')) {
-      const { port } = new URL(listenAddr);
-
-      const server = new WebsocketRpcServer<{}, ClientServices>({
-        port: parseInt(port),
-        onConnection: async () => {
-          const id = PublicKey.random().toHex();
-          log('connection', { id });
-
-          return {
-            exposed: services.descriptors,
-            handlers: services.services as ClientServices,
-            onOpen: async () => {
-              log('open', { id });
-            },
-            onClose: async () => {
-              log('close', { id });
-            },
-          };
-        },
-      });
-
-      await server.open();
-    } else {
-      throw new Error(`Unsupported listen address: ${listenAddr}`);
+      default: {
+        throw new Error(`Invalid address: ${address}`);
+      }
     }
-  }
 
-  log('listening', { socket: params.listen });
+    log('listening', { address });
+  }
 
   // OpenFaaS connector.
   const faasConfig = params.config.values.runtime?.services?.faasd;
@@ -95,6 +69,29 @@ export const runServices = async (params: RunServicesParams) => {
     const { FaasConnector } = await import('./faas/connector');
     const connector = new FaasConnector(faasConfig, services);
     await connector.open();
-    log('connected', { gateway: faasConfig.gateway });
+    log('connector open', { gateway: faasConfig.gateway });
   }
+
+  log('running');
+};
+
+const createServer = (services: ClientServicesProvider, options: WebSocket.ServerOptions) => {
+  return new WebsocketRpcServer<{}, ClientServices>({
+    ...options,
+    onConnection: async () => {
+      const id = PublicKey.random().toHex();
+      log('connection', { id });
+
+      return {
+        exposed: services.descriptors,
+        handlers: services.services as ClientServices,
+        onOpen: async () => {
+          log('open', { id });
+        },
+        onClose: async () => {
+          log('close', { id });
+        },
+      };
+    },
+  });
 };

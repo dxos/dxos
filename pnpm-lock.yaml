@@ -346,6 +346,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -392,6 +393,7 @@ importers:
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
@@ -1386,10 +1388,12 @@ importers:
       '@types/node-fetch': ^2.5.10
       express: 4.17.1
       forever: ^4.0.3
+      isomorphic-ws: ^4.0.1
       nodemon: ^2.0.22
       pm2: ^5.3.0
       ts-node: 10.9.1
       typescript: ^5.0.4
+      ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -1410,7 +1414,9 @@ importers:
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
       express: 4.17.1
       forever: 4.0.3
+      isomorphic-ws: 4.0.1_ws@7.5.9
       pm2: 5.3.0
+      ws: 7.5.9
     devDependencies:
       '@types/debug': 4.1.8
       '@types/express': 4.17.17
@@ -17961,7 +17967,7 @@ packages:
   /axios/1.4.0_debug@4.3.4:
     resolution: {integrity: sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:

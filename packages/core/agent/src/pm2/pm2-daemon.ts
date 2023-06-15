@@ -10,7 +10,7 @@ import pm2, { Proc } from 'pm2';
 import { Trigger } from '@dxos/async';
 import { getUnixSocket } from '@dxos/client';
 
-import { Daemon, ProcessDescription } from '../daemon';
+import { Daemon, ProcessInfo } from '../daemon';
 
 /**
  * Manager of daemon processes started with PM2.
@@ -72,19 +72,19 @@ export class Pm2Daemon implements Daemon {
       return {};
     }
 
-    return procToProcessDescription(result[0]);
+    return procToProcessInfo(result[0]);
   }
 
   async stop(profile: string) {
     assert(this._pm2);
     const result = await promisify(this._pm2.stop.bind(this._pm2))(profile);
-    return procToProcessDescription(result);
+    return procToProcessInfo(result);
   }
 
   async restart(profile: string) {
     assert(this._pm2);
     if (await this.isRunning(profile)) {
-      return procToProcessDescription(await promisify(this._pm2.restart.bind(this._pm2))(profile));
+      return procToProcessInfo(await promisify(this._pm2.restart.bind(this._pm2))(profile));
     }
 
     return this.start(profile);
@@ -101,7 +101,7 @@ export class Pm2Daemon implements Daemon {
   }
 }
 
-const procToProcessDescription = (proc: Proc): ProcessDescription => ({
+const procToProcessInfo = (proc: Proc): ProcessInfo => ({
   profile: proc.name,
   pid: proc.pm_id,
 });
