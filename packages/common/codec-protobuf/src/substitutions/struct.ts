@@ -4,7 +4,7 @@
 
 export type Struct = Record<string, any>;
 
-const encodeStructValue = (structValue: any): any => {
+const encodeStructValue = (structValue: any, visitedObjects: WeakSet<any>): any => {
   const valueType = typeof structValue;
   switch (valueType) {
     case 'undefined': {
@@ -20,23 +20,34 @@ const encodeStructValue = (structValue: any): any => {
       return { boolValue: structValue };
     }
     case 'object': {
-      // null, Array, Object will have typeof 'object'
-      if (structValue === null) {
+      if (visitedObjects.has(structValue)) {
         return { nullValue: 0 };
       }
-      if (Array.isArray(structValue)) {
-        return { listValue: { values: structValue.map(encodeStructValue) } };
+      visitedObjects.add(structValue);
+
+      try {
+        // null, Array, Object will have typeof 'object'
+        if (structValue === null) {
+          return { nullValue: 0 };
+        }
+        if (Array.isArray(structValue)) {
+          return { listValue: { values: structValue.map((value) => encodeStructValue(value, visitedObjects)) } };
+        }
+        return { structValue: encodeStruct(structValue, visitedObjects) };
+      } finally {
+        visitedObjects.delete(structValue);
       }
-      return { structValue: encodeStruct(structValue) };
     }
     default: {
-      throw new Error(`Unsupported type: ${valueType}`);
+      return { nullValue: 0 };
     }
   }
 };
 
-const encodeStruct = (struct: Struct): any => ({
-  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value)])),
+const encodeStruct = (struct: Struct, visitedObjects = new WeakSet<any>()): any => ({
+  fields: Object.fromEntries(
+    Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value, visitedObjects)]),
+  ),
 });
 
 const decodeStructValue = (structValue: any): any => {

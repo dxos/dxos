@@ -21,6 +21,7 @@ import {
   toastTheme,
   tooltipTheme,
   tagTheme,
+  linkTheme,
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -31,6 +32,7 @@ export const theme: Theme<Record<string, any>> = {
   dialog: dialogTheme,
   dropdownMenu: dropdownMenuTheme,
   input: inputTheme,
+  link: linkTheme,
   list: listTheme,
   main: mainTheme,
   message: messageTheme,

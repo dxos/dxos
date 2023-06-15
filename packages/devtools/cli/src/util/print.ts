@@ -25,10 +25,10 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
     mapSpaces(spaces, true),
     {
       key: {
-        header: 'Space key',
+        header: 'key',
       },
       name: {
-        header: 'Name',
+        header: 'name',
       },
     },
     {
@@ -46,6 +46,7 @@ export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
     name: member.identity.profile?.displayName,
+    presence: member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline',
   }));
 };
 
@@ -54,10 +55,13 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
     mapMembers(members, true),
     {
       key: {
-        header: 'Identity key',
+        header: 'identity key',
       },
       name: {
-        header: 'Display name',
+        header: 'display name',
+      },
+      presence: {
+        header: 'presence',
       },
     },
     {
@@ -84,16 +88,16 @@ export const printCredentials = (credentials: Credential[], flags = {}) => {
     mapCredentials(credentials, true),
     {
       id: {
-        header: 'Id',
+        header: 'id',
       },
       issuer: {
-        header: 'Issuer',
+        header: 'issuer',
       },
       subject: {
-        header: 'Subject',
+        header: 'subject',
       },
       type: {
-        header: 'Type',
+        header: 'type',
       },
     },
     {

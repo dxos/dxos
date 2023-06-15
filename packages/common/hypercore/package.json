@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.1.45",
+  "version": "0.1.48",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,9 +23,9 @@
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "hypercore": "^9.12.0",
-    "hypercore-protocol": "^8.0.7",
     "readable-stream": "^3.6.0",
+    "sodium-native": "^3.2.0",
+    "sodium-universal": "^3.0.2",
     "streamx": "^2.12.5"
   },
   "devDependencies": {
@@ -37,9 +37,17 @@
     "@types/randombytes": "^2.0.0",
     "@types/readable-stream": "^2.3.9",
     "debug": "^4.3.3",
+    "hypercore": "^9.12.0",
+    "hypercore-protocol": "^8.0.7",
+    "noise-protocol": "3.0.1",
     "random-access-memory": "^4.1.0"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "pnpm": {
+    "overrides": {
+      "noise-protocol": "3.0.1"
+    }
   }
 }

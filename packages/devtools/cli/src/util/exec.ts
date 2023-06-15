@@ -16,6 +16,7 @@ export const exec = (command: string, options?: Partial<ExecOptions>): Promise<s
   if (verbose) {
     console.log(command);
   }
+
   const [first, ...rest] = command.split(' ');
   return new Promise((resolve, reject) => {
     const subprocess = spawn(first, rest, {

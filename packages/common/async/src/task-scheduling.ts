@@ -64,9 +64,10 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
   const timeout = setTimeout(async () => {
     await runInContextAsync(ctx, fn);
     clearTracking();
+    clearDispose();
   }, afterMs);
 
-  ctx.onDispose(() => {
+  const clearDispose = ctx.onDispose(() => {
     clearTracking();
     clearTimeout(timeout);
   });
@@ -92,6 +93,35 @@ export const scheduleTaskInterval = (ctx: Context, task: () => Promise<void>, in
   };
 
   timeoutId = setTimeout(run, interval);
+  ctx.onDispose(() => {
+    clearTracking();
+    clearTimeout(timeoutId);
+  });
+};
+
+export const scheduleExponentialBackoffTaskInterval = (
+  ctx: Context,
+  task: () => Promise<void>,
+  initialInterval: number,
+) => {
+  const clearTracking = trackResource({
+    name: `repeating task (${task.name || 'anonymous'})`,
+    openStack: new StackTrace(),
+  });
+
+  let timeoutId: NodeJS.Timeout;
+
+  let interval = initialInterval;
+  const repeat = async () => {
+    await runInContextAsync(ctx, task);
+    if (ctx.disposed) {
+      return;
+    }
+    interval *= 2;
+    timeoutId = setTimeout(repeat, interval);
+  };
+
+  timeoutId = setTimeout(repeat, interval);
   ctx.onDispose(() => {
     clearTracking();
     clearTimeout(timeoutId);

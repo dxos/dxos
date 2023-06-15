@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.1.45",
+  "version": "0.1.48",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,7 +36,6 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
-    "hypercore": "^9.12.0",
     "random-access-storage": "^3.0.0",
     "streamx": "^2.12.5"
   },

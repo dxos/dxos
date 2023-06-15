@@ -17,8 +17,8 @@ export type StartVaultOptions = {
 };
 
 export const startVault = async ({ config: configOptions = {} }: StartVaultOptions = {}) => {
-  const { __CONFIG_DEFAULTS__, __CONFIG_DYNAMICS__, __CONFIG_ENVS__ } = definitions(configOptions);
-  const config = defaultsDeep(__CONFIG_DYNAMICS__, __CONFIG_ENVS__, __CONFIG_DEFAULTS__);
+  const { __CONFIG_DEFAULTS__, __CONFIG_LOCAL__, __CONFIG_ENVS__ } = definitions(configOptions);
+  const config = defaultsDeep(__CONFIG_LOCAL__, __CONFIG_ENVS__, __CONFIG_DEFAULTS__);
 
   const server = fastify();
 

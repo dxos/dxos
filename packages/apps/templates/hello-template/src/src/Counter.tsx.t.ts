@@ -12,7 +12,7 @@ export default defineTemplate(
     import { useQuery, Expando, useIdentity, useSpaces } from '@dxos/react-client';
 
     export const Counter = () => {
-      const identity = useIdentity({ login: true });
+      const identity = useIdentity();
       const [space] = useSpaces();
       const [counter] = useQuery(space, { type: 'counter' });
 

@@ -12,11 +12,11 @@ Learn about the [mission](why).
 
 ::: note In this guide
 
-- Starting a react project with an [app template](#create-an-app).
-- Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`.
-- Using [HALO](#how-to-use-echo) for decentralized identity.
-- Starting a [KUBE](#starting-a-kube) to host the app.
-- [Deploying](#deploying-your-app-to-a-kube) the app to KUBE.
+*   Starting a react project with an [app template](#create-an-app).
+*   Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`.
+*   Using [HALO](#how-to-use-echo) for decentralized identity.
+*   Starting a [KUBE](#starting-a-kube) to host the app.
+*   [Deploying](#deploying-your-app-to-a-kube) the app to KUBE.
 
 :::
 
@@ -62,16 +62,16 @@ Now it should be possible to open two windows to that URL and see reactive updat
 
 ::: info Why this is cool:
 
-- State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
-- Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
-- When remote peers join the same [space](./platform/#spaces), their changes are given to running apps through [HALO](./platform/halo) in the same way.
-- Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-- User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
-- Everything works offline.
-- Real-time collaboration is possible when online.
-- There are **no servers** that store any data.
-- There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
-- There is no need for an API tier. The app has everything it needs on the client.
+*   State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
+*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
+*   When remote peers join the same [space](./platform/#spaces), their changes are given to running apps through [HALO](./platform/halo) in the same way.
+*   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+*   User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
+*   Everything works offline.
+*   Real-time collaboration is possible when online.
+*   There are **no servers** that store any data.
+*   There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
+*   There is no need for an API tier. The app has everything it needs on the client.
 
 :::
 
@@ -100,7 +100,7 @@ import {
 
 const Component = () => {
   // Get the user to log in before a space can be obtained.
-  const identity = useIdentity({ login: true });
+  const identity = useIdentity();
   // Get the first available space, created with the identity.
   const [space] = useSpaces();
   // Grab everything in the space.
@@ -181,17 +181,17 @@ This will begin tracking further changes on the object and replicating them to o
 
 ### Recap
 
-- A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-- Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
-- The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+*   Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
+*   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ### Next steps
 
 Continue reading below about how to deploy and host the app, or jump to:
 
-- ECHO with [React](./react)
-- ECHO with [TypeScript](./typescript)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+*   ECHO with [React](./react)
+*   ECHO with [TypeScript](./typescript)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 ## Starting a KUBE
 
@@ -226,9 +226,9 @@ pnpm run deploy
 
 Otherwise, to deploy any static application:
 
-- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-- Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
-- Run `dx app publish`
+*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+*   Ensure there is a [`dx.yml`](kube/dx-yml-file) file in the project root
+*   Run `dx app publish`
 
 The app will be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
 
@@ -250,14 +250,14 @@ This guide demonstrated how to create and deploy a local-first DXOS application.
 
 Using DXOS:
 
-- ECHO with [React](./react/)
-- ECHO with [TypeScript](./typescript/)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+*   ECHO with [React](./react/)
+*   ECHO with [TypeScript](./typescript/)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-- DXOS [repository on GitHub](https://github.com/dxos/dxos)
-- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
+*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀

@@ -4,8 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { log, LogEntry as NaturalLogEntry, LogProcessor, shouldLog } from '@dxos/log';
+import { log, LogEntry as NaturalLogEntry, LogProcessor, shouldLog, getContextFromEntry } from '@dxos/log';
 import { LoggingService, LogEntry, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { jsonify } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
@@ -36,7 +37,13 @@ export class LoggingServiceImpl implements LoggingService {
         }
 
         if (shouldLog(entry, filters)) {
-          next(jsonify(entry));
+          const record = {
+            ...entry,
+            context: jsonify(getContextFromEntry(entry)),
+          } satisfies NaturalLogEntry;
+          delete record.meta?.bugcheck;
+          delete record.meta?.scope;
+          next(record);
         }
       };
 
@@ -52,32 +59,3 @@ export class LoggingServiceImpl implements LoggingService {
     this._logs.emit(entry);
   };
 }
-
-/**
- * Recursively converts an object into a JSON-compatible object.
- */
-const jsonify = (value: any, handles = new WeakSet<any>()): any => {
-  if (typeof value === 'function') {
-    return null;
-  } else if (typeof value === 'object' && value !== null) {
-    if (handles.has(value)) {
-      return null;
-    }
-    handles.add(value);
-
-    if (Array.isArray(value)) {
-      return value.map((x) => jsonify(x, handles));
-    } else {
-      if (typeof value.toJSON === 'function') {
-        return value.toJSON();
-      }
-      const res: any = {};
-      for (const key of Object.keys(value)) {
-        res[key] = jsonify(value[key], handles);
-      }
-      return res;
-    }
-  } else {
-    return value;
-  }
-};

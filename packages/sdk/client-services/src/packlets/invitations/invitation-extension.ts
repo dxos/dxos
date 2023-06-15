@@ -10,13 +10,13 @@ import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AdmissionRequest,
   AdmissionResponse,
-  AuthenticationRequest,
   AuthenticationResponse,
   IntroductionRequest,
-  IntroductionResponse,
   InvitationHostService,
   Options,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -25,13 +25,17 @@ import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
 
+export const MAX_OTP_ATTEMPTS = 3;
+
 type InvitationHostExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
   onOpen: () => void;
   onError: (error: Error) => void;
 
-  introduce: (request: IntroductionRequest) => Promise<IntroductionResponse>;
-  authenticate: (request: AuthenticationRequest) => Promise<AuthenticationResponse>;
+  onStateUpdate: (invitation: Invitation) => void;
+
+  resolveInvitation: (request: IntroductionRequest) => Promise<Invitation | undefined>;
+
   admit: (request: AdmissionRequest) => Promise<AdmissionResponse>;
 };
 
@@ -48,6 +52,22 @@ export class InvitationHostExtension extends RpcExtension<
   private _ctx = new Context();
   private _remoteOptions?: Options;
   private _remoteOptionsTrigger = new Trigger();
+
+  public invitation?: Invitation = undefined;
+
+  public guestProfile?: ProfileDocument = undefined;
+
+  public authenticationPassed = false;
+
+  /**
+   * Retry counter for SHARED_SECRET authentication method.
+   */
+  public authenticationRetry = 0;
+
+  /**
+   * Resolved when admission is completed.
+   */
+  public completedTrigger = new Trigger<PublicKey>();
 
   constructor(private readonly _callbacks: InvitationHostExtensionCallbacks) {
     super({
@@ -72,27 +92,92 @@ export class InvitationHostExtension extends RpcExtension<
         },
 
         introduce: async (request) => {
+          const { profile, invitationId } = request;
+
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
-          const response = await this._callbacks.introduce(request);
+
+          const invitation = await this._callbacks.resolveInvitation(request);
+          if (!invitation) {
+            log.warn('invitation not found', { invitationId });
+            this._callbacks.onError(new Error('Invitation not found.'));
+            // TODO(dmaretskyi): Better error handling.
+            return {
+              authMethod: Invitation.AuthMethod.NONE,
+            };
+          }
+          this.invitation = invitation;
+
+          log('guest introduced itself', {
+            guestProfile: profile,
+          });
+          this.guestProfile = profile;
+
+          this._callbacks.onStateUpdate({ ...this.invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
+
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
-          return response;
+          return {
+            spaceKey: this.invitation.authMethod === Invitation.AuthMethod.NONE ? this.invitation.spaceKey : undefined,
+            authMethod: this.invitation.authMethod,
+          };
         },
 
-        authenticate: async (request) => {
+        authenticate: async ({ authCode: code }) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
-          const response = await this._callbacks.authenticate(request);
-          log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { ...response } }));
-          return response;
+          log('received authentication request', { authCode: code });
+          let status = AuthenticationResponse.Status.OK;
+
+          assert(this.invitation, 'Invitation is not set.');
+          switch (this.invitation.authMethod) {
+            case Invitation.AuthMethod.NONE: {
+              log('authentication not required');
+              return { status: AuthenticationResponse.Status.OK };
+            }
+
+            case Invitation.AuthMethod.SHARED_SECRET: {
+              if (this.invitation.authCode) {
+                if (this.authenticationRetry++ > MAX_OTP_ATTEMPTS) {
+                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                } else if (code !== this.invitation.authCode) {
+                  status = AuthenticationResponse.Status.INVALID_OTP;
+                } else {
+                  this.authenticationPassed = true;
+                }
+              }
+              break;
+            }
+
+            default: {
+              log.error('invalid authentication method', { authMethod: this.invitation.authMethod });
+              status = AuthenticationResponse.Status.INTERNAL_ERROR;
+              break;
+            }
+          }
+
+          log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { status } }));
+          return { status };
         },
 
         admit: async (request) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.admit', trace.begin({ id: traceId }));
-          const response = await this._callbacks.admit(request);
-          log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
-          return response;
+
+          try {
+            assert(this.invitation, 'Invitation is not set.');
+            // Check authenticated.
+            if (isAuthenticationRequired(this.invitation) && !this.authenticationPassed) {
+              throw new Error('Not authenticated');
+            }
+
+            const response = await this._callbacks.admit(request);
+
+            log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
+            return response;
+          } catch (err: any) {
+            this._callbacks.onError(err);
+            throw err;
+          }
         },
       },
     };
@@ -198,3 +283,6 @@ export class InvitationGuestExtension extends RpcExtension<
     await this._ctx.dispose();
   }
 }
+
+export const isAuthenticationRequired = (invitation: Invitation) =>
+  invitation.authMethod !== Invitation.AuthMethod.NONE;

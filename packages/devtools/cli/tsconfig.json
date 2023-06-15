@@ -8,8 +8,9 @@
     ],
     "outDir": "dist/src",
     "rootDirs": [
-      "./notebooks",
-      "./src"
+      // Noli me tangere
+      "./src", // <-- KEEP "./src" FIRST
+      "./notebooks"
     ],
     "types": [
       "@dxos/typings",
@@ -38,6 +39,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -45,6 +49,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
     },
     {
       "path": "../../common/plate"
@@ -59,6 +66,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/agent"
+    },
+    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -69,6 +79,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/client-services"

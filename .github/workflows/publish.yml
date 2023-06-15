@@ -58,6 +58,8 @@ jobs:
         run: pnpm nx bundle vault --parallel 3
         env:
           NODE_ENV: production
+          # TODO(wittjosiah): Remove.
+          NODE_OPTIONS: --max_old_space_size=8192
           DX_ENVIRONMENT: production
           DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           DX_SENTRY_DESTINATION: ${{ secrets.VAULT_SENTRY_DESTINATION }}
@@ -92,3 +94,6 @@ jobs:
         env:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Monitor Release
+        run: node .github/workflows/scripts/monitor.js

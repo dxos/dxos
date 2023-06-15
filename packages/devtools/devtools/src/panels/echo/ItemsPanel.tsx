@@ -33,7 +33,7 @@ const getItemDetails = (item: TypedObject) => ({
   id: truncateKey(item.id),
   type: item.__typename,
   deleted: String(Boolean(item.__deleted)),
-  properties: <JsonView data={item.toJSON()} />
+  properties: <JsonView data={item.toJSON()} />,
 });
 
 const getObjectIcon = (item: TypedObject) => {
@@ -52,7 +52,7 @@ const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   id: item.id,
   title: getItemType(item) || 'Unknown type',
   value: item,
-  Icon: getObjectIcon(item)
+  Icon: getObjectIcon(item),
 });
 
 const ItemsPanel = () => {
@@ -78,8 +78,8 @@ const ItemsPanel = () => {
             items={items.map(getHierarchicalItem).filter(textFilter(filter))}
             slots={{
               value: {
-                className: 'overflow-hidden text-gray-400 truncate pl-2'
-              }
+                className: 'overflow-hidden text-gray-400 truncate pl-2',
+              },
             }}
             onSelect={(item: any) => setSelectedItem(item.value)}
             selected={selectedItem?.id}

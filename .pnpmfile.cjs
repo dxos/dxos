@@ -79,6 +79,7 @@ function readPackage(packageJson, context) {
     case 'react-vis':
     case 'react-motion': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react-dom'] = '^18.0.0'
       break;
     }
 
@@ -88,12 +89,29 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // https://github.com/dxos/dxos/issues/3330
+    case 'simple-hypercore-protocol': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      break;
+    }
+
+    case 'simple-handshake': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      break;
+    }
+
     case 'storybook-addon-react-router-v6': {
       packageJson.peerDependencies['@storybook/addons'] = '^7.0.0-beta'
       packageJson.peerDependencies['@storybook/api'] = '^7.0.0-beta'
       packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta'
       packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta'
       packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta'
+      break;
+    }
+
+    // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
+    case 'typedoc': {
+      packageJson.peerDependencies['typescript'] = '^5.0.0'
       break;
     }
 

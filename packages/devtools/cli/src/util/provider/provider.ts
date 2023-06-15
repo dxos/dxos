@@ -41,10 +41,10 @@ export const printKubes = (kubes: KUBE[], flags = {}) => {
     mapKubes(kubes),
     {
       key: {
-        header: 'Hostname',
+        header: 'hostname',
       },
       ipAddress: {
-        header: 'IP Address',
+        header: 'ip address',
       },
     },
     {

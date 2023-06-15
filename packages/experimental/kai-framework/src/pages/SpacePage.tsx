@@ -16,7 +16,7 @@ import { SpacePanel } from './SpacePanel';
  * Home page with current space.
  */
 const SpacePage = () => {
-  useIdentity({ login: true });
+  useIdentity();
   const { fullscreen } = useAppState();
   const { space, frame, objectId } = useAppRouter();
   const spaces = useSpaces();

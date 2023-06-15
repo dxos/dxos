@@ -13,7 +13,7 @@ import {
   ShellRuntime,
   ShellRuntimeImpl,
 } from '@dxos/client-services';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
@@ -54,7 +54,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
   // Start iframe runtime.
   const shellDisabled = window.location.hash === '#disableshell';
-  const config = new Config(await Dynamics(), Defaults());
+  const config = new Config(await Dynamics(), Local(), Defaults());
 
   const appReady = new Trigger<MessagePort | undefined>();
   window.addEventListener('message', (event) => {
@@ -92,8 +92,12 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 
     return;
   } else {
+    const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
+
     console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools.dxos.org/?target=vault:${window.location.href}`,
+      `%cTo inspect this application, click here:\nhttps://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${
+        window.location.href
+      }`,
       cssStyle,
     );
   }
