@@ -8,10 +8,6 @@ import http from 'http';
 import { Client, Expando, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 
-// TODO(burdon): Express ECHO http server (with Client to daemon/agent).
-// TODO(burdon): Factor out daemon from CLI.
-// TODO(burdon): GET Query/POST upsert.
-
 export type ProxyServerOptions = {
   port: number;
 };
@@ -27,17 +23,12 @@ export class ProxyServer {
   ) {}
 
   async open() {
-    console.log('starting...');
-
-    // TODO(burdon): Should error if not called?
+    log('starting proxy...', { ports: this._options.port });
     await this._client.initialize();
-    console.log(this._client.halo.identity.get());
 
     const app = express();
     app.use(express.json());
 
-    // TODO(burdon): Test with https://github.com/micha/resty
-    // curl -i -w '\n' -X POST -H "Content-Type: application/json" -d "{}" localhost:3000/spaces
     app.get('/spaces', async (req, res) => {
       log('/spaces');
       const spaces = this._client.spaces.get();
@@ -96,7 +87,7 @@ export class ProxyServer {
 
     const { port } = this._options;
     this._server = app.listen(port, () => {
-      console.log('listening', { port });
+      log('proxy listening', { port });
     });
   }
 

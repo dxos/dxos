@@ -9,7 +9,10 @@ import { getUnixSocket } from '@dxos/client';
 
 const START_TIMEOUT = 5_000;
 
-export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
+export const parseAddress = (sock: string) => {
+  const [protocol, path] = sock.split('://');
+  return { protocol, path };
+};
 
 /**
  * Waits till unix socket file is created.
@@ -18,8 +21,8 @@ export const waitForDaemon = async (profile: string) => {
   let slept = 0;
   const inc = 100;
 
-  const sockAddr = addrFromSocket(getUnixSocket(profile));
-  while (!fs.existsSync(sockAddr)) {
+  const { path } = parseAddress(getUnixSocket(profile));
+  while (!fs.existsSync(path)) {
     await sleep(inc);
     slept += inc;
     if (slept >= START_TIMEOUT) {
@@ -29,6 +32,6 @@ export const waitForDaemon = async (profile: string) => {
 };
 
 export const removeSocketFile = (profile: string) => {
-  const socketAddr = addrFromSocket(getUnixSocket(profile));
-  fs.rmSync(socketAddr, { force: true });
+  const { path } = parseAddress(getUnixSocket(profile));
+  fs.rmSync(path, { force: true });
 };

@@ -12,7 +12,7 @@ To run the daemon:
 
 # Start the an agent with a `test` profile.
 DX_PROFILE=test \
-  LOG_FILTER="run-services:debug" \
+  LOG_FILTER="info,agent:debug" \
   dx-dev agent run \
     --listen=unix:///tmp/dx/run/profile/test/agent.sock \
     --listen=ws://localhost:4567 \

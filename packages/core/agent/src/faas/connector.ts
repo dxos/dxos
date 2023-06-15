@@ -57,6 +57,10 @@ type InvocationData = {
   context: {};
 };
 
+/**
+ * Connects to the OpenFaaS service and mounts triggers.
+ * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
+ */
 export class FaasConnector {
   private readonly _ctx = new Context();
 
@@ -69,8 +73,8 @@ export class FaasConnector {
   private readonly _client: Client;
 
   constructor(
-    private readonly _faasConfig: Runtime.Services.Faasd,
     private readonly _clientServices: ClientServicesProvider,
+    private readonly _faasConfig: Runtime.Services.Faasd,
   ) {
     this._client = new Client({ services: _clientServices });
   }
