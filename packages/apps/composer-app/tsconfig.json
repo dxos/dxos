@@ -72,6 +72,9 @@
       "path": "../../ui/react-appkit"
     },
     {
+      "path": "../plugins/plugin-client"
+    },
+    {
       "path": "../types"
     }
   ]

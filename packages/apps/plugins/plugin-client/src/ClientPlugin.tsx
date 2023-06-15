@@ -13,8 +13,7 @@ import {
   ShellController,
   SystemStatus,
 } from '@dxos/react-client';
-
-import { definePlugin } from '../framework';
+import { definePlugin } from '@dxos/react-surface';
 
 export type ClientPluginProvides = {
   client: Client;

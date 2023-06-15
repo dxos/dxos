@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { PluginContextProvider, ThemePlugin } from '@dxos/surface';
+import { PluginContextProvider, ThemePlugin } from '@dxos/react-surface';
 
 import { StackPlugin } from '../plugin';
 

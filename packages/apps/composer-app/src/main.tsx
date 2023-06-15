@@ -7,10 +7,10 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ClientPlugin } from '@braneframe/plugin-client';
 import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import {
-  ClientPlugin,
   GraphPlugin,
   PluginContextProvider,
   RoutesPlugin,

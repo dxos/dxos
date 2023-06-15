@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { definePlugin } from '@dxos/surface';
+import { definePlugin } from '@dxos/react-surface';
 
 import { Stack } from '../components';
 
