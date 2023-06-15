@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import List from './list';
 import { BaseCommand } from '../../base-command';
+import List from './list';
 
 export default class Space extends BaseCommand<typeof Space> {
   static override description = 'List spaces.';
