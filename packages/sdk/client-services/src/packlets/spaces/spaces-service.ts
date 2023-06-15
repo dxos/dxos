@@ -24,9 +24,9 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Provider, humanize } from '@dxos/util';
 
-import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
+import { IdentityManager } from '../identity';
 
 const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
 

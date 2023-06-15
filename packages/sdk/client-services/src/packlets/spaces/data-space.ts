@@ -21,9 +21,9 @@ import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**

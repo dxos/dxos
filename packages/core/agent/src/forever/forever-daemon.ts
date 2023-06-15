@@ -38,6 +38,9 @@ export class ForeverDaemon implements Daemon {
       const socket = getUnixSocket(profile);
       const logDir = path.join(this._rootDir, profile);
       mkdirSync(logDir, { recursive: true });
+
+      // Run the `dx agent run` CLI command.
+      // TODO(burdon): Call local run services binary directly.
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
         uid: profile,

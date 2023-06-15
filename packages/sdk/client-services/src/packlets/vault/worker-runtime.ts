@@ -10,8 +10,8 @@ import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
+import { ClientServicesHost } from '../services';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {

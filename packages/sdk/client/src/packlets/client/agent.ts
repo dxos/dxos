@@ -15,7 +15,7 @@ import { ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
-  `${protocol}://${DX_RUNTIME}/${profile}/agent.sock`;
+  `${protocol}://${DX_RUNTIME}/profile/${profile}/agent.sock`;
 
 export type fromAgentOptions = {
   profile?: string;
@@ -24,7 +24,6 @@ export type fromAgentOptions = {
 /**
  * Connects to locally running CLI daemon.
  */
-// TODO(burdon): Agent-specific or WS RPC?
 export const fromAgent = ({
   profile = process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT,
 }: fromAgentOptions = {}): ClientServicesProvider => {

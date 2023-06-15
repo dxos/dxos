@@ -53,6 +53,7 @@ export class WebsocketRpcServer<C, S> {
           },
         },
       });
+
       await rpc.open();
       await onOpen?.(rpc);
       socket.onclose = async () => {

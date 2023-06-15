@@ -7,20 +7,19 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { ClientServices, Config, PublicKey, fromHost, ClientServicesProvider } from '@dxos/client';
+import { ClientServices, Config, PublicKey, fromHost, ClientServicesProvider, Client } from '@dxos/client';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { ProxyServer, ProxyServerOptions } from './proxy';
 import { addrFromSocket } from './util';
-
-// TODO(burdon): Create class.
-export class Agent {}
 
 export type RunServicesParams = {
   listen: string[];
   config: Config;
 };
 
+// TODO(burdon): Agent.
 export const runServices = async (params: RunServicesParams) => {
   log('starting...', { gateway: params.config.values.runtime?.services?.faasd?.gateway });
 
@@ -51,6 +50,13 @@ export const runServices = async (params: RunServicesParams) => {
       case 'ws': {
         const { port } = new URL(address);
         const server = createServer(services, { port: parseInt(port) });
+        await server.open();
+        break;
+      }
+
+      case 'http': {
+        const { port } = new URL(address);
+        const server = createProxy(services, params.config, { port: parseInt(port) });
         await server.open();
         break;
       }
@@ -94,4 +100,9 @@ const createServer = (services: ClientServicesProvider, options: WebSocket.Serve
       };
     },
   });
+};
+
+const createProxy = (services: ClientServicesProvider, config: Config, options: ProxyServerOptions) => {
+  const client = new Client({ config, services });
+  return new ProxyServer(client, options);
 };

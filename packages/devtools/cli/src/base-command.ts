@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Daemon, ForeverDaemon } from '@dxos/agent';
-import { Client, fromAgent, Config, DX_DATA } from '@dxos/client';
+import { Client, fromAgent, Config, DX_DATA, DX_RUNTIME } from '@dxos/client';
 import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -330,7 +330,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Convenience function to wrap starting the agent.
    */
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new ForeverDaemon(`${DX_DATA}/agent`);
+    const daemon = new ForeverDaemon(`${DX_RUNTIME}/agent`);
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();

@@ -4,7 +4,7 @@ import requests
 # python3 -m pip install requests
 
 def query():
-  url = "http://localhost:3000/query"
+  url = "http://localhost:3000/spaces"
   headers = {"Content-type": "application/json", "Accept": "text/plain"}
   data = {"root": { "filter": { "type": "org.dxos/type/test" } } }
   r = requests.post(url, headers=headers, json=data)
