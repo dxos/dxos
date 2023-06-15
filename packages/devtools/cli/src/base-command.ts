@@ -79,6 +79,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       default: false,
     }),
 
+    verbose: Flags.boolean({
+      char: 'v',
+      description: 'Verbose output',
+      default: false,
+    }),
+
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file.',

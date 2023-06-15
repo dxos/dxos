@@ -13,13 +13,11 @@ import { runCommand } from '../../util';
 
 describe('App', () => {
   const tmpFolder = './tmp/packages/devtools/cli/';
-
   const cleanUp = () => {
     fs.rmSync(tmpFolder, { recursive: true, force: true });
   };
 
   beforeEach(() => cleanUp());
-
   afterEach(() => cleanUp());
 
   // TODO(mykola): Fails on CI.

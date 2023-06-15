@@ -42,6 +42,7 @@ export default class Open extends BaseCommand<typeof Open> {
         this.log(chalk`{red Profile not initialized.}`);
         return {};
       }
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       // const { chromium } = require('playwright');
 
@@ -61,7 +62,6 @@ export default class Open extends BaseCommand<typeof Open> {
 
         const invitationSuccess = hostInvitation({
           observable,
-
           callbacks: {
             onConnecting: async () => {
               const invitationCode = InvitationEncoder.encode(observable.get());
@@ -76,6 +76,7 @@ export default class Open extends BaseCommand<typeof Open> {
           },
           peersNumber: this.flags.instances,
         });
+
         ux.action.start('Waiting for peers to connect');
         await invitationSuccess;
         ux.action.stop();

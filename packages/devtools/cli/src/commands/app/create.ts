@@ -31,7 +31,7 @@ export default class Create extends BaseCommand<typeof Create> {
   static override description = 'Manage applications.';
 
   static override args = {
-    name: Args.string({ required: true, description: 'Name of the project' }),
+    name: Args.string({ required: true, description: 'App name.' }),
   };
 
   static override flags = {
@@ -47,12 +47,7 @@ export default class Create extends BaseCommand<typeof Create> {
     }),
     interactive: Flags.boolean({
       char: 'i',
-      description: 'Customize app template options via interactive prompt',
-      default: false,
-    }),
-    verbose: Flags.boolean({
-      char: 'v',
-      description: 'Verbose output',
+      description: 'Customize app template options via interactive prompt.',
       default: false,
     }),
   };
@@ -67,12 +62,14 @@ export default class Create extends BaseCommand<typeof Create> {
     if (outputDirExists && !isOutputEmpty) {
       this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
     }
+
     try {
       await exec('which pnpm');
     } catch {
       this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
     }
-    // TODO:: make sure this exists in the @dxos/create packages too
+
+    // TODO(???): make sure this exists in the @dxos/create packages too.
     if (os.platform() === 'darwin') {
       try {
         await exec('which xcrun');
@@ -80,29 +77,25 @@ export default class Create extends BaseCommand<typeof Create> {
         this.error('XCode Command Line Tools not found. Please run "xcode-select --install" first.', { exit: 1 });
       }
     }
-    try {
-      this.log('Creating app...');
 
-      const plates = {
-        tasks,
-        bare,
-        hello,
-      };
+    this.log('Creating app...');
+    const plates = {
+      tasks,
+      bare,
+      hello,
+    };
 
-      const monorepo = isDxosMonorepoSync();
+    const monorepo = isDxosMonorepoSync();
+    const result = await plates[template as keyof typeof plates].execute({
+      outputDirectory,
+      interactive,
+      verbose,
+      input: {
+        monorepo,
+        name,
+      },
+    });
 
-      const result = await plates[template as keyof typeof plates].execute({
-        outputDirectory,
-        interactive,
-        verbose,
-        input: {
-          monorepo,
-          name,
-        },
-      });
-      void result.save({ printFiles: verbose });
-    } catch (err: any) {
-      this.error(err, { exit: 1 });
-    }
+    void result.save({ printFiles: verbose });
   }
 }
