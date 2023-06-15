@@ -3,9 +3,8 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'node:assert';
 
-import { runServices } from '@dxos/agent';
+import { Agent } from '@dxos/agent';
 
 import { BaseCommand } from '../../base-command';
 
@@ -23,8 +22,7 @@ export default class Run extends BaseCommand<typeof Run> {
   };
 
   async run(): Promise<any> {
-    assert(this.clientConfig);
-    await runServices({ listen: this.flags.listen, config: this.clientConfig });
+    await new Agent(this.clientConfig, { listen: this.flags.listen }).start();
     this.log('Agent started... (ctrl-c to exit)');
   }
 }
