@@ -69,7 +69,6 @@ export class SpaceProxy implements Space {
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _error: Error | undefined = undefined;
-
   private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
@@ -89,7 +88,6 @@ export class SpaceProxy implements Space {
     assert(this._clientServices.services.DataService, 'DataService not available');
     this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
-
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -106,7 +104,7 @@ export class SpaceProxy implements Space {
 
     databaseRouter.register(this.key, this._db);
 
-    // Update observables
+    // Update observables.
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);

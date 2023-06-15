@@ -16,7 +16,7 @@ import {
   Client,
   ClientServicesProvider,
   PublicKey,
-  Subscription,
+  Space,
 } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
@@ -36,9 +36,9 @@ interface Service {
 type ManagedSpace = {
   spaceKey: PublicKey;
   ownerKey?: PublicKey;
+  lastEpoch?: Timeframe;
   stream?: Stream<Credential>;
-  subscription?: Subscription;
-  timeframe?: Timeframe;
+  subscription?: ZenObservable.Subscription;
 };
 
 export type AgentOptions = {
@@ -153,7 +153,7 @@ export class Agent {
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
     this._managedSpaces.forEach((space) => {
       space.stream?.close();
-      space.subscription?.();
+      space.subscription?.unsubscribe();
     });
     this._managedSpaces.clear();
 
@@ -174,67 +174,81 @@ export class Agent {
 
   // TODO(burdon): Factor out.
   async manageEpochs() {
-    assert(this._client);
+    setTimeout(() => {
+      log('listening...');
+      assert(this._client);
+      this._subscriptions.push(
+        this._client.spaces.subscribe((spaces) => {
+          spaces.forEach((space) => {
+            if (!this._managedSpaces.has(space.key)) {
+              const info = this.watchSpace(space);
+              this._managedSpaces.set(space.key, info);
+            }
+          });
+        }),
+      );
+    }, 5_000); // TODO(burdon): Hack to allow epochs to be processed.
+  }
 
-    this._subscriptions.push(
-      this._client.spaces.subscribe((spaces) => {
-        spaces.forEach((space) => {
-          if (!this._managedSpaces.has(space.key)) {
-            const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
-            stream.subscribe(async (credential) => {
-              assert(this._client);
-              // TODO(burdon): Eventually test we have the credential to be the leader.
-              switch (credential.subject.assertion['@type']) {
-                case 'dxos.halo.credentials.AdmittedFeed': {
-                  if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
-                    info.ownerKey = credential.subject.assertion.identityKey;
-                    if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
-                      log('leader', { space: space.key });
+  // TODO(burdon): Detect if multiple agents are running (esp. after reset).
 
-                      // TODO(burdon): Subscribe to event instead?
-                      const result = space.db.query();
-                      info.subscription = result.subscribe(async (result) => {
-                        // TODO(burdon): Get and compare current timeframe.
-                        if (info.timeframe) {
-                          const epochCount = info.timeframe.totalMessages();
-                          const currentCount = space.internal.data.pipeline?.totalDataTimeframe?.totalMessages() ?? 0;
-                          log('update', { epochCount, currentCount });
+  // TODO(burdon): Factor out.
+  watchSpace(space: Space): ManagedSpace {
+    const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
+    stream.subscribe(async (credential) => {
+      assert(this._client);
+      switch (credential.subject.assertion['@type']) {
+        // TODO(burdon): Eventually test we have the credential to be leader.
+        case 'dxos.halo.credentials.AdmittedFeed': {
+          if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
+            info.ownerKey = credential.subject.assertion.identityKey;
+            if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
+              log('leader', { space: space.key });
 
-                          // TODO(burdon): Config.
-                          const threshold = 10;
-                          const triggerEpoch = currentCount - epochCount > threshold;
-                          if (triggerEpoch) {
-                            log('trigger epoch', { space: space.key });
-                            info.timeframe = undefined; // Reset to prevent triggering until new epoch processed.
-                            await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
-                          }
-                        }
-                      });
-                    }
+              // TODO(burdon): Don't trigger until processed last epoch.
+              info.subscription = space.pipeline.subscribe(async (pipeline) => {
+                if (info.lastEpoch) {
+                  // TODO(burdon): Get and compare current timeframe.
+                  const epochCount = info.lastEpoch.totalMessages();
+                  const currentCount = space.internal.data.pipeline?.totalDataTimeframe?.totalMessages() ?? 0;
+                  log('update', { epochCount, currentCount });
+
+                  // TODO(burdon): Config.
+                  const threshold = 10;
+                  const triggerEpoch = currentCount - epochCount > threshold;
+                  if (triggerEpoch) {
+                    log('trigger epoch', { space: space.key });
+                    info.lastEpoch = undefined; // Reset to prevent triggering until new epoch processed.
+                    await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
                   }
-                  break;
                 }
-
-                // TODO(burdon): Epochs should be numbered?
-                // TODO(burdon): Watch for epochs (current/target/total?)
-                case 'dxos.halo.credentials.Epoch': {
-                  info.timeframe = credential.subject.assertion.timeframe;
-                  log('epoch', { timeframe: info.timeframe?.totalMessages() });
-                  break;
-                }
-              }
-            });
-
-            const info: ManagedSpace = {
-              spaceKey: space.key,
-              stream,
-            };
-
-            this._managedSpaces.set(space.key, info);
+              });
+            }
           }
-        });
-      }),
-    );
+          break;
+        }
+
+        // TODO(burdon): Process all epochs before processing data.
+        // TODO(burdon): Epochs should be numbered?
+        // TODO(burdon): Watch for epochs (current/target/total?)
+        case 'dxos.halo.credentials.Epoch': {
+          info.lastEpoch = credential.subject.assertion.timeframe;
+          log('epoch', {
+            spaceKey: space.key,
+            timeframe: info.lastEpoch,
+            count: info.lastEpoch?.totalMessages(),
+          });
+          break;
+        }
+      }
+    });
+
+    const info: ManagedSpace = {
+      spaceKey: space.key,
+      stream,
+    };
+
+    return info;
   }
 }
 
