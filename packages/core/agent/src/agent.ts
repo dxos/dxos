@@ -33,7 +33,7 @@ interface Service {
   close(): Promise<void>;
 }
 
-type ManagedSpace = {
+type CurrentEpoch = {
   spaceKey: PublicKey;
   ownerKey?: PublicKey;
   lastEpoch?: Timeframe;
@@ -53,7 +53,7 @@ export class Agent {
   private _client?: Client;
   private _services?: ClientServicesProvider;
   private _subscriptions: ZenObservable.Subscription[] = [];
-  private _managedSpaces = new ComplexMap<PublicKey, ManagedSpace>(PublicKey.hash);
+  private _managedSpaces = new ComplexMap<PublicKey, CurrentEpoch>(PublicKey.hash);
 
   // prettier-ignore
   constructor(
@@ -173,7 +173,7 @@ export class Agent {
   }
 
   // TODO(burdon): Factor out.
-  async manageEpochs() {
+  async monitorEpochs() {
     setTimeout(() => {
       log('listening...');
       assert(this._client);
@@ -181,7 +181,7 @@ export class Agent {
         this._client.spaces.subscribe((spaces) => {
           spaces.forEach((space) => {
             if (!this._managedSpaces.has(space.key)) {
-              const info = this.watchSpace(space);
+              const info = this.monitorEpoch(space);
               this._managedSpaces.set(space.key, info);
             }
           });
@@ -192,8 +192,7 @@ export class Agent {
 
   // TODO(burdon): Detect if multiple agents are running (esp. after reset).
 
-  // TODO(burdon): Factor out.
-  watchSpace(space: Space): ManagedSpace {
+  monitorEpoch(space: Space): CurrentEpoch {
     const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
     stream.subscribe(async (credential) => {
       assert(this._client);
@@ -208,7 +207,6 @@ export class Agent {
               // TODO(burdon): Don't trigger until processed last epoch.
               info.subscription = space.pipeline.subscribe(async (pipeline) => {
                 if (info.lastEpoch) {
-                  // TODO(burdon): Get and compare current timeframe.
                   const epochMessages = info.lastEpoch.totalMessages();
                   const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
                   log('update', { space: space.key, epochMessages, totalMessages });
@@ -240,7 +238,7 @@ export class Agent {
       }
     });
 
-    const info: ManagedSpace = {
+    const info: CurrentEpoch = {
       spaceKey: space.key,
       stream,
     };

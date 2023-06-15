@@ -29,7 +29,7 @@ export default class Run extends BaseCommand<typeof Run> {
     await agent.start();
 
     if (this.flags.leader) {
-      await agent.manageEpochs();
+      await agent.monitorEpochs();
     }
 
     this.log('Agent started... (ctrl-c to exit)');
