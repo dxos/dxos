@@ -19,8 +19,14 @@ import { WireProtocol } from '../wire-protocol';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
+ * This value is increased exponentially.
  */
-const SIGNAL_BUFFERING_DELAY = 300;
+const STARTING_SIGNALLING_DELAY = 10;
+
+/**
+ * Maximum delay between signal batches.
+ */
+const MAX_SIGNALLING_DELAY = 300;
 
 /**
  * State machine for each connection.
@@ -74,6 +80,8 @@ export class Connection {
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
     await this._flushSignalBuffer();
   });
+
+  private _signallingDelay = STARTING_SIGNALLING_DELAY;
 
   constructor(
     public readonly topic: PublicKey,
@@ -191,7 +199,8 @@ export class Connection {
     }
 
     try {
-      await cancelWithContext(this._ctx, sleep(SIGNAL_BUFFERING_DELAY));
+      await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+      this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;
