@@ -88,6 +88,8 @@ export class Agent {
             // Unix socket (accessed via CLI).
             //
             case 'unix': {
+              // TODO(burdon): Configure with protocols/ports (not path/address, etc.)
+              //  --socket, --ws=1234, --http=3000
               if (!path.startsWith(DX_RUNTIME)) {
                 log.warn(`Non-standard address: ${path}`);
               }
