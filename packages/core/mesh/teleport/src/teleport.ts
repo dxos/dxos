@@ -39,8 +39,8 @@ export class Teleport {
   private readonly _muxer = new Muxer();
 
   private readonly _control = new ControlExtension({
-    heartbeatInterval: 3000,
-    heartbeatTimeout: 3000,
+    heartbeatInterval: 10_000,
+    heartbeatTimeout: 10_000,
     onTimeout: () => {
       this.destroy(new Error('Connection timed out')).catch((err) => log.catch(err));
     },

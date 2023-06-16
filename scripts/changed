@@ -7,7 +7,7 @@ const { execSync } = require('child_process');
 const { join, basename, relative } = require('path');
 const execa = require('execa');
 
-const MAIN_BRANCH = 'main';
+const MAIN_BRANCH = 'origin/main';
 
 (async () => {
   const projects = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());

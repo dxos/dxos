@@ -12,7 +12,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Agent, ForeverDaemon } from '@dxos/agent';
+import { Agent, ForeverDaemon, socketFileExists } from '@dxos/agent';
 import { Client, fromAgent, Config, DX_DATA } from '@dxos/client';
 import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
@@ -244,11 +244,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   async getClient() {
     const { flags } = await this.parse(this.constructor as any);
-    await this.execWithDaemon(async (daemon) => {
-      if (!(await daemon.isRunning(flags.profile))) {
+
+    if (!socketFileExists(flags.profile)) {
+      await this.execWithDaemon(async (daemon) => {
         await daemon.start(flags.profile);
-      }
-    });
+      });
+    }
 
     assert(this._clientConfig);
     if (!this._client) {

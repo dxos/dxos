@@ -6,7 +6,7 @@ import forever, { ForeverProcess } from 'forever';
 import path from 'node:path';
 
 import { Agent, ProcessDescription } from '../agent';
-import { getUnixSocket, removeSocketFile, waitForDaemon } from '../util';
+import { getUnixSocket, removeSocketFile, waitFor, waitForDaemon } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -52,19 +52,18 @@ export class ForeverDaemon implements Agent {
       forever.stop(profile);
     }
 
+    await waitFor({
+      condition: async () => !(await this._getProcess(profile)).profile,
+      timeoutError: new Error('Daemon takes to long to stop'),
+    });
+
     removeSocketFile(profile);
     return this._getProcess(profile);
   }
 
   async restart(profile: string): Promise<ProcessDescription> {
-    if ((await this._getProcess(profile)).profile === profile) {
-      removeSocketFile(profile);
-      forever.restart(profile);
-    } else {
-      await this.start(profile);
-    }
-
-    return await this._getProcess(profile);
+    await this.stop(profile);
+    return this.start(profile);
   }
 
   async list(): Promise<ProcessDescription[]> {
