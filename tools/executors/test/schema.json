@@ -148,6 +148,11 @@
       "type": "boolean",
       "description": "Exit after first failed test",
       "default": false
+    },
+    "profile": {
+      "type": "boolean",
+      "description": "Record CPU profile",
+      "default": false
     }
   },
   "required": [
