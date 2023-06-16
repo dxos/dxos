@@ -53,7 +53,7 @@ export class ForeverDaemon implements Agent {
     }
 
     await waitFor({
-      condition: async () => !(await this._getProcess(profile)).profile,
+      condition: async () => !(await this.isRunning(profile)),
     });
 
     removeSocketFile(profile);
