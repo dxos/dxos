@@ -34,7 +34,6 @@ export class DatabaseProxy {
   private _entities?: Stream<EchoEvent>;
 
   private readonly _ctx = new Context();
-  public _itemManager!: ItemManager;
 
   public readonly itemUpdate = new Event<Item<Model>[]>();
 
@@ -55,6 +54,7 @@ export class DatabaseProxy {
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
+    public readonly _itemManager: ItemManager,
     private readonly _spaceKey: PublicKey
   ) { }
 
@@ -66,11 +66,10 @@ export class DatabaseProxy {
     return this._currentBatch;
   }
 
-  async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
+  async open(modelFactory: ModelFactory): Promise<void> {
     assert(!this._opening);
     this._opening = true;
 
-    this._itemManager = itemManager;
     this._itemManager._debugLabel = 'proxy';
 
     modelFactory.registered.on(this._ctx, async (model) => {

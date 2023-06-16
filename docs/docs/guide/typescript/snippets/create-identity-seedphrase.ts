@@ -8,9 +8,7 @@ const client = new Client();
 
 (async () => {
   await client.initialize();
-  const seedphrase = generateSeedPhrase();
+  // TODO(dmaretskyi): We don't require a seedphrase anymore.
   const identity = await client.halo.createIdentity({
-    seedphrase
   });
-  console.log(`Don't lose this recovery key: ${seedphrase}`);
 })();

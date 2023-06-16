@@ -30,11 +30,13 @@ export type NodeOptions = {
   grep?: string;
   bail?: boolean;
   envVariables?: Record<string, string>;
+  profile: boolean;
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
+  console.log(`$ ${mocha} ${args.join(' ')}`);
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
@@ -57,7 +59,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 const getNodeArgs = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
-  const setupArgs = getSetupArgs(context.root, options.domRequired, options.trackLeakedResources);
+  const setupArgs = getSetupArgs(context.root, options.domRequired, options.trackLeakedResources, options.profile);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
@@ -124,13 +126,14 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
     .flat();
 };
 
-const getSetupArgs = (root: string, domRequired: boolean, trackLeakedResources: boolean) => {
+const getSetupArgs = (root: string, domRequired: boolean, trackLeakedResources: boolean, profile: boolean) => {
   const scripts = [
     'colors',
     'mocha-env',
     'catch-unhandled-rejections',
     ...(trackLeakedResources ? ['trackLeakedResources'] : []),
     ...(domRequired ? ['react-setup'] : []),
+    ...(profile ? ['profiler'] : []),
   ];
 
   return scripts

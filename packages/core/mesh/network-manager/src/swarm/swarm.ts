@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { Messenger } from '@dxos/messaging';
+import { ListeningHandle, Messenger } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -42,6 +42,8 @@ export class Swarm {
   private readonly _swarmMessenger: SwarmMessenger;
 
   private _ctx = new Context();
+
+  private _listeningHandle?: ListeningHandle = undefined;
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -94,19 +96,6 @@ export class Swarm {
       onOffer: async (msg) => await this.onOffer(msg),
       topic: this._topic,
     });
-
-    this._messenger
-      .listen({
-        peerId: this._ownPeerId,
-        payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: async (message) => {
-          await this._swarmMessenger
-            .receiveMessage(message)
-            .catch((err) => log('Error while receiving message', { err }));
-        },
-      })
-      .catch((error) => log.catch(error));
-
     log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
 
@@ -133,9 +122,24 @@ export class Swarm {
     return this._topic;
   }
 
-  // TODO(burdon): async open?
+  async open() {
+    assert(!this._listeningHandle);
+    this._listeningHandle = await this._messenger.listen({
+      peerId: this._ownPeerId,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async (message) => {
+        await this._swarmMessenger
+          .receiveMessage(message)
+          .catch((err) => log.warn('Error while receiving message', { err }));
+      },
+    });
+  }
+
   async destroy() {
     log('destroying...');
+    await this._listeningHandle?.unsubscribe();
+    this._listeningHandle = undefined;
+
     await this._ctx.dispose();
     await this._topology.destroy();
     await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key)));

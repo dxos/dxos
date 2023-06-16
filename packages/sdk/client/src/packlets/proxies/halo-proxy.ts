@@ -21,7 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential, Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { InvitationsProxy } from './invitations-proxy';
 
@@ -164,7 +164,7 @@ export class HaloProxy implements Halo {
    * Create Identity.
    * Then initializes profile with given display name.
    */
-  async createIdentity(profile = {}): Promise<Identity> {
+  async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
     this._identityChanged.emit(identity);
