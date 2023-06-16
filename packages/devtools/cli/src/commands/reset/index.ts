@@ -18,7 +18,7 @@ export default class Reset extends BaseCommand {
       this.ok();
     }
 
-    await this.execWithDaemon(async (daemon) => daemon.restart(params.flags.profile));
+    await this.execWithDaemon(async (daemon) => daemon.stop(params.flags.profile));
 
     this.log('Reset finished');
   }
