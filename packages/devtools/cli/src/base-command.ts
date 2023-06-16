@@ -12,7 +12,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Daemon, ForeverDaemon, socketFileExists } from '@dxos/agent';
+import { Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, fromAgent, Config, DX_DATA, DX_RUNTIME } from '@dxos/client';
 import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
