@@ -8,6 +8,7 @@ import { subscribe } from '@dxos/observable-object';
 export type MarkdownProperties = {
   title: string;
   meta?: { keys?: { source?: string; id?: string }[] };
+  readOnly?: boolean;
 };
 
 export const isMarkdown = (datum: unknown): datum is ComposerModel =>
@@ -19,4 +20,6 @@ export const isMarkdown = (datum: unknown): datum is ComposerModel =>
     : false;
 
 export const isMarkdownProperties = (datum: unknown): datum is MarkdownProperties =>
-  datum ? typeof datum === 'object' && subscribe in datum : false;
+  datum && typeof datum === 'object'
+    ? subscribe in datum || ('title' in datum && typeof datum.title === 'string')
+    : false;

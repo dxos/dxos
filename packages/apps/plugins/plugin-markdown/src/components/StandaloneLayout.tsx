@@ -34,6 +34,7 @@ export const StandaloneLayout = observer(
               <Input.Label srOnly>{t('document title label')}</Input.Label>
               <Input.TextInput
                 variant='subdued'
+                disabled={properties.readOnly}
                 placeholder={t('untitled document title')}
                 value={properties.title ?? ''}
                 onChange={({ target: { value } }) => (properties.title = value)}

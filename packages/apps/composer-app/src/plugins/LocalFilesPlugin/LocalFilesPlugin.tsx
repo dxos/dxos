@@ -61,10 +61,10 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
                   nodes.push({
                     id: `${LocalFilesPlugin.meta.id}/${file.name}`,
                     label: file.name,
-                    data: createStore({
+                    data: {
                       title: file.name,
                       text,
-                    }),
+                    },
                   });
                 }
               };
@@ -82,11 +82,11 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
                 nodes.push({
                   id: `${LocalFilesPlugin.meta.id}/${handle.name}`,
                   label: handle.name,
-                  data: createStore({
+                  data: {
                     handle,
                     title: handle.name,
                     text: await file.text(),
-                  }),
+                  },
                 });
               }
             },
