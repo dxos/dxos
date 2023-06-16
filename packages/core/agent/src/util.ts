@@ -48,6 +48,11 @@ export const waitFor = async ({
   }
 };
 
+export const socketFileExists = (profile: string) => {
+  const socketAddr = addrFromSocket(getUnixSocket(profile));
+  return fs.existsSync(socketAddr);
+};
+
 export const removeSocketFile = (profile: string) => {
   const socketAddr = addrFromSocket(getUnixSocket(profile));
   fs.rmSync(socketAddr, { force: true });

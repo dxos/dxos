@@ -53,7 +53,8 @@ export class ForeverDaemon implements Agent {
     }
 
     await waitFor({
-      condition: async () => !(await this.isRunning(profile)),
+      condition: async () => !(await this._getProcess(profile)).profile,
+      timeoutError: new Error('Daemon takes to long to stop'),
     });
 
     removeSocketFile(profile);
