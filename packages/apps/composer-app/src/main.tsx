@@ -19,7 +19,11 @@ import {
   TreeViewPlugin,
 } from '@dxos/react-surface';
 
-import { LocalFilesPlugin, MarkdownPlugin, SpacePlugin } from './plugins';
+import {
+  // LocalFilesPlugin,
+  MarkdownPlugin,
+  SpacePlugin,
+} from './plugins';
 
 void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defaults()) });
 
@@ -34,8 +38,8 @@ createRoot(document.getElementById('root')!).render(
         TreeViewPlugin,
         SplitViewPlugin,
         SpacePlugin,
-        LocalFilesPlugin,
         MarkdownPlugin,
+        // LocalFilesPlugin,
         // GithubMarkdownPlugin,
       ]}
     />

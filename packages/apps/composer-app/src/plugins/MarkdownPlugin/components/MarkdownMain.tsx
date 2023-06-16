@@ -14,6 +14,15 @@ export type MarkdownProperties = {
   title: string;
 };
 
+export const MarkdownMainStandalone = ({
+  data: [model, properties],
+}: {
+  data: [ComposerModel, MarkdownProperties];
+  role?: string;
+}) => {
+  return <MarkdownMain model={model} properties={properties} layout='standalone' />;
+};
+
 export const MarkdownMain = ({
   model,
   properties,
