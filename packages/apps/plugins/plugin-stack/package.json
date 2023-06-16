@@ -14,6 +14,10 @@
     "dist",
     "src"
   ],
+  "dependencies": {
+    "@braneframe/types": "workspace:*",
+    "@dxos/observable-object": "workspace:*"
+  },
   "devDependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
