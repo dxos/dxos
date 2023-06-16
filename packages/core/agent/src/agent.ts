@@ -32,6 +32,12 @@ type CurrentEpoch = {
   subscription?: ZenObservable.Subscription;
 };
 
+type EpochOptions = {
+  limit?: number;
+};
+
+const DEFAULT_EPOCH_LIMIT = 10_000;
+
 export type AgentOptions = {
   listen: string[];
 };
@@ -160,69 +166,72 @@ export class Agent {
   }
 
   // TODO(burdon): Factor out.
-  async monitorEpochs() {
-    setTimeout(() => {
-      log('listening...');
-      assert(this._client);
-      this._subscriptions.push(
-        this._client.spaces.subscribe((spaces) => {
-          spaces.forEach((space) => {
-            if (!this._managedSpaces.has(space.key)) {
-              const info = this.monitorEpoch(space);
-              this._managedSpaces.set(space.key, info);
-            }
-          });
-        }),
-      );
-    }, 5_000); // TODO(burdon): Hack to allow all epochs to be processed.
+  async monitorEpochs(options: EpochOptions) {
+    log('listening...');
+    assert(this._client);
+    this._subscriptions.push(
+      this._client.spaces.subscribe((spaces) => {
+        spaces.forEach(async (space) => {
+          if (!this._managedSpaces.has(space.key)) {
+            const info = this.monitorEpoch(space, options);
+            this._managedSpaces.set(space.key, info);
+          }
+        });
+      }),
+    );
   }
 
   // TODO(burdon): Detect if multiple agents are running (esp. after reset; otherwise halo create will fail due to contentino).
 
-  monitorEpoch(space: Space): CurrentEpoch {
+  monitorEpoch(space: Space, { limit: _limit }: EpochOptions): CurrentEpoch {
+    const limit = _limit ?? DEFAULT_EPOCH_LIMIT;
     const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
-    stream.subscribe(async (credential) => {
-      assert(this._client);
-      switch (credential.subject.assertion['@type']) {
-        // TODO(burdon): Eventually test we have the credential to be leader.
-        case 'dxos.halo.credentials.AdmittedFeed': {
-          if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
-            info.ownerKey = credential.subject.assertion.identityKey;
-            if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
-              log('leader', { space: space.key });
+    setTimeout(async () => {
+      // TODO(burdon): Confirm all epochs have been processed.
+      await space.waitUntilReady();
+      log('ready', { space: space.key });
 
-              // TODO(burdon): Don't trigger until processed last epoch.
-              info.subscription = space.pipeline.subscribe(async (pipeline) => {
-                if (info.lastEpoch) {
-                  const epochMessages = info.lastEpoch.totalMessages();
-                  const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
-                  log('update', { space: space.key, epochMessages, totalMessages });
+      stream.subscribe(async (credential) => {
+        assert(this._client);
+        switch (credential.subject.assertion['@type']) {
+          // TODO(burdon): Eventually test we have the credential to be leader.
+          case 'dxos.halo.credentials.AdmittedFeed': {
+            if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
+              info.ownerKey = credential.subject.assertion.identityKey;
+              if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
+                log('leader', { space: space.key, limit });
 
-                  // TODO(burdon): Config.
-                  const threshold = 10;
-                  const triggerEpoch = totalMessages - epochMessages >= threshold;
-                  if (triggerEpoch) {
-                    log('trigger epoch', { space: space.key });
-                    info.lastEpoch = undefined; // Reset to prevent triggering until new epoch processed.
-                    await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
+                // TODO(burdon): Don't trigger until processed last epoch.
+                info.subscription = space.pipeline.subscribe(async (pipeline) => {
+                  if (info.lastEpoch) {
+                    const epochMessages = info.lastEpoch.totalMessages();
+                    const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
+                    log('update', { space: space.key, epochMessages, totalMessages });
+
+                    const triggerEpoch = totalMessages - epochMessages >= limit;
+                    if (triggerEpoch) {
+                      log('trigger epoch', { space: space.key });
+                      info.lastEpoch = undefined; // Reset to prevent triggering until new epoch processed.
+                      await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
+                    }
                   }
-                }
-              });
+                });
+              }
             }
+            break;
           }
-          break;
-        }
 
-        case 'dxos.halo.credentials.Epoch': {
-          info.lastEpoch = credential.subject.assertion.timeframe;
-          log('epoch', {
-            spaceKey: space.key,
-            timeframe: info.lastEpoch,
-            totalMessages: info.lastEpoch?.totalMessages(),
-          });
-          break;
+          case 'dxos.halo.credentials.Epoch': {
+            info.lastEpoch = credential.subject.assertion.timeframe;
+            log('epoch', {
+              spaceKey: space.key,
+              timeframe: info.lastEpoch,
+              totalMessages: info.lastEpoch?.totalMessages(),
+            });
+            break;
+          }
         }
-      }
+      });
     });
 
     const info: CurrentEpoch = {

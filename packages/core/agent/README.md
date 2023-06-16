@@ -14,7 +14,7 @@ To run an agent in the foreground:
 . ../../devtools/cli/scripts/dev.sh
 
 # Start the an agent with a `test` profile.
-DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000 --leader
+DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000
 ```
 
 CLI commands will then connect to the agent:
@@ -24,6 +24,15 @@ DX_PROFILE=test dx-dev halo
 ```
 
 NOTE: The CLI will automatically start an agent if one is not already running.
+
+
+### Epochs
+
+To configure the agent to automatically trigger new epochs set the `epoch` flag (to `auto` or a message count):
+
+```bash
+DX_PROFILE=test dx-dev agent run --socket --epoch=auto
+```
 
 
 ### Devtools

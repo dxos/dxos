@@ -8,6 +8,7 @@ import { Agent } from '@dxos/agent';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
+import { safeParseInt } from '../../util';
 
 export default class Run extends BaseCommand<typeof Run> {
   static override enableJsonFlag = true;
@@ -25,8 +26,8 @@ export default class Run extends BaseCommand<typeof Run> {
     http: Flags.integer({
       description: 'Expose HTTP proxy.',
     }),
-    leader: Flags.boolean({
-      description: 'Leader to manage epochs.',
+    epoch: Flags.string({
+      description: 'Manage epochs (set to "auto" or message count).',
     }),
   };
 
@@ -45,8 +46,9 @@ export default class Run extends BaseCommand<typeof Run> {
     const agent = new Agent(this.clientConfig, { listen });
     await agent.start();
 
-    if (this.flags.leader) {
-      await agent.monitorEpochs();
+    if (this.flags.epoch && this.flags.epoch !== '0') {
+      const limit = safeParseInt(this.flags.epoch, undefined);
+      await agent.monitorEpochs({ limit });
     }
 
     this.log('Agent started... (ctrl-c to exit)');
