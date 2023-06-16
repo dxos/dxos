@@ -16,17 +16,12 @@ const StackPluginStoryPlugin = {
   },
   provides: {
     components: {
-      default: () => {
-        const stack = new StackProto();
-        return <Surface role='main' data={stack} />;
-      },
+      default: () => <Surface role='main' data={new StackProto()} />,
     },
   },
 };
 
-const StackSurfacesApp = () => {
-  return <PluginContextProvider plugins={[ThemePlugin, StackPlugin, StackPluginStoryPlugin]} />;
-};
+const StackSurfacesApp = () => <PluginContextProvider plugins={[ThemePlugin, StackPlugin, StackPluginStoryPlugin]} />;
 
 export default {
   component: StackSurfacesApp,
