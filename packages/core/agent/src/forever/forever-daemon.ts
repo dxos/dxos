@@ -57,14 +57,8 @@ export class ForeverDaemon implements Agent {
   }
 
   async restart(profile: string): Promise<ProcessDescription> {
-    if ((await this._getProcess(profile)).profile === profile) {
-      removeSocketFile(profile);
-      forever.restart(profile);
-    } else {
-      await this.start(profile);
-    }
-
-    return await this._getProcess(profile);
+    await this.stop(profile);
+    return this.start(profile);
   }
 
   async list(): Promise<ProcessDescription[]> {
