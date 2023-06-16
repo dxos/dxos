@@ -77,6 +77,14 @@ DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000
 NOTE: The `agent` will need to be recompiled after any changes.
 
 
+### Reset
+
+Run the following command to reset all data for a given profile:
+
+```bash
+DX_PROFILE=test dx-dev reset --force --no-agent
+```
+
 ### Devtools
 
 To connect devtools, set the `target` query parameter to the agent's websocket URL, e.g.,
