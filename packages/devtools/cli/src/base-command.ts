@@ -277,6 +277,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
+  // TODO(burdon): Doesn't detect agent running manually. Test contention (lock file).
   async maybeStartDaemon() {
     if (!this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
