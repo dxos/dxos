@@ -30,7 +30,7 @@ import { defaultDescription, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useShell } from '@dxos/react-shell';
 
-import { DialogRenameSpace } from '../../../SpacePlugin/DialogRenameSpace';
+import { DialogRenameSpace } from '../../../SpacePlugin/components/DialogRenameSpace';
 import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import {
   DocumentResolverProvider,

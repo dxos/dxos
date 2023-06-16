@@ -10,7 +10,7 @@ import { useMulticastObservable } from '@dxos/react-async';
 import { Space, observer } from '@dxos/react-client';
 import { GraphNode } from '@dxos/react-surface';
 
-import { getSpaceDisplayName } from './getSpaceDisplayName';
+import { getSpaceDisplayName } from '../getSpaceDisplayName';
 
 export const SpaceTreeItem = observer(({ data: item }: { data: GraphNode<Space> }) => {
   const space = item.data!;
