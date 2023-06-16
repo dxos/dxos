@@ -1,8 +1,13 @@
 # DX Agent
 
-Agents are managed by the daemon process via the CLI.
+- Agents are background processes that implement a DXOS network peer.
+- Agents have an identity and represent a user's device.
+- Agents are managed by a daemon process controlled by the `dx agent` CLI commands.
+- By default, agents will automatically sync all Spaces that the user has access to.
+- Agents may be configured to automatically create epochs for Spaces that were created by the associated user.
 
-## Development
+
+## Usage
 
 Both the CLI and agents should be configured to use a given profile using either the `--profile` flag or `DX_PROFILE` environment variable. 
 The CLI will automatically connect to the agent using the given profile.
@@ -10,29 +15,66 @@ The CLI will automatically connect to the agent using the given profile.
 To run an agent in the foreground:
 
 ```bash
-# Source dx-dev alias.
-. ../../devtools/cli/scripts/dev.sh
-
-# Start the an agent with a `test` profile.
-DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000
+DX_PROFILE=test dx agent run
 ```
 
-CLI commands will then connect to the agent:
+The CLI will then connect automatically to the agent:
 
 ```bash
-DX_PROFILE=test dx-dev halo
+DX_PROFILE=test dx halo
 ```
 
 NOTE: The CLI will automatically start an agent if one is not already running.
 
+### Managing HALO Devices
+
+The CLI can support multiple profiles, each with its own HALO identity.
+Similarly, separate browser profiles can be sued to support multiple HALO identities.
+
+To configure the agent to join an existing HALO:
+
+- Open https://halo.dxos.org, then get the invitation code by adding a device.
+- Run the following command then enter the invitation code:
+
+```bash
+DX_PROFILE=test dx halo join
+```
+
+To configure a browser profile to join an identity created by the CLI:
+
+- Open https://halo.dxos.org, then join from an existing device.
+- Run the following command then enter the invitation code into the browser:
+
+```bash
+DX_PROFILE=test dx halo create <username>
+DX_PROFILE=test dx halo share
+```
 
 ### Epochs
 
-To configure the agent to automatically trigger new epochs set the `epoch` flag (to `auto` or a message count):
+To configure the agent to automatically trigger new epochs set the `epoch` flag:
 
 ```bash
-DX_PROFILE=test dx-dev agent run --socket --epoch=auto
+DX_PROFILE=test dx agent run --epoch=auto
 ```
+
+
+## Development
+
+Source the following script to set an alias for `dx-dev` that can be called from any directory:
+
+```bash
+cd packages/devtools/cli
+. ../../devtools/cli/scripts/dev.sh
+```
+
+Example:
+
+```bash
+DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000
+```
+
+NOTE: The `agent` will need to be recompiled after any changes.
 
 
 ### Devtools

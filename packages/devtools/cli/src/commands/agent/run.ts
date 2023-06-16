@@ -18,6 +18,7 @@ export default class Run extends BaseCommand<typeof Run> {
     ...BaseCommand.flags,
     socket: Flags.boolean({
       description: 'Expose socket.',
+      default: true,
     }),
     'web-socket': Flags.integer({
       description: 'Expose web socket port.',
