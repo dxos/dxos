@@ -11,7 +11,7 @@ import { Client, InvitationEncoder } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { acceptInvitation, mapMembers, printMembers } from '../../util';
 
-export default class Join extends BaseCommand {
+export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;
   static override description = 'Join space invitation';
   static override flags = {
@@ -26,9 +26,7 @@ export default class Join extends BaseCommand {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const { flags } = await this.parse(Join);
-      let { invitation: encoded, secret, json } = flags;
-
+      let { invitation: encoded, secret, json } = this.flags;
       if (!encoded) {
         encoded = await ux.prompt(chalk`\n{blue Invitation}`);
       }

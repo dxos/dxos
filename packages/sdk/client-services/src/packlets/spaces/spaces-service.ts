@@ -30,9 +30,6 @@ import { DataSpaceManager } from './data-space-manager';
 
 const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
 
-/**
- *
- */
 export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,

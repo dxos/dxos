@@ -3,32 +3,55 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'node:assert';
 
-import { runServices } from '@dxos/agent';
+import { Agent } from '@dxos/agent';
+import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
+import { safeParseInt } from '../../util';
 
-export default class Run extends BaseCommand {
+export default class Run extends BaseCommand<typeof Run> {
   static override enableJsonFlag = true;
-  static override description = 'Run agent.';
+  static override description = 'Run agent as foreground process.';
 
   static override flags = {
     ...BaseCommand.flags,
-    listen: Flags.string({
-      description: 'RPC endpoints.',
-      required: true,
-      multiple: true,
+    socket: Flags.boolean({
+      description: 'Expose socket.',
+      default: true,
+    }),
+    'web-socket': Flags.integer({
+      description: 'Expose web socket port.',
+      aliases: ['ws'],
+    }),
+    http: Flags.integer({
+      description: 'Expose HTTP proxy.',
+    }),
+    epoch: Flags.string({
+      description: 'Manage epochs (set to "auto" or message count).',
     }),
   };
 
   async run(): Promise<any> {
-    const {
-      flags: { listen },
-    } = await this.parse(Run);
+    const listen = [];
+    if (this.flags.socket) {
+      listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
+    }
+    if (this.flags['web-socket']) {
+      listen.push(`ws://localhost:${this.flags['web-socket']}`);
+    }
+    if (this.flags.http) {
+      listen.push(`http://localhost:${this.flags.http}`);
+    }
 
-    assert(this.clientConfig);
-    await runServices({ listen, config: this.clientConfig });
-    this.log('agent started...');
+    const agent = new Agent(this.clientConfig, { listen });
+    await agent.start();
+
+    if (this.flags.epoch && this.flags.epoch !== '0') {
+      const limit = safeParseInt(this.flags.epoch, undefined);
+      await agent.monitorEpochs({ limit });
+    }
+
+    this.log('Agent started... (ctrl-c to exit)');
   }
 }
