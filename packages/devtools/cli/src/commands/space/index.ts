@@ -5,7 +5,7 @@
 import { BaseCommand } from '../../base-command';
 import List from './list';
 
-export default class Space extends BaseCommand {
+export default class Space extends BaseCommand<typeof Space> {
   static override description = 'List spaces.';
 
   async run(): Promise<void> {

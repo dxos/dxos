@@ -10,7 +10,7 @@ import { Client, InvitationEncoder } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { acceptInvitation } from '../../util';
 
-export default class Join extends BaseCommand {
+export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;
   static override description = 'Join HALO (device) invitation.';
 
@@ -22,8 +22,7 @@ export default class Join extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Join);
-    let { invitation: encoded } = flags;
+    let { invitation: encoded } = this.flags;
 
     return await this.execWithClient(async (client: Client) => {
       if (client.halo.identity.get()) {

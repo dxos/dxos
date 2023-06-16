@@ -16,7 +16,7 @@ export const printAgents = (daemons: any[], flags = {}) => {
       pid: {
         header: 'process',
       },
-      isRunning: {
+      running: {
         header: 'running',
       },
     },
@@ -26,7 +26,7 @@ export const printAgents = (daemons: any[], flags = {}) => {
   );
 };
 
-export default class List extends BaseCommand {
+export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List agents.';
 

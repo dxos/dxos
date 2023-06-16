@@ -3,15 +3,18 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { Agent, ProcessDescription } from '../agent';
-import { getUnixSocket, removeSocketFile, waitFor, waitForDaemon } from '../util';
+import { getUnixSocket } from '@dxos/client';
+
+import { Daemon, ProcessInfo } from '../daemon';
+import { removeSocketFile, waitFor, waitForDaemon } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
  */
-export class ForeverDaemon implements Agent {
+export class ForeverDaemon implements Daemon {
   private readonly _rootDir: string;
 
   constructor(rootDir: string) {
@@ -19,7 +22,7 @@ export class ForeverDaemon implements Agent {
   }
 
   async connect(): Promise<void> {
-    initForever(this._rootDir);
+    forever.load({ root: this._rootDir });
   }
 
   async disconnect() {
@@ -27,27 +30,31 @@ export class ForeverDaemon implements Agent {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.isRunning);
+    return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
-  async start(profile: string): Promise<ProcessDescription> {
+  async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const socket = getUnixSocket(profile);
+      const logDir = path.join(this._rootDir, profile);
+      mkdirSync(logDir, { recursive: true });
+
+      // Run the `dx agent run` CLI command.
+      // TODO(burdon): Call local run services binary directly.
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'run', `--listen=${socket}`, '--profile=' + profile],
+        args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
         uid: profile,
-        logFile: path.join(this._rootDir, `${profile}-log.log`), // Path to log output from forever process (when daemonized)
-        outFile: path.join(this._rootDir, `${profile}-out.log`), // Path to log output from child stdout
-        errFile: path.join(this._rootDir, `${profile}-err.log`), // Path to log output from child stderr
+        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
+        outFile: path.join(logDir, 'out.log'), // Child stdout.
+        errFile: path.join(logDir, 'err.log'), // Child stderr.
       });
     }
 
     await waitForDaemon(profile);
-
     return this._getProcess(profile);
   }
 
-  async stop(profile: string): Promise<ProcessDescription> {
+  async stop(profile: string): Promise<ProcessInfo> {
     if (await this.isRunning(profile)) {
       forever.stop(profile);
     }
@@ -61,12 +68,12 @@ export class ForeverDaemon implements Agent {
     return this._getProcess(profile);
   }
 
-  async restart(profile: string): Promise<ProcessDescription> {
+  async restart(profile: string): Promise<ProcessInfo> {
     await this.stop(profile);
     return this.start(profile);
   }
 
-  async list(): Promise<ProcessDescription[]> {
+  async list(): Promise<ProcessInfo[]> {
     const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
       forever.list(false, (err, processes) => {
         if (err) {
@@ -78,20 +85,16 @@ export class ForeverDaemon implements Agent {
       });
     });
 
-    return result.map((details) => foreverToProcessDescription(details));
+    return result.map((details) => mapProcessInfo(details));
   }
 
-  async _getProcess(profile: string) {
-    return (await this.list()).find((process) => process.profile === profile) ?? {};
+  async _getProcess(profile?: string) {
+    return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
 
-const foreverToProcessDescription = (details: ForeverProcess): ProcessDescription => ({
-  profile: details?.uid,
-  isRunning: details?.running,
-  pid: details?.foreverPid,
+const mapProcessInfo = ({ uid, running, foreverPid }: ForeverProcess): ProcessInfo => ({
+  profile: uid,
+  running,
+  pid: foreverPid,
 });
-
-const initForever = (rootDir: string) => {
-  forever.load({ root: rootDir });
-};

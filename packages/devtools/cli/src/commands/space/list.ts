@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { mapSpaces, printSpaces } from '../../util';
 
-export default class List extends BaseCommand {
+export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List spaces.';
   static override flags = {
@@ -18,12 +18,10 @@ export default class List extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(List);
-
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
-      if (!flags.json) {
-        printSpaces(spaces, flags);
+      if (!this.flags.json) {
+        printSpaces(spaces, this.flags);
       }
 
       return mapSpaces(spaces);

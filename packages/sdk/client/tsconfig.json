@@ -43,6 +43,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/timeframe"
+    },
+    {
       "path": "../../common/util"
     },
     {

@@ -26,18 +26,17 @@ import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto
 import { InvitationsProxy } from './invitations-proxy';
 
 export class HaloProxy implements Halo {
+  private readonly _instanceId = PublicKey.random().toHex();
+
   private readonly _subscriptions = new EventSubscriptions();
+  private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
-  private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
 
+  private readonly _identity = MulticastObservable.from(this._identityChanged, null);
+  private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
+  private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private _invitationProxy?: InvitationsProxy;
-
-  private _identity = MulticastObservable.from(this._identityChanged, null);
-  private _devices = MulticastObservable.from(this._devicesChanged, []);
-  private _contacts = MulticastObservable.from(this._contactsChanged, []);
-
-  private readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * @internal
@@ -169,7 +168,6 @@ export class HaloProxy implements Halo {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
     this._identityChanged.emit(identity);
-
     return identity;
   }
 
@@ -177,7 +175,6 @@ export class HaloProxy implements Halo {
     assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
     this._identityChanged.emit(identity);
-
     return identity;
   }
 
@@ -193,6 +190,7 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
+
     const stream = this._serviceProvider.services.SpacesService.queryCredentials({
       spaceKey: identity.spaceKey!,
     });
@@ -202,8 +200,8 @@ export class HaloProxy implements Halo {
       { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
       Credential[]
     >();
-    const credentials: Credential[] = [];
 
+    const credentials: Credential[] = [];
     stream.subscribe(
       (credential) => {
         credentials.push(credential);
@@ -241,7 +239,6 @@ export class HaloProxy implements Halo {
 
     log('create invitation', options);
     const invitation = this._invitationProxy!.createInvitation(options);
-
     return invitation;
   }
 
@@ -268,6 +265,7 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.SpacesService) {
       throw new ApiError('SpacesService is not available.');
     }
+
     return this._serviceProvider.services.SpacesService.writeCredentials({
       spaceKey: identity.spaceKey!,
       credentials,
@@ -281,6 +279,7 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
+
     const trigger = new Trigger<Credential[]>();
     this.queryCredentials({ ids }).subscribe({
       onUpdate: (credentials) => {

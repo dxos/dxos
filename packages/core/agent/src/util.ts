@@ -5,24 +5,23 @@
 import fs from 'node:fs';
 
 import { sleep } from '@dxos/async';
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { getUnixSocket } from '@dxos/client';
 
 const DAEMON_START_TIMEOUT = 5_000;
 
-export const getUnixSocket = (profile: string, protocol = 'unix') =>
-  `${protocol}://${DX_RUNTIME}/agent/${profile}.sock`;
-
-export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
+export const parseAddress = (sock: string) => {
+  const [protocol, path] = sock.split('://');
+  return { protocol, path };
+};
 
 /**
  * Waits till unix socket file is created.
  */
 export const waitForDaemon = async (profile: string) => {
-  const sockAddr = addrFromSocket(getUnixSocket(profile));
-
+  const { path } = parseAddress(getUnixSocket(profile));
   await waitFor({
-    condition: async () => fs.existsSync(sockAddr),
-    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}[ms]`),
+    condition: async () => fs.existsSync(path),
+    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}ms`),
     timeout: DAEMON_START_TIMEOUT,
   });
 };
@@ -49,11 +48,11 @@ export const waitFor = async ({
 };
 
 export const socketFileExists = (profile: string) => {
-  const socketAddr = addrFromSocket(getUnixSocket(profile));
-  return fs.existsSync(socketAddr);
+  const { path } = parseAddress(getUnixSocket(profile));
+  return fs.existsSync(path);
 };
 
 export const removeSocketFile = (profile: string) => {
-  const socketAddr = addrFromSocket(getUnixSocket(profile));
-  fs.rmSync(socketAddr, { force: true });
+  const { path } = parseAddress(getUnixSocket(profile));
+  fs.rmSync(path, { force: true });
 };

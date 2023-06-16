@@ -4,7 +4,7 @@ runtime:
   client:
     storage:
       persistent: true
-      path: /tmp/dx/cli
+      path: /tmp/dx/run
 
 
   services:
@@ -32,4 +32,4 @@ runtime:
     tunneling:
       server: wss://127.0.0.1/.well-known/dx/tunnel
     machine:
-      doAccessToken: ''
+      doAccessToken:

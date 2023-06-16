@@ -4,14 +4,13 @@
 
 import { BaseCommand } from '../../base-command';
 
-export default class Restart extends BaseCommand {
+export default class Restart extends BaseCommand<typeof Restart> {
   static override enableJsonFlag = true;
   static override description = 'Restart agent daemon.';
 
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
-      const params = await this.parse(Restart);
-      const process = await daemon.restart(params.flags.profile);
+      const process = await daemon.restart(this.flags.profile);
       this.log('Restarted: ', process);
     });
   }
