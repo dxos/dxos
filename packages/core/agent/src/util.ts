@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 
-const START_TIMEOUT = 5_000;
+const DAEMON_START_TIMEOUT = 5_000;
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
   `${protocol}://${DX_RUNTIME}/agent/${profile}.sock`;
@@ -18,15 +18,32 @@ export const addrFromSocket = (sock: string) => sock.slice('unix://'.length);
  * Waits till unix socket file is created.
  */
 export const waitForDaemon = async (profile: string) => {
-  let slept = 0;
-  const inc = 100;
   const sockAddr = addrFromSocket(getUnixSocket(profile));
 
-  while (!fs.existsSync(sockAddr)) {
+  await waitFor({
+    condition: async () => fs.existsSync(sockAddr),
+    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}[ms]`),
+    timeout: DAEMON_START_TIMEOUT,
+  });
+};
+
+export const waitFor = async ({
+  condition,
+  timeoutError,
+  timeout = 5_000,
+}: {
+  condition: () => Promise<boolean>;
+  timeoutError?: Error;
+  timeout?: number;
+}) => {
+  let slept = 0;
+  const inc = 100;
+
+  while (!(await condition())) {
     await sleep(inc);
     slept += inc;
-    if (slept >= START_TIMEOUT) {
-      throw new Error(`Daemon start timeout exceeded ${START_TIMEOUT}[ms]`);
+    if (slept >= timeout) {
+      throw timeoutError ?? new Error(`Timeout exceeded ${timeout}ms`);
     }
   }
 };
