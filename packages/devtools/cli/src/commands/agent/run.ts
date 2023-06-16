@@ -5,6 +5,7 @@
 import { Flags } from '@oclif/core';
 
 import { Agent } from '@dxos/agent';
+import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
 
@@ -14,10 +15,15 @@ export default class Run extends BaseCommand<typeof Run> {
 
   static override flags = {
     ...BaseCommand.flags,
-    listen: Flags.string({
-      description: 'RPC endpoints.',
-      required: true,
-      multiple: true,
+    socket: Flags.boolean({
+      description: 'Expose socket.',
+    }),
+    'web-socket': Flags.integer({
+      description: 'Expose web socket port.',
+      aliases: ['ws'],
+    }),
+    http: Flags.integer({
+      description: 'Expose HTTP proxy.',
     }),
     leader: Flags.boolean({
       description: 'Leader to manage epochs.',
@@ -25,7 +31,18 @@ export default class Run extends BaseCommand<typeof Run> {
   };
 
   async run(): Promise<any> {
-    const agent = new Agent(this.clientConfig, { listen: this.flags.listen });
+    const listen = [];
+    if (this.flags.socket) {
+      listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
+    }
+    if (this.flags['web-socket']) {
+      listen.push(`ws://localhost:${this.flags['web-socket']}`);
+    }
+    if (this.flags.http) {
+      listen.push(`http://localhost:${this.flags.http}`);
+    }
+
+    const agent = new Agent(this.clientConfig, { listen });
     await agent.start();
 
     if (this.flags.leader) {

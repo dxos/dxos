@@ -8,16 +8,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import {
-  DX_RUNTIME,
-  fromHost,
-  ClientServices,
-  Config,
-  Client,
-  ClientServicesProvider,
-  PublicKey,
-  Space,
-} from '@dxos/client';
+import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey, Space } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { Credential, AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -88,10 +79,6 @@ export class Agent {
             // Unix socket (accessed via CLI).
             //
             case 'unix': {
-              if (!path.startsWith(DX_RUNTIME)) {
-                log.warn(`Non-standard address: ${path}`);
-              }
-
               mkdirSync(dirname(path), { recursive: true });
               rmSync(path, { force: true });
               const httpServer = http.createServer();
