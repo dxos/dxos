@@ -36,7 +36,7 @@ export type NodeOptions = {
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const args = await getNodeArgs(context, options);
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
-  console.log(`$ ${mocha} ${args.join(' ')}`)
+  console.log(`$ ${mocha} ${args.join(' ')}`);
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,

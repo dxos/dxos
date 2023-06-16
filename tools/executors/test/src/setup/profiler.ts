@@ -1,28 +1,34 @@
-import fs from "node:fs";
-import inspector from "node:inspector";
-import path from "node:path";
+//
+// Copyright 2023 DXOS.org
+//
+
+import fs from 'node:fs';
+import inspector from 'node:inspector';
+import path from 'node:path';
 
 const session = new inspector.Session();
 const filename = `${new Date().toISOString()}.${process.pid}.cpuprofile`;
 const destination = path.resolve(process.cwd(), filename);
 
 export const mochaHooks = {
-  beforeAll(done: () => void) {
+  beforeAll: (done: () => void) => {
     session.connect();
-    return void session.post('Profiler.enable', () => void session.post('Profiler.start', done));
+    session.post('Profiler.enable', () => session.post('Profiler.start', done));
   },
-  afterAll(done: (err?: Error) => void) {
+  afterAll: (done: (err?: Error) => void) => {
     session.post('Profiler.stop', (sessionErr, data) => {
       if (sessionErr) {
-        return void done(sessionErr);
+        done(sessionErr);
+        return;
       }
-      return void fs.writeFile(destination, JSON.stringify(data.profile), writeErr => {
+      fs.writeFile(destination, JSON.stringify(data.profile), (writeErr) => {
         if (writeErr) {
-          return void done(writeErr);
+          done(writeErr);
+          return;
         }
         session.disconnect();
-        console.log(`CPU profile written to ${destination}`)
-        return void done();
+        console.log(`CPU profile written to ${destination}`);
+        done();
       });
     });
   },
