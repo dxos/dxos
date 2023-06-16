@@ -16,7 +16,7 @@ export type CreateContextParams = {
 /**
  * Maximum number of dispose callbacks before we start logging warnings.
  */
-const MAX_SAFE_DISPOSE_CALLBACKS = 100;
+const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
 @safeInstanceof('Context')
 export class Context {

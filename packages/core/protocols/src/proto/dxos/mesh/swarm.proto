@@ -24,7 +24,13 @@ message MessageData {
   oneof payload {
     Offer offer = 1;
     Answer answer = 2;
+
+    /**
+     * @deprecated Use SignalBatch instead.
+     */
     Signal signal = 3;
+    
+    SignalBatch signal_batch = 4;
   }
 }
 
@@ -39,4 +45,8 @@ message Answer {
 
 message Signal {
   google.protobuf.Struct payload = 1;
+}
+
+message SignalBatch {
+  repeated Signal signals = 1;
 }
