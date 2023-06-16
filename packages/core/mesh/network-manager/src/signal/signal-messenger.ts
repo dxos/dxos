@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { Answer, Offer, Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { Answer, Offer, Signal, SignalBatch } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export interface OfferMessage {
   author: PublicKey;
@@ -18,7 +18,7 @@ export interface SignalMessage {
   recipient: PublicKey;
   topic: PublicKey;
   sessionId: PublicKey;
-  data: { signal: Signal };
+  data: { signal?: Signal; signalBatch?: SignalBatch };
 }
 
 /**

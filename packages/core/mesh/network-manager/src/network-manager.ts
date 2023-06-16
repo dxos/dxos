@@ -166,8 +166,12 @@ export class NetworkManager {
     });
 
     this._swarms.set(topic, swarm);
-    this._signalConnection.join({ topic, peerId }).catch((error) => log.catch(error));
     this._mappers.set(topic, new SwarmMapper(swarm));
+
+    // Open before joining.
+    await swarm.open();
+
+    this._signalConnection.join({ topic, peerId }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);
