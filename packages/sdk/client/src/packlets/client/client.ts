@@ -14,7 +14,7 @@ import {
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { inspectObject } from '@dxos/debug';
+import { inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
@@ -218,6 +218,7 @@ export class Client {
     await this._services.open();
 
     // TODO(burdon): Remove?
+    // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       await createDevtoolsRpcServer(this, this._services);
     }
