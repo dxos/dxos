@@ -3,4 +3,5 @@
 //
 
 export * from './GithubMarkdownPlugin';
+export * from './MarkdownPlugin';
 export * from './SpacePlugin';

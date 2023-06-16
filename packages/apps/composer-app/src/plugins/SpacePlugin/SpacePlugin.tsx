@@ -16,16 +16,13 @@ import {
   Trash,
   Upload,
 } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React from 'react';
 
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { useTranslation } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
-import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { createStore, createSubscription } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
 import {
   EchoDatabase,
   IFrameClientServicesHost,
@@ -42,17 +39,21 @@ import {
   ClientPluginProvides,
   GraphNode,
   GraphProvides,
-  useGraphContext,
   RouterPluginProvides,
   SplitViewProvides,
   TreeViewProvides,
-  useTreeView,
 } from '@dxos/react-surface';
 
-import { DialogRenameSpace } from './DialogRenameSpace';
-import { DialogRestoreSpace } from './DialogRestoreSpace';
-import { SpaceTreeItem } from './SpaceTreeItem';
 import { backupSpace } from './backup';
+import {
+  DialogRenameSpace,
+  DialogRestoreSpace,
+  EmptySpace,
+  EmptyTree,
+  SpaceMain,
+  SpaceMainEmpty,
+  SpaceTreeItem,
+} from './components';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
 
 export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
@@ -61,39 +62,6 @@ export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
-
-export const SpaceMain: FC<{}> = observer(() => {
-  const treeView = useTreeView();
-  const graph = useGraphContext();
-  const [parentId, childId] = treeView.selected;
-
-  const parentNode = graph.roots[SpacePlugin.meta.id].find((node) => node.id === parentId);
-  const childNode = parentNode?.children?.find((node) => node.id === childId);
-
-  const data = parentNode ? (childNode ? [parentNode.data, childNode.data] : [parentNode.data]) : null;
-  return <Surface data={data} role='main' />;
-});
-
-export const SpaceMainEmpty = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className='min-bs-screen is-full flex items-center justify-center p-8'
-      data-testid='composer.firstRunMessage'
-    >
-      <p
-        role='alert'
-        className={mx(
-          defaultDescription,
-          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
-        )}
-      >
-        {t('first run message')}
-      </p>
-    </div>
-  );
-};
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
   return objects.map((obj) => ({
@@ -116,41 +84,6 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
   }));
 };
 
-const nodes = createStore<GraphNode[]>([]);
-const nodeAttributes = new Map<string, { [key: string]: any }>();
-const rootObjects = new Map<string, GraphNode[]>();
-const subscriptions = new EventSubscriptions();
-
-const EmptyTree = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className={mx(
-        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
-        defaultDescription,
-      )}
-    >
-      {t('empty tree message')}
-    </div>
-  );
-};
-
-const EmptySpace = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className={mx(
-        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
-        defaultDescription,
-      )}
-    >
-      {t('empty space message')}
-    </div>
-  );
-};
-
 // TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
@@ -159,6 +92,11 @@ const getSpaceId = (spaceKey: PublicKeyLike) => {
 
   return `${SpacePlugin.meta.id}/${spaceKey}`;
 };
+
+const nodes = createStore<GraphNode[]>([]);
+const nodeAttributes = new Map<string, { [key: string]: any }>();
+const rootObjects = new Map<string, GraphNode[]>();
+const subscriptions = new EventSubscriptions();
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
