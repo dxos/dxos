@@ -21,7 +21,7 @@ export const waitForDaemon = async (profile: string) => {
   const { path } = parseAddress(getUnixSocket(profile));
   await waitFor({
     condition: async () => fs.existsSync(path),
-    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}[ms]`),
+    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}ms`),
     timeout: DAEMON_START_TIMEOUT,
   });
 };
