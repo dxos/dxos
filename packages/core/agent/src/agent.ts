@@ -95,7 +95,8 @@ export class Agent {
             }
 
             //
-            // Web socket (accessed via browser).
+            // Web socket (accessed via devtools).
+            // TODO(burdon): Insecure.
             //
             case 'ws': {
               const { port } = new URL(address);
