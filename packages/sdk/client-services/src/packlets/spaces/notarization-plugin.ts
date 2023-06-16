@@ -144,7 +144,7 @@ export class NotarizationPlugin implements CredentialProcessor {
         log('success');
         await sleep(successDelay); // wait before trying with a new peer
       } catch (err: any) {
-        if (!err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
+        if (!ctx.disposed && !err.message.includes(WRITER_NOT_SET_ERROR_CODE)) {
           log.warn('error notarizing (recoverable)', err);
         }
         notarizeTask.schedule(); // retry immediately with next peer
