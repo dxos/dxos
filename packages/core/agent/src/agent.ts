@@ -29,7 +29,7 @@ type CurrentEpoch = {
   ownerKey?: PublicKey;
   lastEpoch?: Timeframe;
   stream?: Stream<Credential>;
-  subscription?: ZenObservable.Subscription;
+  pipelineSubscription?: ZenObservable.Subscription;
 };
 
 type EpochOptions = {
@@ -147,7 +147,7 @@ export class Agent {
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
     this._managedSpaces.forEach((space) => {
       space.stream?.close();
-      space.subscription?.unsubscribe();
+      space.pipelineSubscription?.unsubscribe();
     });
     this._managedSpaces.clear();
 
@@ -203,7 +203,7 @@ export class Agent {
                 log('leader', { space: space.key, limit });
 
                 // TODO(burdon): Don't trigger until processed last epoch.
-                info.subscription = space.pipeline.subscribe(async (pipeline) => {
+                info.pipelineSubscription = space.pipeline.subscribe(async (pipeline) => {
                   if (info.lastEpoch) {
                     const epochMessages = info.lastEpoch.totalMessages();
                     const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;

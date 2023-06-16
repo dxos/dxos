@@ -4161,6 +4161,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@types/lodash.isequal': ^4.5.0
@@ -4196,6 +4197,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       base-x: 3.0.9

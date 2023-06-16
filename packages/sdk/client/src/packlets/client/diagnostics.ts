@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
+import { Space } from '@dxos/client-protocol';
 import { PublicKey } from '@dxos/keys';
-import { Device, Identity, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Device, Identity, SpaceMember, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
 import { Client } from './client';
@@ -20,6 +22,7 @@ export type SpaceStats = {
     items: number;
   };
   members: SpaceMember[];
+  epochs: { number: number; timeframe: Timeframe }[];
 };
 
 export type ClientStats = {
@@ -44,28 +47,34 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
     data.devices = client.halo.devices.get();
 
     // Spaces.
-    // TODO(burdon): Epochs.
     {
       const trigger = new Trigger();
       const stream = host.subscribeToSpaces({});
       stream?.subscribe(async (msg) => {
-        data.spaces = msg.spaces!.map((info) => {
-          const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
-          const space = client.getSpace(info.key);
-          const result = space?.db.query();
+        data.spaces = await Promise.all(
+          msg.spaces!.map(async (info) => {
+            const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
+            const space = client.getSpace(info.key);
+            const result = space?.db.query();
+            let epochs: SpaceStats['epochs'] = [];
+            if (space) {
+              epochs = await getEpochs(client.services!.services.SpacesService!, space);
+            }
 
-          return {
-            type,
-            info,
-            properties: {
-              name: space?.properties.name,
-            },
-            stats: {
-              items: result?.objects.length,
-            },
-            members: space?.members.get(),
-          } as SpaceStats;
-        });
+            return {
+              type,
+              info,
+              epochs,
+              stats: {
+                items: result?.objects.length,
+              },
+              members: space?.members.get(),
+              properties: {
+                name: space?.properties.name,
+              },
+            } as SpaceStats;
+          }),
+        );
 
         trigger.wake();
       });
@@ -104,4 +113,25 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
   }
 
   return data;
+};
+
+const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
+  const epochs: SpaceStats['epochs'] = [];
+  const stream = service.queryCredentials({ spaceKey: space.key });
+  stream.subscribe(async (credential) => {
+    switch (credential.subject.assertion['@type']) {
+      case 'dxos.halo.credentials.Epoch': {
+        const { number, timeframe } = credential.subject.assertion;
+        if (number > 0) {
+          epochs.push({ number, timeframe });
+        }
+        break;
+      }
+    }
+  });
+
+  // TODO(burdon): Hack to wait for stream to complete.
+  await sleep(1_000);
+  stream.close();
+  return epochs;
 };
