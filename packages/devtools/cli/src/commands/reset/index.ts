@@ -35,6 +35,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
       this.flags['dry-run'] ||
       !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
     if (!dry) {
+      // TODO(burdon): Problem if running manually.
       await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile));
 
       this.warn('Deleting files...');
