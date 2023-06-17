@@ -53,5 +53,8 @@ export default class Run extends BaseCommand<typeof Run> {
     }
 
     this.log('Agent started... (ctrl-c to exit)');
+    if (this.flags['web-socket']) {
+      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
+    }
   }
 }
