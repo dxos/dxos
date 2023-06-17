@@ -14,6 +14,16 @@ export const parseAddress = (sock: string) => {
   return { protocol, path };
 };
 
+export const socketFileExists = (profile: string) => {
+  const { path } = parseAddress(getUnixSocket(profile));
+  return fs.existsSync(path);
+};
+
+export const removeSocketFile = (profile: string) => {
+  const { path } = parseAddress(getUnixSocket(profile));
+  fs.rmSync(path, { force: true });
+};
+
 /**
  * Waits till unix socket file is created.
  */
@@ -21,7 +31,6 @@ export const waitForDaemon = async (profile: string) => {
   const { path } = parseAddress(getUnixSocket(profile));
   await waitFor({
     condition: async () => fs.existsSync(path),
-    timeoutError: new Error(`Daemon start timeout exceeded ${DAEMON_START_TIMEOUT}ms`),
     timeout: DAEMON_START_TIMEOUT,
   });
 };
@@ -45,14 +54,4 @@ export const waitFor = async ({
       throw timeoutError ?? new Error(`Timeout exceeded ${timeout}ms`);
     }
   }
-};
-
-export const socketFileExists = (profile: string) => {
-  const { path } = parseAddress(getUnixSocket(profile));
-  return fs.existsSync(path);
-};
-
-export const removeSocketFile = (profile: string) => {
-  const { path } = parseAddress(getUnixSocket(profile));
-  fs.rmSync(path, { force: true });
 };

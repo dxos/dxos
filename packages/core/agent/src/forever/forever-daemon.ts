@@ -6,8 +6,6 @@ import forever, { ForeverProcess } from 'forever';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { getUnixSocket } from '@dxos/client';
-
 import { Daemon, ProcessInfo } from '../daemon';
 import { removeSocketFile, waitFor, waitForDaemon } from '../util';
 
@@ -35,14 +33,13 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      const socket = getUnixSocket(profile);
       const logDir = path.join(this._rootDir, profile);
       mkdirSync(logDir, { recursive: true });
 
       // Run the `dx agent run` CLI command.
-      // TODO(burdon): Call local run services binary directly.
+      // TODO(burdon): Call local run services binary directly (not via CLI).
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'run', `--listen=${socket}`, `--profile=${profile}`],
+        args: ['agent', 'run', '--socket', `--profile=${profile}`],
         uid: profile,
         logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
         outFile: path.join(logDir, 'out.log'), // Child stdout.
@@ -61,7 +58,6 @@ export class ForeverDaemon implements Daemon {
 
     await waitFor({
       condition: async () => !(await this._getProcess(profile)).profile,
-      timeoutError: new Error('Daemon takes to long to stop'),
     });
 
     removeSocketFile(profile);
