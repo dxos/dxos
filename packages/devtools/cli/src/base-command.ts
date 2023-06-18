@@ -82,21 +82,21 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       default: false,
     }),
 
+    profile: Flags.string({
+      description: 'User profile.',
+      default: ENV_DX_PROFILE_DEFAULT,
+      env: ENV_DX_PROFILE,
+    }),
+
     config: Flags.string({
       env: ENV_DX_CONFIG,
-      description: 'Specify config file.',
+      description: 'Config file.',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
         return join(DX_CONFIG, `profile/${profile}.yml`);
       },
       dependsOn: ['profile'],
       aliases: ['c'],
-    }),
-
-    profile: Flags.string({
-      description: 'User profile.',
-      default: ENV_DX_PROFILE_DEFAULT,
-      env: ENV_DX_PROFILE,
     }),
 
     // TODO(burdon): '--no-' prefix is not working.
@@ -155,7 +155,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this.args = args as Args<T>;
 
     // Load user config file.
-    await this._loadConfig(flags);
+    await this._loadConfig();
   }
 
   private async _initTelemetry() {
@@ -202,9 +202,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
   }
 
-  private async _loadConfig(flags: any) {
-    const { config: configFile } = flags;
-
+  private async _loadConfig() {
+    const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
       const defaultConfigPath = join(
@@ -215,7 +214,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
       if (yamlConfig.runtime?.client?.storage?.path) {
         // Isolate DX_PROFILE storages.
-        yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, flags.profile);
+        yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, this.flags.profile);
       }
 
       await mkdir(dirname(configFile), { recursive: true });

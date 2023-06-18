@@ -1,0 +1,28 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Args } from '@oclif/core';
+
+import { FaasClient } from '@dxos/agent';
+import { PublicKey } from '@dxos/keys';
+
+import { BaseCommand } from '../../base-command';
+
+export default class Exec extends BaseCommand<typeof Exec> {
+  static override enableJsonFlag = true;
+  static override description = 'Invoke function.';
+
+  static override args = {
+    name: Args.string({ required: true, description: 'Function name.' }),
+  };
+
+  async run(): Promise<any> {
+    const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {});
+    const res = await client.dispatch({
+      trigger: { id: PublicKey.random().toHex(), function: { name: this.args.name } },
+    });
+
+    console.log(':::', res);
+  }
+}

@@ -5,62 +5,16 @@
 import { DeferredTask } from '@dxos/async';
 import { Client, ClientServicesProvider, Space, SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Service } from '../service';
-import { FunctionListEntry } from './api';
-
-export type Trigger = {
-  id: string;
-
-  spaceKey: string;
-
-  function: {
-    /**
-     * Name of deployed function to invoke.
-     */
-    name: string;
-  };
-
-  subscription: {
-    /**
-     * Object types.
-     */
-    type?: string;
-
-    /**
-     * Properties to match.
-     */
-    props?: Record<string, any>;
-
-    /**
-     * List of paths for referenced objects to include.
-     */
-    nested?: string[];
-  };
-};
+import { FaasClient, InvocationContext, Trigger } from './client';
 
 type MountedTrigger = {
   trigger: Trigger;
   clear: () => Promise<void>;
-};
-
-type DatabaseEvent = {
-  trigger: Trigger;
-  objects: string[];
-};
-
-type InvocationContext = {
-  // TODO(burdon): clientEndpoints (socket, http, etc.)
-  clientUrl?: string;
-};
-
-type InvocationData = {
-  event: DatabaseEvent;
-  context: InvocationContext;
 };
 
 /**
@@ -70,18 +24,25 @@ type InvocationData = {
 export class FaasConnector implements Service {
   private readonly _ctx = new Context();
 
+  // TODO(burdon): Factor out triggers.
+  private readonly _mountedTriggers: MountedTrigger[] = [];
+
   private readonly _remountTask = new DeferredTask(this._ctx, async () => {
     await this._remountTriggers();
   });
 
   private readonly _client: Client;
 
+  private readonly _faasClient: FaasClient;
+
+  // prettier-ignore
   constructor(
-    private readonly _clientServices: ClientServicesProvider,
-    private readonly _faasConfig: Runtime.Services.Faasd,
-    private readonly _context: InvocationContext,
+    clientServices: ClientServicesProvider,
+    faasConfig: Runtime.Services.Faasd,
+    context: InvocationContext,
   ) {
-    this._client = new Client({ services: _clientServices });
+    this._client = new Client({ services: clientServices });
+    this._faasClient = new FaasClient(faasConfig, context);
   }
 
   async open() {
@@ -95,9 +56,6 @@ export class FaasConnector implements Service {
     await this._client.destroy();
     await this._unmountTriggers();
   }
-
-  // TODO(burdon): Factor out triggers.
-  private readonly _mountedTriggers: MountedTrigger[] = [];
 
   private async _watchTriggers() {
     const observedSpaces = new Map<Space, Context>();
@@ -150,7 +108,7 @@ export class FaasConnector implements Service {
         continue;
       }
 
-      // TODO(dmaretskyi): fix type.
+      // TODO(dmaretskyi): Fix type.
       const objects = space.db.query({ __type: 'dxos.function.Trigger' }).objects;
       triggers.push(...objects.map((object) => object.toJSON() as Trigger));
     }
@@ -194,7 +152,6 @@ export class FaasConnector implements Service {
       log.warn('space not found', { space: trigger.spaceKey });
       return;
     }
-
     await space.waitUntilReady();
 
     if (this._ctx.disposed) {
@@ -202,15 +159,15 @@ export class FaasConnector implements Service {
     }
 
     const updatedIds = new Set<string>();
-    const invoker = new DeferredTask(ctx, async () => {
+
+    const task = new DeferredTask(ctx, async () => {
       const updatedObjects = Array.from(updatedIds);
       updatedIds.clear();
 
-      const event: DatabaseEvent = {
+      await this._faasClient.dispatch({
         trigger,
         objects: updatedObjects,
-      };
-      await this._dispatch(event);
+      });
     });
 
     const selection = createSubscription(({ added, updated }) => {
@@ -221,7 +178,7 @@ export class FaasConnector implements Service {
         updatedIds.add(object.id);
       }
 
-      invoker.schedule();
+      task.schedule();
     });
     ctx.onDispose(() => selection.unsubscribe());
 
@@ -229,6 +186,8 @@ export class FaasConnector implements Service {
       ...trigger.subscription.props,
       '@type': trigger.subscription.type,
     });
+
+    // TODO(burdon): Trigger on subscription.
     const unsubscribe = query.subscribe(({ objects }) => {
       selection.update(objects);
     });
@@ -236,56 +195,5 @@ export class FaasConnector implements Service {
     ctx.onDispose(unsubscribe);
 
     log.info('mounted trigger', { trigger: trigger.id });
-  }
-
-  // TODO(burdon): Factor out dispatch.
-
-  private async _dispatch(event: DatabaseEvent) {
-    const installedFunctions = await this._getFunctions();
-    const installedFunction = installedFunctions.find((func) => func.name === event.trigger.function.name);
-    if (!installedFunction) {
-      log.warn('function not found', { function: event.trigger.function.name });
-      return;
-    }
-
-    const data: InvocationData = {
-      event,
-      context: {
-        clientUrl: this._context.clientUrl ?? raise(new Error('clientUrl not set')),
-      },
-    };
-
-    log.info('calling', { function: installedFunction.name });
-    const result = await this._invokeFunction(installedFunction.name, data);
-    log.info('result', { function: installedFunction.name, result });
-  }
-
-  private async _invokeFunction(functionName: string, data: InvocationData) {
-    const res = await fetch(`${this._faasConfig.gateway}/function/${functionName}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString(
-          'base64',
-        )}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    const body = await res.text();
-    return { body, status: res.status };
-  }
-
-  private async _getFunctions() {
-    const res = await fetch(`${this._faasConfig.gateway}/system/functions`, {
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${this._faasConfig.username}:${this._faasConfig.password}`).toString(
-          'base64',
-        )}`,
-      },
-    });
-
-    const functions: FunctionListEntry[] = await res.json();
-    return functions;
   }
 }

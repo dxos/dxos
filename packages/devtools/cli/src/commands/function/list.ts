@@ -4,6 +4,8 @@
 
 import { ux } from '@oclif/core';
 
+import { FaasClient } from '@dxos/agent';
+
 import { BaseCommand } from '../../base-command';
 
 export const printFunctions = (functions: any[], flags = {}) => {
@@ -25,10 +27,9 @@ export default class List extends BaseCommand<typeof List> {
   static override description = 'List functions.';
 
   async run(): Promise<any> {
-    return await this.execWithDaemon(async (daemon) => {
-      const result: any[] = [];
-      printFunctions(result);
-      return result;
-    });
+    const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {});
+    const result: any[] = await client.listFunctions();
+    printFunctions(result);
+    return result;
   }
 }

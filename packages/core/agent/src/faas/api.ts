@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Generated?
+
 /**
- *
  * @export
  * @interface DeleteFunctionRequest
  */
@@ -17,7 +18,6 @@ export interface DeleteFunctionRequest {
 }
 
 /**
- *
  * @export
  * @interface FunctionDefinition
  */
@@ -103,7 +103,6 @@ export interface FunctionDefinition {
 }
 
 /**
- *
  * @export
  * @interface FunctionDefinitionLimits
  */
@@ -123,7 +122,6 @@ export interface FunctionDefinitionLimits {
 }
 
 /**
- *
  * @export
  * @interface FunctionListEntry
  */
@@ -179,7 +177,6 @@ export interface FunctionListEntry {
 }
 
 /**
- *
  * @export
  * @interface Info
  */
@@ -283,7 +280,6 @@ export interface InfoVersion {
 }
 
 /**
- *
  * @export
  * @interface LogEntry
  */
@@ -315,7 +311,6 @@ export interface LogEntry {
 }
 
 /**
- *
  * @export
  * @interface Secret
  */
@@ -335,7 +330,6 @@ export interface Secret {
 }
 
 /**
- *
  * @export
  * @interface SecretName
  */
