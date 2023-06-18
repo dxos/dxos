@@ -75,6 +75,7 @@ export class Agent {
     ((globalThis as any).__DXOS__ ??= {}).host = (this._services as any)._host;
 
     // Create socket servers.
+    let socketUrl: string | undefined;
     this._endpoints = (
       await Promise.all(
         this._options.listen.map(async (address) => {
@@ -85,6 +86,7 @@ export class Agent {
             // Unix socket (accessed via CLI).
             //
             case 'unix': {
+              socketUrl = address;
               mkdirSync(dirname(path), { recursive: true });
               rmSync(path, { force: true });
               const httpServer = http.createServer();
@@ -130,10 +132,11 @@ export class Agent {
     ).filter(Boolean) as Service[];
 
     // OpenFaaS connector.
+    // TODO(burdon): Manual trigger.
     const faasConfig = this._config.values.runtime?.services?.faasd;
     if (faasConfig) {
       const { FaasConnector } = await import('./faas/connector');
-      const connector = new FaasConnector(this._services!, faasConfig);
+      const connector = new FaasConnector(this._services!, faasConfig, { clientUrl: socketUrl });
       await connector.open();
       this._endpoints.push(connector);
       log('connector open', { gateway: faasConfig.gateway });

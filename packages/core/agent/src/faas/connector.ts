@@ -52,11 +52,14 @@ type DatabaseEvent = {
   objects: string[];
 };
 
+type InvocationContext = {
+  // TODO(burdon): clientEndpoints (socket, http, etc.)
+  clientUrl?: string;
+};
+
 type InvocationData = {
   event: DatabaseEvent;
-  context: {
-    clientUrl?: string; // TODO(burdon): Rename.
-  };
+  context: InvocationContext;
 };
 
 /**
@@ -70,13 +73,12 @@ export class FaasConnector {
     await this._remountTriggers();
   });
 
-  private readonly _mountedTriggers: MountedTrigger[] = [];
-
   private readonly _client: Client;
 
   constructor(
     private readonly _clientServices: ClientServicesProvider,
     private readonly _faasConfig: Runtime.Services.Faasd,
+    private readonly _context: InvocationContext,
   ) {
     this._client = new Client({ services: _clientServices });
   }
@@ -92,6 +94,9 @@ export class FaasConnector {
     await this._client.destroy();
     await this._unmountTriggers();
   }
+
+  // TODO(burdon): Factor out triggers.
+  private readonly _mountedTriggers: MountedTrigger[] = [];
 
   private async _watchTriggers() {
     const observedSpaces = new Map<Space, Context>();
@@ -232,6 +237,8 @@ export class FaasConnector {
     log.info('mounted trigger', { trigger: trigger.id });
   }
 
+  // TODO(burdon): Factor out dispatch.
+
   private async _dispatch(event: DatabaseEvent) {
     const installedFunctions = await this._getFunctions();
     const installedFunction = installedFunctions.find((func) => func.name === event.trigger.function.name);
@@ -243,7 +250,7 @@ export class FaasConnector {
     const data: InvocationData = {
       event,
       context: {
-        clientUrl: this._faasConfig.clientUrl ?? raise(new Error('clientUrl not set')),
+        clientUrl: this._context.clientUrl ?? raise(new Error('clientUrl not set')),
       },
     };
 

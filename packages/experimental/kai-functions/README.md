@@ -1,7 +1,6 @@
 # Kai Remote Functions
 
-
-# TODO(burdon):
+## TODO(burdon):
 - stack.yml files
 - Function namespace (OpenFaaS).
 - Deploy from URL (yml file in GH, package in GHCR).
@@ -43,9 +42,9 @@ brew install faas-cli
 faas-cli template store list --verbose
 ```
 
-## Admin
+## OpenFaas Dashboard
 
-Open the Faasd console (username=admin): 
+Open the Faasd console (username=admin; password from script below): 
 
 ```bash
 . ./scripts/env.sh
