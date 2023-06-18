@@ -4,7 +4,7 @@
 
 import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
 
-import { Plugin } from './Plugin';
+import { Plugin, PluginAction } from './Plugin';
 import { usePluginContext } from './PluginContext';
 
 export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
@@ -12,6 +12,7 @@ export type Direction = 'inline' | 'inline-reverse' | 'block' | 'block-reverse';
 export type SurfaceProps = PropsWithChildren<{
   name?: string;
   data?: any;
+  actions?: PluginAction[];
   component?: string | string[];
   role?: string;
   surfaces?: Record<string, Partial<SurfaceProps>>;
@@ -44,12 +45,19 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
       .filter((Component): Component is JSX.Element => Boolean(Component));
     return props.limit ? components.slice(0, props.limit) : components;
   } else {
+    const actions = plugins.reduce((acc: PluginAction[], plugin) => {
+      if ('actions' in plugin.provides) {
+        return acc.concat(plugin.provides.actions!(props.data, props.role));
+      } else {
+        return acc;
+      }
+    }, []);
     const components = plugins
       .map((plugin) => {
         const Component = plugin.provides.component?.(props.data, props.role);
         return (
           Component && (
-            <Component data={props.data} role={props.role} key={plugin.meta.id}>
+            <Component data={props.data} role={props.role} actions={actions} key={plugin.meta.id}>
               {props.children ?? null}
             </Component>
           )

@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconProps } from '@phosphor-icons/react';
-import React, { UIEvent, FC, createContext, useContext } from 'react';
+import React, { FC, createContext, useContext } from 'react';
 
-import type { TFunction } from '@dxos/aurora';
-
-import { definePlugin, Plugin } from '../framework';
+import { definePlugin, Plugin, PluginAction } from '../framework';
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -23,14 +20,7 @@ export type GraphNode<TDatum = any> = {
   attributes?: { [key: string]: any };
 };
 
-export type GraphNodeAction = {
-  id: string;
-  testId?: string;
-  // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
-  label: [string, { ns: string; count?: number }];
-  icon?: FC<IconProps>;
-  invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
-};
+export type GraphNodeAction = PluginAction;
 
 export type GraphProvides = {
   graph: {
