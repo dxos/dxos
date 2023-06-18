@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
+import { Service } from '../service';
 import { FunctionListEntry } from './api';
 
 export type Trigger = {
@@ -66,7 +67,7 @@ type InvocationData = {
  * Connects to the OpenFaaS service and mounts triggers.
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
  */
-export class FaasConnector {
+export class FaasConnector implements Service {
   private readonly _ctx = new Context();
 
   private readonly _remountTask = new DeferredTask(this._ctx, async () => {

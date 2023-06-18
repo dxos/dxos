@@ -17,12 +17,8 @@ import { ComplexMap } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { ProxyServer, ProxyServerOptions } from './proxy';
+import { Service } from './service';
 import { parseAddress } from './util';
-
-interface Service {
-  open(): Promise<void>;
-  close(): Promise<void>;
-}
 
 type CurrentEpoch = {
   spaceKey: PublicKey;
