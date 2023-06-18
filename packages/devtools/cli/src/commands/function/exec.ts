@@ -18,7 +18,14 @@ export default class Exec extends BaseCommand<typeof Exec> {
   };
 
   async run(): Promise<any> {
-    const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {});
+    // TODO(burdon): Pass in clientUrl.
+    // TODO(burdon): Rebuild function with new API.
+    const context = {
+      clientUrl: 'ws://localhost:4567',
+      // clientUrl: '/tmp/dx/run/profile/test/agent.sock',
+    };
+
+    const client = new FaasClient(this.clientConfig.values.runtime?.services?.faasd ?? {}, context);
     const res = await client.dispatch({
       trigger: { id: PublicKey.random().toHex(), function: { name: this.args.name } },
     });

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { DeferredTask } from '@dxos/async';
 import { Client, ClientServicesProvider, Space, SpaceState } from '@dxos/client';
 import { Context } from '@dxos/context';
@@ -10,7 +12,7 @@ import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { Service } from '../service';
-import { FaasClient, InvocationContext, Trigger } from './client';
+import { FaasClient, InvocationContext, Trigger } from './faas-client';
 
 type MountedTrigger = {
   trigger: Trigger;
@@ -139,6 +141,8 @@ export class FaasConnector implements Service {
 
   private async _mountTrigger(trigger: Trigger) {
     const ctx = this._ctx.derive();
+    assert(trigger.spaceKey);
+    assert(trigger.subscription);
 
     this._mountedTriggers.push({
       trigger,
@@ -147,7 +151,7 @@ export class FaasConnector implements Service {
       },
     });
 
-    const space = this._client.spaces.get().find((space) => space.key.equals(trigger.spaceKey));
+    const space = this._client.spaces.get().find((space) => space.key.equals(trigger.spaceKey!));
     if (!space) {
       log.warn('space not found', { space: trigger.spaceKey });
       return;

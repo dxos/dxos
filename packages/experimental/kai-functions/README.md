@@ -53,8 +53,28 @@ open http://$IP:8080
 
 ## Build and deploy functions to Faasd
 
+NOTE: Building the Docker image may take a few minutes (npm install is slow).
+
 ```bash
 ./scripts/deploy.sh
+```
+
+List functions:
+
+```bash
+DX_PROFILE=test dx-dev function list
+```
+
+Invoke function:
+
+```bash
+DX_PROFILE=test dx-dev function exec hello
+```
+
+View logs:
+
+```bash
+faas-cli logs hello
 ```
 
 ## Development
@@ -75,14 +95,14 @@ export OPENFAAS_URL="http://$IP:8080"
 2. From the CLI directory start the daemon:
 
 ```bash
-dx-dev daemon list
+dx-dev agent list
 DX_PROFILE=test dx-dev agent start
 ```
 
 NOTE: Must invoke run to listen on socket (for functions and devtools).
 
 ```bash
-dx-dev daemon list
+dx-dev agent list
 DX_PROFILE=test dx-dev agent run --web-socket=4567
 ```
 

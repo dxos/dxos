@@ -20,8 +20,8 @@ export type Trigger = {
     name: string;
   };
 
+  // TODO(burdon): Factor out since not all events are triggered by subscriptions.
   spaceKey?: string;
-
   // TODO(burdon): ECHO Query protobuf.
   subscription?: {
     /**
@@ -82,9 +82,9 @@ export class FaasClient {
       context: this._context,
     };
 
-    log.info('calling', { function: fn.name });
-    const result = await this._invokeFunction(fn.name, data);
-    log.info('result', { function: fn.name, result });
+    log.info('exec', { id: event.trigger.id, function: fn.name });
+    const result = await this._execFunction(fn.name, data);
+    log.info('result', { id: event.trigger.id, result });
   }
 
   async listFunctions(): Promise<FunctionListEntry[]> {
@@ -100,7 +100,7 @@ export class FaasClient {
     return await res.json();
   }
 
-  private async _invokeFunction(name: string, data: InvocationData) {
+  private async _execFunction(name: string, data: InvocationData) {
     const res = await fetch(`${this._config.gateway}/function/${name}`, {
       method: 'POST',
       headers: this._createHeaders(),

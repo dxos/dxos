@@ -1,5 +1,9 @@
 set -exuo pipefail
 
+#
+# NOTE: Docker Desktop must be running.
+#
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 . $SCRIPT_DIR/env.sh
 
