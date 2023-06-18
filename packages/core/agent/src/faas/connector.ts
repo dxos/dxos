@@ -54,7 +54,9 @@ type DatabaseEvent = {
 
 type InvocationData = {
   event: DatabaseEvent;
-  context: {};
+  context: {
+    clientUrl?: string; // TODO(burdon): Rename.
+  };
 };
 
 /**
@@ -82,7 +84,7 @@ export class FaasConnector {
   async open() {
     await this._client.initialize();
     await this._watchTriggers();
-    await this._remountTask.schedule();
+    this._remountTask.schedule();
   }
 
   async close() {
@@ -241,7 +243,7 @@ export class FaasConnector {
     const data: InvocationData = {
       event,
       context: {
-        clientUrl: this._faasConfig.daemonUrl ?? raise(new Error('daemonUrl is not set')),
+        clientUrl: this._faasConfig.clientUrl ?? raise(new Error('clientUrl not set')),
       },
     };
 

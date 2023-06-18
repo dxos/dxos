@@ -80,11 +80,11 @@ dx-dev daemon list
 DX_PROFILE=test dx-dev agent start
 ```
 
-NOTE: Must invoke run to listen on socket (for functions an devtools).
+NOTE: Must invoke run to listen on socket (for functions and devtools).
 
 ```bash
 dx-dev daemon list
-DX_PROFILE=test dx-dev agent run --listen=ws://localhost:4567 --listen=unix:///tmp/dx/run/agent/test.sock --profile=test
+DX_PROFILE=test dx-dev agent run --web-socket=4567
 ```
 
 Test via the CLI:
@@ -103,14 +103,14 @@ NOTE: Check/delete the socket file to troubleshoot.
 - Create trigger:
 
 ```yml
-  subscription: {
-    type: 'dxos.experimental.chess.Game'
-  }
+subscription: {
+  type: 'dxos.experimental.chess.Game'
+}
 ```
 
 ### Connect Devtools
 
-- https://devtools.dev.dxos.org/?target=ws://localhost:4567
+- https://devtools.dxos.org/?target=ws://localhost:4567
 
 ### Connect KAI
 

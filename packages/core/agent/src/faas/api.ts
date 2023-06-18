@@ -1,14 +1,12 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 /**
  *
  * @export
  * @interface DeleteFunctionRequest
  */
-//
-// Copyright 2023 DXOS.org
-//
-
-// TODO(burdon): Formatting?
-
 export interface DeleteFunctionRequest {
   /**
    * Name of deployed function

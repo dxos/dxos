@@ -24,3 +24,7 @@ runtime:
       server: ws://127.0.0.1/.well-known/dx/supervisor
     tunneling:
       server: ws://127.0.0.1/.well-known/dx/tunnel
+
+# TODO(burdon): Document.
+#    faasd:
+#      gateway: http://192.168.64.6:8080

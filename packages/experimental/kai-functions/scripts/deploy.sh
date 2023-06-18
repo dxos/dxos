@@ -30,7 +30,6 @@ echo "\n###\n### Deploying $FN_CONFIG\n###\n"
 # NOTE: Publishes to GH Package Registry (see image name in YML).
 # - Configure visibility https://github.com/orgs/dxos/packages
 # NOTE: May timeout in which case retry until succeeds (makes iterative progress).
-# TODO(burdon): Sometimes specifty --gateway path.
 faas-cli deploy --timeout=5m0s -f $FN_CONFIG
 
 # TODO(burdon): Test with client daemon.
