@@ -114,7 +114,10 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         ...spaces.map((space) => {
           const id = getSpaceId(space.key);
           let node = rootNodes.get(id);
-          if (!node) {
+          if (node) {
+            node.label = getSpaceDisplayName(space);
+            node.description = space.properties.description;
+          } else {
             node = createStore<GraphNode<Space>>({
               id,
               label: getSpaceDisplayName(space),
