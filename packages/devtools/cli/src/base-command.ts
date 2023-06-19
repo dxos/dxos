@@ -279,13 +279,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async maybeStartDaemon() {
     if (!this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
-        // TODO(burdon): False if running manually. Also race condition. Lockfile?
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
-          console.log('!!!!!!!!!! START !!!!!!!!!!', this.flags.profile);
-          this.log('Starting agent...');
+          this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile);
-          this.log('Started');
         }
       });
     }

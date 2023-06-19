@@ -2211,6 +2211,7 @@ importers:
       '@types/faker': ^5.5.9
       '@types/fs-extra': ^9.0.4
       '@types/js-yaml': ^4.0.5
+      '@types/lockfile': ^1.0.2
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/node': ^18.11.9
       '@types/node-fetch': ^2.5.10
@@ -2226,6 +2227,7 @@ importers:
       ipfs-http-client: ~56.0.1
       isomorphic-ws: ^4.0.1
       js-yaml: ^4.1.0
+      lockfile: ^1.0.4
       lodash.defaultsdeep: ^4.6.1
       node-fetch: ^2.6.0
       nodemon: ^2.0.22
@@ -2276,6 +2278,7 @@ importers:
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.9
       js-yaml: 4.1.0
+      lockfile: 1.0.4
       lodash.defaultsdeep: 4.6.1
       node-fetch: 2.6.7
       oclif: 3.7.0_d2gyhxeuxd6tnmgqdyixls47tq
@@ -2291,6 +2294,7 @@ importers:
       '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
       '@types/js-yaml': 4.0.5
+      '@types/lockfile': 1.0.2
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
@@ -16562,6 +16566,10 @@ packages:
     resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
     dev: true
 
+  /@types/lockfile/1.0.2:
+    resolution: {integrity: sha512-jD5VbvhfMhaYN4M3qPJuhMVUg3Dfc4tvPvLEAXn6GXbs/ajDFtCQahX37GIE65ipTI3I+hEvNaXS3MYAn9Ce3Q==}
+    dev: true
+
   /@types/lodash.clonedeep/4.5.7:
     resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
     dependencies:
@@ -29869,6 +29877,12 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       p-locate: 5.0.0
+
+  /lockfile/1.0.4:
+    resolution: {integrity: sha512-cvbTwETRfsFh4nHsL1eGWapU1XFi5Ot9E85sWAwia7Y7EgB7vfqcZhTKZ+l7hCGxSPoushMv5GKhT5PdLv03WA==}
+    dependencies:
+      signal-exit: 3.0.7
+    dev: false
 
   /lodash-es/4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}

@@ -29,7 +29,12 @@ export class ForeverDaemon implements Daemon {
     // no-op.
   }
 
-  // TODO(burdon): Lock file (per profile).
+  // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
+  //  https://www.npmjs.com/package/lockfile
+  // lock(profile: string, lock = false) {
+  //   const lockFile = path.join(this._rootDir, profile, 'forever.lock');
+  // }
+
   async isRunning(profile: string): Promise<boolean> {
     return (await this.list()).some((process) => process.profile === profile && process.running);
   }
@@ -50,9 +55,8 @@ export class ForeverDaemon implements Daemon {
   }
 
   async start(profile: string): Promise<ProcessInfo> {
-    // TODO(burdon): False if running manually.
     if (!(await this.isRunning(profile))) {
-      const logDir = path.join(this._rootDir, profile);
+      const logDir = path.join(this._rootDir, profile, 'logs');
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
@@ -68,7 +72,9 @@ export class ForeverDaemon implements Daemon {
     }
 
     await waitForDaemon(profile);
-    return this._getProcess(profile);
+    const proc = await this._getProcess(profile);
+    log('started', { profile: proc.profile, pid: proc.pid });
+    return proc;
   }
 
   async stop(profile: string): Promise<ProcessInfo> {
@@ -87,6 +93,10 @@ export class ForeverDaemon implements Daemon {
   async restart(profile: string): Promise<ProcessInfo> {
     await this.stop(profile);
     return this.start(profile);
+  }
+
+  private _getLockfile(profile: string) {
+    return path.join(this._rootDir, profile, 'forever.lock');
   }
 
   async _getProcess(profile?: string) {
