@@ -276,12 +276,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  // TODO(burdon): Doesn't detect agent running manually. Avoid contention with lock file or use forever.
   async maybeStartDaemon() {
     if (!this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
+        // TODO(burdon): False if running manually. Also race condition. Lockfile?
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
+          console.log('!!!!!!!!!! START !!!!!!!!!!', this.flags.profile);
           this.log('Starting agent...');
           await daemon.start(this.flags.profile);
           this.log('Started');
@@ -294,13 +295,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Lazily create the client.
    */
   async getClient() {
-    const { flags } = await this.parse(this.constructor as any);
-    await this.execWithDaemon(async (daemon) => {
-      if (!(await daemon.isRunning(flags.profile))) {
-        await daemon.start(flags.profile);
-      }
-    });
-
+    await this.maybeStartDaemon();
     assert(this._clientConfig);
     if (!this._client) {
       await this.maybeStartDaemon();

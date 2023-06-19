@@ -6,6 +6,8 @@ import forever, { ForeverProcess } from 'forever';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
+import { log } from '@dxos/log';
+
 import { Daemon, ProcessInfo } from '../daemon';
 import { removeSocketFile, waitFor, waitForDaemon } from '../util';
 
@@ -27,14 +29,32 @@ export class ForeverDaemon implements Daemon {
     // no-op.
   }
 
+  // TODO(burdon): Lock file (per profile).
   async isRunning(profile: string): Promise<boolean> {
     return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
+  async list(): Promise<ProcessInfo[]> {
+    const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
+      forever.list(false, (err, processes) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(processes ?? []);
+      });
+    });
+
+    return result.map((details) => mapProcessInfo(details));
+  }
+
   async start(profile: string): Promise<ProcessInfo> {
+    // TODO(burdon): False if running manually.
     if (!(await this.isRunning(profile))) {
       const logDir = path.join(this._rootDir, profile);
       mkdirSync(logDir, { recursive: true });
+      log('starting...', { profile, logDir });
 
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI).
@@ -67,21 +87,6 @@ export class ForeverDaemon implements Daemon {
   async restart(profile: string): Promise<ProcessInfo> {
     await this.stop(profile);
     return this.start(profile);
-  }
-
-  async list(): Promise<ProcessInfo[]> {
-    const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
-      forever.list(false, (err, processes) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        resolve(processes ?? []);
-      });
-    });
-
-    return result.map((details) => mapProcessInfo(details));
   }
 
   async _getProcess(profile?: string) {
