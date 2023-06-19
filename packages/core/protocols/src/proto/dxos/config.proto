@@ -215,6 +215,7 @@ message Runtime {
 
     message Telemetry {
       bool disabled = 1;
+      repeated string tags = 2;
     }
 
     message Gravity {
