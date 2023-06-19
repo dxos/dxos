@@ -9,7 +9,7 @@ import { Input } from '@dxos/react-appkit';
 
 import { MarkdownProperties } from '../../MarkdownPlugin/components';
 
-export const GithubUrlDialog = ({ data }: { data: any }) => {
+export const UrlDialog = ({ data }: { data: any }) => {
   const [_, properties]: [string, MarkdownProperties] = data;
   const { t } = useTranslation('plugin-github');
   const [ghUrlValue, setGhUrlValue] = useState('');
