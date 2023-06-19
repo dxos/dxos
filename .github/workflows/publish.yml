@@ -1,9 +1,8 @@
 on:
   release:
-    types: [published]
+    types: [push]
 
 name: publish
-
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -73,27 +72,8 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Bundle
-        run: |
-          pnpm nx bundle devtools-extension --parallel 3
-          pnpm nx bundle composer-extension --parallel 3
-        env:
-          NODE_ENV: production
-          DX_ENVIRONMENT: production
-          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
-
-      - name: Gather Artifacts
-        run: |
-          ROOT_CWD="$(pwd)"
-          mkdir artifacts
-          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
-
-      - name: Upload
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
 
       - name: Monitor Release
         run: node .github/workflows/scripts/monitor.js
