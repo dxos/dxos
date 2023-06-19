@@ -335,7 +335,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
           }
         case 'tree--empty':
           switch (true) {
-            case datum === 'root':
+            case datum === SpacePlugin.meta.id:
               return EmptyTree;
             case isSpace(datum?.data):
               return EmptySpace;

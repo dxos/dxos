@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GearSix, Placeholder } from '@phosphor-icons/react';
-import React, { createContext, useContext } from 'react';
+import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 
 import {
   Avatar,
@@ -18,6 +18,7 @@ import {
   useSidebar,
   useThemeContext,
   useTranslation,
+  DropdownMenu,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
@@ -53,7 +54,15 @@ export const TreeViewContainer = observer(() => {
   const { sidebarOpen } = useSidebar(TREE_VIEW_PLUGIN);
   const splitViewContext = useSplitViewContext();
 
-  const actions = Object.values(graph.actions).reduce((acc, actions) => [...acc, ...actions], []);
+  const suppressNextTooltip = useRef<boolean>(false);
+  const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+
+  const [primary, secondary, ...actions] = Object.values(graph.actions).reduce(
+    (acc, actions) => [...acc, ...actions],
+    [],
+  );
+  const hoistedActions = [primary, secondary].filter(Boolean);
 
   return (
     <ElevationProvider elevation='chrome'>
@@ -65,13 +74,13 @@ export const TreeViewContainer = observer(() => {
               {Object.entries(graph.roots).map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
-                  <TreeView key={key} items={items} parent='root' />
+                  <TreeView key={key} items={items} parent={key} />
                 </TreeItem.Root>
               ))}
             </Tree.Root>
             <div role='none' className='order-first shrink-0 flex items-center pli-1.5 plb-1.5 order-0'>
               <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
-              {actions?.map((action) => (
+              {hoistedActions?.map((action) => (
                 <Tooltip.Root key={action.id}>
                   <Tooltip.Trigger asChild>
                     <Button
@@ -92,6 +101,67 @@ export const TreeViewContainer = observer(() => {
                   </Tooltip.Content>
                 </Tooltip.Root>
               ))}
+              <Tooltip.Root
+                open={optionsTooltipOpen}
+                onOpenChange={(nextOpen) => {
+                  if (suppressNextTooltip.current) {
+                    setOptionsTooltipOpen(false);
+                    suppressNextTooltip.current = false;
+                  } else {
+                    setOptionsTooltipOpen(nextOpen);
+                  }
+                }}
+              >
+                <Tooltip.Portal>
+                  <Tooltip.Content classNames='z-[31]' side='bottom'>
+                    {t('tree options label')}
+                    <Tooltip.Arrow />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+                <DropdownMenu.Root
+                  {...{
+                    open: optionsMenuOpen,
+                    onOpenChange: (nextOpen: boolean) => {
+                      if (!nextOpen) {
+                        suppressNextTooltip.current = true;
+                      }
+                      return setOptionsMenuOpen(nextOpen);
+                    },
+                  }}
+                >
+                  <DropdownMenu.Trigger asChild>
+                    <Tooltip.Trigger asChild>
+                      <Button
+                        variant='ghost'
+                        classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                        {...(!sidebarOpen && { tabIndex: -1 })}
+                      >
+                        <DotsThreeVertical className={getSize(4)} />
+                      </Button>
+                    </Tooltip.Trigger>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content classNames='z-[31]'>
+                      {actions.map((action) => (
+                        <DropdownMenu.Item
+                          key={action.id}
+                          onClick={(event) => {
+                            // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                            suppressNextTooltip.current = true;
+                            setOptionsMenuOpen(false);
+                            void action.invoke(t, event);
+                          }}
+                          classNames='gap-2'
+                        >
+                          {action.icon && <action.icon className={getSize(4)} />}
+                          <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                        </DropdownMenu.Item>
+                      ))}
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </Tooltip.Root>
             </div>
             {identity && (
               <>
