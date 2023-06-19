@@ -312,7 +312,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
 
     if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
       client.services.joinedSpace.on((spaceKey) => {
-        treeView.selected = [spaceKey.toHex()];
+        treeView.selected = [getSpaceId(spaceKey)];
       });
     }
 
