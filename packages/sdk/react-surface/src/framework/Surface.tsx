@@ -13,6 +13,7 @@ export type SurfaceProps = PropsWithChildren<{
   name?: string;
   data?: any;
   actions?: PluginAction[];
+  useContext?: () => Record<string, any>;
   component?: string | string[];
   role?: string;
   surfaces?: Record<string, Partial<SurfaceProps>>;
@@ -47,7 +48,7 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
   } else {
     const actions = plugins.reduce((acc: PluginAction[], plugin) => {
       if ('actions' in plugin.provides) {
-        return acc.concat(plugin.provides.actions!(props.data, props.role));
+        return acc.concat(plugin.provides.actions!(props.data, plugins, props.role));
       } else {
         return acc;
       }
@@ -57,7 +58,13 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
         const Component = plugin.provides.component?.(props.data, props.role);
         return (
           Component && (
-            <Component data={props.data} role={props.role} actions={actions} key={plugin.meta.id}>
+            <Component
+              data={props.data}
+              role={props.role}
+              actions={actions}
+              usePluginContext={props.useContext}
+              key={plugin.meta.id}
+            >
               {props.children ?? null}
             </Component>
           )

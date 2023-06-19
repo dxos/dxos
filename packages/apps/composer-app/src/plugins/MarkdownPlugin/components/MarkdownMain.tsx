@@ -6,30 +6,38 @@ import React, { HTMLAttributes, useRef } from 'react';
 
 import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
+import { PluginAction } from '@dxos/react-surface';
 
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 
 export type MarkdownProperties = {
   title: string;
+  keys: {
+    source?: string;
+    id?: string;
+  }[];
 };
 
 export const MarkdownMainStandalone = ({
   data: [model, properties],
+  actions = [],
 }: {
   data: [ComposerModel, MarkdownProperties];
-  role?: string;
+  actions?: PluginAction[];
 }) => {
-  return <MarkdownMain model={model} properties={properties} layout='standalone' />;
+  return <MarkdownMain model={model} properties={properties} actions={actions} layout='standalone' />;
 };
 
 export const MarkdownMain = ({
   model,
   properties,
+  actions,
   layout,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
+  actions: PluginAction[];
   layout: 'standalone' | 'embedded';
 }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
@@ -37,7 +45,7 @@ export const MarkdownMain = ({
 
   return (
     <>
-      <Root id={model.id} properties={properties}>
+      <Root id={model.id} properties={properties} actions={actions}>
         <MarkdownComposer
           ref={editorRef}
           model={model}

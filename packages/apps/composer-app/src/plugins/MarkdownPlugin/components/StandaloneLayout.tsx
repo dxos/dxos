@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThreeVertical, FilePlus } from '@phosphor-icons/react';
-import React, { Dispatch, HTMLAttributes, PropsWithChildren, ReactNode, SetStateAction } from 'react';
-import { FileUploader } from 'react-drag-drop-files';
+import { DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
+import React, { HTMLAttributes, PropsWithChildren } from 'react';
 
 import { Button, DropdownMenu, ThemeContext, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
-import { Dialog, Input } from '@dxos/react-appkit';
+import { Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
+import { PluginAction } from '@dxos/react-surface';
 
 import { MarkdownProperties } from './MarkdownMain';
 
@@ -18,17 +18,11 @@ export const StandaloneLayout = observer(
     children,
     id,
     properties,
-    dropdownMenuContent,
-    handleFileImport,
-    fileImportDialogOpen,
-    setFileImportDialogOpen,
+    actions,
   }: PropsWithChildren<{
     id: string;
     properties: MarkdownProperties;
-    dropdownMenuContent?: ReactNode;
-    handleFileImport?: (file: File) => Promise<void>;
-    fileImportDialogOpen?: boolean;
-    setFileImportDialogOpen?: Dispatch<SetStateAction<boolean>>;
+    actions: PluginAction[];
   }>) => {
     const { t } = useTranslation('composer');
     const themeContext = useThemeContext();
@@ -61,7 +55,19 @@ export const StandaloneLayout = observer(
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content sideOffset={10} classNames='z-10'>
-                    {dropdownMenuContent}
+                    {actions.map((action) => {
+                      const Icon = action.icon ?? Placeholder;
+                      return (
+                        <DropdownMenu.Item
+                          key={action.id}
+                          data-testId={action.testId}
+                          onClick={(event) => action.invoke(t, event)}
+                        >
+                          <span className='grow'>{t(...action.label)}</span>
+                          <Icon className={getSize(4)} />
+                        </DropdownMenu.Item>
+                      );
+                    })}
                     <DropdownMenu.Arrow />
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
@@ -71,30 +77,30 @@ export const StandaloneLayout = observer(
           <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 opacity-50')} />
           {children}
         </div>
-        <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-          {handleFileImport && (
-            <Dialog
-              open={fileImportDialogOpen}
-              onOpenChange={setFileImportDialogOpen}
-              title={t('confirm import title')}
-              slots={{ overlay: { classNames: 'backdrop-blur-sm' } }}
-            >
-              <p className='mlb-4'>{t('confirm import body')}</p>
-              <FileUploader
-                types={['md']}
-                classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
-                dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-                handleChange={handleFileImport}
-              >
-                <FilePlus weight='duotone' className={getSize(8)} />
-                <span>{t('upload file message')}</span>
-              </FileUploader>
-              <Button classNames='block is-full' onClick={() => setFileImportDialogOpen?.(false)}>
-                {t('cancel label', { ns: 'appkit' })}
-              </Button>
-            </Dialog>
-          )}
-        </ThemeContext.Provider>
+        {/* <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}> */}
+        {/*  {handleFileImport && ( */}
+        {/*    <Dialog */}
+        {/*      open={fileImportDialogOpen} */}
+        {/*      onOpenChange={setFileImportDialogOpen} */}
+        {/*      title={t('confirm import title')} */}
+        {/*      slots={{ overlay: { classNames: 'backdrop-blur-sm' } }} */}
+        {/*    > */}
+        {/*      <p className='mlb-4'>{t('confirm import body')}</p> */}
+        {/*      <FileUploader */}
+        {/*        types={['md']} */}
+        {/*        classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer' */}
+        {/*        dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }} */}
+        {/*        handleChange={handleFileImport} */}
+        {/*      > */}
+        {/*        <FilePlus weight='duotone' className={getSize(8)} /> */}
+        {/*        <span>{t('upload file message')}</span> */}
+        {/*      </FileUploader> */}
+        {/*      <Button classNames='block is-full' onClick={() => setFileImportDialogOpen?.(false)}> */}
+        {/*        {t('cancel label', { ns: 'appkit' })} */}
+        {/*      </Button> */}
+        {/*    </Dialog> */}
+        {/*  )} */}
+        {/* </ThemeContext.Provider> */}
       </Main.Content>
     );
   },

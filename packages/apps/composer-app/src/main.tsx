@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-surface';
 
 import {
+  GithubMarkdownPlugin,
   // LocalFilesPlugin,
   MarkdownPlugin,
   SpacePlugin,
@@ -40,7 +41,7 @@ createRoot(document.getElementById('root')!).render(
         SpacePlugin,
         MarkdownPlugin,
         // LocalFilesPlugin,
-        // GithubMarkdownPlugin,
+        GithubMarkdownPlugin,
       ]}
     />
   </StrictMode>,

@@ -18,33 +18,46 @@ export type PluginAction = {
   invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };
 
-export type PluginProvides<TProvides> = TProvides & {
+export type PluginProvides<TProvides, TContextValue> = TProvides & {
   context?: FC<PropsWithChildren>;
   component?: <P extends PropsWithChildren = PropsWithChildren>(
     datum: any,
     role?: string,
     props?: Partial<P>,
-  ) => FC<PropsWithChildren<{ data: any; role?: string; actions?: PluginAction[] }>> | undefined | null | false | 0;
+  ) =>
+    | FC<
+        PropsWithChildren<{
+          data: any;
+          role?: string;
+          actions?: PluginAction[];
+          usePluginContext?: () => TContextValue;
+        }>
+      >
+    | undefined
+    | null
+    | false
+    | 0;
   components?: Record<string, FC<any>> & { default?: FC };
-  actions?: (datum: any, role?: string) => PluginAction[];
+  actions?: (datum: any, plugins: Plugin[], role?: string) => PluginAction[];
+  useContext?: () => TContextValue;
 };
 
-export type Plugin<TProvides = {}> = {
+export type Plugin<TProvides = {}, TContextValue = {}> = {
   meta: {
     id: string;
   };
-  provides: PluginProvides<TProvides>;
+  provides: PluginProvides<TProvides, TContextValue>;
 };
 
-export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 'provides'> & {
+export type PluginDefinition<TProvides = {}, TInitProvides = {}, TContextValue = {}> = Omit<Plugin, 'provides'> & {
   provides?: Plugin<TProvides>['provides'];
-  init?: () => Promise<PluginProvides<TInitProvides>>;
+  init?: () => Promise<PluginProvides<TInitProvides, TContextValue>>;
   ready?: (plugins: Plugin[]) => Promise<void>;
   unload?: () => Promise<void>;
 };
 
-export const definePlugin = <TProvides = {}, TInitProvides = {}>(
-  plugin: PluginDefinition<TProvides, TInitProvides>,
+export const definePlugin = <TProvides = {}, TInitProvides = {}, TContextValue = {}>(
+  plugin: PluginDefinition<TProvides, TInitProvides, TContextValue>,
 ) => {
   return plugin;
 };
