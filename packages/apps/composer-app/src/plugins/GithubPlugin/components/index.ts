@@ -4,3 +4,4 @@
 
 export * from './GithubApiProviders';
 export * from './GithubEchoResolverProviders';
+export * from './MarkdownActions';

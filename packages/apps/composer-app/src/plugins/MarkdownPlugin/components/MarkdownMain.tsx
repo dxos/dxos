@@ -12,6 +12,7 @@ import { StandaloneLayout } from './StandaloneLayout';
 
 export type MarkdownProperties = {
   title: string;
+  keys?: { source?: string; id?: string }[];
 };
 
 export const MarkdownMainStandalone = ({
@@ -37,7 +38,7 @@ export const MarkdownMain = ({
 
   return (
     <>
-      <Root id={model.id} properties={properties}>
+      <Root properties={properties} model={model}>
         <MarkdownComposer
           ref={editorRef}
           model={model}

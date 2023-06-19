@@ -7,7 +7,8 @@ import React from 'react';
 
 import { definePlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { OctokitProvider, PatInput } from './components';
+import { isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
+import { MarkdownActions, OctokitProvider, PatInput } from './components';
 
 export const GithubPlugin: PluginDefinition = definePlugin({
   meta: {
@@ -16,10 +17,15 @@ export const GithubPlugin: PluginDefinition = definePlugin({
   provides: {
     context: (props) => <OctokitProvider {...props} />,
     component: (datum, role) => {
-      if (role === 'dialog' && datum === 'dxos:SplitViewPlugin/ProfileSettings') {
-        return PatInput;
-      } else {
-        return null;
+      switch (role) {
+        case 'dialog':
+          return datum === 'dxos:SplitViewPlugin/ProfileSettings' ? PatInput : null;
+        case 'menuitem':
+          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])
+            ? MarkdownActions
+            : null;
+        default:
+          return null;
       }
     },
   },
