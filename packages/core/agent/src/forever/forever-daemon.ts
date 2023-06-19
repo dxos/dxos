@@ -63,7 +63,7 @@ export class ForeverDaemon implements Daemon {
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI).
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'run', '--socket', `--profile=${profile}`],
+        args: ['agent', 'run', `--profile=${profile}`, '--socket'],
         uid: profile,
         logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
         outFile: path.join(logDir, 'out.log'), // Child stdout.
