@@ -47,6 +47,8 @@ export default class Run extends BaseCommand<typeof Run> {
     const agent = new Agent(this.clientConfig, { listen });
     await agent.start();
 
+    process.on('exit', () => agent.stop());
+
     if (this.flags.epoch && this.flags.epoch !== '0') {
       const limit = safeParseInt(this.flags.epoch, undefined);
       await agent.monitorEpochs({ limit });
