@@ -3,6 +3,7 @@
 //
 
 import { ux } from '@oclif/core';
+import { format, parseISO } from 'date-fns';
 
 import { FaasClient } from '@dxos/agent';
 
@@ -14,6 +15,16 @@ export const printFunctions = (functions: any[], flags = {}) => {
     {
       name: {
         header: 'name',
+      },
+      image: {
+        header: 'image',
+      },
+      createdAt: {
+        header: 'createdAt',
+        get: (row) => format(parseISO(row.createdAt), 'MM/dd/yyyy HH:mm'),
+      },
+      invocationCount: {
+        header: 'invocations',
       },
     },
     {

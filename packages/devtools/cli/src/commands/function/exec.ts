@@ -20,6 +20,9 @@ export default class Exec extends BaseCommand<typeof Exec> {
   async run(): Promise<any> {
     // TODO(burdon): Pass in clientUrl.
     // TODO(burdon): Rebuild function with new API.
+    // TODO(burdon): Use JWT instead of password.
+    //  https://docs.openfaas.com/reference/authentication
+    //  faas-cli registry-login
     const context = {
       clientUrl: 'ws://localhost:4567',
       // clientUrl: '/tmp/dx/run/profile/test/agent.sock',

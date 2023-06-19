@@ -71,7 +71,7 @@ Invoke function:
 DX_PROFILE=test dx-dev function exec hello
 ```
 
-View logs:
+View logs (https://docs.openfaas.com/cli/logs):
 
 ```bash
 faas-cli logs hello

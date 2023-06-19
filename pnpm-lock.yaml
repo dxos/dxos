@@ -2216,6 +2216,7 @@ importers:
       '@types/node-fetch': ^2.5.10
       chalk: ^4.1.0
       cli-progress: ^3.11.2
+      date-fns: ^2.29.3
       debug: ^4.3.3
       do-wrapper: ^4.5.1
       fs-extra: ^8.1.0
@@ -2266,6 +2267,7 @@ importers:
       '@octokit/core': 4.1.0
       chalk: 4.1.2
       cli-progress: 3.11.2
+      date-fns: 2.29.3
       debug: 4.3.4
       do-wrapper: 4.5.1
       fs-extra: 8.1.0
