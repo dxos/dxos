@@ -9,7 +9,6 @@ import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } f
 import { defaultDisabled, getSize } from '@dxos/aurora-theme';
 import { observer } from '@dxos/react-client';
 
-import { Surface } from '../../framework';
 import { GraphNode } from '../GraphPlugin';
 import { TreeView } from './TreeView';
 
@@ -59,7 +58,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
           ]}
           onClick={() => setOpen(!open)}
         >
-          <Surface role='treeitem' data={node} />
+          {Array.isArray(node.label) ? t(...node.label) : node.label}
         </TreeItem.Heading>
         <Tooltip.Root
           open={optionsTooltipOpen}
@@ -114,7 +113,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
                     classNames='gap-2'
                   >
                     {action.icon && <action.icon className={getSize(4)} />}
-                    <span>{t(...action.label)}</span>
+                    <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
                   </DropdownMenu.Item>
                 ))}
                 <DropdownMenu.Arrow />
@@ -126,7 +125,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
           <Tooltip.Root>
             <Tooltip.Portal>
               <Tooltip.Content side='bottom' classNames='z-[31]'>
-                {t(...primaryAction.label)}
+                {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
                 <Tooltip.Arrow />
               </Tooltip.Content>
             </Tooltip.Portal>
@@ -138,7 +137,9 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
                 {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >
-                <span className='sr-only'>{t(...primaryAction.label)}</span>
+                <span className='sr-only'>
+                  {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+                </span>
                 {primaryAction.icon ? (
                   <primaryAction.icon className={getSize(4)} />
                 ) : (

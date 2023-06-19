@@ -13,7 +13,7 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GraphNode<TDatum = any> = {
   id: string;
-  label: string;
+  label: string | [string, { ns: string; count?: number }];
   description?: string;
   icon?: FC;
   data?: TDatum; // nit about naming this
@@ -27,7 +27,7 @@ export type GraphNodeAction = {
   id: string;
   testId?: string;
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
-  label: [string, { ns: string; count?: number }];
+  label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
   invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };

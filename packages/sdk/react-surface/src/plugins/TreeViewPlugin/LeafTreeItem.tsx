@@ -61,7 +61,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           className='text-start flex gap-2'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-          <p className='grow mbs-1'>{node.label || t('untitled document title')}</p>
+          <p className='grow mbs-1'>{Array.isArray(node.label) ? t(...node.label) : node.label}</p>
         </button>
       </TreeItem.Heading>
       <Tooltip.Root
@@ -116,7 +116,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
                   classNames='gap-2'
                 >
                   {action.icon && <action.icon className={getSize(4)} />}
-                  <span>{t(...action.label)}</span>
+                  <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
                 </DropdownMenu.Item>
               ))}
               <DropdownMenu.Arrow />
