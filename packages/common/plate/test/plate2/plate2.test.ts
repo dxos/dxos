@@ -5,19 +5,35 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import extended from './extend/template.t';
-import simple from './simple/template.t';
+import simpleFileGroup from './file-templates/group.t';
+import simpleFile from './file-templates/simple.md.t';
+import simpleDir from './simple/template.t';
 
 chai.use(chaiAsPromised);
 
 describe('plate 2 templates', () => {
   it('exists', () => {
-    expect(simple).to.exist;
+    expect(simpleDir).to.exist;
     expect(extended).to.exist;
+  });
+
+  it('file templates', async () => {
+    expect(simpleFile).to.be.a('function');
+    expect(simpleFileGroup).to.be.a('function');
+
+    const result = await simpleFile({ input: { name: 'zanzibar' } });
+    expect(result).to.exist;
+    expect(result.files).to.be.an('array');
+    expect(result.files.length).to.eq(1);
+    const [file] = result.files;
+    expect(file).to.exist;
+    expect(file.path).to.eq('simple.md');
+    expect(file.content).to.eq('the name was zanzibar');
   });
 
   it('simple template', async () => {
     const name = 'alice';
-    const result = await simple.execute({
+    const result = await simpleDir.execute({
       input: {
         name
       }

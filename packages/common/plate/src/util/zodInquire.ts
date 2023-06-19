@@ -106,6 +106,8 @@ export const getQuestions = async <TShape extends InquirableZodType = Inquirable
       extractFromIntersection(shape);
     } else if (shape instanceof z.ZodEffects) {
       extractFromType(shape.innerType());
+    } else if (shape instanceof z.ZodNull) {
+      // do nothing
     } else {
       extractFromObject(shape);
     }

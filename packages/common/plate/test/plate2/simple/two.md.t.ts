@@ -1,6 +1,6 @@
 import template from './template.t';
 
-export default template
+export default template.define
   .slots({
     prop: 'default prop'
   })

@@ -1,11 +1,10 @@
-import path from 'path';
 import { z } from '..';
-import { InteractiveDirectoryTemplate } from '../../../src/plate2';
+import { directory } from '..';
 
-export default new InteractiveDirectoryTemplate({
+export default directory({
   include: ['*'],
   exclude: ['exclude', /exclude/],
-  input: z.object({
+  inputShape: z.object({
     name: z.string().describe('name the thing').default('name')
   })
 });
