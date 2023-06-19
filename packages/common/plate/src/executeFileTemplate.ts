@@ -6,23 +6,13 @@ import { z } from 'zod';
 
 import { ConfigDeclaration } from './config';
 import { File, getFileType, MaybePromise, promise } from './file';
+import { isTemplateFile, getOutputNameFromTemplateName } from './util/filenames';
 import { Imports } from './util/imports';
 import { loadModule, LoadModuleOptions } from './util/loadModule';
 import { InquirableZodType } from './util/zodInquire';
 
-/** Include all template files that end with .t.ts or .t.js */
-export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
-/** Do not process files that are compilation noise like .map and .t.d.ts */
-export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.d\.ts$/, /\.map$/, /config\.t\.[tj]s$/];
-
-export const isTemplateFile = (file: string) =>
-  TEMPLATE_FILE_INCLUDE.test(file) && !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
-
-export const getOutputNameFromTemplateName = (s: string): string => {
-  const e = TEMPLATE_FILE_INCLUDE.exec(s);
-  const out = e?.[1];
-  return out ?? s;
-};
+export { TEMPLATE_FILE_IGNORE, TEMPLATE_FILE_INCLUDE } from './util/filenames';
+export { isTemplateFile, getOutputNameFromTemplateName };
 
 export type LoadTemplateOptions = LoadModuleOptions;
 

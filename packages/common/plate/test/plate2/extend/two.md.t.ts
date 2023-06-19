@@ -1,7 +1,7 @@
 import template from './template.t';
 import inherited from '../simple/two.md.t';
 
-export default template.text({
+export default template.define.text({
   content: async (context) => {
     const { input } = context;
     // const inheritedContent = await inherited({

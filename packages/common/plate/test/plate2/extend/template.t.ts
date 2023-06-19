@@ -1,8 +1,8 @@
 import template from '../simple/template.t';
-import { InteractiveDirectoryTemplate } from '../../../src/plate2';
+import { directory } from '..';
 
-export default new InteractiveDirectoryTemplate({
-  input: template.input,
+export default directory({
+  inputShape: template.inputShape,
   inherits: (context) => {
     const { input } = context;
     return template.execute({ ...context, input: { name: `prefixed ${input.name}` } });

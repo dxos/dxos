@@ -2,66 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 import callsite from 'callsite';
+import path from 'path';
 
 import { InquirableZodType, z } from '.';
+import { getOutputNameFromTemplateName } from './util/filenames';
+import { Imports } from './util/imports';
 
 type MaybePromise<T> = T | Promise<T>;
 
-type Effect = {
-  commit(): Promise<any>;
+type Effect<I = void, O = any> = {
+  apply(argument: I): MaybePromise<O>;
 };
 
-export type Context<I = any, S extends Slots<I> = Slots<I>> = { input: I; slots?: S };
+export type Transform<I, O> = (input: I) => MaybePromise<O>;
 
-export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>> =
-  | R
-  | ((context: Context<I, S>) => MaybePromise<R>);
+export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>> = R | Transform<Context<I, S>, R>;
+
+export type ExtractResult<S extends Slot> = S extends Slot<infer U> ? U : never;
 
 export type Slots<I = any, TSlots extends Slots = {}> = Record<string, Slot<any, I, TSlots>>;
 
-const renderSlot = async <I = any, TSlots extends Slots<I> = {}>(
+export type Context<I = any, S extends Slots<I> = Slots<I>> = { input: I; slots?: S };
+
+export type Template<I = any, TSlots extends Slots<I> = Slots<I>> = Transform<Context<I, TSlots>, FileResults>;
+
+export type RenderedSlots<TSlots extends Slots> = { [key in keyof TSlots]: ExtractResult<TSlots[key]> };
+
+const renderSlots = async <I = any, TSlots extends Slots<I> = {}>(
   slots: TSlots,
-  slotName: keyof TSlots,
-  context: Context<I, TSlots>
-) => {
-  return '';
+  context: Context<I>
+): Promise<RenderedSlots<TSlots>> => {
+  const result: RenderedSlots<TSlots> = {} as any;
+  for (const key in slots) {
+    result[key] = typeof slots[key] === 'function' ? await slots[key](context) : slots[key];
+  }
+  return result;
+};
+
+const slotDefault = <T>(slot: Slot<T>, value: T) => {
+  return typeof slot === 'function' ? (context: any) => (slot as Function)(context) ?? value : slot ?? value;
 };
 
 export type Path = string | string[];
-class FileEffect<I = any, TSlots extends Slots<I> = {}> implements Effect {
-  path?: string;
-  content?: string;
-  copyOf?: string;
-
-  static isFileEffect = (o: any): o is FileEffect => {
-    return o?.path && o?.content;
-  };
-
-  constructor(private readonly slots: FileSlots<I> & TSlots) {}
-
-  async render(context: Context<I, TSlots>) {
-    const { slots } = this;
-    this.content = await renderSlot(slots, 'content', context);
-    this.path = await renderSlot(slots, 'path', context);
-    this.copyOf = await renderSlot(slots, 'copyOf', context);
-  }
-
-  async commit() {}
-}
-
-type Results<R = FileEffect> = {
-  files: R[];
-  commit(): Promise<any>;
-};
-
-const results = (files: FileEffect[]): Results => ({
-  files,
-  commit: async () => Promise.all(files.map((e) => e.commit()))
-});
-
-export type Template<I = any, TSlots extends Slots<I> = Slots<I>> = (
-  context: Context<I, TSlots>
-) => MaybePromise<Results>;
 
 export type FileSlots<I = any, TSlots extends Slots<I> = {}> = {
   path?: Slot<Path, I, TSlots>;
@@ -69,80 +51,108 @@ export type FileSlots<I = any, TSlots extends Slots<I> = {}> = {
   copyOf?: Slot<string, I, TSlots>;
 };
 
-export const slots = <I = any, TSlots extends Slots<I> = {}>(slots: TSlots) => {
-  return new Plate(slots);
-};
+class FileEffect implements Effect {
+  public path: Path = '';
+  public content = '';
+  public copyOf?: string;
 
-export class Plate<I = any, TSlots extends Slots<I> = {}> {
-  constructor(private readonly _slots: TSlots) {}
+  static isFileEffect = (o: any): o is FileEffect => {
+    return o?.path && o?.content;
+  };
 
-  text(options: FileSlots<I, TSlots>): Template<I, TSlots> {
-    const stack = callsite();
-    const templateFile = stack[1].getFileName();
-    return async (context: Context<I, TSlots>) => {
-      return results([
-        new FileEffect({
-          path: templateFile,
-          content: ''
-        })
-      ]);
-    };
+  constructor(private readonly slots: RenderedSlots<FileSlots>) {
+    Object.assign(this, slots);
   }
 
-  ts(options: FileSlots<I, TSlots>): Template<I> {
-    return async (context: Context<I>) => {
-      // const imports = new Imports();
-      const effects: FileEffect[] = []; // ?
-      return results(effects);
-    };
-  }
+  async save() {}
 
-  slots<USlots extends Slots<I>>(slots: USlots) {
-    return new Plate<I, USlots>(slots);
+  async apply() {
+    await this.save();
   }
 }
 
-export const text = <I = any, TSlots extends FileSlots<I> = FileSlots<I>>(slots: TSlots): Template<I, TSlots> => {
-  return async (context: Context<I, TSlots>) => {
-    const effects: FileEffect[] = [];
-    return results(effects);
-  };
+type FileResults<I = any, S extends FileSlots<I> = FileSlots<I>> = Effect<Context<I, S>> & {
+  files: FileEffect[];
 };
 
-type Group<I = any, S extends Slots<I> = Slots<I>> = (context: Context<I, S>) => Template<I>[];
+const results = (files: FileEffect[]): FileResults => ({
+  files,
+  apply: async () => Promise.all(files.map((e) => e.apply()))
+});
 
-export const group = <I = any>(grouping: Group<I>): Template<I> => {
-  return async (context: Context<I>) => {
-    const groupingResults = await Promise.all(grouping(context)?.map((template) => execute(template, context)));
-    return results(groupingResults.map((r) => r.files).flat());
-  };
-};
-
-const execute = async <I = any>(template: Template<I>, context: Context<I>) => {
-  return typeof template === 'function' ? template?.(context) : template;
-};
+type Group<I = any> = (context: Context<I, any>) => Template<I, any>[];
 
 // directory templates
 export type FilterExpression = string | RegExp;
 
 export type Filter<TInput = any> = FilterExpression[] | ((input: TInput) => FilterExpression[]);
 
+class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
+  constructor(private parentSlots?: TSlots) {}
+
+  text(slots: FileSlots<I, TSlots>): Template<I, TSlots> {
+    const stack = callsite();
+    const templateFile = stack[1].getFileName();
+
+    return async (context: Context<I, TSlots>) => {
+      const {
+        content,
+        path: p,
+        copyOf
+      } = {
+        path: getOutputNameFromTemplateName(path.basename(templateFile)),
+        ...(await renderSlots(slots, context))
+      };
+      return results([
+        new FileEffect({
+          path: p,
+          content,
+          copyOf
+        })
+      ]);
+    };
+  }
+
+  ecmascript(slots: FileSlots<I, TSlots>): Template<I, TSlots> {
+    return async (context: Context<I>) => {
+      const imports = new Imports();
+      const effects: FileEffect[] = []; // ? compute results here
+      return results(effects);
+    };
+  }
+
+  slots<TNewSlots extends Slots<I>>(slots: TNewSlots) {
+    return new TemplateFactory<I, TNewSlots>(slots);
+  }
+
+  input<TNewInput>() {
+    return new TemplateFactory<TNewInput, TSlots>();
+  }
+
+  group(grouping: Group<I>): Template<I> {
+    return async (context: Context<I>) => {
+      const groupingResults = await Promise.all(grouping(context)?.map((template) => template(context)));
+      return results(groupingResults.map((r) => r.files).flat());
+    };
+  }
+}
+
 export type DirectoryTemplateOptions<I = any> = {
   inherits?: Template<I>;
   include?: Filter<I>;
   exclude?: Filter<I>;
-  defaults?: Partial<I>;
+  defaultInput?: Partial<I>;
   before?: Template<I>;
-  after?: Template<Results[]>;
+  after?: Template<FileResults[]>;
   context?: (context: Context<I>) => MaybePromise<Context<I>>;
 };
 
-export class DirectoryTemplate<I = any> extends Plate<I> {
-  constructor(public readonly options: DirectoryTemplateOptions<I>) {
-    super({});
-  }
+export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResults> {
+  constructor(public readonly options: DirectoryTemplateOptions<I>) {}
 
-  async execute(context: Context<I>): Promise<Results> {
+  public define = new TemplateFactory<I>();
+
+  async apply(context: Context<I>): Promise<FileResults> {
     return results([]);
   }
 }
@@ -150,14 +160,22 @@ export class DirectoryTemplate<I = any> extends Plate<I> {
 // with inquirer
 interface InteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>
   extends DirectoryTemplateOptions<z.infer<IShape>> {
-  input: IShape;
-  questions?: any;
+  inputShape: IShape;
+  inputQuestions?: any;
 }
 
 export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends DirectoryTemplate<z.infer<I>> {
-  public readonly input: I;
+  public readonly inputShape: I;
   constructor(public override readonly options: InteractiveDirectoryTemplateOptions<I>) {
     super(options);
-    this.input = options.input;
+    this.inputShape = options.inputShape;
   }
 }
+
+export type TemplateOptions<I extends InquirableZodType> = InteractiveDirectoryTemplateOptions<I>;
+
+export const template = <TInput = null>() => new TemplateFactory<TInput>();
+
+export const directory = <I extends InquirableZodType>(options: TemplateOptions<I>) => {
+  return new InteractiveDirectoryTemplate(options);
+};
