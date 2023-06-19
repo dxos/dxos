@@ -25,7 +25,7 @@ echo "\n###\n### Publishing $FN_CONFIG\n###\n"
 # Build and upload to GH package registry.
 # Cache option.
 NO_CACHE=0
-faas-cli publish -f $FN_CONFIG --platforms linux/arm64
+faas-cli publish -f $FN_CONFIG --platforms=linux/arm64
 #  --no-cache=$NO_CACHE
 
 echo "\n###\n### Deploying $FN_CONFIG\n###\n"
