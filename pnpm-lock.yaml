@@ -375,6 +375,7 @@ importers:
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
       jszip: ^3.10.1
+      localforage: ^1.10.0
       lodash.update: ^4.10.2
       octokit: ^2.0.14
       react: ^18.2.0
@@ -413,6 +414,7 @@ importers:
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
       jszip: 3.10.1
+      localforage: 1.10.0
       lodash.update: 4.10.2
       octokit: 2.0.14
       react: 18.2.0

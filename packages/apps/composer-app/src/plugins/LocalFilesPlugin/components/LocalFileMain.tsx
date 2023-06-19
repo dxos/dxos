@@ -4,11 +4,12 @@
 
 import React from 'react';
 
+import { observer } from '@dxos/observable-object/react';
 import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
 
 import { LocalFilesPlugin } from '../LocalFilesPlugin';
 
-export const LocalFileMain = () => {
+export const LocalFileMain = observer(() => {
   const treeView = useTreeView();
   const graph = useGraphContext();
   const [parentId, childId] = treeView.selected;
@@ -25,5 +26,9 @@ export const LocalFileMain = () => {
     ? node.data
     : null;
 
+  if (parentNode?.attributes?.disabled) {
+    return <Surface role='main' data={parentNode} />;
+  }
+
   return <Surface role='main' data={data} />;
-};
+});

@@ -41,6 +41,9 @@ export type GraphProvides = {
 
 type GraphPlugin = Plugin<GraphProvides>;
 
+export const isGraphNode = (datum: unknown): datum is GraphNode =>
+  datum && typeof datum === 'object' ? 'id' in datum && 'label' in datum : false;
+
 export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
   return (plugins as GraphPlugin[]).filter((p) => typeof p.provides?.graph?.nodes === 'function');
 };
