@@ -1,6 +1,4 @@
-on:
-  release:
-    types: [push]
+on: [push]
 
 name: publish
 jobs:
