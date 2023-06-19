@@ -4,5 +4,3 @@
 
 export * from './GithubApiProviders';
 export * from './GithubEchoResolverProviders';
-export * from './StandaloneMain';
-export * from './EmbeddedMain';

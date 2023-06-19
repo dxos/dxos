@@ -11,7 +11,7 @@ import { useTelemetry } from '@dxos/react-appkit';
 import { useIdentity, useInvitationStatus, useSpaceInvitations } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
-import { MarkdownDocument } from '../MarkdownDocument';
+import { MarkdownDocument } from '../_MarkdownDocument';
 import { EditorViewState } from '../props';
 
 const InvitationToast = ({

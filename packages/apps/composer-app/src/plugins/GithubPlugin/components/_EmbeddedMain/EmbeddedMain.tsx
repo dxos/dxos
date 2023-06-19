@@ -39,7 +39,7 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
-import { MarkdownDocument } from '../MarkdownDocument';
+import { MarkdownDocument } from '../_MarkdownDocument';
 import { EditorViewState } from '../props';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
