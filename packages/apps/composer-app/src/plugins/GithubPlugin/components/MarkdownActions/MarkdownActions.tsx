@@ -57,8 +57,8 @@ export const MarkdownActions = ({ data }: { data: any }) => {
               index && index >= 0 && properties.keys?.splice(index, 1);
             }}
           >
+            <span className='grow'>{t('unbind to file in github label')}</span>
             <LinkBreak className={getSize(4)} />
-            <span>{t('unbind to file in github label')}</span>
           </DropdownMenu.Item>
         </>
       ) : (
@@ -69,8 +69,8 @@ export const MarkdownActions = ({ data }: { data: any }) => {
             splitView.dialogOpen = true;
           }}
         >
+          <span className='grow'>{t('bind to file in github label')}</span>
           <Link className={getSize(4)} />
-          <span>{t('bind to file in github label')}</span>
         </DropdownMenu.Item>
       )}
     </>
