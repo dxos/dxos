@@ -29,7 +29,7 @@ export default defineTemplate(
     </ErrorBoundary>`;
 
     const themeProvider = (content: string) => text`
-    <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}, appTranslations]} fallback={<${GenericFallback()} />}>
+    <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}]} fallback={<${GenericFallback()} />}>
       ${content}
     </${ThemeProvider()}>
     `;
@@ -45,8 +45,6 @@ export default defineTemplate(
       
       // Dynamics allows configuration to be supplied by the hosting KUBE.
       const config = async () => new ${Config()}(await ${Dynamics()}(), ${Local()}(), ${Defaults()}());
-
-      ${dxosUi && `const appTranslations = { 'en-US': { '${name}': { 'current app name': 'This app' } } };`}
 
       export const App = () => {
         ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
