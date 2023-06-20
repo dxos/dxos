@@ -1,6 +1,6 @@
 # UI System
 
-Here is how the UI system is organized into separate concerns:
+Here is how the UI system is organized into separate packages:
 
 ## UI Primitives
 > Lookless, pure components.
