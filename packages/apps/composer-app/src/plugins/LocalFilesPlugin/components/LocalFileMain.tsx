@@ -27,7 +27,7 @@ export const LocalFileMain = observer(() => {
         : node?.data
         ? node.data
         : null,
-    [node],
+    [node?.data],
   );
 
   if (parentNode?.attributes?.disabled) {

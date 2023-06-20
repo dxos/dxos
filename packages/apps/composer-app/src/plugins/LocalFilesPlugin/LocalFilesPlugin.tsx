@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, FloppyDisk, FolderOpen, LockSimpleOpen } from '@phosphor-icons/react';
+import { ArticleMedium, File, FloppyDisk, FolderOpen, LockSimpleOpen, X } from '@phosphor-icons/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -76,12 +76,17 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
   ready: async (plugins) => {
     window.addEventListener('keydown', handleKeyDown);
 
-    const value = await localforage.getItem<FileSystemDirectoryHandle[]>(LocalFilesPlugin.meta.id);
+    const value = await localforage.getItem<FileSystemHandle[]>(LocalFilesPlugin.meta.id);
     if (Array.isArray(value)) {
       await Promise.all(
         value.map(async (handle) => {
-          const node = await handleDirectory(handle);
-          nodes.push(node);
+          if (handle.kind === 'file') {
+            const node = await handleFile(handle);
+            nodes.unshift(node);
+          } else if (handle.kind === 'directory') {
+            const node = await handleDirectory(handle);
+            nodes.push(node);
+          }
         }),
       );
     }
@@ -137,71 +142,61 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
         const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
 
         return [
-          // TODO(wittjosiah): Full support for individual files.
-          // {
-          //   id: 'open-file-handle',
-          //   label: ['open file label', { ns: 'os' }],
-          //   icon: File,
-          //   invoke: async () => {
-          //     if ('showOpenFilePicker' in window) {
-          //       const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
-          //         types: [
-          //           {
-          //             description: 'Markdown',
-          //             accept: { 'text/markdown': ['.md'] },
-          //           },
-          //         ],
-          //       });
-          //       const file = await handle.getFile();
-          //       const id = `${LocalFilesPlugin.meta.id}/${handle.name.replaceAll(/\.| /g, '-')}`;
-          //       nodes.unshift({
-          //         id,
-          //         label: handle.name,
-          //         icon: ArticleMedium,
-          //         data: {
-          //           handle,
-          //           title: handle.name,
-          //           text: await file.text(),
-          //         },
-          //       });
-          //       if (treeViewPlugin) {
-          //         treeViewPlugin.provides.treeView.selected = [id];
-          //       }
-          //       return;
-          //     }
+          {
+            id: 'open-file-handle',
+            label: ['open file label', { ns: 'os' }],
+            icon: File,
+            invoke: async () => {
+              if ('showOpenFilePicker' in window) {
+                const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
+                  mode: 'readwrite',
+                  types: [
+                    {
+                      description: 'Markdown',
+                      accept: { 'text/markdown': ['.md'] },
+                    },
+                  ],
+                });
+                const node = await handleFile(handle);
+                nodes.unshift(node);
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [node.id];
+                }
+              }
 
-          //     const input = document.createElement('input');
-          //     input.type = 'file';
-          //     input.accept = '.md,text/markdown';
-          //     input.onchange = async () => {
-          //       const [file] = input.files ? Array.from(input.files) : [];
-          //       if (file) {
-          //         const text = await new Promise<string>((resolve) => {
-          //           const reader = new FileReader();
-          //           reader.addEventListener('loadend', (event) => {
-          //             const text = event.target?.result;
-          //             resolve(String(text));
-          //           });
-          //           reader.readAsText(file);
-          //         });
-          //         const id = `${LocalFilesPlugin.meta.id}/${file.name.replaceAll(/\.| /g, '-')}`;
-          //         nodes.unshift({
-          //           id,
-          //           label: file.name,
-          //           icon: ArticleMedium,
-          //           data: {
-          //             title: file.name,
-          //             text,
-          //           },
-          //         });
-          //         if (treeViewPlugin) {
-          //           treeViewPlugin.provides.treeView.selected = [id];
-          //         }
-          //       }
-          //     };
-          //     input.click();
-          //   },
-          // },
+              // TODO(wittjosiah): Handle legacy files.
+              // const input = document.createElement('input');
+              // input.type = 'file';
+              // input.accept = '.md,text/markdown';
+              // input.onchange = async () => {
+              //   const [file] = input.files ? Array.from(input.files) : [];
+              //   if (file) {
+              //     const text = await new Promise<string>((resolve) => {
+              //       const reader = new FileReader();
+              //       reader.addEventListener('loadend', (event) => {
+              //         const text = event.target?.result;
+              //         resolve(String(text));
+              //       });
+              //       reader.readAsText(file);
+              //     });
+              //     const id = `${LocalFilesPlugin.meta.id}/${file.name.replaceAll(/\.| /g, '-')}`;
+              //     nodes.unshift({
+              //       id,
+              //       label: file.name,
+              //       icon: ArticleMedium,
+              //       data: {
+              //         title: file.name,
+              //         text,
+              //       },
+              //     });
+              //     if (treeViewPlugin) {
+              //       treeViewPlugin.provides.treeView.selected = [id];
+              //     }
+              //   }
+              // };
+              // input.click();
+            },
+          },
           // TODO(wittjosiah): Only show this if supported by browser.
           {
             id: 'open-directory',
@@ -266,21 +261,17 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
     },
   });
 
-  const grantedActions: GraphNodeAction[] = [
-    // TODO(wittjosiah): Implement actions.
-    // {
-    //   id: 'new-file',
-    //   label: ['new file label', { ns: 'os' }],
-    //   icon: Plus,
-    //   invoke: async () => {},
-    // },
-    // {
-    //   id: 'close-directory',
-    //   label: ['close directory label', { ns: 'os' }],
-    //   icon: FolderSimpleMinus,
-    //   invoke: async () => {},
-    // },
-  ];
+  const closeAction: GraphNodeAction = {
+    id: 'close-directory',
+    label: ['close directory label', { ns: 'os' }],
+    icon: X,
+    invoke: async () => {
+      const index = nodes.indexOf(node);
+      nodes.splice(index, 1);
+    },
+  };
+
+  const grantedActions = [closeAction];
 
   const defaultActions: GraphNodeAction[] = [
     {
@@ -296,6 +287,7 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
         }
       },
     },
+    closeAction,
   ];
 
   const permission = await handle.queryPermission({ mode: 'readwrite' });
@@ -346,4 +338,75 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
   }
 
   return children;
+};
+
+const handleFile = async (handle: any /* FileSystemFileHandle */) => {
+  const id = `${LocalFilesPlugin.meta.id}/${handle.name.replaceAll(/\.| /g, '-')}`;
+
+  const permission = await handle.queryPermission({ mode: 'readwrite' });
+  const data: LocalFile = {
+    handle,
+    title: handle.name,
+  };
+
+  const node = createStore<GraphNode<LocalFile>>({
+    id,
+    label: handle.name,
+    icon: ArticleMedium,
+    data,
+  });
+
+  const closeAction: GraphNodeAction = {
+    id: 'close-directory',
+    label: ['close file label', { ns: 'os' }],
+    icon: X,
+    invoke: async () => {
+      const index = nodes.indexOf(node);
+      nodes.splice(index, 1);
+    },
+  };
+
+  const grantedActions: GraphNodeAction[] = [
+    {
+      id: 'save',
+      label: ['save label', { ns: 'os' }],
+      icon: FloppyDisk,
+      invoke: async () => {
+        await handleSave(node);
+      },
+    },
+    closeAction,
+  ];
+
+  const defaultActions: GraphNodeAction[] = [
+    {
+      id: 're-open',
+      label: ['re-open directory label', { ns: 'os' }],
+      icon: LockSimpleOpen,
+      invoke: async () => {
+        const result = await handle.requestPermission({ mode: 'readwrite' });
+        if (result === 'granted' && node.actions) {
+          const file = await handle.getFile();
+          node.data = { ...node.data!, text: await file.text() };
+          node.actions = grantedActions;
+          node.attributes = {};
+          node.children = undefined;
+        }
+      },
+    },
+    closeAction,
+  ];
+
+  if (permission === 'granted') {
+    const file = await handle.getFile();
+    node.data = { ...node.data!, text: await file.text() };
+    node.actions = grantedActions;
+    node.attributes = {};
+  } else {
+    node.actions = defaultActions;
+    node.attributes = { disabled: true };
+    node.children = [];
+  }
+
+  return node;
 };
