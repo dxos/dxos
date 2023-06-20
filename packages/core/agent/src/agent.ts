@@ -17,12 +17,8 @@ import { ComplexMap } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { ProxyServer, ProxyServerOptions } from './proxy';
+import { Service } from './service';
 import { parseAddress } from './util';
-
-interface Service {
-  open(): Promise<void>;
-  close(): Promise<void>;
-}
 
 type CurrentEpoch = {
   spaceKey: PublicKey;
@@ -39,6 +35,7 @@ type EpochOptions = {
 const DEFAULT_EPOCH_LIMIT = 10_000;
 
 export type AgentOptions = {
+  profile: string;
   listen: string[];
 };
 
@@ -60,14 +57,17 @@ export class Agent {
     assert(this._config);
   }
 
-  async start() {
-    log('starting...');
+  // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
+  //  https://www.npmjs.com/package/lockfile
 
+  async start() {
     // Create client services.
+    // TODO(burdon): Check lock.
     this._services = fromHost(this._config);
     await this._services.open();
 
     // Create client.
+    // TODO(burdon): Move away from needing client for epochs and proxy?
     this._client = new Client({ config: this._config, services: this._services });
     await this._client.initialize();
 
@@ -75,6 +75,7 @@ export class Agent {
     ((globalThis as any).__DXOS__ ??= {}).host = (this._services as any)._host;
 
     // Create socket servers.
+    let socketUrl: string | undefined;
     this._endpoints = (
       await Promise.all(
         this._options.listen.map(async (address) => {
@@ -85,6 +86,7 @@ export class Agent {
             // Unix socket (accessed via CLI).
             //
             case 'unix': {
+              socketUrl = address;
               mkdirSync(dirname(path), { recursive: true });
               rmSync(path, { force: true });
               const httpServer = http.createServer();
@@ -130,10 +132,11 @@ export class Agent {
     ).filter(Boolean) as Service[];
 
     // OpenFaaS connector.
+    // TODO(burdon): Manual trigger.
     const faasConfig = this._config.values.runtime?.services?.faasd;
     if (faasConfig) {
       const { FaasConnector } = await import('./faas/connector');
-      const connector = new FaasConnector(this._services!, faasConfig);
+      const connector = new FaasConnector(this._services!, faasConfig, { clientUrl: socketUrl });
       await connector.open();
       this._endpoints.push(connector);
       log('connector open', { gateway: faasConfig.gateway });
@@ -181,8 +184,6 @@ export class Agent {
       }),
     );
   }
-
-  // TODO(burdon): Detect if multiple agents are running (esp. after reset; otherwise halo create will fail due to contentino).
 
   monitorEpoch(space: Space, { limit: _limit }: EpochOptions): CurrentEpoch {
     const limit = _limit ?? DEFAULT_EPOCH_LIMIT;

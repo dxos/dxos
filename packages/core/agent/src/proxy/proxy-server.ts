@@ -8,12 +8,14 @@ import http from 'http';
 import { Client, Expando, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 
+import { Service } from '../service';
+
 export type ProxyServerOptions = {
   port: number;
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
-export class ProxyServer {
+export class ProxyServer implements Service {
   private _server?: http.Server;
 
   // prettier-ignore
