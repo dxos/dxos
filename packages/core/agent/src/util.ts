@@ -22,6 +22,14 @@ export const removeSocketFile = (profile: string) => {
   fs.rmSync(path, { force: true });
 };
 
+/**
+ * Waits till unix socket file is created.
+ */
+export const waitForDaemon = async (profile: string) => {
+  const { path } = parseAddress(getUnixSocket(profile));
+  fs.rmSync(path, { force: true });
+};
+
 export const waitFor = async ({
   condition,
   timeoutError,

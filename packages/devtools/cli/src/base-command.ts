@@ -283,6 +283,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         if (!running) {
           this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile);
+          this.log('Started');
         }
       });
     }

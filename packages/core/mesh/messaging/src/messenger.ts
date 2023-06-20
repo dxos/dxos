@@ -45,7 +45,7 @@ export class Messenger {
   private _closed = true;
   private readonly _retryDelay: number;
 
-  constructor({ signalManager, retryDelay = 100 }: MessengerOptions) {
+  constructor({ signalManager, retryDelay = 300 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._retryDelay = retryDelay;
 
