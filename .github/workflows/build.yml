@@ -71,3 +71,6 @@ jobs:
 
       - name: Monitor Release
         run: node .github/workflows/scripts/monitor.js
+
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
