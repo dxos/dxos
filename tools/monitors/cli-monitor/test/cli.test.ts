@@ -8,7 +8,8 @@ import { promisify } from 'node:util';
 
 describe('CLI', () => {
   it('prints config', async () => {
-    const { stdout } = await promisify(exec)('npm exec dx config', { cwd: __dirname });
+    const { stdout, stderr } = await promisify(exec)('npm exec dx config', { cwd: __dirname });
+    console.log('stderr', stderr);
     expect(stdout).to.contain('"version": 1');
   }).timeout(5000);
 });
