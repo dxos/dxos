@@ -31,6 +31,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const treeView = useTreeView();
 
   const active = node.id === treeView.selected.at(-1);
+  const modified = node.attributes?.modified ?? false;
   const Icon = node.icon ?? Placeholder;
 
   const suppressNextTooltip = useRef<boolean>(false);
@@ -61,7 +62,9 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           className='text-start flex gap-2'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-          <p className='grow mbs-1'>{Array.isArray(node.label) ? t(...node.label) : node.label}</p>
+          <p className={mx(modified && 'italic', 'grow mbs-1')}>
+            {Array.isArray(node.label) ? t(...node.label) : node.label}
+          </p>
         </button>
       </TreeItem.Heading>
       <Tooltip.Root

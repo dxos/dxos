@@ -42,7 +42,7 @@ export const GithubPlugin: PluginDefinition = definePlugin({
               return null;
           }
         case 'menuitem':
-          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])
+          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && !datum[1].readOnly
             ? MarkdownActions
             : null;
         default:

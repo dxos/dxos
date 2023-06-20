@@ -2,17 +2,65 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PluginDefinition, definePlugin } from '@dxos/react-surface';
+import React from 'react';
 
-import { MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
+import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
+import { createStore } from '@dxos/observable-object';
+import { observer } from '@dxos/react-client';
+import { definePlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+
+import { MarkdownMain } from './components';
 import { MarkdownSection } from './components/MarkdownSection';
-import { isMarkdown, isMarkdownProperties } from './props';
+import { MarkdownProperties, isMarkdown, isMarkdownProperties } from './props';
 import translations from './translations';
+
+const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+
+const MarkdownMainStandalone = observer(
+  ({ data: [model, properties] }: { data: [ComposerModel, MarkdownProperties]; role?: string }) => {
+    return (
+      <MarkdownMain
+        model={model}
+        properties={properties}
+        layout='standalone'
+        onChange={(text) => store.onChange.forEach((onChange) => onChange(text))}
+      />
+    );
+  },
+);
+
+const MarkdownMainEmbedded = ({
+  data: [model, properties, _],
+}: {
+  data: [ComposerModel, MarkdownProperties, 'embedded'];
+  role?: string;
+}) => {
+  return <MarkdownMain model={model} properties={properties} layout='embedded' />;
+};
+
+export type MarkdownProvides = {
+  markdown: {
+    onChange: MarkdownComposerProps['onChange'];
+  };
+};
+
+type MarkdownPlugin = Plugin<MarkdownProvides>;
+
+export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
+  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
+};
 
 // TODO(wittjosiah): This explicit type should not be necessary, should be inferred from `definePlugin`.
 export const MarkdownPlugin: PluginDefinition = definePlugin({
   meta: {
     id: 'dxos:markdown',
+  },
+  ready: async (plugins) => {
+    markdownPlugins(plugins).forEach((plugin) => {
+      if (plugin.provides.markdown.onChange) {
+        store.onChange.push(plugin.provides.markdown.onChange);
+      }
+    });
   },
   provides: {
     translations,

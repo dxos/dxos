@@ -22,6 +22,7 @@ export const StandaloneLayout = observer(
   }: PropsWithChildren<{
     model: ComposerModel;
     properties: MarkdownProperties;
+    // TODO(wittjosiah): Support forwardRef with observer.
     editorRef: RefObject<MarkdownComposerRef>;
   }>) => {
     const { t } = useTranslation('composer');

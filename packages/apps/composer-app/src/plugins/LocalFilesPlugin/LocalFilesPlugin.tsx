@@ -17,8 +17,10 @@ import {
   TreeViewProvides,
   definePlugin,
   findPlugin,
+  findGraphNode,
 } from '@dxos/react-surface';
 
+import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 
 export type LocalFile = {
@@ -28,23 +30,38 @@ export type LocalFile = {
 };
 
 const nodes = createStore<GraphNode<LocalFile>[]>([]);
+const store = createStore<{ current: GraphNode<LocalFile> | undefined }>();
 
 export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides;
 
 const isLocalFile = (datum: unknown): datum is LocalFile =>
   datum && typeof datum === 'object' ? 'title' in datum : false;
 
-export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
+export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownProvides>({
   meta: {
     id: 'dxos:local',
   },
-  ready: async () => {
+  init: async () => {
+    return {
+      markdown: {
+        onChange: (text) => {
+          if (store.current) {
+            store.current.data!.text = text.toString();
+            store.current.attributes = { ...store.current.attributes, modified: true };
+          }
+        },
+      },
+    };
+  },
+  ready: async (plugins) => {
     const value = await localforage.getItem<FileSystemDirectoryHandle[]>(LocalFilesPlugin.meta.id);
     if (Array.isArray(value)) {
-      value.forEach(async (handle) => {
-        const node = await handleDirectory(handle);
-        nodes.push(node);
-      });
+      await Promise.all(
+        value.map(async (handle) => {
+          const node = await handleDirectory(handle);
+          nodes.push(node);
+        }),
+      );
     }
 
     const handle = createSubscription(async () => {
@@ -56,6 +73,17 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
       );
     });
     handle.update([nodes]);
+
+    const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+    if (treeViewPlugin) {
+      const handle = createSubscription(() => {
+        store.current =
+          (treeViewPlugin.provides.treeView.selected[0]?.startsWith(LocalFilesPlugin.meta.id) &&
+            findGraphNode(nodes, treeViewPlugin.provides.treeView.selected)) ||
+          undefined;
+      });
+      handle.update([treeViewPlugin.provides.treeView, nodes, ...Array.from(nodes)]);
+    }
   },
   provides: {
     component: (datum, role) => {
@@ -63,6 +91,12 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
         case 'main':
           if (isGraphNode(datum) && isLocalFile(datum.data) && datum.attributes?.disabled) {
             return LocalFileMainPermissions;
+          }
+          break;
+
+        case 'menuitem':
+          if (Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && datum[1].readOnly) {
+            return null;
           }
           break;
       }
@@ -242,6 +276,7 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
   const permission = await handle.queryPermission({ mode: 'readwrite' });
   if (permission === 'granted') {
     node.actions = grantedActions;
+    node.attributes = {};
     node.children = await handleDirectoryChildren(handle, node);
   } else {
     node.actions = defaultActions;
@@ -261,17 +296,19 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
     }
 
     const file = await child.getFile();
-    children.push({
-      id: child.name.replaceAll(/\.| /g, '-'),
-      label: child.name,
-      icon: ArticleMedium,
-      parent,
-      data: {
-        handle,
-        title: child.name,
-        text: await file.text(),
-      },
-    });
+    children.push(
+      createStore<GraphNode<LocalFile>>({
+        id: child.name.replaceAll(/\.| /g, '-'),
+        label: child.name,
+        icon: ArticleMedium,
+        parent,
+        data: {
+          handle,
+          title: child.name,
+          text: await file.text(),
+        },
+      }),
+    );
   }
 
   return children;
