@@ -12,13 +12,11 @@ import { Input } from '@dxos/react-appkit';
 import { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
-export const ExportDialog = ({ data }: { data: any }) => {
-  const [_, [initialExportViewState, initialResponseUrl], model, docGhId]: [
-    string,
-    [ExportViewState, string | null],
-    ComposerModel,
-    GhIdentifier,
-  ] = data;
+export const ExportDialog = ({
+  data: [_, [initialExportViewState, initialResponseUrl], model, docGhId],
+}: {
+  data: [string, [ExportViewState, string | null], ComposerModel, GhIdentifier];
+}) => {
   const content = model.content;
 
   const { octokit } = useOctokitContext();

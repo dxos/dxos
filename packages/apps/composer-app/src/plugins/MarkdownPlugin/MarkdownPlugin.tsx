@@ -8,7 +8,7 @@ import { ObservableObject } from '@dxos/observable-object';
 import { PluginDefinition, definePlugin } from '@dxos/react-surface';
 import { YText } from '@dxos/text-model';
 
-import { MarkdownProperties, MarkdownMainStandalone } from './components';
+import { MarkdownProperties, MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
 
 export const isMarkdown = (datum: unknown): datum is ComposerModel =>
   datum && typeof datum === 'object'
@@ -32,7 +32,11 @@ export const MarkdownPlugin: PluginDefinition = definePlugin({
       switch (role) {
         case 'main':
           if (Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])) {
-            return MarkdownMainStandalone;
+            if (datum[2] === 'embedded') {
+              return MarkdownMainEmbedded;
+            } else {
+              return MarkdownMainStandalone;
+            }
           }
           break;
       }

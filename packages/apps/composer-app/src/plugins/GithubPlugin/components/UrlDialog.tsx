@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import update from 'lodash.update';
 import React, { useState } from 'react';
 
 import { Dialog, Button, useTranslation } from '@dxos/aurora';
@@ -10,8 +11,7 @@ import { Input } from '@dxos/react-appkit';
 import { MarkdownProperties } from '../../MarkdownPlugin/components';
 import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
 
-export const UrlDialog = ({ data }: { data: any }) => {
-  const [_, properties]: [string, MarkdownProperties] = data;
+export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
   const { t } = useTranslation('plugin-github');
   const [ghUrlValue, setGhUrlValue] = useState('');
 
@@ -38,8 +38,10 @@ export const UrlDialog = ({ data }: { data: any }) => {
             classNames='mbs-2'
             onClick={() => {
               if (ghId && document) {
-                const key = { source: 'com.github', id: ghId };
-                properties.keys = [key];
+                update(properties, 'meta', (meta) => ({
+                  ...meta,
+                  keys: [...(meta.keys ?? []), { source: 'com.github', id: ghId }],
+                }));
               }
             }}
           >

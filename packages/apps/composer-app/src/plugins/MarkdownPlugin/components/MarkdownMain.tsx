@@ -12,7 +12,7 @@ import { StandaloneLayout } from './StandaloneLayout';
 
 export type MarkdownProperties = {
   title: string;
-  keys?: { source?: string; id?: string }[];
+  meta?: { keys?: { source?: string; id?: string }[] };
 };
 
 export const MarkdownMainStandalone = ({
@@ -22,6 +22,15 @@ export const MarkdownMainStandalone = ({
   role?: string;
 }) => {
   return <MarkdownMain model={model} properties={properties} layout='standalone' />;
+};
+
+export const MarkdownMainEmbedded = ({
+  data: [model, properties, _],
+}: {
+  data: [ComposerModel, MarkdownProperties, 'embedded'];
+  role?: string;
+}) => {
+  return <MarkdownMain model={model} properties={properties} layout='embedded' />;
 };
 
 export const MarkdownMain = ({

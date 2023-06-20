@@ -11,8 +11,11 @@ import { log } from '@dxos/log';
 import { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
-export const ImportDialog = ({ data }: { data: any }) => {
-  const [_, docGhId, editorRef]: [string, GhIdentifier, RefObject<MarkdownComposerRef>] = data;
+export const ImportDialog = ({
+  data: [_, docGhId, editorRef],
+}: {
+  data: [string, GhIdentifier, RefObject<MarkdownComposerRef>];
+}) => {
   const { t } = useTranslation('plugin-github');
   const { octokit } = useOctokitContext();
 

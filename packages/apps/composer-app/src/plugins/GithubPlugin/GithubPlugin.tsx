@@ -5,18 +5,23 @@
 
 import React from 'react';
 
-import { definePlugin, PluginDefinition } from '@dxos/react-surface';
+import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
 
 import { isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
-import { MarkdownActions, OctokitProvider, PatInput } from './components';
-import { ExportDialog } from './components/ExportDialog';
-import { ImportDialog } from './components/ImportDialog';
-import { UrlDialog } from './components/UrlDialog';
+import {
+  MarkdownActions,
+  OctokitProvider,
+  PatInput,
+  EmbeddedMain,
+  ExportDialog,
+  ImportDialog,
+  UrlDialog,
+} from './components';
 import translations from './translations';
 
 export const GithubPlugin: PluginDefinition = definePlugin({
   meta: {
-    id: 'dxos:GithubPlugin',
+    id: 'dxos:github',
   },
   provides: {
     translations,
@@ -27,11 +32,11 @@ export const GithubPlugin: PluginDefinition = definePlugin({
           switch (true) {
             case datum === 'dxos:SplitViewPlugin/ProfileSettings':
               return PatInput;
-            case Array.isArray(datum) && datum[0] === 'dxos:githubPlugin/BindDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos:github/BindDialog':
               return UrlDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos:githubPlugin/ExportDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos:github/ExportDialog':
               return ExportDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos:githubPlugin/ImportDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos:github/ImportDialog':
               return ImportDialog;
             default:
               return null;
@@ -43,6 +48,17 @@ export const GithubPlugin: PluginDefinition = definePlugin({
         default:
           return null;
       }
+    },
+    router: {
+      routes: () => [
+        {
+          path: '/embedded',
+          element: <Surface component='dxos:github/EmbeddedMain' />,
+        },
+      ],
+    },
+    components: {
+      EmbeddedMain,
     },
   },
 });
