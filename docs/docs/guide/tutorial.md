@@ -6,10 +6,18 @@ next: ./platform
 
 # React tutorial
 
-In this tutorial, we'll build a `react` app using a [DXOS app template](#create-an-app). We
-'ll use [ECHO](./platform/) for real-time state consensus and [HALO](./platform/halo) for decentralized identity. We'll deploy the app to Netlify.
+This tutorial walks you through creating a simple shared counter application in `react` using DXOS to share counter state between peers.
 
-The app will demonstrate a shared real-time counter.
+The code completed application can be found [here](https://github.com/dxos/shared-counter) and you can play with the app [here](https://shared-counter.netlify.app/).
+
+::: note In this tutorial, we will:
+
+- Build a `react` app using a [DXOS app template](#create-an-app).
+- Use [ECHO](#updating-the-counter) for real-time state consensus.
+- Create a decentralized identity with [HALO](#creating-a-user-identity).
+- [Deploy](#deploying-the-app) the app to Netlify.
+
+:::
 
 ## Creating a DXOS app
 
@@ -137,7 +145,7 @@ return (
 
 `useQuery` allows you to search the database for objects that match the query. In our case, we are searching for objects that have a key and value of `type: 'counter'`. The first time this query executes, there is no object that matches it.
 
-We need an empty counter that we can increment. 
+We need an empty counter that we can increment.
 
 Grab an `Expando`:
 
@@ -206,15 +214,9 @@ export const Counter = () => {
 };
 ```
 
-Every time you click the button, you should see the count increase by 1. 
+Every time you click the button, you should see the count increase by 1.
 
 Notice how we updated the `counter`'s value: we simply pushed elements onto the array directly. We instantiated the `counter` variable from `useQuery`, so it's value is tracked: changes to it's value are automatically persisted to ECHO and reactively update the UI.
-
-::: tip
-
-We are using the array length to track the counter because the array is implemented as a Set CRDT and allows multiple concurrent writers to safely increment the value that way. Doing this by incrementing a field value directly would cause last-writer-wins conflicts between peers.
-
-:::
 
 ### Local-first
 
@@ -226,19 +228,26 @@ Now let's test out connecting multiple peers. Open another window and load the l
 
 ### Peer-to-peer over WebRTC
 
-What's going on behind the scenes? The two peers are communicating directly, peer-to-peer, over secure WebRTC connections.
+What's going on behind the scenes? The two peers are communicating directly, peer-to-peer, over secure WebRTC connections. Every time the button is pressed, an element is added to the array and the count increases. No servers are involved in the exchange of state between peers.
 
 ### CRDTs for Consistency
 
-You may wonder why we chose to represent a counter as an array when an integer would work just as well.
+You may wonder why we chose to represent a counter as an array when an integer would be simpler. ECHO uses [CRDTs](https://crdt.tech/) to ensure the state remains consistent. If we used an integer to represent the count, the algorithm for updating the state effectively becomes "last write wins" and short-circuits the CRDT. Consider how each client would update the count, assuming it was an integer:
 
-- Because CRDTs
-  - LWW could screw this up.
+1. Grab the most recent count value.
+2. Increment the count value by 1.
+3. Save the count value to the shared state.
 
-### Recap
+If both peers click the button at the exact same time, the count _should_ increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
+
+With an array, each time a client pushes an element onto the array, the CRDT algorithm merges those changes together, preserving all elements from all clients.
+
+This is one of the "gotchas" when working with CRDTs. While they ensure that conflicts will be resolved transparently, you have to think carefully about the data types and what happens during conflicted states.
+
+## Recap
 
 - A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-- Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
+- Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
 - The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ## Deploying the app
@@ -247,7 +256,7 @@ DXOS apps are static apps that rely on peer-to-peer networking and client-side r
 
 We offer a sophisticated self-hosting appliance called [KUBE](./kube/README.md) that you can also use to [deploy your app's assets to IPFS](./kube/deploying.md). While this process is not as simple as a plain static asset host, it avoids reliance on centralized hosts.
 
-For the sake of speed and this guide, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
+For the sake of simplicity, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
 1. Go to "Add new site" in Netlify, and click "Import an existing project."
 2. Link to your application's repository.
@@ -255,13 +264,13 @@ For the sake of speed and this guide, we will deploy the app's static assets to 
    - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
 3. Publish!
 
-That's it.
+That's it. Your app is now live!
 
 ## Next steps
 
 This guide demonstrated how to create and deploy a local-first DXOS application.
 
-Using DXOS:
+For more info on using DXOS, see:
 
 - ECHO with [React](./react/)
 - ECHO with [TypeScript](./typescript/)
