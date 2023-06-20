@@ -62,9 +62,9 @@ export class Agent {
   //  https://www.npmjs.com/package/lockfile
 
   async start() {
-    console.log('111');
-    lockfile.lockSync('/tmp/agent.lock');
-    console.log('222');
+    // console.log('111');
+    // lockfile.lockSync('/tmp/agent.lock');
+    // console.log('222');
 
     // Create client services.
     this._services = fromHost(this._config);
@@ -149,9 +149,9 @@ export class Agent {
   }
 
   async stop() {
-    console.log('333');
-    lockfile.unlockSync('/tmp/agent.lock');
-    console.log('444');
+    // console.log('333');
+    // lockfile.unlockSync('/tmp/agent.lock');
+    // console.log('444');
 
     // Close epoch subscriptions.
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
