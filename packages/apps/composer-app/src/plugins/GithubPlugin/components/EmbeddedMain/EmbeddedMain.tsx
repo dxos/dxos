@@ -21,6 +21,7 @@ import {
   DensityProvider,
   Dialog,
   Toggle,
+  Main,
   useTranslation,
   DropdownMenu,
   Tooltip,
@@ -34,6 +35,7 @@ import { useShell } from '@dxos/react-shell';
 import { Surface } from '@dxos/react-surface';
 
 import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
+import { useDocGhId } from '../../hooks';
 import { EditorViewState } from '../../props';
 import {
   DocumentResolverProvider,
@@ -42,6 +44,7 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
+import { GfmPreview } from './GfmPreview';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
@@ -81,6 +84,8 @@ const EmbeddedLayoutImpl = () => {
     space: space ?? undefined,
     text: document ? document.content : undefined,
   });
+
+  const docGhId = useDocGhId(document?.meta?.keys ?? []);
 
   return (
     <>
@@ -225,7 +230,16 @@ const EmbeddedLayoutImpl = () => {
           </ButtonGroup>
         </div>
         {space && document ? (
-          <Surface role='main' data={[textModel, document, 'embedded']} />
+          editorViewState === 'preview' ? (
+            <Main.Content classNames='min-bs-[100vh] flex flex-col p-0.5'>
+              <GfmPreview
+                markdown={document.content?.toString() ?? ''}
+                {...(docGhId && { owner: docGhId.owner, repo: docGhId.repo })}
+              />
+            </Main.Content>
+          ) : (
+            <Surface role='main' data={[textModel, document, 'embedded']} />
+          )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
             <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>

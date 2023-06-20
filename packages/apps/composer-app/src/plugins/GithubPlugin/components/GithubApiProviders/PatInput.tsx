@@ -7,7 +7,6 @@ import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { useSplitViewContext } from '@dxos/react-surface';
 
 import { useOctokitContext } from './OctokitProvider';
 
@@ -31,17 +30,14 @@ export const PatInput = () => {
   const { t } = useTranslation('plugin-github');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
-  const { dialogOpen } = useSplitViewContext();
 
   useEffect(() => {
     setPatValue(pat);
   }, [pat]);
 
   useEffect(() => {
-    if (!dialogOpen) {
-      void setPat(patValue);
-    }
-  }, [dialogOpen]);
+    void setPat(patValue);
+  }, [patValue]);
 
   return (
     <Input.Root>
