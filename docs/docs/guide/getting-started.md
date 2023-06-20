@@ -1,39 +1,110 @@
 ---
 order: 2
-title: Getting started
-next: ./platform
+title: Quick start
+next: ./tutorial
 ---
 
-# Getting started
+# Quick start
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
 
-In this guide, we'll cover:
+DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 
-- Starting a `react` project using a [DXOS app template](#create-an-app).
-- Using [ECHO](#echo-state-consensus) for real-time state consensus in `react`.
-- Using [HALO](#how-to-use-echo) for decentralized identity.
-- Deploying the app.
+::: note In this guide
 
-## Creating a DXOS app
+*   [Installation](#installation)
+*   Using with [React](#react)
+*   Project [templates](#project-templates).
+*   [Deploy](#deployment) to Netlify
+*   Self-sovereign hosting with [KUBE](#self-sovereign-hosting).
 
-DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react), but in this guide we will walk you through creating and deploying a `react` app.
+:::
 
-Ensure `node -v` is at version 18 or higher (we recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
+## Installation
 
-First, create a new empty folder:
+For any `node` or browser build such as `vite`, or `rollup` (for `react` see [below](#react)):
 
 ```bash
-mkdir shared-counter
-cd shared-counter
+npm install --save @dxos/client
 ```
 
-We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
+Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-For this guide, we're going to start with the [`bare`](./cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm init`:
+```ts file=./snippets/create-client.ts#L5-
+import { Client } from '@dxos/client';
+
+// create a client
+const client = new Client();
+
+const main = async () => {
+  await client.initialize();
+  // use client here
+
+};
+
+main();
+```
+
+An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](config).
+
+To begin manipulating data, we must [create an identity](./typescript/identity), and [join or create a space](./typescript/spaces). 
+
+See below for `react` usage, otherwise see the [TypeScript Guide](./typescript/queries).
+
+## React
+
+Use `@dxos/react-client` for `react` hooks to access and manipulate data in ECHO and HALO.
 
 ```bash
-npm init @dxos/bare
+npm install --save @dxos/react-client
+```
+
+Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
+
+```tsx file=./snippets/create-client-react.tsx#L5-
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  ClientProvider,
+  useIdentity,
+  useQuery,
+  useSpaces
+} from '@dxos/react-client';
+
+const Component = () => {
+  // Get the user to log in before a space can be obtained.
+  const identity = useIdentity();
+  // Get the first available space, created with the identity.
+  const [space] = useSpaces();
+  // Grab everything in the space.
+  const objects = useQuery(space, {});
+  // Show the id of the first object returned.
+  return <>{objects[0]?.id}</>;
+};
+
+const App = () => (
+  <ClientProvider>
+    <Component />
+  </ClientProvider>
+);
+
+createRoot(document.body).render(<App />);
+```
+
+Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
+
+For a step-by-step walkthrough, see the [react tutorial](./tutorial).
+
+## Project templates
+
+DXOS project templates are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions to get you going quickly.
+
+Ensure `node -v` is at version 18 or higher (recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
+
+Initialize an empty folder with `npm create` like this:
+
+```bash
+npm create @dxos@latest
 ```
 
 ::: note
@@ -47,44 +118,33 @@ npm install
 npm run serve
 ```
 
-This will start the development server and print its URL to the console.
+This will start the development server and print a URL to the console. Opening two browser windows can demonstrate local state sync working:
 
-The bare template is an empty `react` app wrapped in some DXOS goodness. Open the `App.tsx` file and you'll see this:
+<video class="dark" controls loop autoplay style="width:100%" src="/images/hello-dark.mp4"></video> <video class="light" controls loop autoplay style="width:100%" src="/images/hello-light.mp4"></video>
 
-```tsx
-const config = async () => new Config(await Dynamics(), Local(), Defaults());
+::: info Why this is cool:
 
-export const App = () => {
-  const serviceWorker = useRegisterSW();
-  return (
-    <ThemeProvider
-      appNs="shared-counter"
-      resourceExtensions={[appkitTranslations]}
-      fallback={<GenericFallback />}
-    >
-      <ErrorBoundary
-        fallback={({ error }) => <ResetDialog error={error} config={config} />}
-      >
-        <ClientProvider config={config} fallback={GenericFallback}>
-          <div>Your code goes here</div>
-          <ServiceWorkerToastContainer {...serviceWorker} />
-        </ClientProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
-  );
-};
-```
+*   State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
+*   Data is stored **locally**, in-browser, in [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), controlled by the `halo.dxos.org` domain. **This enables privacy and gives end-users control over their data**. The app running on `localhost` subscribes to data through a local shared memory connection with the [HALO](./platform/halo) [PWA](./glossary#pwa) on `halo.dxos.org` which is fast and works offline. Learn more about the [HALO vault topology](./platform/#local-vault-topology).
+*   Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+*   User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
+*   Everything works offline.
+*   Real-time collaboration is possible when online.
+*   There are **no servers** that store any data.
+*   There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
+*   **There is no need for an API tier.** The app has everything it needs on the client.
 
-There's a lot going on here! Let's walk through it.
+:::
 
-### Bootstrap the DXOS Client
+### Deployment
 
-DXOS apps enable users to control their data and identity by storing it in a [vault](./platform/README.md#local-vault-topology) separated from the application. In a browser-based environment like this React app, data is stored in persistent browser storage owned by the vault. The vault runs inside of a [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) which is loaded into the DXOS app via an iFrame. The `ClientProvider` bootstraps the vault and iFrame, enabling the application to access the user's identity and data information.
+By default DXOS template apps are static, Progressive Web Apps that work offline. They can be deployed with any regular static hosting technique like Netlify, Vercel, CloudFlare, GitHub Pages, an S3 bucket, and others.
 
-### React Helpers
+The build command is `npm run build` which produces a static bundle in the output folder `out/shared-counter`, which can be changed in `vite.config.ts`.
 
-The other wrapper components are part of DXOS's [`react-appkit`](./react/ui.md):
+For example, with [Netlify](https://netlify.com):
 
+<<<<<<< HEAD
 - The `<ServiceWorkerToastContainer>` allows the vault to send messages in the form of Toasts to the application.
 - `<ErrorBoundary>` and `<ResetDialog>` catch errors that bubble up from the application and provide a user-friendly way to refresh the application in the event of a crash.
 - `<ThemeProvider>` and the `<GenericFallback>` give you the DXOS styles along with a loading indicator.
@@ -353,27 +413,63 @@ We offer a sophisticated self-hosting appliance called [KUBE](./kube/README.md) 
 For the sake of speed and this guide, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
 1. Go to "Add new site" in Netlify, and click "Import an existing project."
+=======
+1. Go to "Add new site", and click "Import an existing project."
+>>>>>>> db633aa0e (move new content into tutorial, restore and simplify getting started)
 2. Link to your application's repository.
-   - Set the build command to `npm run build`
-   - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+3. Set the build command and output directory.
 3. Publish!
 
-That's it.
+## Self-sovereign Hosting
 
-## Next steps
+[KUBE](platform/kube) is a compact binary that can host static applications and provides supporting services like peer network discovery for ECHO apps. 
 
-This guide demonstrated how to create and deploy a local-first DXOS application.
+KUBE has everything you need to host apps on your LAN, and can even expose them to the public internet safely with automatic [tunneling](./kube/tunneling).
 
-Using DXOS:
+Install KUBE:
 
-- ECHO with [React](./react/)
-- ECHO with [TypeScript](./typescript/)
-- ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+```bash file=./snippets/install-kube.sh
+sudo bash -c "$(curl -fsSL https://install-kube.dxos.org)"
+```
+
+Then:
+
+```bash
+sudo kube start # start the service in the background
+kube status # verify it's running
+```
+
+Once KUBE is running, static applications can be deployed to it.
+
+DXOS Template apps are pre-configured to deploy to KUBE in one line:
+
+```bash
+npm run deploy
+```
+
+The app will be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`.
+
+Read more about KUBE [tunneling](./kube/tunneling).
+
+## Recap
+
+This guide demonstrated how to create and deploy a local-first DXOS application with ECHO state consensus and HALO identity.
+
+*   A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
+*   Reading objects is as simple as [`space.query()`](typescript/queries) in TypeScript or [`useQuery()`](react/queries) in `react`.
+*   The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
+
+Next steps:
+
+*   ECHO with [React](./react/)
+*   ECHO with [TypeScript](./typescript/)
+*   ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+*   Self-sovereign hosting with [KUBE](./kube/)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-- Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
-- DXOS [repository on GitHub](https://github.com/dxos/dxos)
-- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+*   Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+*   DXOS [repository on GitHub](https://github.com/dxos/dxos)
+*   File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀
