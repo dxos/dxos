@@ -317,9 +317,15 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     }
 
     const nodeHandle = createSubscription(() => {
-      const [id] = treeView.selected ?? [];
-      if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-        client.services.setSpaceProvider(() => PublicKey.safeFrom(id));
+      const [prefixedId] = treeView.selected ?? [''];
+      if (prefixedId) {
+        const [_prefix, id] = prefixedId?.split('/');
+        if (
+          client.services instanceof IFrameClientServicesProxy ||
+          client.services instanceof IFrameClientServicesHost
+        ) {
+          client.services.setSpaceProvider(() => PublicKey.safeFrom(id));
+        }
       }
     });
     nodeHandle.update([treeView]);
