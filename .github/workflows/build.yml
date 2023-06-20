@@ -1,7 +1,7 @@
 name: CI
 on: [push]
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -69,8 +69,8 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - name: Monitor Release
         run: node .github/workflows/scripts/monitor.js
