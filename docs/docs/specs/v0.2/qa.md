@@ -1,9 +1,11 @@
 # QA Script
+
 This is the verification process to promote something from staging to production:
 
 Use your normal, default profile in the browser, falling back to anonymous/guest profiles in case of a problem.
 
 ## Composer
+
 - Launch app: [https://composer.staging.dxos.org](https://composer.staging.dxos.org)
 - Create a space + document if necessary
 - Click between documents, navigation should work
@@ -31,17 +33,22 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
 - Open Notes frame and create Note, drag it, observe replication both ways (exercises references)
 
 ## HALO
+
 - [https://halo.staging.kube.dxos.org] - observe that the app loads
 - invite a device to join, and give the invite code to a mobile device using an anonymous window. Observe that devices join the same halo and see the same spaces.
 
 ## CLI
+
 - npm init @dxos@next (staging)
 - pnpm install
 - pnpm serve
 - observe that the app loads and presents the "click to login" button
 - login and use the counter, observe counter working between two windows
 
+- repeat the process with `dx app create` using `npm i -g @dxos/cli@next` (staging)
+
 ## Kube
+
 - ensure a prod kube is running locally
 - pnpm run deploy the app made with @dxos@next just now
 - observe the app on [appname].localhost working
