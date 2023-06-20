@@ -72,30 +72,30 @@ export const MarkdownActions = ({ data }: { data: any }) => {
               splitView.dialogOpen = true;
             }}
           >
-            <span className='grow'>{t('import from github label')}</span>
             <FileArrowDown className={getSize(4)} />
+            <span className='grow'>{t('import from github label')}</span>
           </DropdownMenu.Item>
           <DropdownMenu.Item classNames='gap-2' disabled={!docGhId} onClick={() => docGhId && handleGhExport()}>
-            <span className='grow'>{t('export to github label')}</span>
             <FileArrowUp className={getSize(4)} />
+            <span className='grow'>{t('export to github label')}</span>
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild classNames='gap-2' disabled={!ghId}>
             <a
               {...(ghId ? { href: `https://github.com/${ghId}`, target: '_blank', rel: 'noreferrer' } : { href: '#' })}
             >
-              <span className='grow'>{t('open in github label')}</span>
               <ArrowSquareOut className={getSize(4)} />
+              <span className='grow'>{t('open in github label')}</span>
             </a>
           </DropdownMenu.Item>
           <DropdownMenu.Item
             classNames='gap-2'
             onClick={() => {
               const index = properties.keys?.findIndex((key) => key.source === 'com.github');
-              index && index >= 0 && properties.keys?.splice(index, 1);
+              typeof index !== 'undefined' && index >= 0 && properties.keys?.splice(index, 1);
             }}
           >
-            <span className='grow'>{t('unbind to file in github label')}</span>
             <LinkBreak className={getSize(4)} />
+            <span className='grow'>{t('unbind to file in github label')}</span>
           </DropdownMenu.Item>
         </>
       ) : (
@@ -106,8 +106,8 @@ export const MarkdownActions = ({ data }: { data: any }) => {
             splitView.dialogOpen = true;
           }}
         >
-          <span className='grow'>{t('bind to file in github label')}</span>
           <Link className={getSize(4)} />
+          <span className='grow'>{t('bind to file in github label')}</span>
         </DropdownMenu.Item>
       )}
     </>

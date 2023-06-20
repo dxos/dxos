@@ -28,7 +28,7 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const PatInput = () => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation('plugin-github');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
   const { dialogOpen } = useSplitViewContext();

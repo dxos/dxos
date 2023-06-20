@@ -19,7 +19,7 @@ export const UrlDialog = ({ data }: { data: any }) => {
 
   return (
     <>
-      <Dialog.Title>{t('bind to file in github label')}</Dialog.Title>
+      <Dialog.Title classNames='mbe-2'>{t('bind to file in github label')}</Dialog.Title>
       <Input
         label={t('paste url to file in github label')}
         description={t('paste url to file in github description')}
