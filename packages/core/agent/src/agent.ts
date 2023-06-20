@@ -3,6 +3,7 @@
 //
 
 import WebSocket from 'isomorphic-ws';
+import lockfile from 'lockfile';
 import assert from 'node:assert';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
@@ -35,6 +36,7 @@ type EpochOptions = {
 const DEFAULT_EPOCH_LIMIT = 10_000;
 
 export type AgentOptions = {
+  profile: string;
   listen: string[];
 };
 
@@ -56,8 +58,13 @@ export class Agent {
     assert(this._config);
   }
 
+  // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
+  //  https://www.npmjs.com/package/lockfile
+
   async start() {
-    log('starting...');
+    console.log('111');
+    lockfile.lockSync('/tmp/agent.lock');
+    console.log('222');
 
     // Create client services.
     this._services = fromHost(this._config);
@@ -142,6 +149,10 @@ export class Agent {
   }
 
   async stop() {
+    console.log('333');
+    lockfile.unlockSync('/tmp/agent.lock');
+    console.log('444');
+
     // Close epoch subscriptions.
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
     this._managedSpaces.forEach((space) => {

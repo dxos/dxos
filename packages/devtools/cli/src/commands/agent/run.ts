@@ -44,7 +44,7 @@ export default class Run extends BaseCommand<typeof Run> {
       listen.push(`http://localhost:${this.flags.http}`);
     }
 
-    const agent = new Agent(this.clientConfig, { listen });
+    const agent = new Agent(this.clientConfig, { profile: this.flags.profile, listen });
     await agent.start();
 
     if (this.flags.epoch && this.flags.epoch !== '0') {
@@ -52,7 +52,13 @@ export default class Run extends BaseCommand<typeof Run> {
       await agent.monitorEpochs({ limit });
     }
 
+    // NOTE: This is currently called by the agent's forever daemon.
     this.log('Agent started... (ctrl-c to exit)');
+    process.on('SIGINT', async () => {
+      await agent.stop();
+      process.exit(0);
+    });
+
     if (this.flags['web-socket']) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
     }
