@@ -63,8 +63,17 @@ const config: UserConfig = defineUserConfig({
         text: 'API',
         link: '/api/',
       },
+      {
+        text: 'Blog',
+        link: '/blog/'
+      }
     ],
     plugins: {
+      blog: {
+        filter(page) {
+          return /blog\//.test(page.data.path);
+        }
+      },
       mdEnhance: {
         codetabs: true,
         sub: true,
