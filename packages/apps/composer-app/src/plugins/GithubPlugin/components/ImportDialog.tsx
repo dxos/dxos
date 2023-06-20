@@ -16,7 +16,7 @@ export const ImportDialog = ({
 }: {
   data: [string, GhIdentifier, RefObject<MarkdownComposerRef>];
 }) => {
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const { octokit } = useOctokitContext();
 
   const importGhIssueContent = useCallback(async () => {

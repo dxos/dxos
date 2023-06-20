@@ -50,7 +50,7 @@ const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
   const identity = useIdentity();
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const shell = useShell();

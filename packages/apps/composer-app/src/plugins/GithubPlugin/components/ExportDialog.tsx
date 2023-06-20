@@ -20,7 +20,7 @@ export const ExportDialog = ({
   const content = model.content;
 
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const [exportViewState, setExportViewState] = useState<ExportViewState>(initialExportViewState);
   const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(initialResponseUrl);
   const [ghBranchValue, setGhBranchValue] = useState('');

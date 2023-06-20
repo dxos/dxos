@@ -22,7 +22,7 @@ export const MarkdownActions = ({
 }) => {
   const ghId = properties.meta?.keys?.find((key) => key.source === 'com.github')?.id;
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const splitView = useSplitViewContext();
 
   const docGhId = useDocGhId(properties.meta?.keys ?? []);

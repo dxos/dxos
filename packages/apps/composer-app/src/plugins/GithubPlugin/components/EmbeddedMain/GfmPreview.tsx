@@ -76,7 +76,7 @@ export type GfmPreviewProps = {
 export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   const [html, setHtml] = useState('');
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
 
   useEffect(() => {
     if (octokit && markdown) {

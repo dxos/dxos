@@ -5,7 +5,8 @@
 export default [
   {
     'en-US': {
-      'plugin-github': {
+      'dxos:github': {
+        'plugin name': 'GitHub',
         'markdown actions label': 'GitHub actions',
         'unbind to file in github label': 'Disconnect from GitHub',
         'bind to file in github label': 'Connect to issue or file in GitHub',

@@ -12,7 +12,7 @@ import { MarkdownProperties } from '../../MarkdownPlugin/components';
 import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
 
 export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const [ghUrlValue, setGhUrlValue] = useState('');
 
   const ghId = useGhIdFromUrl(ghUrlValue);

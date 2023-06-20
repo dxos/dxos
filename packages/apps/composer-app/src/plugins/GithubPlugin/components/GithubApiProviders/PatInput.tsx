@@ -27,7 +27,7 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const PatInput = () => {
-  const { t } = useTranslation('plugin-github');
+  const { t } = useTranslation('dxos:github');
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
 
