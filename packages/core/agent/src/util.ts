@@ -7,8 +7,6 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { getUnixSocket } from '@dxos/client';
 
-const DAEMON_START_TIMEOUT = 5_000;
-
 export const parseAddress = (sock: string) => {
   const [protocol, path] = sock.split('://');
   return { protocol, path };
@@ -29,10 +27,7 @@ export const removeSocketFile = (profile: string) => {
  */
 export const waitForDaemon = async (profile: string) => {
   const { path } = parseAddress(getUnixSocket(profile));
-  await waitFor({
-    condition: async () => fs.existsSync(path),
-    timeout: DAEMON_START_TIMEOUT,
-  });
+  fs.rmSync(path, { force: true });
 };
 
 export const waitFor = async ({

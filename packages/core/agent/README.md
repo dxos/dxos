@@ -106,6 +106,25 @@ To enable debugging, set `NODE_OPTIONS` then open in VSCode (CMD-SHIFT-P "Attach
 NODE_OPTIONS="--inspect-brk"
 ```
 
+## Demo
+
+Use the [DXOS ZSH theme](../../../tools/zsh/ohmyz/themes/dxos.zsh-theme) to display the current profile in the shell prompt.
+
+```bash
+# Source dx-dev alias.
+. ./packages/devtools/cli/scripts/dev.sh
+
+export DX_PROFILE=test
+
+dx-dev agent stop
+dx-dev agent list
+dx-dev reset --force --no-agent
+dx-dev halo create Tester --no-agent
+dx-dev halo --no-agent
+
+dx-dev agent run --socket --web-socket=4567 --http=3000
+```
+
 ## Testing
 
 To test the Client proxy endpoint use `curl`:

@@ -7,12 +7,15 @@ export default defineTemplate(
     const imports = new Imports();
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
     const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
-    const { Config, Dynamics, Defaults, Local } = imports.lazy(['Config', 'Dynamics', 'Defaults', 'Local'], '@dxos/config');
+    const { Config, Dynamics, Defaults, Local } = imports.lazy(
+      ['Config', 'Dynamics', 'Defaults', 'Local'],
+      '@dxos/config',
+    );
     const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-appkit');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
     const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
       ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
-      '@dxos/react-appkit'
+      '@dxos/react-appkit',
     );
 
     const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
@@ -54,7 +57,7 @@ export default defineTemplate(
     config,
     slots: {
       content: '<div>Your code goes here</div>',
-      extraImports: ''
-    }
-  }
+      extraImports: '',
+    },
+  },
 );

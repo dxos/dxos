@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 import "dxos/devtools/swarm.proto";
 import "dxos/echo/feed.proto";
+import "dxos/echo/metadata.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/keyring.proto";
@@ -58,6 +59,7 @@ service DevtoolsHost {
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
   rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
   rpc SubscribeToFeedBlocks(SubscribeToFeedBlocksRequest) returns (stream SubscribeToFeedBlocksResponse);
+  rpc SubscribeToMetadata(google.protobuf.Empty) returns (stream SubscribeToMetadataResponse);
 
   rpc GetSpaceSnapshot(GetSpaceSnapshotRequest) returns (GetSpaceSnapshotResponse);
   rpc SaveSpaceSnapshot(SaveSpaceSnapshotRequest) returns (SaveSpaceSnapshotResponse);
@@ -149,6 +151,14 @@ message StoredSnapshotInfo {
 
 message GetSnapshotsResponse {
   repeated StoredSnapshotInfo snapshots = 1;
+}
+
+//
+// Metadata
+//
+
+message SubscribeToMetadataResponse {
+  dxos.echo.metadata.EchoMetadata metadata = 1;
 }
 
 //
