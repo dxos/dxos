@@ -18,8 +18,9 @@ import {
   SignalPanel,
   SpacesPanel,
   StoragePanel,
-  SwarmPanel
+  SwarmPanel,
 } from '../panels';
+import MetadataPanel from '../panels/echo/MetadataPanel';
 
 export const namespace = 'devtools';
 
@@ -38,70 +39,74 @@ export const useRoutes = () => {
           children: [
             {
               path: '/client/config',
-              element: <ConfigPanel />
+              element: <ConfigPanel />,
             },
             {
               path: '/client/storage',
-              element: <StoragePanel />
+              element: <StoragePanel />,
             },
             {
               path: '/client/logs',
-              element: <LoggingPanel />
+              element: <LoggingPanel />,
             },
-          ]
+          ],
         },
         {
           path: '/halo',
           children: [
             {
               path: '/halo/identity',
-              element: <IdentityPanel />
+              element: <IdentityPanel />,
             },
             {
               path: '/halo/keyring',
-              element: <KeyringPanel />
+              element: <KeyringPanel />,
             },
             {
               path: '/halo/credentials',
-              element: <CredentialsPanel />
-            }
-          ]
+              element: <CredentialsPanel />,
+            },
+          ],
         },
         {
           path: '/echo',
           children: [
             {
               path: '/echo/spaces',
-              element: <SpacesPanel />
+              element: <SpacesPanel />,
             },
             {
               path: '/echo/feeds',
-              element: <FeedsPanel />
+              element: <FeedsPanel />,
             },
             {
               path: '/echo/items',
-              element: <ItemsPanel />
+              element: <ItemsPanel />,
             },
             {
               path: '/echo/members',
-              element: <MembersPanel />
-            }
-          ]
+              element: <MembersPanel />,
+            },
+            {
+              path: '/echo/metadata',
+              element: <MetadataPanel />,
+            },
+          ],
         },
         {
           path: '/mesh',
           children: [
             {
               path: '/mesh/swarm',
-              element: <SwarmPanel />
+              element: <SwarmPanel />,
             },
             {
               path: '/mesh/signal',
-              element: <SignalPanel />
-            }
-          ]
-        }
-      ]
-    }
+              element: <SignalPanel />,
+            },
+          ],
+        },
+      ],
+    },
   ]);
 };
