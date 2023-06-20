@@ -42,14 +42,27 @@ const handleKeyDown = async (event: KeyboardEvent) => {
 
 const handleSave = async (node: GraphNode<LocalFile>) => {
   const handle = node.data?.handle as any;
-  if (!handle) {
-    return;
+  if (handle) {
+    const writeable = await handle.createWritable();
+    await writeable.write(node.data!.text);
+    await writeable.close();
+  } else {
+    handleLegacySave(node);
   }
 
-  const writeable = await handle.createWritable();
-  await writeable.write(node.data!.text);
-  await writeable.close();
   node.attributes = { ...node.attributes, modified: false };
+};
+
+const handleLegacySave = (node: GraphNode<LocalFile>) => {
+  const filename = typeof node.label === 'string' ? node.label : 'untitled.md';
+  const contents = node.data?.text || '';
+  const blob = new Blob([contents], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.setAttribute('href', window.URL.createObjectURL(blob));
+  a.setAttribute('download', filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 };
 
 export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides;
@@ -141,7 +154,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
       actions: (plugins) => {
         const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
 
-        return [
+        const actions: GraphNodeAction[] = [
           {
             id: 'open-file-handle',
             label: ['open file label', { ns: 'os' }],
@@ -162,58 +175,45 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
                 if (treeViewPlugin) {
                   treeViewPlugin.provides.treeView.selected = [node.id];
                 }
+
+                return;
               }
 
-              // TODO(wittjosiah): Handle legacy files.
-              // const input = document.createElement('input');
-              // input.type = 'file';
-              // input.accept = '.md,text/markdown';
-              // input.onchange = async () => {
-              //   const [file] = input.files ? Array.from(input.files) : [];
-              //   if (file) {
-              //     const text = await new Promise<string>((resolve) => {
-              //       const reader = new FileReader();
-              //       reader.addEventListener('loadend', (event) => {
-              //         const text = event.target?.result;
-              //         resolve(String(text));
-              //       });
-              //       reader.readAsText(file);
-              //     });
-              //     const id = `${LocalFilesPlugin.meta.id}/${file.name.replaceAll(/\.| /g, '-')}`;
-              //     nodes.unshift({
-              //       id,
-              //       label: file.name,
-              //       icon: ArticleMedium,
-              //       data: {
-              //         title: file.name,
-              //         text,
-              //       },
-              //     });
-              //     if (treeViewPlugin) {
-              //       treeViewPlugin.provides.treeView.selected = [id];
-              //     }
-              //   }
-              // };
-              // input.click();
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.md,text/markdown';
+              input.onchange = async () => {
+                const [file] = input.files ? Array.from(input.files) : [];
+                if (file) {
+                  const node = await handleLegacyFile(file);
+                  nodes.unshift(node);
+                  if (treeViewPlugin) {
+                    treeViewPlugin.provides.treeView.selected = [node.id];
+                  }
+                }
+              };
+              input.click();
             },
           },
-          // TODO(wittjosiah): Only show this if supported by browser.
-          {
+        ];
+
+        if ('showDirectoryPicker' in window) {
+          actions.push({
             id: 'open-directory',
             label: ['open directory label', { ns: 'os' }],
             icon: FolderOpen,
             invoke: async () => {
-              if ('showDirectoryPicker' in window) {
-                const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                const node = await handleDirectory(handle);
-                nodes.push(node);
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [node.id, node.children![0]?.id];
-                }
+              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              const node = await handleDirectory(handle);
+              nodes.push(node);
+              if (treeViewPlugin) {
+                treeViewPlugin.provides.treeView.selected = [node.id, node.children![0]?.id];
               }
             },
-          },
-        ];
+          });
+        }
+
+        return actions;
       },
     },
     router: {
@@ -407,6 +407,49 @@ const handleFile = async (handle: any /* FileSystemFileHandle */) => {
     node.attributes = { disabled: true };
     node.children = [];
   }
+
+  return node;
+};
+
+const handleLegacyFile = async (file: File) => {
+  const id = `${LocalFilesPlugin.meta.id}/${file.name.replaceAll(/\.| /g, '-')}`;
+  const text = await new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.addEventListener('loadend', (event) => {
+      const text = event.target?.result;
+      resolve(String(text));
+    });
+    reader.readAsText(file);
+  });
+
+  const node = createStore<GraphNode<LocalFile>>({
+    id,
+    label: file.name,
+    icon: ArticleMedium,
+    data: {
+      title: file.name,
+      text,
+    },
+    actions: [
+      {
+        id: 'save-as',
+        label: ['save as label', { ns: 'os' }],
+        icon: FloppyDisk,
+        invoke: async () => {
+          await handleSave(node);
+        },
+      },
+      {
+        id: 'close-directory',
+        label: ['close file label', { ns: 'os' }],
+        icon: X,
+        invoke: async () => {
+          const index = nodes.indexOf(node);
+          nodes.splice(index, 1);
+        },
+      },
+    ],
+  });
 
   return node;
 };
