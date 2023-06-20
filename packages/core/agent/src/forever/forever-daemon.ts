@@ -3,11 +3,16 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
-import { mkdirSync } from 'node:fs';
+import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
+import { getUnixSocket } from '@dxos/client';
+import { log } from '@dxos/log';
+
 import { Daemon, ProcessInfo } from '../daemon';
-import { removeSocketFile, waitFor, waitForDaemon } from '../util';
+import { parseAddress, removeSocketFile, waitFor } from '../util';
+
+const DAEMON_START_TIMEOUT = 5_000;
 
 /**
  * Manager of daemon processes started with Forever.
@@ -31,44 +36,6 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
-  async start(profile: string): Promise<ProcessInfo> {
-    if (!(await this.isRunning(profile))) {
-      const logDir = path.join(this._rootDir, profile);
-      mkdirSync(logDir, { recursive: true });
-
-      // Run the `dx agent run` CLI command.
-      // TODO(burdon): Call local run services binary directly (not via CLI).
-      forever.startDaemon(process.argv[1], {
-        args: ['agent', 'run', '--socket', `--profile=${profile}`],
-        uid: profile,
-        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
-        outFile: path.join(logDir, 'out.log'), // Child stdout.
-        errFile: path.join(logDir, 'err.log'), // Child stderr.
-      });
-    }
-
-    await waitForDaemon(profile);
-    return this._getProcess(profile);
-  }
-
-  async stop(profile: string): Promise<ProcessInfo> {
-    if (await this.isRunning(profile)) {
-      forever.stop(profile);
-    }
-
-    await waitFor({
-      condition: async () => !(await this._getProcess(profile)).profile,
-    });
-
-    removeSocketFile(profile);
-    return this._getProcess(profile);
-  }
-
-  async restart(profile: string): Promise<ProcessInfo> {
-    await this.stop(profile);
-    return this.start(profile);
-  }
-
   async list(): Promise<ProcessInfo[]> {
     const result = await new Promise<ForeverProcess[]>((resolve, reject) => {
       forever.list(false, (err, processes) => {
@@ -81,16 +48,64 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map((details) => mapProcessInfo(details));
+    return result.map(({ uid, foreverPid, running }: ForeverProcess) => ({
+      profile: uid,
+      pid: foreverPid,
+      running,
+    }));
+  }
+
+  async start(profile: string): Promise<ProcessInfo> {
+    if (!(await this.isRunning(profile))) {
+      const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
+      mkdirSync(logDir, { recursive: true });
+      log('starting...', { profile, logDir });
+
+      // Run the `dx agent run` CLI command.
+      // TODO(burdon): Call local run services binary directly (not via CLI)?
+      forever.startDaemon(process.argv[1], {
+        args: ['agent', 'run', `--profile=${profile}`, '--socket'],
+        uid: profile,
+        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
+        outFile: path.join(logDir, 'out.log'), // Child stdout.
+        errFile: path.join(logDir, 'err.log'), // Child stderr.
+      });
+    }
+
+    // TODO(burdon): Detect lock file and exit.
+    // TODO(burdon): Display to user the error file.
+    const { path: socketFile } = parseAddress(getUnixSocket(profile));
+    await waitFor({
+      condition: async () => fs.existsSync(socketFile),
+      timeout: DAEMON_START_TIMEOUT,
+    });
+
+    const proc = await this._getProcess(profile);
+    log.info('started', { profile: proc.profile, pid: proc.pid });
+    return proc;
+  }
+
+  async stop(profile: string): Promise<ProcessInfo> {
+    if (await this.isRunning(profile)) {
+      forever.stop(profile);
+    }
+
+    await waitFor({
+      condition: async () => !(await this._getProcess(profile)).profile,
+    });
+
+    removeSocketFile(profile);
+    const proc = await this._getProcess(profile);
+    log.info('stopped', { profile });
+    return proc;
+  }
+
+  async restart(profile: string): Promise<ProcessInfo> {
+    await this.stop(profile);
+    return this.start(profile);
   }
 
   async _getProcess(profile?: string) {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
-
-const mapProcessInfo = ({ uid, running, foreverPid }: ForeverProcess): ProcessInfo => ({
-  profile: uid,
-  running,
-  pid: foreverPid,
-});

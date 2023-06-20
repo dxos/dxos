@@ -4,6 +4,7 @@ This is the verification process to promote something from staging to production
 
 Use your normal, default profile in the browser, falling back to anonymous/guest profiles in case of a problem.
 
+
 ## Composer
 
 - Launch app: [https://composer.staging.dxos.org](https://composer.staging.dxos.org)
@@ -14,6 +15,7 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
   - see that typing into a document replicates both ways
   - cursors should be present
   - selection highlights should be present
+
 
 ## Kai
 
@@ -32,23 +34,107 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
   - Type a bunch of random text quickly (on both sides) observe replication both ways
 - Open Notes frame and create Note, drag it, observe replication both ways (exercises references)
 
+
 ## HALO
 
 - [https://halo.staging.kube.dxos.org] - observe that the app loads
 - invite a device to join, and give the invite code to a mobile device using an anonymous window. Observe that devices join the same halo and see the same spaces.
 
+
 ## CLI
 
-- npm init @dxos@next (staging)
-- pnpm install
-- pnpm serve
+### Installation
+
+- `npm init @dxos@next` (staging)
+- `pnpm install`
+- `pnpm serve`
 - observe that the app loads and presents the "click to login" button
 - login and use the counter, observe counter working between two windows
 
-- repeat the process with `dx app create` using `npm i -g @dxos/cli@next` (staging)
+> repeat the process with `dx app create` using `npm i -g @dxos/cli@next` (staging)
 
-## Kube
+### HALO Invitations
+
+1). Join two profiles:
+
+```bash
+# Reset identity:
+export DX_PROFILE=test-1
+dx agent stop
+dx reset --force --no-agent
+dx halo --no-agent create Test
+dx halo --no-agent --json
+# Copy Invitation code and PIN and enter in second profile below:
+dx halo share
+
+...
+
+# List devices (2)
+dx device list
+```
+
+2). Open a new profile in a separate window:
+
+```bash
+# Reset identity:
+export DX_PROFILE=test-2
+dx agent stop
+dx reset --force --no-agent
+# Enter Invitaiton code and PIN.
+dx halo join
+
+...
+
+# List devices (2)
+dx device list
+```
+
+3). Open KAI in a new/anonymous browser profile:
+- Copy invitation code and PIN by running `dx halo share` again.
+- Select create identity from authorized device:
+
+4). Open Profile panel in KAI profile above:
+- Create invitation.
+- Run `dx halo join` in a third CLI profile.
+
+```bash
+# Reset identity:
+export DX_PROFILE=test-3
+dx agent stop
+dx reset --force --no-agent
+# Enter Invitaiton code and PIN.
+dx halo join
+
+...
+
+# List devices (4)
+dx device list
+```
+
+You should now see FOUR devices.
+
+
+## Devtools and ECHO Proxy
+
+```bash
+export DX_PROFILE=test-1
+dx agent stop
+dx agent run --socket --ws=3456 --http=3000
+```
+
+- Open devtools and check identity: 
+  https://devtools.dev.dxos.org?target=ws://localhost:3456
+- Create a space and query the ECHO proxy:
+
+```bash
+dx space create
+curl -i http://localhost:3000/spaces | jq
+```
+
+
+## KUBE
 
 - ensure a prod kube is running locally
 - pnpm run deploy the app made with @dxos@next just now
 - observe the app on [appname].localhost working
+

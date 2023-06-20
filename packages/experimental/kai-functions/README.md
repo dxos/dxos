@@ -1,7 +1,6 @@
 # Kai Remote Functions
 
-
-# TODO(burdon):
+## TODO(burdon):
 - stack.yml files
 - Function namespace (OpenFaaS).
 - Deploy from URL (yml file in GH, package in GHCR).
@@ -43,9 +42,9 @@ brew install faas-cli
 faas-cli template store list --verbose
 ```
 
-## Admin
+## OpenFaas Dashboard
 
-Open the Faasd console (username=admin): 
+Open the Faasd console (username=admin; password from script below): 
 
 ```bash
 . ./scripts/env.sh
@@ -54,8 +53,28 @@ open http://$IP:8080
 
 ## Build and deploy functions to Faasd
 
+NOTE: Building the Docker image may take a few minutes (npm install is slow).
+
 ```bash
 ./scripts/deploy.sh
+```
+
+List functions:
+
+```bash
+DX_PROFILE=test dx-dev function list
+```
+
+Invoke function:
+
+```bash
+DX_PROFILE=test dx-dev function exec hello
+```
+
+View logs (https://docs.openfaas.com/cli/logs):
+
+```bash
+faas-cli logs hello
 ```
 
 ## Development
@@ -76,15 +95,15 @@ export OPENFAAS_URL="http://$IP:8080"
 2. From the CLI directory start the daemon:
 
 ```bash
-dx-dev daemon list
+dx-dev agent list
 DX_PROFILE=test dx-dev agent start
 ```
 
-NOTE: Must invoke run to listen on socket (for functions an devtools).
+NOTE: Must invoke run to listen on socket (for functions and devtools).
 
 ```bash
-dx-dev daemon list
-DX_PROFILE=test dx-dev agent run --listen=ws://localhost:4567 --listen=unix:///tmp/dx/run/agent/test.sock --profile=test
+dx-dev agent list
+DX_PROFILE=test dx-dev agent run --web-socket=4567
 ```
 
 Test via the CLI:
@@ -103,14 +122,14 @@ NOTE: Check/delete the socket file to troubleshoot.
 - Create trigger:
 
 ```yml
-  subscription: {
-    type: 'dxos.experimental.chess.Game'
-  }
+subscription: {
+  type: 'dxos.experimental.chess.Game'
+}
 ```
 
 ### Connect Devtools
 
-- https://devtools.dev.dxos.org/?target=ws://localhost:4567
+- https://devtools.dxos.org/?target=ws://localhost:4567
 
 ### Connect KAI
 
