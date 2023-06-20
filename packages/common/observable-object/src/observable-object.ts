@@ -50,7 +50,7 @@ class ObservableObjectImpl<T> implements ObservableObject {
   }
 }
 
-class ObservableArray<T> extends Array<T> implements ObservableObject {
+export class ObservableArray<T> extends Array<T> implements ObservableObject {
   private _subscriptions = new Set<(value: ObservableArray<T>) => void>();
 
   constructor(...args: T[]) {
@@ -90,4 +90,21 @@ export const createStore = <T extends object | any[]>(data?: T): T => {
   } else {
     return new ObservableObjectImpl(data) as T;
   }
+};
+
+export const ObservableObject: ObservableObjectConstructor = ObservableObjectImpl as any;
+
+/**
+ * Helper type to disable type inference for a generic parameter.
+ * @see https://stackoverflow.com/a/56688073
+ */
+type NoInfer<T> = [T][T extends any ? 0 : never];
+
+type ObservableObjectConstructor = {
+  /**
+   * Create a new document.
+   * @param initialProps Initial properties.
+   * @param _schemaType Schema type for generated types.
+   */
+  new <T extends Record<string, any> = Record<string, any>>(initialData?: NoInfer<Partial<T>>): ObservableObjectImpl<T>;
 };
