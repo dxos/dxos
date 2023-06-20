@@ -5,4 +5,4 @@
 /**
  * Timeout for retrying messages.
  */
-export const MESSAGE_TIMEOUT = 3_000;
+export const MESSAGE_TIMEOUT = 10_000;
