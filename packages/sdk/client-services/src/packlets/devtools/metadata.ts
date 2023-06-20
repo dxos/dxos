@@ -10,5 +10,5 @@ import { ServiceContext } from '../services';
 export const subscribeToMetadata = ({ context }: { context: ServiceContext }) =>
   new Stream<SubscribeToMetadataResponse>(({ next, ctx }) => {
     context.metadataStore.update.on(ctx, (data) => next({ metadata: data }));
-    next({ metadata: (context.metadataStore as any)._metadata });
+    next({ metadata: context.metadataStore.metadata });
   });

@@ -35,6 +35,10 @@ export class MetadataStore {
     private readonly _directory: Directory
   ) {}
 
+  get metadata(): EchoMetadata {
+    return this._metadata;
+  }
+
   get version(): number {
     return this._metadata.version ?? 0;
   }
