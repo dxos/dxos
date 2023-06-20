@@ -42,6 +42,7 @@ import {
   RouterPluginProvides,
   SplitViewProvides,
   TreeViewProvides,
+  TranslationsProvides,
 } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
@@ -55,8 +56,9 @@ import {
   SpaceTreeItem,
 } from './components';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
+import translations from './translations';
 
-export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
+export type SpacePluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
@@ -267,6 +269,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     subscriptions.clear();
   },
   provides: {
+    translations,
     router: {
       routes: () => [
         {

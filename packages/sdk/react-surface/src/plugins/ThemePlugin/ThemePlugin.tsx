@@ -12,7 +12,7 @@ import { createStore } from '@dxos/observable-object';
 import { definePlugin, Plugin } from '../../framework';
 import compositeEnUs from './translations/en-US';
 
-type TranslationsProvides = {
+export type TranslationsProvides = {
   translations: Resource[];
 };
 

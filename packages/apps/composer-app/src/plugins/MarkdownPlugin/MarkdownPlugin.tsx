@@ -9,6 +9,7 @@ import { PluginDefinition, definePlugin } from '@dxos/react-surface';
 import { YText } from '@dxos/text-model';
 
 import { MarkdownProperties, MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
+import translations from './translations';
 
 export const isMarkdown = (datum: unknown): datum is ComposerModel =>
   datum && typeof datum === 'object'
@@ -27,6 +28,7 @@ export const MarkdownPlugin: PluginDefinition = definePlugin({
     id: 'dxos:markdown',
   },
   provides: {
+    translations,
     // TODO(wittjosiah): Type unknown in framework.
     component: (datum: unknown, role) => {
       switch (role) {
