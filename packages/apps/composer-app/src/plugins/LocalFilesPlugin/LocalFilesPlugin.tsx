@@ -20,7 +20,7 @@ import {
   findGraphNode,
 } from '@dxos/react-surface';
 
-import { MarkdownProvides, isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
+import { MarkdownProvides } from '../MarkdownPlugin';
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 
 export type LocalFile = {
@@ -134,12 +134,6 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
         case 'main':
           if (isGraphNode(datum) && isLocalFile(datum.data) && datum.attributes?.disabled) {
             return LocalFileMainPermissions;
-          }
-          break;
-
-        case 'menuitem':
-          if (Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && datum[1].readOnly) {
-            return null;
           }
           break;
       }
