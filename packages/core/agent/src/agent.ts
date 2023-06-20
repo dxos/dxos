@@ -3,7 +3,6 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import lockfile from 'lockfile';
 import assert from 'node:assert';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
@@ -62,15 +61,13 @@ export class Agent {
   //  https://www.npmjs.com/package/lockfile
 
   async start() {
-    // console.log('111');
-    // lockfile.lockSync('/tmp/agent.lock');
-    // console.log('222');
-
     // Create client services.
+    // TODO(burdon): Check lock.
     this._services = fromHost(this._config);
     await this._services.open();
 
     // Create client.
+    // TODO(burdon): Move away from needing client for epochs and proxy?
     this._client = new Client({ config: this._config, services: this._services });
     await this._client.initialize();
 
@@ -149,10 +146,6 @@ export class Agent {
   }
 
   async stop() {
-    // console.log('333');
-    // lockfile.unlockSync('/tmp/agent.lock');
-    // console.log('444');
-
     // Close epoch subscriptions.
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
     this._managedSpaces.forEach((space) => {
@@ -191,8 +184,6 @@ export class Agent {
       }),
     );
   }
-
-  // TODO(burdon): Detect if multiple agents are running (esp. after reset; otherwise halo create will fail due to contentino).
 
   monitorEpoch(space: Space, { limit: _limit }: EpochOptions): CurrentEpoch {
     const limit = _limit ?? DEFAULT_EPOCH_LIMIT;

@@ -70,10 +70,10 @@ export class ForeverDaemon implements Daemon {
         outFile: path.join(logDir, 'out.log'), // Child stdout.
         errFile: path.join(logDir, 'err.log'), // Child stderr.
       });
-
-      // TODO(burdon): Detect lock file and exit.
     }
 
+    // TODO(burdon): Detect lock file and exit.
+    // TODO(burdon): Display to user the error file.
     const { path: socketFile } = parseAddress(getUnixSocket(profile));
     await waitFor({
       condition: async () => fs.existsSync(socketFile),
