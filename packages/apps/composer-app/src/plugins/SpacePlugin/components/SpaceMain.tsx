@@ -4,14 +4,17 @@
 
 import React, { FC } from 'react';
 
+import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client';
+import { isTypedObject, SpaceProxy } from '@dxos/client';
 import { observer } from '@dxos/observable-object/react';
 import { useIdentity } from '@dxos/react-client';
 import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
 
-import { isDocument } from '../../GithubMarkdownPlugin';
 import { SpacePlugin } from '../SpacePlugin';
+
+export const isDocument = (datum: unknown): datum is Document =>
+  isTypedObject(datum) && Document.type.name === datum.__typename;
 
 export const SpaceMain: FC<{}> = observer(() => {
   const identity = useIdentity();

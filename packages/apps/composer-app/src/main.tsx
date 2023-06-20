@@ -21,6 +21,7 @@ import {
 
 import {
   // LocalFilesPlugin,
+  GithubPlugin,
   MarkdownPlugin,
   SpacePlugin,
 } from './plugins';
@@ -39,8 +40,8 @@ createRoot(document.getElementById('root')!).render(
         SplitViewPlugin,
         SpacePlugin,
         MarkdownPlugin,
+        GithubPlugin,
         // LocalFilesPlugin,
-        // GithubMarkdownPlugin,
       ]}
     />
   </StrictMode>,

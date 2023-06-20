@@ -146,7 +146,7 @@ export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, 
   mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
 
 export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(props.srOnly && 'sr-only', ...etc);
+  mx('leading-none mlb-1', props.srOnly && 'sr-only', ...etc);
 
 export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
