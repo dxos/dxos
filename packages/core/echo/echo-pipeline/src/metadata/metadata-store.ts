@@ -5,7 +5,7 @@
 import CRC32 from 'crc-32';
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,11 +28,16 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
+  public readonly update = new Event<EchoMetadata>();
 
   // prettier-ignore
   constructor(
     private readonly _directory: Directory
   ) {}
+
+  get metadata(): EchoMetadata {
+    return this._metadata;
+  }
 
   get version(): number {
     return this._metadata.version ?? 0;
@@ -90,6 +95,7 @@ export class MetadataStore {
       created: this._metadata.created ?? new Date(),
       updated: new Date(),
     };
+    this.update.emit(data);
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
