@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Config, Defaults, Local } from '@dxos/config';
+import { Config, Defaults, Envs, Local } from '@dxos/config';
 import {
   Client,
   ClientContext,
@@ -20,7 +20,7 @@ export type ClientPluginProvides = {
   setLayout: ShellController['setLayout'];
 };
 
-const client = new Client({ config: new Config(Local(), Defaults()) });
+const client = new Client({ config: new Config(Envs(), Local(), Defaults()) });
 
 export const ClientPlugin = definePlugin<{}, ClientPluginProvides>({
   meta: {

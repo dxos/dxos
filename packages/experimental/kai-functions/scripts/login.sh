@@ -7,5 +7,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 PASSWORD=$(ssh ubuntu@$IP "sudo cat /var/lib/faasd/secrets/basic-auth-password")
 echo $PASSWORD | faas-cli login --password-stdin
 
+# TODO(burdon): Option to open.
 # Username=admin
-open http://$IP:8080
+#open http://$IP:8080

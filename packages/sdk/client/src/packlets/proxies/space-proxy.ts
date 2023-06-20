@@ -25,6 +25,7 @@ import { InvitationsProxy } from './invitations-proxy';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
+
   /**
    * @internal
    * To update the space query when a space changes.
@@ -68,7 +69,6 @@ export class SpaceProxy implements Space {
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _error: Error | undefined = undefined;
-
   private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
@@ -86,9 +86,8 @@ export class SpaceProxy implements Space {
     }));
 
     assert(this._clientServices.services.DataService, 'DataService not available');
-    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
-
+    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this._itemManager, this.key);
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -105,7 +104,7 @@ export class SpaceProxy implements Space {
 
     databaseRouter.register(this.key, this._db);
 
-    // Update observables
+    // Update observables.
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
@@ -122,19 +121,6 @@ export class SpaceProxy implements Space {
 
   get isOpen() {
     return this._data.state === SpaceState.READY && this._initialized;
-  }
-
-  /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
-   */
-  private get _currentState(): SpaceState {
-    if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INITIALIZING;
-    } else {
-      return this._data.state;
-    }
   }
 
   get db() {
@@ -188,6 +174,19 @@ export class SpaceProxy implements Space {
   }
 
   /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  private get _currentState(): SpaceState {
+    if (this._data.state === SpaceState.READY && !this._initialized) {
+      return SpaceState.INITIALIZING;
+    } else {
+      return this._data.state;
+    }
+  }
+
+  /**
    * Called by EchoProxy to update this space instance.
    * Called once on initial creation.
    * @internal Package-private.
@@ -230,7 +229,7 @@ export class SpaceProxy implements Space {
 
     await this._invitationsProxy.open();
 
-    await this._dbBackend!.open(this._itemManager!, this._modelFactory);
+    await this._dbBackend!.open(this._modelFactory);
     log('ready');
     this._databaseInitialized.wake();
 

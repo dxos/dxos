@@ -10,7 +10,7 @@ import { Client, Invitation, InvitationEncoder } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { hostInvitation } from '../../util';
 
-export default class Share extends BaseCommand {
+export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;
   static override description = 'Create HALO (device) invitation.';
 
@@ -29,10 +29,8 @@ export default class Share extends BaseCommand {
         return {};
       }
 
-      const { flags } = await this.parse(Share);
-
       const observable = client.halo.createInvitation({
-        authMethod: flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
+        authMethod: this.flags.noCode ? Invitation.AuthMethod.NONE : Invitation.AuthMethod.SHARED_SECRET,
       });
       const invitationSuccess = hostInvitation({
         observable,
@@ -41,7 +39,7 @@ export default class Share extends BaseCommand {
             const invitationCode = InvitationEncoder.encode(observable.get());
 
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-            !flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+            !this.flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
           },
         },
       });

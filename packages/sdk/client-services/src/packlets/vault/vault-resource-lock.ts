@@ -17,6 +17,7 @@ export type VaultResourceLockOptions = {
   onRelease?: () => MaybePromise<void>;
 };
 
+// TODO(burdon): Extend to support locking for web and NodeJS (use npm lockfile). Use to lock agents.
 export class VaultResourceLock {
   private readonly _broadcastChannel = new BroadcastChannel('vault-resource-lock');
   private readonly _lockKey: string;

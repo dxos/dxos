@@ -6,8 +6,6 @@
 import { Client, Config, PublicKey, fromSocket } from '@dxos/client';
 
 module.exports = async (event: any, context: any) => {
-  console.log(':::::', !!context.client);
-
   const clientUrl = event?.body?.context?.clientUrl;
   if (!clientUrl) {
     return context.status(400);

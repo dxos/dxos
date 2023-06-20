@@ -4,6 +4,7 @@
 
 export * from './agent';
 export * from './client';
+export * from './diagnostics';
 export * from './iframe-controller';
 export * from './iframe-service-host';
 export * from './iframe-service-proxy';

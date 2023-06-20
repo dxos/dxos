@@ -1,5 +1,9 @@
 set -exuo pipefail
 
+#
+# NOTE: Docker Desktop must be running.
+#
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 . $SCRIPT_DIR/env.sh
 
@@ -21,7 +25,7 @@ echo "\n###\n### Publishing $FN_CONFIG\n###\n"
 # Build and upload to GH package registry.
 # Cache option.
 NO_CACHE=0
-faas-cli publish -f $FN_CONFIG --platforms linux/arm64
+faas-cli publish -f $FN_CONFIG --platforms=linux/arm64
 #  --no-cache=$NO_CACHE
 
 echo "\n###\n### Deploying $FN_CONFIG\n###\n"
@@ -30,7 +34,6 @@ echo "\n###\n### Deploying $FN_CONFIG\n###\n"
 # NOTE: Publishes to GH Package Registry (see image name in YML).
 # - Configure visibility https://github.com/orgs/dxos/packages
 # NOTE: May timeout in which case retry until succeeds (makes iterative progress).
-# TODO(burdon): Sometimes specifty --gateway path.
 faas-cli deploy --timeout=5m0s -f $FN_CONFIG
 
 # TODO(burdon): Test with client daemon.

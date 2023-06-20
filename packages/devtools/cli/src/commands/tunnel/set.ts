@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { BaseCommand } from '../../base-command';
 import { TunnelRpcPeer, printTunnels } from '../../util';
 
-export default class Set extends BaseCommand {
+export default class Set extends BaseCommand<typeof Set> {
   static override enableJsonFlag = true;
   static override description = 'Enable or disable tunnel.';
 
@@ -27,20 +27,14 @@ export default class Set extends BaseCommand {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Set);
-    const { app, enabled, disabled } = flags;
-    try {
-      if (!!enabled === !!disabled) {
-        throw new Error('Specify either --enabled or --disabled.');
-      }
-      return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
-        const tunnelResponse = await tunnel.rpc.tunnel({ name: app, enabled: enabled && !disabled });
-        assert(tunnelResponse, 'Unable to set tunnel.');
-        printTunnels([tunnelResponse], flags);
-      });
-    } catch (err: any) {
-      this.log(`Unable to set tunnel: ${err.message}`);
-      this.error(err, { exit: 1 });
+    const { app, enabled, disabled } = this.flags;
+    if (!!enabled === !!disabled) {
+      throw new Error('Specify either --enabled or --disabled.');
     }
+    return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
+      const tunnelResponse = await tunnel.rpc.tunnel({ name: app, enabled: enabled && !disabled });
+      assert(tunnelResponse, 'Unable to set tunnel.');
+      printTunnels([tunnelResponse], this.flags);
+    });
   }
 }

@@ -39,7 +39,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
             t('offline ready label', { appName: t('current app name', { ns: appNs }) })
           )}
         </Toast.Title>
-        <Toast.Description>{t('need refresh description')}</Toast.Description>
+        {variant === 'needRefresh' && <Toast.Description>{t('need refresh description')}</Toast.Description>}
       </Toast.Body>
       <Toast.Actions>
         {needRefresh && (

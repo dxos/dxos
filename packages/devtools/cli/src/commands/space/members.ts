@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers, selectSpace } from '../../util';
 
-export default class Members extends BaseCommand {
+export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
   static override description = 'List space members.';
   static override flags = {
@@ -21,8 +21,7 @@ export default class Members extends BaseCommand {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
-    const { args, flags } = await this.parse(Members);
-    let { key } = args;
+    let { key } = this.args;
 
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
@@ -39,8 +38,8 @@ export default class Members extends BaseCommand {
       }
 
       const members = space.members.get();
-      if (!flags.json) {
-        printMembers(members, flags);
+      if (!this.flags.json) {
+        printMembers(members, this.flags);
       }
 
       return mapMembers(members);

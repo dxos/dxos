@@ -218,6 +218,7 @@ export class Client {
     await this._services.open();
 
     // TODO(burdon): Remove?
+    // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       await createDevtoolsRpcServer(this, this._services);
     }

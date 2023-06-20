@@ -4,16 +4,14 @@
 
 import { BaseCommand } from '../../base-command';
 
-export default class Stop extends BaseCommand {
+export default class Stop extends BaseCommand<typeof Stop> {
   static override enableJsonFlag = true;
   static override description = 'Stop agent daemon.';
 
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
-      const params = await this.parse(Stop);
-      await daemon.stop(params.flags.profile);
-
-      this.log('Stopped');
+      await daemon.stop(this.flags.profile);
+      this.log('Agent stopped');
     });
   }
 }
