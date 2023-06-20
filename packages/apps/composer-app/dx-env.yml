@@ -5,3 +5,7 @@ LOG_FILTER:
 LOG_PREFIX:
   path: runtime.client.log.prefix
   type: string
+
+REMOTE_SOURCE:
+  path: runtime.client.remoteSource
+  type: string

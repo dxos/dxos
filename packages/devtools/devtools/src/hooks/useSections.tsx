@@ -15,7 +15,7 @@ import {
   Queue,
   Receipt,
   Users,
-  UsersThree
+  UsersThree,
 } from '@phosphor-icons/react';
 import { FC } from 'react';
 
@@ -39,7 +39,7 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/client/config',
           title: 'Config',
-          Icon: Gear
+          Icon: Gear,
         },
         {
           id: '/client/storage',
@@ -49,9 +49,9 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/client/logs',
           title: 'Logs',
-          Icon: Receipt
-        }
-      ]
+          Icon: Receipt,
+        },
+      ],
     },
     {
       id: '/halo',
@@ -61,19 +61,19 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/halo/identity',
           title: 'Identity',
-          Icon: IdentificationBadge
+          Icon: IdentificationBadge,
         },
         {
           id: '/halo/keyring',
           title: 'Keyring',
-          Icon: Key
+          Icon: Key,
         },
         {
           id: '/halo/credentials',
           title: 'Credentials',
-          Icon: CreditCard
-        }
-      ]
+          Icon: CreditCard,
+        },
+      ],
     },
     {
       id: '/echo',
@@ -83,29 +83,34 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/echo/spaces',
           title: 'Spaces',
-          Icon: HardDrive
+          Icon: HardDrive,
         },
         {
           id: '/echo/feeds',
           title: 'Feeds',
-          Icon: Queue
+          Icon: Queue,
         },
         {
           id: '/echo/items',
           title: 'Items',
-          Icon: Database
+          Icon: Database,
         },
         {
           id: '/echo/members',
           title: 'Members',
-          Icon: Users
-        }
+          Icon: Users,
+        },
+        {
+          id: '/echo/metadata',
+          title: 'Metadata',
+          Icon: HardDrive,
+        },
         // {
         //   id: '/echo/snapshots',
         //   title: 'Snapshots',
         //   Icon: <SnapshotsIcon />
         // }
-      ]
+      ],
     },
     {
       id: 'mesh',
@@ -120,15 +125,15 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/mesh/swarm',
           title: 'Swarm',
-          Icon: UsersThree
+          Icon: UsersThree,
         },
         {
           id: '/mesh/signal',
           title: 'Signal',
-          Icon: PaperPlane
-        }
-      ]
-    }
+          Icon: PaperPlane,
+        },
+      ],
+    },
     // {
     //   id: '/dmg',
     //   title: 'DMG',

@@ -8,7 +8,7 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Halo extends BaseCommand {
+export default class Halo extends BaseCommand<typeof Halo> {
   static override enableJsonFlag = true;
   static override description = 'Show HALO profile.';
 
@@ -17,12 +17,11 @@ export default class Halo extends BaseCommand {
       const identity = client.halo.identity.get();
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
-        //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Identity not initialized.}`);
         return {};
       } else {
         const { identityKey, profile } = identity;
-        this.log(`Display name: ${profile?.displayName}`);
+        this.logToStderr('Identity key:', identityKey.toHex());
         return {
           identityKey: identityKey.toHex(),
           profile,

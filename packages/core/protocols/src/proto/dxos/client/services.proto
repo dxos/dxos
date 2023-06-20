@@ -83,7 +83,6 @@ service IdentityService {
   rpc CreateIdentity(halo.credentials.ProfileDocument) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
-
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
 }
 
@@ -177,7 +176,7 @@ message Space {
     repeated dxos.keys.PublicKey control_feeds = 18;
     repeated dxos.keys.PublicKey data_feeds = 19;
 
-    /// Mutations alredy processed.
+    /// Mutations already processed.
     optional timeframe.TimeframeVector current_control_timeframe = 10;
 
     /// Minimum timeframe to consider the state to be up-to-date.
@@ -188,7 +187,7 @@ message Space {
 
     /// All mutations known to exist on the network.
     optional timeframe.TimeframeVector known_control_timeframe = 15;
-    
+
     /// Mutations alredy processed.
     optional timeframe.TimeframeVector current_data_timeframe = 12;
 
@@ -207,13 +206,11 @@ message Space {
   dxos.keys.PublicKey space_key = 1;
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
-
   optional dxos.error.Error error = 4;
 
   repeated SpaceMember members = 10;
 
   optional dxos.echo.metadata.SpaceCache cache = 20;
-
   Metrics metrics = 21;
 }
 

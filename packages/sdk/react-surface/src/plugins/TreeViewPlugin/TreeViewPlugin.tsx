@@ -41,6 +41,8 @@ const Context = createContext<TreeViewContextValue>(store);
 
 export const useTreeView = () => useContext(Context);
 
+export const selectedToUri = (selected: string[]) => selected.join('/').replace(':', '/');
+
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
 

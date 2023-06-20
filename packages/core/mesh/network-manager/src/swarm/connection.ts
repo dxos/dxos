@@ -4,8 +4,10 @@
 
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { CancelledError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -14,6 +16,17 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 import { WireProtocol } from '../wire-protocol';
+
+/**
+ * How long to wait before sending the signal in case we receive another signal.
+ * This value is increased exponentially.
+ */
+const STARTING_SIGNALLING_DELAY = 10;
+
+/**
+ * Maximum delay between signal batches.
+ */
+const MAX_SIGNALLING_DELAY = 300;
 
 /**
  * State machine for each connection.
@@ -51,14 +64,24 @@ export enum ConnectionState {
  * Owns a transport paired together with a wire-protocol.
  */
 export class Connection {
+  private readonly _ctx = new Context();
+
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
-  private _bufferedSignals: Signal[] = [];
+
+  private _incomingSignalBuffer: Signal[] = [];
+  private _outgoingSignalBuffer: Signal[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
   public _instanceId = PublicKey.random().toHex();
+
+  private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
+    await this._flushSignalBuffer();
+  });
+
+  private _signallingDelay = STARTING_SIGNALLING_DELAY;
 
   constructor(
     public readonly topic: PublicKey,
@@ -108,21 +131,7 @@ export class Connection {
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) => {
-        try {
-          await this._signalMessaging.signal({
-            author: this.ownId,
-            recipient: this.remoteId,
-            sessionId: this.sessionId,
-            topic: this.topic,
-            data: { signal },
-          });
-        } catch (err) {
-          // If signal fails treat connection as failed
-          log('Signal failed', { err });
-          await this.close();
-        }
-      },
+      sendSignal: async (signal) => this._sendSignal(signal),
     });
 
     this._transport.connected.once(() => {
@@ -141,11 +150,11 @@ export class Connection {
     });
 
     // Replay signals that were received before transport was created.
-    for (const signal of this._bufferedSignals) {
+    for (const signal of this._incomingSignalBuffer) {
       void this._transport.signal(signal); // TODO(burdon): Remove async?
     }
 
-    this._bufferedSignals = [];
+    this._incomingSignalBuffer = [];
 
     log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
   }
@@ -156,6 +165,8 @@ export class Connection {
       return;
     }
     this._changeState(ConnectionState.CLOSING);
+
+    await this._ctx.dispose();
 
     log('closing...', { peerId: this.ownId });
 
@@ -177,25 +188,69 @@ export class Connection {
     this._changeState(ConnectionState.CLOSED);
   }
 
+  private _sendSignal(signal: Signal) {
+    this._outgoingSignalBuffer.push(signal);
+    this._signalSendTask.schedule();
+  }
+
+  private async _flushSignalBuffer() {
+    if (this._outgoingSignalBuffer.length === 0) {
+      return;
+    }
+
+    try {
+      await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+      this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
+
+      const signals = [...this._outgoingSignalBuffer];
+      this._outgoingSignalBuffer.length = 0;
+
+      await this._signalMessaging.signal({
+        author: this.ownId,
+        recipient: this.remoteId,
+        sessionId: this.sessionId,
+        topic: this.topic,
+        data: { signalBatch: { signals } },
+      });
+    } catch (err) {
+      if (err instanceof CancelledError) {
+        return;
+      }
+
+      // If signal fails treat connection as failed
+      log.warn('Signal failed', { err });
+      await this.close();
+    }
+  }
+
+  /**
+   * Receive a signal from the remote peer.
+   */
   async signal(msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
       return;
     }
-    assert(msg.data.signal);
+    assert(msg.data.signal || msg.data.signalBatch);
     assert(msg.author?.equals(this.remoteId));
     assert(msg.recipient?.equals(this.ownId));
 
-    if (this._state === ConnectionState.INITIAL) {
-      log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
-      this._bufferedSignals.push(msg.data.signal);
-      return;
-    }
+    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
+    for (const signal of signals) {
+      if (!signal) {
+        continue;
+      }
 
-    assert(this._transport, 'Connection not ready to accept signals.');
-    log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
-    await this._transport.signal(msg.data.signal);
+      if (this._state === ConnectionState.INITIAL) {
+        log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+        this._incomingSignalBuffer.push(signal);
+      } else {
+        assert(this._transport, 'Connection not ready to accept signals.');
+        log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+        await this._transport.signal(signal);
+      }
+    }
   }
 
   private _changeState(state: ConnectionState): void {

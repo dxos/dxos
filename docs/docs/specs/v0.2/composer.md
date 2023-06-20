@@ -1,39 +1,54 @@
 # Composer
 
-The App: A developer-first, peer-to-peer knowledge management system (KMS).
-The Component: A real-time, collaborative code and text editor.
-The Framework: The extensibility model upon which Composer and Kai are be built.
+- The App: A developer-first, peer-to-peer knowledge management system (KMS).
+- The Component: A real-time, collaborative code and text editor.
+- The Framework: The extensibility model upon which Composer and Kai are be built.
 
-## Scenarios
+## Product Scenarios
 
-#### Composer scenarios (production)
+mvp:
 
-1. Users can collaborate on a github issue together
-2. Users can work on folders of markdown files in a "stack-editor" paradigm
-3. Developers can extend Composer with custom data sources and visual surfaces
-4. Developers can visualize the structure of Composer's surfaces and examine metadata about fulfilling components.
+1. Users can collaborate on markdown documents in a plain-text-editor paradigm
+2. Users can collaborate on a github issue together
 
-#### Additional Kai scenarios (labs)
+extensibility:
 
-4. Users can work with email
-5. Users can see all notifications in a universal inbox (across email and other sources)
-6. Users can make presentations
-7. Users can draw together
-8. Users can collect lists of contacts
-9. Users can manage shared todo lists
-10. Users can launch and interact with bots in their spaces
-11. Users can play chess together
-12. Users can collaborate over kanban boards
-13. Users can collaborate over post-boards of notes
-14. Users can interact with LLM based agents
-15. Users can chat and message with other users
-16. Users can inspect the state of ECHO spaces and objects (devtools)
+3. Developers can extend any part of the UI with custom components
+4. Developers can extend Composer with custom data sources
+
+hero scenario:
+
+5. Users can collaborate on documents in a stack-editor paradigm
+6. Users can collaborate on plain-text-files on disk
+
+see also:
+
+7. [Shell](./shell.md)
+8. [Vault](./vault.md)
+
+## Lab Scenarios
+
+The framework should design for these, but doesn't have to build them. We can build these in the labs workstream at a slower pace.
+
+1. Users can work with email
+2. Users can see all notifications in a universal inbox (across email and other sources)
+3. Users can make presentations
+4. Users can draw together
+5. Users can collect lists of contacts
+6. Users can manage shared todo lists
+7. Users can launch and interact with bots in their spaces
+8. Users can play chess together
+9. Users can collaborate over kanban boards
+10. Users can collaborate over post-boards of notes
+11. Users can interact with LLM based agents
+12. Users can chat and message with other users
+13. Users can inspect the state of ECHO spaces and objects (devtools)
 
 ## Goals
 
-1. To provide developers with full control over the interface of their KMS
+1. To provide developers with full control over the interface of their app
 2. To make it possible for Kai and Composer to share a common application framework
-3. To make Composer an easier-to-ship subset of all of Kai's scenarios
+3. To make a step towards "multiple sources of knowledge interoperating in the same application"
 
 ## Non goals
 
@@ -113,6 +128,7 @@ export const Plugin = {
 ## Application State and Mutations
 
 ### Cross plugin state sharing
+
 - There is no central application state. Each plugin is free to declare it's own application state container.
 - State containers are generally expected to be "granularly reactive" with supporting hooks and wrappers for react.
 - Plugins are free to provide that state container to their components however they want. Plugins can expose a `Plugin.provides.context` which allows them to wrap the application with a custom context provider or any other DOM.
@@ -122,13 +138,15 @@ export const Plugin = {
   - the assumption is that each plugin's state store exposes a reactive mutation (action handlers or similar) API and store mutations cause components to re-render automatically.
 
 ### ECHO vs ephemeral state
+
 - When state is local, ephemeral, per-session: it is managed by in-memory reactive containers (stores) and backed by local or session storage as appropriate. i.e. the selection state in a List or Tree is ephemeral and not shared between windows or devices, but may be shared among components and plugins in the application.
 - When state is stable across devices, permanent: it is managed by ECHO objects.
 
 ### Ephemeral state management solution
+
 - The default state management opinion for 1P plugins is `@dxos/observable-object`. The same package powers the reactive ECHO objects API.
 - The `GraphNode extends ObservableObject` and a mutable, observable tree of these represents the "state of the UI" to which React components are bound reactively.
-- Because the granularity of observable updates is important, a utility exists on `ObservableObject` to perform a `deepMerge` with any incoming tree-ish object. This allows plugin code to declare GraphNodes as "pure functions of state" and for the `deepMerge` generic diffing process to carefully apply a minimum number of operations to the mutable state store.
+- If ergonomics become an issue, a utility can exists on `ObservableObject` to perform a `deepMerge` with any incoming tree-ish object. This allows plugin code to declare GraphNodes as "pure functions of state" and for the `deepMerge` generic diffing process to carefully apply a minimum number of operations to the mutable state store.
 
 ## Stacks
 
@@ -195,10 +213,115 @@ Other plugins possible:
 3. the **github** plugin - which provides nodes representing github issues and assets
 
 ## Example Plugins
+
 See `/packages/experimental/surface`.
 
-## Things to think about:
+## Graph
 
-- how to do paging of large result sets
-- how to detect circular / infinite trees and deal with them
-- how to expand `getNodes` lazily / in a timely manner without losing too much fidelity in the Tree
+This is a contract for UI affordances which present, organize and navigate over the graph of user knowledge.
+
+The goal is to enable any kind of navigation UI such as trees, lists, accordions of lists, accordions of trees, force-directed layouts, ..., etc. and to allow them to source their content/navigation structure from plugins.
+
+The average tree or list item has mostly similar properties:
+
+```ts
+type Node = {
+  label: string;
+  icon: any;
+  // ... 
+  children: Node[]; // if a tree
+}
+```
+
+The `graph` contract is derived by working backwards from these UI models which are chosen to view and navigate "everything".
+
+- users use a TreeView to organize and navigate items in ECHO spaces
+- users can select nodes in the TreeView
+- selected tree nodes are presented in detail on the right side of the app via `<Surface />`
+  - if multiple nodes are selected, the detail area shows only the total number of things selected
+- TreeView: first level items act as group headers, second level items have zero indent (P2)
+
+To assemble the tree, every plugin `provides.graph(): Node[]` node arrays and the lists are concatenated before rendering in the TreeView. Later, we can enable more cross-plugin collaboration over Nodes as appropriate.
+
+- total graph is assembled by concatenation of graph nodes from all plugins (P0)
+- plugins are allowed to extend each other's nodes with actions (P2)
+- plugins are allowed to extend each other's nodes with children (P3)
+
+## Hero Scenarios
+
+Priority legend:
+- P0 - must have
+- P1 - painful cut
+- P2 - nice to have
+- P3 - cut / next iteration
+
+### 5. Users can collaborate on documents in a stack-editor paradigm
+
+This scenario expands the plain-text-editor to support multimedia and other arbitrary content types by envisioning the document as a vertical sequence (**stack**) of **stack items**. 
+
+Users are free to drag-arrange section order, insert new sections, and interact with the contents of each section.
+
+This scenario demonstrates the value of `<Surface />` elements by delegating the presentation of each section to them, thereby taking advantage of plugins which may supply new content types for sections and components to render them with.
+
+Pure component:
+
+- 5.1 Developers can use a "pure", responsive `<Stack />` component to render a sequence of `<Stack.Item />` items
+- 5.2 Stack items provide mobile-friendly affordances for being dragged and re-ordered
+- 5.3 Stack provides an affordance for appending a new stack item
+- 5.4 Stack provides affordances for inserting new stack items between other items or at the top
+
+GFM in ECHO:
+
+- 5.5 Developers can use the `<MarkdownStackEditor />` (MSE) component for editing GFM Markdown documents in ECHO
+  - 5.5.1 MSE supports PlainText sections (P0)
+  - 5.5.2 MSE supports Image sections (P0)
+  - 5.5.3 MSE supports TaskList sections (P2)
+  - 5.5.4 MSE supports Table sections (P3)
+
+n.b.: until the various section types are supported, they appear as plain text.
+
+### 6. Users can collaborate on plain-text-files on disk
+
+This scenario demonstrates the power of bringing multiple data sources into the same application and enabling interactions between them.
+
+By bringing the local file system into Composer, we can shorten the distance between local files and ECHO spaces. Local files are the basis for successful app ecosystems from IDEs to modern productivity tools. ECHO spaces can make it easy to collaborate on local files using Composer.
+
+The key interactions to explore first are drag and drop operations between nodes from different data sources.
+
+Local files:
+
+- users can add a local disk folder to the Composer sidebar next to all the ECHO spaces
+- users can see the contents of those folders in Composer, and examine files by selecting them
+- details about unknown files are presented with a generic metadata presenter (file name, icon? only)
+- users can edit local known plain text files with the PlainText editor
+- users can see syntax highlighting for the file's language if supported (P2)
+- users can edit local markdown files with `MarkdownStackEditor`
+- local disk files require saving to persist
+- display of local folders chosen by users survives composer restart
+  - missing files do not show in the UI on restart (P0)
+  - missing files are shown in a disabled state which can be re-attached to another folder on disk (P3)
+- changes to local disk files live in buffers that survive composer restart (P3)
+- users can view local images in the detail area (P2)
+- users can view local videos in the detail area (P3)
+
+Collaboration:
+
+- users can drag a local file onto an ECHO space, creating a copy of it
+- users can drag a document from an ECHO space onto a local folder, creating a copy of it
+- name collisions are handled by appending/incrementing a number in the name/title `(1)` automatically (P0)
+- name collisions are handled by a dialog choice (overwrite, keep both, cancel) (P2)
+- name collisions can be handled by a merge editor (P3)
+
+Better Collaboration:
+
+When dropping an item, users are presented with a choice when there are more than one applicable actions:
+
+- users can drag a local file onto an ECHO space, creating a sync relationship (P1)
+- users can drag a document from an ECHO space in to a local folder, creating a sync relationship (P1)
+
+Even Better Collaboration:
+
+- users can drag a local file onto a document in an ECHO space, choosing (overwrite, merge, sync, cancel) (P3)
+- users can drag an ECHO document onto a local file, choosing (overwrite, merge, sync, cancel) (P3)
+- users can drag a local folder onto an ECHO space (or subfolder), choosing (overwrite, merge, sync, cancel) (P3)
+- users can drag an ECHO space onto a local folder, choosing (overwrite, merge, sync, cancel) (P3)
