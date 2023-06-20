@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, FolderOpen, FolderSimpleMinus, LockSimpleOpen, Plus } from '@phosphor-icons/react';
+import { ArticleMedium, FolderOpen, LockSimpleOpen } from '@phosphor-icons/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -78,7 +78,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
         const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
 
         return [
-          // TODO(wittjosiah): Open individual files?
+          // TODO(wittjosiah): Full support for individual files.
           // {
           //   id: 'open-file-handle',
           //   label: ['open file label', { ns: 'os' }],
@@ -143,6 +143,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides>({
           //     input.click();
           //   },
           // },
+          // TODO(wittjosiah): Only show this if supported by browser.
           {
             id: 'open-directory',
             label: ['open directory label', { ns: 'os' }],
@@ -207,18 +208,19 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
   });
 
   const grantedActions: GraphNodeAction[] = [
-    {
-      id: 'new-file',
-      label: ['new file label', { ns: 'os' }],
-      icon: Plus,
-      invoke: async () => {},
-    },
-    {
-      id: 'close-directory',
-      label: ['close directory label', { ns: 'os' }],
-      icon: FolderSimpleMinus,
-      invoke: async () => {},
-    },
+    // TODO(wittjosiah): Implement actions.
+    // {
+    //   id: 'new-file',
+    //   label: ['new file label', { ns: 'os' }],
+    //   icon: Plus,
+    //   invoke: async () => {},
+    // },
+    // {
+    //   id: 'close-directory',
+    //   label: ['close directory label', { ns: 'os' }],
+    //   icon: FolderSimpleMinus,
+    //   invoke: async () => {},
+    // },
   ];
 
   const defaultActions: GraphNodeAction[] = [
