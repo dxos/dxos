@@ -21,17 +21,22 @@ import {
   DensityProvider,
   Dialog,
   Toggle,
+  Main,
   useTranslation,
   DropdownMenu,
   Tooltip,
   useJdenticonHref,
 } from '@dxos/aurora';
+import { useTextModel } from '@dxos/aurora-composer';
 import { defaultDescription, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
+import { useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
+import { Surface } from '@dxos/react-surface';
 
-import { DialogRenameSpace } from '../../../SpacePlugin/DialogRenameSpace';
 import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
+import { useDocGhId } from '../../hooks';
+import { EditorViewState } from '../../props';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,
@@ -39,13 +44,13 @@ import {
   SpaceResolverProvider,
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
-import { MarkdownDocument } from '../MarkdownDocument';
-import { EditorViewState } from '../props';
+import { GfmPreview } from './GfmPreview';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
-  const { t } = useTranslation('composer');
+  const identity = useIdentity();
+  const { t } = useTranslation('dxos:github');
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const shell = useShell();
@@ -73,6 +78,14 @@ const EmbeddedLayoutImpl = () => {
   const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
 
   const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
+
+  const textModel = useTextModel({
+    identity,
+    space: space ?? undefined,
+    text: document ? document.content : undefined,
+  });
+
+  const docGhId = useDocGhId(document?.meta?.keys ?? []);
 
   return (
     <>
@@ -140,8 +153,8 @@ const EmbeddedLayoutImpl = () => {
               <Tooltip.Trigger asChild>
                 <DropdownMenu.Trigger asChild disabled={!(space && document)}>
                   <Button>
-                    <span className='sr-only'>{t('embedded options label')}</span>
                     <DotsThreeVertical className={getSize(5)} />
+                    <span className='sr-only'>{t('embedded options label')}</span>
                   </Button>
                 </DropdownMenu.Trigger>
               </Tooltip.Trigger>
@@ -152,17 +165,17 @@ const EmbeddedLayoutImpl = () => {
                     rel='noreferrer'
                     href={
                       space && document
-                        ? `${location.origin}/space/${space?.key.toHex() ?? 'never'}/${document.id}`
+                        ? `${location.origin}/dxos/space/${space?.key.toHex() ?? 'never'}/${document.id}`
                         : '#'
                     }
                   >
-                    <span className='grow'>{t('open in composer label')}</span>
                     <ArrowSquareOut className={mx('shrink-0', getSize(5))} />
+                    <span className='grow'>{t('open in composer label', { ns: 'composer' })}</span>
                   </a>
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator />
                 <DropdownMenu.GroupLabel>
-                  {t('active space label')}
+                  {t('active space label', { ns: 'composer' })}
                   <Avatar.Root size={5} variant='circle'>
                     <div role='none' className='flex gap-1 mlb-1 items-center'>
                       <Avatar.Frame>
@@ -175,7 +188,7 @@ const EmbeddedLayoutImpl = () => {
                   </Avatar.Root>
                 </DropdownMenu.GroupLabel>
                 <DropdownMenu.Item onClick={() => setRenameDialogOpen(true)}>
-                  <span className='grow'>{t('rename space label')}</span>
+                  <span className='grow'>{t('rename space label', { ns: 'composer' })}</span>
                   <PencilSimpleLine className={mx('shrink-0', getSize(5))} />
                 </DropdownMenu.Item>
                 <DropdownMenu.Item onClick={() => setResolverDialogOpen(true)}>
@@ -217,7 +230,16 @@ const EmbeddedLayoutImpl = () => {
           </ButtonGroup>
         </div>
         {space && document ? (
-          <MarkdownDocument {...{ layout: 'embedded', space, document, editorViewState, setEditorViewState }} />
+          editorViewState === 'preview' ? (
+            <Main.Content classNames='min-bs-[100vh] flex flex-col p-0.5'>
+              <GfmPreview
+                markdown={document.content?.toString() ?? ''}
+                {...(docGhId && { owner: docGhId.owner, repo: docGhId.repo })}
+              />
+            </Main.Content>
+          ) : (
+            <Surface role='main' data={[textModel, document, 'embedded']} />
+          )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
             <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
@@ -239,7 +261,7 @@ const EmbeddedLayoutImpl = () => {
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
             <Dialog.Overlay classNames='backdrop-blur'>
               <Dialog.Content>
-                <DialogRenameSpace data={['dxos:SpacePlugin/RenameSpaceDialog', space]} />
+                <Surface role='dialog' data={['dxos:space/RenameSpaceDialog', space]} />
               </Dialog.Content>
             </Dialog.Overlay>
           </Dialog.Root>
