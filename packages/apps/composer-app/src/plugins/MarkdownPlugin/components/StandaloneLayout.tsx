@@ -3,10 +3,10 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { HTMLAttributes, PropsWithChildren } from 'react';
+import React, { HTMLAttributes, PropsWithChildren, RefObject } from 'react';
 
 import { Button, DropdownMenu, ThemeContext, Main, useThemeContext, useTranslation } from '@dxos/aurora';
-import { ComposerModel } from '@dxos/aurora-composer';
+import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
 import { observer } from '@dxos/react-client';
@@ -19,9 +19,11 @@ export const StandaloneLayout = observer(
     children,
     model,
     properties,
+    editorRef,
   }: PropsWithChildren<{
     model: ComposerModel;
     properties: MarkdownProperties;
+    editorRef: RefObject<MarkdownComposerRef>;
   }>) => {
     const { t } = useTranslation('composer');
     const themeContext = useThemeContext();
@@ -54,7 +56,7 @@ export const StandaloneLayout = observer(
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content sideOffset={10} classNames='z-10'>
-                    <Surface data={[model, properties]} role='menuitem' />
+                    <Surface data={[model, properties, editorRef]} role='menuitem' />
                     <DropdownMenu.Arrow />
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>

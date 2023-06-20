@@ -1,11 +1,11 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
+import React, { RefObject, useCallback } from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/aurora';
-import { ComposerModel } from '@dxos/aurora-composer';
+import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { useSplitViewContext } from '@dxos/react-surface';
@@ -16,7 +16,8 @@ import { GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const MarkdownActions = ({ data }: { data: any }) => {
-  const [model, properties]: [ComposerModel, MarkdownProperties] = data;
+  const [model, properties, editorRef]: [ComposerModel, MarkdownProperties, RefObject<MarkdownComposerRef>] = data;
+  const ghId = properties.keys?.find((key) => key.source === 'com.github')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('plugin-github');
   const splitView = useSplitViewContext();
@@ -39,7 +40,7 @@ export const MarkdownActions = ({ data }: { data: any }) => {
         const {
           data: { html_url: issueUrl },
         } = await updateIssueContent();
-        splitView.dialogContent = ['dxos:githubPlugin/ExportDialog', ['response', issueUrl], model, properties];
+        splitView.dialogContent = ['dxos:githubPlugin/ExportDialog', ['response', issueUrl], model, docGhId];
         splitView.dialogOpen = true;
       } catch (err) {
         log.error('Failed to export to Github issue');
@@ -53,7 +54,7 @@ export const MarkdownActions = ({ data }: { data: any }) => {
     if ('issueNumber' in docGhId!) {
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
-      splitView.dialogContent = ['dxos:githubPlugin/ExportDialog', ['create-pr', null], model, properties];
+      splitView.dialogContent = ['dxos:githubPlugin/ExportDialog', ['create-pr', null], model, docGhId];
       splitView.dialogOpen = true;
     }
   }, [exportGhIssueContent, docGhId]);
@@ -63,9 +64,28 @@ export const MarkdownActions = ({ data }: { data: any }) => {
       <DropdownMenu.GroupLabel>{t('markdown actions label')}</DropdownMenu.GroupLabel>
       {docGhId ? (
         <>
+          <DropdownMenu.Item
+            classNames='gap-2'
+            disabled={!docGhId}
+            onClick={() => {
+              splitView.dialogContent = ['dxos:githubPlugin/ImportDialog', docGhId, editorRef];
+              splitView.dialogOpen = true;
+            }}
+          >
+            <span className='grow'>{t('import from github label')}</span>
+            <FileArrowDown className={getSize(4)} />
+          </DropdownMenu.Item>
           <DropdownMenu.Item classNames='gap-2' disabled={!docGhId} onClick={() => docGhId && handleGhExport()}>
             <span className='grow'>{t('export to github label')}</span>
             <FileArrowUp className={getSize(4)} />
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild classNames='gap-2' disabled={!ghId}>
+            <a
+              {...(ghId ? { href: `https://github.com/${ghId}`, target: '_blank', rel: 'noreferrer' } : { href: '#' })}
+            >
+              <span className='grow'>{t('open in github label')}</span>
+              <ArrowSquareOut className={getSize(4)} />
+            </a>
           </DropdownMenu.Item>
           <DropdownMenu.Item
             classNames='gap-2'

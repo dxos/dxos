@@ -10,6 +10,7 @@ import { definePlugin, PluginDefinition } from '@dxos/react-surface';
 import { isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
 import { MarkdownActions, OctokitProvider, PatInput } from './components';
 import { ExportDialog } from './components/ExportDialog';
+import { ImportDialog } from './components/ImportDialog';
 import { UrlDialog } from './components/UrlDialog';
 import translations from './translations';
 
@@ -30,6 +31,8 @@ export const GithubPlugin: PluginDefinition = definePlugin({
               return UrlDialog;
             case Array.isArray(datum) && datum[0] === 'dxos:githubPlugin/ExportDialog':
               return ExportDialog;
+            case Array.isArray(datum) && datum[0] === 'dxos:githubPlugin/ImportDialog':
+              return ImportDialog;
             default:
               return null;
           }

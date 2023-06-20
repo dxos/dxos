@@ -47,6 +47,8 @@ export default [
         'preview gfm label': 'Preview Markdown',
         'exit gfm preview label': 'Exit preview',
         'save and close label': 'Save & close',
+        'export to github label': 'Export to GitHub',
+        'import from github label': 'Import from GitHub',
       },
     },
   },

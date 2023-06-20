@@ -18,8 +18,6 @@ export const composer = {
   'import from file label': 'Upload',
   'export to markdown label': 'Export to Markdown',
   'import from markdown label': 'Import from Markdown',
-  'export to github label': 'Export to GitHub',
-  'import from github label': 'Import from GitHub',
   'confirm import title': 'Overwrite this document’s content?',
   'confirm restore title': 'Overwrite files in this space?',
   'confirm import body':

@@ -4,22 +4,20 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Button, Trans, useTranslation } from '@dxos/aurora';
+import { Button, Dialog, Trans, useTranslation } from '@dxos/aurora';
 import { ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
-import { MarkdownProperties } from '../../MarkdownPlugin/components';
-import { useDocGhId } from '../hooks';
-import { ExportViewState, GhFileIdentifier } from '../props';
+import { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const ExportDialog = ({ data }: { data: any }) => {
-  const [_, [initialExportViewState, initialResponseUrl], model, properties]: [
+  const [_, [initialExportViewState, initialResponseUrl], model, docGhId]: [
     string,
     [ExportViewState, string | null],
     ComposerModel,
-    MarkdownProperties,
+    GhIdentifier,
   ] = data;
   const content = model.content;
 
@@ -29,7 +27,6 @@ export const ExportDialog = ({ data }: { data: any }) => {
   const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(initialResponseUrl);
   const [ghBranchValue, setGhBranchValue] = useState('');
   const [ghMessageValue, setGhMessageValue] = useState('');
-  const docGhId = useDocGhId(properties.keys ?? []);
 
   const exportGhFileContent = useCallback(async () => {
     if (octokit && docGhId && 'path' in docGhId && content) {
@@ -88,6 +85,7 @@ export const ExportDialog = ({ data }: { data: any }) => {
 
   return (
     <>
+      <Dialog.Title>{t('confirm export title')}</Dialog.Title>
       {exportViewState === 'response' ? (
         <>
           <p>
@@ -113,9 +111,11 @@ export const ExportDialog = ({ data }: { data: any }) => {
             />
           </p>
           <div role='none' className='flex justify-end'>
-            <Button variant='primary' onClick={() => setExportViewState(null)}>
-              {t('done label', { ns: 'os' })}
-            </Button>
+            <Dialog.Close asChild>
+              <Button variant='primary' onClick={() => setExportViewState(null)}>
+                {t('done label', { ns: 'os' })}
+              </Button>
+            </Dialog.Close>
           </div>
         </>
       ) : (
@@ -137,7 +137,9 @@ export const ExportDialog = ({ data }: { data: any }) => {
             size='textarea'
           />
           <div role='none' className='flex justify-end gap-2'>
-            <Button onClick={() => setExportViewState(null)}>{t('close label', { ns: 'os' })}</Button>
+            <Dialog.Close asChild>
+              <Button onClick={() => setExportViewState(null)}>{t('close label', { ns: 'os' })}</Button>
+            </Dialog.Close>
             <Button disabled={exportViewState === 'pending'} variant='primary' onClick={() => exportGhFileContent()}>
               {t('continue label', { ns: 'os' })}
             </Button>

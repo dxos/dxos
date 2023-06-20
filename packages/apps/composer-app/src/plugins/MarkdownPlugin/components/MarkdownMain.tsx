@@ -38,7 +38,7 @@ export const MarkdownMain = ({
 
   return (
     <>
-      <Root properties={properties} model={model}>
+      <Root properties={properties} model={model} editorRef={editorRef}>
         <MarkdownComposer
           ref={editorRef}
           model={model}
