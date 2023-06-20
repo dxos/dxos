@@ -338,6 +338,7 @@ importers:
 
   packages/apps/composer-app:
     specifiers:
+      '@braneframe/plugin-client': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -386,6 +387,7 @@ importers:
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
+      '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
@@ -537,6 +539,54 @@ importers:
       vite: 4.3.9_@types+node@18.11.9
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
+
+  packages/apps/plugins/plugin-client:
+    specifiers:
+      '@dxos/config': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+    devDependencies:
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-stack:
+    specifiers:
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/types': link:../../types
+      '@dxos/observable-object': link:../../../common/observable-object
+    devDependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
 
   packages/apps/quickstart:
     specifiers:
@@ -4541,7 +4591,6 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/log': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
@@ -4555,7 +4604,6 @@ importers:
       react-router: ^6.4.0
       react-router-dom: ^6.4.0
     dependencies:
-      '@dxos/config': link:../config
       '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-client': link:../react-client
       react-router: 6.4.2_react@18.2.0
