@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, FolderOpen, LockSimpleOpen } from '@phosphor-icons/react';
+import { ArticleMedium, FloppyDisk, FolderOpen, LockSimpleOpen } from '@phosphor-icons/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -32,6 +32,26 @@ export type LocalFile = {
 const nodes = createStore<GraphNode<LocalFile>[]>([]);
 const store = createStore<{ current: GraphNode<LocalFile> | undefined }>();
 
+const handleKeyDown = async (event: KeyboardEvent) => {
+  const modifier = event.ctrlKey || event.metaKey;
+  if (event.key === 's' && modifier && store.current) {
+    event.preventDefault();
+    await handleSave(store.current);
+  }
+};
+
+const handleSave = async (node: GraphNode<LocalFile>) => {
+  const handle = node.data?.handle as any;
+  if (!handle) {
+    return;
+  }
+
+  const writeable = await handle.createWritable();
+  await writeable.write(node.data!.text);
+  await writeable.close();
+  node.attributes = { ...node.attributes, modified: false };
+};
+
 export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides;
 
 const isLocalFile = (datum: unknown): datum is LocalFile =>
@@ -54,6 +74,8 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
     };
   },
   ready: async (plugins) => {
+    window.addEventListener('keydown', handleKeyDown);
+
     const value = await localforage.getItem<FileSystemDirectoryHandle[]>(LocalFilesPlugin.meta.id);
     if (Array.isArray(value)) {
       await Promise.all(
@@ -84,6 +106,9 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
       });
       handle.update([treeViewPlugin.provides.treeView, nodes, ...Array.from(nodes)]);
     }
+  },
+  unload: async () => {
+    window.removeEventListener('keydown', handleKeyDown);
   },
   provides: {
     component: (datum, role) => {
@@ -296,19 +321,28 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
     }
 
     const file = await child.getFile();
-    children.push(
-      createStore<GraphNode<LocalFile>>({
-        id: child.name.replaceAll(/\.| /g, '-'),
-        label: child.name,
-        icon: ArticleMedium,
-        parent,
-        data: {
-          handle,
-          title: child.name,
-          text: await file.text(),
+    const node = createStore<GraphNode<LocalFile>>({
+      id: child.name.replaceAll(/\.| /g, '-'),
+      label: child.name,
+      icon: ArticleMedium,
+      parent,
+      data: {
+        handle: child,
+        title: child.name,
+        text: await file.text(),
+      },
+      actions: [
+        {
+          id: 'save',
+          label: ['save label', { ns: 'os' }],
+          icon: FloppyDisk,
+          invoke: async () => {
+            await handleSave(node);
+          },
         },
-      }),
-    );
+      ],
+    });
+    children.push(node);
   }
 
   return children;
