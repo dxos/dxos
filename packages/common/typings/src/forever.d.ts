@@ -104,4 +104,6 @@ declare module 'forever' {
    * @param callback Continuation to respond to when complete.
    */
   export const list: (format: boolean, callback: (err: Error, processes: ForeverProcess[]) => void) => void;
+
+  export const kill: (pid: number, killTree?: boolean, signal?: string, callback?: () => any) => void;
 }
