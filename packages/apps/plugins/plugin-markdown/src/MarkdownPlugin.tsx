@@ -3,8 +3,7 @@
 //
 
 import { ComposerModel } from '@dxos/aurora-composer';
-import { TypedObject } from '@dxos/echo-schema';
-import { ObservableObject } from '@dxos/observable-object';
+import { subscribe } from '@dxos/observable-object';
 import { PluginDefinition, definePlugin } from '@dxos/react-surface';
 import { YText } from '@dxos/text-model';
 
@@ -20,7 +19,7 @@ export const isMarkdown = (datum: unknown): datum is ComposerModel =>
     : false;
 
 export const isMarkdownProperties = (datum: unknown): datum is MarkdownProperties =>
-  datum instanceof TypedObject || datum instanceof ObservableObject;
+  datum ? typeof datum === 'object' && subscribe in datum : false;
 
 // TODO(wittjosiah): This explicit type should not be necessary, should be inferred from `definePlugin`.
 export const MarkdownPlugin: PluginDefinition = definePlugin({

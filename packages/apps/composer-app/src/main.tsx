@@ -8,6 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import {
@@ -22,7 +23,6 @@ import {
 import {
   // LocalFilesPlugin,
   GithubPlugin,
-  MarkdownPlugin,
   SpacePlugin,
 } from './plugins';
 

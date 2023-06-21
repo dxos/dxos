@@ -1,0 +1,58 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-markdown/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/plugins/plugin-markdown/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-markdown/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-markdown/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-markdown/src/index.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-markdown/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-markdown/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-markdown/.storybook"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

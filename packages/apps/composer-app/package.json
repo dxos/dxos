@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
