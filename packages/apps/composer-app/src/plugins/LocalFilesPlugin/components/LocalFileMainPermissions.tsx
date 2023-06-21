@@ -8,10 +8,10 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { GraphNode } from '@dxos/react-surface';
 
-import { LocalFile } from '../LocalFilesPlugin';
+import { LocalFile, LocalFilesPlugin } from '../LocalFilesPlugin';
 
 export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalFile> }) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(LocalFilesPlugin.meta.id);
   const action = data.actions?.find(({ id }) => id === 're-open');
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArticleMedium, File, FloppyDisk, FolderOpen, LockSimpleOpen, X } from '@phosphor-icons/react';
+import { File as FileIcon, FilePlus, FloppyDisk, FolderPlus, Plugs, X } from '@phosphor-icons/react';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -154,8 +154,8 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
         const actions: GraphNodeAction[] = [
           {
             id: 'open-file-handle',
-            label: ['open file label', { ns: 'os' }],
-            icon: File,
+            label: ['open file label', { ns: LocalFilesPlugin.meta.id }],
+            icon: FilePlus,
             invoke: async () => {
               if ('showOpenFilePicker' in window) {
                 const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
@@ -197,8 +197,8 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
         if ('showDirectoryPicker' in window) {
           actions.push({
             id: 'open-directory',
-            label: ['open directory label', { ns: 'os' }],
-            icon: FolderOpen,
+            label: ['open directory label', { ns: LocalFilesPlugin.meta.id }],
+            icon: FolderPlus,
             invoke: async () => {
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const node = await handleDirectory(handle);
@@ -260,7 +260,7 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
 
   const closeAction: GraphNodeAction = {
     id: 'close-directory',
-    label: ['close directory label', { ns: 'os' }],
+    label: ['close directory label', { ns: LocalFilesPlugin.meta.id }],
     icon: X,
     invoke: async () => {
       const index = nodes.indexOf(node);
@@ -273,8 +273,8 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
   const defaultActions: GraphNodeAction[] = [
     {
       id: 're-open',
-      label: ['re-open directory label', { ns: 'os' }],
-      icon: LockSimpleOpen,
+      label: ['re-open directory label', { ns: LocalFilesPlugin.meta.id }],
+      icon: Plugs,
       invoke: async () => {
         const result = await handle.requestPermission({ mode: 'readwrite' });
         if (result === 'granted' && node.actions) {
@@ -313,7 +313,7 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
     const node = createStore<GraphNode<LocalFile>>({
       id: child.name.replaceAll(/\.| /g, '-'),
       label: child.name,
-      icon: ArticleMedium,
+      icon: FileIcon,
       parent,
       data: {
         handle: child,
@@ -349,13 +349,13 @@ const handleFile = async (handle: any /* FileSystemFileHandle */) => {
   const node = createStore<GraphNode<LocalFile>>({
     id,
     label: handle.name,
-    icon: ArticleMedium,
+    icon: FileIcon,
     data,
   });
 
   const closeAction: GraphNodeAction = {
     id: 'close-directory',
-    label: ['close file label', { ns: 'os' }],
+    label: ['close file label', { ns: LocalFilesPlugin.meta.id }],
     icon: X,
     invoke: async () => {
       const index = nodes.indexOf(node);
@@ -366,7 +366,7 @@ const handleFile = async (handle: any /* FileSystemFileHandle */) => {
   const grantedActions: GraphNodeAction[] = [
     {
       id: 'save',
-      label: ['save label', { ns: 'os' }],
+      label: ['save label', { ns: LocalFilesPlugin.meta.id }],
       icon: FloppyDisk,
       invoke: async () => {
         await handleSave(node);
@@ -378,8 +378,8 @@ const handleFile = async (handle: any /* FileSystemFileHandle */) => {
   const defaultActions: GraphNodeAction[] = [
     {
       id: 're-open',
-      label: ['re-open directory label', { ns: 'os' }],
-      icon: LockSimpleOpen,
+      label: ['re-open file label', { ns: LocalFilesPlugin.meta.id }],
+      icon: Plugs,
       invoke: async () => {
         const result = await handle.requestPermission({ mode: 'readwrite' });
         if (result === 'granted' && node.actions) {
@@ -422,7 +422,7 @@ const handleLegacyFile = async (file: File) => {
   const node = createStore<GraphNode<LocalFile>>({
     id,
     label: file.name,
-    icon: ArticleMedium,
+    icon: FileIcon,
     data: {
       title: file.name,
       text,
@@ -430,7 +430,7 @@ const handleLegacyFile = async (file: File) => {
     actions: [
       {
         id: 'save-as',
-        label: ['save as label', { ns: 'os' }],
+        label: ['save as label', { ns: LocalFilesPlugin.meta.id }],
         icon: FloppyDisk,
         invoke: async () => {
           await handleSave(node);
@@ -438,7 +438,7 @@ const handleLegacyFile = async (file: File) => {
       },
       {
         id: 'close-directory',
-        label: ['close file label', { ns: 'os' }],
+        label: ['close file label', { ns: LocalFilesPlugin.meta.id }],
         icon: X,
         invoke: async () => {
           const index = nodes.indexOf(node);

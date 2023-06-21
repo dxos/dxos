@@ -74,7 +74,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
           >
             <Tooltip.Portal>
               <Tooltip.Content classNames='z-[31]' side='bottom'>
-                {t('space options label')}
+                {t('tree branch options label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>
             </Tooltip.Portal>

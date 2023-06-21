@@ -80,7 +80,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
       >
         <Tooltip.Portal>
           <Tooltip.Content classNames='z-[31]' side='bottom'>
-            {t('document options label')}
+            {t('tree leaf options label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
