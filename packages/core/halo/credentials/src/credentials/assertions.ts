@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { TypedMessage } from '@dxos/protocols';
+import { TYPES, TypedMessage } from '@dxos/protocols';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const getCredentialAssertion = (credential: Credential): TypedMessage => credential.subject.assertion;
@@ -22,3 +22,8 @@ export const isValidAuthorizedDeviceCredential = (
     assertion.deviceKey.equals(deviceKey)
   );
 };
+
+export type SpecificCredential<T> = Omit<Credential, 'subject'> & { subject: Omit<Credential['subject'], 'assertion'> & { assertion: T } };
+
+export const checkCredentialType = <K extends keyof TYPES>(credential: Credential, type: K): credential is SpecificCredential<TYPES[K]> =>
+  credential.subject.assertion['@type'] === type;

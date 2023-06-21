@@ -19,11 +19,16 @@ import { randomInt, range } from '@dxos/util';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
+import { getReader } from '../analysys';
 
 export type EchoTestSpec = {
   agents: number;
   duration: number;
   iterationDelay: number;
+
+  epochPeriod: number;
+
+  measureNewAgentSyncTime: boolean;
 
   insertionSize: number;
   operationCount: number;
@@ -144,7 +149,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         lastTime = Date.now();
         const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-        log.info('stats', { lag, mutationsPerSec, agentIdx });
+        const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+
+        log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
+        log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog)
 
         for (const _ of range(spec.operationCount)) {
           // TODO: extract size and random seed
@@ -158,6 +166,11 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         }
 
         await space.db.flush();
+
+        if(agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
+          await space.internal.createEpoch();
+        }
+
         iter++;
       },
       spec.iterationDelay,
@@ -169,6 +182,14 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
+
+    // const reader = getReader(results);
+    // for await(const entry of reader) {
+    //   switch(entry.message) {
+    //     case 'dxos.test.echo.stats':
+    //       console.log(entry.context)
+    //   }
+    // }
   }
 }
 
@@ -177,3 +198,11 @@ const serializeTimeframe = (timeframe: Timeframe) =>
 
 const deserializeTimeframe = (timeframe: string) =>
   new Timeframe(Object.entries(JSON.parse(timeframe)).map(([k, v]) => [PublicKey.from(k), v as number]));
+
+
+type StatsLog = {
+  lag: number;
+  mutationsPerSec: number;
+  epoch: number;
+  agentIdx: number;
+}
