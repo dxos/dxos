@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
-import { Button, useTranslation, randomString } from '@dxos/aurora';
-import { ObservableArray, subscribe } from '@dxos/observable-object';
+import { Main, Input, List, Button, useTranslation, randomString } from '@dxos/aurora';
+import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
@@ -15,6 +15,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const { t } = useTranslation('dxos:stack');
   const [_, setIter] = useState([]);
   useEffect(() => {
+    // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
     return sections[subscribe](() => setIter([])) as () => void;
   }, []);
   return (
@@ -54,13 +55,21 @@ export const StackMain = ({
 }: {
   data: [stack: StackModel, properties: StackProperties];
 }) => {
-  const sections = useMemo(() => {
-    if (subscribe in stack.sections) {
-      return stack.sections as ObservableArray<StackSectionModel>;
-    } else {
-      return new ObservableArray<StackSectionModel>(...stack.sections);
-    }
-  }, [stack]);
-
-  return <StackMainImpl sections={sections} />;
+  const { t } = useTranslation('dxos:stack');
+  return (
+    <Main.Content classNames='min-bs-[100vh] mli-auto max-is-[60rem] bg-white dark:bg-neutral-925'>
+      <Input.Root>
+        <Input.Label srOnly>{t('stack title label')}</Input.Label>
+        <Input.TextInput
+          variant='subdued'
+          classNames='p-2'
+          defaultValue={properties.title}
+          onChange={({ target: { value } }) => (properties.title = value)}
+        />
+      </Input.Root>
+      <List>
+        <StackMainImpl sections={stack.sections} />
+      </List>
+    </Main.Content>
+  );
 };

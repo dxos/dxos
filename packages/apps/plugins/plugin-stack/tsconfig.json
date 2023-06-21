@@ -24,9 +24,6 @@
       "path": "../../../common/observable-object"
     },
     {
-      "path": "../../../core/echo/echo-schema"
-    },
-    {
       "path": "../../../sdk/react-surface"
     },
     {

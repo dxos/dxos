@@ -565,7 +565,6 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/echo-schema': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -575,7 +574,6 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/observable-object': link:../../../common/observable-object
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
