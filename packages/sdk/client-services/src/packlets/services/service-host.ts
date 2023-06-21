@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
+import { clientServiceBundle, ClientServices, createDefaultModelFactory, DX_RUNTIME } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
@@ -27,6 +27,8 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
+import { NodeResourceLock } from './node-resource-lock';
+import { ResourceLock } from './resource-lock';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -54,7 +56,7 @@ export type InitializeOptions = {
  * Remote service implementation.
  */
 export class ClientServicesHost {
-  private readonly _resourceLock?: VaultResourceLock;
+  private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
@@ -89,15 +91,26 @@ export class ClientServicesHost {
     }
 
     this._resourceLock = lockKey
-      ? new VaultResourceLock({
-          lockKey,
-          onAcquire: () => {
-            if (!this._opening) {
-              void this.open();
-            }
-          },
-          onRelease: () => this.close(),
-        })
+      ? typeof window !== 'undefined'
+        ? new VaultResourceLock({
+            lockKey,
+            onAcquire: () => {
+              if (!this._opening) {
+                void this.open();
+              }
+            },
+            onRelease: () => this.close(),
+          })
+        : new NodeResourceLock({
+            path: DX_RUNTIME,
+            lockKey,
+            onAcquire: () => {
+              if (!this._opening) {
+                void this.open();
+              }
+            },
+            onRelease: () => this.close(),
+          })
       : undefined;
 
     this._systemService = new SystemServiceImpl({

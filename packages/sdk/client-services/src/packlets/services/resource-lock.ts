@@ -15,6 +15,8 @@ export type ResourceLockOptions = {
  * For example, start only one `ServicesHost` at a time.
  */
 export interface ResourceLock {
+  lockKey: string;
+
   acquire(): Promise<void>;
 
   release(): Promise<void>;
