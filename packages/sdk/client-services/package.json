@@ -47,7 +47,9 @@
     "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@types/lockfile": "^1.0.2",
+    "lockfile": "^1.0.4"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
