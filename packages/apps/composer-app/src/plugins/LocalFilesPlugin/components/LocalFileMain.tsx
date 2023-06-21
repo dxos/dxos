@@ -33,7 +33,7 @@ export const LocalFileMain = observer(() => {
         : node?.data
         ? node.data
         : null,
-    [node?.id, node?.data, node?.attributes],
+    [node?.data],
   );
 
   return <Surface role='main' data={data} />;

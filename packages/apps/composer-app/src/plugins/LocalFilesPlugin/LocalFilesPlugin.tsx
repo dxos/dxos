@@ -323,7 +323,7 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
       actions: [
         {
           id: 'save',
-          label: ['save label', { ns: 'os' }],
+          label: ['save label', { ns: LocalFilesPlugin.meta.id }],
           icon: FloppyDisk,
           invoke: async () => {
             await handleSave(node);
