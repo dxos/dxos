@@ -65,15 +65,10 @@ const config: UserConfig = defineUserConfig({
       },
       {
         text: 'Blog',
-        link: '/blog/'
+        link: '//blog.dxos.org'
       }
     ],
     plugins: {
-      blog: {
-        filter(page) {
-          return /blog\//.test(page.data.path);
-        }
-      },
       mdEnhance: {
         codetabs: true,
         sub: true,

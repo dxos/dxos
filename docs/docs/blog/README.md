@@ -1,4 +1,0 @@
----
-layout: BlogHome
-home: true
----
