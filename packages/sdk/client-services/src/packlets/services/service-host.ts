@@ -102,7 +102,7 @@ export class ClientServicesHost {
             onRelease: () => this.close(),
           })
         : new NodeResourceLock({
-            path: DX_RUNTIME,
+            root: DX_RUNTIME,
             lockKey,
             onAcquire: () => {
               if (!this._opening) {

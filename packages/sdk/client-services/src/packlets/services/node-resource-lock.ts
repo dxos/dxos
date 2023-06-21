@@ -11,18 +11,18 @@ import { log, logInfo } from '@dxos/log';
 import { ResourceLock, ResourceLockOptions } from '../services';
 
 export type NodeResourceLockOptions = ResourceLockOptions & {
-  path: string;
+  root: string;
 };
 
 export class NodeResourceLock implements ResourceLock {
-  private readonly _path: string;
+  private readonly _root: string;
   private readonly _lockKey: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];
   private readonly _onRelease: ResourceLockOptions['onRelease'];
   private _releaseTrigger = new Trigger();
 
-  constructor({ path, lockKey, onAcquire, onRelease }: NodeResourceLockOptions) {
-    this._path = path;
+  constructor({ root, lockKey, onAcquire, onRelease }: NodeResourceLockOptions) {
+    this._root = root;
     this._lockKey = lockKey;
     this._onAcquire = onAcquire;
     this._onRelease = onRelease;
@@ -52,6 +52,9 @@ export class NodeResourceLock implements ResourceLock {
   }
 
   private _getLockFilePath() {
-    return path.join(this._path, this._lockKey);
+    return path.join(this._root, this._lockKey);
   }
 }
+
+export const isLocked = ({ lockKey, root }: { lockKey: string; root: string }) =>
+  lockfile.checkSync(path.join(root, lockKey));
