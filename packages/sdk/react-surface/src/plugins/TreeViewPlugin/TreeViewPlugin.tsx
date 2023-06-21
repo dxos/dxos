@@ -73,7 +73,7 @@ export const TreeViewContainer = observer(() => {
             <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain'>
               {Object.entries(graph.roots).map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
-                  <TreeItem.Heading classNames='sr-only'>{key}</TreeItem.Heading>
+                  <TreeItem.Heading classNames='pl-2'>{t('plugin name', { ns: key })}</TreeItem.Heading>
                   <TreeView key={key} items={items} parent={key} />
                 </TreeItem.Root>
               ))}

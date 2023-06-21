@@ -18,10 +18,12 @@ import {
   definePlugin,
   findPlugin,
   findGraphNode,
+  TranslationsProvides,
 } from '@dxos/react-surface';
 
 import { MarkdownProvides } from '../MarkdownPlugin';
 import { LocalFileMain, LocalFileMainPermissions } from './components';
+import translations from './translations';
 
 export type LocalFile = {
   handle?: FileSystemFileHandle | FileSystemDirectoryHandle;
@@ -65,7 +67,7 @@ const handleLegacySave = (node: GraphNode<LocalFile>) => {
   document.body.removeChild(a);
 };
 
-export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides;
+export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
 
 const isLocalFile = (datum: unknown): datum is LocalFile =>
   datum && typeof datum === 'object' ? 'title' in datum : false;
@@ -129,6 +131,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
     window.removeEventListener('keydown', handleKeyDown);
   },
   provides: {
+    translations,
     component: (datum, role) => {
       switch (role) {
         case 'main':
