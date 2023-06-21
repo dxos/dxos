@@ -5,27 +5,22 @@
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
-import { MaybePromise } from '@dxos/util';
+
+import { ResourceLock, ResourceLockOptions } from '../services';
 
 enum Message {
   ACQUIRING = 'acquiring',
 }
 
-export type VaultResourceLockOptions = {
-  lockKey: string;
-  onAcquire?: () => MaybePromise<void>;
-  onRelease?: () => MaybePromise<void>;
-};
-
 // TODO(burdon): Extend to support locking for web and NodeJS (use npm lockfile). Use to lock agents.
-export class VaultResourceLock {
+export class VaultResourceLock implements ResourceLock {
   private readonly _broadcastChannel = new BroadcastChannel('vault-resource-lock');
   private readonly _lockKey: string;
-  private readonly _onAcquire: VaultResourceLockOptions['onAcquire'];
-  private readonly _onRelease: VaultResourceLockOptions['onRelease'];
+  private readonly _onAcquire: ResourceLockOptions['onAcquire'];
+  private readonly _onRelease: ResourceLockOptions['onRelease'];
   private _releaseTrigger = new Trigger();
 
-  constructor({ lockKey, onAcquire, onRelease }: VaultResourceLockOptions) {
+  constructor({ lockKey, onAcquire, onRelease }: ResourceLockOptions) {
     this._lockKey = lockKey;
     this._onAcquire = onAcquire;
     this._onRelease = onRelease;
