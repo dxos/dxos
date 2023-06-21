@@ -35,26 +35,25 @@ export class NodeResourceLock implements ResourceLock {
 
   async acquire() {
     log('acquiring lock...');
-    if (lockfile.checkSync(this._getLockFilePath())) {
+    if (lockfile.checkSync(getLockFilePath({ root: this._root, lockKey: this._lockKey }))) {
       throw new Error(`Lock already acquired: ${this._lockKey}`);
     }
-    lockfile.lockSync(this._getLockFilePath());
+    lockfile.lockSync(getLockFilePath({ root: this._root, lockKey: this._lockKey }));
     await this._onAcquire?.();
     log('acquired lock');
   }
 
   async release() {
-    if (!lockfile.checkSync(this._getLockFilePath())) {
+    if (!lockfile.checkSync(getLockFilePath({ root: this._root, lockKey: this._lockKey }))) {
       throw new Error(`Lock already acquired: ${this._lockKey}`);
     }
-    lockfile.unlockSync(this._getLockFilePath());
+    lockfile.unlockSync(getLockFilePath({ root: this._root, lockKey: this._lockKey }));
     await this._onRelease?.();
   }
-
-  private _getLockFilePath() {
-    return path.join(this._root, this._lockKey);
-  }
 }
+const getLockFilePath = ({ lockKey, root }: { lockKey: string; root: string }) => {
+  return path.join(root, `${lockKey}.lock`);
+};
 
 export const isLocked = ({ lockKey, root }: { lockKey: string; root: string }) =>
-  lockfile.checkSync(path.join(root, lockKey));
+  lockfile.checkSync(getLockFilePath({ lockKey, root }));
