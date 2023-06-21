@@ -38,11 +38,15 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1', disabled && defaultDisabled]}
-      {...(disabled && { 'aria-disabled': true })}
+      classNames='mbe-1'
     >
       <div role='none' className='flex mis-1 items-start'>
-        <TreeItem.OpenTrigger disabled={disabled} {...(!sidebarOpen && { tabIndex: -1 })}>
+        <TreeItem.OpenTrigger
+          disabled={disabled}
+          classNames={[disabled && defaultDisabled]}
+          {...(disabled && { 'aria-disabled': true })}
+          {...(!sidebarOpen && { tabIndex: -1 })}
+        >
           <OpenTriggerIcon
             {...(hasActiveDocument && !open
               ? { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' }
@@ -55,7 +59,9 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
             'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
             error && 'text-error-700 dark:text-error-300',
             !disabled && 'cursor-pointer',
+            disabled && defaultDisabled,
           ]}
+          {...(disabled && { 'aria-disabled': true })}
           onClick={() => setOpen(!open)}
         >
           {Array.isArray(node.label) ? t(...node.label) : node.label}
