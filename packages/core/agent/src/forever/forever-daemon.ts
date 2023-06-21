@@ -20,7 +20,7 @@ export class ForeverDaemon implements Daemon {
   private readonly _rootDir: string;
 
   constructor(rootDir: string) {
-    this._rootDir = path.join(rootDir, 'forever');
+    this._rootDir = path.join(rootDir);
   }
 
   async connect(): Promise<void> {
@@ -56,7 +56,7 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      if (isLocked({ lockKey: profile, root: DX_RUNTIME })) {
+      if (isLocked({ lockKey: profile, root: path.join(this._rootDir, 'profile', profile) })) {
         throw new Error(`Profile is locked: ${profile}`);
       }
 
@@ -92,7 +92,7 @@ export class ForeverDaemon implements Daemon {
     if (await this.isRunning(profile)) {
       forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
       await waitFor({
-        condition: async () => !isLocked({ lockKey: profile, root: DX_RUNTIME }),
+        condition: async () => !isLocked({ lockKey: profile, root: path.join(this._rootDir, 'profile', profile) }),
       });
     }
 

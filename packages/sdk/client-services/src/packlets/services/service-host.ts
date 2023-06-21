@@ -3,6 +3,7 @@
 //
 
 import assert from 'node:assert';
+import path from 'node:path';
 
 import { Event } from '@dxos/async';
 import { clientServiceBundle, ClientServices, createDefaultModelFactory, DX_RUNTIME } from '@dxos/client-protocol';
@@ -102,7 +103,7 @@ export class ClientServicesHost {
             onRelease: () => this.close(),
           })
         : new NodeResourceLock({
-            root: DX_RUNTIME,
+            root: path.join(DX_RUNTIME, 'agent', 'profile', lockKey),
             lockKey,
             onAcquire: () => {
               if (!this._opening) {
