@@ -9,14 +9,13 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Create extends BaseCommand {
+export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create space.';
   static override args = { name: Args.string() };
 
   async run(): Promise<any> {
-    const { args } = await this.parse(Create);
-    let { name } = args;
+    let { name } = this.args;
     if (!name) {
       // TODO(burdon): Move to v7: https://v6.fakerjs.dev/migration-guide-v5
       name = `${faker.commerce.productName().toLowerCase().replace(/\s/g, '-')}`;

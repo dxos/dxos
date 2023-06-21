@@ -4,15 +4,14 @@
 
 import { BaseCommand } from '../../base-command';
 
-export default class Start extends BaseCommand {
+export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
   static override description = 'Start agent daemon.';
 
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
-      const params = await this.parse(Start);
-      const process = await daemon.start(params.flags.profile);
-      this.log('Started:', process);
+      await daemon.start(this.flags.profile);
+      this.log('Agent started');
     });
   }
 }

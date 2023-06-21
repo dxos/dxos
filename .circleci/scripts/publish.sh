@@ -37,6 +37,7 @@ for APP in "${APPS[@]}"; do
       --verbose
   elif [ $BRANCH = "staging" ]; then
     export DX_ENVIRONMENT=staging
+    export REMOTE_SOURCE=https://halo.staging.dxos.org/vault.html
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config-staging.yml"
     VERSION=$(cat package.json | jq -r ".version")
 
@@ -47,6 +48,7 @@ for APP in "${APPS[@]}"; do
       --verbose
   else
     export DX_ENVIRONMENT=development
+    export REMOTE_SOURCE=https://halo.dev.dxos.org/vault.html
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config-dev.yml"
 
     $ROOT/packages/devtools/cli/bin/run app publish \

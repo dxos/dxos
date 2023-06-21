@@ -44,4 +44,4 @@ jobs:
           git checkout $BRANCH
           git checkout staging
           git reset --hard $BRANCH
-          git push --force staging
+          git push --force

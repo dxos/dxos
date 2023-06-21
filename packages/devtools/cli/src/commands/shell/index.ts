@@ -6,7 +6,7 @@ import { ux, run } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Shell extends BaseCommand {
+export default class Shell extends BaseCommand<typeof Shell> {
   static override description = 'Interactive shell.';
 
   // BaseCommand handler is also called.
