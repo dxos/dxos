@@ -3,3 +3,4 @@
 //
 
 export * from './MarkdownMain';
+export * from './StandaloneLayout';

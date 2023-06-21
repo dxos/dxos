@@ -19,7 +19,7 @@ export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalFile> 
         role='alert'
         className={mx(
           defaultDescription,
-          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
+          'border border-dashed border-neutral-400/50 rounded-xl flex flex-col space-items-evenly justify-center p-8 font-system-normal text-lg',
         )}
       >
         {t('missing file permissions')}

@@ -9,9 +9,9 @@ import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/react-client';
 import { definePlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
-import { MarkdownMain } from './components';
+import { MarkdownMain, StandaloneLayout } from './components';
 import { MarkdownSection } from './components/MarkdownSection';
-import { MarkdownProperties, isMarkdown, isMarkdownProperties } from './props';
+import { MarkdownProperties, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties } from './props';
 import translations from './translations';
 
 const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
@@ -36,6 +36,14 @@ const MarkdownMainEmbedded = ({
   role?: string;
 }) => {
   return <MarkdownMain model={model} properties={properties} layout='embedded' />;
+};
+
+const MarkdownMainEmpty = ({ data: [model, properties] }: { data: [any, MarkdownProperties] }) => {
+  return (
+    <StandaloneLayout model={model} properties={properties}>
+      <model.content />
+    </StandaloneLayout>
+  );
 };
 
 export type MarkdownProvides = {
@@ -74,6 +82,8 @@ export const MarkdownPlugin: PluginDefinition = definePlugin({
             } else {
               return MarkdownMainStandalone;
             }
+          } else if (Array.isArray(datum) && isMarkdownPlaceholder(datum[0]) && isMarkdownProperties(datum[1])) {
+            return MarkdownMainEmpty;
           }
           break;
         case 'section':

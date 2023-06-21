@@ -8,6 +8,7 @@ import { observer } from '@dxos/observable-object/react';
 import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
 
 import { LocalFilesPlugin } from '../LocalFilesPlugin';
+import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 
 export const LocalFileMain = observer(() => {
   const treeView = useTreeView();
@@ -19,7 +20,12 @@ export const LocalFileMain = observer(() => {
   const node = childNode ?? parentNode;
   const data = useMemo(
     () =>
-      node?.data?.text
+      node?.attributes?.disabled
+        ? [
+            { id: node.id, content: () => <LocalFileMainPermissions data={node} /> },
+            { title: node.data.title, readOnly: true },
+          ]
+        : node?.data?.text
         ? [
             { id: node.id, content: node.data.text },
             { title: node.data.title, readOnly: true },
@@ -27,12 +33,8 @@ export const LocalFileMain = observer(() => {
         : node?.data
         ? node.data
         : null,
-    [node?.data],
+    [node?.id, node?.data, node?.attributes],
   );
-
-  if (parentNode?.attributes?.disabled) {
-    return <Surface role='main' data={parentNode} />;
-  }
 
   return <Surface role='main' data={data} />;
 });
