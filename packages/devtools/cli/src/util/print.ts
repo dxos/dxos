@@ -5,9 +5,38 @@
 import { ux } from '@oclif/core';
 
 import { Space, SpaceMember } from '@dxos/client';
+import { Device } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { maybeTruncateKey } from './util';
+
+//
+// Devices
+//
+
+export const mapDevices = (devices: Device[], truncateKeys = false) => {
+  return devices.map((device) => ({
+    key: maybeTruncateKey(device.deviceKey, truncateKeys),
+    kind: device.kind,
+  }));
+};
+
+export const printDevices = (devices: Device[], flags = {}) => {
+  ux.table(
+    mapDevices(devices, true),
+    {
+      key: {
+        header: 'key',
+      },
+      kind: {
+        header: 'kind',
+      },
+    },
+    {
+      ...flags,
+    },
+  );
+};
 
 //
 // Spaces
@@ -25,10 +54,10 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
     mapSpaces(spaces, true),
     {
       key: {
-        header: 'Space key',
+        header: 'key',
       },
       name: {
-        header: 'Name',
+        header: 'name',
       },
     },
     {
@@ -46,6 +75,7 @@ export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identity.identityKey, truncateKeys),
     name: member.identity.profile?.displayName,
+    presence: member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline',
   }));
 };
 
@@ -54,10 +84,13 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
     mapMembers(members, true),
     {
       key: {
-        header: 'Identity key',
+        header: 'identity key',
       },
       name: {
-        header: 'Display name',
+        header: 'display name',
+      },
+      presence: {
+        header: 'presence',
       },
     },
     {
@@ -84,16 +117,16 @@ export const printCredentials = (credentials: Credential[], flags = {}) => {
     mapCredentials(credentials, true),
     {
       id: {
-        header: 'Id',
+        header: 'id',
       },
       issuer: {
-        header: 'Issuer',
+        header: 'issuer',
       },
       subject: {
-        header: 'Subject',
+        header: 'subject',
       },
       type: {
-        header: 'Type',
+        header: 'type',
       },
     },
     {

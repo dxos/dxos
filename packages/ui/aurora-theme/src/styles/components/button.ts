@@ -18,12 +18,12 @@ import {
 } from '../fragments';
 
 export const primaryAppButtonColors =
-  'bg-primary-550 dark:bg-primary-550 data-[state=on]:bg-primary-500 dark:data-[state=on]:bg-primary-500 text-white data-[state=on]:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
+  'bg-primary-550 dark:bg-primary-550 aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 text-white aria-pressed:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
 export const defaultAppButtonColors =
-  'bg-white data-[state=on]:bg-primary-50 text-neutral-800 data-[state=on]:text-primary-800 dark:bg-neutral-800 dark:data-[state=on]:bg-primary-800 dark:text-neutral-50 dark:data-[state=on]:text-primary-50';
+  'bg-white aria-pressed:bg-primary-50 text-neutral-800 aria-pressed:text-primary-800 dark:bg-neutral-800 dark:aria-pressed:bg-primary-800 dark:text-neutral-50 dark:aria-pressed:text-primary-50';
 export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutral-750/50 dark:text-neutral-50';
 export const ghostButtonColors =
-  'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300 data-[state=on]:text-primary-800 dark:data-[state=on]:text-primary-50';
+  'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300 aria-pressed:text-primary-800 dark:aria-pressed:text-primary-50';
 
 export type AppButtonStyleProps = Partial<{
   inGroup?: boolean;

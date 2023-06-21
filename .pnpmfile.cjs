@@ -1,5 +1,27 @@
 // https://pnpm.io/pnpmfile
 
+function lockfileWarning() {
+  const fs = require('fs')
+  const cp = require('child_process')
+  
+  // get repo root
+  const repoRoot = cp.execSync('git rev-parse --show-toplevel').toString().trim()
+
+  if(!fs.existsSync(`${repoRoot}/pnpm-lock.yaml`)) {
+    if(!process.env.REGENERATE_LOCKFILE) {
+      console.log('\n\nRegenerating lockfile from scratch is not recommended. Rerun with REGENERATE_LOCKFILE=1 if you know what you\'re doing.\n\n\n')
+      process.exit(1)
+    } else {
+      process.on('exit', () => {
+        fs.appendFileSync(`${repoRoot}/pnpm-lock.yaml`, `\n# First generated on ${new Date().toISOString()} by ${process.env.USER}\n`)
+      })
+    }
+  }
+}
+
+lockfileWarning();
+
+
 function readPackage(packageJson, context) {
   switch (packageJson.name) {
     // Package has an unneccessarily strict peer dep of 17.0.1
@@ -79,12 +101,24 @@ function readPackage(packageJson, context) {
     case 'react-vis':
     case 'react-motion': {
       packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react-dom'] = '^18.0.0'
       break;
     }
 
     // @dxos/devtools-extension
     case '@crxjs/vite-plugin': {
       packageJson.peerDependencies['vite'] = '^4.3.0'
+      break;
+    }
+
+    // https://github.com/dxos/dxos/issues/3330
+    case 'simple-hypercore-protocol': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
+      break;
+    }
+
+    case 'simple-handshake': {
+      packageJson.dependencies['noise-protocol'] = '3.0.1'
       break;
     }
 

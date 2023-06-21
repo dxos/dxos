@@ -69,6 +69,7 @@ export const getTelemetryContext = async (configDir: string): Promise<TelemetryC
     await mkdir(configDir, { recursive: true });
   }
 
+  // TODO(burdon): Is this config or state?
   const idPath = join(configDir, 'telemetry.yml');
   if (await exists(idPath)) {
     const context = await readFile(idPath, 'utf-8');

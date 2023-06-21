@@ -7,6 +7,7 @@ import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
@@ -14,6 +15,17 @@ import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
 export interface InvitationInputProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
 }
+
+const invitationCodeFromUrl = (text: string) => {
+  try {
+    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const invitation = searchParams.get('spaceInvitationCode') ?? searchParams.get('deviceInvitationCode');
+    return invitation ?? text;
+  } catch (err) {
+    log.catch(err);
+    return text;
+  }
+};
 
 export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProps) => {
   const disabled = !viewStateProps.active;
@@ -31,7 +43,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
   const handleNext = () =>
     joinSend({
       type: `set${Kind}InvitationCode`,
-      code: inputValue,
+      code: invitationCodeFromUrl(inputValue),
     });
 
   return (

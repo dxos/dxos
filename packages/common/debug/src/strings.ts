@@ -10,18 +10,15 @@ export const truncate = (str = '', length = 8, pad: boolean | string = false) =>
   }
 };
 
-export type TruncateKeyOptions = {
-  length?: number;
-  start?: boolean;
-};
-
-export const truncateKey = (key: any, { length = 8, start }: TruncateKeyOptions = {}) => {
+export const truncateKey = (key: any, length = 8) => {
   const str = String(key);
   if (str.length <= length) {
     return str;
   }
 
-  return start
-    ? `${str.slice(0, length)}...`
-    : `${str.substring(0, length / 2)}...${str.substring(str.length - length / 2)}`;
+  return str.slice(0, length);
+
+  // return start
+  //   ? `${str.slice(0, length)}...`
+  //   : `${str.substring(0, length / 2)}...${str.substring(str.length - length / 2)}`;
 };

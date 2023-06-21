@@ -28,11 +28,11 @@ export const queryCredentials = async (
       throw err;
     },
   });
+
   setTimeout(() => {
     trigger.wake(result);
   }, timeout);
 
   await trigger.wait();
-
   return result;
 };

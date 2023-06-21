@@ -8,24 +8,23 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Create extends BaseCommand {
+export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create HALO.';
   static override args = {
-    displayName: Args.string({ description: 'Display name' }),
+    displayName: Args.string({ description: 'Display name', required: true }),
   };
 
   async run(): Promise<any> {
-    const { args } = await this.parse(Create);
-    const { displayName } = args; // TODO(burdon): Prompt.
+    const { displayName } = this.args;
 
     return await this.execWithClient(async (client: Client) => {
       let identity = client.halo.identity.get();
       if (identity) {
-        this.log('Identity already initialized.'); // TODO(burdon): Return as error?
+        this.log('Identity already initialized.');
       } else {
         identity = await client.halo.createIdentity({ displayName });
-        return { displayName };
+        return { identityKey: identity.identityKey.toHex(), displayName };
       }
     });
   }

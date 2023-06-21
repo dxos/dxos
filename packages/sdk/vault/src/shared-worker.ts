@@ -10,8 +10,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';
 
-// NOTE: Verbose logging enabled in the shared worker for the time being.
-const LOG_FILTER = 'debug';
+const LOG_FILTER = 'warn';
 
 void initializeAppTelemetry({
   namespace,

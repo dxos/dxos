@@ -3,10 +3,12 @@
 //
 
 import { Planet } from '@phosphor-icons/react';
-import React, { FC, ReactNode, useEffect } from 'react';
+import * as localForage from 'localforage';
+import React, { FC, ReactNode } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Select } from '@dxos/react-appkit';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useSpaces } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
@@ -27,14 +29,13 @@ export const SpaceSelector = () => {
     }));
 
     if (spaceKey) {
-      localStorage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+      localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
     }
   };
 
-  useEffect(() => {
-    const spaceKeyHex = localStorage.getItem('dxos.devtools.spaceKey');
+  useAsyncEffect(async () => {
+    const spaceKeyHex: string | null = await localForage.getItem('dxos.devtools.spaceKey');
     if (spaceKeyHex) {
-      console.log({ spaceKeyHex, spaces });
       handleSelect(PublicKey.fromHex(spaceKeyHex));
     }
   }, []);
@@ -52,8 +53,8 @@ export const SpaceSelector = () => {
             <div className='pr-1'>
               <Planet />
             </div>
-            {space.properties.name ?? humanize(space.key)}
-            <span className='text-neutral-250'>{space.key.truncate(4)}</span>
+            <span className='text-neutral-250'>{space.key.truncate()}</span>
+            <span>{space.properties.name ?? humanize(space.key)}</span>
           </div>
         </Select.Item>
       ))}

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Hypercore, HypercoreProperties, ReadStreamOptions } from 'hypercore';
+import type { Hypercore, HypercoreProperties, ReadStreamOptions } from 'hypercore';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
