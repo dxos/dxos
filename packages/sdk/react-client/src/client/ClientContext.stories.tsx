@@ -45,7 +45,7 @@ const TestApp = () => {
   );
 };
 
-const servicesProvider = (config?: Config) => fromHost(config);
+const servicesProvider = (config?: Config) => fromHost({ config });
 
 export const Primary = {
   render: () => (

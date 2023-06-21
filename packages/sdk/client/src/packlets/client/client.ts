@@ -88,7 +88,7 @@ export class Client {
     }
 
     this._config = config ?? new Config();
-    this._services = services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config));
+    this._services = services ?? (isNode() ? fromHost({ config: this._config }) : fromIFrame(this._config));
 
     // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();

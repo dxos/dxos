@@ -18,7 +18,7 @@ describe.skip('KaiBot', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
-    const client = new Client({ config, services: fromHost(config) });
+    const client = new Client({ config, services: fromHost({ config }) });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.createSpace();

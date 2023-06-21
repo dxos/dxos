@@ -23,7 +23,7 @@ describe.skip('TravelBot', () => {
   test('basic', async () => {
     // TODO(burdon): Config sets up network!
     const config = new Config(loadJson(process.env.TEST_CONFIG!));
-    const client = new Client({ config, services: fromHost(config) });
+    const client = new Client({ config, services: fromHost({ config }) });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.createSpace();

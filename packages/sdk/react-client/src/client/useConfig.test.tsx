@@ -41,7 +41,7 @@ describe('Config hook', () => {
         },
       },
     });
-    const client = new Client({ config, services: fromHost(config) });
+    const client = new Client({ config, services: fromHost({ config }) });
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });

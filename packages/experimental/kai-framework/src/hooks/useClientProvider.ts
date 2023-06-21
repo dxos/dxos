@@ -18,7 +18,7 @@ export const useClientProvider = (dev: boolean) => {
     const config = await configProvider();
     const client = new Client({
       config,
-      services: config.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config),
+      services: config.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost({ config }) : fromIFrame(config),
     });
 
     await client.initialize();

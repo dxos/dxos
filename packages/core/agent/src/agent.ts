@@ -63,7 +63,7 @@ export class Agent {
   async start() {
     // Create client services.
     // TODO(burdon): Check lock.
-    this._services = fromHost(this._config);
+    this._services = fromHost({ config: this._config });
     await this._services.open();
 
     // Create client.
