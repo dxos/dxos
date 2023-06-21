@@ -22,6 +22,8 @@ import { observer } from '@dxos/react-client';
 import { GraphNode } from '../GraphPlugin';
 import { useTreeView } from './TreeViewPlugin';
 
+const spaceExp = /\s/g;
+
 export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const { sidebarOpen, closeSidebar } = useSidebar();
   // TODO(wittjosiah): Update namespace.
@@ -38,6 +40,9 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
+  const label = Array.isArray(node.label) ? t(...node.label) : node.label;
+  const wrap = spaceExp.test(label);
+
   return (
     <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
       <TreeItem.Heading
@@ -47,7 +52,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           'button.root',
           'tree-item__heading--link',
           { variant: 'ghost', density },
-          'grow text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
+          'grow min-is-0 text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
         )}
       >
         <button
@@ -59,10 +64,10 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
             treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
             !isLg && closeSidebar();
           }}
-          className='text-start flex gap-2'
+          className='text-start flex gap-2 justify-start'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-          <p className={mx(modified && 'italic', 'grow mbs-1')}>
+          <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1', wrap ? 'break-words' : 'truncate')}>
             {Array.isArray(node.label) ? t(...node.label) : node.label}
           </p>
         </button>
