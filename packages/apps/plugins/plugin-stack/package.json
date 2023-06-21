@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/types": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/observable-object": "workspace:*"
   },
   "devDependencies": {

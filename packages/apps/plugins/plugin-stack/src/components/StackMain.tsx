@@ -2,43 +2,65 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 
-import { Stack as StackProto, Document } from '@braneframe/types';
-import { Button, useTranslation } from '@dxos/aurora';
-import { observer } from '@dxos/observable-object/react';
+import { Button, useTranslation, randomString } from '@dxos/aurora';
+import { ObservableArray, subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
-export type StackMainProps = {
-  role?: string;
-  data?: StackProto;
-};
+import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
 
-export const StackMain = observer(({ data: stack }: StackMainProps) => {
-  const { t } = useTranslation('plugin-stack');
-  // todo(thure): Why isn’t this updating when stack.sections is set? This should be unnecessary.
-  const [iter, setIter] = useState(0);
+// todo(thure): `observer` causes infinite rerenders if used here.
+const StackMainImpl = ({ sections }: { sections: StackSections }) => {
+  const { t } = useTranslation('dxos:stack');
+  const [_, setIter] = useState([]);
+  useEffect(() => {
+    return sections[subscribe](() => setIter([])) as () => void;
+  }, []);
   return (
     <article>
-      <span className='hidden'>{iter}</span>
-      {stack?.sections.map(({ object }) => (
-        <Fragment key={object.id}>
-          <p className='mlb-2'>{object.id}</p>
-          <Surface role='section' data={object} />
-        </Fragment>
-      ))}
+      {sections
+        // todo(thure): This filter should be unnecessary; why is the first value sometimes some sort of array-like object?
+        .filter((section) => 'object' in section)
+        .map(({ object }, o) => {
+          return (
+            <Fragment key={o}>
+              <p className='mlb-2'>{o}</p>
+              <Surface role='section' data={[object, object]} />
+            </Fragment>
+          );
+        })}
       <Button
         onClick={() => {
-          if (stack) {
-            const document = new Document();
-            const section = new StackProto.Section({ object: document });
-            stack.sections = [...stack.sections, section];
-            setIter(iter + 1);
-          }
+          const section: StackSectionModel = {
+            source: { resolver: 'dxos:markdown', guid: randomString() },
+            object: {
+              id: randomString(),
+              content: '',
+              title: '',
+            },
+          };
+          sections.splice(sections.length, 0, section);
         }}
       >
         {t('add section label')}
       </Button>
     </article>
   );
-});
+};
+
+export const StackMain = ({
+  data: [stack, properties],
+}: {
+  data: [stack: StackModel, properties: StackProperties];
+}) => {
+  const sections = useMemo(() => {
+    if (subscribe in stack.sections) {
+      return stack.sections as ObservableArray<StackSectionModel>;
+    } else {
+      return new ObservableArray<StackSectionModel>(...stack.sections);
+    }
+  }, [stack]);
+
+  return <StackMainImpl sections={sections} />;
+};
