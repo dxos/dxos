@@ -73,7 +73,7 @@ Returns: <code>Promise&lt;[Identity](/api/@dxos/react-client/interfaces/Identity
 
 Arguments: 
 
-`profile`: <code>object</code>
+`profile`: <code>ProfileDocument</code>
 
 ### [createInvitation(\[options\])]()
 
