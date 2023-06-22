@@ -18,6 +18,7 @@ import {
 } from '@phosphor-icons/react';
 import React from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { TextKind } from '@dxos/aurora-composer';
@@ -36,7 +37,6 @@ import {
   Surface,
   definePlugin,
   findPlugin,
-  ClientPluginProvides,
   GraphNode,
   GraphProvides,
   RouterPluginProvides,

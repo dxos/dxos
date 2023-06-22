@@ -4,13 +4,13 @@
 import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@phosphor-icons/react';
 import React, { RefObject, useCallback } from 'react';
 
+import { MarkdownProperties } from '@braneframe/plugin-markdown';
 import { DropdownMenu, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { useSplitViewContext } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../../MarkdownPlugin/components';
 import { useDocGhId } from '../hooks';
 import { GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';

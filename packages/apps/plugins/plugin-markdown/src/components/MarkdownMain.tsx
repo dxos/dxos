@@ -7,13 +7,9 @@ import React, { HTMLAttributes, useRef } from 'react';
 import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
 
+import { MarkdownProperties } from '../props';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-
-export type MarkdownProperties = {
-  title: string;
-  meta?: { keys?: { source?: string; id?: string }[] };
-};
 
 export const MarkdownMainStandalone = ({
   data: [model, properties],
