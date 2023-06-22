@@ -81,3 +81,8 @@ export class Lock implements ResourceLock {
     log('recieved lock', { steal });
   }
 }
+
+// TODO(mykola): Implement.
+export const isLocked = (lockPath: string) => {
+  throw new Error('Not implemented');
+};
