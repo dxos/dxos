@@ -13,14 +13,13 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
-import { getReader } from '../analysys';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 export type EchoTestSpec = {
   agents: number;
@@ -87,7 +86,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         },
       },
     });
-    this.builder.storage = createStorage({ type: StorageType.RAM })
+    this.builder.storage = createStorage({ type: StorageType.RAM });
 
     const services = this.builder.createLocal();
     const client = new Client({ services });
@@ -131,8 +130,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         ),
       );
       return Timeframe.merge(...timeframes);
-    }
-
+    };
 
     assert(space);
     log.info('space joined', { agentIdx, spaceKey: space.key });
@@ -142,7 +140,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     log.info('space ready', { agentIdx, spaceKey: space.key });
     await env.syncBarrier('space ready');
 
-    const obj = space.db.add(new Text('', TextKind.PLAIN));
+    space.db.add(new Text('', TextKind.PLAIN));
     await space.db.flush();
 
     if (config.ephemeral) {
@@ -173,7 +171,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           const lag = maximalTimeframe.newMessages(getSpaceBackend().dataPipeline.pipelineState!.timeframe);
 
           // compute throughput
-          const mutationsSinceLastIter = getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+          const mutationsSinceLastIter =
+            getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
           const timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
           const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
@@ -181,7 +180,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           const epoch = getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
           log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
-          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog)
+          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog);
 
           for (const _ of range(spec.operationCount)) {
             // TODO: extract size and random seed
@@ -242,10 +241,9 @@ const serializeTimeframe = (timeframe: Timeframe) =>
 const deserializeTimeframe = (timeframe: string) =>
   new Timeframe(Object.entries(JSON.parse(timeframe)).map(([k, v]) => [PublicKey.from(k), v as number]));
 
-
 type StatsLog = {
   lag: number;
   mutationsPerSec: number;
   epoch: number;
   agentIdx: number;
-}
+};

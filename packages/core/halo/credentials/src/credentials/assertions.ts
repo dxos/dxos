@@ -23,7 +23,11 @@ export const isValidAuthorizedDeviceCredential = (
   );
 };
 
-export type SpecificCredential<T> = Omit<Credential, 'subject'> & { subject: Omit<Credential['subject'], 'assertion'> & { assertion: T } };
+export type SpecificCredential<T> = Omit<Credential, 'subject'> & {
+  subject: Omit<Credential['subject'], 'assertion'> & { assertion: T };
+};
 
-export const checkCredentialType = <K extends keyof TYPES>(credential: Credential, type: K): credential is SpecificCredential<TYPES[K]> =>
-  credential.subject.assertion['@type'] === type;
+export const checkCredentialType = <K extends keyof TYPES>(
+  credential: Credential,
+  type: K,
+): credential is SpecificCredential<TYPES[K]> => credential.subject.assertion['@type'] === type;
