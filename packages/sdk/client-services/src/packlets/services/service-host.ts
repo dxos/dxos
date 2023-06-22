@@ -21,12 +21,12 @@ import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
+import { Lock, ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { VaultResourceLock } from '../vault';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -54,7 +54,7 @@ export type InitializeOptions = {
  * Remote service implementation.
  */
 export class ClientServicesHost {
-  private readonly _resourceLock?: VaultResourceLock;
+  private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
@@ -88,17 +88,17 @@ export class ClientServicesHost {
       this.initialize({ config, transportFactory, signalManager });
     }
 
-    this._resourceLock = lockKey
-      ? new VaultResourceLock({
-          lockKey,
-          onAcquire: () => {
-            if (!this._opening) {
-              void this.open();
-            }
-          },
-          onRelease: () => this.close(),
-        })
-      : undefined;
+    if (lockKey) {
+      this._resourceLock = new Lock({
+        lockKey,
+        onAcquire: () => {
+          if (!this._opening) {
+            void this.open();
+          }
+        },
+        onRelease: () => this.close(),
+      });
+    }
 
     this._systemService = new SystemServiceImpl({
       config: this._config,
