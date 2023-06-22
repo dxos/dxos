@@ -12,6 +12,7 @@ enum Message {
   ACQUIRING = 'acquiring',
 }
 
+// TODO(mykola): Factor out.
 // TODO(burdon): Extend to support locking for web and NodeJS (use npm lockfile). Use to lock agents.
 export class VaultResourceLock implements ResourceLock {
   private readonly _broadcastChannel = new BroadcastChannel('vault-resource-lock');

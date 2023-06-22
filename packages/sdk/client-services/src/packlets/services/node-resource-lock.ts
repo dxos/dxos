@@ -9,6 +9,7 @@ import { log, logInfo } from '@dxos/log';
 
 import { ResourceLock, ResourceLockOptions } from '../services';
 
+// TODO(mykola): Factor out.
 export class NodeResourceLock implements ResourceLock {
   private readonly _lockPath: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];

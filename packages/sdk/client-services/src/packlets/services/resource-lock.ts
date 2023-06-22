@@ -10,6 +10,7 @@ export type ResourceLockOptions = {
   onRelease?: () => MaybePromise<void>;
 };
 
+// TODO(mykola): Factor out.
 /**
  * Resource lock. Used to coordinate access to shared resources.
  * For example, start only one `ServicesHost` at a time.
