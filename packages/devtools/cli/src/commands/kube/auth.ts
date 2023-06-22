@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { BaseCommand } from '../../base-command';
 import { SupervisorRpcPeer, queryCredentials } from '../../util';
 
-export default class Auth extends BaseCommand {
+export default class Auth extends BaseCommand<typeof Auth> {
   static override enableJsonFlag = true;
   static override description = 'Authenticate with KUBE.';
 
@@ -37,9 +37,9 @@ export default class Auth extends BaseCommand {
       );
 
       if (!kubeAccessCreds.length) {
-        this.log(chalk`{gray No kube access credentials - requesting..}`);
+        this.log(chalk`{gray No KUBE access credentials - requesting..}`);
       } else {
-        this.log(chalk`{gray Kube access credentials found - requesting session token..}`);
+        this.log(chalk`{gray KUBE access credentials found - requesting session token..}`);
       }
 
       const credsToPresent = [authDeviceCreds[0].id, kubeAccessCreds[0]?.id].filter(Boolean);
@@ -60,7 +60,6 @@ export default class Auth extends BaseCommand {
       const identity = client.halo.identity;
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.
-        //  Error [OpenError]: Error parsing JSON in /tmp/user-1/dx/cli/keystore/data.json: Unexpected end of JSON input
         this.log(chalk`{red Profile not initialized.}`);
       } else {
         const { credential, token } = await this.presentAuthCredentials(client);

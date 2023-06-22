@@ -21,6 +21,7 @@ type PlanOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
+  profile?: boolean;
 };
 
 type TestSummary = {
@@ -111,6 +112,16 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
       const childProcess = fork(process.argv[1], {
+        execArgv: options.profile
+          ? [
+              '--cpu-prof',
+              '--cpu-prof-dir',
+              agentParams.outDir,
+              '--cpu-prof-name',
+              'agent.cpuprofile',
+              ...process.execArgv,
+            ]
+          : [...process.execArgv],
         env: {
           ...process.env,
           GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
@@ -184,4 +195,4 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   }
 };
 
-const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().toHex().slice(0, 4)}`;
+const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;

@@ -178,6 +178,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/document-model/package.json",
           "jsonpath": "$.version"
         },
@@ -403,11 +408,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/surface/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/gravity/gravity-agent/package.json",
           "jsonpath": "$.version"
         },
@@ -469,6 +469,11 @@
         {
           "type": "json",
           "path": "packages/sdk/react-shell/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-surface/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import fetch from 'isomorphic-fetch';
+import assert from 'node:assert';
 import urljoin from 'url-join';
 
 import { PublicKey } from '@dxos/keys';
@@ -25,26 +25,24 @@ export class Spy {
 
   private _count = 0;
 
-  constructor (
-    private readonly _config = defaultConfig
-  ) {
+  constructor(private readonly _config = defaultConfig) {
     console.log(`### SPY(${this.info}) ###`);
   }
 
-  get size () {
+  get size() {
     return Array.from(this._bindings.values()).reduce((count, set) => count + set.size, 0);
   }
 
-  get info () {
+  get info() {
     return `${this.id.toHex().slice(0, 4)}[${this.size}]`;
   }
 
-  humanize (key: PublicKey) {
+  humanize(key: PublicKey) {
     assert(key);
     return humanize(key);
   }
 
-  enable (enable = true) {
+  enable(enable = true) {
     this._enabled = enable;
     return this;
   }
@@ -52,8 +50,8 @@ export class Spy {
   /**
    * Bind the object instance to the key.
    */
-  bind (key: PublicKey | string, object: any, label?: string) {
-    const keyString = (typeof key === 'string') ? key : humanize(key);
+  bind(key: PublicKey | string, object: any, label?: string) {
+    const keyString = typeof key === 'string' ? key : humanize(key);
     let bindings = this._bindings.get(keyString);
     if (!bindings) {
       bindings = new Set();
@@ -71,10 +69,9 @@ export class Spy {
   /**
    * Log the message with the given key or bound object.
    */
-  async log (key: any, data: any, tmp?: string) {
+  async log(key: any, data: any, tmp?: string) {
     assert(key);
     if (this._enabled) {
-      let label;
       let keyValue: string;
       if (typeof key === 'string') {
         keyValue = key;
@@ -96,7 +93,7 @@ export class Spy {
     return this;
   }
 
-  async mark (label: string) {
+  async mark(label: string) {
     if (this._enabled) {
       await this._post({ cmd: Command.MARK, label: label.replace(/\W+/g, '-') });
     }
@@ -107,7 +104,7 @@ export class Spy {
   /**
    * Clear the log.
    */
-  async clear () {
+  async clear() {
     this._bindings.clear();
     if (this._enabled) {
       await this._post({ cmd: Command.CLEAR });
@@ -116,20 +113,19 @@ export class Spy {
     return this;
   }
 
-  async _post (data: any) {
+  async _post(data: any) {
     const { hostname, port, path } = this._config;
     const url = urljoin(`http://${hostname}:${port}`, path);
 
     try {
-
       // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
       await fetch(url, {
         method: 'POST',
         mode: 'cors',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
     } catch (err) {
       // Silently ignore.

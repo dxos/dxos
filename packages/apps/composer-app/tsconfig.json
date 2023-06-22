@@ -18,7 +18,13 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
     },
     {
       "path": "../../common/react-async"
@@ -46,6 +52,9 @@
     },
     {
       "path": "../../sdk/react-shell"
+    },
+    {
+      "path": "../../sdk/react-surface"
     },
     {
       "path": "../../sdk/vault"

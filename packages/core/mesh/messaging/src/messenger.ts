@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
+import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -45,7 +45,7 @@ export class Messenger {
   private _closed = true;
   private readonly _retryDelay: number;
 
-  constructor({ signalManager, retryDelay = 100 }: MessengerOptions) {
+  constructor({ signalManager, retryDelay = 300 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._retryDelay = retryDelay;
 
@@ -115,7 +115,7 @@ export class Messenger {
       () => {
         log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
-        timeoutHit(new Error('Message not delivered'));
+        timeoutHit(new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'));
         void messageContext.dispose();
       },
       MESSAGE_TIMEOUT,

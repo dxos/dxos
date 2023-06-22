@@ -23,8 +23,9 @@ export const CreateProfile: FC<{
   const handleSubmit = async (text: string) => {
     const displayName = text.trim();
     if (displayName.length) {
+      // TODO(dmaretskyi): Remove seedphrase.
       const seedphrase = generateSeedPhrase();
-      const identity = await client.halo.createIdentity({ seedphrase, displayName });
+      const identity = await client.halo.createIdentity({ displayName });
       const clipped = await copyToClipboard(seedphrase);
       setClipped(clipped);
       onCreate(identity);

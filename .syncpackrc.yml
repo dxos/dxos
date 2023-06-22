@@ -1,5 +1,8 @@
+# https://jamiemason.github.io/syncpack/config
 peer: false
 workspace: false
+#source:
+#  - 'packages/**/package.json'
 semverGroups:
   - range: ^
     packages:
@@ -19,6 +22,13 @@ semverGroups:
       - nx
       - '@nwrl/*'
 versionGroups:
+  # TODO(burdon): Does not honor skipped files in pnpm-workspace.yaml
+  #   https://github.com/JamieMason/syncpack/issues/139
+  - packages:
+      - '@dxos/kai-fn-chess'
+      - '@dxos/openfaas-node18-dxos'
+    dependencies:
+      - '**'
   - packages:
       - '@dxos/docs'
     dependencies:

@@ -19,13 +19,13 @@ export const printTunnels = (tunnels: TunnelResponse[], flags = {}) => {
     mapTunnels(tunnels),
     {
       key: {
-        header: 'App',
+        header: 'app',
       },
       enabled: {
-        header: 'Enabled',
+        header: 'enabled',
       },
       url: {
-        header: 'URL',
+        header: 'url',
       },
     },
     {

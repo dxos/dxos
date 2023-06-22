@@ -37,11 +37,13 @@ import {
   SubscribeToSwarmInfoResponse,
   StorageInfo,
   GetSnapshotsResponse,
+  SubscribeToMetadataResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
+import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
 
@@ -160,5 +162,9 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
     return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
+  }
+
+  subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
+    return subscribeToMetadata({ context: this.params.context });
   }
 }

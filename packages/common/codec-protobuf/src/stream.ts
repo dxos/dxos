@@ -227,6 +227,7 @@ export class Stream<T> {
     }
   }
 
+  // TODO(burdon): Can this be cancelled?
   subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
@@ -243,7 +244,7 @@ export class Stream<T> {
 
     this._buffer = null;
 
-    // Stream might have allready been closed.
+    // Stream might have already have been closed.
     if (this._isClosed) {
       onClose?.(this._closeError);
       return;

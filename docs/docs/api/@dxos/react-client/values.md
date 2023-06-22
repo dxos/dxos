@@ -25,9 +25,6 @@ Type: "dxos:app"
 ### [`DEFAULT_CLIENT_ORIGIN`]()
 Type: "https://halo.dxos.org/vault.html"
 
-### [`DEFAULT_DX_PROFILE`]()
-Type: "dxos-default"
-
 ### [`DEFAULT_INTERNAL_CHANNEL`]()
 Type: "dxos:vault"
 
@@ -36,6 +33,30 @@ Type: "dxos:shell"
 
 ### [`DEFAULT_VISITORS`]()
 Type: [ConvertVisitors](/api/@dxos/react-client/types/ConvertVisitors)
+
+### [`DX_CACHE`]()
+Type: string
+
+### [`DX_CONFIG`]()
+Type: string
+
+### [`DX_DATA`]()
+Type: string
+
+### [`DX_RUNTIME`]()
+Type: "/tmp/dx/run"
+
+### [`DX_STATE`]()
+Type: string
+
+### [`ENV_DX_CONFIG`]()
+Type: "DX_CONFIG"
+
+### [`ENV_DX_PROFILE`]()
+Type: "DX_PROFILE"
+
+### [`ENV_DX_PROFILE_DEFAULT`]()
+Type: "default"
 
 ### [`EXPECTED_CONFIG_VERSION`]()
 Type: "1"
@@ -58,7 +79,7 @@ Timeout for space properties to be loaded in the set of tracked items.
 Accounts for latency between SpaceService reporting the space as READY and DataService streaming the item states.
 
 ### [`ON_CLOSE_DELAY`]()
-Type: "1000"
+Type: "3000"
 
 ### [`PROXY_CONNECTION_TIMEOUT`]()
 Type: "30000"

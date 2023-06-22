@@ -9,6 +9,7 @@ const knownPeerPackages = [
   '@dxos/aurora-theme',
   '@dxos/react-appkit',
   '@dxos/react-shell',
+  '@dxos/react-surface',
   '@dxos/aurora-composer',
 ];
 
