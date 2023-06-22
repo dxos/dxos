@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
 import { createStore } from '@dxos/observable-object';
-import { observer } from '@dxos/react-client';
+import { observer } from '@dxos/observable-object/react';
 import { definePlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { MarkdownMain, StandaloneLayout } from './components';
