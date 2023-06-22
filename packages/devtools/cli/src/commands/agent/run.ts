@@ -35,7 +35,7 @@ export default class Run extends BaseCommand<typeof Run> {
   async run(): Promise<any> {
     const listen = [];
     if (this.flags.socket) {
-      listen.push(`unix://${DX_RUNTIME}/agent/profile/${this.flags.profile}/agent.sock`);
+      listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
     }
     if (this.flags['web-socket']) {
       listen.push(`ws://localhost:${this.flags['web-socket']}`);

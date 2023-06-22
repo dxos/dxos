@@ -32,7 +32,7 @@ export const waitForDaemon = async (profile: string) => {
 };
 
 export const lockFilePath = (profile: string): string => {
-  const lockFile = path.join(DX_RUNTIME, 'agent', 'profile', profile, 'lockfile');
+  const lockFile = path.join(DX_RUNTIME, 'profile', profile, 'lockfile');
   fs.mkdirSync(path.dirname(lockFile), { recursive: true });
   return lockFile;
 };
