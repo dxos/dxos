@@ -17,14 +17,10 @@ import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
  * Manager of daemon processes started with Forever.
  */
 export class ForeverDaemon implements Daemon {
-  private readonly _rootDir: string;
-
-  constructor(rootDir: string) {
-    this._rootDir = path.join(rootDir);
-  }
+  constructor(private readonly _rootDir: string) {}
 
   async connect(): Promise<void> {
-    forever.load({ root: this._rootDir });
+    forever.load({ root: path.join(this._rootDir, 'forever') });
   }
 
   async disconnect() {
