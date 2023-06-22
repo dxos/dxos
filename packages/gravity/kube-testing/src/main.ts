@@ -48,9 +48,10 @@ const runEcho = () =>
       iterationDelay: 1000,
 
       epochPeriod: 4,
+      measureNewAgentSyncTime: true,
 
       insertionSize: 1024,
-      operationCount: 100,
+      operationCount: 500,
       signalArguments: ['globalsubserver'],
     },
     options: {

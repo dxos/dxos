@@ -20,6 +20,7 @@ import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
 import { getReader } from '../analysys';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 export type EchoTestSpec = {
   agents: number;
@@ -40,6 +41,18 @@ export type EchoAgentConfig = {
   agentIdx: number;
   signalUrl: string;
   invitationTopic: string;
+
+  /// ROLES
+
+  /**
+   * Creates the space and invites other agents.
+   */
+  creator: boolean;
+
+  /**
+   * Only comes online periodically to measure sync time.
+   */
+  ephemeral: boolean;
 };
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
@@ -54,6 +67,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       agentIdx,
       signalUrl: signal.url(),
       invitationTopic,
+      creator: agentIdx === 0,
+      ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
     }));
   }
 
@@ -72,6 +87,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         },
       },
     });
+    this.builder.storage = createStorage({ type: StorageType.RAM })
 
     const services = this.builder.createLocal();
     const client = new Client({ services });
@@ -79,7 +95,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     await client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
 
     let space: Space;
-    if (agentIdx === 0) {
+    if (config.creator) {
       space = await client.createSpace({ name: 'test space' });
       space.createInvitation({
         swarmKey: PublicKey.from(invitationTopic),
@@ -103,9 +119,22 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       });
     }
 
-    assert(space);
-    const spaceBackend = services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
+    const getSpaceBackend = () => services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
+    const getObj = () => space.db.objects.find((obj) => obj instanceof Text) as Text;
 
+    const getMaximalTimeframe = async () => {
+      const timeframes = await Promise.all(
+        Object.keys(env.params.agents).map((agentId) =>
+          env.redis
+            .get(`${env.params.testId}:timeframe:${agentId}`)
+            .then((timeframe) => (timeframe ? deserializeTimeframe(timeframe) : new Timeframe())),
+        ),
+      );
+      return Timeframe.merge(...timeframes);
+    }
+
+
+    assert(space);
     log.info('space joined', { agentIdx, spaceKey: space.key });
     await env.syncBarrier('space joined');
 
@@ -116,8 +145,12 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     const obj = space.db.add(new Text('', TextKind.PLAIN));
     await space.db.flush();
 
+    if (config.ephemeral) {
+      await client.destroy();
+    }
+
     let iter = 0;
-    const lastTimeframe = spaceBackend.dataPipeline.pipelineState!.timeframe;
+    const lastTimeframe = getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
     let lastTime = Date.now();
     const ctx = new Context();
     scheduleTaskInterval(
@@ -125,50 +158,60 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       async () => {
         log.info('iter', { iter, agentIdx });
 
-        await env.redis.set(
-          `${env.params.testId}:timeframe:${env.params.agentId}`,
-          serializeTimeframe(spaceBackend.dataPipeline.pipelineState!.timeframe),
-        );
+        if (!config.ephemeral) {
+          await env.redis.set(
+            `${env.params.testId}:timeframe:${env.params.agentId}`,
+            serializeTimeframe(getSpaceBackend().dataPipeline.pipelineState!.timeframe),
+          );
+        }
 
         await env.syncBarrier(`iter ${iter}`);
 
-        // compute lag
-        const timeframes = await Promise.all(
-          Object.keys(env.params.agents).map((agentId) =>
-            env.redis
-              .get(`${env.params.testId}:timeframe:${agentId}`)
-              .then((timeframe) => (timeframe ? deserializeTimeframe(timeframe) : new Timeframe())),
-          ),
-        );
-        const maximalTimeframe = Timeframe.merge(...timeframes);
-        const lag = maximalTimeframe.newMessages(spaceBackend.dataPipeline.pipelineState!.timeframe);
+        if (!config.ephemeral) {
+          // compute lag
+          const maximalTimeframe = await getMaximalTimeframe();
+          const lag = maximalTimeframe.newMessages(getSpaceBackend().dataPipeline.pipelineState!.timeframe);
 
-        // compute throughput
-        const mutationsSinceLastIter = spaceBackend.dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
-        const timeSinceLastIter = Date.now() - lastTime;
-        lastTime = Date.now();
-        const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
+          // compute throughput
+          const mutationsSinceLastIter = getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+          const timeSinceLastIter = Date.now() - lastTime;
+          lastTime = Date.now();
+          const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-        const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+          const epoch = getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
-        log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
-        log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog)
+          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
+          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog)
 
-        for (const _ of range(spec.operationCount)) {
-          // TODO: extract size and random seed
-          obj.model!.content.insert(
-            randomInt(obj.text.length, 0),
-            randomBytes(spec.insertionSize).toString('hex') as any,
-          );
-          if (obj.text.length > 100) {
-            obj.model!.content.delete(randomInt(obj.text.length, 0), randomInt(obj.text.length, 100));
+          for (const _ of range(spec.operationCount)) {
+            // TODO: extract size and random seed
+            getObj().model!.content.insert(
+              randomInt(getObj().text.length, 0),
+              randomBytes(spec.insertionSize).toString('hex') as any,
+            );
+            if (getObj().text.length > 100) {
+              getObj().model!.content.delete(randomInt(getObj().text.length, 0), randomInt(getObj().text.length, 100));
+            }
           }
-        }
 
-        await space.db.flush();
+          await space.db.flush();
 
-        if(agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
-          await space.internal.createEpoch();
+          if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
+            await space.internal.createEpoch();
+          }
+        } else {
+          await client.initialize();
+
+          const begin = Date.now();
+          const space = client.spaces.get()[0];
+          await space.waitUntilReady();
+
+          const maximalTimeframe = await getMaximalTimeframe();
+          await getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
+
+          log.info('sync time', { time: Date.now() - begin, agentIdx, iter });
+
+          await client.destroy();
         }
 
         iter++;

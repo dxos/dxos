@@ -9,6 +9,7 @@ import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc
 import { ExtensionContext, TeleportExtension } from './teleport';
 
 export abstract class RpcExtension<Client, Server> implements TeleportExtension {
+  // TODO(dmaretskyi): Type optionally.
   private _extensionContext!: ExtensionContext;
   private _rpc?: ProtoRpcPeer<Client>;
 
