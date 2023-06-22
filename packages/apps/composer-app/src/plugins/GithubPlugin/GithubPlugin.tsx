@@ -5,9 +5,9 @@
 
 import React from 'react';
 
+import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
 
-import { isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
 import {
   MarkdownActions,
   OctokitProvider,

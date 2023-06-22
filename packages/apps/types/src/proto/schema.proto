@@ -27,3 +27,28 @@ message Meta {
 
   repeated ForeignKey keys = 1;
 }
+
+// TODO(burdon): Rename.
+// TODO(burdon): System type for external GUIDs (identifies resolver).
+// TODO(burdon): Timestamp, temporal context, TTL.
+// TODO(burdon): Dependency graph (resolvers that preceded this).
+message Source {
+  string resolver = 1; // TODO(burdon): DXN of resolver.
+  string guid = 2; // TODO(burdon): `id` should be allowed on non-objects.
+}
+
+message Stack {
+  option (object) = true;
+
+  // Sections may belong to different stacks.
+  message Section {
+    option (object) = true;
+    Source source = 1; // TODO(burdon): Metadata from resolver.
+    dxos.schema.TypedObject object = 2;
+  }
+
+  string title = 1;
+  repeated Section sections = 2;
+
+  string subject_id = 10; // TODO(burdon): Create external link instead.
+}
