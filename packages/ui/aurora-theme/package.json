@@ -28,14 +28,14 @@
     "tailwind-merge": "^1.10.0",
     "tailwindcss": "~3.3.2",
     "tailwindcss-logical": "^3.0.0",
-    "tailwindcss-radix": "^2.8.0"
+    "tailwindcss-radix": "^2.8.0",
+    "esbuild-style-plugin": "^1.6.1"
   },
   "devDependencies": {
     "@dxos/aurora-types": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
     "esbuild": "^0.16.14",
-    "esbuild-style-plugin": "^1.6.1",
     "vite": "^4.3.9"
   },
   "publishConfig": {

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import fs from 'fs';
+import fs from 'node:fs';
 import fetch from 'node-fetch';
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import path, { dirname } from 'node:path';

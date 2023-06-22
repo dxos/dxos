@@ -34,6 +34,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-accordion": "^1.1.1",
@@ -44,13 +45,13 @@
     "lodash.toarray": "^4.4.0",
     "qrcode.react": "^3.1.0",
     "url-join": "^5.0.0",
+    "@dxos/log": "workspace:*",
     "xstate": "^4.37.0"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "@phosphor-icons/react": "^2.0.5",

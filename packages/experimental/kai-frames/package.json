@@ -30,6 +30,7 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/kai-sandbox": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/kai-types": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/metagraph": "workspace:*",

@@ -4,7 +4,7 @@
 
 import compare from 'compare-semver';
 import NPM from 'npm-api';
-import * as process from 'process';
+import * as process from 'node:process';
 
 /**
  * Clear terminal.

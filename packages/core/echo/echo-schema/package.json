@@ -29,6 +29,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/observable-object": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",

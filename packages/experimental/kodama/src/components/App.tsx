@@ -3,7 +3,7 @@
 //
 
 import { Box, Text } from 'ink';
-import * as process from 'process';
+import * as process from 'node:process';
 import React, { useMemo } from 'react';
 
 import { useClient, useIdentity } from '@dxos/react-client';

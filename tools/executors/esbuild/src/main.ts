@@ -4,18 +4,19 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
-import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
+import { bundleDepsPlugin } from './bundle-deps-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
+  alias: Record<string, string>;
   entryPoints: string[];
   format?: Format;
   injectGlobals: boolean;
@@ -35,11 +36,13 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   try {
     await readdir(options.outputPath);
     await rm(options.outputPath, { recursive: true });
-  } catch {}
+  } catch { }
 
   // TODO(wittjosiah): Workspace from context is deprecated.
   const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
+
+  const runtimeDeps = new Set([...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]);
 
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
@@ -61,6 +64,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         metafile: options.metafile,
         bundle: options.bundle,
         watch: options.watch,
+        alias: options.alias,
         platform,
         // https://esbuild.github.io/api/#log-override
         logOverride: {
@@ -96,9 +100,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             },
           },
           fixRequirePlugin(),
-          nodeExternalsPlugin({
-            packagePath,
-            allowList: options.bundlePackages,
+          bundleDepsPlugin({
+            packages: options.bundlePackages,
+            runtimeDeps,
+            resolveDir: dirname(packagePath),
+            alias: options.alias,
           }),
           logTransformer.createPlugin(),
           RawPlugin(),
@@ -133,7 +139,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   );
 
   if (options.watch) {
-    await new Promise(() => {}); // Wait indefinitely.
+    await new Promise(() => { }); // Wait indefinitely.
   }
 
   return { success: errors.flat().length === 0 };

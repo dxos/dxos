@@ -19,6 +19,10 @@ export const fixRequirePlugin = (): Plugin => ({
   name: 'fix-require',
   setup: (build) => {
     build.onEnd(async (args) => {
+      if(args.errors.length > 0) {
+        return;
+      }
+
       if (!args.metafile) {
         throw new Error('Metafile is require for fixRequirePlugin');
       }

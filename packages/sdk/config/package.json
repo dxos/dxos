@@ -37,6 +37,7 @@
     "@dxos/util": "workspace:*",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
+    "pkg-up": "3.1.0",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",

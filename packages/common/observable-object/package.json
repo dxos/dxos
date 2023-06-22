@@ -48,6 +48,9 @@
   "optionalDependencies": {
     "react": "*"
   },
+  "peerDependencies": {
+    "react": "*"
+  },
   "publishConfig": {
     "access": "public"
   }
