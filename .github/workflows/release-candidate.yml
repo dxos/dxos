@@ -32,10 +32,16 @@ jobs:
         with:
           branch: ${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
 
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Checkout all branches
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
       - name: Push to Staging
         run: |
           BRANCH="${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}"
           git checkout $BRANCH
           git checkout staging
           git reset --hard $BRANCH
-          git push --force staging
+          git push --force

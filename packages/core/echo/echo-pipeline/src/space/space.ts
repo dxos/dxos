@@ -241,10 +241,12 @@ export class Space {
     log('closed');
   }
 
+  @synchronized
   async initializeDataPipeline() {
     log('initializeDataPipeline');
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
     await this._dataPipeline.open();
-    await this._dataPipelineCredentialConsumer!.open();
+    assert(this._dataPipelineCredentialConsumer);
+    await this._dataPipelineCredentialConsumer.open();
   }
 }

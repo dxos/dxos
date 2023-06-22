@@ -22,7 +22,19 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [fromCliEnv(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/cli-env.ts#L19)
+### [diagnostics(client, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/diagnostics.ts#L40)
+
+
+
+Returns: <code>Promise&lt;any&gt;</code>
+
+Arguments: 
+
+`client`: <code>[Client](/api/@dxos/client/classes/Client)</code>
+
+`options`: <code>[DiagnosticOptions](/api/@dxos/client/types/DiagnosticOptions)</code>
+
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/agent.ts#L27)
 
 
 
@@ -33,7 +45,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServi
 
 Arguments: 
 
-`options`: <code>[FromCliEnvOptions](/api/@dxos/client/types/FromCliEnvOptions)</code>
+`options`: <code>[fromAgentOptions](/api/@dxos/client/types/fromAgentOptions)</code>
 
 ### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
 
@@ -86,6 +98,18 @@ Generate bip39 seed phrase (aka mnemonic).
 Returns: <code>string</code>
 
 Arguments: none
+
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/agent.ts#L17)
+
+
+
+Returns: <code>string</code>
+
+Arguments: 
+
+`profile`: <code>string</code>
+
+`protocol`: <code>string</code>
 
 ### [isReferenceLike(value)]()
 

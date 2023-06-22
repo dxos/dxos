@@ -26,7 +26,7 @@ describe('Swarm', () => {
     afterTest(() => signalManager.close());
   });
 
-  const setupSwarm = ({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) => {
+  const setupSwarm = async ({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) => {
     const protocol = new TestWireProtocol(peerId);
     const swarm = new Swarm(
       topic,
@@ -42,6 +42,8 @@ describe('Swarm', () => {
       await swarm.destroy();
     });
 
+    await swarm.open();
+
     return { swarm, protocol };
   };
 
@@ -50,9 +52,9 @@ describe('Swarm', () => {
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
+    const { swarm: swarm1, protocol: protocol1 } = await setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
+    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -89,8 +91,8 @@ describe('Swarm', () => {
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1 } = setupSwarm({ topic, peerId: peerId1 });
-    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
+    const { swarm: swarm1 } = await setupSwarm({ topic, peerId: peerId1 });
+    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -119,9 +121,9 @@ describe('Swarm', () => {
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1, protocol: protocol1 } = setupSwarm({ topic, peerId: peerId1 });
+    const { swarm: swarm1, protocol: protocol1 } = await setupSwarm({ topic, peerId: peerId1 });
 
-    const { swarm: swarm2 } = setupSwarm({ topic, peerId: peerId2 });
+    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);

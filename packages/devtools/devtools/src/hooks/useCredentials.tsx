@@ -20,9 +20,9 @@ export const useCredentials = ({ spaceKey }: { spaceKey?: PublicKey }) => {
     if (!spaceKey) {
       return;
     }
-    const stream = services.SpacesService.queryCredentials({ spaceKey });
-    const newCredentials: Credential[] = [];
 
+    const newCredentials: Credential[] = [];
+    const stream = services.SpacesService.queryCredentials({ spaceKey });
     stream.subscribe((credential) => {
       newCredentials.push(credential);
       setCredentials([...newCredentials]);

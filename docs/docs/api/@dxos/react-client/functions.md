@@ -36,7 +36,19 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
 
-### [fromCliEnv(\[options\])]()
+### [diagnostics(client, options)]()
+
+
+
+Returns: <code>Promise&lt;any&gt;</code>
+
+Arguments: 
+
+`client`: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+
+`options`: <code>[DiagnosticOptions](/api/@dxos/react-client/types/DiagnosticOptions)</code>
+
+### [fromAgent(\[options\])]()
 
 
 
@@ -47,7 +59,7 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/Clien
 
 Arguments: 
 
-`options`: <code>[FromCliEnvOptions](/api/@dxos/react-client/types/FromCliEnvOptions)</code>
+`options`: <code>[fromAgentOptions](/api/@dxos/react-client/types/fromAgentOptions)</code>
 
 ### [fromHost(\[config\])]()
 
@@ -100,6 +112,18 @@ Generate bip39 seed phrase (aka mnemonic).
 Returns: <code>string</code>
 
 Arguments: none
+
+### [getUnixSocket(profile, \[protocol\])]()
+
+
+
+Returns: <code>string</code>
+
+Arguments: 
+
+`profile`: <code>string</code>
+
+`protocol`: <code>string</code>
 
 ### [isReferenceLike(value)]()
 

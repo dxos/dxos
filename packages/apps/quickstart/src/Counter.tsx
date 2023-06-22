@@ -8,7 +8,7 @@ import { Loading } from '@dxos/react-appkit';
 import { Expando, useQuery, useIdentity, useSpaces } from '@dxos/react-client';
 
 export const Counter = () => {
-  const identity = useIdentity({ login: true });
+  const identity = useIdentity();
   const [space] = useSpaces();
   const [counter] = useQuery(space, { type: 'counter' });
 

@@ -32,27 +32,27 @@ export class AppManager {
   }
 
   isAuthenticated() {
-    return this.page.getByTestId('composer.firstRunMessage').isVisible();
+    return this.page.getByTestId('splitViewPlugin.firstRunMessage').isVisible();
   }
 
   createSpace() {
-    return this.page.getByTestId('composer.createSpace').click();
+    return this.page.getByTestId('spacePlugin.createSpace').click();
   }
 
   joinSpace() {
-    return this.page.getByTestId('composer.joinSpace').click();
+    return this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   createDocument() {
-    return this.page.getByTestId('composer.createDocument').last().click();
+    return this.page.getByTestId('spacePlugin.createDocument').last().click();
   }
 
   getSpaceItemsCount() {
-    return this.page.getByTestId('composer.spaceTreeItemHeading').count();
+    return this.page.getByTestId('spacePlugin.spaceTreeItemHeading').count();
   }
 
   getDocumentItemsCount() {
-    return this.page.getByTestId('composer.documentTreeItemHeading').count();
+    return this.page.getByTestId('spacePlugin.documentTreeItemHeading').count();
   }
 
   getMarkdownTextbox() {
@@ -75,7 +75,7 @@ export class AppManager {
   }
 
   getDocumentLinks() {
-    return this.page.getByTestId('composer.documentTreeItemHeading');
+    return this.page.getByTestId('spacePlugin.documentTreeItemHeading');
   }
 
   getCollaboratorCursors() {

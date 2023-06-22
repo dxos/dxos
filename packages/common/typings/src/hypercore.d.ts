@@ -207,7 +207,7 @@ declare module 'hypercore' {
     has(start: number, end?: number): boolean;
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedclearstart-end-callback
-    clear (start: number, end?: number, cb?: Callback<void>): void;
+    clear(start: number, end?: number, cb?: Callback<void>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
     /** @deprecated remove in v10 */
@@ -243,7 +243,7 @@ declare module 'hypercore' {
   export type HypercoreConstructor = (
     storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
-    options?: HypercoreOptions
+    options?: HypercoreOptions,
   ) => Hypercore;
 
   // Default constructor.
@@ -251,7 +251,7 @@ declare module 'hypercore' {
   export function hypercore<T = any>(
     storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
-    options?: HypercoreOptions
+    options?: HypercoreOptions,
   ): Hypercore<T>;
 
   export default hypercore;

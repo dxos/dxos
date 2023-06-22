@@ -40,7 +40,7 @@ export const testConfigWithLocalSignal = new Config({
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
 export class TestBuilder {
-  private readonly _config: Config;
+  public config: Config;
 
   public storage?: Storage;
 
@@ -48,32 +48,28 @@ export class TestBuilder {
   constructor (
     config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
-    private readonly _signalManagerContext = new MemorySignalManagerContext()
+    public signalManagerContext = new MemorySignalManagerContext()
   ) {
-    this._config = config ?? new Config();
-  }
-
-  get config(): Config {
-    return this._config;
+    this.config = config ?? new Config();
   }
 
   /**
    * Get network manager using local shared memory or remote signal manager.
    */
   private get networking() {
-    const signals = this._config.get('runtime.services.signaling');
+    const signals = this.config.get('runtime.services.signaling');
     if (signals) {
       return {
         signalManager: new WebsocketSignalManager(signals),
         transportFactory: createWebRTCTransportFactory({
-          iceServers: this._config.get('runtime.services.ice'),
+          iceServers: this.config.get('runtime.services.ice'),
         }),
       };
     }
 
     // Memory transport with shared context.
     return {
-      signalManager: new MemorySignalManager(this._signalManagerContext),
+      signalManager: new MemorySignalManager(this.signalManagerContext),
       transportFactory: MemoryTransportFactory,
     };
   }
@@ -83,7 +79,7 @@ export class TestBuilder {
    */
   createClientServicesHost() {
     return new ClientServicesHost({
-      config: this._config,
+      config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,
@@ -95,7 +91,7 @@ export class TestBuilder {
    */
   createLocal() {
     return new LocalClientServices({
-      config: this._config,
+      config: this.config,
       modelFactory: this._modelFactory,
       storage: this.storage,
       ...this.networking,

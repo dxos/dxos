@@ -75,19 +75,17 @@ export class Gossip {
   }
 
   postMessage(channel: string, payload: any) {
-    return Promise.all(
-      [...this._connections.values()].map((extension) =>
-        extension
-          .sendAnnounce({
-            peerId: this._params.localPeerId,
-            messageId: PublicKey.random(),
-            channelId: channel,
-            timestamp: new Date(),
-            payload,
-          })
-          .catch((err) => log.warn(err)),
-      ),
-    );
+    for (const extension of this._connections.values()) {
+      void extension
+        .sendAnnounce({
+          peerId: this._params.localPeerId,
+          messageId: PublicKey.random(),
+          channelId: channel,
+          timestamp: new Date(),
+          payload,
+        })
+        .catch((err) => log(err));
+    }
   }
 
   listen(channel: string, callback: (message: GossipMessage) => void) {
@@ -117,7 +115,7 @@ export class Gossip {
         if (this._params.localPeerId.equals(message.peerId) || remotePeerId.equals(message.peerId)) {
           return;
         }
-        return extension.sendAnnounce(message).catch((err) => log.warn(err));
+        return extension.sendAnnounce(message).catch((err) => log(err));
       }),
     );
   }
