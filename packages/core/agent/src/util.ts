@@ -3,9 +3,10 @@
 //
 
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { getUnixSocket } from '@dxos/client';
+import { DX_RUNTIME, getUnixSocket } from '@dxos/client';
 
 export const parseAddress = (sock: string) => {
   const [protocol, path] = sock.split('://');
@@ -29,6 +30,8 @@ export const waitForDaemon = async (profile: string) => {
   const { path } = parseAddress(getUnixSocket(profile));
   fs.rmSync(path, { force: true });
 };
+
+export const lockFilePath = (profile: string): string => path.join(DX_RUNTIME, 'agent', 'profile', profile, 'lockfile');
 
 export const waitFor = async ({
   condition,

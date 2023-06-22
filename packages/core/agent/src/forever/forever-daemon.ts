@@ -6,13 +6,13 @@ import forever, { ForeverProcess } from 'forever';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { DX_RUNTIME, getUnixSocket } from '@dxos/client';
+import { getUnixSocket } from '@dxos/client';
 import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../timeouts';
-import { parseAddress, removeSocketFile, waitFor } from '../util';
+import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -56,7 +56,7 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      if (isLocked({ lockKey: profile, root: path.join(this._rootDir, 'profile', profile) })) {
+      if (isLocked(lockFilePath(profile))) {
         throw new Error(`Profile is locked: ${profile}`);
       }
 
@@ -92,7 +92,7 @@ export class ForeverDaemon implements Daemon {
     if (await this.isRunning(profile)) {
       forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
       await waitFor({
-        condition: async () => !isLocked({ lockKey: profile, root: path.join(this._rootDir, 'profile', profile) }),
+        condition: async () => !isLocked(lockFilePath(profile)),
       });
     }
 
