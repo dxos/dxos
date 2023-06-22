@@ -21,6 +21,7 @@ module.exports = {
           root: __dirname,
           content: [
             resolve(__dirname, '../src/**/*.{js,ts,jsx,tsx}'),
+            resolve(__dirname, '../node_modules/@braneframe/plugin-markdown/node_modules/@dxos/aurora-composer/src/**/*.{js,ts,jsx,tsx}')
           ]
         })
       ]

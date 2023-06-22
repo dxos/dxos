@@ -5,6 +5,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { Main, Input, List, Button, useTranslation, randomString } from '@dxos/aurora';
+import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
@@ -30,21 +31,23 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             </Fragment>
           );
         })}
-      <Button
-        onClick={() => {
-          const section: StackSectionModel = {
-            source: { resolver: 'dxos:markdown', guid: randomString() },
-            object: {
-              id: randomString(),
-              content: '',
-              title: '',
-            },
-          };
-          sections.splice(sections.length, 0, section);
-        }}
-      >
-        {t('add section label')}
-      </Button>
+      <div role='none' className='p-4'>
+        <Button
+          onClick={() => {
+            const section: StackSectionModel = {
+              source: { resolver: 'dxos:markdown', guid: randomString() },
+              object: {
+                id: randomString(),
+                content: '',
+                title: '',
+              },
+            };
+            sections.splice(sections.length, 0, section);
+          }}
+        >
+          {t('add section label')}
+        </Button>
+      </div>
     </article>
   );
 };
@@ -61,11 +64,12 @@ export const StackMain = ({
         <Input.Label srOnly>{t('stack title label')}</Input.Label>
         <Input.TextInput
           variant='subdued'
-          classNames='p-2'
+          classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
           defaultValue={properties.title}
           onChange={({ target: { value } }) => (properties.title = value)}
         />
       </Input.Root>
+      <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 opacity-50')} />
       <List>
         <StackMainImpl sections={stack.sections} />
       </List>
