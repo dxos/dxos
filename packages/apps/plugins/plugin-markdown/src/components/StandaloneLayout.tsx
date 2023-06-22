@@ -3,16 +3,15 @@
 //
 
 import { DotsThreeVertical } from '@phosphor-icons/react';
-import React, { HTMLAttributes, PropsWithChildren, RefObject } from 'react';
+import React, { PropsWithChildren, RefObject } from 'react';
 
-import { Button, DropdownMenu, ThemeContext, Main, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, ThemeContext, Main, Input, useThemeContext, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
-import { Input } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
+import { observer } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
-import { MarkdownProperties } from './MarkdownMain';
+import { MarkdownProperties } from '../props';
 
 export const StandaloneLayout = observer(
   ({
@@ -31,22 +30,17 @@ export const StandaloneLayout = observer(
       <Main.Content classNames='min-bs-full'>
         <div role='none' className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white dark:bg-neutral-925 flex flex-col'>
           <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
-            <Input
-              key={model.id}
-              variant='subdued'
-              label={t('document title label')}
-              labelVisuallyHidden
-              placeholder={t('untitled document title')}
-              value={properties.title ?? ''}
-              onChange={({ target: { value } }) => (properties.title = value)}
-              slots={{
-                root: { className: 'shrink-0 grow pis-6 plb-1.5 pointer-fine:plb-0.5' },
-                input: {
-                  'data-testid': 'composer.documentTitle',
-                  className: 'text-center',
-                } as HTMLAttributes<HTMLInputElement>,
-              }}
-            />
+            <Input.Root id={`input--${model.id}`}>
+              <Input.Label srOnly>{t('document title label')}</Input.Label>
+              <Input.TextInput
+                variant='subdued'
+                placeholder={t('untitled document title')}
+                value={properties.title ?? ''}
+                onChange={({ target: { value } }) => (properties.title = value)}
+                classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
+                data-testid='composer.documentTitle'
+              />
+            </Input.Root>
             <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
               <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
