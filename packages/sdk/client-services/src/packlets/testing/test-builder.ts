@@ -4,6 +4,7 @@
 
 import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { SnapshotStore, DataPipeline, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
@@ -71,11 +72,22 @@ export const syncItemsLocal = async (db1: DataPipeline, db2: DataPipeline) => {
 
 export class TestBuilder {
   public readonly signalContext = new MemorySignalManagerContext();
+  private readonly _ctx = new Context();
 
-  createPeer(): TestPeer {
-    return new TestPeer(this.signalContext);
+  createPeer(peerOptions?: TestPeerOpts): TestPeer {
+    const peer = new TestPeer(this.signalContext, peerOptions);
+    this._ctx.onDispose(async () => peer.destroy());
+    return peer;
+  }
+
+  async destroy() {
+    await this._ctx.dispose();
   }
 }
+
+export type TestPeerOpts = {
+  storageType?: StorageType;
+};
 
 export type TestPeerProps = {
   storage?: Storage;
@@ -90,10 +102,13 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
 
-  constructor(private readonly signalContext: MemorySignalManagerContext) {}
+  constructor(
+    private readonly signalContext: MemorySignalManagerContext,
+    private readonly opts: TestPeerOpts = { storageType: StorageType.RAM },
+  ) {}
 
   get storage() {
-    return (this._props.storage ??= createStorage({ type: StorageType.RAM }));
+    return (this._props.storage ??= createStorage({ type: this.opts.storageType }));
   }
 
   get keyring() {
@@ -135,6 +150,10 @@ export class TestPeer {
       modelFactory: createDefaultModelFactory(),
       snapshotStore: this.snapshotStore,
     }));
+  }
+
+  async destroy() {
+    await this.storage.reset();
   }
 }
 

@@ -8,6 +8,7 @@
       <w>burdon</w>
       <w>cairan</w>
       <w>callbackfn</w>
+      <w>containerd</w>
       <w>crdt</w>
       <w>ctors</w>
       <w>delimitered</w>
@@ -20,6 +21,8 @@
       <w>dxos's</w>
       <w>dxrpc</w>
       <w>endcap</w>
+      <w>faas</w>
+      <w>faasd</w>
       <w>frontmatter</w>
       <w>hljs</w>
       <w>hypercard</w>
@@ -30,6 +33,7 @@
       <w>ipdata</w>
       <w>kodama</w>
       <w>latlng</w>
+      <w>libsodium</w>
       <w>lichess</w>
       <w>localizer</w>
       <w>loopback</w>
@@ -39,9 +43,11 @@
       <w>mins</w>
       <w>minsize</w>
       <w>mkcert</w>
+      <w>multipass</w>
       <w>nanoerror</w>
       <w>nanomessage</w>
       <w>nanoresource</w>
+      <w>oclif</w>
       <w>onauthenticate</w>
       <w>onchannelclose</w>
       <w>ondata</w>
@@ -57,6 +63,7 @@
       <w>onunwant</w>
       <w>onwait</w>
       <w>onwant</w>
+      <w>openfaas</w>
       <w>orgs</w>
       <w>packlets</w>
       <w>permissionless</w>

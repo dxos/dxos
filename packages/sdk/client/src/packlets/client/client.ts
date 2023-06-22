@@ -171,6 +171,10 @@ export class Client {
     return this._echo.dbRouter;
   }
 
+  addSchema(schema: EchoSchema): void {
+    return this._echo.addSchema(schema);
+  }
+
   /**
    * ECHO spaces.
    */
@@ -178,8 +182,11 @@ export class Client {
     return this._echo.spaces;
   }
 
-  addSchema(schema: EchoSchema): void {
-    return this._echo.addSchema(schema);
+  /**
+   * Get an existing space by its key.
+   */
+  getSpace(spaceKey: PublicKey): Space | undefined {
+    return this._echo.getSpace(spaceKey);
   }
 
   /**
@@ -187,13 +194,6 @@ export class Client {
    */
   createSpace(meta?: PropertiesProps): Promise<Space> {
     return this._echo.createSpace(meta);
-  }
-
-  /**
-   * Get an existing space by its key.
-   */
-  getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._echo.getSpace(spaceKey);
   }
 
   /**
@@ -218,6 +218,7 @@ export class Client {
     await this._services.open();
 
     // TODO(burdon): Remove?
+    // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       await createDevtoolsRpcServer(this, this._services);
     }

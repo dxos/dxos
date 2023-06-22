@@ -69,7 +69,6 @@ export class ItemManager {
     assert(itemId);
     assert(modelType);
     if (this.entities.has(itemId)) {
-      log.info('init twice');
       return this.entities.get(itemId)!;
     }
 

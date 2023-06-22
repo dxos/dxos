@@ -168,9 +168,8 @@ export class ServiceContext {
   private async _checkStorageVersion() {
     await this.metadataStore.load();
     if (this.metadataStore.version !== STORAGE_VERSION) {
-      log.error('Invalid storage version', { current: this.metadataStore.version, expected: STORAGE_VERSION });
+      throw new Error(`Invalid storage version: current=${this.metadataStore.version}, expected=${STORAGE_VERSION}`);
       // TODO(mykola): Migrate storage to a new version if incompatibility is detected.
-      await this.metadataStore.clear();
     }
   }
 

@@ -25,7 +25,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     'flex flex-col',
     !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     'is-[95vw] md:is-full max-is-md rounded-xl p-4',
-    'shadow-2xl bg-white dark:bg-neutral-800',
+    'shadow-2xl bg-neutral-50 dark:bg-neutral-850',
     defaultFocus,
     ...etc,
   );

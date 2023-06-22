@@ -25,6 +25,7 @@ import { InvitationsProxy } from './invitations-proxy';
 
 export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
+
   /**
    * @internal
    * To update the space query when a space changes.
@@ -61,14 +62,13 @@ export class SpaceProxy implements Space {
   private readonly _internal!: SpaceInternal;
   private readonly _dbBackend?: DatabaseProxy;
   private readonly _itemManager?: ItemManager;
-  private readonly _invitationProxy: InvitationsProxy;
+  private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _error: Error | undefined = undefined;
-
   private _cachedProperties: Properties;
   private _properties?: TypedObject;
 
@@ -80,15 +80,14 @@ export class SpaceProxy implements Space {
     databaseRouter: DatabaseRouter
   ) {
     assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
-    this._invitationProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
+    this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
       spaceKey: this.key
     }));
 
     assert(this._clientServices.services.DataService, 'DataService not available');
-    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this.key);
     this._itemManager = new ItemManager(this._modelFactory);
-
+    this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this._itemManager, this.key);
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -105,7 +104,7 @@ export class SpaceProxy implements Space {
 
     databaseRouter.register(this.key, this._db);
 
-    // Update observables
+    // Update observables.
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
@@ -122,19 +121,6 @@ export class SpaceProxy implements Space {
 
   get isOpen() {
     return this._data.state === SpaceState.READY && this._initialized;
-  }
-
-  /**
-   * Current state of the space.
-   * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
-   */
-  private get _currentState(): SpaceState {
-    if (this._data.state === SpaceState.READY && !this._initialized) {
-      return SpaceState.INITIALIZING;
-    } else {
-      return this._data.state;
-    }
   }
 
   get db() {
@@ -165,7 +151,7 @@ export class SpaceProxy implements Space {
    * @inheritdoc
    */
   get invitations() {
-    return this._invitationProxy.created;
+    return this._invitationsProxy.created;
   }
 
   /**
@@ -185,6 +171,19 @@ export class SpaceProxy implements Space {
 
   get error(): Error | undefined {
     return this._error;
+  }
+
+  /**
+   * Current state of the space.
+   * The database is ready to be used in `SpaceState.READY` state.
+   * Presence is available in `SpaceState.INACTIVE` state.
+   */
+  private get _currentState(): SpaceState {
+    if (this._data.state === SpaceState.READY && !this._initialized) {
+      return SpaceState.INITIALIZING;
+    } else {
+      return this._data.state;
+    }
   }
 
   /**
@@ -228,9 +227,9 @@ export class SpaceProxy implements Space {
     // TODO(burdon): Does this need to be set before method completes?
     this._initializing = true;
 
-    await this._invitationProxy.open();
+    await this._invitationsProxy.open();
 
-    await this._dbBackend!.open(this._itemManager!, this._modelFactory);
+    await this._dbBackend!.open(this._modelFactory);
     log('ready');
     this._databaseInitialized.wake();
 
@@ -276,7 +275,7 @@ export class SpaceProxy implements Space {
   async _destroy() {
     log('destroying...');
     await this._ctx.dispose();
-    await this._invitationProxy.close();
+    await this._invitationsProxy.close();
     await this._dbBackend?.close();
     await this._itemManager?.destroy();
     log('destroyed');
@@ -331,7 +330,7 @@ export class SpaceProxy implements Space {
    */
   createInvitation(options?: Partial<Invitation>) {
     log('create invitation', options);
-    return this._invitationProxy.createInvitation(options);
+    return this._invitationsProxy.createInvitation(options);
   }
 
   /**

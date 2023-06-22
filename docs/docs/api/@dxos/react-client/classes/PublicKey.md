@@ -121,7 +121,7 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`length`: <code>number</code>
+`length`: <code>undefined</code>
 
 ### [assertValidPublicKey(value)]()
 
