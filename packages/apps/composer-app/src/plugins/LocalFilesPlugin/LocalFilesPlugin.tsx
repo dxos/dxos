@@ -6,6 +6,7 @@ import { File as FileIcon, FilePlus, FloppyDisk, FolderPlus, Plugs, X } from '@p
 import localforage from 'localforage';
 import React from 'react';
 
+import { MarkdownProvides } from '@braneframe/plugin-markdown';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import {
   GraphNode,
@@ -21,7 +22,6 @@ import {
   TranslationsProvides,
 } from '@dxos/react-surface';
 
-import { MarkdownProvides } from '../MarkdownPlugin';
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';
 
