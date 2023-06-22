@@ -52,7 +52,7 @@ export default class Run extends BaseCommand<typeof Run> {
       await agent.monitorEpochs({ limit });
     }
 
-    // NOTE: This is not currently called by the agent's forever daemon.
+    // NOTE: This is currently called by the agent's forever daemon.
     this.log('Agent started... (ctrl-c to exit)');
     process.on('SIGINT', async () => {
       await agent.stop();
