@@ -275,6 +275,9 @@ message Invitation {
    */
   message Beacon {
     optional bytes swarm_key = 1;
+
+    /// Preimage of the swarm key to protect against spoofing.
+    optional bytes key_preimage = 2;
   }
 
   enum Type {
