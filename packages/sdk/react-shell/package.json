@@ -29,12 +29,13 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-accordion": "^1.1.1",
@@ -45,7 +46,6 @@
     "lodash.toarray": "^4.4.0",
     "qrcode.react": "^3.1.0",
     "url-join": "^5.0.0",
-    "@dxos/log": "workspace:*",
     "xstate": "^4.37.0"
   },
   "devDependencies": {

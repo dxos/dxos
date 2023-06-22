@@ -30,15 +30,15 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hypercore": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "debug": "^4.3.3",
     "random-access-storage": "^3.0.0",
-    "@dxos/keyring": "workspace:*",
     "streamx": "^2.12.5"
   },
   "devDependencies": {

@@ -14,6 +14,7 @@
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -29,13 +30,12 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "assert": "^2.0.0",
-    "yjs": "^13.5.44",
-    "@faker-js/faker": "^7.3.0",
     "@dxos/text-model": "workspace:*",
-    "@dxos/aurora": "workspace:*",
-    "use-subscription": "^1.8.0"
+    "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
+    "assert": "^2.0.0",
+    "use-subscription": "^1.8.0",
+    "yjs": "^13.5.44"
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",

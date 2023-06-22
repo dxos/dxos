@@ -50,6 +50,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
     }
   ]
 }
