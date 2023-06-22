@@ -21,13 +21,12 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   return (
     <article>
       {sections
-        // todo(thure): This filter should be unnecessary; why is the first value sometimes some sort of array-like object?
-        .filter((section) => 'object' in section)
-        .map(({ object }, o) => {
+        // todo(thure): This filter should be unnecessary; why is the first (or only?) value sometimes some sort of array-like object?
+        .filter((section) => 'source' in section)
+        .map((section, o) => {
           return (
-            <Fragment key={o}>
-              <p className='mlb-2'>{o}</p>
-              <Surface role='section' data={[object, object]} />
+            <Fragment key={section.source.guid}>
+              <Surface role='section' data={section} />
             </Fragment>
           );
         })}

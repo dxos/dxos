@@ -1,4 +1,4 @@
-# @braneframe/surface-plugin-stack
+# @braneframe/plugin-stack
 
 Surface plugin for Stack entities.
 

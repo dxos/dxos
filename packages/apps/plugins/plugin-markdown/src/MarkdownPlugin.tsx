@@ -8,6 +8,7 @@ import { PluginDefinition, definePlugin } from '@dxos/react-surface';
 import { YText } from '@dxos/text-model';
 
 import { MarkdownProperties, MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
+import { MarkdownSection } from './components/MarkdownSection';
 import translations from './translations';
 
 export const isMarkdown = (datum: unknown): datum is ComposerModel =>
@@ -40,6 +41,10 @@ export const MarkdownPlugin: PluginDefinition = definePlugin({
             }
           }
           break;
+        case 'section':
+          if (datum && typeof datum === 'object' && 'object' in datum && isMarkdown(datum.object)) {
+            return MarkdownSection;
+          }
       }
 
       return null;

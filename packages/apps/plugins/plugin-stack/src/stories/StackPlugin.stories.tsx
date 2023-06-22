@@ -5,6 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
+import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { ObservableArray, ObservableObject } from '@dxos/observable-object';
 import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface';
 
@@ -30,7 +31,9 @@ const StackPluginStoryPlugin = {
   },
 };
 
-const StackSurfacesApp = () => <PluginContextProvider plugins={[ThemePlugin, StackPlugin, StackPluginStoryPlugin]} />;
+const StackSurfacesApp = () => (
+  <PluginContextProvider plugins={[ThemePlugin, StackPlugin, MarkdownPlugin, StackPluginStoryPlugin]} />
+);
 
 export default {
   component: StackSurfacesApp,

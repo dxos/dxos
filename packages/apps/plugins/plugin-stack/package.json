@@ -18,6 +18,7 @@
     "@dxos/observable-object": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-markdown": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
