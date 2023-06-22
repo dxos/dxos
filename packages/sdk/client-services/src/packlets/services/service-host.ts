@@ -16,6 +16,7 @@ import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
+import { isNode } from '@dxos/util';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -28,7 +29,7 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { VaultResourceLock } from '../vault';
 import { NodeResourceLock } from './node-resource-lock';
-import { ResourceLock } from './resource-lock';
+import { ResourceLock, ResourceLockOptions } from './resource-lock';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -90,27 +91,22 @@ export class ClientServicesHost {
       this.initialize({ config, transportFactory, signalManager });
     }
 
-    this._resourceLock = lockKey
-      ? typeof window !== 'undefined'
-        ? new VaultResourceLock({
-            lockKey,
-            onAcquire: () => {
-              if (!this._opening) {
-                void this.open();
-              }
-            },
-            onRelease: () => this.close(),
-          })
-        : new NodeResourceLock({
-            lockKey,
-            onAcquire: () => {
-              if (!this._opening) {
-                void this.open();
-              }
-            },
-            onRelease: () => this.close(),
-          })
-      : undefined;
+    if (lockKey) {
+      const lockParams: ResourceLockOptions = {
+        lockKey,
+        onAcquire: () => {
+          if (!this._opening) {
+            void this.open();
+          }
+        },
+        onRelease: () => this.close(),
+      };
+      this._resourceLock = lockKey
+        ? isNode()
+          ? new NodeResourceLock(lockParams)
+          : new VaultResourceLock(lockParams)
+        : undefined;
+    }
 
     this._systemService = new SystemServiceImpl({
       config: this._config,
