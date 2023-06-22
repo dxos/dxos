@@ -4419,7 +4419,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
-      pkg-up: 3.1.0
+      pkg-up: ^3.1.0
       webpack: ^5.75.0
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
