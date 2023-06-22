@@ -276,7 +276,7 @@ message Invitation {
   message Beacon {
     optional bytes swarm_key = 1;
 
-    /// Preimage of the swarm key to protect against spoofing.
+    /// Preimage of the swarm key to protect against spoofing as the swarm key is publically visible on the signal servers.
     optional bytes key_preimage = 2;
   }
 
