@@ -16,20 +16,17 @@ import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
-import { isNode } from '@dxos/util';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { IdentityServiceImpl } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
+import { createLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { VaultResourceLock } from '../vault';
-import { NodeResourceLock } from '../locks/node-resource-lock';
-import { ResourceLock, ResourceLockOptions } from '../locks/resource-lock';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -92,7 +89,7 @@ export class ClientServicesHost {
     }
 
     if (lockKey) {
-      const lockParams: ResourceLockOptions = {
+      this._resourceLock = createLock({
         lockKey,
         onAcquire: () => {
           if (!this._opening) {
@@ -100,12 +97,7 @@ export class ClientServicesHost {
           }
         },
         onRelease: () => this.close(),
-      };
-      this._resourceLock = lockKey
-        ? isNode()
-          ? new NodeResourceLock(lockParams)
-          : new VaultResourceLock(lockParams)
-        : undefined;
+      });
     }
 
     this._systemService = new SystemServiceImpl({

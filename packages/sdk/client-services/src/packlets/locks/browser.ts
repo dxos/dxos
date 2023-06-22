@@ -6,7 +6,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 
-import { ResourceLock, ResourceLockOptions } from '../services';
+import { ResourceLock, ResourceLockOptions } from './resource-lock';
 
 enum Message {
   ACQUIRING = 'acquiring',
@@ -14,7 +14,7 @@ enum Message {
 
 // TODO(mykola): Factor out.
 // TODO(burdon): Extend to support locking for web and NodeJS (use npm lockfile). Use to lock agents.
-export class VaultResourceLock implements ResourceLock {
+export class Lock implements ResourceLock {
   private readonly _broadcastChannel = new BroadcastChannel('vault-resource-lock');
   private readonly _lockKey: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];

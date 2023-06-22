@@ -9,6 +9,7 @@
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "jsondown": false,
+    "./src/packlets/locks/node.ts": "./src/packlets/locks/browser.ts",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },

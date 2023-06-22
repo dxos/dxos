@@ -7,10 +7,10 @@ import lockfile from 'lockfile';
 import { Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
 
-import { ResourceLock, ResourceLockOptions } from '../services';
+import { ResourceLock, ResourceLockOptions } from './resource-lock';
 
 // TODO(mykola): Factor out.
-export class NodeResourceLock implements ResourceLock {
+export class Lock implements ResourceLock {
   private readonly _lockPath: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];
   private readonly _onRelease: ResourceLockOptions['onRelease'];
