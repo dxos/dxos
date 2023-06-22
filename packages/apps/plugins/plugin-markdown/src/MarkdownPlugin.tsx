@@ -2,25 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ComposerModel } from '@dxos/aurora-composer';
-import { subscribe } from '@dxos/observable-object';
 import { PluginDefinition, definePlugin } from '@dxos/react-surface';
-import { YText } from '@dxos/text-model';
 
-import { MarkdownProperties, MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
+import { MarkdownMainStandalone, MarkdownMainEmbedded } from './components';
 import { MarkdownSection } from './components/MarkdownSection';
+import { isMarkdown, isMarkdownProperties } from './props';
 import translations from './translations';
-
-export const isMarkdown = (datum: unknown): datum is ComposerModel =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      'content' in datum &&
-      (typeof datum.content === 'string' || datum.content instanceof YText)
-    : false;
-
-export const isMarkdownProperties = (datum: unknown): datum is MarkdownProperties =>
-  datum ? typeof datum === 'object' && subscribe in datum : false;
 
 // TODO(wittjosiah): This explicit type should not be necessary, should be inferred from `definePlugin`.
 export const MarkdownPlugin: PluginDefinition = definePlugin({

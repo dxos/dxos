@@ -3,3 +3,4 @@
 //
 
 export * from './MarkdownPlugin';
+export * from './props';
