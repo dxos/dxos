@@ -28,7 +28,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
       path.join(DX_DATA, profile),
       path.join(DX_STATE, profile),
       path.join(DX_RUNTIME, profile),
-      path.join(DX_RUNTIME, 'agent', profile),
+      path.join(DX_RUNTIME, profile),
       this.clientConfig?.get('runtime.client.storage.path'),
     ].filter(Boolean) as string[];
 

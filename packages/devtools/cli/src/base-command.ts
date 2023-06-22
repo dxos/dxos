@@ -333,7 +333,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Convenience function to wrap starting the agent.
    */
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new ForeverDaemon(`${DX_RUNTIME}/agent`);
+    const daemon = new ForeverDaemon(`${DX_RUNTIME}`);
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();
