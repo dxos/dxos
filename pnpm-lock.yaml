@@ -85,7 +85,6 @@ importers:
       chai-dom: ^1.11.0
       chalk: ^4.1.0
       esbuild: ^0.16.14
-      esbuild-node-externals: ^1.7.0
       esbuild-plugin-raw: ^0.1.7
       esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.41.0
@@ -193,7 +192,6 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
-      esbuild-node-externals: 1.7.0_esbuild@0.16.14
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -23630,17 +23628,6 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
-
-  /esbuild-node-externals/1.7.0_esbuild@0.16.14:
-    resolution: {integrity: sha512-nfY3hxtO2anCTZ87LgfzCTfBuyG6de+NyiCNMF1mgrBufS0NgoYlBwF77HHuOInsJLxsAJf0BfLeV6ekZ3hRuA==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      esbuild: 0.12 - 0.17
-    dependencies:
-      esbuild: 0.16.14
-      find-up: 5.0.0
-      tslib: 2.5.0
-    dev: true
 
   /esbuild-openbsd-64/0.14.54:
     resolution: {integrity: sha512-Qyk7ikT2o7Wu76UsvvDS5q0amJvmRzDyVlL0qf5VLsLchjCa1+IAvd8kTBgUxD7VBUUVgItLkk609ZHUc1oCaw==}
