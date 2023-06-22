@@ -15,7 +15,7 @@ import { ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
-  `${protocol}://${DX_RUNTIME}/profile/${profile}/agent.sock`;
+  `${protocol}://${DX_RUNTIME}/agent/profile/${profile}/agent.sock`;
 
 export type fromAgentOptions = {
   profile?: string;
