@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { promises as fs } from 'node:fs';
 import merge from 'lodash.merge';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import yaml from 'yaml';
 

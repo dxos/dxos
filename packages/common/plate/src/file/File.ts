@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { promises as fs } from 'node:fs';
 import mkdirp from 'mkdirp';
+import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 
 // import chalk from 'chalk';

@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import yaml from 'js-yaml';
 import set from 'lodash.set';
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
