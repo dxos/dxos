@@ -33,7 +33,7 @@ export const fromIFrame = (
   }
 
   return new IFrameClientServicesHost({
-    host: fromHost({ config }),
+    host: fromHost(config),
     source,
     vault: options.vault,
     timeout: options.timeout,
@@ -43,10 +43,7 @@ export const fromIFrame = (
 /**
  * Creates stand-alone services without rpc.
  */
-export const fromHost = ({
-  config = new Config(),
-  ...params
-}: ClientServicesHostParams = {}): ClientServicesProvider => {
+export const fromHost = (config = new Config(), params?: ClientServicesHostParams): ClientServicesProvider => {
   return new LocalClientServices({
     config,
     ...setupNetworking(config),

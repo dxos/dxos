@@ -37,7 +37,7 @@ const createClientContext = async (): Promise<ClientContextProps> => {
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-    const servicesProvider = remoteSource ? fromIFrame(config) : fromHost({ config });
+    const servicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
     const client = new Client({ config, services: servicesProvider });
     await client.initialize();
 

@@ -40,7 +40,7 @@ const start = async () => {
 
   const client = new Client({
     config,
-    services: fromHost({ config }),
+    services: fromHost(config),
   });
 
   await client.initialize();

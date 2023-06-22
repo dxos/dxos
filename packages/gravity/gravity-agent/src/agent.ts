@@ -40,7 +40,7 @@ export class Agent implements AgentContext {
     stateMachine
   }: AgentParams) {
     this._config = new Config(config);
-    this._client = new Client({ config: this._config, services: services ?? fromHost({ config: this._config }) });
+    this._client = new Client({ config: this._config, services: services ?? fromHost(this._config) });
     this._spec = spec ?? {};
     this._stateMachine = stateMachine ?? new DummyStateMachine();
     this._stateMachine.setContext(this);
