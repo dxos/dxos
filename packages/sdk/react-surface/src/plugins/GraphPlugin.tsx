@@ -21,6 +21,8 @@ export type GraphNode<TDatum = any> = {
   children?: GraphNode[];
   actions?: GraphNodeAction[];
   attributes?: { [key: string]: any };
+  onReceivedTarget?: (target: GraphNode) => any;
+  onReceivedSource?: (source: unknown) => MaybePromise<void>;
 };
 
 export type GraphNodeAction = {

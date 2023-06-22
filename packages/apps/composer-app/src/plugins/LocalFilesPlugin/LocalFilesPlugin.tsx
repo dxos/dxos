@@ -22,6 +22,7 @@ import {
   TranslationsProvides,
 } from '@dxos/react-surface';
 
+import { isDocument } from '../SpacePlugin/document';
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';
 
@@ -32,6 +33,7 @@ export type LocalFile = {
 };
 
 const nodes = createStore<GraphNode<LocalFile>[]>([]);
+const childNodes = new Map<string, GraphNode<LocalFile>>();
 const store = createStore<{ current: GraphNode<LocalFile> | undefined }>();
 
 const handleKeyDown = async (event: KeyboardEvent) => {
@@ -69,7 +71,7 @@ const handleLegacySave = (node: GraphNode<LocalFile>) => {
 
 export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
 
-const isLocalFile = (datum: unknown): datum is LocalFile =>
+export const isLocalFile = (datum: unknown): datum is LocalFile =>
   datum && typeof datum === 'object' ? 'title' in datum : false;
 
 export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownProvides>({
@@ -221,7 +223,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                sidebar: { component: 'dxos:treeview/TreeView' },
                 main: { component: 'dxos:local/LocalFileMain' },
               }}
             />
@@ -255,6 +257,20 @@ const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
     data: {
       handle,
       title: handle.name,
+    },
+    onReceivedTarget: (target): GraphNode<LocalFile> => {
+      console.log({ target });
+      return node;
+    },
+    onReceivedSource: async (source) => {
+      console.log({ source });
+      if (isDocument(source)) {
+        const child = await handle.getFileHandle(`${source.title}.md`, { create: true });
+        const writeable = await child.createWritable();
+        await writeable.write(source.content.text);
+        await writeable.close();
+        node.children = await handleDirectoryChildren(handle, node);
+      }
     },
   });
 
@@ -309,28 +325,37 @@ const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle 
       continue;
     }
 
-    const file = await child.getFile();
-    const node = createStore<GraphNode<LocalFile>>({
-      id: child.name.replaceAll(/\.| /g, '-'),
-      label: child.name,
-      icon: FileIcon,
-      parent,
-      data: {
-        handle: child,
-        title: child.name,
-        text: await file.text(),
-      },
-      actions: [
-        {
-          id: 'save',
-          label: ['save label', { ns: LocalFilesPlugin.meta.id }],
-          icon: FloppyDisk,
-          invoke: async () => {
-            await handleSave(node);
-          },
+    let node = childNodes.get(child);
+    if (!node) {
+      const file = await child.getFile();
+      node = createStore<GraphNode<LocalFile>>({
+        id: child.name.replaceAll(/\.| /g, '-'),
+        label: child.name,
+        icon: FileIcon,
+        parent,
+        data: {
+          handle: child,
+          title: child.name,
+          text: await file.text(),
         },
-      ],
-    });
+        actions: [
+          {
+            id: 'save',
+            label: ['save label', { ns: LocalFilesPlugin.meta.id }],
+            icon: FloppyDisk,
+            invoke: async () => {
+              await handleSave(node!);
+            },
+          },
+        ],
+        onReceivedTarget: (): LocalFile | undefined => {
+          return node!.data;
+        },
+        onReceivedSource: (source) => {
+          console.log({ source });
+        },
+      });
+    }
     children.push(node);
   }
 
@@ -351,6 +376,12 @@ const handleFile = async (handle: any /* FileSystemFileHandle */) => {
     label: handle.name,
     icon: FileIcon,
     data,
+    onReceivedTarget: (): LocalFile | undefined => {
+      return node.data;
+    },
+    onReceivedSource: (source) => {
+      console.log({ source });
+    },
   });
 
   const closeAction: GraphNodeAction = {
@@ -446,6 +477,13 @@ const handleLegacyFile = async (file: File) => {
         },
       },
     ],
+    onReceivedTarget: (target): GraphNode<LocalFile> => {
+      console.log({ target });
+      return node;
+    },
+    onReceivedSource: (source) => {
+      console.log({ source });
+    },
   });
 
   return node;

@@ -31,6 +31,7 @@ import {
   ShellLayout,
   Space,
   SpaceState,
+  Text,
   TypedObject,
 } from '@dxos/react-client';
 import {
@@ -45,6 +46,7 @@ import {
   TranslationsProvides,
 } from '@dxos/react-surface';
 
+import { isLocalFile } from '../LocalFilesPlugin';
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
@@ -57,25 +59,35 @@ export const isSpace = (datum: unknown): datum is Space =>
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
 
-const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
-  return objects.map((obj) => ({
-    id: obj.id,
-    label: obj.title ?? 'Untitled',
-    description: obj.description,
-    icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
-    data: obj,
-    parent,
-    actions: [
-      {
-        id: 'delete',
-        label: ['delete document label', { ns: 'composer' }],
-        icon: Trash,
-        invoke: async () => {
-          parent.data?.db.remove(obj);
+const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode<TypedObject>[] => {
+  return objects.map((obj) => {
+    const node: GraphNode<TypedObject> = {
+      id: obj.id,
+      label: obj.title ?? 'Untitled',
+      description: obj.description,
+      icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
+      data: obj,
+      parent,
+      actions: [
+        {
+          id: 'delete',
+          label: ['delete document label', { ns: 'composer' }],
+          icon: Trash,
+          invoke: async () => {
+            parent.data?.db.remove(obj);
+          },
         },
+      ],
+      onReceivedTarget: () => {
+        return obj;
       },
-    ],
-  }));
+      onReceivedSource: (source) => {
+        console.log({ source });
+      },
+    };
+
+    return node;
+  });
 };
 
 // TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
@@ -99,7 +111,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   },
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-    const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+    const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
     const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
     if (!clientPlugin) {
       return;
@@ -202,6 +214,20 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                   },
                 },
               ],
+              onReceivedTarget: (target): GraphNode<Space> => {
+                console.log({ target });
+                return node!;
+              },
+              onReceivedSource: (source) => {
+                console.log({ source });
+                if (isLocalFile(source)) {
+                  const document = space.db.add(new Document({ title: source.title, content: new Text(source.text) }));
+                  console.log({ id, document, treeViewPlugin });
+                  if (treeViewPlugin) {
+                    treeViewPlugin.provides.treeView.selected = [id, document.id];
+                  }
+                }
+              },
             });
             rootNodes.set(id, node);
           }
@@ -286,7 +312,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                sidebar: { component: 'dxos:treeview/TreeView' },
                 main: { component: 'dxos:space/SpaceMain' },
               }}
             />
@@ -298,7 +324,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                sidebar: { component: 'dxos:treeview/TreeView' },
                 main: { component: 'dxos:space/SpaceMain' },
               }}
             />

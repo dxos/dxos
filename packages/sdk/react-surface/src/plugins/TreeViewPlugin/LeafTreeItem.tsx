@@ -20,6 +20,7 @@ import { appTx, getSize, mx } from '@dxos/aurora-theme';
 import { observer } from '@dxos/react-client';
 
 import { GraphNode } from '../GraphPlugin';
+import { useFakeDragAndDrop } from './TreeViewContainer';
 import { useTreeView } from './TreeViewPlugin';
 
 const spaceExp = /\s/g;
@@ -43,6 +44,8 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const label = Array.isArray(node.label) ? t(...node.label) : node.label;
   const wrap = spaceExp.test(label);
 
+  const { setSource, setTarget } = useFakeDragAndDrop();
+
   return (
     <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
       <TreeItem.Heading
@@ -59,7 +62,15 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           role='link'
           {...(!sidebarOpen && { tabIndex: -1 })}
           data-itemid={node.id}
-          onClick={() => {
+          onClick={(event) => {
+            if (event.ctrlKey || event.metaKey) {
+              setSource(node);
+              return;
+            } else if (event.shiftKey) {
+              setTarget(node);
+              return;
+            }
+
             // TODO(wittjosiah): Make recursive.
             treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
             !isLg && closeSidebar();

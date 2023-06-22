@@ -118,7 +118,7 @@ export const SplitViewPlugin = definePlugin<RouterPluginProvides & SplitViewProv
             <Surface
               component='dxos:SplitViewPlugin/SplitView'
               surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                sidebar: { component: 'dxos:treeview/TreeView' },
                 main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
               }}
             />

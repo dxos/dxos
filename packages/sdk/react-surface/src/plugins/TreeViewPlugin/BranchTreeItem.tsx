@@ -11,6 +11,7 @@ import { observer } from '@dxos/react-client';
 
 import { GraphNode } from '../GraphPlugin';
 import { TreeView } from './TreeView';
+import { useFakeDragAndDrop } from './TreeViewContainer';
 
 export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
   const [primaryAction, ...actions] = node.actions ?? [];
@@ -32,6 +33,8 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
   }, []);
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
+
+  const { setSource, setTarget } = useFakeDragAndDrop();
 
   return (
     <TreeItem.Root
@@ -62,7 +65,17 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
             disabled && defaultDisabled,
           ]}
           {...(disabled && { 'aria-disabled': true })}
-          onClick={() => setOpen(!open)}
+          onClick={(event) => {
+            if (event.ctrlKey || event.metaKey) {
+              setSource(node);
+              return;
+            } else if (event.shiftKey) {
+              setTarget(node);
+              return;
+            }
+
+            setOpen(!open);
+          }}
         >
           {Array.isArray(node.label) ? t(...node.label) : node.label}
         </TreeItem.Heading>
