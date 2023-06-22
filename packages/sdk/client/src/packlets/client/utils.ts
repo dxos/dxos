@@ -3,7 +3,7 @@
 //
 
 import { ClientServicesProvider } from '@dxos/client-protocol';
-import { LocalClientServices } from '@dxos/client-services';
+import { ClientServicesHostParams, LocalClientServices } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -43,10 +43,11 @@ export const fromIFrame = (
 /**
  * Creates stand-alone services without rpc.
  */
-export const fromHost = (config: Config = new Config()): ClientServicesProvider => {
+export const fromHost = (config = new Config(), params?: ClientServicesHostParams): ClientServicesProvider => {
   return new LocalClientServices({
     config,
     ...setupNetworking(config),
+    ...params,
   });
 };
 
