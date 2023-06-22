@@ -32,19 +32,21 @@ export class NodeResourceLock implements ResourceLock {
     if (lockfile.checkSync(this.lockKey)) {
       throw new Error(`Lock already acquired: ${this._lockPath}`);
     }
+
     lockfile.lockSync(this._lockPath);
     await this._onAcquire?.();
+
     log('acquired lock');
   }
 
   async release() {
-    if (!lockfile.checkSync(this._lockPath) {
+    if (!lockfile.checkSync(this._lockPath)) {
       throw new Error(`Lock already acquired: ${this._lockPath}`);
     }
-    lockfile.unlockSync(this._lockPath;
+
     await this._onRelease?.();
+    lockfile.unlockSync(this._lockPath);
   }
 }
 
-export const isLocked = (lockPath: string) =>
-  lockfile.checkSync(lockPath);
+export const isLocked = (lockPath: string) => lockfile.checkSync(lockPath);
