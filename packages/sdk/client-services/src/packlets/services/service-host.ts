@@ -3,10 +3,9 @@
 //
 
 import assert from 'node:assert';
-import path from 'node:path';
 
 import { Event } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory, DX_RUNTIME } from '@dxos/client-protocol';
+import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
@@ -103,7 +102,6 @@ export class ClientServicesHost {
             onRelease: () => this.close(),
           })
         : new NodeResourceLock({
-            root: path.join(DX_RUNTIME, 'agent', 'profile', lockKey),
             lockKey,
             onAcquire: () => {
               if (!this._opening) {
