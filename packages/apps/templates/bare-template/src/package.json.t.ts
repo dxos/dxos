@@ -80,7 +80,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     description: `${name}${monorepo ? '' : ' - a DXOS application'}`,
     private: true,
     scripts: {
-      build: 'NODE_OPTIONS="--max-old-space-size=4096" tsc --noEmit && vite build',
+      build: 'tsc --noEmit && NODE_OPTIONS="--max-old-space-size=4096" vite build',
       deploy: 'NODE_OPTIONS="--max-old-space-size=4096" dx app publish',
       preview: 'vite preview',
       serve: 'vite'

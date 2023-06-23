@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Hypercore, HypercoreProperties, ReadStreamOptions } from 'hypercore';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
+import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
