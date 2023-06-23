@@ -1,6 +1,10 @@
-import { Plugin } from "esbuild";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Plugin } from 'esbuild';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export type BundleDepsPluginOptions = {
   /**
@@ -14,16 +18,19 @@ export type BundleDepsPluginOptions = {
   alias?: Record<string, string>;
 
   packageDir: string;
-}
+};
 
 /**
  * Ensures all external dependencies are marked as external unless specifically listed for being included in the package bundle.
  */
 export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
   name: 'bundle-deps',
-  setup(build) {
+  setup: (build) => {
     const packageJson = JSON.parse(readFileSync(join(options.packageDir, 'package.json'), 'utf-8'));
-    const runtimeDeps = new Set([...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]);
+    const runtimeDeps = new Set([
+      ...Object.keys(packageJson.dependencies ?? {}),
+      ...Object.keys(packageJson.peerDependencies ?? {}),
+    ]);
 
     build.onResolve({ namespace: 'file', filter: /.*/ }, (args) => {
       // Ignore aliased imports.
@@ -33,7 +40,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
           kind: args.kind,
           namespace: args.namespace,
           resolveDir: options.packageDir,
-        })
+        });
       }
 
       // Ignore `node:` imports.
@@ -58,13 +65,15 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
 
       if (!runtimeDeps.has(moduleName)) {
         return {
-          errors: [{
-            text: `Missing dependency: ${moduleName}`
-          }]
-        }
+          errors: [
+            {
+              text: `Missing dependency: ${moduleName}`,
+            },
+          ],
+        };
       }
 
       return { external: true, path: args.path };
     });
   },
-})
+});

@@ -19,7 +19,7 @@ export const fixRequirePlugin = (): Plugin => ({
   name: 'fix-require',
   setup: (build) => {
     build.onEnd(async (args) => {
-      if(args.errors.length > 0) {
+      if (args.errors.length > 0) {
         return;
       }
 

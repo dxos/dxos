@@ -9,9 +9,9 @@ import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
-import { bundleDepsPlugin } from './bundle-deps-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
@@ -36,7 +36,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   try {
     await readdir(options.outputPath);
     await rm(options.outputPath, { recursive: true });
-  } catch { }
+  } catch {}
 
   // TODO(wittjosiah): Workspace from context is deprecated.
   const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
@@ -136,7 +136,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   );
 
   if (options.watch) {
-    await new Promise(() => { }); // Wait indefinitely.
+    await new Promise(() => {}); // Wait indefinitely.
   }
 
   return { success: errors.flat().length === 0 };
