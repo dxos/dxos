@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-surface",
   "version": "0.1.50",
-  "private": true,
   "description": "A react framework for making extensible interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,5 +17,8 @@
   },
   "peerDependencies": {
     "react": "*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
