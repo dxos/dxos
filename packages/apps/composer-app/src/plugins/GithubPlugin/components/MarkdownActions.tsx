@@ -5,11 +5,11 @@ import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@ph
 import React, { RefObject, useCallback } from 'react';
 
 import { MarkdownProperties } from '@braneframe/plugin-markdown';
+import { useSplitViewContext } from '@braneframe/plugin-splitview';
 import { DropdownMenu, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { useSplitViewContext } from '@dxos/react-surface';
 
 import { useDocGhId } from '../hooks';
 import { GhIssueIdentifier } from '../props';

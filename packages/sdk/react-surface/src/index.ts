@@ -2,5 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './framework';
-export * from './plugins';
+export * from './Context';
+export * from './PluginContext';
+export * from './Plugin';
+export * from './Surface';

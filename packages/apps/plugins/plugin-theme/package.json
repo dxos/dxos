@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-stack",
-  "version": "0.1.50",
-  "description": "DXOS Surface plugin for Stack entities",
+  "name": "@braneframe/plugin-theme",
+  "version": "0.1.45",
+  "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,16 +16,12 @@
   ],
   "dependencies": {
     "@dxos/observable-object": "workspace:*",
-    "lodash.get": "^4.4.2"
+    "i18next": "^21.10.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
-    "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
@@ -36,7 +32,6 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

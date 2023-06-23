@@ -19,6 +19,11 @@ import {
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
+import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
+import { RouterPluginProvides } from '@braneframe/plugin-router';
+import { SplitViewProvides } from '@braneframe/plugin-splitview';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { TextKind } from '@dxos/aurora-composer';
@@ -33,17 +38,7 @@ import {
   SpaceState,
   TypedObject,
 } from '@dxos/react-client';
-import {
-  Surface,
-  definePlugin,
-  findPlugin,
-  GraphNode,
-  GraphProvides,
-  RouterPluginProvides,
-  SplitViewProvides,
-  TreeViewProvides,
-  TranslationsProvides,
-} from '@dxos/react-surface';
+import { Surface, definePlugin, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';

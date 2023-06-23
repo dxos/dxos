@@ -4,8 +4,10 @@
 
 import React, { useMemo } from 'react';
 
+import { useGraphContext } from '@braneframe/plugin-graph';
+import { useTreeView } from '@braneframe/plugin-treeview';
 import { observer } from '@dxos/observable-object/react';
-import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
+import { Surface } from '@dxos/react-surface';
 
 import { LocalFilesPlugin } from '../LocalFilesPlugin';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
