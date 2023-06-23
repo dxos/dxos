@@ -3,8 +3,8 @@
 //
 
 import compare from 'compare-semver';
+import * as process from 'node:process';
 import NPM from 'npm-api';
-import * as process from 'process';
 
 /**
  * Clear terminal.

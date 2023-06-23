@@ -23,6 +23,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@types/node": "^18.11.9",
     "yjs": "^13.5.44"
   },

@@ -21,6 +21,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
