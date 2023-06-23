@@ -1079,7 +1079,6 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
-      '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
@@ -1107,7 +1106,6 @@ importers:
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/typings': link:../typings
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
 
@@ -1121,6 +1119,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
@@ -1144,6 +1143,7 @@ importers:
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
+      '@dxos/typings': link:../typings
       readable-stream: 3.6.0
       sodium-native: 3.4.1
       sodium-universal: 3.1.0

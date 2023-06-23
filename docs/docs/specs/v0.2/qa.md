@@ -48,6 +48,7 @@ Use your normal, default profile in the browser, falling back to anonymous/guest
 - `npm init @dxos@next` (staging)
 - `pnpm install`
 - `pnpm serve`
+- `pnpm build`
 - observe that the app loads and presents the "click to login" button
 - login and use the counter, observe counter working between two windows
 
