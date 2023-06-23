@@ -25,6 +25,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
