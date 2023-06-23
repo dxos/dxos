@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TFunction } from '@dxos/aurora';
-import { Space } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/client';
 
-export const getSpaceDisplayName = (t: TFunction, space: Space, disabled?: boolean) => {
+export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
+  const disabled = space.state.get() !== SpaceState.READY;
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : disabled
-    ? t('loading space title')
-    : t('untitled space title');
+    ? ['loading space title', { ns: 'composer' }]
+    : ['untitled space title', { ns: 'composer' }];
 };
