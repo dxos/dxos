@@ -4169,6 +4169,8 @@ importers:
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
       '@types/seedrandom': ^3.0.5
+      canvas: ^2.11.2
+      chart.js: ^4.3.0
       danfojs-node: ^1.1.2
       redis: ^4.6.6
       seedrandom: ^3.0.5
@@ -4188,7 +4190,9 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 7.6.0
-      danfojs-node: 1.1.2_seedrandom@3.0.5
+      canvas: 2.11.2
+      chart.js: 4.3.0
+      danfojs-node: 1.1.2_ihcuhbzspmrdikxur7i6vc4ele
       redis: 4.6.6
       seedrandom: 3.0.5
     devDependencies:
@@ -10285,7 +10289,6 @@ packages:
 
   /@kurkle/color/0.3.2:
     resolution: {integrity: sha512-fuscdXJ9G1qb7W8VdHi+IwRqij3lBkosAm4ydQtEmbY58OzHXqQhvlxqEkoz0yssNVn38bcpRWgA9PP+OGoisw==}
-    dev: true
 
   /@lezer/common/1.0.2:
     resolution: {integrity: sha512-SVgiGtMnMnW3ActR8SXgsDhw7a0w0ChHSYAyAUxxrOiJ1OqYWEKk/xJd84tTSPo1mo6DXLObAJALNnd0Hrv7Ng==}
@@ -20483,6 +20486,19 @@ packages:
       '@types/node': 18.11.9
     dev: false
 
+  /canvas/2.11.2:
+    resolution: {integrity: sha512-ItanGBMrmRV7Py2Z+Xhs7cT+FNt5K0vPL4p9EZ/UX/Mu7hFbkxSjKF2KVtPwX7UYWp7dRKnrTvReflgrItJbdw==}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@mapbox/node-pre-gyp': 1.0.10
+      nan: 2.17.0
+      simple-get: 3.1.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: false
+
   /capital-case/1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
     dependencies:
@@ -20696,6 +20712,13 @@ packages:
     dependencies:
       '@kurkle/color': 0.3.2
     dev: true
+
+  /chart.js/4.3.0:
+    resolution: {integrity: sha512-ynG0E79xGfMaV2xAHdbhwiPLczxnNNnasrmPEXriXsPJGjmhOBYzFVEsB65w2qMDz+CaBJJuJD0inE/ab/h36g==}
+    engines: {pnpm: '>=7'}
+    dependencies:
+      '@kurkle/color': 0.3.2
+    dev: false
 
   /check-error/1.0.2:
     resolution: {integrity: sha512-BrgHpW9NURQgzoNyjfq0Wu6VFO6D7IZEmJNdtgNqpzGG8RuNFHt2jQxWlAs4HMe119chBnv+34syEZtc6IhLtA==}
@@ -22310,7 +22333,7 @@ packages:
       lodash-es: 4.17.21
     dev: true
 
-  /danfojs-node/1.1.2_seedrandom@3.0.5:
+  /danfojs-node/1.1.2_ihcuhbzspmrdikxur7i6vc4ele:
     resolution: {integrity: sha512-piIehMLN2Buk7i4PNlM95hoAnu0Nmt0vFebT2NcN25g7sfnJfbT2nWLJ732nIu0XL6rGhl+DDBBHwpymq0N7tw==}
     dependencies:
       '@tensorflow/tfjs-node': 3.21.1_seedrandom@3.0.5
@@ -22320,7 +22343,7 @@ packages:
       request: 2.88.2
       stream-json: 1.7.5
       table: 6.7.1
-      xlsx: 0.17.2
+      xlsx: 0.17.2_canvas@2.11.2
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -22531,6 +22554,13 @@ packages:
     dependencies:
       mimic-response: 1.0.1
     dev: true
+
+  /decompress-response/4.2.1:
+    resolution: {integrity: sha512-jOSne2qbyE+/r8G1VU+G/82LBs2Fs4LAsTiLSHOCOMZQl2OKZ6i8i4IyHemTe+/yIXOtTcRQMzPcgyhoFlqPkw==}
+    engines: {node: '>=8'}
+    dependencies:
+      mimic-response: 2.1.0
+    dev: false
 
   /decompress-response/6.0.0:
     resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
@@ -29301,7 +29331,7 @@ packages:
       jsdom: 20.0.1
     dev: true
 
-  /jsdom/16.7.0:
+  /jsdom/16.7.0_canvas@2.11.2:
     resolution: {integrity: sha512-u9Smc2G1USStM+s/x1ru5Sxrl6mPYCbByG1U/hUmqaVsm4tbNyS7CicOSRyuGQYZhTu0h84qkZZQ/I+dzizSVw==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -29313,6 +29343,7 @@ packages:
       abab: 2.0.6
       acorn: 8.8.2
       acorn-globals: 6.0.0
+      canvas: 2.11.2
       cssom: 0.4.4
       cssstyle: 2.3.0
       data-urls: 2.0.0
@@ -31428,6 +31459,11 @@ packages:
   /mimic-response/1.0.1:
     resolution: {integrity: sha512-j5EctnkH7amfV/q5Hgmoal1g2QHFJRraOtmx0JpIqkxhBhI/lJSl1nMpQ45hVarwNETOoWEimndZ4QK0RHxuxQ==}
     engines: {node: '>=4'}
+
+  /mimic-response/2.1.0:
+    resolution: {integrity: sha512-wXqjST+SLt7R009ySCglWBCFpjUygmCIfD790/kVbiGmUgfYGuB14PiTd5DwVxSV4NcYHjzMkoj5LjQZwTQLEA==}
+    engines: {node: '>=8'}
+    dev: false
 
   /mimic-response/3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
@@ -36754,6 +36790,18 @@ packages:
       varint: 5.0.2
     dev: true
 
+  /simple-concat/1.0.1:
+    resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
+    dev: false
+
+  /simple-get/3.1.1:
+    resolution: {integrity: sha512-CQ5LTKGfCpvE1K0n2us+kuMPbk/q0EKl82s4aheV9oXjFEz6W/Y7oQFVJuU6QG77hRT4Ghb5RURteF5vnWjupA==}
+    dependencies:
+      decompress-response: 4.2.1
+      once: 1.4.0
+      simple-concat: 1.0.1
+    dev: false
+
   /simple-handshake/3.0.0:
     resolution: {integrity: sha512-8Te0vlxvhpNCMgwnWFTbRR6Re2l8hq8wyXQc3lY9dPYXFxYwVkh79LhDQHFCOWRavmbiOdfqq1l5HT/73Rn2/w==}
     dependencies:
@@ -41285,12 +41333,12 @@ packages:
     resolution: {integrity: sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==}
     engines: {node: '>=0.10.0'}
 
-  /word/0.4.0:
+  /word/0.4.0_canvas@2.11.2:
     resolution: {integrity: sha512-Aq84KjS7Z9HSU14qf4l/NEouaqfJAZtE9zEz7TIvw9V/3oJeUbjQwhz7ggqbL7I7REt4Bz+9HuCWsBO5N7xChw==}
     engines: {node: '>=0.8'}
     dependencies:
       cfb: 1.2.2
-      jsdom: 16.7.0
+      jsdom: 16.7.0_canvas@2.11.2
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -41575,7 +41623,7 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /xlsx/0.17.2:
+  /xlsx/0.17.2_canvas@2.11.2:
     resolution: {integrity: sha512-RIhN6/oc/ZqYZqY4jz4AX92yNfULhtNrcZP1lknIcsyR+Ra8Zu/9F1lAZWncYbDex95iYQX/XNNNzNFXZjlNOQ==}
     engines: {node: '>=0.8'}
     hasBin: true
@@ -41589,7 +41637,7 @@ packages:
       fflate: 0.3.11
       ssf: 0.11.2
       wmf: 1.0.2
-      word: 0.4.0
+      word: 0.4.0_canvas@2.11.2
     transitivePeerDependencies:
       - bufferutil
       - canvas

@@ -17,9 +17,17 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
+import { Chart, BarController, CategoryScale, LinearScale, LineController, LineElement, PointElement, BarElement, ChartConfiguration } from 'chart.js';
+import { createCanvas } from 'canvas';
+
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
+import { SerializedLogEntry, getReader } from '../analysys';
+import { writeFileSync } from 'node:fs';
+import { exec } from 'node:child_process';
+
+Chart.register(BarController, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement);
 
 export type EchoTestSpec = {
   agents: number;
@@ -225,13 +233,43 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
 
-    // const reader = getReader(results);
-    // for await(const entry of reader) {
-    //   switch(entry.message) {
-    //     case 'dxos.test.echo.stats':
-    //       console.log(entry.context)
-    //   }
-    // }
+    const dataPoints: SerializedLogEntry<StatsLog>[] = [];
+
+    const reader = getReader(results);
+    for await (const entry of reader) {
+      switch (entry.message) {
+        case 'dxos.test.echo.stats':
+          dataPoints.push(entry)
+      }
+    }
+
+    const chart = await renderPNG({
+      type: 'line',
+      data: {
+        datasets: [{
+          type: 'line',
+          data: [{
+            x: 1,
+            y: 1,
+          }, {
+            x: 2,
+            y: 2,
+          }],
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            display: true,
+          },
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    })
+
+    showPng(chart)
   }
 }
 
@@ -247,3 +285,32 @@ type StatsLog = {
   epoch: number;
   agentIdx: number;
 };
+
+
+
+function renderPNG(configuration: ChartConfiguration) {
+
+  const canvas = createCanvas(800, 600);
+  // Disable animation (otherwise charts will throw exceptions)
+  configuration.options ??= {};
+  configuration.options.responsive = false;
+  configuration.options.animation = false;
+  (canvas as any).style = {};
+  const context = canvas.getContext('2d');
+  const chart = new Chart(context as any, configuration);
+  return new Promise<Buffer>((resolve, reject) => {
+    // or `pngStream` `toDataURL`, etc
+    canvas.toBuffer((error, buffer) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve(buffer);
+    });
+  });
+}
+
+const showPng = (data: Buffer) => {
+  const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
+  writeFileSync(filename, data);
+  exec(`open ${filename}`)
+}

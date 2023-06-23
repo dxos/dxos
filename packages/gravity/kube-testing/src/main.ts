@@ -44,11 +44,11 @@ const runEcho = () =>
     plan: new EchoTestPlan(),
     spec: {
       agents: 2,
-      duration: 120_000,
+      duration: 30_000,
       iterationDelay: 1000,
 
       epochPeriod: 4,
-      measureNewAgentSyncTime: true,
+      measureNewAgentSyncTime: false,
 
       insertionSize: 1024,
       operationCount: 500,
@@ -58,8 +58,8 @@ const runEcho = () =>
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
       profile: true,
-      // repeatAnalysis:
-      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+      repeatAnalysis:
+        '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-06-23T11:16:27-03a06479/test.json'
     },
   });
 
