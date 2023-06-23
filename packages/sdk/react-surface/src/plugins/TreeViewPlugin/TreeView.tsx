@@ -14,19 +14,18 @@ import { LeafTreeItem } from './LeafTreeItem';
 
 export type TreeViewProps = {
   items?: GraphNode[];
-  parent?: 'root' | GraphNode;
+  parent?: string | GraphNode;
 };
 
 export const TreeView = observer((props: TreeViewProps) => {
   const { items } = props;
+  const visibleItems = items && Array.from(items).filter((item) => !item.attributes?.hidden);
   return (
     <Tree.Branch>
-      {items?.length ? ( // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
-        Array.from(items)
-          .filter((item) => !item.attributes?.hidden)
-          .map((item) =>
-            item.children ? <BranchTreeItem key={item.id} node={item} /> : <LeafTreeItem key={item.id} node={item} />,
-          )
+      {visibleItems?.length ? ( // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
+        visibleItems.map((item) =>
+          item.children ? <BranchTreeItem key={item.id} node={item} /> : <LeafTreeItem key={item.id} node={item} />,
+        )
       ) : (
         <Surface role='tree--empty' data={props.parent} />
       )}
