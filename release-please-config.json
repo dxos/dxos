@@ -158,6 +158,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/protobuf-compiler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/random-access-storage/package.json",
           "jsonpath": "$.version"
         },
@@ -578,7 +583,7 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/protobuf-compiler/package.json",
+          "path": "tools/executors/nx-protobuf-compiler/package.json",
           "jsonpath": "$.version"
         },
         {
