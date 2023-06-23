@@ -5,13 +5,14 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { resolve } from 'path';
+import { join, resolve } from 'node:path';
 
-import { preconfigureProtobufjs } from './configure';
-import { ModuleSpecifier } from './module-specifier';
-import { registerResolver } from './parser';
-import { parseAndGenerateSchema } from './type-generator';
+import {
+  ModuleSpecifier,
+  parseAndGenerateSchema,
+  preconfigureProtobufjs,
+  registerResolver,
+} from '@dxos/protobuf-compiler';
 
 export interface GenerateExecutorOptions {
   basePath: string;

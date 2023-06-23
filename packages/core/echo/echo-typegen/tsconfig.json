@@ -15,9 +15,6 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/executors/protobuf-compiler"
-    },
-    {
       "path": "../../../common/log"
     },
     {
@@ -25,6 +22,9 @@
     },
     {
       "path": "../../../common/plate"
+    },
+    {
+      "path": "../../../common/protobuf-compiler"
     },
     {
       "path": "../document-model"

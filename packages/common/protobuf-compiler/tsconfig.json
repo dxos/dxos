@@ -10,16 +10,16 @@
   ],
   "references": [
     {
-      "path": "../../../packages/common/codec-protobuf"
+      "path": "../../../tools/protobuf-test"
     },
     {
-      "path": "../../../packages/common/log"
+      "path": "../codec-protobuf"
     },
     {
-      "path": "../../../packages/common/node-std"
+      "path": "../log"
     },
     {
-      "path": "../../protobuf-test"
+      "path": "../node-std"
     }
   ]
 }
