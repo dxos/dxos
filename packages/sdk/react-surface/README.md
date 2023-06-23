@@ -1,11 +1,11 @@
-# @dxos/surface
+# @dxos/react-surface
 
 A react framework for making extensible interfaces.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/surface
+pnpm i @dxos/react-surface
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ pnpm i @dxos/surface
 Run with
 
 ```bash
-pnpm nx storybook surface
+pnpm nx storybook react-surface
 ```
 
 ## DXOS Resources
