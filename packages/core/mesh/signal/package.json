@@ -12,6 +12,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0"

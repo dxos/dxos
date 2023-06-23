@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import http from 'http';
+import http from 'node:http';
 
 import { log } from '@dxos/log';
 
