@@ -42,6 +42,7 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log-hook": "workspace:*",
+    "@dxos/nx-protobuf-compiler": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/serve-with-vault": "workspace:*",
