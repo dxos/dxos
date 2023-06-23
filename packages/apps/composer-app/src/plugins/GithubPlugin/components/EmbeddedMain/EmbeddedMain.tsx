@@ -86,6 +86,7 @@ const EmbeddedLayoutImpl = () => {
   });
 
   const docGhId = useDocGhId(document?.meta?.keys ?? []);
+  const name = space && getSpaceDisplayName(space);
 
   return (
     <>
@@ -182,7 +183,7 @@ const EmbeddedLayoutImpl = () => {
                         <Avatar.Fallback href={spaceJdenticon} />
                       </Avatar.Frame>
                       <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                        {space && getSpaceDisplayName(t, space)}
+                        {Array.isArray(name) ? t(...name) : name}
                       </Avatar.Label>
                     </div>
                   </Avatar.Root>

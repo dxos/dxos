@@ -5,8 +5,9 @@
 export const composer = {
   'current app name': 'Composer',
   'sidebar tree label': 'Spaces with documents',
-  'space options label': 'Configure this space',
-  'document options label': 'Document options',
+  'tree options label': 'More options',
+  'tree branch options label': 'More options',
+  'tree leaf options label': 'More options',
   'create document label': 'Create new document',
   'untitled document title': 'Untitled document',
   'untitled space title': 'Untitled space',

@@ -8,4 +8,3 @@ export * from './EmptySpace';
 export * from './EmptyTree';
 export * from './SpaceMain';
 export * from './SpaceMainEmpty';
-export * from './SpaceTreeItem';
