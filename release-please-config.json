@@ -33,6 +33,21 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/quickstart/package.json",
           "jsonpath": "$.version"
         },

@@ -24,5 +24,5 @@ Ad blockers and other browser extensions may cause problems installing apps.
 
 ### `EINVALIDPACKAGENAME` when initializing a new app
 
-This is likely due to an older version of `npm` and/or `node`. 
+This is likely due to an older version of `npm` and/or `node`.
 To use `npm init @dxos@latest` node needs to be at `v18` or newer. We recommend using [Node Version Manager](https://github.com/nvm-sh/nvm) or similar to ensure `node >= 18` and `npm >= 9`.

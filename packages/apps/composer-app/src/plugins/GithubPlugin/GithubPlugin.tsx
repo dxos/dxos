@@ -5,9 +5,9 @@
 
 import React from 'react';
 
+import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
 
-import { isMarkdown, isMarkdownProperties } from '../MarkdownPlugin';
 import {
   MarkdownActions,
   OctokitProvider,
@@ -42,7 +42,7 @@ export const GithubPlugin: PluginDefinition = definePlugin({
               return null;
           }
         case 'menuitem':
-          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])
+          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && !datum[1].readOnly
             ? MarkdownActions
             : null;
         default:

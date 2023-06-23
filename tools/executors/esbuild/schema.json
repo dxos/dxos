@@ -49,6 +49,11 @@
       "type": "boolean",
       "description": "Watch mode",
       "default": false
+    },
+    "alias": {
+      "type": "object",
+      "description": "Alias imports",
+      "default": {}
     }
   },
   "required": ["entryPoints", "outputPath"]

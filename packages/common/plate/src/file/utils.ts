@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
 
 export const fileExists = async (path: string) => {
   try {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-typegen",
-  "version": "0.1.48",
+  "version": "0.1.49",
   "description": "ECHO type generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/plate": "workspace:*",
+    "@dxos/protobuf-compiler": "workspace:*",
     "protobufjs": "^7.2.2"
   },
   "devDependencies": {

@@ -3,8 +3,8 @@
 //
 import chalk from 'chalk';
 import flatten from 'lodash.flatten';
-import os from 'os';
-import * as path from 'path';
+import os from 'node:os';
+import * as path from 'node:path';
 import readDir from 'recursive-readdir';
 
 import { loadConfig, QuestionOptions, unDefault, prettyConfig, ConfigDeclaration, forceFilter } from './config';

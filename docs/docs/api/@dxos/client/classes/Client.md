@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L55)
-Type: <code>"0.1.48"</code>
+Type: <code>"0.1.49"</code>
 
 The version of this client API
 
@@ -51,7 +51,7 @@ Type: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServices
 
 Current client services provider.
 
-### [spaces](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L177)
+### [spaces](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L181)
 Type: <code>MulticastObservable&lt;[Space](/api/@dxos/client/interfaces/Space)[]&gt;</code>
 
 ECHO spaces.
@@ -84,7 +84,7 @@ Arguments:
 
 `invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
-### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L181)
+### [addSchema(schema)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L174)
 
 
 
@@ -94,7 +94,7 @@ Arguments:
 
 `schema`: <code>[EchoSchema](/api/@dxos/client/classes/EchoSchema)</code>
 
-### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L310)
+### [createSerializer()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L311)
 
 
 
@@ -102,7 +102,7 @@ Returns: <code>[SpaceSerializer](/api/@dxos/client/classes/SpaceSerializer)</cod
 
 Arguments: none
 
-### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L188)
+### [createSpace(\[meta\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L195)
 
 
 
@@ -115,7 +115,7 @@ Arguments:
 
 `meta`: <code>[PropertiesProps](/api/@dxos/client/types/PropertiesProps)</code>
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L265)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L266)
 
 
 
@@ -127,7 +127,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L195)
+### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L188)
 
 
 
@@ -152,7 +152,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L295)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L296)
 
 
 
@@ -164,7 +164,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L286)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/client.ts#L287)
 
 
 

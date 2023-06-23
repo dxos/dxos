@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-framework",
-  "version": "0.1.48",
+  "version": "0.1.49",
   "private": true,
   "description": "Kai Framework.",
   "homepage": "https://dxos.org",
@@ -28,6 +28,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",

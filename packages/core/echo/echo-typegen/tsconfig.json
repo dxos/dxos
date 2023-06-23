@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../../../../tools/executors/protobuf-compiler"
+    },
+    {
       "path": "../../../common/log"
     },
     {
