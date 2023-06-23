@@ -20,6 +20,7 @@ import { ProxyServer, ProxyServerOptions } from './proxy';
 import { Service } from './service';
 import { parseAddress } from './util';
 
+// TODO(burdon): Use Epoch type from credentials.proto.
 type CurrentEpoch = {
   spaceKey: PublicKey;
   ownerKey?: PublicKey;
@@ -193,9 +194,13 @@ export class Agent {
       await space.waitUntilReady();
       log('ready', { space: space.key });
 
+      // space.internal.data
+
       stream.subscribe(async (credential) => {
         assert(this._client);
         switch (credential.subject.assertion['@type']) {
+          // TODO(burdon): Update address book.
+
           // TODO(burdon): Eventually test we have the credential to be leader.
           case 'dxos.halo.credentials.AdmittedFeed': {
             if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
@@ -224,6 +229,8 @@ export class Agent {
           }
 
           case 'dxos.halo.credentials.Epoch': {
+            assert(checkCredentialType());
+            const m: Epoch = credential.subject.assertion;
             info.lastEpoch = credential.subject.assertion.timeframe;
             log('epoch', {
               spaceKey: space.key,

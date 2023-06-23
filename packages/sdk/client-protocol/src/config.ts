@@ -22,6 +22,7 @@ const HOME = typeof process !== 'undefined' ? process?.env?.HOME : '';
 // Base directories.
 // TODO(burdon): Consider Windows, Linux, OSX.
 // https://wiki.archlinux.org/title/XDG_Base_Directory
+// Each `/dx` directory should contain `/profile/<DX_PROFILE>` subdirectories.
 
 // XDG_CONFIG_HOME (Analogous to /etc.)
 export const DX_CONFIG = `${HOME}/.config/dx`;

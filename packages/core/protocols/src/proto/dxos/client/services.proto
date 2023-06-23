@@ -209,10 +209,13 @@ message Space {
   optional dxos.error.Error error = 4;
 
   repeated SpaceMember members = 10;
+  optional dxos.keys.PublicKey creator = 11;
 
   optional dxos.echo.metadata.SpaceCache cache = 20;
   Metrics metrics = 21;
 }
+
+// TODO(burdon): Create type for epoch?
 
 message UpdateSpaceRequest {
   optional Status status = 1;

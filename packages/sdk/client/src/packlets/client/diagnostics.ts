@@ -115,6 +115,7 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
   return data;
 };
 
+// TODO(burdon): Keep in sync with agents.
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
   const epochs: SpaceStats['epochs'] = [];
   const stream = service.queryCredentials({ spaceKey: space.key });

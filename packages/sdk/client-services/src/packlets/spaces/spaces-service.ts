@@ -42,6 +42,7 @@ export class SpacesServiceImpl implements SpacesService {
     if (!this._identityManager.identity) {
       throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
     }
+
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
     return this._transformSpace(space);
@@ -150,6 +151,8 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   private _transformSpace(space: DataSpace): Space {
+    const creator = space.inner.spaceState.creator;
+
     return {
       spaceKey: space.key,
       state: space.state,
@@ -178,6 +181,7 @@ export class SpacesServiceImpl implements SpacesService {
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
+      creator: creator?.key,
       cache: space.cache,
       metrics: space.metrics,
     };
