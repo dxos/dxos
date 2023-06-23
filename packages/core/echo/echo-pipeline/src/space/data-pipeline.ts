@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialProcessor, FeedInfo, getCredentialAssertion } from '@dxos/credentials';
+import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -79,7 +79,7 @@ export class DataPipeline {
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
 
-  public currentEpoch?: Credential;
+  public currentEpoch?: SpecificCredential<Epoch>;
   public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
@@ -102,13 +102,12 @@ export class DataPipeline {
   createCredentialProcessor(): CredentialProcessor {
     return {
       process: async (credential) => {
-        const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+        if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
           return;
         }
 
         log('new epoch', { credential });
-        await this._processEpoch(assertion);
+        await this._processEpoch(credential.subject.assertion);
 
         this.currentEpoch = credential;
         this.onNewEpoch.emit(credential);
