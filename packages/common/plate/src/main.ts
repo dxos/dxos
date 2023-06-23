@@ -4,7 +4,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import process from 'process';
+import process from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
