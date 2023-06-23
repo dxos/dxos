@@ -62,7 +62,7 @@ export const App = () => {
   const serviceWorker = useRegisterSW();
   return (
     <ThemeProvider
-      appNs="shared-counter"
+      appNs='shared-counter'
       resourceExtensions={[appkitTranslations]}
       fallback={<GenericFallback />}
     >
@@ -70,7 +70,7 @@ export const App = () => {
         fallback={({ error }) => <ResetDialog error={error} config={config} />}
       >
         <ClientProvider config={config} fallback={GenericFallback}>
-          <div>Your code goes here</div>
+          <Counter />
           <ServiceWorkerToastContainer {...serviceWorker} />
         </ClientProvider>
       </ErrorBoundary>
@@ -100,7 +100,7 @@ Before an application can read or write user data, the device must be authentica
 
 Let's create a simple component called `Counter.tsx`.
 
-```tsx{6,8} file=./snippets/tutorial/counter.tsx#L5-
+```tsx{6,8} file=./snippets/tutorial/counter.tsx#L5-14
 import { useIdentity, useSpaces } from '@dxos/react-client';
 import React from 'react';
 
@@ -119,25 +119,23 @@ export const Counter = () => {
 
 ## Updating UI state from ECHO
 
-Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. Grab the `useQuery` hook:
+Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. Add the `useQuery` hook to your imports:
 
-```tsx
-import { useQuery } from '@dxos/react-client';
+```tsx file=./snippets/tutorial/counter-1.tsx#L6
+import { useIdentity, useSpaces, useQuery } from '@dxos/react-client';
 ```
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx
+```tsx file=./snippets/tutorial/counter-1.tsx#L14-24
 const [counter] = useQuery(space, { type: 'counter' });
 
 return (
   <div>
-    {counter ? (
-      <div className="text-center">
-        Clicked {counter.values ? counter.values.length : '0'} times.
+    {counter && (
+      <div className='text-center'>
+        Clicked {counter.values.length ?? 0} times.
       </div>
-    ) : (
-      <div className="text-center">No counter created.</div>
     )}
   </div>
 );
@@ -149,17 +147,17 @@ We need an empty counter that we can increment.
 
 Grab an `Expando`:
 
-```tsx
-import { Expando } from '@dxos/react-client';
+```tsx file=./snippets/tutorial/counter-2.tsx#L6
+import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 ```
 
 Above the `return` statement, add the following effect:
 
-```tsx
+```tsx file=./snippets/tutorial/counter-2.tsx#L13-18
 useEffect(() => {
   if (space && !counter) {
-    const c = new Expando({ type: 'counter', values: [] });
-    space.db.add(c);
+    const counter = new Expando({ type: 'counter', values: [] });
+    space.db.add(counter);
   }
 }, [space, counter]);
 ```
@@ -176,38 +174,36 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{20-27} file=./snippets/tutorial/counter-2.tsx#L5-
-import { Expando, useIdentity, useQuery, useSpaces } from "@dxos/react-client";
-import React, { useEffect } from "react";
+```tsx{20-27} file=./snippets/tutorial/counter-2.tsx#L5-37
+import React, { useEffect } from 'react';
+import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 
 export const Counter = () => {
-  const identity = useIdentity();
+  useIdentity();
   const [space] = useSpaces();
-  const [counter] = useQuery(space, { type: "counter" });
+  const [counter] = useQuery(space, { type: 'counter' });
 
   useEffect(() => {
     if (space && !counter) {
-      const c = new Expando({ type: 'counter', values: [] });
-      space.db.add(c);
+      const counter = new Expando({ type: 'counter', values: [] });
+      space.db.add(counter);
     }
   }, [space, counter]);
 
   return (
     <div>
-      {counter ? (
-        <div className="text-center">
+      {counter && (
+        <div className='text-center'>
           <button
-            className="border bg-white dark:bg:black py-2 px-4 rounded"
+            className='border bg-white py-2 px-4 rounded'
             onClick={() => {
               counter.values.push(1);
             }}
           >
             Click me
           </button>
-          <p>Clicked {counter.values ? counter.values.length : "0"} times.</p>
+          <p>Clicked {counter.values.length ?? 0} times.</p>
         </div>
-      ) : (
-        <div className="text-center">No counter created.</div>
       )}
     </div>
   );

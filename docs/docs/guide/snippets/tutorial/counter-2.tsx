@@ -1,38 +1,36 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { Expando, useIdentity, useQuery, useSpaces } from "@dxos/react-client";
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
+import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
 
 export const Counter = () => {
-  const identity = useIdentity();
+  useIdentity();
   const [space] = useSpaces();
-  const [counter] = useQuery(space, { type: "counter" });
+  const [counter] = useQuery(space, { type: 'counter' });
 
   useEffect(() => {
     if (space && !counter) {
-      const c = new Expando({ type: 'counter', values: [] });
-      space.db.add(c);
+      const counter = new Expando({ type: 'counter', values: [] });
+      space.db.add(counter);
     }
   }, [space, counter]);
 
   return (
     <div>
-      {counter ? (
-        <div className="text-center">
+      {counter && (
+        <div className='text-center'>
           <button
-            className="border bg-white dark:bg:black py-2 px-4 rounded"
+            className='border bg-white py-2 px-4 rounded'
             onClick={() => {
               counter.values.push(1);
             }}
           >
             Click me
           </button>
-          <p>Clicked {counter.values ? counter.values.length : "0"} times.</p>
+          <p>Clicked {counter.values.length ?? 0} times.</p>
         </div>
-      ) : (
-        <div className="text-center">No counter created.</div>
       )}
     </div>
   );
