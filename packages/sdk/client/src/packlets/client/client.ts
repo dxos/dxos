@@ -11,6 +11,7 @@ import {
   ClientServicesProvider,
   createDefaultModelFactory,
   Space,
+  STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
@@ -236,7 +237,7 @@ export class Client {
 
         this._statusTimeout = setTimeout(() => {
           this._statusUpdate.emit(null);
-        }, 5000);
+        }, STATUS_TIMEOUT);
       },
       (err) => {
         trigger.wake(err);
