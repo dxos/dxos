@@ -2,8 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChartConfiguration } from 'chart.js';
+import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
 import assert from 'node:assert';
+import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config, Invitation, Space, Text } from '@dxos/client';
@@ -17,17 +21,10 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { Chart, BarController, CategoryScale, LinearScale, LineController, LineElement, PointElement, BarElement, ChartConfiguration } from 'chart.js';
-import { createCanvas } from 'canvas';
-
+import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
-import { SerializedLogEntry, getReader } from '../analysys';
-import { writeFileSync } from 'node:fs';
-import { exec } from 'node:child_process';
-
-Chart.register(BarController, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement);
 
 export type EchoTestSpec = {
   agents: number;
@@ -239,37 +236,26 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     for await (const entry of reader) {
       switch (entry.message) {
         case 'dxos.test.echo.stats':
-          dataPoints.push(entry)
+          dataPoints.push(entry);
       }
     }
 
     const chart = await renderPNG({
-      type: 'line',
+      type: 'scatter',
       data: {
-        datasets: [{
-          type: 'line',
-          data: [{
-            x: 1,
-            y: 1,
-          }, {
-            x: 2,
-            y: 2,
-          }],
-        }]
-      },
-      options: {
-        scales: {
-          x: {
-            display: true,
+        datasets: [
+          {
+            label: 'First Dataset',
+            showLine: true,
+            data: Array.from(Array(150).fill(0).keys()).map((i) => ({ x: i, y: i + 10 * Math.random() })),
+            backgroundColor: 'rgb(255, 99, 132)',
           },
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    })
+        ],
+      },
+      options: {},
+    });
 
-    showPng(chart)
+    showPng(chart);
   }
 }
 
@@ -286,31 +272,19 @@ type StatsLog = {
   agentIdx: number;
 };
 
+const renderPNG = async (
+  configuration: ChartConfiguration,
+  opts: ChartJSNodeCanvasOptions = { width: 1920, height: 1080, backgroundColour: 'white' },
+) => {
+  // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
+  const chartJSNodeCanvas = new ChartJSNodeCanvas(opts);
 
-
-function renderPNG(configuration: ChartConfiguration) {
-
-  const canvas = createCanvas(800, 600);
-  // Disable animation (otherwise charts will throw exceptions)
-  configuration.options ??= {};
-  configuration.options.responsive = false;
-  configuration.options.animation = false;
-  (canvas as any).style = {};
-  const context = canvas.getContext('2d');
-  const chart = new Chart(context as any, configuration);
-  return new Promise<Buffer>((resolve, reject) => {
-    // or `pngStream` `toDataURL`, etc
-    canvas.toBuffer((error, buffer) => {
-      if (error) {
-        return reject(error);
-      }
-      return resolve(buffer);
-    });
-  });
-}
+  const image = await chartJSNodeCanvas.renderToBuffer(configuration as any);
+  return image;
+};
 
 const showPng = (data: Buffer) => {
   const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
   writeFileSync(filename, data);
-  exec(`open ${filename}`)
-}
+  exec(`open ${filename}`);
+};
