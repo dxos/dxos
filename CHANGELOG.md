@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.50](https://github.com/dxos/dxos/compare/v0.1.49...v0.1.50) (2023-06-23)
+
+
+### Features
+
+* **client-services:** Add node lock file ([#3513](https://github.com/dxos/dxos/issues/3513)) ([38341b4](https://github.com/dxos/dxos/commit/38341b4187e74cb86de26564fde54898b826e171))
+* **composer-app:** local files ([#3484](https://github.com/dxos/dxos/issues/3484)) ([9f02c02](https://github.com/dxos/dxos/commit/9f02c02c97ea7212a2715f7616649a000fb2ccc6))
+* Epoch bench ([#3533](https://github.com/dxos/dxos/issues/3533)) ([64d796a](https://github.com/dxos/dxos/commit/64d796ab88016ad52f5c4458c9d07e7fab0db2ed))
+* **plugin-stack:** Add anywhere, remove, drag and drop ([#3532](https://github.com/dxos/dxos/issues/3532)) ([0803021](https://github.com/dxos/dxos/commit/08030210a92078dc7671ab8265d10efe3753bf71))
+
+
+### Bug Fixes
+
+* **feed-store:** change hypercore types imports ([3e02c56](https://github.com/dxos/dxos/commit/3e02c5651b84163bde5d56109537154f321b474f))
+
 ## [0.1.49](https://github.com/dxos/dxos/compare/v0.1.48...v0.1.49) (2023-06-22)
 
 
