@@ -42,8 +42,6 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
-  const runtimeDeps = new Set([...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]);
-
   const logTransformer = new LogTransformer({ isVerbose: context.isVerbose });
 
   const errors = await Promise.all(
@@ -102,8 +100,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           fixRequirePlugin(),
           bundleDepsPlugin({
             packages: options.bundlePackages,
-            runtimeDeps,
-            resolveDir: dirname(packagePath),
+            packageDir: dirname(packagePath),
             alias: options.alias,
           }),
           logTransformer.createPlugin(),

@@ -1,4 +1,6 @@
 import { Plugin } from "esbuild";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 export type BundleDepsPluginOptions = {
   /**
@@ -9,19 +11,20 @@ export type BundleDepsPluginOptions = {
   /**
    * Aliases. Mimics https://esbuild.github.io/api/#alias.
    */
-  alias?: Record<string, string>; 
+  alias?: Record<string, string>;
 
-  /**
-   * Runtime dependencies available to the bundle.
-   */
-  runtimeDeps: Set<string>;
-
-  resolveDir: string;
+  packageDir: string;
 }
 
+/**
+ * Ensures all external dependencies are marked as external unless specifically listed for being included in the package bundle.
+ */
 export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
   name: 'bundle-deps',
   setup(build) {
+    const packageJson = JSON.parse(readFileSync(join(options.packageDir, 'package.json'), 'utf-8'));
+    const runtimeDeps = new Set([...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]);
+
     build.onResolve({ namespace: 'file', filter: /.*/ }, (args) => {
       // Ignore aliased imports.
       if (options.alias?.[args.path]) {
@@ -29,7 +32,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
           importer: args.importer,
           kind: args.kind,
           namespace: args.namespace,
-          resolveDir: options.resolveDir,
+          resolveDir: options.packageDir,
         })
       }
 
@@ -53,7 +56,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         return null; // Bundle this dependency.
       }
 
-      if (!options.runtimeDeps.has(moduleName)) {
+      if (!runtimeDeps.has(moduleName)) {
         return {
           errors: [{
             text: `Missing dependency: ${moduleName}`
