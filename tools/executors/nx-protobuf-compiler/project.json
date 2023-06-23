@@ -1,0 +1,36 @@
+{
+  "sourceRoot": "tools/executors/nx-protobuf-compiler/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/nx-protobuf-compiler/src/index.ts",
+        "outputPath": "tools/executors/nx-protobuf-compiler/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/executors/nx-protobuf-compiler/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/executors/nx-protobuf-compiler/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
+}
