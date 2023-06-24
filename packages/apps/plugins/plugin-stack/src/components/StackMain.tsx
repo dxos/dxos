@@ -71,7 +71,6 @@ const StackSection = ({ onAdd, onRemove, section }: StackSectionProps) => {
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [_, setIter] = useState([]);
-
   useEffect(() => {
     // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
     return sections[subscribe](() => setIter([])) as () => void;

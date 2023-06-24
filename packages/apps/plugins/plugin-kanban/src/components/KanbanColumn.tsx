@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { Button, DragEndEvent, Input, List, ListItem, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
@@ -33,14 +35,14 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-// TODO(burdon): Drag items between columns.
+// TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
 // TODO(burdon): Dragging object on top (no transparency).
 // TODO(burdon): Scrolling.
 
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
   return (
-    <div className='flex flex-col justify-center outline outline-dashed rounded w-72 h-72'>
+    <div className='flex flex-col justify-center shadow rounded w-72 h-72 bg-neutral-50 dark:bg-neutral-925'>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -51,6 +53,8 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 
 export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => void }> = ({ column, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: column.id });
+  const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   const [_, setIter] = useState([]);
   useEffect(() => {
@@ -72,7 +76,6 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
     }
   };
 
-  // TODO(burdon): Factor out (with stack).
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -83,51 +86,67 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
   }, []);
 
   // TODO(burdon): Width approx mobile phone width.
+  // TODO(burdon): Min height not working.
+  // TODO(burdon): Impl. dragging relative/z  className in List.Item.
   return (
-    <div className='flex flex-col p-2 outline rounded w-72'>
-      <div className='flex items-center mb-2 mr-1'>
-        {/* <ListItem.DragHandle /> */}
-        <div className='mr-1'>
-          <DotsSixVertical className={getSize(5)} />
+    <div
+      ref={setNodeRef}
+      className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10')}
+      style={{ transform: CSS.Transform.toString(tx), transition }}
+    >
+      <div
+        className={mx(
+          'flex flex-col py-2 overflow-hidden shadow rounded w-72 min-w-72 __min-h-72 bg-neutral-50 dark:bg-neutral-925',
+          isDragging && 'bg-neutral-100 dark:bg-neutral-900',
+        )}
+      >
+        <div className='flex items-center mb-2 pl-2 pr-5'>
+          <div className='mr-1'>
+            <button {...attributes} {...listeners}>
+              <DotsSixVertical className={getSize(5)} />
+            </button>
+          </div>
+
+          <Input.Root>
+            {/* TODO(burdon): Label shouldn't be unique per plugin? */}
+            <Input.Label srOnly>{t('kanban column title label')}</Input.Label>
+            {/* TODO(burdon): Is classNames boilerplate required everywhere? How to make consistent across plugins? Same for separator, etc. */}
+            <Input.TextInput
+              variant='subdued'
+              defaultValue={column.title}
+              onChange={({ target: { value } }) => (column.title = value)}
+              classNames='px-1'
+            />
+          </Input.Root>
+
+          {/* TODO(burdon): Menu. */}
+          <DeleteColumn onClick={onDelete} />
         </div>
 
-        <Input.Root>
-          {/* TODO(burdon): Label shouldn't be unique per plugin? */}
-          <Input.Label srOnly>{t('kanban column title label')}</Input.Label>
-          {/* TODO(burdon): Is classNames boilerplate required everywhere? How to make consistent across plugins? Same for separator, etc. */}
-          <Input.TextInput
-            variant='subdued'
-            defaultValue={column.title}
-            onChange={({ target: { value } }) => (column.title = value)}
-          />
-        </Input.Root>
+        {/* TODO(burdon): Custom (radix) scrollbar (move to list). Scrolling bug if drag to bottom (see kai). */}
+        <div className='flex flex-col grow overflow-y-scroll pr-4'>
+          <List
+            variant='ordered-draggable'
+            listItemIds={column.items?.map(({ id }) => id)}
+            onDragEnd={handleDragEnd}
+            classNames='space-y-1'
+          >
+            {column.items?.map((item) => (
+              <ListItem.Root key={item.id} id={item.id} classNames='flex items-center pl-2'>
+                <div className='flex flex-col items-center'>
+                  <ListItem.DragHandle />
+                </div>
+                <div className='grow'>
+                  <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
+                </div>
+              </ListItem.Root>
+            ))}
+          </List>
+        </div>
 
-        {/* TODO(burdon): Menu. */}
-        <DeleteColumn onClick={onDelete} />
-      </div>
-
-      <div>
-        <List
-          variant='ordered-draggable'
-          listItemIds={column.items?.map(({ id }) => id)}
-          onDragEnd={handleDragEnd}
-          classNames='space-y-2'
-        >
-          {column.items?.map((item) => (
-            <ListItem.Root key={item.id} id={item.id} classNames='flex items-center'>
-              <div className='flex flex-col items-center'>
-                <ListItem.DragHandle />
-              </div>
-              <div className='grow'>
-                <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
-              </div>
-            </ListItem.Root>
-          ))}
-        </List>
-      </div>
-
-      <div className='flex justify-center'>
-        <AddItem onClick={handleAddItem} />
+        <div className='flex justify-center mt-2'>
+          <AddItem onClick={handleAddItem} />
+        </div>
       </div>
     </div>
   );

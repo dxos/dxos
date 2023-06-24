@@ -38,7 +38,12 @@ const DefaultKanbanPluginStory = () => {
     // ]),
   });
 
-  return <Surface role='main' data={[object]} />;
+  return (
+    // TODO(burdon): Factor out container.
+    <div className='flex overflow-hidden absolute left-0 right-0 top-0 bottom-0'>
+      <Surface role='main' data={[object]} />
+    </div>
+  );
 };
 
 const KanbanPluginStoryPlugin = {

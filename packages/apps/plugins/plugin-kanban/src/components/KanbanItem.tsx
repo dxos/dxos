@@ -28,11 +28,13 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete: () => void }>
       <Input.Root>
         {/* TODO(burdon): Label shouldn't be unique per plugin? */}
         <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
-        {/* TODO(burdon): Is classNames boilerplate required everywhere? How to make consistent across plugins? Same for separator, etc. */}
-        <Input.TextInput
+        {/* TODO(burdon): Remove border; Auto-expand height */}
+        <Input.TextArea
+          rows={1}
           variant='subdued'
           defaultValue={item.title}
           onChange={({ target: { value } }) => (item.title = value)}
+          classNames='px-1 border-none resize-none'
         />
       </Input.Root>
       <DeleteItem onClick={onDelete} />

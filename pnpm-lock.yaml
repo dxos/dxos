@@ -568,6 +568,10 @@ importers:
   packages/apps/plugins/plugin-kanban:
     specifiers:
       '@braneframe/plugin-markdown': workspace:*
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/observable-object': workspace:*
@@ -587,6 +591,10 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -8601,7 +8609,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.5.0
-    dev: false
 
   /@dnd-kit/core/6.0.5_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-3nL+Zy5cT+1XwsWdlXIvGIFvbuocMyB4NBxTN74DeBaBqeWdH9JsnKwQv7buZQgAHmAH+eIENfS1ginkvW6bCw==}
@@ -8614,7 +8621,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       tslib: 2.5.0
-    dev: false
 
   /@dnd-kit/modifiers/6.0.0_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-V3+JSo6/BTcgPRHiNUTSKgqVv/doKXg+T4Z0QvKiiXp+uIyJTUtPkQOBRQApUWi3ApBhnoWljyt/3xxY4fTd0Q==}
@@ -8626,7 +8632,6 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - react
-    dev: false
 
   /@dnd-kit/sortable/7.0.1_vvd3dzag27tc7rclyb2whqqnpe:
     resolution: {integrity: sha512-n77qAzJQtMMywu25sJzhz3gsHnDOUlEjTtnRl8A87rWIhnu32zuP+7zmFjwGgvqfXmRufqiHOSlH7JPC/tnJ8Q==}
@@ -8638,7 +8643,6 @@ packages:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       react: 18.2.0
       tslib: 2.5.0
-    dev: false
 
   /@dnd-kit/utilities/3.2.0_react@18.2.0:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
@@ -8647,7 +8651,6 @@ packages:
     dependencies:
       react: 18.2.0
       tslib: 2.5.0
-    dev: false
 
   /@dxos/benchmark-suite/1.0.0-beta.3:
     resolution: {integrity: sha512-rpHryqIC1sOSWcGLyqnhJdLWDQ2jtidm7K8G/LQr1Xp3ibHO7cRg0w9v1RnYUDgyCtgWh4AWyec5lazNMCpAzw==}
