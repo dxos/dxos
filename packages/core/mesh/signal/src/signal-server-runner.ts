@@ -116,7 +116,7 @@ export class SignalServerRunner {
     }
 
     if (waited >= this._timeout) {
-      this.stop();
+      await this.stop();
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {

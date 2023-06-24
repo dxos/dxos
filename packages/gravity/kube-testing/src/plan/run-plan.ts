@@ -204,6 +204,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
     console.error(err);
     process.exit(1);
   } finally {
+    log.info('agent complete', { agentId: params.agentId });
     process.exit(0);
   }
 };
