@@ -122,24 +122,23 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
   return data;
 };
 
-// TODO(burdon): Keep in sync with agent monitor code.
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
-  // TODO(burdon): Other stats.
-  console.log('>>>>', space.internal.data);
   const done = new Trigger();
+  // TODO(burdon): Other stats from internal.data.
   const currentEpoch = space.internal.data.pipeline!.currentEpoch!;
-  console.log('>>>>', JSON.stringify(currentEpoch.subject.assertion.timeframe));
 
+  // TODO(burdon): Hangs.
   const epochs: SpaceStats['epochs'] = [];
   const stream = service.queryCredentials({ spaceKey: space.key });
-  const subscription = stream.subscribe(async (credential) => {
+  stream.subscribe(async (credential) => {
+    console.log('???');
     switch (credential.subject.assertion['@type']) {
       case 'dxos.halo.credentials.Epoch': {
-        // TODO(burdon): Number is not monotonic.
+        console.log('ep');
+        // TODO(burdon): Epoch number is not monotonic.
         const { number, timeframe } = credential.subject.assertion;
         if (number > 0) {
           epochs.push({ number, timeframe });
-          console.log(timeframe);
           if (timeframe.equals(currentEpoch.subject.assertion.timeframe)) {
             done.wake();
           }
@@ -150,7 +149,6 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
   });
 
   await done.wait();
-  subscription.close();
   stream.close();
   return epochs;
 };

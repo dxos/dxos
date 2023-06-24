@@ -116,7 +116,7 @@ export class Agent {
     ).filter(Boolean) as Service[];
 
     // Epoch monitor.
-    if (!this._options.monitor) {
+    if (this._options.monitor) {
       this._monitor = new Monitor(this._client!, this._services!, this._options.monitor!);
       await this._monitor.start();
     }
