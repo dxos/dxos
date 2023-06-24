@@ -151,13 +151,13 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   private _transformSpace(space: DataSpace): Space {
-    const creator = space.inner.spaceState.creator;
-
     return {
       spaceKey: space.key,
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
+        currentEpoch: space.dataPipeline.currentEpoch,
+
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
@@ -181,7 +181,7 @@ export class SpacesServiceImpl implements SpacesService {
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
-      creator: creator?.key,
+      creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
     };
