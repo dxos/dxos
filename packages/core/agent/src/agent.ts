@@ -9,32 +9,18 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey } from '@dxos/client';
-import { checkCredentialType, SpecificCredential } from '@dxos/credentials';
 import { log } from '@dxos/log';
-import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { ComplexMap } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { Monitor, MonitorOptions } from './monitor';
 import { ProxyServer, ProxyServerOptions } from './proxy';
 import { Service } from './service';
 import { lockFilePath, parseAddress } from './util';
 
-type CurrentEpoch = {
-  spaceKey: PublicKey;
-  ownerKey?: PublicKey;
-  currentEpoch?: SpecificCredential<Epoch>;
-  nextEpoch?: SpecificCredential<Epoch>;
-};
-
-type EpochOptions = {
-  limit?: number;
-};
-
-const DEFAULT_EPOCH_LIMIT = 10_000;
-
 export type AgentOptions = {
   profile: string;
-  listen: string[];
+  listen: string[]; // TODO(burdon): Rename endpoints.
+  monitor?: MonitorOptions;
 };
 
 /**
@@ -44,8 +30,7 @@ export class Agent {
   private _endpoints: Service[] = [];
   private _client?: Client;
   private _services?: ClientServicesProvider;
-  private _subscriptions: ZenObservable.Subscription[] = [];
-  private _managedSpaces = new ComplexMap<PublicKey, CurrentEpoch>(PublicKey.hash);
+  private _monitor?: Monitor;
 
   // prettier-ignore
   constructor(
@@ -53,6 +38,7 @@ export class Agent {
     private readonly _options: AgentOptions
   ) {
     assert(this._config);
+    assert(this._options);
   }
 
   // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
@@ -129,6 +115,12 @@ export class Agent {
       )
     ).filter(Boolean) as Service[];
 
+    // Epoch monitor.
+    if (!this._options.monitor) {
+      this._monitor = new Monitor(this._client!, this._services!, this._options.monitor!);
+      await this._monitor.start();
+    }
+
     // OpenFaaS connector.
     // TODO(burdon): Manual trigger.
     const faasConfig = this._config.values.runtime?.services?.faasd;
@@ -144,9 +136,11 @@ export class Agent {
   }
 
   async stop() {
-    // Close epoch subscriptions.
-    this._subscriptions.forEach((subscription) => subscription.unsubscribe());
-    this._managedSpaces.clear();
+    // Stop monitor.
+    if (this._monitor) {
+      await this._monitor.stop();
+      this._monitor = undefined;
+    }
 
     // Close service endpoints.
     await Promise.all(this._endpoints.map((server) => server.close()));
@@ -162,115 +156,6 @@ export class Agent {
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
   }
-
-  // TODO(burdon): Subscribe to space members to update address book.
-
-  /**
-   * Monitor all epochs for which the agent is the leader.
-   */
-  // TODO(burdon): Factor out.
-  async monitorEpochs(options: EpochOptions) {
-    log('listening...');
-    assert(this._client);
-    this._subscriptions.push(
-      this._client.spaces.subscribe((spaces) => {
-        spaces.forEach(async (space) => {
-          if (!this._managedSpaces.has(space.key)) {
-            const current: CurrentEpoch = {
-              spaceKey: space.key,
-            };
-            this._managedSpaces.set(space.key, current);
-
-            setTimeout(async () => {
-              await space.waitUntilReady();
-
-              // Listen for epochs.
-              const limit = options.limit ?? DEFAULT_EPOCH_LIMIT;
-              space.pipeline.subscribe(async (pipeline) => {
-                assert(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
-                const timeframe = pipeline.currentEpoch?.subject.assertion.timeframe;
-                const epochMessages = timeframe.totalMessages();
-                const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
-                log('update', { space: space.key, epochMessages, totalMessages });
-
-                const triggerEpoch = totalMessages - epochMessages >= limit;
-                if (triggerEpoch) {
-                  log('trigger epoch', { space: space.key });
-                  // current.lastEpochCredential = undefined; // Reset to prevent triggering until new epoch processed.
-                  // await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
-                }
-              });
-            });
-          }
-        });
-      }),
-    );
-  }
-
-  /*
-  monitorEpoch(space: Space, { limit: _limit }: EpochOptions): CurrentEpoch {
-    // const stream = this._services!.services.SpacesService!.queryCredentials({ spaceKey: space.key });
-    // setTimeout(async () => {
-    // TODO(burdon): Confirm all epochs have been processed.
-    await space.waitUntilReady();
-    log('ready', { space: space.key });
-
-      stream.subscribe(async (credential) => {
-        assert(this._client);
-        switch (credential.subject.assertion['@type']) {
-          // TODO(burdon): Update address book.
-
-          // TODO(burdon): Eventually test we have the credential to be leader.
-          case 'dxos.halo.credentials.AdmittedFeed': {
-            if (!info.ownerKey && credential.subject.assertion.designation === AdmittedFeed.Designation.CONTROL) {
-              info.ownerKey = credential.subject.assertion.identityKey;
-              if (info.ownerKey?.equals(this._client.halo.identity.get()!.identityKey)) {
-                log('leader', { space: space.key, limit });
-
-                // TODO(burdon): Don't trigger until processed last epoch.
-                info.pipelineSubscription = space.pipeline.subscribe(async (pipeline) => {
-                  if (info.lastEpochCredential) {
-                    const timeframe = info.lastEpochCredential?.subject.assertion.timeframe;
-                    const epochMessages = timeframe.totalMessages();
-                    const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
-                    log('update', { space: space.key, epochMessages, totalMessages });
-
-                    const triggerEpoch = totalMessages - epochMessages >= limit;
-                    if (triggerEpoch) {
-                      log('trigger epoch', { space: space.key });
-                      info.lastEpochCredential = undefined; // Reset to prevent triggering until new epoch processed.
-                      await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
-                    }
-                  }
-                });
-              }
-            }
-            break;
-          }
-
-          case 'dxos.halo.credentials.Epoch': {
-            assert(checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
-            info.lastEpochCredential = credential;
-            const timeframe = info.lastEpochCredential?.subject.assertion.timeframe;
-            log('epoch', {
-              spaceKey: space.key,
-              timeframe,
-              totalMessages: timeframe.totalMessages(),
-            });
-            break;
-          }
-        }
-      });
-    });
-
-    const info: CurrentEpoch = {
-      spaceKey: space.key,
-      // stream,
-    };
-
-    return info;
-  }
-  */
 }
 
 const createServer = (services: ClientServicesProvider, options: WebSocket.ServerOptions) => {
