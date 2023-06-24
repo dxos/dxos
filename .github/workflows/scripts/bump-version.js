@@ -16,8 +16,11 @@ const bump = async () => {
   } = releasePleaseConfig;
 
   const { '.': currentVersion } = releasePleaseManifest;
+
+  const prereleaseID = process.argv[2] || 'next';
+
   // Prerelease bumps A.B.C to A.B.C-next.0, we're replacing the 0 with the git short hash.
-  const version = `${semver.inc(currentVersion, 'prerelease', 'next').slice(0, -1)}${hash.trim()}`;
+  const version = `${semver.inc(currentVersion, 'prerelease', prereleaseID).slice(0, -1)}${hash.trim()}`;
 
   console.log(`Bumping release files to ${version}...`);
 
