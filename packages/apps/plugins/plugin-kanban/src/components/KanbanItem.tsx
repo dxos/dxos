@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import type { KanbanItem } from '../props';
 
@@ -22,9 +24,18 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 
 export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete: () => void }> = ({ item, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: item.id });
+  const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   return (
-    <div className='flex p-1 border bg-white dark:bg-neutral-925'>
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(tx), transition }}
+      className={mx('flex grow p-1 border bg-white dark:bg-neutral-925', isDragging && 'relative z-10')}
+    >
+      <button {...attributes} {...listeners}>
+        <DotsSixVertical className={getSize(5)} />
+      </button>
       <Input.Root>
         {/* TODO(burdon): Label shouldn't be unique per plugin? */}
         <Input.Label srOnly>{t('kanban item title label')}</Input.Label>

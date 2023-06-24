@@ -2,18 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
+import { useDroppable } from '@dnd-kit/core';
+import { Modifiers } from '@dnd-kit/core/dist/modifiers';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { X, Plus } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
-import { Button, DragEndEvent, Input, List, ListItem, useTranslation } from '@dxos/aurora';
+import { Button, DragEndEvent, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
 import type { KanbanColumn } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
+
+// TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
+//  https://docs.dndkit.com/presets/sortable#multiple-containers
+// TODO(burdon): Scrolling (radix -- see kai).
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
@@ -35,10 +41,6 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-// TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
-// TODO(burdon): Dragging object on top (no transparency).
-// TODO(burdon): Scrolling.
-
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
   return (
@@ -51,10 +53,15 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
   );
 };
 
-export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => void }> = ({ column, onDelete }) => {
+export const KanbanColumnComponent: FC<{ column: KanbanColumn; modifiers?: Modifiers[]; onDelete: () => void }> = ({
+  column,
+  modifiers = [restrictToVerticalAxis],
+  onDelete,
+}) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
-  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: column.id });
-  const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
+  const { setNodeRef: droppableNodeRef, isOver } = useDroppable({ id: column.id });
+  // const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: column.id });
+  // const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   const [_, setIter] = useState([]);
   useEffect(() => {
@@ -87,25 +94,25 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
 
   // TODO(burdon): Width approx mobile phone width.
   // TODO(burdon): Min height not working.
-  // TODO(burdon): Impl. dragging relative/z  className in List.Item.
+  // TODO(burdon): Impl. dragging relative/z className in List.Item.
   return (
     <div
-      ref={setNodeRef}
-      className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10')}
-      style={{ transform: CSS.Transform.toString(tx), transition }}
+      // ref={setNodeRef}
+      // style={{ transform: CSS.Transform.toString(tx), transition }}
+      className={mx('flex flex-col overflow-y-hidden' /* isDragging && 'relative z-10' */)}
     >
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-72 min-w-72 __min-h-72 bg-neutral-50 dark:bg-neutral-925',
-          isDragging && 'bg-neutral-100 dark:bg-neutral-900',
+          // isDragging && 'bg-neutral-100 dark:bg-neutral-900',
         )}
       >
         <div className='flex items-center mb-2 pl-2 pr-5'>
-          <div className='mr-1'>
-            <button {...attributes} {...listeners}>
-              <DotsSixVertical className={getSize(5)} />
-            </button>
-          </div>
+          {/* <div className='mr-1'> */}
+          {/* <button {...attributes} {...listeners}> */}
+          {/*  <DotsSixVertical className={getSize(5)} /> */}
+          {/* </button> */}
+          {/* </div> */}
 
           <Input.Root>
             {/* TODO(burdon): Label shouldn't be unique per plugin? */}
@@ -124,24 +131,16 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
         </div>
 
         {/* TODO(burdon): Custom (radix) scrollbar (move to list). Scrolling bug if drag to bottom (see kai). */}
-        <div className='flex flex-col grow overflow-y-scroll pr-4'>
-          <List
-            variant='ordered-draggable'
-            listItemIds={column.items?.map(({ id }) => id)}
-            onDragEnd={handleDragEnd}
-            classNames='space-y-1'
-          >
+        <div ref={droppableNodeRef} className='flex flex-col grow overflow-y-scroll pr-4'>
+          {/* <DndContext modifiers={modifiers} onDragEnd={handleDragEnd}> */}
+          <SortableContext strategy={verticalListSortingStrategy} items={column.items?.map(({ id }) => id)}>
             {column.items?.map((item) => (
-              <ListItem.Root key={item.id} id={item.id} classNames='flex items-center pl-2'>
-                <div className='flex flex-col items-center'>
-                  <ListItem.DragHandle />
-                </div>
-                <div className='grow'>
-                  <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
-                </div>
-              </ListItem.Root>
+              <div key={item.id} id={item.id} className='flex items-center pl-2'>
+                <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
+              </div>
             ))}
-          </List>
+          </SortableContext>
+          {/* </DndContext> */}
         </div>
 
         <div className='flex justify-center mt-2'>

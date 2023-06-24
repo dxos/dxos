@@ -13,6 +13,7 @@ import { KanbanBoard } from './KanbanBoard';
 // TODO(burdon): Copying Stack; why array?
 export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  // TODO(burdon): Panel color standards.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
       <div>
