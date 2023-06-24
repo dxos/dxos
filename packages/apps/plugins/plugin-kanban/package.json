@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-stack",
+  "name": "@braneframe/plugin-kanban",
   "version": "0.1.45",
-  "description": "DXOS Surface plugin for Stack entities",
+  "description": "Kanban DXOS Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

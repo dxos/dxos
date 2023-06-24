@@ -20,9 +20,9 @@ import {
 import { defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
+import { arrayMove } from '@dxos/util';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
-import { arrayMoveInPlace } from '../util';
 
 type StackSectionProps = {
   onAdd: () => void;
@@ -103,7 +103,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     if (active.id !== over?.id) {
       const oldIndex = sections.findIndex((section) => section.object.id === active.id);
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
-      arrayMoveInPlace<StackSectionModel>(sections, oldIndex, newIndex);
+      arrayMove(sections, oldIndex, newIndex);
     }
   }, []);
 
