@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.48",
+  "version": "0.1.49",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -24,7 +24,8 @@
     "nx": "nx",
     "prepare": "husky install",
     "serve": "serve",
-    "test": "nx run-many --target=test"
+    "test": "nx run-many --target=test",
+    "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\""
   },
   "dependencies": {
     "@dxos/conform": "workspace:^0.1.0",
@@ -41,6 +42,7 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log-hook": "workspace:*",
+    "@dxos/nx-protobuf-compiler": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/serve-with-vault": "workspace:*",
@@ -95,7 +97,6 @@
     "chai-dom": "^1.11.0",
     "chalk": "^4.1.0",
     "esbuild": "^0.16.14",
-    "esbuild-node-externals": "^1.7.0",
     "esbuild-plugin-raw": "^0.1.7",
     "esbuild-plugin-yaml": "^0.0.1",
     "eslint": "^8.41.0",

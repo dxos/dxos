@@ -30,11 +30,19 @@ pnpm build
 
 > Don't forget to install and build when switching branches
 
-Run all unit tests
+Run all unit tests:
 
 ```
 pnpm test
 ```
+
+Recompile any package within the monorepo when changes are detected:
+
+```
+pnpm watch
+```
+
+> Run watch alongside a vite dev server to get monorepo-wide hot module reloading
 
 ## Run commands:
 

@@ -5,10 +5,10 @@
 import update from 'lodash.update';
 import React, { useState } from 'react';
 
+import { MarkdownProperties } from '@braneframe/plugin-markdown';
 import { Dialog, Button, useTranslation } from '@dxos/aurora';
 import { Input } from '@dxos/react-appkit';
 
-import { MarkdownProperties } from '../../MarkdownPlugin/components';
 import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
 
 export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {

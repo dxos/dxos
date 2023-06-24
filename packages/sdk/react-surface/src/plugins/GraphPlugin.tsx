@@ -13,7 +13,7 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GraphNode<TDatum = any> = {
   id: string;
-  label: string;
+  label: string | [string, { ns: string; count?: number }];
   description?: string;
   icon?: FC;
   data?: TDatum; // nit about naming this
@@ -27,7 +27,7 @@ export type GraphNodeAction = {
   id: string;
   testId?: string;
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
-  label: [string, { ns: string; count?: number }];
+  label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
   invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };
@@ -40,6 +40,22 @@ export type GraphProvides = {
 };
 
 type GraphPlugin = Plugin<GraphProvides>;
+
+export const findGraphNode = (nodes: GraphNode[], [id, ...path]: string[]): GraphNode | undefined => {
+  const node = nodes.find((n) => n.id === id);
+  if (!node) {
+    return undefined;
+  }
+
+  if (path.length === 0 || !node.children || node.children.length === 0) {
+    return node;
+  }
+
+  return findGraphNode(node.children, path);
+};
+
+export const isGraphNode = (datum: unknown): datum is GraphNode =>
+  datum && typeof datum === 'object' ? 'id' in datum && 'label' in datum : false;
 
 export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
   return (plugins as GraphPlugin[]).filter((p) => typeof p.provides?.graph?.nodes === 'function');

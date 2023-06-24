@@ -1,7 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
-import path from 'path';
+import path from 'node:path';
 import { z } from 'zod';
 
 import { ConfigDeclaration } from './config';

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.1.48",
+  "version": "0.1.49",
   "private": true,
   "description": "DXOS composer application.",
   "homepage": "https://dxos.org",
@@ -9,6 +9,8 @@
   "license": "MIT",
   "author": "DXOS.org",
   "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
@@ -32,6 +34,7 @@
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",
     "jszip": "^3.10.1",
+    "localforage": "^1.10.0",
     "lodash.update": "^4.10.2",
     "octokit": "^2.0.14",
     "react": "^18.2.0",
