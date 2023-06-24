@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X, Plus } from '@phosphor-icons/react';
+import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { Button, DragEndEvent, Input, List, ListItem, useTranslation } from '@dxos/aurora';
@@ -35,6 +35,19 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 
 // TODO(burdon): Drag items between columns.
 // TODO(burdon): Dragging object on top (no transparency).
+// TODO(burdon): Scrolling.
+
+export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
+  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  return (
+    <div className='flex flex-col justify-center outline outline-dashed rounded w-72 h-72'>
+      <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
+        <span className='sr-only'>{t('add column label')}</span>
+        <Plus className={getSize(6)} />
+      </Button>
+    </div>
+  );
+};
 
 export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => void }> = ({ column, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
@@ -71,8 +84,13 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
 
   // TODO(burdon): Width approx mobile phone width.
   return (
-    <div className='flex flex-col m-1 p-1 outline rounded w-72'>
-      <div className='flex'>
+    <div className='flex flex-col p-2 outline rounded w-72'>
+      <div className='flex items-center mb-2 mr-1'>
+        {/* <ListItem.DragHandle /> */}
+        <div className='mr-1'>
+          <DotsSixVertical className={getSize(5)} />
+        </div>
+
         <Input.Root>
           {/* TODO(burdon): Label shouldn't be unique per plugin? */}
           <Input.Label srOnly>{t('kanban column title label')}</Input.Label>
@@ -89,11 +107,16 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete: () => v
       </div>
 
       <div>
-        <List variant='ordered-draggable' listItemIds={column.items?.map(({ id }) => id)} onDragEnd={handleDragEnd}>
+        <List
+          variant='ordered-draggable'
+          listItemIds={column.items?.map(({ id }) => id)}
+          onDragEnd={handleDragEnd}
+          classNames='space-y-2'
+        >
           {column.items?.map((item) => (
             <ListItem.Root key={item.id} id={item.id} classNames='flex items-center'>
               <div className='flex flex-col items-center'>
-                <ListItem.DragHandle classNames='grow' />
+                <ListItem.DragHandle />
               </div>
               <div className='grow'>
                 <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />

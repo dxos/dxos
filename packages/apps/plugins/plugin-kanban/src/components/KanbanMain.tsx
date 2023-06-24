@@ -2,28 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Button, Input, Main, useTranslation } from '@dxos/aurora';
-import { defaultBlockSeparator, getSize, mx } from '@dxos/aurora-theme';
+import { Input, Main, useTranslation } from '@dxos/aurora';
+import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { ObservableArray, subscribe } from '@dxos/observable-object';
 
 import { KanbanColumns, KanbanItem } from '../props';
 import type { KanbanModel } from '../props';
-import { KanbanColumnComponent } from './KanbanColumn';
+import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 
-const AddColumn = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
-  return (
-    <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
-      <span className='sr-only'>{t('add column label')}</span>
-      <Plus className={getSize(4)} />
-    </Button>
-  );
-};
-
-// TODO(burdon): Drag columns.
+// TODO(burdon): Drag columns (option).
+// TODO(burdon): Scrolling (with snap).
+// TODO(burdon): BG colors.
 
 // TODO(burdon): Consistently use FC?
 export const KanbanMainImpl: FC<{ columns: KanbanColumns }> = ({ columns }) => {
@@ -49,15 +40,13 @@ export const KanbanMainImpl: FC<{ columns: KanbanColumns }> = ({ columns }) => {
   };
 
   return (
-    <div className='flex flex-col'>
-      <div className='flex'>
+    <div className='flex grow p-2'>
+      <div className='flex space-x-4'>
         {columns.map((column) => (
           <KanbanColumnComponent key={column.id} column={column} onDelete={() => handleDeleteColumn(column.id)} />
         ))}
         {/* TODO(burdon): Make it look like a column. */}
-        <div>
-          <AddColumn onClick={handleAddColumn} />
-        </div>
+        <KanbanColumnComponentPlaceholder onAdd={handleAddColumn} />
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete: () => void }>
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
 
   return (
-    <div className='flex m-1 p-1 outline'>
+    <div className='flex p-1 border bg-white dark:bg-neutral-925'>
       <Input.Root>
         {/* TODO(burdon): Label shouldn't be unique per plugin? */}
         <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
