@@ -17,6 +17,8 @@ import {
   DensityProvider,
   DragEndEvent,
   arrayMoveInPlace,
+  useListContext,
+  ListScopedProps,
 } from '@dxos/aurora';
 import { defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
@@ -28,6 +30,7 @@ type StackSectionProps = {
   onAdd: () => void;
   onRemove: () => void;
   section: StackSectionModel;
+  isOverlay?: boolean;
 };
 
 const AddSection = ({ onClick }: { onClick: StackSectionProps['onAdd'] }) => {
@@ -41,8 +44,10 @@ const AddSection = ({ onClick }: { onClick: StackSectionProps['onAdd'] }) => {
   );
 };
 
-const StackSection = ({ onAdd, onRemove, section }: StackSectionProps) => {
+const StackSection = ({ onAdd, onRemove, section, isOverlay, __listScope }: ListScopedProps<StackSectionProps>) => {
   const { t } = useTranslation('dxos:stack');
+  const { draggingId } = useListContext('StackSection', __listScope);
+  const _isDragging = !isOverlay && draggingId === section.object.id;
   return (
     <DensityProvider density='fine'>
       <AddSection onClick={onAdd} />
@@ -111,9 +116,11 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     <>
       <List
         variant='ordered-draggable'
+        itemSizes='many'
         onDragEnd={handleDragEnd}
         listItemIds={sections.map(({ object: { id } }) => id)}
         classNames='pis-1 pie-2'
+        dragOverlay={(draggingId) => null}
       >
         {sections
           // todo(thure): This filter should be unnecessary; why is the first (or only?) value sometimes some sort of array-like object?
