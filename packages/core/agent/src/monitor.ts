@@ -95,6 +95,7 @@ export class Monitor {
                     if (state.epochTriggered) {
                       state.epochTriggered = undefined;
                     } else {
+                      // TODO(burdon): New epoch message # is off by one.
                       const triggerEpoch = totalMessages > currentEpoch && totalMessages % limit === 0;
                       if (triggerEpoch) {
                         log('trigger epoch', { space: space.key });
