@@ -16,13 +16,13 @@ import {
   randomString,
   DensityProvider,
   DragEndEvent,
+  arrayMoveInPlace,
 } from '@dxos/aurora';
 import { defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
-import { arrayMoveInPlace } from '../util';
 
 type StackSectionProps = {
   onAdd: () => void;

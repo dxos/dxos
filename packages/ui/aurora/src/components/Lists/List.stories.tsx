@@ -4,17 +4,17 @@
 
 import '@dxosTheme';
 import { Play, PushPin } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 
-import { List, ListItem, arrayMove, DragEndEvent } from './List';
+import { List, ListItem, arrayMove, DragEndEvent, ListProps, useListContext, ListScopedProps } from './List';
 
 export default {
-  component: List,
+  component: List as FC<ListProps>,
 };
 
-export const Default = {
+export const UniformSizeDraggable = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -35,9 +35,10 @@ export const Default = {
       }
     };
     return (
-      <List {...args} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
+      <List {...args} itemSizes='one' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
           <ListItem.Root key={id} id={id}>
+            {args.variant === 'ordered-draggable' && <ListItem.DragHandle />}
             <ListItem.Endcap>
               <Play className={mx(getSize(5), 'mbs-2.5')} />
             </ListItem.Endcap>
@@ -51,7 +52,79 @@ export const Default = {
     );
   },
   args: {
-    selectable: true,
+    variant: 'ordered-draggable',
+  },
+};
+
+const ManySizesDraggableListItem = ({
+  id,
+  text,
+  className,
+  __listScope,
+}: ListScopedProps<{ id: string; text: ReactNode; className?: string }>) => {
+  const { draggingId } = useListContext('ManySizesDraggableListItem', __listScope);
+  return (
+    <ListItem.Root key={id} id={id} classNames={[id === draggingId && 'opacity-20', className]}>
+      <ListItem.DragHandle />
+      <ListItem.Endcap>
+        <Play className={mx(getSize(5), 'mbs-2.5')} />
+      </ListItem.Endcap>
+      <ListItem.Heading classNames='grow pbs-2' asChild>
+        {text}
+      </ListItem.Heading>
+      <ListItem.Endcap>
+        <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+      </ListItem.Endcap>
+    </ListItem.Root>
+  );
+};
+export const ManySizesDraggable = {
+  render: ({ ...args }) => {
+    const [items, setItems] = useState(
+      [...Array(12)].map((_, index) => ({
+        id: `listItem-${index}`,
+        text: (
+          <p
+            className={mx(
+              index % 3 === 0 ? 'bs-20' : index % 2 === 0 ? 'bs-12' : 'bs-8',
+              surfaceElevation({ elevation: 'group' }),
+              'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded',
+            )}
+          >{`List item ${index + 1}`}</p>
+        ),
+      })),
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (active.id !== over?.id) {
+        setItems((items) => {
+          const oldIndex = items.findIndex((item) => item.id === active.id);
+          const newIndex = items.findIndex((item) => item.id === over?.id);
+
+          return arrayMove(items, oldIndex, newIndex);
+        });
+      }
+    };
+
+    return (
+      <List
+        {...args}
+        onDragEnd={handleDragEnd}
+        listItemIds={items.map(({ id }) => id)}
+        dragOverlay={(draggingId) => {
+          const item = items.find(({ id }) => id === draggingId);
+          return item ? <ManySizesDraggableListItem {...item} className='opacity-100' /> : null;
+        }}
+      >
+        {items.map(({ id, text }) => (
+          <ManySizesDraggableListItem key={id} {...{ id, text }} />
+        ))}
+      </List>
+    );
+  },
+  args: {
     variant: 'ordered-draggable',
   },
 };
