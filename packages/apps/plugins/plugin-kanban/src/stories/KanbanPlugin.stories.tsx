@@ -3,64 +3,32 @@
 //
 
 import '@dxosTheme';
+import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { ObservableArray, ObservableObject } from '@dxos/observable-object';
 import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface';
 
 import { KanbanPlugin } from '../KanbanPlugin';
-import { KanbanModel } from '../props';
+import { KanbanModel, KanbanColumn, KanbanItem } from '../props';
 
 const DefaultKanbanPluginStory = () => {
   const object = new ObservableObject<KanbanModel>({
-    id: 'test', // TODO(burdon): Why?
-    title: 'Kanban',
-    columns: new ObservableArray<KanbanColumn>([
-      {
-        id: 'column-1',
-        title: 'Column 1',
-        // items: new ObservableArray<KanbanItem>()
-      },
-      //     items: new ObservableArray<KanbanItem>([
-      //       {
-      //         id: 'item-1',
-      //         title: 'III',
-      //       },
-      //     ]),
-      //   },
-      // TODO(burdon): Set data?
-      // columns: new ObservableArray([
-      //   {
-      //     id: 'column-1',
-      //     title: 'Column 1',
-      //     items: [
-      //       {
-      //         id: 'item-1',
-      //         title: 'Item 1',
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     id: 'column-2',
-      //     title: 'Column 2',
-      //   },
-      //   {
-      //     id: 'column-3',
-      //     title: 'Column 3',
-      //   },
-    ]),
+    id: 'test',
+    title: faker.lorem.words(3),
+    columns: new ObservableArray<KanbanColumn>(
+      ...faker.datatype.array(faker.datatype.number(5)).map(() => ({
+        id: 'column-' + Math.random(),
+        title: faker.lorem.words(3),
+        items: new ObservableArray<KanbanItem>(
+          ...faker.datatype.array(faker.datatype.number(8)).map(() => ({
+            id: 'item-' + Math.random(),
+            title: faker.lorem.words(3),
+          })),
+        ),
+      })),
+    ),
   });
-
-  // object.columns.push({
-  //   id: 'column-1',
-  //   title: 'Column 1',
-  //   items: new ObservableArray([
-  //     {
-  //       id: 'item-1',
-  //       title: 'III',
-  //     },
-  //   ]),
-  // });
 
   return (
     // TODO(burdon): Factor out container.
