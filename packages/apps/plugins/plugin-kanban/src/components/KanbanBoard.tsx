@@ -13,6 +13,8 @@ import { arrayMove } from '@dxos/util';
 import { KanbanColumns, KanbanItem } from '../props';
 import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 
+// TODO(burdon): Touch sensors.
+
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{ columns: KanbanColumns }> = ({ columns }) => {
   const [_, setIter] = useState([]);

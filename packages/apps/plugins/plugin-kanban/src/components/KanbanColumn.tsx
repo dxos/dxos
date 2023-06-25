@@ -16,9 +16,11 @@ import { arrayMove } from '@dxos/util';
 import type { KanbanColumn } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 
+// TODO(burdon): Scrolling (radix -- see kai).
 // TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
 //  https://docs.dndkit.com/presets/sortable#multiple-containers
-// TODO(burdon): Scrolling (radix -- see kai).
+//  https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/presets-sortable-multiple-containers--basic-setup
+//  https://github.com/clauderic/dnd-kit/blob/master/stories/2%20-%20Presets/Sortable/4-MultipleContainers.story.tsx
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
@@ -43,7 +45,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
   return (
-    <div className='flex flex-col justify-center shadow rounded w-72 h-72 bg-neutral-50 dark:bg-neutral-925'>
+    <div className='flex flex-col justify-center shadow rounded w-80 h-80 bg-neutral-50 dark:bg-neutral-925'>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -102,8 +104,6 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
   };
 
   // TODO(burdon): Width approx mobile phone width.
-  // TODO(burdon): Min height not working.
-  // TODO(burdon): Impl. dragging relative/z className in List.Item.
   return (
     <div
       ref={setNodeRef}
@@ -112,16 +112,14 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
     >
       <div
         className={mx(
-          'flex flex-col py-2 overflow-hidden shadow rounded w-72 min-w-72 __min-h-72 bg-neutral-50 dark:bg-neutral-925',
+          'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-925',
           isDragging && 'bg-neutral-100 dark:bg-neutral-900',
         )}
       >
-        <div className='flex items-center mb-2 pl-2 pr-5'>
-          <div className='mr-1'>
-            <button {...attributes} {...listeners}>
-              <DotsSixVertical className={getSize(5)} />
-            </button>
-          </div>
+        <div className='flex items-center mb-2 px-2'>
+          <button {...attributes} {...listeners}>
+            <DotsSixVertical className={getSize(5)} />
+          </button>
 
           <Input.Root>
             {/* TODO(burdon): Label shouldn't be unique per plugin? */}
@@ -131,7 +129,7 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
               variant='subdued'
               defaultValue={column.title}
               onChange={({ target: { value } }) => (column.title = value)}
-              classNames='px-1'
+              classNames='px-2'
             />
           </Input.Root>
 
@@ -139,7 +137,6 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
           {onDelete && <DeleteColumn onClick={onDelete} />}
         </div>
 
-        {/* TODO(burdon): Custom (radix) scrollbar (move to list). */}
         {/* TODO(burdon): Does inner DndContext prevent dragging across columns? */}
         <DndContext
           onDragStart={handleDragStart}
@@ -150,7 +147,7 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
           <SortableContext strategy={verticalListSortingStrategy} items={column.items?.map(({ id }) => id)}>
             <div ref={droppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
               {column.items?.map((item) => (
-                <div key={item.id} id={item.id} className='flex items-center pl-2'>
+                <div key={item.id} id={item.id} className='flex pl-2'>
                   <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
                 </div>
               ))}
