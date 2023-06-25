@@ -10,7 +10,7 @@ import { ObservableArray, ObservableObject } from '@dxos/observable-object';
 import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface';
 
 import { KanbanPlugin } from '../KanbanPlugin';
-import { KanbanModel, KanbanColumn, KanbanItem } from '../props';
+import { KanbanModel, KanbanColumnModel, KanbanItem } from '../props';
 
 faker.seed(1);
 
@@ -18,7 +18,7 @@ const DefaultKanbanPluginStory = () => {
   const object = new ObservableObject<KanbanModel>({
     id: 'test',
     title: faker.lorem.words(3),
-    columns: new ObservableArray<KanbanColumn>(
+    columns: new ObservableArray<KanbanColumnModel>(
       ...faker.datatype.array(faker.datatype.number({ min: 2, max: 8 })).map(() => ({
         id: 'column-' + faker.datatype.uuid(),
         title: faker.lorem.words(3),

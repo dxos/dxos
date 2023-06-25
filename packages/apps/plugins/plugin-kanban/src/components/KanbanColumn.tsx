@@ -12,10 +12,9 @@ import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 
-import type { KanbanColumn, KanbanItem } from '../props';
+import type { Location, KanbanColumnModel, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 
-// TODO(burdon): Scrolling (radix -- see kai).
 // TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
 //  https://docs.dndkit.com/presets/sortable#multiple-containers
 //  https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/presets-sortable-multiple-containers--basic-setup
@@ -55,20 +54,14 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export type ActiveItem = {
-  active: {
-    column: string;
-    item: KanbanItem;
-  };
-  over: {
-    column: string;
-    item?: string;
-  };
+  dragging: Location;
+  over: Location;
 };
 
 export const KanbanColumnComponent: FC<{
-  column: KanbanColumn;
+  column: KanbanColumnModel;
   active?: ActiveItem;
-  onAdd?: (column: KanbanColumn) => KanbanItem;
+  onAdd?: (column: KanbanColumnModel) => KanbanItem;
   onDelete?: () => void;
 }> = ({ column, active, onAdd, onDelete }) => {
   const [_, setIter] = useState([]);
@@ -100,7 +93,11 @@ export const KanbanColumnComponent: FC<{
     }
   };
 
-  // Splice active element.
+  // Splice/merge item being dragged.
+  // Remove item being dragged out of column and insert if being dragged into column.
+  // TODO(burdon): Just update model directly?
+  const items = column.items;
+  /*
   let idx = -1;
   const items = column.items.filter((item, i) => {
     if (active?.active.column !== column.id && active?.over.item === item.id) {
@@ -112,14 +109,15 @@ export const KanbanColumnComponent: FC<{
   if (idx !== -1) {
     items.splice(idx, 0, active!.active.item);
   }
+  */
 
-  // TODO(burdon): Width approx mobile phone width.
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10')}
     >
+      {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-900',
@@ -146,6 +144,7 @@ export const KanbanColumnComponent: FC<{
           {onDelete && <DeleteColumn onClick={onDelete} />}
         </div>
 
+        {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
         <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
             {items.map((item) => (

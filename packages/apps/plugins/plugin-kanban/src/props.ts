@@ -16,6 +16,16 @@ import { ObservableArray, subscribe } from '@dxos/observable-object';
 // TODO(burdon): How are types mapped onto ECHO? I.e., relationship between ECHO object/array and Observable.
 // TODO(burdon): Can the plugin configure the object based on the datum? E.g., how are the models constructed?
 
+// TODO(burdon): Create models. Simple first based on actual data.
+//  Model is always a projection since the dragging state is tentative.
+//  Can plugin inject context for model?
+
+// NEXT:
+//  - Discuss mapping of objects onto models (esp. Observable).
+//  - E.g., Observable as part of the model data interface.
+//  - E.g., Can methods be added to Observables or should a model contain an Observable.
+//  - E.g., Add/move/remove columns and items.
+
 // TODO(burdon): Pluggable content (e.g., support text document for title).
 export type KanbanItem = { id: string; content: string };
 
@@ -23,20 +33,18 @@ export type KanbanItem = { id: string; content: string };
 export type GenericKanbanItem = KanbanItem & { [key: string]: any };
 
 // TODO(burdon): Implement ColumnModel with callbacks.
-export type KanbanColumn<T extends KanbanItem = GenericKanbanItem> = {
+export type KanbanColumnModel<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
   title: string;
   items: ObservableArray<T>;
 };
-
-export type KanbanColumns<T extends KanbanItem = GenericKanbanItem> = ObservableArray<KanbanColumn<T>>;
 
 // TODO(burdon): When to use Model suffix?
 export type KanbanModel<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
   title: string;
   // TODO(burdon): How is this mapped onto ECHO?
-  columns: KanbanColumns<T>;
+  columns: ObservableArray<KanbanColumnModel<T>>;
 };
 
 // TODO(burdon): Why array? Test data type?
@@ -49,15 +57,15 @@ export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknow
       subscribe in datum.columns
     : false;
 
-export type Cell = {
-  column: KanbanColumn;
+export type Location = {
+  column: KanbanColumnModel;
   item?: KanbanItem;
   idx?: number;
 };
 
 // TODO(burdon): Move to model.
-export const findCell = (columns: KanbanColumn[], id: string): Cell | undefined => {
-  let cell: Cell | undefined;
+export const findLocation = (columns: KanbanColumnModel[], id: string): Location | undefined => {
+  let cell: Location | undefined;
   for (const column of columns) {
     if (column.id === id) {
       cell = { column };

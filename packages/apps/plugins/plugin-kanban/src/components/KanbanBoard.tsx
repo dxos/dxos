@@ -18,7 +18,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
-import type { KanbanColumn, KanbanColumns, KanbanItem } from '../props';
+import type { KanbanColumnModel, KanbanModel, KanbanItem } from '../props';
 import { ActiveItem, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 
@@ -28,14 +28,14 @@ import { KanbanItemComponent } from './KanbanItem';
 
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{
-  columns: KanbanColumns;
-  onAddColumn?: () => KanbanColumn;
-  onAddItem?: (column: KanbanColumn) => KanbanItem;
-}> = ({ columns, onAddColumn, onAddItem }) => {
+  model: KanbanModel;
+  onAddColumn?: () => KanbanColumnModel;
+  onAddItem?: (column: KanbanColumnModel) => KanbanItem;
+}> = ({ model, onAddColumn, onAddItem }) => {
   const [_, setIter] = useState([]);
   useEffect(() => {
     // TODO(burdon): Copying from Stack. Create custom hook?
-    return columns[subscribe](() => setIter([])) as () => void;
+    return model.columns[subscribe](() => setIter([])) as () => void;
   }, []);
 
   const mouseSensor = useSensor(MouseSensor, {
@@ -45,46 +45,21 @@ export const KanbanBoard: FC<{
   });
 
   // TODO(burdon): Consolidate.
-  const [activeColumn, setActiveColumn] = useState<KanbanColumn | undefined>();
+  const [activeColumn, setActiveColumn] = useState<KanbanColumnModel | undefined>();
   const [activeItem, setActiveItem] = useState<KanbanItem | undefined>();
   const [active, setActive] = useState<ActiveItem | undefined>();
 
   // TODO(burdon): Tentatively insert into new column when dragging over without causing mutation.
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     if (activeItem && over && active.id !== over.id) {
-      // TODO(burdon): Get column from item.
-      const active: Partial<ActiveItem> = {
-        active: {
-          column: columns.find((column) => column.items.find((item) => item.id === activeItem.id))!.id,
-          item: activeItem,
-        },
-      };
-
-      switch ((over.data.current as any).type) {
-        case 'column': {
-          active.over = { column: over.id as string };
-          break;
-        }
-
-        case 'item': {
-          columns.forEach((column) => {
-            const item = column.items.find((item) => item.id === over.id);
-            if (item) {
-              active.over = { column: column.id, item: item.id };
-            }
-          });
-          break;
-        }
-      }
-
-      setActive(active as ActiveItem);
+      setActive(undefined);
     } else {
       setActive(undefined);
     }
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    columns.forEach((column) => {
+    model.columns.forEach((column) => {
       if (column.id === active.id) {
         setActiveColumn(column);
       } else {
@@ -108,15 +83,15 @@ export const KanbanBoard: FC<{
     if (active.id !== over?.id) {
       switch ((active.data.current as any).type) {
         case 'column': {
-          const oldIndex = columns.findIndex((column) => column.id === active.id);
-          const newIndex = columns.findIndex((column) => column.id === over?.id);
-          arrayMove(columns, oldIndex, newIndex);
+          const oldIndex = model.columns.findIndex((column) => column.id === active.id);
+          const newIndex = model.columns.findIndex((column) => column.id === over?.id);
+          arrayMove(model.columns, oldIndex, newIndex);
           break;
         }
 
         // TODO(burdon): Handle drag to other column.
         case 'item': {
-          const column = (active.data.current as any).column as KanbanColumn;
+          const column = (active.data.current as any).column as KanbanColumnModel;
           const oldIndex = column.items.findIndex((item) => item.id === active.id);
           const newIndex = column.items.findIndex((item) => item.id === over?.id);
           arrayMove(column.items, oldIndex, newIndex);
@@ -132,14 +107,14 @@ export const KanbanBoard: FC<{
   const handleAddColumn = onAddColumn
     ? () => {
         const column = onAddColumn();
-        columns.splice(columns.length, 0, column);
+        model.columns.splice(model.columns.length, 0, column);
       }
     : undefined;
 
   const handleDeleteColumn = (id: string) => {
-    const index = columns.findIndex((column) => column.id === id);
+    const index = model.columns.findIndex((column) => column.id === id);
     if (index >= 0) {
-      columns.splice(index, 1);
+      model.columns.splice(index, 1);
     }
   };
 
@@ -167,8 +142,8 @@ export const KanbanBoard: FC<{
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext strategy={horizontalListSortingStrategy} items={columns?.map(({ id }) => id)}>
-            {columns.map((column) => (
+          <SortableContext strategy={horizontalListSortingStrategy} items={model.columns?.map(({ id }) => id)}>
+            {model.columns.map((column) => (
               <KanbanColumnComponent
                 key={column.id}
                 column={column}

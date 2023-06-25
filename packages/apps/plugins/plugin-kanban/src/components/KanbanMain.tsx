@@ -9,7 +9,7 @@ import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { ObservableArray } from '@dxos/observable-object';
 
-import type { KanbanColumn, KanbanItem, KanbanModel } from '../props';
+import type { KanbanColumnModel, KanbanItem, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Why array? Generalize to graph node (which may contain a collection)?
@@ -26,7 +26,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
   };
 
   // TODO(burdon): External (needs space.db)?
-  const handleAddItem = (column: KanbanColumn) => {
+  const handleAddItem = (column: KanbanColumnModel) => {
     return {
       id: 'item-' + faker.datatype.uuid(),
       content: faker.lorem.words(3),
@@ -50,7 +50,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
       </div>
       <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />
       <div className='flex grow overflow-hidden'>
-        <KanbanBoard columns={kanban.columns} onAddColumn={handleAddColumn} onAddItem={handleAddItem} />
+        <KanbanBoard model={kanban} onAddColumn={handleAddColumn} onAddItem={handleAddItem} />
       </div>
     </Main.Content>
   );
