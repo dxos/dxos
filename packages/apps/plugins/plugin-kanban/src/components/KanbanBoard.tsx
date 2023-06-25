@@ -14,6 +14,7 @@ import { KanbanColumn, KanbanColumns, KanbanItem } from '../props';
 import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 
 // TODO(burdon): Touch sensors.
+// TODO(burdon): Prevent browser nav back when swiping left/right.
 
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{
