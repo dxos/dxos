@@ -10,6 +10,7 @@ import translations from './translations';
 
 export const KanbanPlugin: PluginDefinition = definePlugin({
   meta: {
+    // TODO(burdon): Make id consistent with other plugins.
     id: 'dxos.org/plugin/kanban',
   },
   provides: {

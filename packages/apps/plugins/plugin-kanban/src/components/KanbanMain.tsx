@@ -9,15 +9,14 @@ import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { ObservableArray } from '@dxos/observable-object';
 
-import { KanbanColumn, KanbanItem } from '../props';
-import type { KanbanModel } from '../props';
+import type { KanbanColumn, KanbanItem, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
-// TODO(burdon): Copying Stack; why array?
+// TODO(burdon): Why array? Generalize to graph node (which may contain a collection)?
 export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  // TODO(burdon): External (needs space.db)?
+  // TODO(burdon): External (needs space.db)? Via context?
   const handleAddColumn = () => {
     return {
       id: 'column-' + Math.random(),
