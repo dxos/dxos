@@ -27,8 +27,6 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: item.id });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  // TODO(burdon): Colored tags.
-
   return (
     <div
       ref={setNodeRef}
@@ -42,9 +40,9 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
           </button>
         </div>
         <Input.Root>
-          {/* TODO(burdon): Spellcheck only when focused. */}
           {/* TODO(burdon): Label shouldn't be unique per plugin? */}
           <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
+          {/* TODO(burdon): Use text document. */}
           {/* TODO(burdon): Remove border; Auto-expand height */}
           <Input.TextArea
             rows={3}

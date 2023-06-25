@@ -81,7 +81,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
       const section: StackSectionModel = {
         source: { resolver: 'dxos:markdown', guid: randomString() },
         object: {
-          id: randomString(),
+          id: randomString(), // TODO(burdon): Must not use this for ECHO object.
           content: '',
         },
       };
