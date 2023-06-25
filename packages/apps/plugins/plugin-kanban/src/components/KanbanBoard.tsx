@@ -18,6 +18,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
+import { findLocation } from '../props';
 import type { KanbanColumnModel, KanbanModel, KanbanItem } from '../props';
 import { ActiveItem, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
@@ -49,10 +50,15 @@ export const KanbanBoard: FC<{
   const [activeItem, setActiveItem] = useState<KanbanItem | undefined>();
   const [active, setActive] = useState<ActiveItem | undefined>();
 
-  // TODO(burdon): Tentatively insert into new column when dragging over without causing mutation.
+  // TODO(burdon): Update observables -- BUT DO NOT UPDATE ECHO YET.
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (activeItem && over && active.id !== over.id) {
-      setActive(undefined);
+    const dragging = findLocation(model.columns, active.id as string)!;
+    if (dragging.item && over && active.id !== over.id) {
+      const droppable = findLocation(model.columns, over.id as string)!;
+      if (dragging?.column.id !== droppable?.column.id) {
+        dragging.column.items.splice(dragging.idx!, 1);
+        droppable.column.items.splice(droppable.idx ?? 0, 0, dragging.item);
+      }
     } else {
       setActive(undefined);
     }
