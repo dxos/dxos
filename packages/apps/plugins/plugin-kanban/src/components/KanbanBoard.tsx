@@ -15,6 +15,7 @@ import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './Kanba
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
+// TODO(burdon): Snap scroll (see kai).
 
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{
@@ -58,7 +59,7 @@ export const KanbanBoard: FC<{
   };
 
   return (
-    <div className='flex p-4 overflow-x-scroll space-x-4'>
+    <div className='flex overflow-x-scroll p-4 space-x-4'>
       <div className='flex space-x-4'>
         <DndContext modifiers={[restrictToHorizontalAxis]} sensors={[mouseSensor]} onDragEnd={handleDragEnd}>
           <SortableContext strategy={horizontalListSortingStrategy} items={columns?.map((column) => column.id) ?? []}>

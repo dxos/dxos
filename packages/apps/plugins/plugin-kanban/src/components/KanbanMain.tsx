@@ -15,7 +15,7 @@ import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Copying Stack; why array?
 export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
 
   // TODO(burdon): External.
   const handleAddColumn = () => {
@@ -39,7 +39,6 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
     <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
       <div>
         <Input.Root>
-          {/* TODO(burdon): Label shouldn't be unique per plugin? */}
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>
           {/* TODO(burdon): Is classNames boilerplate required everywhere? Make consistent across plugins? Same for separator, etc. */}
           <Input.TextInput

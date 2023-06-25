@@ -5,8 +5,16 @@
 export default [
   {
     'en-US': {
-      'dxos.org/plugins/kanban': {
+      // TODO(burdon): Make consistent with other plugins.
+      'dxos.org/plugin/kanban': {
         'plugin name': 'Kanban',
+        'kanban title label': 'title',
+        'column title label': 'column title',
+        'item content label': 'item content',
+        'add column label': 'add column',
+        'add item label': 'add item',
+        'delete column label': 'delete column',
+        'delete item label': 'delete item',
       },
     },
   },

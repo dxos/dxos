@@ -23,7 +23,7 @@ import { KanbanItemComponent } from './KanbanItem';
 //  https://github.com/clauderic/dnd-kit/blob/master/stories/2%20-%20Presets/Sortable/4-MultipleContainers.story.tsx
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete column label')}</span>
@@ -33,7 +33,7 @@ const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
 };
 
 const AddItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('add item label')}</span>
@@ -43,7 +43,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
     <div className='flex flex-col justify-center shadow rounded w-80 h-80 bg-neutral-50 dark:bg-neutral-900'>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
@@ -59,7 +59,8 @@ export const KanbanColumnComponent: FC<{
   onAdd?: (column: KanbanColumn) => KanbanItem;
   onDelete?: () => void;
 }> = ({ column, onAdd, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
+
   const { setNodeRef: droppableNodeRef, isOver } = useDroppable({ id: column.id });
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: column.id });
@@ -126,8 +127,7 @@ export const KanbanColumnComponent: FC<{
           </button>
 
           <Input.Root>
-            {/* TODO(burdon): Label shouldn't be unique per plugin? */}
-            <Input.Label srOnly>{t('kanban column title label')}</Input.Label>
+            <Input.Label srOnly>{t('column title label')}</Input.Label>
             {/* TODO(burdon): Is classNames boilerplate required everywhere? How to make consistent across plugins? Same for separator, etc. */}
             <Input.TextInput
               variant='subdued'

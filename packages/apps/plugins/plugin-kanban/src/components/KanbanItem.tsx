@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import type { KanbanItem } from '../props';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete item label')}</span>
@@ -23,7 +23,7 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }> = ({ item, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
+  const { t } = useTranslation('dxos.org/plugin/kanban');
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: item.id });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
@@ -31,7 +31,7 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow border', isDragging && 'border-dashed')}
+      className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
       <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'invisible')}>
         <div className='flex h-[40px] items-center'>
@@ -40,10 +40,9 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
           </button>
         </div>
         <Input.Root>
-          {/* TODO(burdon): Label shouldn't be unique per plugin? */}
-          <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
+          <Input.Label srOnly>{t('item content label')}</Input.Label>
           {/* TODO(burdon): Pluggable content; e.g., use text document. */}
-          {/* TODO(burdon): Remove border; Auto-expand height */}
+          {/* TODO(burdon): Remove border when focused; Auto-expand height */}
           <Input.TextArea
             rows={3}
             variant='subdued'
