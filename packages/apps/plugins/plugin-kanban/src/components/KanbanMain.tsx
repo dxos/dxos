@@ -34,7 +34,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
     };
   };
 
-  // TODO(burdon): Panel color standards.
+  // TODO(burdon): Style/color standards for panels, borders, etc.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
       <div>
