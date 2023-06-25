@@ -99,6 +99,7 @@ export const KanbanBoard: FC<{
     setActive(undefined);
   };
 
+  // TODO(burdon): Call model.
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
