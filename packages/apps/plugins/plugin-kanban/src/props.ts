@@ -13,18 +13,21 @@ import { ObservableArray, subscribe } from '@dxos/observable-object';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
+// NEXT:
+//  - Discuss mapping of objects onto models (esp. Observable).
+//  - Should the model "contain" Observables.
+//  - Should the component model the Observables directly (or call model methods).
+//  - Immutable Observables?
+//  - Consider temporary mutations (e.g., re-arranging items while dragging but before dropped).
+//  - Consider projections (e.g., column objects from query).
+//  - Add/move/remove columns and items.
+//  - Coupling of model to proto typedefs.
+
 // TODO(burdon): How are types mapped onto ECHO? I.e., relationship between ECHO object/array and Observable.
 // TODO(burdon): Can the plugin configure the object based on the datum? E.g., how are the models constructed?
-
 // TODO(burdon): Create models. Simple first based on actual data.
 //  Model is always a projection since the dragging state is tentative.
 //  Can plugin inject context for model?
-
-// NEXT:
-//  - Discuss mapping of objects onto models (esp. Observable).
-//  - E.g., Observable as part of the model data interface.
-//  - E.g., Can methods be added to Observables or should a model contain an Observable.
-//  - E.g., Add/move/remove columns and items.
 
 // TODO(burdon): Pluggable content (e.g., support text document for title).
 export type KanbanItem = { id: string; content: string };
