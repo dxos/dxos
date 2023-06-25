@@ -22,11 +22,12 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const KanbanItemComponent: FC<{ column?: KanbanColumnModel; item: KanbanItem; onDelete?: () => void }> = ({
-  column,
-  item,
-  onDelete,
-}) => {
+export const KanbanItemComponent: FC<{
+  column?: KanbanColumnModel;
+  item: KanbanItem;
+  debug?: boolean;
+  onDelete?: () => void;
+}> = ({ column, item, debug = false, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
@@ -58,7 +59,7 @@ export const KanbanItemComponent: FC<{ column?: KanbanColumnModel; item: KanbanI
               classNames='px-1 border-none resize-none'
             />
           </Input.Root>
-          <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>
+          {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (
           <div className='flex h-[40px] items-center'>

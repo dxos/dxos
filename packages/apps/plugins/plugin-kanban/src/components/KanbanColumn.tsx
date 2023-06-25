@@ -12,13 +12,8 @@ import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 
-import type { Location, KanbanColumnModel, KanbanItem } from '../props';
+import type { KanbanColumnModel, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
-
-// TODO(burdon): Drag items between columns (lock x direction until threshold reached: see kai).
-//  https://docs.dndkit.com/presets/sortable#multiple-containers
-//  https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/?path=/story/presets-sortable-multiple-containers--basic-setup
-//  https://github.com/clauderic/dnd-kit/blob/master/stories/2%20-%20Presets/Sortable/4-MultipleContainers.story.tsx
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -53,17 +48,12 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
   );
 };
 
-export type ActiveItem = {
-  dragging: Location;
-  over: Location;
-};
-
 export const KanbanColumnComponent: FC<{
   column: KanbanColumnModel;
-  active?: ActiveItem;
+  debug?: boolean;
   onAdd?: (column: KanbanColumnModel) => KanbanItem;
   onDelete?: () => void;
-}> = ({ column, active, onAdd, onDelete }) => {
+}> = ({ column, debug = false, onAdd, onDelete }) => {
   const [_, setIter] = useState([]);
   useEffect(() => {
     // TODO(burdon): Copying from Stack. Create custom hook?
@@ -92,24 +82,6 @@ export const KanbanColumnComponent: FC<{
       column.items.splice(index, 1);
     }
   };
-
-  // Splice/merge item being dragged.
-  // Remove item being dragged out of column and insert if being dragged into column.
-  // TODO(burdon): Just update model directly?
-  const items = column.items;
-  /*
-  let idx = -1;
-  const items = column.items.filter((item, i) => {
-    if (active?.active.column !== column.id && active?.over.item === item.id) {
-      idx = i;
-    }
-    return active?.over.column === column.id || active?.active.item.id !== item.id;
-  });
-  console.log('::::', idx);
-  if (idx !== -1) {
-    items.splice(idx, 0, active!.active.item);
-  }
-  */
 
   return (
     <div
@@ -145,9 +117,9 @@ export const KanbanColumnComponent: FC<{
         </div>
 
         {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
-        <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
+        <SortableContext strategy={verticalListSortingStrategy} items={column.items.map(({ id }) => id)}>
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
-            {items.map((item) => (
+            {column.items.map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
                 <KanbanItemComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
               </div>
@@ -161,7 +133,7 @@ export const KanbanColumnComponent: FC<{
           </div>
         )}
 
-        <div className='px-2 text-xs text-red-800'>{column.id.slice(0, 9)}</div>
+        {debug && <div className='px-2 text-xs text-red-800'>{column.id.slice(0, 9)}</div>}
       </div>
     </div>
   );
