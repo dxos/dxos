@@ -42,13 +42,13 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
         <Input.Root>
           {/* TODO(burdon): Label shouldn't be unique per plugin? */}
           <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
-          {/* TODO(burdon): Use text document. */}
+          {/* TODO(burdon): Pluggable content; e.g., use text document. */}
           {/* TODO(burdon): Remove border; Auto-expand height */}
           <Input.TextArea
             rows={3}
             variant='subdued'
-            defaultValue={item.title}
-            onChange={({ target: { value } }) => (item.title = value)}
+            defaultValue={item.content}
+            onChange={({ target: { value } }) => (item.content = value)}
             // TODO(burdon): Consistent vertical padding with input.
             classNames='px-1 border-none resize-none'
           />

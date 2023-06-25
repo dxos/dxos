@@ -30,7 +30,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
   const handleAddItem = (column: KanbanColumn) => {
     return {
       id: 'item-' + Math.random(),
-      title: faker.lorem.words(3),
+      content: faker.lorem.words(3),
     };
   };
 

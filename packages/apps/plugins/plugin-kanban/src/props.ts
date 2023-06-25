@@ -4,7 +4,8 @@
 
 import { ObservableArray, subscribe } from '@dxos/observable-object';
 
-export type KanbanItem = { id: string; title: string };
+// TODO(burdon): Pluggable content (e.g., support text document for title).
+export type KanbanItem = { id: string; content: string };
 
 // TODO(burdon): Why?
 export type GenericKanbanItem = KanbanItem & { [key: string]: any };
