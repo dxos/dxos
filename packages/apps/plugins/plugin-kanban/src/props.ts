@@ -4,10 +4,12 @@
 
 import { ObservableArray, subscribe } from '@dxos/observable-object';
 
+// TODO(burdon): How are types mapped onto ECHO?
+
 // TODO(burdon): Pluggable content (e.g., support text document for title).
 export type KanbanItem = { id: string; content: string };
 
-// TODO(burdon): Why?
+// TODO(burdon): Use protobuf typedefs?
 export type GenericKanbanItem = KanbanItem & { [key: string]: any };
 
 export type KanbanColumn<T extends KanbanItem = GenericKanbanItem> = {

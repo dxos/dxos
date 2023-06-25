@@ -18,7 +18,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
-import { KanbanColumn, KanbanColumns, KanbanItem } from '../props';
+import type { KanbanColumn, KanbanColumns, KanbanItem } from '../props';
 import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 

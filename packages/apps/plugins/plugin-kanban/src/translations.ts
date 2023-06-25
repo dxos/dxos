@@ -5,7 +5,7 @@
 export default [
   {
     'en-US': {
-      // TODO(burdon): Make consistent with other plugins.
+      // TODO(burdon): Make id consistent with other plugins.
       'dxos.org/plugin/kanban': {
         'plugin name': 'Kanban',
         'kanban title label': 'title',
