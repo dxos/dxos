@@ -10,7 +10,7 @@ import React, { FC } from 'react';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import type { KanbanItem } from '../props';
+import type { KanbanColumn, KanbanItem } from '../props';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -22,9 +22,16 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }> = ({ item, onDelete }) => {
+export const KanbanItemComponent: FC<{ column?: KanbanColumn; item: KanbanItem; onDelete?: () => void }> = ({
+  column,
+  item,
+  onDelete,
+}) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
-  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: item.id });
+  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
+    id: item.id,
+    data: { type: 'item', column },
+  });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   return (
@@ -34,24 +41,25 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }
       className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
       <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'invisible')}>
-        <div className='flex h-[40px] items-center'>
-          <button {...attributes} {...listeners}>
-            <DotsSixVertical className={getSize(5)} />
-          </button>
+        <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
+          <DotsSixVertical className={getSize(5)} />
+        </button>
+        <div className='flex flex-col grow'>
+          <Input.Root>
+            <Input.Label srOnly>{t('item content label')}</Input.Label>
+            {/* TODO(burdon): Pluggable content; e.g., use text document. */}
+            {/* TODO(burdon): Remove border when focused; Auto-expand height */}
+            <Input.TextArea
+              rows={3}
+              variant='subdued'
+              defaultValue={item.content}
+              onChange={({ target: { value } }) => (item.content = value)}
+              // TODO(burdon): Consistent vertical padding with input.
+              classNames='px-1 border-none resize-none'
+            />
+          </Input.Root>
+          <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>
         </div>
-        <Input.Root>
-          <Input.Label srOnly>{t('item content label')}</Input.Label>
-          {/* TODO(burdon): Pluggable content; e.g., use text document. */}
-          {/* TODO(burdon): Remove border when focused; Auto-expand height */}
-          <Input.TextArea
-            rows={3}
-            variant='subdued'
-            defaultValue={item.content}
-            onChange={({ target: { value } }) => (item.content = value)}
-            // TODO(burdon): Consistent vertical padding with input.
-            classNames='px-1 border-none resize-none'
-          />
-        </Input.Root>
         {onDelete && (
           <div className='flex h-[40px] items-center'>
             <DeleteItem onClick={onDelete} />

@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragOverlay, DragStartEvent, useDroppable, DragOverEvent, UniqueIdentifier, DndContext } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { Button, DragEndEvent, Input, useTranslation } from '@dxos/aurora';
+import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
-import { arrayMove } from '@dxos/util';
 
 import type { KanbanColumn, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
@@ -42,6 +41,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
+// TODO(burdon): Factor out container.
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
@@ -54,45 +54,31 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
   );
 };
 
+export type ActiveItem = {
+  item: KanbanItem;
+  over?: string;
+};
+
 export const KanbanColumnComponent: FC<{
   column: KanbanColumn;
+  active?: ActiveItem;
   onAdd?: (column: KanbanColumn) => KanbanItem;
   onDelete?: () => void;
-}> = ({ column, onAdd, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
-
-  const { setNodeRef: droppableNodeRef, isOver } = useDroppable({ id: column.id });
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: column.id });
-  const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
-
+}> = ({ column, active, onAdd, onDelete }) => {
   const [_, setIter] = useState([]);
   useEffect(() => {
     // TODO(burdon): Copying from Stack. Create custom hook?
     return column.items[subscribe](() => setIter([])) as () => void;
   }, []);
 
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(active.id);
-  };
+  const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
-
-  const handleDragOver = ({ over, active }: DragOverEvent) => {
-    console.log('over', over, active.id);
-  };
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id !== over?.id) {
-      const oldIndex = column.items.findIndex((item) => item.id === active.id);
-      const newIndex = column.items.findIndex((item) => item.id === over?.id);
-      arrayMove(column.items, oldIndex, newIndex);
-    }
-    setActiveId(null);
-  }, []);
+  const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({ id: column.id });
+  const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
+    id: column.id,
+    data: { type: 'column' },
+  });
+  const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
   const handleAddItem = onAdd
     ? () => {
@@ -108,6 +94,8 @@ export const KanbanColumnComponent: FC<{
     }
   };
 
+  const items = column.items.filter((item) => item.id !== active?.item.id);
+
   // TODO(burdon): Width approx mobile phone width.
   return (
     <div
@@ -118,7 +106,7 @@ export const KanbanColumnComponent: FC<{
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-900',
-          isDragging && 'bg-neutral-100 dark:bg-neutral-800',
+          (isOver || isDragging) && 'bg-neutral-100 dark:bg-neutral-800',
         )}
       >
         <div className='flex items-center mb-2 px-2'>
@@ -141,30 +129,15 @@ export const KanbanColumnComponent: FC<{
           {onDelete && <DeleteColumn onClick={onDelete} />}
         </div>
 
-        {/* TODO(burdon): Does inner DndContext prevent dragging across columns? */}
-        <DndContext
-          onDragStart={handleDragStart}
-          onDragCancel={handleDragCancel}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-        >
-          <SortableContext strategy={verticalListSortingStrategy} items={column.items?.map(({ id }) => id)}>
-            <div ref={droppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
-              {column.items?.map((item) => (
-                <div key={item.id} id={item.id} className='flex pl-2'>
-                  <KanbanItemComponent item={item} onDelete={() => handleDeleteItem(item.id)} />
-                </div>
-              ))}
-            </div>
-          </SortableContext>
-
-          {/* Overlay required to drag across columns. */}
-          <DragOverlay>
-            {activeId && (
-              <KanbanItemComponent item={column.items.find((item) => item.id === activeId)!} onDelete={() => {}} />
-            )}
-          </DragOverlay>
-        </DndContext>
+        <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
+          <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
+            {items.map((item) => (
+              <div key={item.id} id={item.id} className='flex pl-2'>
+                <KanbanItemComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
+              </div>
+            ))}
+          </div>
+        </SortableContext>
 
         {handleAddItem && (
           <div className='flex justify-center mt-2'>

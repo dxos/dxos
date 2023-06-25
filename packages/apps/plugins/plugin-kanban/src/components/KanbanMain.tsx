@@ -20,7 +20,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
   // TODO(burdon): External (needs space.db)?
   const handleAddColumn = () => {
     return {
-      id: 'column-' + Math.random(),
+      id: 'column-' + faker.datatype.uuid(),
       title: faker.lorem.words(3),
       items: new ObservableArray<KanbanItem>(),
     };
@@ -29,7 +29,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
   // TODO(burdon): External (needs space.db)?
   const handleAddItem = (column: KanbanColumn) => {
     return {
-      id: 'item-' + Math.random(),
+      id: 'item-' + faker.datatype.uuid(),
       content: faker.lorem.words(3),
     };
   };

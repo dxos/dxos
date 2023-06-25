@@ -12,7 +12,7 @@ import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface
 import { KanbanPlugin } from '../KanbanPlugin';
 import { KanbanModel, KanbanColumn, KanbanItem } from '../props';
 
-faker.seed(102);
+faker.seed(1);
 
 const DefaultKanbanPluginStory = () => {
   const object = new ObservableObject<KanbanModel>({
@@ -20,12 +20,12 @@ const DefaultKanbanPluginStory = () => {
     title: faker.lorem.words(3),
     columns: new ObservableArray<KanbanColumn>(
       ...faker.datatype.array(faker.datatype.number({ min: 2, max: 8 })).map(() => ({
-        id: 'column-' + Math.random(),
+        id: 'column-' + faker.datatype.uuid(),
         title: faker.lorem.words(3),
         items: new ObservableArray<KanbanItem>(
           ...faker.datatype.array(faker.datatype.number(8)).map(() => ({
-            id: 'item-' + Math.random(),
-            content: faker.lorem.words(faker.datatype.number({ min: 4, max: 12 })) + '.',
+            id: 'item-' + faker.datatype.uuid(),
+            content: faker.lorem.words(faker.datatype.number({ min: 3, max: 8 })) + '.',
           })),
         ),
       })),
