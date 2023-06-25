@@ -13,7 +13,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
-import type { KanbanColumn } from '../props';
+import type { KanbanColumn, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 
 // TODO(burdon): Scrolling (radix -- see kai).
@@ -54,7 +54,11 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
   );
 };
 
-export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => void }> = ({ column, onDelete }) => {
+export const KanbanColumnComponent: FC<{
+  column: KanbanColumn;
+  onAdd?: (column: KanbanColumn) => KanbanItem;
+  onDelete?: () => void;
+}> = ({ column, onAdd, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
   const { setNodeRef: droppableNodeRef, isOver } = useDroppable({ id: column.id });
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -89,12 +93,12 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
     setActiveId(null);
   }, []);
 
-  const handleAddItem = () => {
-    column.items.splice(column.items.length, 0, {
-      id: 'item-' + Math.random(),
-      title: 'Item ' + (column.items.length + 1),
-    });
-  };
+  const handleAddItem = onAdd
+    ? () => {
+        const item = onAdd(column);
+        column.items.splice(column.items.length, 0, item);
+      }
+    : undefined;
 
   const handleDeleteItem = (id: string) => {
     const index = column.items.findIndex((column) => column.id === id);
@@ -108,7 +112,7 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10', isOver && 'outline')}
+      className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10')}
     >
       <div
         className={mx(
@@ -162,9 +166,11 @@ export const KanbanColumnComponent: FC<{ column: KanbanColumn; onDelete?: () => 
           </DragOverlay>
         </DndContext>
 
-        <div className='flex justify-center mt-2'>
-          <AddItem onClick={handleAddItem} />
-        </div>
+        {handleAddItem && (
+          <div className='flex justify-center mt-2'>
+            <AddItem onClick={handleAddItem} />
+          </div>
+        )}
       </div>
     </div>
   );

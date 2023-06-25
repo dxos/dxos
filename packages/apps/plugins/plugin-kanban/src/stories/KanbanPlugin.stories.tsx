@@ -25,7 +25,7 @@ const DefaultKanbanPluginStory = () => {
         items: new ObservableArray<KanbanItem>(
           ...faker.datatype.array(faker.datatype.number(8)).map(() => ({
             id: 'item-' + Math.random(),
-            title: faker.lorem.words(3),
+            title: faker.lorem.words(faker.datatype.number({ min: 4, max: 12 })) + '.',
           })),
         ),
       })),
