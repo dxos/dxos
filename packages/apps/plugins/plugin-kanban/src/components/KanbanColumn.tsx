@@ -106,7 +106,7 @@ export const KanbanColumnComponent: FC<{
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-900',
-          (isOver || isDragging) && 'bg-neutral-100 dark:bg-neutral-800',
+          isDragging && 'bg-neutral-100 dark:bg-neutral-800',
         )}
       >
         <div className='flex items-center mb-2 px-2'>

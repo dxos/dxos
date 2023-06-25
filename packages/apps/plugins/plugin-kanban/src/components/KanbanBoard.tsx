@@ -127,7 +127,7 @@ export const KanbanBoard: FC<{
         <DndContext
           // TODO(burdon): Custom CollisionDetection.
           // collisionDetection={closestCenter}
-          // sensors={[mouseSensor]}
+          sensors={[mouseSensor]}
           modifiers={[customModifier]}
           onDragOver={handleDragOver}
           onDragStart={handleDragStart}
