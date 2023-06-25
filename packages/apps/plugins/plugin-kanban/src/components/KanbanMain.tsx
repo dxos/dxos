@@ -17,7 +17,7 @@ import { KanbanBoard } from './KanbanBoard';
 export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  // TODO(burdon): External.
+  // TODO(burdon): External (needs space.db)?
   const handleAddColumn = () => {
     return {
       id: 'column-' + Math.random(),
@@ -26,7 +26,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
     };
   };
 
-  // TODO(burdon): External.
+  // TODO(burdon): External (needs space.db)?
   const handleAddItem = (column: KanbanColumn) => {
     return {
       id: 'item-' + Math.random(),
@@ -34,7 +34,7 @@ export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) 
     };
   };
 
-  // TODO(burdon): Style/color standards for panels, borders, etc.
+  // TODO(burdon): Style/color standards for panels, borders, text, etc.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
       <div>
