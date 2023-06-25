@@ -22,7 +22,7 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete: () => void }> = ({ item, onDelete }) => {
+export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete?: () => void }> = ({ item, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban'); // TODO(burdon): Make consistent across plugins.
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({ id: item.id });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
@@ -31,24 +31,25 @@ export const KanbanItemComponent: FC<{ item: KanbanItem; onDelete: () => void }>
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow p-1 border bg-white dark:bg-neutral-925', isDragging && 'relative z-10')}
+      className={mx('flex grow p-1 border bg-white dark:bg-neutral-925', isDragging && 'invisible')}
     >
       <button {...attributes} {...listeners}>
         <DotsSixVertical className={getSize(5)} />
       </button>
       <Input.Root>
+        {/* TODO(burdon): Spellcheck only when focused. */}
         {/* TODO(burdon): Label shouldn't be unique per plugin? */}
         <Input.Label srOnly>{t('kanban item title label')}</Input.Label>
         {/* TODO(burdon): Remove border; Auto-expand height */}
         <Input.TextArea
-          rows={1}
+          rows={3}
           variant='subdued'
           defaultValue={item.title}
           onChange={({ target: { value } }) => (item.title = value)}
           classNames='px-1 border-none resize-none'
         />
       </Input.Root>
-      <DeleteItem onClick={onDelete} />
+      {onDelete && <DeleteItem onClick={onDelete} />}
     </div>
   );
 };

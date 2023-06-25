@@ -3,6 +3,8 @@
 //
 
 import { DndContext, DragEndEvent, MouseSensor, useSensor } from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
+import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { ObservableArray, subscribe } from '@dxos/observable-object';
@@ -34,10 +36,6 @@ export const KanbanBoard: FC<{ columns: KanbanColumns }> = ({ columns }) => {
     }
   }, []);
 
-  const handleDragOver = () => {
-    console.log('!!!');
-  };
-
   const handleAddColumn = () => {
     columns.splice(columns.length, 0, {
       id: 'column-' + Math.random(),
@@ -56,16 +54,12 @@ export const KanbanBoard: FC<{ columns: KanbanColumns }> = ({ columns }) => {
   return (
     <div className='flex p-4 overflow-x-scroll space-x-4'>
       <div className='flex space-x-4'>
-        <DndContext
-          /* modifiers={[restrictToHorizontalAxis]} */ sensors={[mouseSensor]}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-        >
-          {/* <SortableContext strategy={horizontalListSortingStrategy} items={columns?.map((column) => column.id) ?? []}> */}
-          {columns.map((column) => (
-            <KanbanColumnComponent key={column.id} column={column} onDelete={() => handleDeleteColumn(column.id)} />
-          ))}
-          {/* </SortableContext> */}
+        <DndContext modifiers={[restrictToHorizontalAxis]} sensors={[mouseSensor]} onDragEnd={handleDragEnd}>
+          <SortableContext strategy={horizontalListSortingStrategy} items={columns?.map((column) => column.id) ?? []}>
+            {columns.map((column) => (
+              <KanbanColumnComponent key={column.id} column={column} onDelete={() => handleDeleteColumn(column.id)} />
+            ))}
+          </SortableContext>
         </DndContext>
 
         <KanbanColumnComponentPlaceholder onAdd={handleAddColumn} />
