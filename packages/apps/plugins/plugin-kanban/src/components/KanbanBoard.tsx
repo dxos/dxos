@@ -52,8 +52,12 @@ export const KanbanBoard: FC<{
   // TODO(burdon): Tentatively insert into new column when dragging over without causing mutation.
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     if (activeItem && over && active.id !== over.id) {
+      // TODO(burdon): Get column from item.
       const active: Partial<ActiveItem> = {
-        item: activeItem,
+        active: {
+          column: columns.find((column) => column.items.find((item) => item.id === activeItem.id))!.id,
+          item: activeItem,
+        },
       };
 
       switch ((over.data.current as any).type) {
@@ -73,7 +77,6 @@ export const KanbanBoard: FC<{
         }
       }
 
-      console.log(active.over);
       setActive(active as ActiveItem);
     } else {
       setActive(undefined);

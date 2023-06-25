@@ -55,7 +55,10 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export type ActiveItem = {
-  item: KanbanItem;
+  active: {
+    column: string;
+    item: KanbanItem;
+  };
   over: {
     column: string;
     item?: string;
@@ -97,8 +100,18 @@ export const KanbanColumnComponent: FC<{
     }
   };
 
-  // TODO(burdon): Splice ina active element.
-  const items = column.items.filter((item) => active?.over.column === column.id || active?.item.id !== item.id);
+  // Splice active element.
+  let idx = -1;
+  const items = column.items.filter((item, i) => {
+    if (active?.active.column !== column.id && active?.over.item === item.id) {
+      idx = i;
+    }
+    return active?.over.column === column.id || active?.active.item.id !== item.id;
+  });
+  console.log('::::', idx);
+  if (idx !== -1) {
+    items.splice(idx, 0, active!.active.item);
+  }
 
   // TODO(burdon): Width approx mobile phone width.
   return (
