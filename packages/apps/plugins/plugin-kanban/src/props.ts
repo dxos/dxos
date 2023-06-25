@@ -22,10 +22,11 @@ export type KanbanColumns<T extends KanbanItem = GenericKanbanItem> = Observable
 export type KanbanModel<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
   title: string;
+  // TODO(burdon): How is this mapped onto ECHO?
   columns: KanbanColumns<T>;
 };
 
-// TODO(burdon): Why array?
+// TODO(burdon): Why array? Test data type?
 export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is KanbanModel<T> =>
   datum && typeof datum === 'object'
     ? 'id' in datum &&
