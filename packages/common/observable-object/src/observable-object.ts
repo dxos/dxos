@@ -13,7 +13,7 @@ export interface ObservableObject {
   [subscribe]: (callback: (value: any) => void) => UnsubscribeCallback;
 }
 
-class ObservableObjectImpl<T> implements ObservableObject {
+export class ObservableObjectImpl<T> implements ObservableObject {
   private _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
 
   constructor(initialData?: T) {
@@ -23,7 +23,7 @@ class ObservableObjectImpl<T> implements ObservableObject {
       });
     }
 
-    // TODO(wittjosiah): Implement other proxy methods here: enuming properties, instanceof, etc.
+    // TODO(wittjosiah): Implement other proxy methods here: enumerating properties, instanceof, etc.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
     return new Proxy(this, {
       get: (_target, property, receiver) => {
@@ -86,7 +86,7 @@ export class ObservableArray<T> extends Array<T> implements ObservableObject {
   }
 }
 
-// TODO(burdon): Rename createObservable?
+// TODO(burdon): Rename createObservable? Does "store" imply some specialization?
 export const createStore = <T extends object | any[]>(data?: T): T => {
   if (Array.isArray(data)) {
     return new ObservableArray(...data) as T;
