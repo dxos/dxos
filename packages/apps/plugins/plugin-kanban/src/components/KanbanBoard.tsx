@@ -19,7 +19,7 @@ import { subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
 import type { KanbanColumn, KanbanColumns, KanbanItem } from '../props';
-import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
+import { ActiveItem, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 
 // TODO(burdon): Touch sensors.
@@ -38,19 +38,46 @@ export const KanbanBoard: FC<{
     return columns[subscribe](() => setIter([])) as () => void;
   }, []);
 
-  const [activeColumn, setActiveColumn] = useState<KanbanColumn | null>(null);
-  const [activeItem, setActiveItem] = useState<KanbanItem | null>(null);
-
-  // TODO(burdon): Different sensor based on column/item.
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
       distance: 8,
     },
   });
 
+  // TODO(burdon): Consolidate.
+  const [activeColumn, setActiveColumn] = useState<KanbanColumn | undefined>();
+  const [activeItem, setActiveItem] = useState<KanbanItem | undefined>();
+  const [active, setActive] = useState<ActiveItem | undefined>();
+
   // TODO(burdon): Tentatively insert into new column when dragging over without causing mutation.
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    console.log('over', String(active.id).slice(0, 9), String(over?.id).slice(0, 9));
+    if (activeItem && over && active.id !== over.id) {
+      const active: Partial<ActiveItem> = {
+        item: activeItem,
+      };
+
+      switch ((over.data.current as any).type) {
+        case 'column': {
+          active.over = { column: over.id as string };
+          break;
+        }
+
+        case 'item': {
+          columns.forEach((column) => {
+            const item = column.items.find((item) => item.id === over.id);
+            if (item) {
+              active.over = { column: column.id, item: item.id };
+            }
+          });
+          break;
+        }
+      }
+
+      console.log(active.over);
+      setActive(active as ActiveItem);
+    } else {
+      setActive(undefined);
+    }
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -67,8 +94,9 @@ export const KanbanBoard: FC<{
   };
 
   const handleDragCancel = () => {
-    setActiveColumn(null);
-    setActiveItem(null);
+    setActiveColumn(undefined);
+    setActiveItem(undefined);
+    setActive(undefined);
   };
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -92,8 +120,9 @@ export const KanbanBoard: FC<{
       }
     }
 
-    setActiveColumn(null);
-    setActiveItem(null);
+    setActiveColumn(undefined);
+    setActiveItem(undefined);
+    setActive(undefined);
   }, []);
 
   const handleAddColumn = onAddColumn
@@ -139,7 +168,7 @@ export const KanbanBoard: FC<{
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
-                // active={activeItem ? { item: activeItem } : undefined}
+                active={active}
                 onAdd={onAddItem}
                 onDelete={() => handleDeleteColumn(column.id)}
               />

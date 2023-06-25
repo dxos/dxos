@@ -56,7 +56,10 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 
 export type ActiveItem = {
   item: KanbanItem;
-  over?: string;
+  over: {
+    column: string;
+    item?: string;
+  };
 };
 
 export const KanbanColumnComponent: FC<{
@@ -73,7 +76,7 @@ export const KanbanColumnComponent: FC<{
 
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({ id: column.id });
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: column.id,
     data: { type: 'column' },
@@ -94,7 +97,8 @@ export const KanbanColumnComponent: FC<{
     }
   };
 
-  const items = column.items.filter((item) => item.id !== active?.item.id);
+  // TODO(burdon): Splice ina active element.
+  const items = column.items.filter((item) => active?.over.column === column.id || active?.item.id !== item.id);
 
   // TODO(burdon): Width approx mobile phone width.
   return (
@@ -144,6 +148,8 @@ export const KanbanColumnComponent: FC<{
             <AddItem onClick={handleAddItem} />
           </div>
         )}
+
+        <div className='px-2 text-xs text-red-800'>{column.id.slice(0, 9)}</div>
       </div>
     </div>
   );
