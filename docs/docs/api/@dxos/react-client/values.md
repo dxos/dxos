@@ -91,6 +91,11 @@ Type: "3000"
 
 Timeout for waiting before stealing resource lock.
 
+### [`STATUS_TIMEOUT`]()
+Type: "10000"
+
+Timeout for how long the remote client will wait before assuming the connection is lost.
+
 ### [`TYPE_SCHEMA`]()
 Type: "dxos:type/schema"
 
