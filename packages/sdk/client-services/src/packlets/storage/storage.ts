@@ -4,6 +4,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DX_DATA } from '@dxos/client-protocol';
 import { InvalidConfigError } from '@dxos/errors';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -12,12 +13,7 @@ import StorageDriver = Runtime.Client.Storage.StorageDriver;
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
-  const {
-    path = 'dxos/storage', // TODO(burdon): Factor out const.
-    storageType,
-    keyStorage,
-    persistent = false,
-  } = config ?? {};
+  const { path = DX_DATA, storageType, keyStorage, persistent = false } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
