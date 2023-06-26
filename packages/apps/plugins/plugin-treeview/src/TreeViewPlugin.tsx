@@ -25,7 +25,7 @@ import {
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer, useIdentity } from '@dxos/react-client';
-import { definePlugin } from '@dxos/react-surface';
+import { Surface, definePlugin } from '@dxos/react-surface';
 
 import { TreeView } from './components';
 
@@ -42,7 +42,12 @@ const Context = createContext<TreeViewContextValue>(store);
 
 export const useTreeView = () => useContext(Context);
 
-export const selectedToUri = (selected: string[]) => selected.join('/').replace(':', '/');
+export const uriToSelected = (uri: string) => {
+  const [_, namespace, type, id, ...rest] = uri.split('/');
+  return [`${namespace}:${type}/${id}`, ...rest];
+};
+
+export const selectedToUri = (selected: string[]) => '/' + selected.join('/').replace(':', '/');
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
@@ -221,6 +226,30 @@ export const TreeViewPlugin = definePlugin<TreeViewProvides, {}>({
     context: ({ children }) => {
       return <Context.Provider value={store}>{children}</Context.Provider>;
     },
-    components: { TreeView: TreeViewContainer },
+    components: {
+      default: observer(() => {
+        const { selected } = useTreeView();
+        const [plugin] = selected[0]?.split('/') ?? [];
+
+        return selected ? (
+          <Surface
+            component='dxos:SplitViewPlugin/SplitView'
+            surfaces={{
+              sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+              main: { component: `${plugin}/Main` },
+            }}
+          />
+        ) : (
+          <Surface
+            component='dxos:SplitViewPlugin/SplitView'
+            surfaces={{
+              sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+              main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
+            }}
+          />
+        );
+      }),
+      TreeView: TreeViewContainer,
+    },
   },
 });
