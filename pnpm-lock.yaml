@@ -4256,6 +4256,7 @@ importers:
   packages/gravity/proto-guard:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -4266,6 +4267,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
