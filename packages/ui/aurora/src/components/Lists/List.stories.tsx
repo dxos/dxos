@@ -64,7 +64,7 @@ const ManySizesDraggableListItem = ({
 }: ListScopedProps<{ id: string; text: ReactNode; className?: string }>) => {
   const { draggingId } = useListContext('ManySizesDraggableListItem', __listScope);
   return (
-    <ListItem.Root key={id} id={id} classNames={[id === draggingId && 'opacity-20', className]}>
+    <ListItem.Root key={id} id={id} classNames={[id === draggingId && 'relative z-10', className]}>
       <ListItem.DragHandle />
       <ListItem.Endcap>
         <Play className={mx(getSize(5), 'mbs-2.5')} />
@@ -109,15 +109,7 @@ export const ManySizesDraggable = {
     };
 
     return (
-      <List
-        {...args}
-        onDragEnd={handleDragEnd}
-        listItemIds={items.map(({ id }) => id)}
-        dragOverlay={(draggingId) => {
-          const item = items.find(({ id }) => id === draggingId);
-          return item ? <ManySizesDraggableListItem {...item} className='opacity-100' /> : null;
-        }}
-      >
+      <List {...args} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
         {items.map(({ id, text }) => (
           <ManySizesDraggableListItem key={id} {...{ id, text }} />
         ))}
