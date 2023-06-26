@@ -274,7 +274,7 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
   });
 };
 
-const getReader = (results: PlanResults) => {
+export const getReader = (results: PlanResults) => {
   const start = Date.now();
   const reader = new LogReader();
 

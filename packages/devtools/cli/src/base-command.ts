@@ -212,9 +212,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       );
 
       const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
-      if (yamlConfig.runtime?.client?.storage?.path) {
+      {
         // Isolate DX_PROFILE storages.
-        yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, this.flags.profile);
+        yamlConfig.runtime ??= {};
+        yamlConfig.runtime.client ??= {};
+        yamlConfig.runtime.client.storage ??= {};
+        yamlConfig.runtime.client.storage.path = join(
+          yamlConfig.runtime.client.storage.path ?? DX_DATA,
+          this.flags.profile,
+        );
       }
 
       await mkdir(dirname(configFile), { recursive: true });
@@ -301,7 +307,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
-        this._client = new Client({ config: this._clientConfig, services: fromAgent(this.flags.profile) });
+        this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
 
       await this._client.initialize();
@@ -333,7 +339,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Convenience function to wrap starting the agent.
    */
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new ForeverDaemon(`${DX_RUNTIME}/agent`);
+    const daemon = new ForeverDaemon(`${DX_RUNTIME}`);
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();

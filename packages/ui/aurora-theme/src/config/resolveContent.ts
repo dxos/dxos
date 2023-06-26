@@ -5,6 +5,8 @@
 import { resolve } from 'node:path';
 
 const knownPeerPackages = [
+  '@braneframe/plugin-markdown',
+  '@braneframe/plugin-stack',
   '@dxos/aurora',
   '@dxos/aurora-theme',
   '@dxos/react-appkit',
