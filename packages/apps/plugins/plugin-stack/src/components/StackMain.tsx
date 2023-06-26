@@ -43,6 +43,7 @@ const StackSection = ({ onAdd, onRemove, section, __listScope }: ListScopedProps
         classNames={[
           surfaceElevation({ elevation: 'group' }),
           'bg-white dark:bg-neutral-925 grow rounded mbe-2',
+          'hover-hover:[--controls-opacity:.1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1] hover-hover:hover:[--controls-opacity:1]',
           isDragging && 'relative z-10',
         ]}
       >
@@ -50,13 +51,21 @@ const StackSection = ({ onAdd, onRemove, section, __listScope }: ListScopedProps
           {get(section, 'object.title', t('generic section heading'))}
         </ListItem.Heading>
         <ListItem.DragHandle
-          asChild
-          classNames={[buttonFine, 'self-stretch flex items-center justify-center bs-auto is-auto']}
+          classNames={[
+            buttonFine,
+            'self-stretch flex items-center justify-center bs-auto is-auto transition-opacity opacity-[--controls-opacity]',
+          ]}
         >
           <DotsSixVertical className={getSize(5)} />
         </ListItem.DragHandle>
-        <Surface role='section' data={section} />
-        <Button variant='ghost' classNames='self-stretch justify-start' onClick={onRemove}>
+        <div role='none' className='flex-1'>
+          <Surface role='section' data={section} />
+        </div>
+        <Button
+          variant='ghost'
+          classNames='self-stretch justify-start transition-opacity opacity-[--controls-opacity]'
+          onClick={onRemove}
+        >
           <span className='sr-only'>{t('remove section label')}</span>
           <Minus className={getSize(4)} />
         </Button>
