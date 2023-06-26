@@ -20,7 +20,11 @@ export const UrlSyncPlugin: PluginDefinition = definePlugin({
         // If no selection, try to restore from URL.
         useEffect(() => {
           if (treeView.selected.length === 0 && window.location.pathname.length > 1) {
-            treeView.selected = uriToSelected(window.location.pathname);
+            treeView.selected =
+              // TODO(wittjosiah): Remove. This is here for backwards compatibility.
+              window.location.pathname === '/embedded'
+                ? ['dxos:github/embedded']
+                : uriToSelected(window.location.pathname);
           }
         }, []);
 
@@ -28,7 +32,8 @@ export const UrlSyncPlugin: PluginDefinition = definePlugin({
         useEffect(() => {
           const selectedPath = selectedToUri(treeView.selected);
           if (window.location.pathname !== selectedPath) {
-            history.pushState(null, '', selectedPath);
+            // TODO(wittjosiah): Better support for search params?
+            history.pushState(null, '', `${selectedPath}${window.location.search}`);
           }
         }, [treeView.selected]);
 

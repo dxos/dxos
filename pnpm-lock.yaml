@@ -387,7 +387,6 @@ importers:
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
       react-is: ^18.2.0
-      react-router-dom: ^6.4.0
       showdown: ^2.1.0
       turndown: ^7.1.1
       vite: ^4.3.9
@@ -430,7 +429,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       showdown: 2.1.0
       turndown: 7.1.1
     devDependencies:
