@@ -250,8 +250,6 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 DXOS apps are static apps that rely on peer-to-peer networking and client-side resources for storage and computation. There are no servers or backends. However, the static assets for the app need to be hosted somewhere in order to access them from a web browser.
 
-We offer a sophisticated self-hosting appliance called [KUBE](./kube/README.md) that you can also use to [deploy your app's assets to IPFS](./kube/deploying.md). While this process is not as simple as a plain static asset host, it avoids reliance on centralized hosts.
-
 For the sake of simplicity, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
 1. Go to "Add new site" in Netlify, and click "Import an existing project."
@@ -261,6 +259,10 @@ For the sake of simplicity, we will deploy the app's static assets to Netlify. T
 3. Publish!
 
 That's it. Your app is now live!
+
+## Self-hosting
+
+We offer a compact self-hosting appliance called [KUBE](./kube/README.md) that you can also use to [deploy your app's assets to IPFS](./kube/deploying.md). This option is best for those who wish to deploy private, self-hosted, or air-gapped applications with full control over all the infrastructure of their app. KUBE can be used to host apps in a LAN and expose them to the wider area network with built-in automatic [tunneling](./kube/tunneling.md).
 
 ## Next steps
 
