@@ -50,14 +50,14 @@
         ],
         "coveragePath": "coverage/packages/sdk/client-services",
         "envVariables": {
-          "SIGNAL_PORT": 4004
+          "SIGNAL_PORT": 12004
         },
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/sdk/client-services",
         "resultsPath": "test-results/packages/sdk/client-services",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
-          "port": 4004
+          "port": 12004
         },
         "testPatterns": [
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
