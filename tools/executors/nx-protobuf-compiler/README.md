@@ -1,19 +1,9 @@
-# @dxos/react-surface
-
-A react framework for making extensible interfaces.
+# @dxos/protobuf-compiler
 
 ## Installation
 
 ```bash
-pnpm i @dxos/react-surface
-```
-
-## Usage
-
-Run with
-
-```bash
-pnpm nx storybook react-surface
+pnpm i @dxos/protobuf-compiler
 ```
 
 ## DXOS Resources

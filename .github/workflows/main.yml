@@ -1,9 +1,9 @@
 on:
   push:
     branches:
-      - staging
+      - main
 
-name: staging
+name: main
 
 jobs:
   publish:
@@ -46,7 +46,7 @@ jobs:
         run: pnpm install
 
       - name: Bump Versions
-        run: node .github/workflows/scripts/bump-version.js next
+        run: node .github/workflows/scripts/bump-version.js main
 
       - name: Build
         run: pnpm nx run-many --target=build
@@ -73,9 +73,6 @@ jobs:
       - name: Publish to NPM
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=next
+          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Monitor Pre-release
-        run: node .github/workflows/scripts/monitor.js --next
