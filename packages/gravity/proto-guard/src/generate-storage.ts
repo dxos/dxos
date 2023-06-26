@@ -33,6 +33,7 @@ const main = async () => {
     const space = await client.createSpace(expectedProperties);
     await space.waitUntilReady();
     space.db.add(new Expando(expectedExpando));
+    await space.internal.createEpoch();
     space.db.add(new Text(expectedText));
   }
 
