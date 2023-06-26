@@ -101,7 +101,7 @@ type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content
 
 const ListItemCollapsibleContent: ForwardRefExoticComponent<CollapsibleContentProps> = Collapsible.Content;
 
-const PureListItem = forwardRef<
+const ListItemImpl = forwardRef<
   ListItemElement,
   ListItemProps & { id: string } & Partial<DraggableListItemContextValue>
 >(
@@ -177,18 +177,19 @@ const PureListItem = forwardRef<
 );
 
 const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
-  (props: ListItemScopedProps<ListItemProps & { id: string }>, forwardedRef) => {
+  (props: ListItemScopedProps<ListScopedProps<ListItemProps & { id: string }>>, forwardedRef) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
       id: props.id,
     });
+    const { itemSizes } = useListContext(LIST_NAME, props.__listScope);
     const ref = useComposedRefs(forwardedRef, setNodeRef) as ComponentPropsWithRef<typeof Primitive.li>['ref'];
 
     return (
-      <PureListItem
+      <ListItemImpl
         {...props}
         style={{
           ...props.style,
-          transform: CSS.Transform.toString(transform),
+          transform: CSS[itemSizes === 'one' ? 'Transform' : 'Translate'].toString(transform),
           transition,
         }}
         ref={ref}
@@ -208,7 +209,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedPr
   if (variant === 'ordered-draggable') {
     return <DraggableListItem {...props} ref={forwardedRef} id={listItemId} />;
   } else {
-    return <PureListItem {...props} ref={forwardedRef} id={listItemId} />;
+    return <ListItemImpl {...props} ref={forwardedRef} id={listItemId} />;
   }
 });
 
