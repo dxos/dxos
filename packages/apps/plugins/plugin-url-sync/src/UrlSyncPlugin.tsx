@@ -6,9 +6,9 @@ import { useEffect } from 'react';
 
 import { selectedToUri, uriToSelected, useTreeView } from '@braneframe/plugin-treeview';
 import { observer } from '@dxos/observable-object/react';
-import { definePlugin, PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
-export const UrlSyncPlugin: PluginDefinition = definePlugin({
+export const UrlSyncPlugin = (): PluginDefinition => ({
   meta: {
     id: 'dxos:url-sync',
   },

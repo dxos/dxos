@@ -6,7 +6,8 @@
 import React from 'react';
 
 import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { definePlugin, PluginDefinition } from '@dxos/react-surface';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import {
   MarkdownActions,
@@ -19,7 +20,7 @@ import {
 } from './components';
 import translations from './translations';
 
-export const GithubPlugin: PluginDefinition = definePlugin({
+export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
   meta: {
     id: 'dxos:github',
   },

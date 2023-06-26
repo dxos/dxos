@@ -8,10 +8,10 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
 import { defaultDescription, mx } from '@dxos/aurora-theme';
 
-import { LocalFile, LocalFilesPlugin } from '../LocalFilesPlugin';
+import { LOCAL_FILES_PLUGIN, LocalFile } from '../LocalFilesPlugin';
 
 export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalFile> }) => {
-  const { t } = useTranslation(LocalFilesPlugin.meta.id);
+  const { t } = useTranslation(LOCAL_FILES_PLUGIN);
   const action = data.actions?.find(({ id }) => id === 're-open');
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

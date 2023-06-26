@@ -597,6 +597,7 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     specifiers:
+      '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -614,6 +615,7 @@ importers:
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
     devDependencies:
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
