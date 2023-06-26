@@ -47,7 +47,7 @@ Arguments:
 
 `options`: <code>[fromAgentOptions](/api/@dxos/client/types/fromAgentOptions)</code>
 
-### [fromHost(config)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
+### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
 
 
 
@@ -59,6 +59,8 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServi
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
+
+`params`: <code>ClientServicesHostParams</code>
 
 ### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L20)
 

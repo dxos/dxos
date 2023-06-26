@@ -61,7 +61,7 @@ Arguments:
 
 `options`: <code>[fromAgentOptions](/api/@dxos/react-client/types/fromAgentOptions)</code>
 
-### [fromHost(\[config\])]()
+### [fromHost(\[config\], \[params\])]()
 
 
 
@@ -73,6 +73,8 @@ Returns: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/Clien
 Arguments: 
 
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
+`params`: <code>ClientServicesHostParams</code>
 
 ### [fromIFrame(\[config\], \[options\])]()
 
