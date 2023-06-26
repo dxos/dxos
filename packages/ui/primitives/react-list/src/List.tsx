@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragOverlay, DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
-import React, { ComponentPropsWithRef, forwardRef, ReactNode, useCallback, useState } from 'react';
+import React, { ComponentPropsWithRef, forwardRef, useCallback, useState } from 'react';
 
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
@@ -26,7 +26,6 @@ type SharedListProps = {
   onDragEnd?: (event: DragEndEvent) => void;
   onDragOver?: (event: DragOverEvent) => void;
   itemSizes?: ListItemSizes;
-  dragOverlay?: (id: string) => ReactNode;
 };
 
 type SharedDraggableListProps = SharedListProps & {
@@ -34,9 +33,8 @@ type SharedDraggableListProps = SharedListProps & {
   variant: 'ordered-draggable';
 };
 
-type HeterogeneousDraggableListProps = Exclude<SharedDraggableListProps, 'itemSizes' | 'dragOverlay'> & {
+type HeterogeneousDraggableListProps = Exclude<SharedDraggableListProps, 'itemSizes'> & {
   itemSizes?: 'many';
-  dragOverlay: ReactNode;
 };
 
 type HomogeneousDraggableListProps = Exclude<SharedDraggableListProps, 'itemSizes'> & {
@@ -65,7 +63,7 @@ const isOrderedDraggable = (props: ListProps): props is SharedDraggableListProps
   props.variant === 'ordered-draggable';
 const _isOrderedDraggableHomogeneous = (props: ListProps): props is HomogeneousDraggableListProps =>
   isOrderedDraggable(props) && props.itemSizes === 'one';
-const isOrderedDraggableHeterogeneous = (props: ListProps): props is HeterogeneousDraggableListProps =>
+const _isOrderedDraggableHeterogeneous = (props: ListProps): props is HeterogeneousDraggableListProps =>
   isOrderedDraggable(props) && props.itemSizes !== 'one';
 
 const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
@@ -77,7 +75,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
     onDragOver,
     listItemIds,
     itemSizes,
-    dragOverlay,
     children,
     ...rootProps
   } = props;
@@ -112,9 +109,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
             <SortableContext items={listItemIds!} strategy={verticalListSortingStrategy}>
               {children}
             </SortableContext>
-            {isOrderedDraggableHeterogeneous(props) && (
-              <DragOverlay>{draggingId ? dragOverlay?.(draggingId) : null}</DragOverlay>
-            )}
           </DndContext>
         ) : (
           <>{children}</>
