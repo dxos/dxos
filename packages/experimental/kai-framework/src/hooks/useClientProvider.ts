@@ -18,6 +18,7 @@ export const useClientProvider = (dev: boolean) => {
     const config = await configProvider();
     const client = new Client({
       config,
+      // TODO(burdon): Factor out (or look for) a parseBool that treats "0" as false also.
       services: config.get('runtime.app.env.DX_VAULT') === 'false' ? fromHost(config) : fromIFrame(config),
     });
 

@@ -1,0 +1,25 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/protobuf-test"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
+}

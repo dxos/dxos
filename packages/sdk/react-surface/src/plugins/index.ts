@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './ClientPlugin';
 export * from './GraphPlugin';
 export * from './ListViewPlugin';
 export * from './RoutesPlugin';

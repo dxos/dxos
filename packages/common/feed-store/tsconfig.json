@@ -49,9 +49,6 @@
       "path": "../random-access-storage"
     },
     {
-      "path": "../typings"
-    },
-    {
       "path": "../util"
     }
   ]

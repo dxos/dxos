@@ -16,16 +16,14 @@ import {
   Trash,
   Upload,
 } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { useTranslation } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
-import { defaultDescription, mx } from '@dxos/aurora-theme';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { createStore, createSubscription } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
 import {
   EchoDatabase,
   IFrameClientServicesHost,
@@ -39,61 +37,25 @@ import {
   Surface,
   definePlugin,
   findPlugin,
-  ClientPluginProvides,
   GraphNode,
   GraphProvides,
-  useGraphContext,
   RouterPluginProvides,
   SplitViewProvides,
   TreeViewProvides,
-  useTreeView,
+  TranslationsProvides,
 } from '@dxos/react-surface';
 
-import { DialogRenameSpace } from './DialogRenameSpace';
-import { DialogRestoreSpace } from './DialogRestoreSpace';
-import { SpaceTreeItem } from './SpaceTreeItem';
 import { backupSpace } from './backup';
+import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
+import translations from './translations';
 
-export type SpacePluginProvides = GraphProvides & RouterPluginProvides;
+export type SpacePluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
-
-export const SpaceMain: FC<{}> = observer(() => {
-  const treeView = useTreeView();
-  const graph = useGraphContext();
-  const [parentId, childId] = treeView.selected;
-
-  const parentNode = graph.roots[SpacePlugin.meta.id].find((node) => node.id === parentId);
-  const childNode = parentNode?.children?.find((node) => node.id === childId);
-
-  const data = parentNode ? (childNode ? [parentNode.data, childNode.data] : [parentNode.data]) : null;
-  return <Surface data={data} role='main' />;
-});
-
-export const SpaceMainEmpty = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className='min-bs-screen is-full flex items-center justify-center p-8'
-      data-testid='composer.firstRunMessage'
-    >
-      <p
-        role='alert'
-        className={mx(
-          defaultDescription,
-          'border border-dashed border-neutral-400/50 rounded-xl flex items-center justify-center p-8 font-system-normal text-lg',
-        )}
-      >
-        {t('first run message')}
-      </p>
-    </div>
-  );
-};
 
 const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
   return objects.map((obj) => ({
@@ -116,41 +78,6 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
   }));
 };
 
-const nodes = createStore<GraphNode[]>([]);
-const nodeAttributes = new Map<string, { [key: string]: any }>();
-const rootObjects = new Map<string, GraphNode[]>();
-const subscriptions = new EventSubscriptions();
-
-const EmptyTree = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className={mx(
-        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
-        defaultDescription,
-      )}
-    >
-      {t('empty tree message')}
-    </div>
-  );
-};
-
-const EmptySpace = () => {
-  const { t } = useTranslation('composer');
-  return (
-    <div
-      role='none'
-      className={mx(
-        'p-2 mli-2 mbe-2 text-center border border-dashed border-neutral-400/50 rounded-xl',
-        defaultDescription,
-      )}
-    >
-      {t('empty space message')}
-    </div>
-  );
-};
-
 // TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
@@ -159,6 +86,12 @@ const getSpaceId = (spaceKey: PublicKeyLike) => {
 
   return `${SpacePlugin.meta.id}/${spaceKey}`;
 };
+
+const nodes = createStore<GraphNode<Space>[]>([]);
+const rootNodes = new Map<string, GraphNode<Space>>();
+const nodeAttributes = new Map<string, { [key: string]: any }>();
+const rootObjects = new Map<string, GraphNode[]>();
+const subscriptions = new EventSubscriptions();
 
 export const SpacePlugin = definePlugin<SpacePluginProvides>({
   meta: {
@@ -180,91 +113,98 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
         nodes.length,
         ...spaces.map((space) => {
           const id = getSpaceId(space.key);
-          const node: GraphNode<Space> = {
-            id,
-            label: space.properties.name ?? 'Untitled space',
-            description: space.properties.description,
-            icon: Planet,
-            data: space,
-            actions: [
-              {
-                id: 'create-doc',
-                testId: 'spacePlugin.createDocument',
-                label: ['create document label', { ns: 'composer' }],
-                icon: Plus,
-                invoke: async () => {
-                  const document = space.db.add(new Document());
-                  if (treeViewPlugin) {
-                    treeViewPlugin.provides.treeView.selected = [id, document.id];
-                  }
-                },
-              },
-              {
-                id: 'rename-space',
-                label: ['rename space label', { ns: 'composer' }],
-                icon: PencilSimpleLine,
-                invoke: async () => {
-                  if (splitViewPlugin?.provides.splitView) {
-                    splitViewPlugin.provides.splitView.dialogOpen = true;
-                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RenameSpaceDialog', space];
-                  }
-                },
-              },
-              {
-                id: 'view-invitations',
-                label: ['view invitations label', { ns: 'composer' }],
-                icon: PaperPlane,
-                invoke: async () => {
-                  await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
-                },
-              },
-              {
-                id: 'hide-space',
-                label: ['hide space label', { ns: 'composer' }],
-                icon: EyeSlash,
-                invoke: async () => {
-                  if (identity) {
-                    const identityHex = identity.identityKey.toHex();
-                    space.properties.members = {
-                      ...space.properties.members,
-                      [identityHex]: {
-                        ...space.properties.members?.[identityHex],
-                        hidden: true,
-                      },
-                    };
-                    if (treeViewPlugin?.provides.treeView.selected[0] === id) {
-                      treeViewPlugin.provides.treeView.selected = [];
+          let node = rootNodes.get(id);
+          if (node) {
+            node.label = getSpaceDisplayName(space);
+            node.description = space.properties.description;
+          } else {
+            node = createStore<GraphNode<Space>>({
+              id,
+              label: getSpaceDisplayName(space),
+              description: space.properties.description,
+              icon: Planet,
+              data: space,
+              actions: [
+                {
+                  id: 'create-doc',
+                  testId: 'spacePlugin.createDocument',
+                  label: ['create document label', { ns: 'composer' }],
+                  icon: Plus,
+                  invoke: async () => {
+                    const document = space.db.add(new Document());
+                    if (treeViewPlugin) {
+                      treeViewPlugin.provides.treeView.selected = [id, document.id];
                     }
-                  }
+                  },
                 },
-              },
-              {
-                id: 'backup-space',
-                label: ['download all docs in space label', { ns: 'composer' }],
-                icon: Download,
-                invoke: async (t) => {
-                  const backupBlob = await backupSpace(space, t('untitled document title'));
-                  const url = URL.createObjectURL(backupBlob);
-                  const element = document.createElement('a');
-                  element.setAttribute('href', url);
-                  element.setAttribute('download', `${getSpaceDisplayName(t, space)} backup.zip`);
-                  element.setAttribute('target', 'download');
-                  element.click();
+                {
+                  id: 'rename-space',
+                  label: ['rename space label', { ns: 'composer' }],
+                  icon: PencilSimpleLine,
+                  invoke: async () => {
+                    if (splitViewPlugin?.provides.splitView) {
+                      splitViewPlugin.provides.splitView.dialogOpen = true;
+                      splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RenameSpaceDialog', space];
+                    }
+                  },
                 },
-              },
-              {
-                id: 'restore-space',
-                label: ['upload all docs in space label', { ns: 'composer' }],
-                icon: Upload,
-                invoke: async () => {
-                  if (splitViewPlugin?.provides.splitView) {
-                    splitViewPlugin.provides.splitView.dialogOpen = true;
-                    splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RestoreSpaceDialog', space];
-                  }
+                {
+                  id: 'view-invitations',
+                  label: ['view invitations label', { ns: 'composer' }],
+                  icon: PaperPlane,
+                  invoke: async () => {
+                    await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey: space.key });
+                  },
                 },
-              },
-            ],
-          };
+                {
+                  id: 'hide-space',
+                  label: ['hide space label', { ns: 'composer' }],
+                  icon: EyeSlash,
+                  invoke: async () => {
+                    if (identity) {
+                      const identityHex = identity.identityKey.toHex();
+                      space.properties.members = {
+                        ...space.properties.members,
+                        [identityHex]: {
+                          ...space.properties.members?.[identityHex],
+                          hidden: true,
+                        },
+                      };
+                      if (treeViewPlugin?.provides.treeView.selected[0] === id) {
+                        treeViewPlugin.provides.treeView.selected = [];
+                      }
+                    }
+                  },
+                },
+                {
+                  id: 'backup-space',
+                  label: ['download all docs in space label', { ns: 'composer' }],
+                  icon: Download,
+                  invoke: async (t) => {
+                    const backupBlob = await backupSpace(space, t('untitled document title'));
+                    const url = URL.createObjectURL(backupBlob);
+                    const element = document.createElement('a');
+                    element.setAttribute('href', url);
+                    element.setAttribute('download', `${node!.label} backup.zip`);
+                    element.setAttribute('target', 'download');
+                    element.click();
+                  },
+                },
+                {
+                  id: 'restore-space',
+                  label: ['upload all docs in space label', { ns: 'composer' }],
+                  icon: Upload,
+                  invoke: async () => {
+                    if (splitViewPlugin?.provides.splitView) {
+                      splitViewPlugin.provides.splitView.dialogOpen = true;
+                      splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RestoreSpaceDialog', space];
+                    }
+                  },
+                },
+              ],
+            });
+            rootNodes.set(id, node);
+          }
 
           let attributes = nodeAttributes.get(id);
           if (!attributes) {
@@ -274,6 +214,8 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
                 return;
               }
               attributes!.hidden = space.properties.members?.[identity.identityKey.toHex()]?.hidden === true;
+              node!.label = getSpaceDisplayName(space);
+              node!.description = space.properties.description;
             });
             handle.update([space.properties]);
             subscriptions.add(handle.unsubscribe);
@@ -288,7 +230,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             const objects = createStore(objectsToGraphNodes(node, query.objects));
             subscriptions.add(
               query.subscribe((query) => {
-                objects.splice(0, objects.length, ...objectsToGraphNodes(node, query.objects));
+                objects.splice(0, objects.length, ...objectsToGraphNodes(node!, query.objects));
               }),
             );
 
@@ -335,6 +277,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     subscriptions.clear();
   },
   provides: {
+    translations,
     router: {
       routes: () => [
         {
@@ -390,16 +333,9 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
             default:
               return null;
           }
-        case 'treeitem':
-          switch (true) {
-            case isSpace(datum?.data):
-              return SpaceTreeItem;
-            default:
-              return null;
-          }
         case 'tree--empty':
           switch (true) {
-            case datum === 'root':
+            case datum === SpacePlugin.meta.id:
               return EmptyTree;
             case isSpace(datum?.data):
               return EmptySpace;

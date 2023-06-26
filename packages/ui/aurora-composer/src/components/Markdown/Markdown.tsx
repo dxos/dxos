@@ -15,7 +15,7 @@ import {
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateField, Text } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
@@ -29,7 +29,15 @@ import {
   rectangularSelection,
   EditorView,
 } from '@codemirror/view';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState, KeyboardEvent } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  KeyboardEvent,
+  useMemo,
+} from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
@@ -44,6 +52,7 @@ import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
 export type MarkdownComposerProps = {
   model?: ComposerModel;
   slots?: ComposerSlots;
+  onChange?: (content: string | Text) => void;
 };
 
 export type MarkdownComposerRef = {
@@ -78,7 +87,7 @@ const shadeKeys = {
 };
 
 export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
-  ({ model, slots = {} }, forwardedRef) => {
+  ({ model, slots = {}, onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
 
@@ -91,6 +100,20 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       state,
       view,
     }));
+
+    const listenChangesExtension = useMemo(
+      () =>
+        StateField.define({
+          create: () => null,
+          update: (_value, transaction) => {
+            if (transaction.docChanged && onChange) {
+              onChange(transaction.newDoc);
+            }
+            return null;
+          },
+        }),
+      [onChange],
+    );
 
     useEffect(() => {
       if (provider && peer) {
@@ -119,6 +142,9 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
+          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
+          listenChangesExtension,
+
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           highlightActiveLineGutter(),
           highlightSpecialChars(),

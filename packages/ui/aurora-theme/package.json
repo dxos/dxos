@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-theme",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "description": "A set of design system tokens to use with DXOS Aurora.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,7 @@
     "@fontsource/space-grotesk": "^4.5.10",
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
+    "esbuild-style-plugin": "^1.6.1",
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "postcss": "^8.4.21",
@@ -35,7 +36,6 @@
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
     "esbuild": "^0.16.14",
-    "esbuild-style-plugin": "^1.6.1",
     "vite": "^4.3.9"
   },
   "publishConfig": {

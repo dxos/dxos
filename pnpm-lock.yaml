@@ -31,6 +31,7 @@ importers:
       '@dxos/eslint-plugin-rules': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log-hook': workspace:*
+      '@dxos/nx-protobuf-compiler': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/serve-with-vault': workspace:*
@@ -85,7 +86,6 @@ importers:
       chai-dom: ^1.11.0
       chalk: ^4.1.0
       esbuild: ^0.16.14
-      esbuild-node-externals: ^1.7.0
       esbuild-plugin-raw: ^0.1.7
       esbuild-plugin-yaml: ^0.0.1
       eslint: ^8.41.0
@@ -139,8 +139,9 @@ importers:
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/keys': link:packages/common/keys
       '@dxos/log-hook': link:tools/log-hook
+      '@dxos/nx-protobuf-compiler': link:tools/executors/nx-protobuf-compiler
       '@dxos/plate': link:packages/common/plate
-      '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
+      '@dxos/protobuf-compiler': link:packages/common/protobuf-compiler
       '@dxos/serve-with-vault': link:tools/executors/serve-with-vault
       '@dxos/signal': link:packages/core/mesh/signal
       '@dxos/swc-log-plugin': link:tools/swc-log-plugin
@@ -193,7 +194,6 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
-      esbuild-node-externals: 1.7.0_esbuild@0.16.14
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -338,6 +338,8 @@ importers:
 
   packages/apps/composer-app:
     specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -373,6 +375,7 @@ importers:
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
       jszip: ^3.10.1
+      localforage: ^1.10.0
       lodash.update: ^4.10.2
       octokit: ^2.0.14
       react: ^18.2.0
@@ -386,6 +389,8 @@ importers:
       vite-plugin-pwa: ^0.14.1
       workbox-window: ^6.5.4
     dependencies:
+      '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
@@ -409,6 +414,7 @@ importers:
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
       jszip: 3.10.1
+      localforage: 1.10.0
       lodash.update: 4.10.2
       octokit: 2.0.14
       react: 18.2.0
@@ -537,6 +543,87 @@ importers:
       vite: 4.3.9_@types+node@18.11.9
       vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
       workbox-window: 6.5.4
+
+  packages/apps/plugins/plugin-client:
+    specifiers:
+      '@dxos/config': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+    devDependencies:
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-markdown:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/text-model': link:../../../core/echo/text-model
+    devDependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-stack:
+    specifiers:
+      '@braneframe/plugin-markdown': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
 
   packages/apps/quickstart:
     specifiers:
@@ -992,7 +1079,6 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
-      '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
@@ -1007,20 +1093,19 @@ importers:
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
       '@dxos/hypercore': link:../hypercore
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
+      '@faker-js/faker': 7.6.0
       debug: 4.3.4
       random-access-storage: 3.0.0
       streamx: 2.12.5
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/keyring': link:../../core/halo/keyring
-      '@dxos/typings': link:../typings
-      '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
 
@@ -1034,6 +1119,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/debug': ^4.1.7
@@ -1057,6 +1143,7 @@ importers:
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
+      '@dxos/typings': link:../typings
       readable-stream: 3.6.0
       sodium-native: 3.4.1
       sodium-universal: 3.1.0
@@ -1224,6 +1311,47 @@ importers:
       '@types/prettier': 2.7.2
       '@types/recursive-readdir': 2.2.1
       '@types/yargs': 16.0.4
+      typescript: 5.0.4
+
+  packages/common/protobuf-compiler:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protobuf-test': workspace:*
+      '@swc-node/register': 1.5.4
+      '@swc/core': 1.3.21
+      '@types/argparse': ^2.0.0
+      '@types/glob': ~7.1.3
+      '@types/mocha': ^8.2.2
+      '@types/node': ^18.11.9
+      argparse: ^2.0.1
+      chalk: ^4.1.0
+      glob: ~7.1.6
+      protobufjs: ^7.2.2
+      read-pkg: ^5.2.0
+      ts-morph: ^16.0.0
+      ts-node: 10.9.1
+      typescript: ^5.0.4
+    dependencies:
+      '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
+      argparse: 2.0.1
+      chalk: 4.1.2
+      glob: 7.1.7
+      protobufjs: 7.2.2
+      read-pkg: 5.2.0
+      ts-morph: 16.0.0
+    devDependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/protobuf-test': link:../../../tools/protobuf-test
+      '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
+      '@swc/core': 1.3.21
+      '@types/argparse': 2.0.10
+      '@types/glob': 7.1.4
+      '@types/mocha': 8.2.3
+      '@types/node': 18.11.9
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_nwl2raujl3bgghs66srenn2dn4
       typescript: 5.0.4
 
   packages/common/random-access-storage:
@@ -1605,6 +1733,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/document-model': link:../document-model
       '@dxos/echo-db': link:../echo-db
+      '@dxos/echo-pipeline': link:../echo-pipeline
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
@@ -1615,7 +1744,6 @@ importers:
       '@dxos/util': link:../../../common/util
       protobufjs: 7.2.2
     devDependencies:
-      '@dxos/echo-pipeline': link:../echo-pipeline
       wait-for-expect: 3.0.2
 
   packages/core/echo/echo-typegen:
@@ -1627,6 +1755,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/plate': workspace:*
+      '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': 1.5.4
       '@swc/core': 1.3.21
       '@types/mocha': ^8.2.2
@@ -1639,6 +1768,7 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/node-std': link:../../../common/node-std
       '@dxos/plate': link:../../../common/plate
+      '@dxos/protobuf-compiler': link:../../../common/protobuf-compiler
       protobufjs: 7.2.2
     devDependencies:
       '@dxos/document-model': link:../document-model
@@ -1714,12 +1844,12 @@ importers:
       '@dxos/keys': link:../../../common/keys
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
+      '@dxos/protocols': link:../../protocols
       '@types/node': 18.11.9
       yjs: 13.5.44
     devDependencies:
       '@dxos/document-model': link:../document-model
       '@dxos/feed-store': link:../../../common/feed-store
-      '@dxos/protocols': link:../../protocols
       '@faker-js/faker': 7.6.0
       '@types/faker': 5.5.9
 
@@ -1988,12 +2118,12 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/log': link:../../../common/log
+      '@dxos/util': link:../../../common/util
       debug: 4.3.4
       node-fetch: 2.6.7
       pkg-up: 3.1.0
     devDependencies:
       '@dxos/protocols': link:../../protocols
-      '@dxos/util': link:../../../common/util
       '@types/debug': 4.1.7
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
@@ -2017,6 +2147,7 @@ importers:
       varint: 6.0.0
       wait-for-expect: ^3.0.2
     dependencies:
+      '@dxos/async': link:../../../common/async
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
@@ -2029,7 +2160,6 @@ importers:
       randombytes: 2.1.0
       varint: 6.0.0
     devDependencies:
-      '@dxos/async': link:../../../common/async
       '@types/randombytes': 2.0.0
       '@types/varint': 6.0.0
       typescript: 5.0.4
@@ -2738,6 +2868,7 @@ importers:
       '@dxos/gem-core': link:../gem-core
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@faker-js/faker': 7.6.0
       assert: 2.0.0
       clsx: 1.2.1
       d3: 7.6.1
@@ -2748,7 +2879,6 @@ importers:
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/aurora': link:../../ui/aurora
-      '@faker-js/faker': 7.6.0
       '@types/d3': 7.4.0
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
@@ -2926,6 +3056,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.startcase: ^4.4.0
       mailparser: ^3.6.4
+      node-fetch: ^2.6.0
       openai: ^3.2.1
       split2: ^4.1.0
     dependencies:
@@ -2958,6 +3089,7 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.startcase: 4.4.0
       mailparser: 3.6.4
+      node-fetch: 2.6.7
       openai: 3.2.1
       split2: 4.1.0
     devDependencies:
@@ -3081,6 +3213,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
@@ -3142,7 +3275,6 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@faker-js/faker': 7.6.0
@@ -3266,6 +3398,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/chess-app': link:../chess-app
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
@@ -3314,7 +3447,6 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/vault': link:../../sdk/vault
       '@faker-js/faker': 7.6.0
       '@remix-run/router': 1.0.2
@@ -3430,8 +3562,10 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@types/faker': ^5.5.9
@@ -3452,20 +3586,22 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
+      '@faker-js/faker': 7.6.0
       assert: 2.0.0
+      date-fns: 2.29.3
+      prosemirror-schema-basic: 1.2.1
+      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
     devDependencies:
       '@dxos/client-services': link:../../sdk/client-services
-      '@faker-js/faker': 7.6.0
       '@types/faker': 5.5.9
-      date-fns: 2.29.3
       prosemirror-model: 1.19.0
-      prosemirror-schema-basic: 1.2.1
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
       y-protocols: 1.0.5
       yjs: 13.5.44
 
@@ -3770,6 +3906,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/debug': link:../../common/debug
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-shell': link:../../sdk/react-shell
@@ -3785,7 +3922,6 @@ importers:
       react-table: 7.8.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.20.12
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/config': link:../../sdk/config
       '@faker-js/faker': 7.6.0
       '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
@@ -3963,6 +4099,7 @@ importers:
 
   packages/gravity/gravity-agent:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -3985,6 +4122,7 @@ importers:
       util: ^0.12.4
       yargs: ~16.2.0
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -4069,6 +4207,7 @@ importers:
   packages/gravity/kube-testing:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
@@ -4076,6 +4215,7 @@ importers:
       '@dxos/messaging': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -4090,6 +4230,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
@@ -4097,6 +4238,7 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/signal': link:../../core/mesh/signal
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
@@ -4114,6 +4256,7 @@ importers:
   packages/gravity/proto-guard:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -4124,6 +4267,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
@@ -4272,7 +4416,9 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
+      '@types/lockfile': ^1.0.2
       '@types/readable-stream': ^2.3.9
+      lockfile: ^1.0.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-protocol': link:../client-protocol
@@ -4302,6 +4448,8 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
+      '@types/lockfile': 1.0.2
+      lockfile: 1.0.4
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
       '@types/readable-stream': 2.3.14
@@ -4326,6 +4474,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
+      pkg-up: ^3.1.0
       webpack: ^5.75.0
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -4341,6 +4490,7 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
+      pkg-up: 3.1.0
     devDependencies:
       '@types/debug': 4.1.7
       '@types/js-yaml': 4.0.5
@@ -4507,9 +4657,11 @@ importers:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/aurora-types': link:../../ui/aurora-types
       '@dxos/client': link:../client
+      '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -4525,8 +4677,6 @@ importers:
       xstate: 4.37.1
     devDependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/client-services': link:../client-services
-      '@dxos/log': link:../../common/log
       '@dxos/react-async': link:../../common/react-async
       '@faker-js/faker': 7.6.0
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -4543,20 +4693,19 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/log': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      i18next: ^21.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       react-is: ^18.2.0
       react-router: ^6.4.0
       react-router-dom: ^6.4.0
     dependencies:
-      '@dxos/config': link:../config
       '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-client': link:../react-client
       react-router: 6.4.2_react@18.2.0
@@ -4568,12 +4717,14 @@ importers:
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      i18next: 21.10.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-is: 18.2.0
 
   packages/sdk/vault:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
@@ -4607,6 +4758,7 @@ importers:
       vite: ^4.3.9
       yargs: ~16.2.0
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
@@ -4772,7 +4924,9 @@ importers:
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       '@lezer/common': 1.0.2
       '@lezer/highlight': 1.1.3
@@ -4802,9 +4956,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/text-model': link:../../core/echo/text-model
       '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -4841,6 +4993,7 @@ importers:
       '@fontsource/space-grotesk': 4.5.10
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.3.2
       autoprefixer: 10.4.13_postcss@8.4.21
+      esbuild-style-plugin: 1.6.1
       lodash.get: 4.4.2
       lodash.merge: 4.6.2
       postcss: 8.4.21
@@ -4853,7 +5006,6 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/lodash.merge': 4.6.7
       esbuild: 0.16.17
-      esbuild-style-plugin: 1.6.1
       vite: 4.3.9
 
   packages/ui/aurora-types:
@@ -5227,46 +5379,8 @@ importers:
   tools/executors/esbuild:
     specifiers: {}
 
-  tools/executors/protobuf-compiler:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/protobuf-test': workspace:*
-      '@swc-node/register': 1.5.4
-      '@swc/core': 1.3.21
-      '@types/argparse': ^2.0.0
-      '@types/glob': ~7.1.3
-      '@types/mocha': ^8.2.2
-      '@types/node': ^18.11.9
-      argparse: ^2.0.1
-      chalk: ^4.1.0
-      glob: ~7.1.6
-      protobufjs: ^7.2.2
-      read-pkg: ^5.2.0
-      ts-morph: ^16.0.0
-      ts-node: 10.9.1
-      typescript: ^5.0.4
-    dependencies:
-      '@dxos/log': link:../../../packages/common/log
-      '@dxos/node-std': link:../../../packages/common/node-std
-      argparse: 2.0.1
-      chalk: 4.1.2
-      glob: 7.1.7
-      protobufjs: 7.2.2
-      read-pkg: 5.2.0
-      ts-morph: 16.0.0
-    devDependencies:
-      '@dxos/codec-protobuf': link:../../../packages/common/codec-protobuf
-      '@dxos/protobuf-test': link:../../protobuf-test
-      '@swc-node/register': 1.5.4_alxlrzxltytozdqmu5bi74dqma
-      '@swc/core': 1.3.21
-      '@types/argparse': 2.0.10
-      '@types/glob': 7.1.4
-      '@types/mocha': 8.2.3
-      '@types/node': 18.11.9
-      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_nwl2raujl3bgghs66srenn2dn4
-      typescript: 5.0.4
+  tools/executors/nx-protobuf-compiler:
+    specifiers: {}
 
   tools/executors/serve-with-vault:
     specifiers: {}
@@ -5486,7 +5600,7 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/esbuild-plugins': link:../../packages/common/esbuild-plugins
       '@dxos/esbuild-server': 2.29.0
-      '@dxos/protobuf-compiler': link:../executors/protobuf-compiler
+      '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/debug': 4.1.7
       '@types/diff': 5.0.2
       '@types/glob': 7.1.4
@@ -16557,7 +16671,7 @@ packages:
 
   /@types/less/3.0.3:
     resolution: {integrity: sha512-1YXyYH83h6We1djyoUEqTlVyQtCfJAFXELSKW2ZRtjHD4hQ82CC4lvrv5D0l0FLcKBaiPbXyi3MpMsI9ZRgKsw==}
-    dev: true
+    dev: false
 
   /@types/level-codec/9.0.1:
     resolution: {integrity: sha512-6z7DSlBsmbax3I/bV1Q6jT1nKquDjFl95LURVThdKtwILkRawLYtXdINW19xM95N5kqN2detWb2iGrbUlPwNyw==}
@@ -16584,6 +16698,10 @@ packages:
   /@types/linkify-it/3.0.2:
     resolution: {integrity: sha512-HZQYqbiFVWufzCwexrvh694SOim8z2d+xJl5UNamcvQFejLY/2YUtzXHYi3cHdI7PMlS8ejH2slRAOJQ32aNbA==}
     dev: true
+
+  /@types/lockfile/1.0.2:
+    resolution: {integrity: sha512-jD5VbvhfMhaYN4M3qPJuhMVUg3Dfc4tvPvLEAXn6GXbs/ajDFtCQahX37GIE65ipTI3I+hEvNaXS3MYAn9Ce3Q==}
+    dev: false
 
   /@types/lodash.clonedeep/4.5.7:
     resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
@@ -16988,7 +17106,7 @@ packages:
     resolution: {integrity: sha512-BPdoIt1lfJ6B7rw35ncdwBZrAssjcwzI5LByIrYs+tpXlj/CAkuVdRsgZDdP4lq5EjyWzwxZCqAoFyHKFwp32g==}
     dependencies:
       '@types/node': 18.11.9
-    dev: true
+    dev: false
 
   /@types/sax/1.2.4:
     resolution: {integrity: sha512-pSAff4IAxJjfAXUG6tFkO7dsSbTmf8CtUpfhhZ5VhkRpC4628tJhh3+V6H1E+/Gs9piSzYKT5yzHO5M4GG9jkw==}
@@ -17074,7 +17192,7 @@ packages:
     resolution: {integrity: sha512-B5otJekvD6XM8iTrnO6e2twoTY2tKL9VkL/57/2Lo4tv3EatbCaufdi68VVtn/h4yjO+HVvYEyrNQd0Lzj6riw==}
     dependencies:
       '@types/node': 18.11.9
-    dev: true
+    dev: false
 
   /@types/tapable/1.0.8:
     resolution: {integrity: sha512-ipixuVrh2OdNmauvtT51o3d8z12p6LtFW9in7U79der/kwejjdNchQC5UMn5u/KxNoM7VHHOs/l8KS8uHxhODQ==}
@@ -22295,6 +22413,7 @@ packages:
   /date-fns/2.29.3:
     resolution: {integrity: sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==}
     engines: {node: '>=0.11'}
+    dev: false
 
   /date-format/4.0.14:
     resolution: {integrity: sha512-39BOQLs9ZjKh0/patS9nrT8wc3ioX3/eA/zgbKNopnF2wCqJEoxywwwElATYvRsXdnOxA/OQeQoFZ3rFjVajhg==}
@@ -23535,17 +23654,6 @@ packages:
     dev: true
     optional: true
 
-  /esbuild-node-externals/1.7.0_esbuild@0.16.14:
-    resolution: {integrity: sha512-nfY3hxtO2anCTZ87LgfzCTfBuyG6de+NyiCNMF1mgrBufS0NgoYlBwF77HHuOInsJLxsAJf0BfLeV6ekZ3hRuA==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      esbuild: 0.12 - 0.17
-    dependencies:
-      esbuild: 0.16.14
-      find-up: 5.0.0
-      tslib: 2.5.0
-    dev: true
-
   /esbuild-openbsd-64/0.14.54:
     resolution: {integrity: sha512-Qyk7ikT2o7Wu76UsvvDS5q0amJvmRzDyVlL0qf5VLsLchjCa1+IAvd8kTBgUxD7VBUUVgItLkk609ZHUc1oCaw==}
     engines: {node: '>=12'}
@@ -23598,7 +23706,7 @@ packages:
       glob: 8.1.0
       postcss: 8.4.21
       postcss-modules: 4.3.1_postcss@8.4.21
-    dev: true
+    dev: false
 
   /esbuild-sunos-64/0.14.54:
     resolution: {integrity: sha512-28GZ24KmMSeKi5ueWzMcco6EBHStL3B6ubM7M51RmPwXQGLe0teBGJocmWhgwccA1GeFXqxzILIxXpHbl9Q/Kw==}
@@ -25580,7 +25688,7 @@ packages:
     resolution: {integrity: sha512-ySFolZQfw9FoDb3ed9d80Cm9f0+r7qj+HJkWjeD9RBfpxEVTlVhol+gvaQB/78WbwYfbnNh8nWHHBSlg072y6A==}
     dependencies:
       loader-utils: 3.2.1
-    dev: true
+    dev: false
 
   /generic-pool/3.9.0:
     resolution: {integrity: sha512-hymDOu5B53XvN4QT9dBmZxPX4CWhBPPLguTZ9MMFeFa/Kg0xWVfylOVNlJji/E7yTZWFd/q9GO5TxDLq156D7g==}
@@ -26856,7 +26964,6 @@ packages:
     resolution: {integrity: sha512-YeuIBmFsGjUfO3qBmMOc0rQaun4mIpGKET5WDwvu8lU7gvwpcariZLNtL0Fzj+zazcHUrlXHiptcFhBMFaxzfg==}
     dependencies:
       '@babel/runtime': 7.21.0
-    dev: false
 
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -26872,7 +26979,7 @@ packages:
 
   /icss-replace-symbols/1.1.0:
     resolution: {integrity: sha512-chIaY3Vh2mh2Q3RGXttaDIzeiPvaVXJ+C4DAh/w3c37SKZ/U6PGMmuicR2EQQp9bKG8zLMCl7I+PtIoOOPp8Gg==}
-    dev: true
+    dev: false
 
   /icss-utils/5.1.0_postcss@8.4.21:
     resolution: {integrity: sha512-soFhflCVWLfRNOPU3iv5Z9VUdT44xFRbzjLsEzSr5AQmgqPMTHdU3PMT1Cf1ssx8fLNJDA1juftYl+PUcv3MqA==}
@@ -26881,7 +26988,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       postcss: 8.4.21
-    dev: true
+    dev: false
 
   /idb/7.1.0:
     resolution: {integrity: sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==}
@@ -29862,7 +29969,7 @@ packages:
   /loader-utils/3.2.1:
     resolution: {integrity: sha512-ZvFw1KWS3GVyYBYb7qkmRM/WwL2TQQBxgCK62rlvm4WpVQ23Nb4tYjApUlfjrEGvOs7KHEsmyUn75OHZrJMWPw==}
     engines: {node: '>= 12.13.0'}
-    dev: true
+    dev: false
 
   /loadjs/4.2.0:
     resolution: {integrity: sha512-AgQGZisAlTPbTEzrHPb6q+NYBMD+DP9uvGSIjSUM5uG+0jG15cb8axWpxuOIqrmQjn6scaaH8JwloiP27b2KXA==}
@@ -29897,12 +30004,18 @@ packages:
     dependencies:
       p-locate: 5.0.0
 
+  /lockfile/1.0.4:
+    resolution: {integrity: sha512-cvbTwETRfsFh4nHsL1eGWapU1XFi5Ot9E85sWAwia7Y7EgB7vfqcZhTKZ+l7hCGxSPoushMv5GKhT5PdLv03WA==}
+    dependencies:
+      signal-exit: 3.0.7
+    dev: false
+
   /lodash-es/4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
 
   /lodash.camelcase/4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
-    dev: true
+    dev: false
 
   /lodash.castarray/4.4.0:
     resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==}
@@ -33674,7 +33787,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       postcss: 8.4.21
-    dev: true
+    dev: false
 
   /postcss-modules-local-by-default/4.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-sT7ihtmGSF9yhm6ggikHdV0hlziDTX7oFoXtuVWeDd3hHObNkcHRo9V3yg7vCAY7cONyxJC/XXCmmiHHcvX7bQ==}
@@ -33686,7 +33799,7 @@ packages:
       postcss: 8.4.21
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
-    dev: true
+    dev: false
 
   /postcss-modules-scope/3.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-hncihwFA2yPath8oZ15PZqvWGkWf+XUfQgUGamS4LqoP1anQLOsOJw0vr7J7IwLpoY9fatA2qiGUGmuZL0Iqlg==}
@@ -33696,7 +33809,7 @@ packages:
     dependencies:
       postcss: 8.4.21
       postcss-selector-parser: 6.0.11
-    dev: true
+    dev: false
 
   /postcss-modules-values/4.0.0_postcss@8.4.21:
     resolution: {integrity: sha512-RDxHkAiEGI78gS2ofyvCsu7iycRv7oqw5xMWn9iMoR0N/7mf9D50ecQqUo5BZ9Zh2vH4bCUR/ktCqbB9m8vJjQ==}
@@ -33706,7 +33819,7 @@ packages:
     dependencies:
       icss-utils: 5.1.0_postcss@8.4.21
       postcss: 8.4.21
-    dev: true
+    dev: false
 
   /postcss-modules/4.3.1_postcss@8.4.21:
     resolution: {integrity: sha512-ItUhSUxBBdNamkT3KzIZwYNNRFKmkJrofvC2nWab3CPKhYBQ1f27XXh1PAPE27Psx58jeelPsxWB/+og+KEH0Q==}
@@ -33722,7 +33835,7 @@ packages:
       postcss-modules-scope: 3.0.0_postcss@8.4.21
       postcss-modules-values: 4.0.0_postcss@8.4.21
       string-hash: 1.1.3
-    dev: true
+    dev: false
 
   /postcss-nested/5.0.6_postcss@8.4.21:
     resolution: {integrity: sha512-rKqm2Fk0KbA8Vt3AdGN0FB9OBOMDVajMG6ZCf/GoHgdxUJ4sBFp0A/uMIRm+MJUdo33YXEtjqIz8u7DAp8B7DA==}
@@ -34134,6 +34247,7 @@ packages:
     resolution: {integrity: sha512-vYBdIHsYKSDIqYmPBC7lnwk9DsKn8PnVqK97pMYP5MLEDFqWIX75JiaJTzndBii4bRuNqhC2UfDOfM3FKhlBHg==}
     dependencies:
       prosemirror-model: 1.19.0
+    dev: false
 
   /prosemirror-schema-list/1.2.2:
     resolution: {integrity: sha512-rd0pqSDp86p0MUMKG903g3I9VmElFkQpkZ2iOd3EOVg1vo5Cst51rAsoE+5IPy0LPXq64eGcCYlW1+JPNxOj2w==}
@@ -37027,6 +37141,7 @@ packages:
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
 
   /source-map/0.7.4:
     resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
@@ -41610,6 +41725,7 @@ packages:
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
       yjs: 13.5.44
+    dev: false
 
   /y-protocols/1.0.5:
     resolution: {integrity: sha512-Wil92b7cGk712lRHDqS4T90IczF6RkcvCwAD0A2OPg+adKmOe+nOiT/N2hvpQIWS3zfjmtL4CPaH5sIW1Hkm/A==}

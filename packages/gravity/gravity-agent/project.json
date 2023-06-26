@@ -48,13 +48,13 @@
           "nodejs"
         ],
         "envVariables": {
-          "SIGNAL_PORT": 4002
+          "SIGNAL_PORT": 12002
         },
         "outputPath": "tmp/mocha/packages/gravity/gravity-agent",
         "resultsPath": "test-results/packages/gravity/gravity-agent",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
-          "port": 4002
+          "port": 12002
         },
         "testPatterns": [
           "packages/gravity/gravity-agent/src/**/*.test.{ts,js}"

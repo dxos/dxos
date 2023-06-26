@@ -23,7 +23,7 @@
       "path": "../../packages/common/esbuild-plugins"
     },
     {
-      "path": "../executors/protobuf-compiler"
+      "path": "../../packages/common/protobuf-compiler"
     }
   ]
 }

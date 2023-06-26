@@ -1,6 +1,6 @@
 {
   "name": "@dxos/proto-guard",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "private": true,
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",

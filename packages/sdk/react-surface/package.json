@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-surface",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "private": true,
   "description": "A react framework for making extensible interfaces.",
   "homepage": "https://dxos.org",
@@ -13,7 +13,6 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
-    "@dxos/config": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "react-router": "^6.4.0",
@@ -26,6 +25,7 @@
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "i18next": "^21.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0"

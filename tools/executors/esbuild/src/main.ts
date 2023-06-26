@@ -4,18 +4,19 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build, Format, Platform } from 'esbuild';
-import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
+import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
 import { LogTransformer } from './log-transform-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
+  alias: Record<string, string>;
   entryPoints: string[];
   format?: Format;
   injectGlobals: boolean;
@@ -61,6 +62,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         metafile: options.metafile,
         bundle: options.bundle,
         watch: options.watch,
+        alias: options.alias,
         platform,
         // https://esbuild.github.io/api/#log-override
         logOverride: {
@@ -96,9 +98,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             },
           },
           fixRequirePlugin(),
-          nodeExternalsPlugin({
-            packagePath,
-            allowList: options.bundlePackages,
+          bundleDepsPlugin({
+            packages: options.bundlePackages,
+            packageDir: dirname(packagePath),
+            alias: options.alias,
           }),
           logTransformer.createPlugin(),
           RawPlugin(),
