@@ -20,13 +20,11 @@ import { arrayMove } from '@dxos/util';
 
 import { findLocation } from '../props';
 import type { KanbanColumnModel, KanbanModel, KanbanItem } from '../props';
-import { ActiveItem, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
+import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
-// TODO(burdon): Snap scroll (see kai).
-
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{
   model: KanbanModel;
@@ -45,12 +43,11 @@ export const KanbanBoard: FC<{
     },
   });
 
-  // TODO(burdon): Consolidate.
+  // Dragging state.
   const [activeColumn, setActiveColumn] = useState<KanbanColumnModel | undefined>();
   const [activeItem, setActiveItem] = useState<KanbanItem | undefined>();
-  const [active, setActive] = useState<ActiveItem | undefined>();
 
-  // TODO(burdon): Update observables -- BUT DO NOT UPDATE ECHO YET.
+  // Update observable state.
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     const dragging = findLocation(model.columns, active.id as string)!;
     if (dragging.item && over && active.id !== over.id) {
@@ -59,8 +56,6 @@ export const KanbanBoard: FC<{
         dragging.column.items.splice(dragging.idx!, 1);
         droppable.column.items.splice(droppable.idx ?? 0, 0, dragging.item);
       }
-    } else {
-      setActive(undefined);
     }
   };
 
@@ -80,7 +75,6 @@ export const KanbanBoard: FC<{
   const handleDragCancel = () => {
     setActiveColumn(undefined);
     setActiveItem(undefined);
-    setActive(undefined);
   };
 
   // TODO(burdon): Call model.
@@ -95,7 +89,6 @@ export const KanbanBoard: FC<{
           break;
         }
 
-        // TODO(burdon): Handle drag to other column.
         case 'item': {
           const column = (active.data.current as any).column as KanbanColumnModel;
           const oldIndex = column.items.findIndex((item) => item.id === active.id);
@@ -107,7 +100,6 @@ export const KanbanBoard: FC<{
 
     setActiveColumn(undefined);
     setActiveItem(undefined);
-    setActive(undefined);
   }, []);
 
   const handleAddColumn = onAddColumn
@@ -136,11 +128,9 @@ export const KanbanBoard: FC<{
   };
 
   return (
-    <div className='flex overflow-x-scroll p-4 space-x-4'>
+    <div className='flex overflow-x-scroll snap-x p-4 space-x-4'>
       <div className='flex space-x-4'>
         <DndContext
-          // TODO(burdon): Custom CollisionDetection.
-          // collisionDetection={closestCenter}
           sensors={[mouseSensor]}
           modifiers={[customModifier]}
           onDragOver={handleDragOver}
@@ -153,7 +143,6 @@ export const KanbanBoard: FC<{
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
-                active={active}
                 onAdd={onAddItem}
                 onDelete={() => handleDeleteColumn(column.id)}
               />

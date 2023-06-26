@@ -87,7 +87,7 @@ export const KanbanColumnComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex flex-col overflow-y-hidden', isDragging && 'relative z-10')}
+      className={mx('flex flex-col snap-center overflow-y-hidden', isDragging && 'relative z-10')}
     >
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
