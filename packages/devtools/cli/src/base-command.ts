@@ -212,9 +212,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       );
 
       const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
-      if (yamlConfig.runtime?.client?.storage?.path) {
+      {
         // Isolate DX_PROFILE storages.
-        yamlConfig.runtime.client.storage.path = join(yamlConfig.runtime.client.storage.path, this.flags.profile);
+        yamlConfig.runtime ??= {};
+        yamlConfig.runtime.client ??= {};
+        yamlConfig.runtime.client.storage ??= {};
+        yamlConfig.runtime.client.storage.path = join(
+          yamlConfig.runtime.client.storage.path ?? DX_DATA,
+          this.flags.profile,
+        );
       }
 
       await mkdir(dirname(configFile), { recursive: true });
