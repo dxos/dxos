@@ -74,7 +74,7 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
 // TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.toHex();
+    spaceKey = spaceKey.truncate();
   }
 
   return `${SpacePlugin.meta.id}/${spaceKey}`;
