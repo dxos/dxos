@@ -14,9 +14,9 @@ pnpm run deploy
 
 Otherwise, to deploy any static application:
 
-- Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
-- Ensure there is a [`dx.yml`](./dx-yml-file) file in the project root
-- Run `dx app publish`
+*   Ensure the [`dx` CLI](#creating-apps-with-dx-cli) is installed
+*   Ensure there is a [`dx.yml`](./dx-yml-file) file in the project root
+*   Run `dx app publish`
 
 The app will be accessible in a browser at `http://<app-name>.localhost` where `<app-name>` is found in `dx.yml`. 🚀
 
