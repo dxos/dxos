@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
