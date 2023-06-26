@@ -15,7 +15,7 @@ import {
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
-import { subscribe } from '@dxos/observable-object';
+import { ObservableArray, subscribe } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
 import { findLocation } from '../props';
@@ -58,6 +58,9 @@ export const KanbanBoard: FC<{
       }
     }
   };
+
+  // TODO(burdon): Calculate items for columns.
+  const mapItems = (column: string, items: ObservableArray<KanbanItem>) => items;
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     model.columns.forEach((column) => {
