@@ -14,7 +14,12 @@ import StorageDriver = Runtime.Client.Storage.StorageDriver;
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
-  const { path = isNode() ? DX_DATA : 'dxos/storage', storageType, keyStorage, persistent = false } = config ?? {};
+  const {
+    path = isNode() ? DX_DATA : 'dxos/storage', // TODO(burdon): Factor out const.
+    storageType,
+    keyStorage,
+    persistent = false,
+  } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
     throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
