@@ -301,7 +301,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
-        this._client = new Client({ config: this._clientConfig, services: fromAgent(this.flags.profile) });
+        this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
 
       await this._client.initialize();
