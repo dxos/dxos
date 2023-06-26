@@ -59,14 +59,17 @@ export const ListViewContainer = observer(() => {
       <div>
         {actions?.map((action) => (
           <Button variant='ghost' key={action.id} onClick={(event) => action.invoke(t, event)}>
-            {t(...action.label)}
+            {Array.isArray(action.label) ? t(...action.label) : action.label}
           </Button>
         ))}
       </div>
       {Object.entries(graph.roots).map(([key, items]) => (
         <ListView
           key={key}
-          items={items?.map((item) => ({ id: item.id, text: item.label }))}
+          items={items?.map((item) => ({
+            id: item.id,
+            text: Array.isArray(item.label) ? t(...item.label) : item.label,
+          }))}
           onSelect={(id) => setSelected(items.find((item) => item.id === id) ?? null)}
         />
       ))}

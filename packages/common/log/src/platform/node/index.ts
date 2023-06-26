@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import fs from 'fs';
 import yaml from 'js-yaml';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { LogOptions } from '../../config';
 

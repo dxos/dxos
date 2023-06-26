@@ -62,7 +62,7 @@
         "^build",
         "^compile"
       ],
-      "executor": "@dxos/protobuf-compiler:generate",
+      "executor": "@dxos/nx-protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto"
       },
@@ -96,7 +96,7 @@
     }
   },
   "implicitDependencies": [
-    "protobuf-compiler",
+    "nx-protobuf-compiler",
     "test"
   ]
 }

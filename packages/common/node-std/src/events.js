@@ -2,4 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export { EventEmitter } from 'events';
+import { EventEmitter } from 'events';
+
+export { EventEmitter };
+export default { EventEmitter };
