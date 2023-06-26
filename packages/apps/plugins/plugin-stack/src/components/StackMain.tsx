@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Minus, Plus } from '@phosphor-icons/react';
+import { DotsSixVertical, Minus, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -16,13 +16,15 @@ import {
   randomString,
   DensityProvider,
   DragEndEvent,
+  arrayMoveInPlace,
+  useListContext,
+  ListScopedProps,
 } from '@dxos/aurora';
-import { defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
-import { arrayMoveInPlace } from '../util';
 
 type StackSectionProps = {
   onAdd: () => void;
@@ -30,39 +32,43 @@ type StackSectionProps = {
   section: StackSectionModel;
 };
 
-const AddSection = ({ onClick }: { onClick: StackSectionProps['onAdd'] }) => {
+const StackSection = ({ onAdd, onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
   const { t } = useTranslation('dxos:stack');
-  return (
-    <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
-      <span className='sr-only'>{t('add section label')}</span>
-      <Plus className={getSize(4)} />
-      <CaretRight className={getSize(3)} />
-    </Button>
-  );
-};
-
-const StackSection = ({ onAdd, onRemove, section }: StackSectionProps) => {
-  const { t } = useTranslation('dxos:stack');
+  const { draggingId } = useListContext('StackSection', __listScope);
+  const isDragging = draggingId === section.object.id;
   return (
     <DensityProvider density='fine'>
-      <AddSection onClick={onAdd} />
-      <ListItem.Root id={section.object.id} classNames='flex gap-2 items-start justify-start'>
+      <ListItem.Root
+        id={section.object.id}
+        classNames={[
+          surfaceElevation({ elevation: 'group' }),
+          'bg-white dark:bg-neutral-925 grow rounded mbe-2',
+          'hover-hover:[--controls-opacity:.1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1] hover-hover:hover:[--controls-opacity:1]',
+          isDragging && 'relative z-10',
+        ]}
+      >
         <ListItem.Heading classNames='sr-only'>
           {get(section, 'object.title', t('generic section heading'))}
         </ListItem.Heading>
-        <div role='none' className='p-1 -m-1 self-stretch flex flex-col'>
-          <Button variant='ghost' classNames='p-0' onClick={onRemove}>
-            <span className='sr-only'>{t('remove section label')}</span>
-            <Minus className={getSize(4)} />
-          </Button>
-          <ListItem.DragHandle classNames='grow' />
-        </div>
-        <div
-          role='none'
-          className={mx(surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925 grow rounded')}
+        <ListItem.DragHandle
+          classNames={[
+            buttonFine,
+            'self-stretch flex items-center justify-center bs-auto is-auto transition-opacity opacity-[--controls-opacity]',
+          ]}
         >
+          <DotsSixVertical className={getSize(5)} />
+        </ListItem.DragHandle>
+        <div role='none' className='flex-1'>
           <Surface role='section' data={section} />
         </div>
+        <Button
+          variant='ghost'
+          classNames='self-stretch justify-start transition-opacity opacity-[--controls-opacity]'
+          onClick={onRemove}
+        >
+          <span className='sr-only'>{t('remove section label')}</span>
+          <Minus className={getSize(4)} />
+        </Button>
       </ListItem.Root>
     </DensityProvider>
   );
@@ -71,6 +77,7 @@ const StackSection = ({ onAdd, onRemove, section }: StackSectionProps) => {
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [_, setIter] = useState([]);
+  const { t } = useTranslation('dxos:stack');
 
   useEffect(() => {
     // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
@@ -111,6 +118,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     <>
       <List
         variant='ordered-draggable'
+        itemSizes='many'
         onDragEnd={handleDragEnd}
         listItemIds={sections.map(({ object: { id } }) => id)}
         classNames='pis-1 pie-2'
@@ -130,7 +138,10 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           })}
       </List>
       <div role='none' className='pis-1 pie-2'>
-        <AddSection onClick={() => handleAdd(sections.length)} />
+        <Button variant='ghost' onClick={() => handleAdd(sections.length)} classNames='is-full gap-2'>
+          <Plus className={getSize(4)} />
+          <span>{t('add section label')}</span>
+        </Button>
       </div>
     </>
   );
@@ -148,7 +159,7 @@ export const StackMain = ({
         <Input.Label srOnly>{t('stack title label')}</Input.Label>
         <Input.TextInput
           variant='subdued'
-          classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
+          classNames='flex-1 min-is-0 is-auto pis-2 plb-3.5 pointer-fine:plb-2.5'
           defaultValue={properties.title}
           onChange={({ target: { value } }) => (properties.title = value)}
         />
