@@ -37,7 +37,7 @@ export const canonicalStringify = (obj: any) =>
      * We also skip @type.
      */
     // TODO(dmaretskyi): Should we actually skip the @type field?
-    replacer: function(this: any, key: any, value: any) {
+    replacer: function (this: any, key: any, value: any) {
       if (key.toString().startsWith('__') || key.toString() === '@type') {
         return undefined;
       }
@@ -60,7 +60,7 @@ export const canonicalStringify = (obj: any) =>
           return original.frames().reduce((frames: Record<string, number>, [key, seq]) => {
             frames[truncateKey(key)] = seq;
             return frames;
-          }, {})
+          }, {});
         }
       }
 
@@ -72,10 +72,9 @@ export const canonicalStringify = (obj: any) =>
  * Old key truncation method (339d...9d66) to keep backwards compatibility with credentials signed with old method
  */
 const truncateKey = (key: PublicKey) => {
-  const str = key.toHex()
+  const str = key.toHex();
   return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
-}
-
+};
 
 /**
  * export const truncateKey = (key: any, { length = 8, start }: TruncateKeyOptions = {}) => {
@@ -104,6 +103,4 @@ return start
 "04ee588b": 1703
 }
 
-
  */
-
