@@ -17,15 +17,24 @@ export const UrlSyncPlugin: PluginDefinition = definePlugin({
       default: observer(() => {
         const treeView = useTreeView();
 
-        // If no selection, try to restore from URL.
+        // Update selection based on browser navigation.
         useEffect(() => {
-          if (treeView.selected.length === 0 && window.location.pathname.length > 1) {
+          const handleNavigation = () => {
             treeView.selected =
               // TODO(wittjosiah): Remove. This is here for backwards compatibility.
               window.location.pathname === '/embedded'
                 ? ['dxos:github/embedded']
                 : uriToSelected(window.location.pathname);
+          };
+
+          if (treeView.selected.length === 0 && window.location.pathname.length > 1) {
+            handleNavigation();
           }
+
+          window.addEventListener('popstate', handleNavigation);
+          return () => {
+            window.removeEventListener('popstate', handleNavigation);
+          };
         }, []);
 
         // Update URL when selection changes.
