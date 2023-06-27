@@ -9,12 +9,11 @@ import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { createStore } from '@dxos/observable-object';
 
-import { isKanban, KanbanItem, KanbanModel } from '../props';
-import type { KanbanColumn } from '../props';
+import { isKanban } from '../props';
+import type { KanbanColumn, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-// TODO(burdon): Generalize to graph node (which may contain a collection)?
 export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   const kanban = isKanban(data) ? data : null;
@@ -22,23 +21,22 @@ export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
     return null;
   }
 
+  // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
     root: kanban,
-  };
-
-  // TODO(burdon): External (needs space.db)?
-  const handleCreateColumn = () => {
-    return {
-      id: PublicKey.random().toHex(),
-      items: createStore([]),
-    };
-  };
-
-  // TODO(burdon): Add metadata from column in the case of projections?
-  const handleCreateItem = (column: KanbanColumn): KanbanItem => {
-    return {
-      id: PublicKey.random().toHex(),
-    };
+    // TODO(burdon): External (needs space.db)?
+    createColumn: () => {
+      return {
+        id: PublicKey.random().toHex(),
+        items: createStore([]),
+      };
+    },
+    // TODO(burdon): Add metadata from column in the case of projections?
+    createItem: (column: KanbanColumn) => {
+      return {
+        id: PublicKey.random().toHex(),
+      };
+    },
   };
 
   // TODO(burdon): Style/color standards for panels, borders, text, etc.
@@ -58,7 +56,7 @@ export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
       </div>
       <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />
       <div className='flex grow overflow-hidden'>
-        <KanbanBoard model={model} onCreateColumn={handleCreateColumn} onCreateItem={handleCreateItem} />
+        <KanbanBoard model={model} />
       </div>
     </Main.Content>
   );

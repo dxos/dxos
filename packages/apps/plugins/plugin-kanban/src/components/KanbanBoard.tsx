@@ -27,11 +27,7 @@ import { KanbanItemComponent } from './KanbanItem';
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
 // TODO(burdon): Consistently use FC?
-export const KanbanBoard: FC<{
-  model: KanbanModel;
-  onCreateColumn?: () => KanbanColumn;
-  onCreateItem?: (column: KanbanColumn) => KanbanItem;
-}> = ({ model, onCreateColumn, onCreateItem }) => {
+export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const kanban = model.root;
 
   // TODO(burdon): Copying from Stack. Create custom hook?
@@ -130,13 +126,12 @@ export const KanbanBoard: FC<{
     setDraggingItem(undefined);
   };
 
-  const handleAddColumn = onCreateColumn
-    ? () => {
-        const column = onCreateColumn();
-        kanban.columns.splice(kanban.columns.length, 0, column);
-      }
-    : undefined;
+  const handleCreateColumn = () => {
+    const column = model.createColumn();
+    kanban.columns.splice(kanban.columns.length, 0, column);
+  };
 
+  // TODO(burdon): Move to model.
   const handleDeleteColumn = (id: string) => {
     const index = kanban.columns.findIndex((column) => column.id === id);
     if (index >= 0) {
@@ -173,7 +168,7 @@ export const KanbanBoard: FC<{
                 key={column.id}
                 column={column}
                 itemMapper={itemMapper}
-                onCreate={onCreateItem}
+                onCreate={(column: KanbanColumn) => model.createItem(column)}
                 onDelete={() => handleDeleteColumn(column.id)}
               />
             ))}
@@ -187,7 +182,7 @@ export const KanbanBoard: FC<{
           )}
         </DndContext>
 
-        {handleAddColumn && <KanbanColumnComponentPlaceholder onAdd={handleAddColumn} />}
+        {handleCreateColumn && <KanbanColumnComponentPlaceholder onAdd={handleCreateColumn} />}
       </div>
     </div>
   );

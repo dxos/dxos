@@ -50,8 +50,11 @@ export type Kanban<T extends KanbanItem = GenericKanbanItem> = {
   columns: KanbanColumn<T>[];
 };
 
+// TODO(burdon): Add other methods: Move, Delete, etc.
 export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
   root: Kanban<T>;
+  createColumn(): KanbanColumn;
+  createItem(column: KanbanColumn): KanbanItem;
 }
 
 // TODO(burdon): Test data type?
