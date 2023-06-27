@@ -107,6 +107,12 @@ export const initializeAppTelemetry = async ({
 
     Sentry.configureTracing();
 
+    // Add telemetry tags.
+    const tags = await Telemetry.getLocalTelemetryTags();
+    if (tags) {
+      BASE_TELEMETRY_PROPERTIES.tags = tags.toString();
+    }
+
     const TELEMETRY_API_KEY = config.get('runtime.app.env.DX_TELEMETRY_API_KEY');
     Telemetry.init({
       apiKey: TELEMETRY_API_KEY,
