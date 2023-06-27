@@ -8,7 +8,7 @@ import { logObjectAccess } from './access-observer';
 
 export const subscribe = Symbol.for('dxos.observable-object.subscribe');
 
-// TODO(burdon): Name clash with const below. Rename Observable? Or rename Impl => Dictionary.
+// TODO(burdon): Name clash with const below. Rename Observable and rename ObservableObjectImpl => ObservableObject.
 export interface ObservableObject {
   [subscribe]: (callback: (value: any) => void) => UnsubscribeCallback;
 }

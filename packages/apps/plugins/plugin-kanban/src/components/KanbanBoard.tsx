@@ -23,14 +23,15 @@ import { findLocation } from '../props';
 import type { Location, KanbanColumn, KanbanModel, KanbanItem } from '../props';
 import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
+import { useSubscription } from './util';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const kanban = model.root;
+  useSubscription(kanban.columns);
 
-  // TODO(burdon): Copying from Stack. Create custom hook?
   const [_, setIter] = useState([]);
   useEffect(() => {
     const handle = createSubscription(() => setIter([]));

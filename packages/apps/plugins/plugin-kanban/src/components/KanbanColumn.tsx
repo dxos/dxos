@@ -6,14 +6,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { createSubscription } from '@dxos/observable-object';
 
 import type { KanbanColumn, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
+import { useSubscription } from './util';
 
 export type ItemsMapper = (column: string, items: KanbanItem[]) => KanbanItem[];
 
@@ -53,20 +53,13 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 export const KanbanColumnComponent: FC<{
   column: KanbanColumn;
   itemMapper?: ItemsMapper;
-  debug?: boolean;
+  debug?: boolean; // TODO(burdon): Context.
   onCreate?: (column: KanbanColumn) => KanbanItem;
   onDelete?: () => void;
-}> = ({ column, itemMapper, debug = true, onCreate, onDelete }) => {
+}> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  // TODO(burdon): Copying from Stack. Create custom hook?
-  const [_, setIter] = useState([]);
-  useEffect(() => {
-    const handle = createSubscription(() => setIter([]));
-    handle.update([column.items]);
-    return () => handle.unsubscribe();
-  }, []);
-
+  useSubscription([column.items]);
   const items = itemMapper?.(column.id, column.items) ?? column.items;
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id });

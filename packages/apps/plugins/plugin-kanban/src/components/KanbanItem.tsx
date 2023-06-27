@@ -27,7 +27,7 @@ export const KanbanItemComponent: FC<{
   item: KanbanItem;
   debug?: boolean;
   onDelete?: () => void;
-}> = ({ column, item, debug = true, onDelete }) => {
+}> = ({ column, item, debug = false, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
