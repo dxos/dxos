@@ -19,8 +19,8 @@ import React, { FC, useEffect, useState } from 'react';
 import { createSubscription } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
-import { findLocation, Location } from '../props';
-import type { KanbanColumnModel, KanbanModel, KanbanItem } from '../props';
+import { findLocation } from '../props';
+import type { Location, KanbanColumn, KanbanModel, KanbanItem } from '../props';
 import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 
@@ -29,14 +29,16 @@ import { KanbanItemComponent } from './KanbanItem';
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{
   model: KanbanModel;
-  onAddColumn?: () => KanbanColumnModel;
-  onAddItem?: (column: KanbanColumnModel) => KanbanItem;
-}> = ({ model, onAddColumn, onAddItem }) => {
+  onCreateColumn?: () => KanbanColumn;
+  onCreateItem?: (column: KanbanColumn) => KanbanItem;
+}> = ({ model, onCreateColumn, onCreateItem }) => {
+  const kanban = model.root;
+
   // TODO(burdon): Copying from Stack. Create custom hook?
   const [_, setIter] = useState([]);
   useEffect(() => {
     const handle = createSubscription(() => setIter([]));
-    handle.update([model.columns]);
+    handle.update([kanban.columns]);
     return () => handle.unsubscribe();
   }, []);
 
@@ -48,7 +50,7 @@ export const KanbanBoard: FC<{
 
   // Dragging column.
   // TODO(burdon): Dragging column causes flickering when dragging left to first column.
-  const [draggingColumn, setDraggingColumn] = useState<KanbanColumnModel | undefined>();
+  const [draggingColumn, setDraggingColumn] = useState<KanbanColumn | undefined>();
 
   // Dragging item.
   const [draggingItem, setDraggingItem] = useState<{ source: Location; target?: Location }>();
@@ -75,7 +77,7 @@ export const KanbanBoard: FC<{
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    model.columns.forEach((column) => {
+    kanban.columns.forEach((column) => {
       if (column.id === active.id) {
         setDraggingColumn(column);
       } else {
@@ -92,7 +94,7 @@ export const KanbanBoard: FC<{
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     if (draggingItem) {
       const { source } = draggingItem;
-      const target = findLocation(model.columns, over?.id as string);
+      const target = findLocation(kanban.columns, over?.id as string);
       if (active.id !== over?.id) {
         setDraggingItem({ source, target });
       }
@@ -103,9 +105,9 @@ export const KanbanBoard: FC<{
   const handleDragEnd = (event: DragEndEvent) => {
     if (draggingColumn) {
       const { active, over } = event;
-      const oldIndex = model.columns.findIndex((column) => column.id === active.id);
-      const newIndex = model.columns.findIndex((column) => column.id === over?.id);
-      arrayMove(model.columns, oldIndex, newIndex);
+      const oldIndex = kanban.columns.findIndex((column) => column.id === active.id);
+      const newIndex = kanban.columns.findIndex((column) => column.id === over?.id);
+      arrayMove(kanban.columns, oldIndex, newIndex);
     } else if (draggingItem) {
       const { source, target } = draggingItem;
       if (source.column.id === target!.column.id) {
@@ -128,17 +130,17 @@ export const KanbanBoard: FC<{
     setDraggingItem(undefined);
   };
 
-  const handleAddColumn = onAddColumn
+  const handleAddColumn = onCreateColumn
     ? () => {
-        const column = onAddColumn();
-        model.columns.splice(model.columns.length, 0, column);
+        const column = onCreateColumn();
+        kanban.columns.splice(kanban.columns.length, 0, column);
       }
     : undefined;
 
   const handleDeleteColumn = (id: string) => {
-    const index = model.columns.findIndex((column) => column.id === id);
+    const index = kanban.columns.findIndex((column) => column.id === id);
     if (index >= 0) {
-      model.columns.splice(index, 1);
+      kanban.columns.splice(index, 1);
     }
   };
 
@@ -165,13 +167,13 @@ export const KanbanBoard: FC<{
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <SortableContext strategy={horizontalListSortingStrategy} items={model.columns?.map(({ id }) => id)}>
-            {model.columns.map((column) => (
+          <SortableContext strategy={horizontalListSortingStrategy} items={kanban.columns?.map(({ id }) => id)}>
+            {kanban.columns.map((column) => (
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
                 itemMapper={itemMapper}
-                onAdd={onAddItem}
+                onCreate={onCreateItem}
                 onDelete={() => handleDeleteColumn(column.id)}
               />
             ))}

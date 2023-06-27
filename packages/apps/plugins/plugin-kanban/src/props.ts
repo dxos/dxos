@@ -30,28 +30,32 @@ import { subscribe } from '@dxos/observable-object';
 //  Can plugin inject context for model?
 
 // TODO(burdon): Pluggable content (e.g., support text document for title).
-export type KanbanItem = { id: string; content: string };
+export type KanbanItem = { id: string; content?: string };
 
 // TODO(burdon): Use protobuf typedefs?
 export type GenericKanbanItem = KanbanItem & { [key: string]: any };
 
 // TODO(burdon): Implement ColumnModel with callbacks.
-export type KanbanColumnModel<T extends KanbanItem = GenericKanbanItem> = {
+export type KanbanColumn<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
-  title: string;
+  title?: string;
   items: T[];
 };
 
 // TODO(burdon): When to use Model suffix?
-export type KanbanModel<T extends KanbanItem = GenericKanbanItem> = {
+export type Kanban<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
-  title: string;
+  title?: string;
   // TODO(burdon): How is this mapped onto ECHO?
-  columns: KanbanColumnModel<T>[];
+  columns: KanbanColumn<T>[];
 };
 
+export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
+  root: Kanban<T>;
+}
+
 // TODO(burdon): Test data type?
-export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is KanbanModel<T> =>
+export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> =>
   datum && typeof datum === 'object'
     ? 'id' in datum &&
       typeof datum.id === 'string' &&
@@ -61,7 +65,7 @@ export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknow
     : false;
 
 export type Location = {
-  column: KanbanColumnModel;
+  column: KanbanColumn;
   item?: KanbanItem;
   idx?: number;
 };
@@ -70,7 +74,7 @@ export type Location = {
  * Find the column or item within the model.
  */
 // TODO(burdon): Move to model.
-export const findLocation = (columns: KanbanColumnModel[], id: string): Location | undefined => {
+export const findLocation = (columns: KanbanColumn[], id: string): Location | undefined => {
   for (const column of columns) {
     if (column.id === id) {
       return { column };

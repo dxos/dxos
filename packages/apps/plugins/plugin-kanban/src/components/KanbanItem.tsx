@@ -10,7 +10,7 @@ import React, { FC } from 'react';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import type { KanbanColumnModel, KanbanItem } from '../props';
+import type { KanbanColumn, KanbanItem } from '../props';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -23,7 +23,7 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanItemComponent: FC<{
-  column?: KanbanColumnModel;
+  column?: KanbanColumn;
   item: KanbanItem;
   debug?: boolean;
   onDelete?: () => void;

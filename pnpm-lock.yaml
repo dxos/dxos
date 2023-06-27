@@ -574,6 +574,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
@@ -591,6 +592,7 @@ importers:
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/keys': link:../../../common/keys
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
@@ -4301,6 +4303,7 @@ importers:
   packages/gravity/proto-guard:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -4311,6 +4314,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols

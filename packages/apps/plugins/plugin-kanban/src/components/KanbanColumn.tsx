@@ -12,7 +12,7 @@ import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { createSubscription } from '@dxos/observable-object';
 
-import type { KanbanColumnModel, KanbanItem } from '../props';
+import type { KanbanColumn, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 
 export type ItemsMapper = (column: string, items: KanbanItem[]) => KanbanItem[];
@@ -51,12 +51,12 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export const KanbanColumnComponent: FC<{
-  column: KanbanColumnModel;
+  column: KanbanColumn;
   itemMapper?: ItemsMapper;
   debug?: boolean;
-  onAdd?: (column: KanbanColumnModel) => KanbanItem;
+  onCreate?: (column: KanbanColumn) => KanbanItem;
   onDelete?: () => void;
-}> = ({ column, itemMapper, debug = true, onAdd, onDelete }) => {
+}> = ({ column, itemMapper, debug = true, onCreate, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
   // TODO(burdon): Copying from Stack. Create custom hook?
@@ -76,9 +76,9 @@ export const KanbanColumnComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const handleAddItem = onAdd
+  const handleAddItem = onCreate
     ? () => {
-        const item = onAdd(column);
+        const item = onCreate(column);
         column.items.splice(column.items.length, 0, item);
       }
     : undefined;

@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import React, { FC } from 'react';
 
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
-import { ObservableArray } from '@dxos/observable-object';
+import { PublicKey } from '@dxos/keys';
+import { createStore } from '@dxos/observable-object';
 
-import { isKanban } from '../props';
-import type { KanbanColumnModel, KanbanItem } from '../props';
+import { isKanban, KanbanItem, KanbanModel } from '../props';
+import type { KanbanColumn } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
@@ -22,20 +22,22 @@ export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
     return null;
   }
 
-  // TODO(burdon): External (needs space.db)? Via context?
-  const handleAddColumn = () => {
-    return {
-      id: 'column-' + faker.datatype.uuid(),
-      title: faker.lorem.words(3),
-      items: new ObservableArray<KanbanItem>(),
-    };
+  const model: KanbanModel = {
+    root: kanban,
   };
 
   // TODO(burdon): External (needs space.db)?
-  const handleAddItem = (column: KanbanColumnModel) => {
+  const handleCreateColumn = () => {
     return {
-      id: 'item-' + faker.datatype.uuid(),
-      content: faker.lorem.words(3),
+      id: PublicKey.random().toHex(),
+      items: createStore([]),
+    };
+  };
+
+  // TODO(burdon): Add metadata from column in the case of projections?
+  const handleCreateItem = (column: KanbanColumn): KanbanItem => {
+    return {
+      id: PublicKey.random().toHex(),
     };
   };
 
@@ -49,14 +51,14 @@ export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
           <Input.TextInput
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
-            defaultValue={kanban.title}
-            onChange={({ target: { value } }) => (kanban.title = value)}
+            defaultValue={model.root.title}
+            onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>
       </div>
       <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />
       <div className='flex grow overflow-hidden'>
-        <KanbanBoard model={kanban} onAddColumn={handleAddColumn} onAddItem={handleAddItem} />
+        <KanbanBoard model={model} onCreateColumn={handleCreateColumn} onCreateItem={handleCreateItem} />
       </div>
     </Main.Content>
   );

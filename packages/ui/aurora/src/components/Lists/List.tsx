@@ -27,7 +27,6 @@ import {
   LIST_ITEM_NAME,
   useListItemContext,
   arrayMove,
-  arrayMoveInPlace,
   DragEndEvent,
   DragOverEvent,
 } from '@dxos/react-list';
@@ -203,16 +202,7 @@ export const ListItem: {
   MockDragHandle: MockListItemDragHandle,
 };
 
-export {
-  List,
-  useListDensity,
-  useListContext,
-  useListItemContext,
-  LIST_NAME,
-  LIST_ITEM_NAME,
-  arrayMove,
-  arrayMoveInPlace,
-};
+export { List, useListDensity, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME, arrayMove };
 
 export type {
   ListProps,
