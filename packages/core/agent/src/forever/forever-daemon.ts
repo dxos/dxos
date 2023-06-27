@@ -28,7 +28,12 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.running);
+    const { path: socketFile } = parseAddress(getUnixSocket(profile));
+    return (
+      fs.existsSync(socketFile) ||
+      isLocked(lockFilePath(profile)) ||
+      (await this.list()).some((process) => process.profile === profile && process.running)
+    );
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -52,10 +57,6 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
-      if (isLocked(lockFilePath(profile))) {
-        throw new Error(`Profile is locked: ${profile}`);
-      }
-
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
@@ -71,7 +72,6 @@ export class ForeverDaemon implements Daemon {
       });
     }
 
-    // TODO(burdon): Detect lock file and exit.
     // TODO(burdon): Display to user the error file.
     const { path: socketFile } = parseAddress(getUnixSocket(profile));
     await waitFor({

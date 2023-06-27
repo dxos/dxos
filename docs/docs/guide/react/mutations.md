@@ -130,14 +130,14 @@ root.render(
 
 To create (insert) a new object, simply construct a `new` one with the appropriate constructor like `Task` and pass any initial values into the constructor (line 24 above).
 
-## Deleting objects
+## Removing objects
 
-To delete an object (typed or untyped) call the `delete` API on a space.
+To remove an object (typed or untyped) call the `remove` API on a space.
 
 ```ts
-await space.db.delete(task)
+await space.db.remove(task);
 ```
 
 ::: note
-Objects in ECHO are not physically deleted, they are marked with a deleted field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
+Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
 :::
