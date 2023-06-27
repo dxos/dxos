@@ -341,10 +341,10 @@ importers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-router': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/plugin-url-sync': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -387,7 +387,6 @@ importers:
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
       react-is: ^18.2.0
-      react-router-dom: ^6.4.0
       showdown: ^2.1.0
       turndown: ^7.1.1
       vite: ^4.3.9
@@ -397,10 +396,10 @@ importers:
       '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
-      '@braneframe/plugin-router': link:../plugins/plugin-router
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
+      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
@@ -430,7 +429,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       showdown: 2.1.0
       turndown: 7.1.1
     devDependencies:
@@ -626,31 +624,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
-  packages/apps/plugins/plugin-router:
-    specifiers:
-      '@braneframe/plugin-treeview': workspace:*
-      '@dxos/observable-object': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router: ^6.4.0
-      react-router-dom: ^6.4.0
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
-      react-router: 6.4.2_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@braneframe/plugin-treeview': link:../plugin-treeview
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
-
   packages/apps/plugins/plugin-splitview:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -763,6 +736,23 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-url-sync:
+    specifiers:
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      react: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+    devDependencies:
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/quickstart:

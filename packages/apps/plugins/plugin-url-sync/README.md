@@ -1,6 +1,6 @@
-# @braneframe/plugin-client
+# @braneframe/plugin-url-sync
 
-Surface plugin for DXOS Client.
+DXOS Surface plugin for keeping the browser url in sync with the application state.
 
 ## DXOS Resources
 
