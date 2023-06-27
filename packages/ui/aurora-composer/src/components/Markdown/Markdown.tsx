@@ -29,14 +29,15 @@ import {
   rectangularSelection,
   EditorView,
 } from '@codemirror/view';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
+  KeyboardEvent,
   forwardRef,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
-  KeyboardEvent,
   useMemo,
+  useCallback,
 } from 'react';
 import { yCollab } from 'y-codemirror.next';
 
@@ -90,6 +91,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
   ({ model, slots = {}, onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
@@ -203,15 +205,17 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       };
     }, [parent, content, provider?.awareness, themeMode]);
 
-    const escKeyUp = useCallback(
+    const handleKeyUp = useCallback(
       ({ key }: KeyboardEvent) => {
-        if (parent && key === 'Escape') {
-          parent.focus();
+        switch (key) {
+          case 'Enter':
+            view?.contentDOM.focus();
+            break;
         }
       },
-      [parent],
+      [view],
     );
 
-    return <div tabIndex={0} onKeyUp={escKeyUp} key={id} {...slots.root} ref={setParent} />;
+    return <div tabIndex={0} key={id} {...slots.root} onKeyUp={handleKeyUp} {...tabsterDOMAttribute} ref={setParent} />;
   },
 );

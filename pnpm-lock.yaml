@@ -339,7 +339,12 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/plugin-url-sync': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -382,7 +387,6 @@ importers:
       react-dom: ^18.2.0
       react-drag-drop-files: ^2.3.8
       react-is: ^18.2.0
-      react-router-dom: ^6.4.0
       showdown: ^2.1.0
       turndown: ^7.1.1
       vite: ^4.3.9
@@ -390,7 +394,12 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
+      '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
+      '@braneframe/plugin-theme': link:../plugins/plugin-theme
+      '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
+      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@braneframe/types': link:../types
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
@@ -420,7 +429,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       showdown: 2.1.0
       turndown: 7.1.1
     devDependencies:
@@ -565,8 +573,31 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
+  packages/apps/plugins/plugin-graph:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    devDependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
   packages/apps/plugins/plugin-markdown:
     specifiers:
+      '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -584,6 +615,32 @@ importers:
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
     devDependencies:
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-splitview:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+    devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -597,6 +654,7 @@ importers:
   packages/apps/plugins/plugin-stack:
     specifiers:
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-theme': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/observable-object': workspace:*
@@ -614,6 +672,7 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -623,6 +682,79 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-theme:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      i18next: ^21.10.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+      i18next: 21.10.0
+    devDependencies:
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-treeview:
+    specifiers:
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/react-client': link:../../../sdk/react-client
+    devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-url-sync:
+    specifiers:
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@types/react': ^18.0.21
+      react: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/observable-object': link:../../../common/observable-object
+    devDependencies:
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      react: 18.2.0
       vite: 4.3.9
 
   packages/apps/quickstart:
@@ -4691,36 +4823,11 @@ importers:
 
   packages/sdk/react-surface:
     specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      i18next: ^21.10.0
       react: ^18.2.0
-      react-dom: ^18.2.0
-      react-is: ^18.2.0
-      react-router: ^6.4.0
-      react-router-dom: ^6.4.0
-    dependencies:
-      '@dxos/observable-object': link:../../common/observable-object
-      '@dxos/react-client': link:../react-client
-      react-router: 6.4.2_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/log': link:../../common/log
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      i18next: 21.10.0
       react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-is: 18.2.0
 
   packages/sdk/vault:
     specifiers:
@@ -4882,6 +4989,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
+      '@fluentui/react-tabster': ^9.8.1
       '@lezer/common': ^1.0.2
       '@lezer/highlight': ^1.1.3
       '@lezer/markdown': ^1.0.2
@@ -4928,6 +5036,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
+      '@fluentui/react-tabster': 9.8.1_5uumaiclxbdbzaqafclbf6maf4
       '@lezer/common': 1.0.2
       '@lezer/highlight': 1.1.3
       '@lezer/markdown': 1.0.2
@@ -8877,7 +8986,7 @@ packages:
       '@emotion/memoize': 0.8.0
       '@emotion/unitless': 0.8.0
       '@emotion/utils': 1.2.0
-      csstype: 3.1.1
+      csstype: 3.1.2
 
   /@emotion/sheet/1.2.0:
     resolution: {integrity: sha512-OiTkRgpxescko+M51tZsMq7Puu/KP55wMT8BgpcXVG2hqXc0Vo0mfymJ/Uj24Hp0i083ji/o0aLddh08UEjq8w==}
@@ -9677,6 +9786,70 @@ packages:
     engines: {node: '>=14.0.0', npm: '>=7.0.0'}
     dev: true
 
+  /@fluentui/keyboard-keys/9.0.3:
+    resolution: {integrity: sha512-40KBVJ9HzsvmPL3rwYaAvxCacNS0xnTmOt6TLxxrAVgVrZ1X7DLgd8OGFZcWROs0dhHdCk2D51bl4nK8Q1r3mQ==}
+    dependencies:
+      '@swc/helpers': 0.4.14
+    dev: false
+
+  /@fluentui/react-shared-contexts/9.5.1_iapumuv4e6jcjznwuxpf4tt22e:
+    resolution: {integrity: sha512-n5gsYr372h39Y2+mqqQGi2u4bgmJgQL4aoQOf+wilC5g+g22s+3RHR3y0/dFi3plMiloioQh7ULN6FJgLvfYpQ==}
+    peerDependencies:
+      '@types/react': '>=16.8.0 <19.0.0'
+      react: '>=16.8.0 <19.0.0'
+    dependencies:
+      '@fluentui/react-theme': 9.1.9
+      '@swc/helpers': 0.4.14
+      '@types/react': 18.0.21
+      react: 18.2.0
+    dev: false
+
+  /@fluentui/react-tabster/9.8.1_5uumaiclxbdbzaqafclbf6maf4:
+    resolution: {integrity: sha512-z6m8mIFEqSrl3QhqiOyYIo8GizKIwnL/77dMR4L5KaQejZHQkAcJM1mOXuuviUxMwjwn9Or5kI+tOhcYamb65w==}
+    peerDependencies:
+      '@types/react': '>=16.8.0 <19.0.0'
+      '@types/react-dom': '>=16.8.0 <19.0.0'
+      react: '>=16.8.0 <19.0.0'
+      react-dom: '>=16.8.0 <19.0.0'
+    dependencies:
+      '@fluentui/react-shared-contexts': 9.5.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@fluentui/react-theme': 9.1.9
+      '@fluentui/react-utilities': 9.9.4_iapumuv4e6jcjznwuxpf4tt22e
+      '@griffel/react': 1.5.7_react@18.2.0
+      '@swc/helpers': 0.4.14
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      keyborg: 2.0.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      tabster: 4.6.0
+    dev: false
+
+  /@fluentui/react-theme/9.1.9:
+    resolution: {integrity: sha512-xzcc8uhNyVEqy5XGqbKE4Obg/8sFj356L8scBJdYq+iIAySmu0SRn8qvfLajzVDayqCgEfZ64h1qmeS1K//R1w==}
+    dependencies:
+      '@fluentui/tokens': 1.0.0-alpha.6
+      '@swc/helpers': 0.4.14
+    dev: false
+
+  /@fluentui/react-utilities/9.9.4_iapumuv4e6jcjznwuxpf4tt22e:
+    resolution: {integrity: sha512-AifOo/ldw7JbsUhgBsXnJrTnWofbapSS71rqVWMGHTFA7Qex+4rgsFw/UxC3KsstWZi0VybiMM19r1fvAj9AJA==}
+    peerDependencies:
+      '@types/react': '>=16.8.0 <19.0.0'
+      react: '>=16.8.0 <19.0.0'
+    dependencies:
+      '@fluentui/keyboard-keys': 9.0.3
+      '@swc/helpers': 0.4.14
+      '@types/react': 18.0.21
+      react: 18.2.0
+    dev: false
+
+  /@fluentui/tokens/1.0.0-alpha.6:
+    resolution: {integrity: sha512-3fF2rWSltn4HUdg3Q1Sb9qS6gCT6XsCDeEgbwMt93BWT2qu3cn8n4IQKbeqT/WUv4yd1AhMt7D8JUze2A1I9Kg==}
+    dependencies:
+      '@swc/helpers': 0.4.14
+    dev: false
+
   /@fontsource/fira-code/4.5.12:
     resolution: {integrity: sha512-dAVGsgiVR6jslpuXosHH4/Jf8bsAIKL1RWqjVq4WpmxL7CFHfg9hT5bAv/Y3xsEj8kDTibEgpuC3eMfr9kb02g==}
     dev: false
@@ -9691,6 +9864,26 @@ packages:
 
   /@gar/promisify/1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
+    dev: false
+
+  /@griffel/core/1.11.0:
+    resolution: {integrity: sha512-3jlrsJVbNC0avRMfNGWmbklptmtH5s63Gt/xa0zY6+Oa3kU/StNAu+d0LqLChb5egwXrisQIeC+tzzJ+YozGjg==}
+    dependencies:
+      '@emotion/hash': 0.9.0
+      csstype: 3.1.2
+      rtl-css-js: 1.16.1
+      stylis: 4.1.3
+      tslib: 2.5.0
+    dev: false
+
+  /@griffel/react/1.5.7_react@18.2.0:
+    resolution: {integrity: sha512-b9/LkkuO512O268jqRpJPso9ROng/kqh81YSTJUL13tT4qPZQnvrdiwoP7ZeqXbG0zzZHLZ3tWUZrCDOl549OQ==}
+    peerDependencies:
+      react: '>=16.8.0 <19.0.0'
+    dependencies:
+      '@griffel/core': 1.11.0
+      react: 18.2.0
+      tslib: 2.5.0
     dev: false
 
   /@headlessui/react/1.7.3_biqbaboplfbrettd7655fr4n2y:
@@ -10932,7 +11125,7 @@ packages:
       '@emotion/cache': 11.10.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      csstype: 3.1.1
+      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
@@ -10962,7 +11155,7 @@ packages:
       '@mui/utils': 5.10.9_react@18.2.0
       '@types/react': 18.0.21
       clsx: 1.2.1
-      csstype: 3.1.1
+      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
@@ -15417,7 +15610,6 @@ packages:
     resolution: {integrity: sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==}
     dependencies:
       tslib: 2.5.0
-    dev: true
 
   /@swc/helpers/0.5.1:
     resolution: {integrity: sha512-sJ902EfIzn1Fa+qYmjdQqh8tPsoxyBz+8yBKC2HKUxyezKJFwPGOn7pv4WY6QuQW//ySQi5lJjA/ZT9sNWWNTg==}
@@ -15675,7 +15867,7 @@ packages:
       '@emotion/react': ^11
     dependencies:
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: true
 
   /@theme-ui/mdx/0.14.7_kw33ahswscikfvijozsocpg2v4:
@@ -17070,7 +17262,7 @@ packages:
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
-      csstype: 3.1.1
+      csstype: 3.1.2
 
   /@types/reactcss/1.2.6:
     resolution: {integrity: sha512-qaIzpCuXNWomGR1Xq8SCFTtF4v8V27Y6f+b9+bzHiv087MylI/nTCqqdChNeWS7tslgROmYB7yeiruWX7WnqNg==}
@@ -17185,7 +17377,7 @@ packages:
   /@types/styled-system/5.1.15:
     resolution: {integrity: sha512-1uls4wipZn8FtYFZ7upRVFDoEeOXTQTs2zuyOZPn02T6rjIxtvj2P2lG5qsxXHhKuKsu3thveCZrtaeLE/ibLg==}
     dependencies:
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: true
 
   /@types/stylus/0.48.38:
@@ -21931,6 +22123,10 @@ packages:
 
   /csstype/3.1.1:
     resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+    dev: false
+
+  /csstype/3.1.2:
+    resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
 
   /csv-parse/5.3.6:
     resolution: {integrity: sha512-WI330GjCuEioK/ii8HM2YE/eV+ynpeLvU+RXw4R8bRU8R0laK5zO3fDsc4gH8s472e3Ga38rbIjCAiQh+tEHkw==}
@@ -22985,7 +23181,7 @@ packages:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
     dependencies:
       '@babel/runtime': 7.21.0
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: false
 
   /dom-serializer/1.4.1:
@@ -26964,6 +27160,7 @@ packages:
     resolution: {integrity: sha512-YeuIBmFsGjUfO3qBmMOc0rQaun4mIpGKET5WDwvu8lU7gvwpcariZLNtL0Fzj+zazcHUrlXHiptcFhBMFaxzfg==}
     dependencies:
       '@babel/runtime': 7.21.0
+    dev: false
 
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -29574,6 +29771,10 @@ packages:
     dependencies:
       commander: 8.3.0
     dev: true
+
+  /keyborg/2.0.0:
+    resolution: {integrity: sha512-RWY8nWrzRkwTQLaKyDtbTu5SOb5L4B20UzAsBHlQDFZqVY/+Mid0bQ7MVTC8vbOTrWY2xkkzj8gZF9Ua7re4xA==}
+    dev: false
 
   /keyv/3.0.0:
     resolution: {integrity: sha512-eguHnq22OE3uVoSYG0LVWNP+4ppamWr9+zWBe1bsNcovIMy6huUJFPgy4mGwCd/rnl3vOLGW1MTlu4c57CT1xA==}
@@ -34730,7 +34931,7 @@ packages:
       '@types/lodash': 4.14.191
       base16: 1.0.0
       color: 3.2.1
-      csstype: 3.1.1
+      csstype: 3.1.2
       lodash.curry: 4.1.1
     dev: false
 
@@ -36160,6 +36361,12 @@ packages:
     resolution: {integrity: sha512-nfMOlASu9OnRJo1mbEk2cz0D56a1MBNrJ7orjRZQG10XDyuvwksKbuXNp6qa+kbn839HwjwhBzhFmdsaEAfauA==}
     engines: {node: 6.* || >= 7.*}
     dev: true
+
+  /rtl-css-js/1.16.1:
+    resolution: {integrity: sha512-lRQgou1mu19e+Ya0LsTvKrVJ5TYUbqCVPAiImX3UfLTenarvPUl1QFdvu5Z3PYmHT9RCcwIfbjRQBntExyj3Zg==}
+    dependencies:
+      '@babel/runtime': 7.21.0
+    dev: false
 
   /run-async/2.4.1:
     resolution: {integrity: sha512-tvVnVv01b8c1RrA6Ep7JkStj85Guv/YrMcwqYQnwjsAS2cTmmPGBBjAjpCW7RrSodNSoE2/qg9O4bceNvUuDgQ==}
@@ -37814,7 +38021,6 @@ packages:
 
   /stylis/4.1.3:
     resolution: {integrity: sha512-GP6WDNWf+o403jrEp9c5jibKavrtLW+/qYGhFxFrG8maXhwTBI7gLLhiBb0o7uFccWN+EOS9aMO6cGHWAO07OA==}
-    dev: true
 
   /success-symbol/0.1.0:
     resolution: {integrity: sha512-7S6uOTxPklNGxOSbDIg4KlVLBQw1UiGVyfCUYgYxrZUKRblUkmGj7r8xlfQoFudvqLv6Ap5gd76/IIFfI9JG2A==}
@@ -37920,6 +38126,13 @@ packages:
       slice-ansi: 4.0.0
       string-width: 4.2.3
       strip-ansi: 6.0.1
+    dev: false
+
+  /tabster/4.6.0:
+    resolution: {integrity: sha512-JTgjk0dPKjK3cfG3ZZVcLYnsZQAaK7cx6E8LpCNzCxrcKmPVVVtwrskUtX8oQqCnk7H1X36oxRRFlbJGGThLtw==}
+    dependencies:
+      keyborg: 2.0.0
+      tslib: 2.5.0
     dev: false
 
   /tailwind-merge/1.10.0:

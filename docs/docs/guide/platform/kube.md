@@ -24,4 +24,4 @@ Some of the services offered by KUBE:
 ### Next steps
 
 *   KUBE [Installation](../kube)
-*   [Build an application](../getting-started) and [deploy to KUBE](../getting-started#deploying-apps-to-kube)
+*   [Build an application](../getting-started#project-templates) and [deploy to KUBE](../kube/deploying)

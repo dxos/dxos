@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "private": true,
   "description": "DXOS composer application.",
   "homepage": "https://dxos.org",
@@ -10,7 +10,12 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
+    "@braneframe/plugin-url-sync": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
@@ -40,7 +45,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-drag-drop-files": "^2.3.8",
-    "react-router-dom": "^6.4.0",
     "showdown": "^2.1.0",
     "turndown": "^7.1.1"
   },
