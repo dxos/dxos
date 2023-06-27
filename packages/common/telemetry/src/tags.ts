@@ -13,10 +13,12 @@ export const getLocalTelemetryTags = async (): Promise<string[]> => {
   const localKubeConfigUrl = 'http://kube.local/.well-known/dx/config';
 
   log('fetching config...', { localKubeConfigUrl });
-  return await fetch(localKubeConfigUrl)
-    .then((res) => (res.json() as Promise<ConfigProto>).then((config) => config?.runtime?.kube?.telemetry?.tags ?? []))
-    .catch((error) => {
-      log('Failed to fetch telemetry tags', error);
-      return [];
-    });
+  try {
+    return await fetch(localKubeConfigUrl).then((res) =>
+      (res.json() as Promise<ConfigProto>).then((config) => config?.runtime?.kube?.telemetry?.tags ?? []),
+    );
+  } catch (error) {
+    log('Failed to fetch telemetry tags', error);
+    return [];
+  }
 };
