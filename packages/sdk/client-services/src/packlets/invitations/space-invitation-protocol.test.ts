@@ -100,10 +100,10 @@ describe('services/space-invitations-protocol', () => {
       }),
     );
 
-    if(error1) {
+    if (error1) {
       throw error1;
     }
-    if(error2) {
+    if (error2) {
       throw error2;
     }
 

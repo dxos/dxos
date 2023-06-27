@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { PushStream, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
+import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   AUTHENTICATION_CODE_LENGTH,
@@ -313,7 +313,7 @@ export class InvitationsHandler {
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // Remote connection no longer needed.
-              admitted = true; 
+              admitted = true;
 
               // 4. Record credential in our HALO.
               const result = await protocol.accept(admissionResponse, admissionRequest);
