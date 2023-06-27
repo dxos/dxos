@@ -5,7 +5,7 @@
 import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
 import React, { createContext, useContext, useRef, useState } from 'react';
 
-import { useGraphContext } from '@braneframe/plugin-graph';
+import { GraphNode, useGraphContext } from '@braneframe/plugin-graph';
 import { useSplitViewContext } from '@braneframe/plugin-splitview';
 import {
   Avatar,
@@ -25,7 +25,7 @@ import {
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer, useIdentity } from '@dxos/react-client';
-import { definePlugin } from '@dxos/react-surface';
+import { Surface, definePlugin } from '@dxos/react-surface';
 
 import { TreeView } from './components';
 
@@ -42,7 +42,12 @@ const Context = createContext<TreeViewContextValue>(store);
 
 export const useTreeView = () => useContext(Context);
 
-export const selectedToUri = (selected: string[]) => selected.join('/').replace(':', '/');
+export const uriToSelected = (uri: string) => {
+  const [_, namespace, type, id, ...rest] = uri.split('/');
+  return [`${namespace}:${type}/${id}`, ...rest];
+};
+
+export const selectedToUri = (selected: string[]) => '/' + selected.join('/').replace(':', '/');
 
 export const TreeViewContainer = observer(() => {
   const graph = useGraphContext();
@@ -212,6 +217,15 @@ export type TreeViewProvides = {
   treeView: TreeViewContextValue;
 };
 
+const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
+  const node = graph.find((node) => node.id === id);
+  if (!node) {
+    return nodes;
+  }
+
+  return resolveNodes(node.children ?? [], path, [...nodes, node]);
+};
+
 export const TreeViewPlugin = definePlugin<TreeViewProvides, {}>({
   meta: {
     id: TREE_VIEW_PLUGIN,
@@ -221,6 +235,38 @@ export const TreeViewPlugin = definePlugin<TreeViewProvides, {}>({
     context: ({ children }) => {
       return <Context.Provider value={store}>{children}</Context.Provider>;
     },
-    components: { TreeView: TreeViewContainer },
+    components: {
+      default: observer(() => {
+        const treeView = useTreeView();
+        const graph = useGraphContext();
+        const [plugin] = treeView.selected[0]?.split('/') ?? [];
+        const nodes = resolveNodes(graph.roots[plugin] ?? [], treeView.selected);
+
+        if (treeView.selected.length === 0) {
+          return (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
+              }}
+            />
+          );
+        } else if (nodes.length === 0) {
+          return <Surface component={`${plugin}/Main`} />;
+        } else {
+          return (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                main: { component: `${plugin}/Main`, data: nodes },
+              }}
+            />
+          );
+        }
+      }),
+      TreeView: TreeViewContainer,
+    },
   },
 });

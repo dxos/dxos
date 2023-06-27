@@ -48,11 +48,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-router/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-splitview/package.json",
           "jsonpath": "$.version"
         },
@@ -69,6 +64,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-treeview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-url-sync/package.json",
           "jsonpath": "$.version"
         },
         {

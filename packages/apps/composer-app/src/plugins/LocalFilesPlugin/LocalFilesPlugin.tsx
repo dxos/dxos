@@ -4,15 +4,13 @@
 
 import { File as FileIcon, FilePlus, FloppyDisk, FolderPlus, Plugs, X } from '@phosphor-icons/react';
 import localforage from 'localforage';
-import React from 'react';
 
 import { findGraphNode, GraphNode, GraphNodeAction, GraphProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
-import { RouterPluginProvides } from '@braneframe/plugin-router';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { createStore, createSubscription } from '@dxos/observable-object';
-import { Surface, definePlugin, findPlugin } from '@dxos/react-surface';
+import { definePlugin, findPlugin } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';
@@ -59,7 +57,7 @@ const handleLegacySave = (node: GraphNode<LocalFile>) => {
   document.body.removeChild(a);
 };
 
-export type LocalFilesPluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
+export type LocalFilesPluginProvides = GraphProvides & TranslationsProvides;
 
 const isLocalFile = (datum: unknown): datum is LocalFile =>
   datum && typeof datum === 'object' ? 'title' in datum : false;
@@ -136,7 +134,7 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
       return null;
     },
     components: {
-      LocalFileMain,
+      Main: LocalFileMain,
     },
     graph: {
       nodes: () => nodes,
@@ -203,38 +201,6 @@ export const LocalFilesPlugin = definePlugin<LocalFilesPluginProvides, MarkdownP
         }
 
         return actions;
-      },
-    },
-    router: {
-      routes: () => [
-        {
-          path: '/dxos/local/*',
-          element: (
-            <Surface
-              component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:local/LocalFileMain' },
-              }}
-            />
-          ),
-        },
-      ],
-      current: (params): string[] | null => {
-        const splat = params['*'];
-        if (!splat) {
-          return null;
-        }
-
-        const [directory, ...rest] = splat.split('/');
-        return [`${LocalFilesPlugin.meta.id}/${directory}`, ...rest];
-      },
-      next: (path, params): string[] | null => {
-        if (!path.startsWith('/dxos/local/')) {
-          return null;
-        }
-
-        return LocalFilesPlugin.provides!.router.current!(params);
       },
     },
   },

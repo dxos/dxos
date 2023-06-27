@@ -81,9 +81,6 @@
       "path": "../plugins/plugin-markdown"
     },
     {
-      "path": "../plugins/plugin-router"
-    },
-    {
       "path": "../plugins/plugin-splitview"
     },
     {
@@ -91,6 +88,9 @@
     },
     {
       "path": "../plugins/plugin-treeview"
+    },
+    {
+      "path": "../plugins/plugin-url-sync"
     },
     {
       "path": "../types"
