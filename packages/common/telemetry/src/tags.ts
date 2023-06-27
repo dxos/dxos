@@ -10,7 +10,7 @@ export const getLocalTelemetryTags = async () => {
 
   log('fetching config...', { localKubeConfigUrl });
   return await fetch(localKubeConfigUrl)
-    .then((res) => (res.json() as ConfigProto).runtime?.kube?.telemetry?.tags)
+    .then((res) => (res.json() as Promise<ConfigProto>).then((config) => config?.runtime?.kube?.telemetry?.tags))
     .catch((error) => {
       log('Failed to fetch telemetry tags', error);
       return [];
