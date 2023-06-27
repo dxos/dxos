@@ -26,16 +26,16 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PluginContextProvider
       plugins={[
-        ThemePlugin,
-        ClientPlugin,
-        GraphPlugin,
-        TreeViewPlugin,
-        UrlSyncPlugin,
-        SplitViewPlugin,
-        SpacePlugin,
-        MarkdownPlugin,
-        GithubPlugin,
-        LocalFilesPlugin,
+        ThemePlugin(),
+        ClientPlugin(),
+        GraphPlugin(),
+        TreeViewPlugin(),
+        UrlSyncPlugin(),
+        SplitViewPlugin(),
+        SpacePlugin(),
+        MarkdownPlugin(),
+        GithubPlugin(),
+        LocalFilesPlugin(),
       ]}
     />
   </StrictMode>,

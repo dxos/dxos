@@ -5,3 +5,4 @@
 export * from './BranchTreeItem';
 export * from './LeafTreeItem';
 export * from './TreeView';
+export * from './TreeViewContainer';

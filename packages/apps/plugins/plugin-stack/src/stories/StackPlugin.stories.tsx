@@ -21,7 +21,7 @@ const DefaultStackPluginStory = () => {
   return <Surface role='main' data={[stack, stack]} />;
 };
 
-const StackPluginStoryPlugin = {
+const StackPluginStoryPlugin = () => ({
   meta: {
     id: 'dxos:stackStoryPlugin',
   },
@@ -30,10 +30,10 @@ const StackPluginStoryPlugin = {
       default: DefaultStackPluginStory,
     },
   },
-};
+});
 
 const StackSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin, StackPlugin, MarkdownPlugin, StackPluginStoryPlugin]} />
+  <PluginContextProvider plugins={[ThemePlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]} />
 );
 
 export default {

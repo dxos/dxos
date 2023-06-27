@@ -6,7 +6,7 @@ import type { IconProps } from '@phosphor-icons/react';
 import React, { UIEvent, FC, createContext, useContext } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
-import { definePlugin, Plugin } from '@dxos/react-surface';
+import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -66,12 +66,7 @@ export type GraphContextValue = {
   actions: { [key: string]: GraphNodeAction[] };
 };
 
-const graph: GraphContextValue = {
-  roots: {},
-  actions: {},
-};
-
-const GraphContext = createContext<GraphContextValue>(graph);
+const GraphContext = createContext<GraphContextValue>({ roots: {}, actions: {} });
 
 export const useGraphContext = () => useContext(GraphContext);
 
@@ -79,27 +74,34 @@ export type GraphPluginProvides = {
   graph: GraphContextValue;
 };
 
-export const GraphPlugin = definePlugin<GraphPluginProvides, {}>({
-  meta: {
-    id: 'dxos:GraphPlugin',
+export const GraphPlugin = (
+  graph: GraphContextValue = {
+    roots: {},
+    actions: {},
   },
-  ready: async (plugins) => {
-    for (const plugin of graphPlugins(plugins)) {
-      const nodes = plugin.provides.graph.nodes?.(plugins);
-      if (nodes) {
-        graph.roots[plugin.meta.id] = nodes;
-      }
-
-      const actions = plugin.provides.graph.actions?.(plugins);
-      if (actions) {
-        graph.actions[plugin.meta.id] = actions;
-      }
-    }
-  },
-  provides: {
-    graph,
-    context: ({ children }) => {
-      return <GraphContext.Provider value={graph}>{children}</GraphContext.Provider>;
+): PluginDefinition<GraphPluginProvides> => {
+  return {
+    meta: {
+      id: 'dxos:GraphPlugin',
     },
-  },
-});
+    ready: async (plugins) => {
+      for (const plugin of graphPlugins(plugins)) {
+        const nodes = plugin.provides.graph.nodes?.(plugins);
+        if (nodes) {
+          graph.roots[plugin.meta.id] = nodes;
+        }
+
+        const actions = plugin.provides.graph.actions?.(plugins);
+        if (actions) {
+          graph.actions[plugin.meta.id] = actions;
+        }
+      }
+    },
+    provides: {
+      graph,
+      context: ({ children }) => {
+        return <GraphContext.Provider value={graph}>{children}</GraphContext.Provider>;
+      },
+    },
+  };
+};

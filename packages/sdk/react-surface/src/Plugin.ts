@@ -7,7 +7,7 @@ import { FC, PropsWithChildren } from 'react';
 export type PluginProvides<TProvides> = TProvides & {
   context?: FC<PropsWithChildren>;
   component?: <P extends PropsWithChildren = PropsWithChildren>(
-    datum: any,
+    datum: unknown,
     role?: string,
     props?: Partial<P>,
   ) => FC<PropsWithChildren<{ data: any; role?: string }>> | undefined | null | false | 0;
@@ -26,12 +26,6 @@ export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 
   init?: () => Promise<PluginProvides<TInitProvides>>;
   ready?: (plugins: Plugin[]) => Promise<void>;
   unload?: () => Promise<void>;
-};
-
-export const definePlugin = <TProvides = {}, TInitProvides = {}>(
-  plugin: PluginDefinition<TProvides, TInitProvides>,
-) => {
-  return plugin;
 };
 
 export const findPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> | undefined => {
