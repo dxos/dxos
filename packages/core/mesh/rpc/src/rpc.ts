@@ -39,6 +39,15 @@ export interface RpcPort {
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
 
+const CLOSE_TIMEOUT = 3_000;
+
+export type CloseOptions = {
+  /**
+   * Time to wait for the other side to confirm close.
+   */
+  timeout?: number;
+};
+
 class PendingRpcRequest {
   constructor(
     public readonly resolve: (response: Response) => void,
@@ -51,7 +60,22 @@ const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
 
 enum RpcState {
   INITIAL = 'INITIAL',
+
+  OPENING = 'OPENING',
+
   OPENED = 'OPENED',
+
+  /**
+   * Bye message sent, waiting for the other side to close.
+   * Not possible to send requests.
+   * All pending requests will be rejected.
+   */
+  CLOSING = 'CLOSING',
+
+  /**
+   * Connection fully closed.
+   * The underlying transport can be disposed.
+   */
   CLOSED = 'CLOSED',
 }
 
@@ -74,11 +98,19 @@ export class RpcPeer {
   private readonly _localStreams = new Map<number, Stream<any>>();
   private readonly _remoteOpenTrigger = new Trigger();
 
-  private readonly _closeTrigger = new Trigger();
+  /**
+   * Triggered when the peer starts closing.
+   */
+  private readonly _closingTrigger = new Trigger();
+
+  /**
+   * Triggered when peer receives a bye message.
+   */
+  private readonly _byeTrigger = new Trigger();
 
   private _nextId = 0;
   private _state = RpcState.INITIAL;
-  private _unsubscribe: (() => void) | undefined;
+  private _unsubscribeFromPort: (() => void) | undefined;
   private _clearOpenInterval: (() => void) | undefined;
 
   // prettier-ignore
@@ -93,11 +125,11 @@ export class RpcPeer {
    */
   @synchronized
   async open() {
-    if (this._state === RpcState.OPENED) {
+    if (this._state !== RpcState.INITIAL) {
       return;
     }
 
-    this._unsubscribe = this._options.port.subscribe(async (msg) => {
+    this._unsubscribeFromPort = this._options.port.subscribe(async (msg) => {
       try {
         await this._receive(msg);
       } catch (err: any) {
@@ -105,9 +137,10 @@ export class RpcPeer {
       }
     }) as any;
 
-    this._state = RpcState.OPENED;
+    this._state = RpcState.OPENING;
 
     if (this._options.noHandshake) {
+      this._state = RpcState.OPENED;
       this._remoteOpenTrigger.wake();
       return;
     }
@@ -115,14 +148,19 @@ export class RpcPeer {
     log('sending open message');
     await this._sendMessage({ open: true });
 
+    if (this._state !== RpcState.OPENING) {
+      return;
+    }
+
     // Retry sending.
     this._clearOpenInterval = exponentialBackoffInterval(() => {
       void this._sendMessage({ open: true }).catch((err) => log.warn(err));
     }, 50);
 
-    await Promise.race([this._remoteOpenTrigger.wait(), this._closeTrigger.wait()]);
+    await Promise.race([this._remoteOpenTrigger.wait(), this._closingTrigger.wait()]);
 
     this._clearOpenInterval?.();
+    this._state = RpcState.OPENED;
 
     if (this._state !== RpcState.OPENED) {
       // Closed while opening.
@@ -136,16 +174,61 @@ export class RpcPeer {
   }
 
   /**
-   * Close the peer. Stop taking or making requests.
+   * Close the peer.
+   * Stop taking or making requests.
+   * Will wait for confirmation from the other side.
+   * Any responses for RPC calls made before close will be delivered.
    */
-  async close() {
-    this._unsubscribe?.();
+  async close({ timeout = CLOSE_TIMEOUT }: CloseOptions = {}) {
+    if (this._state === RpcState.CLOSED) {
+      return;
+    }
+
+    this._abortRequests();
+
+    if (this._state === RpcState.OPENED && !this._options.noHandshake) {
+      try {
+        this._state = RpcState.CLOSING;
+        await this._sendMessage({ bye: {} });
+
+        await this._byeTrigger.wait({ timeout });
+      } catch (err: any) {
+        log('error closing peer', { err });
+        return;
+      }
+    }
+
+    this._disposeAndClose();
+  }
+
+  /**
+   * Dispose the connection without waiting for the other side.
+   */
+  async abort() {
+    if (this._state === RpcState.CLOSED) {
+      return;
+    }
+
+    this._abortRequests();
+    this._disposeAndClose();
+  }
+
+  private _abortRequests() {
+    // Abort open
     this._clearOpenInterval?.();
-    this._closeTrigger.wake();
+    this._closingTrigger.wake();
+
+    // Abort pending requests
     for (const req of this._outgoingRequests.values()) {
       req.reject(new RpcClosedError());
     }
     this._outgoingRequests.clear();
+  }
+
+  private _disposeAndClose() {
+    this._unsubscribeFromPort?.();
+    this._unsubscribeFromPort = undefined;
+    this._clearOpenInterval?.();
     this._state = RpcState.CLOSED;
   }
 
@@ -154,9 +237,10 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg, { preserveAny: true });
+    log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
-      if (this._state !== RpcState.OPENED) {
+      if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
         log('received request while closed');
         await this._sendMessage({
           response: {
@@ -244,6 +328,17 @@ export class RpcPeer {
 
       this._localStreams.delete(decoded.streamClose.id);
       stream.close();
+    } else if (decoded.bye) {
+      this._byeTrigger.wake();
+      // If we haven't already started closing, close now.
+      if (this._state !== RpcState.CLOSING && this._state !== RpcState.CLOSED) {
+        log('replying to bye');
+        this._state = RpcState.CLOSING;
+        await this._sendMessage({ bye: {} });
+
+        this._abortRequests();
+        this._disposeAndClose();
+      }
     } else {
       log.error('received malformed message', { msg });
       throw new Error('Malformed message.');
@@ -360,6 +455,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage) {
+    log('sending message', { type: Object.keys(message)[0] });
     await this._options.port.send(codec.encode(message, { preserveAny: true }));
   }
 

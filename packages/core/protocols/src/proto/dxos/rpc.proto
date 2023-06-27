@@ -23,6 +23,9 @@ message RpcMessage {
     bool open_ack = 4;
 
     StreamClose stream_close = 5;
+
+    /// Request to close the connection.
+    Bye bye = 6;
   }
 }
 
@@ -65,4 +68,12 @@ message MessageTrace {
 
   Direction direction = 1;
   bytes data = 2;
+}
+
+/**
+ * Request to close the connection.
+ * Connection is closed once both sides have received the Bye message.
+ */
+message Bye {
+
 }
