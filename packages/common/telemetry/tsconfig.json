@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../log"
     },
     {
