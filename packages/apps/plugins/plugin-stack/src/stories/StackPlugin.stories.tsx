@@ -6,8 +6,9 @@ import '@dxosTheme';
 import React from 'react';
 
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ObservableArray, ObservableObject } from '@dxos/observable-object';
-import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface';
+import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
 import { StackPlugin } from '../StackPlugin';
 
@@ -20,7 +21,7 @@ const DefaultStackPluginStory = () => {
   return <Surface role='main' data={[stack, stack]} />;
 };
 
-const StackPluginStoryPlugin = {
+const StackPluginStoryPlugin = () => ({
   meta: {
     id: 'dxos:stackStoryPlugin',
   },
@@ -29,10 +30,10 @@ const StackPluginStoryPlugin = {
       default: DefaultStackPluginStory,
     },
   },
-};
+});
 
 const StackSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin, StackPlugin, MarkdownPlugin, StackPluginStoryPlugin]} />
+  <PluginContextProvider plugins={[ThemePlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]} />
 );
 
 export default {

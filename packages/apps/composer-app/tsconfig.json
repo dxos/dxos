@@ -75,7 +75,25 @@
       "path": "../plugins/plugin-client"
     },
     {
+      "path": "../plugins/plugin-graph"
+    },
+    {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-space"
+    },
+    {
+      "path": "../plugins/plugin-splitview"
+    },
+    {
+      "path": "../plugins/plugin-theme"
+    },
+    {
+      "path": "../plugins/plugin-treeview"
+    },
+    {
+      "path": "../plugins/plugin-url-sync"
     },
     {
       "path": "../types"

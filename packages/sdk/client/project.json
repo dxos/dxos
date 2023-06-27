@@ -52,14 +52,14 @@
       "options": {
         "coveragePath": "coverage/packages/sdk/client",
         "envVariables": {
-          "SIGNAL_PORT": 4003
+          "SIGNAL_PORT": 12003
         },
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/sdk/client",
         "resultsPath": "test-results/packages/sdk/client",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "setupOptions": {
-          "port": 4003
+          "port": 12003
         },
         "testPatterns": [
           "packages/sdk/client/src/**/*.test.{ts,js}"

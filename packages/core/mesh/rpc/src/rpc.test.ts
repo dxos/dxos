@@ -4,8 +4,9 @@
 
 import { expect } from 'earljs';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { SerializedError, TYPES } from '@dxos/protocols';
 import { describe, test } from '@dxos/test';
 
@@ -148,8 +149,8 @@ describe('RpcPeer', () => {
 
       expect(open).toEqual(false);
 
-      await alice.close();
-      await bob.close();
+      await alice.close({ timeout: 10 });
+      await bob.close({ timeout: 10 });
     });
 
     test('can close while opening', async () => {
@@ -196,6 +197,8 @@ describe('RpcPeer', () => {
 
       const response = await bob.call('method', createPayload('request'));
       expect(response).toEqual(createPayload('response'));
+
+      await Promise.all([alice.close(), bob.close()]);
     });
 
     test('can send multiple requests', async () => {
@@ -535,6 +538,131 @@ describe('RpcPeer', () => {
 
       const response = await bob.call('method', createPayload('request'));
       expect(response).toEqual(createPayload('response'));
+
+      await Promise.all([alice.close(), bob.close()]);
+    });
+  });
+
+  describe('closure', () => {
+    test('responses to rpc calls before close are delivered', async () => {
+      const [alicePort, bobPort] = createLinkedPorts({ delay: 5 });
+
+      const closeTrigger = new Trigger();
+      const events: string[] = [];
+
+      const alice: RpcPeer = new RpcPeer({
+        callHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          setTimeout(async () => {
+            log('alice: closing');
+            await alice.close();
+            log('alice: closed');
+            events.push('closed');
+            closeTrigger.wake();
+          });
+          log('alice: responding');
+          return msg;
+        },
+        port: alicePort,
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort,
+      });
+
+      await Promise.all([alice.open(), bob.open()]);
+
+      await bob.call('method', createPayload('request')).then(() => events.push('response received'));
+
+      await closeTrigger.wait();
+
+      expect(events).toEqual(['response received', 'closed']);
+    });
+
+    test('abort resolves immediately', async () => {
+      const [alicePort, bobPort] = createLinkedPorts({ delay: 5 });
+
+      const closeTrigger = new Trigger();
+      const events: string[] = [];
+
+      const alice: RpcPeer = new RpcPeer({
+        callHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          setTimeout(async () => {
+            log('alice: closing');
+            await alice.abort();
+            log('alice: closed');
+            events.push('closed');
+            closeTrigger.wake();
+          });
+          log('alice: responding');
+          return msg;
+        },
+        port: alicePort,
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort,
+      });
+
+      await Promise.all([alice.open(), bob.open()]);
+
+      await bob.call('method', createPayload('request')).then(() => events.push('response received'));
+
+      await closeTrigger.wait();
+
+      expect(events).toEqual(['closed', 'response received']);
+    });
+
+    test('close is idempotent', async () => {
+      const [alicePort, bobPort] = createLinkedPorts({ delay: 5 });
+
+      const alice: RpcPeer = new RpcPeer({
+        callHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          return msg;
+        },
+        port: alicePort,
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort,
+      });
+
+      await Promise.all([alice.open(), bob.open()]);
+
+      await bob.call('method', createPayload('request'));
+
+      void alice.close();
+      void alice.close();
+
+      await Promise.all([alice.close(), bob.close()]);
+    });
+
+    test('open and close immediately', async () => {
+      const [alicePort, bobPort] = createLinkedPorts({ delay: 5 });
+
+      const alice: RpcPeer = new RpcPeer({
+        callHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          return msg;
+        },
+        port: alicePort,
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort,
+      });
+
+      void alice.open();
+      void bob.open();
+
+      await alice.close();
+      await bob.close();
     });
   });
 });

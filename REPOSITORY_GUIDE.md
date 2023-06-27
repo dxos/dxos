@@ -30,18 +30,26 @@ pnpm build
 
 > Don't forget to install and build when switching branches
 
-Run all unit tests
+Run all unit tests:
 
 ```
 pnpm test
 ```
+
+Recompile any package within the monorepo when changes are detected:
+
+```
+pnpm watch
+```
+
+> Run watch alongside a vite dev server to get monorepo-wide hot module reloading
 
 ## Run commands:
 
 Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
-| `pnpm nx serve halo` | Runs the `halo` app in dev mode |
+| `pnpm nx serve halo-app` | Runs the `halo` app in dev mode |
 | `pnpm nx serve-with-vault tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve-with-vault composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
 | `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |

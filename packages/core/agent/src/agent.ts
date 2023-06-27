@@ -18,7 +18,7 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { ProxyServer, ProxyServerOptions } from './proxy';
 import { Service } from './service';
-import { parseAddress } from './util';
+import { lockFilePath, parseAddress } from './util';
 
 type CurrentEpoch = {
   spaceKey: PublicKey;
@@ -63,7 +63,7 @@ export class Agent {
   async start() {
     // Create client services.
     // TODO(burdon): Check lock.
-    this._services = fromHost(this._config);
+    this._services = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
     await this._services.open();
 
     // Create client.

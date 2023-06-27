@@ -46,7 +46,7 @@ jobs:
         run: pnpm install
 
       - name: Bump Versions
-        run: node .github/workflows/scripts/bump-version-next.js
+        run: node .github/workflows/scripts/bump-version.js next
 
       - name: Build
         run: pnpm nx run-many --target=build

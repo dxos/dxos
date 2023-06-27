@@ -45,7 +45,14 @@ export default defineConfig({
     }),
     ThemePlugin({
       root: __dirname,
-      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
+      ],
       extensions: [osThemeExtension],
     }),
     ReactPlugin(),

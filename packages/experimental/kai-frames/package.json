@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-frames",
-  "version": "0.1.48",
+  "version": "0.1.50",
   "private": true,
   "description": "Frame components.",
   "homepage": "https://dxos.org",
@@ -21,6 +21,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/chess-app": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",

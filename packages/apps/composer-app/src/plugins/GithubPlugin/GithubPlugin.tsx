@@ -6,7 +6,8 @@
 import React from 'react';
 
 import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import {
   MarkdownActions,
@@ -19,7 +20,7 @@ import {
 } from './components';
 import translations from './translations';
 
-export const GithubPlugin: PluginDefinition = definePlugin({
+export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
   meta: {
     id: 'dxos:github',
   },
@@ -42,23 +43,15 @@ export const GithubPlugin: PluginDefinition = definePlugin({
               return null;
           }
         case 'menuitem':
-          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])
+          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && !datum[1].readOnly
             ? MarkdownActions
             : null;
         default:
           return null;
       }
     },
-    router: {
-      routes: () => [
-        {
-          path: '/embedded',
-          element: <Surface component='dxos:github/EmbeddedMain' />,
-        },
-      ],
-    },
     components: {
-      EmbeddedMain,
+      Main: EmbeddedMain,
     },
   },
 });

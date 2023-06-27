@@ -4,6 +4,8 @@
 
 import { PropertiesProps } from '@dxos/client';
 
+export const expectedEpoch = 1;
+
 export const expectedProperties: PropertiesProps = {
   name: 'PROTO_GUARD_SPACE',
 };

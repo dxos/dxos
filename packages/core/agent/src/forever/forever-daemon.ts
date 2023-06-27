@@ -7,25 +7,20 @@ import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { getUnixSocket } from '@dxos/client';
+import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
-import { parseAddress, removeSocketFile, waitFor } from '../util';
-
-const DAEMON_START_TIMEOUT = 5_000;
-
+import { DAEMON_START_TIMEOUT } from '../timeouts';
+import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
 export class ForeverDaemon implements Daemon {
-  private readonly _rootDir: string;
-
-  constructor(rootDir: string) {
-    this._rootDir = path.join(rootDir, 'forever');
-  }
+  constructor(private readonly _rootDir: string) {}
 
   async connect(): Promise<void> {
-    forever.load({ root: this._rootDir });
+    forever.load({ root: path.join(this._rootDir, 'forever') });
   }
 
   async disconnect() {
@@ -33,7 +28,12 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.running);
+    const { path: socketFile } = parseAddress(getUnixSocket(profile));
+    return (
+      fs.existsSync(socketFile) ||
+      isLocked(lockFilePath(profile)) ||
+      (await this.list()).some((process) => process.profile === profile && process.running)
+    );
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -72,7 +72,6 @@ export class ForeverDaemon implements Daemon {
       });
     }
 
-    // TODO(burdon): Detect lock file and exit.
     // TODO(burdon): Display to user the error file.
     const { path: socketFile } = parseAddress(getUnixSocket(profile));
     await waitFor({
@@ -87,7 +86,10 @@ export class ForeverDaemon implements Daemon {
 
   async stop(profile: string): Promise<ProcessInfo> {
     if (await this.isRunning(profile)) {
-      forever.stop(profile);
+      forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
+      await waitFor({
+        condition: async () => !isLocked(lockFilePath(profile)),
+      });
     }
 
     await waitFor({
@@ -105,7 +107,7 @@ export class ForeverDaemon implements Daemon {
     return this.start(profile);
   }
 
-  async _getProcess(profile?: string) {
+  async _getProcess(profile?: string): Promise<ProcessInfo> {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }

@@ -24,6 +24,9 @@
       "path": "../../../common/plate"
     },
     {
+      "path": "../../../common/protobuf-compiler"
+    },
+    {
       "path": "../document-model"
     },
     {

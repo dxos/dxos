@@ -4,7 +4,7 @@
 
 import flatten from 'lodash.flatten';
 import zip from 'lodash.zip';
-import * as os from 'os';
+import * as os from 'node:os';
 import prettier from 'prettier';
 
 const force = (a: Function | any) => (typeof a === 'function' ? a() : a);
