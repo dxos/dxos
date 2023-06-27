@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Button, Dialog, Input, useTranslation } from '@dxos/aurora';
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/react-client';
 
 export const DialogRenameSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
   const { t } = useTranslation('composer');
