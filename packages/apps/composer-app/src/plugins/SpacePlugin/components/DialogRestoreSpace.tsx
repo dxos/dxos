@@ -6,16 +6,16 @@ import { FilePlus } from '@phosphor-icons/react';
 import React from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
+import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, Dialog, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
-import { useSplitViewContext } from '@dxos/react-surface';
 
 import { restoreSpace } from '../backup';
 
 export const DialogRestoreSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
   const { t } = useTranslation('composer');
-  const splitViewContext = useSplitViewContext();
+  const splitViewContext = useSplitView();
   return (
     <>
       <Dialog.Title>{t('confirm restore title')}</Dialog.Title>

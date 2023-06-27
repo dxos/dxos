@@ -6,7 +6,8 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { PluginContextProvider, Surface, ThemePlugin } from '@dxos/react-surface';
+import { ThemePlugin } from '@braneframe/plugin-theme';
+import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
 import { KanbanPlugin } from '../KanbanPlugin';
 import { createKanban } from './testing';
@@ -23,7 +24,7 @@ const DefaultKanbanPluginStory = () => {
   );
 };
 
-const KanbanPluginStoryPlugin = {
+const KanbanPluginStoryPlugin = () => ({
   meta: {
     id: 'dxos.org/plugin/KanbanPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
   },
@@ -32,10 +33,10 @@ const KanbanPluginStoryPlugin = {
       default: DefaultKanbanPluginStory,
     },
   },
-};
+});
 
 const KanbanSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin, KanbanPlugin, KanbanPluginStoryPlugin]} />
+  <PluginContextProvider plugins={[ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()]} />
 );
 
 export default {

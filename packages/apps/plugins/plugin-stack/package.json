@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",

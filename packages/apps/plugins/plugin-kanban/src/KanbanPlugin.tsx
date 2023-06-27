@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { definePlugin, PluginDefinition } from '@dxos/react-surface';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
 import { isKanban } from './props';
 import translations from './translations';
 
-export const KanbanPlugin: PluginDefinition = definePlugin({
+export const KanbanPlugin = (): PluginDefinition<TranslationsProvides> => ({
   meta: {
     // TODO(burdon): Make id consistent with other plugins.
     id: 'dxos.org/plugin/kanban',

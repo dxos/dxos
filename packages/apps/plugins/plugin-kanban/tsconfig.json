@@ -40,6 +40,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }
