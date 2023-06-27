@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
@@ -27,7 +30,9 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
-export const MarkdownPlugin = (): PluginDefinition<TranslationsProvides> => {
+type MarkdownPluginProvides = SpaceProvides & TranslationsProvides;
+
+export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
 
   const MarkdownMainStandalone = observer(
@@ -54,6 +59,17 @@ export const MarkdownPlugin = (): PluginDefinition<TranslationsProvides> => {
       });
     },
     provides: {
+      space: {
+        types: [
+          {
+            id: 'create-doc',
+            testId: 'spacePlugin.createDocument',
+            label: ['create document label', { ns: 'composer' }],
+            icon: Plus,
+            Type: Document,
+          },
+        ],
+      },
       translations,
       component: (datum, role) => {
         switch (role) {
