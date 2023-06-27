@@ -5,6 +5,7 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
@@ -12,7 +13,6 @@ import { Space, SpaceState } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, useQuery } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { matchSpace } from './spaceResolvers';
 
