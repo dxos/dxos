@@ -38,12 +38,37 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-router/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-splitview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-treeview/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -21,9 +21,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../sdk/react-surface"
     },
     {
@@ -31,12 +28,6 @@
     },
     {
       "path": "../../../ui/aurora-theme"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

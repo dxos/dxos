@@ -31,12 +31,6 @@
     },
     {
       "path": "../../../ui/aurora-theme"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

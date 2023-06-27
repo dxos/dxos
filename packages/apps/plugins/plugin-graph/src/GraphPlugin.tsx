@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconProps } from '@phosphor-icons/react';
+import type { IconProps } from '@phosphor-icons/react';
 import React, { UIEvent, FC, createContext, useContext } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
-
-import { definePlugin, Plugin } from '../framework';
+import { definePlugin, Plugin } from '@dxos/react-surface';
 
 export type MaybePromise<T> = T | Promise<T>;
 
