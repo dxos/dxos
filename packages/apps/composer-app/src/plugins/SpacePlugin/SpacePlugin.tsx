@@ -16,11 +16,9 @@ import {
   Trash,
   Upload,
 } from '@phosphor-icons/react';
-import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
-import { RouterPluginProvides } from '@braneframe/plugin-router';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
@@ -38,14 +36,14 @@ import {
   SpaceState,
   TypedObject,
 } from '@dxos/react-client';
-import { Surface, definePlugin, findPlugin } from '@dxos/react-surface';
+import { definePlugin, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import { getSpaceDisplayName } from './getSpaceDisplayName';
 import translations from './translations';
 
-export type SpacePluginProvides = GraphProvides & RouterPluginProvides & TranslationsProvides;
+export type SpacePluginProvides = GraphProvides & TranslationsProvides;
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
@@ -273,52 +271,6 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   },
   provides: {
     translations,
-    router: {
-      routes: () => [
-        {
-          path: '/dxos/space/:spaceId',
-          element: (
-            <Surface
-              component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:space/SpaceMain' },
-              }}
-            />
-          ),
-        },
-        {
-          path: '/dxos/space/:spaceId/:objectId',
-          element: (
-            <Surface
-              component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:space/SpaceMain' },
-              }}
-            />
-          ),
-        },
-      ],
-      current: (params): string[] | null => {
-        const spaceKey = PublicKey.safeFrom(params.spaceId);
-        const spaceId = spaceKey && getSpaceId(spaceKey);
-        if (spaceId && params.objectId) {
-          return [spaceId, params.objectId];
-        } else if (spaceId) {
-          return [spaceId];
-        } else {
-          return null;
-        }
-      },
-      next: (path, params): string[] | null => {
-        if (!path.startsWith('/dxos/space/')) {
-          return null;
-        }
-
-        return SpacePlugin.provides!.router.current!(params);
-      },
-    },
     component: (datum, role) => {
       switch (role) {
         case 'main':
@@ -355,7 +307,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
       }
     },
     components: {
-      SpaceMain,
+      Main: SpaceMain,
     },
     graph: {
       nodes: () => nodes,

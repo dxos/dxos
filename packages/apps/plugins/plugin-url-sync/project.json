@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-router/src",
+  "sourceRoot": "packages/apps/plugins/plugin-url-sync/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-router/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-router/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-router/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-url-sync/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-url-sync/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-url-sync/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-router/src/index.ts"
+          "packages/apps/plugins/plugin-url-sync/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-router/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-url-sync/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-router/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-url-sync/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [

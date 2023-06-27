@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
+import { definePlugin, PluginDefinition } from '@dxos/react-surface';
 
 import {
   MarkdownActions,
@@ -49,16 +49,8 @@ export const GithubPlugin: PluginDefinition = definePlugin({
           return null;
       }
     },
-    router: {
-      routes: () => [
-        {
-          path: '/embedded',
-          element: <Surface component='dxos:github/EmbeddedMain' />,
-        },
-      ],
-    },
     components: {
-      EmbeddedMain,
+      Main: EmbeddedMain,
     },
   },
 });
