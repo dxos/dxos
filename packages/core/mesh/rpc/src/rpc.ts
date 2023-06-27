@@ -125,10 +125,7 @@ export class RpcPeer {
    */
   @synchronized
   async open() {
-    if (this._state === RpcState.CLOSING || this._state === RpcState.CLOSED) {
-      return;
-    }
-    if (this._state === RpcState.OPENED || this._state === RpcState.OPENING) {
+    if (this._state !== RpcState.INITIAL) {
       return;
     }
 
@@ -243,7 +240,7 @@ export class RpcPeer {
     log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
-      if (this._state !== RpcState.OPENED) {
+      if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
         log('received request while closed');
         await this._sendMessage({
           response: {
