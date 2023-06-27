@@ -8,19 +8,10 @@ import React from 'react';
 import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { appTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import compositeEnUs from './translations/en-US';
-
-export type TranslationsProvides = {
-  translations: Resource[];
-};
-
-export type TranslationsPlugin = Plugin<TranslationsProvides>;
-
-export const translationsPlugins = (plugins: Plugin[]): TranslationsPlugin[] => {
-  return (plugins as TranslationsPlugin[]).filter((p) => Array.isArray(p.provides?.translations));
-};
+import { translationsPlugins } from './util';
 
 export const ThemePlugin = (): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
@@ -34,7 +25,7 @@ export const ThemePlugin = (): PluginDefinition => {
 
   return {
     meta: {
-      id: 'dxos:ThemePlugin',
+      id: 'dxos:theme',
     },
     ready: async (plugins) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');

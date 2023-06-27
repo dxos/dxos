@@ -7,7 +7,7 @@ import React, { HTMLAttributes, useRef } from 'react';
 import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 
