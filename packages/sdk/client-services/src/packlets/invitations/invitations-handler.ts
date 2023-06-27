@@ -10,14 +10,13 @@ import {
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitationObservable,
   INVITATION_TIMEOUT,
-  ON_CLOSE_DELAY,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import { InvalidInvitationExtensionRoleError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createTeleportProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createTeleportProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -154,7 +153,8 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
               if (type !== Invitation.Type.MULTIUSE) {
-                await sleep(ON_CLOSE_DELAY);
+                // Wait for graceful close before disposing.
+                await swarmConnection.close();
                 await ctx.dispose();
               }
             }
@@ -177,9 +177,10 @@ export class InvitationsHandler {
       return extension;
     };
 
+    let swarmConnection: SwarmConnection;
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
-      const swarmConnection = await this._networkManager.joinSwarm({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
@@ -210,6 +211,10 @@ export class InvitationsHandler {
     assert(protocol);
 
     const authenticated = new Trigger<string>();
+
+    // TODO(dmaretskyi): Turn into state?
+    // Whether the Host has already admitted us and the remote connection is no longer needed.
+    let admitted = false;
 
     let currentState: Invitation.State;
     const stream = new PushStream<Invitation>();
@@ -244,7 +249,7 @@ export class InvitationsHandler {
         onOpen: (extensionCtx) => {
           extensionCtx.onDispose(async () => {
             log('extension disposed', { currentState });
-            if (currentState !== Invitation.State.SUCCESS) {
+            if (!admitted) {
               stream.error(new Error('Remote peer disconnected.'));
             }
           });
@@ -306,6 +311,9 @@ export class InvitationsHandler {
               log('request admission', { ...protocol.toJSON() });
               const admissionRequest = await protocol.createAdmissionRequest();
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
+
+              // Remote connection no longer needed.
+              admitted = true; 
 
               // 4. Record credential in our HALO.
               const result = await protocol.accept(admissionResponse, admissionRequest);

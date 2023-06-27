@@ -78,7 +78,7 @@ describe('services/space-invitations-protocol', () => {
 
     const space1 = await host.dataSpaceManager!.createSpace();
 
-    const [{ invitation: invitation1 }, { invitation: invitation2 }] = await Promise.all(
+    const [{ invitation: invitation1, error: error1 }, { invitation: invitation2, error: error2 }] = await Promise.all(
       performInvitation({
         host,
         guest,
@@ -99,6 +99,13 @@ describe('services/space-invitations-protocol', () => {
         },
       }),
     );
+
+    if(error1) {
+      throw error1;
+    }
+    if(error2) {
+      throw error2;
+    }
 
     expect(attempt).to.eq(1);
     expect(invitation1?.spaceKey).to.exist;
