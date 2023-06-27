@@ -5,7 +5,7 @@ import { ArrowSquareOut, FileArrowDown, FileArrowUp, Link, LinkBreak } from '@ph
 import React, { RefObject, useCallback } from 'react';
 
 import { MarkdownProperties } from '@braneframe/plugin-markdown';
-import { useSplitViewContext } from '@braneframe/plugin-splitview';
+import { useSplitView } from '@braneframe/plugin-splitview';
 import { DropdownMenu, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { getSize } from '@dxos/aurora-theme';
@@ -23,7 +23,7 @@ export const MarkdownActions = ({
   const ghId = properties.meta?.keys?.find((key) => key.source === 'com.github')?.id;
   const { octokit } = useOctokitContext();
   const { t } = useTranslation('dxos:github');
-  const splitView = useSplitViewContext();
+  const splitView = useSplitView();
 
   const docGhId = useDocGhId(properties.meta?.keys ?? []);
 

@@ -20,7 +20,7 @@ import {
 import { appTx, getSize, mx } from '@dxos/aurora-theme';
 import { observer } from '@dxos/observable-object/react';
 
-import { useTreeView } from '../TreeViewPlugin';
+import { useTreeView } from '../TreeViewContext';
 
 const spaceExp = /\s/g;
 
