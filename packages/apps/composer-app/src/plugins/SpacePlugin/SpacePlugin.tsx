@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
+import { GraphNode, GraphPluginProvides, GraphProvides } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
@@ -74,7 +74,7 @@ const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): 
 // TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.toHex();
+    spaceKey = spaceKey.truncate();
   }
 
   return `${SpacePlugin.meta.id}/${spaceKey}`;
@@ -93,6 +93,7 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
   ready: async (plugins) => {
     const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
     const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+    const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:GraphPlugin');
     const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
     if (!clientPlugin) {
       return;
@@ -252,15 +253,14 @@ export const SpacePlugin = definePlugin<SpacePluginProvides>({
     }
 
     const nodeHandle = createSubscription(() => {
-      const [prefixedId] = treeView.selected ?? [''];
-      if (prefixedId) {
-        const [_prefix, id] = prefixedId?.split('/');
-        if (
-          client.services instanceof IFrameClientServicesProxy ||
-          client.services instanceof IFrameClientServicesHost
-        ) {
-          client.services.setSpaceProvider(() => PublicKey.safeFrom(id));
-        }
+      const space: Space = graphPlugin?.provides.graph.roots[SpacePlugin.meta.id]?.find(
+        (node) => node.id === treeView.selected[0],
+      )?.data;
+      if (
+        space &&
+        (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
+      ) {
+        client.services.setSpaceProvider(() => space.key);
       }
     });
     nodeHandle.update([treeView]);
