@@ -2,32 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
-import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty } from './components';
-import { MarkdownSection } from './components/MarkdownSection';
-import { MarkdownProperties, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties } from './props';
+import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty, MarkdownSection } from './components';
 import translations from './translations';
+import { MarkdownProperties } from './types';
+import { isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
-export type MarkdownProvides = {
-  markdown: {
-    onChange: MarkdownComposerProps['onChange'];
-  };
-};
+type MarkdownPluginProvides = SpaceProvides & TranslationsProvides;
 
-export type MarkdownPlugin = Plugin<MarkdownProvides>;
-
-export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
-  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
-};
-
-export const MarkdownPlugin = (): PluginDefinition<TranslationsProvides> => {
+export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
 
   const MarkdownMainStandalone = observer(
@@ -42,6 +35,7 @@ export const MarkdownPlugin = (): PluginDefinition<TranslationsProvides> => {
       );
     },
   );
+
   return {
     meta: {
       id: 'dxos:markdown',
@@ -54,6 +48,17 @@ export const MarkdownPlugin = (): PluginDefinition<TranslationsProvides> => {
       });
     },
     provides: {
+      space: {
+        types: [
+          {
+            id: 'create-doc',
+            testId: 'spacePlugin.createDocument',
+            label: ['create document label', { ns: 'composer' }],
+            icon: Plus,
+            Type: Document,
+          },
+        ],
+      },
       translations,
       component: (datum, role) => {
         switch (role) {

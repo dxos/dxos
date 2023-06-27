@@ -341,6 +341,7 @@ importers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
@@ -379,14 +380,11 @@ importers:
       dompurify: ^3.0.3
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
-      jszip: ^3.10.1
       localforage: ^1.10.0
       lodash.update: ^4.10.2
       octokit: ^2.0.14
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-drag-drop-files: ^2.3.8
-      react-is: ^18.2.0
       showdown: ^2.1.0
       turndown: ^7.1.1
       vite: ^4.3.9
@@ -396,6 +394,7 @@ importers:
       '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
+      '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
@@ -422,13 +421,11 @@ importers:
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
-      jszip: 3.10.1
       localforage: 1.10.0
       lodash.update: 4.10.2
       octokit: 2.0.14
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       showdown: 2.1.0
       turndown: 7.1.1
     devDependencies:
@@ -444,7 +441,6 @@ importers:
       '@types/showdown': 2.0.0
       '@types/turndown': 5.0.1
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      react-is: 18.2.0
       vite: 4.3.9
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
@@ -644,7 +640,9 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     specifiers:
+      '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -658,11 +656,68 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/types': link:../../types
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
     devDependencies:
+      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-space:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      jszip: ^3.10.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/types': link:../../types
+      '@dxos/async': link:../../../common/async
+      '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/text-model': link:../../../core/echo/text-model
+      jszip: 3.10.1
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
+      react-is: 18.2.0
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface

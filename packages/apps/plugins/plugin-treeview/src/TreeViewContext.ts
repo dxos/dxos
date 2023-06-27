@@ -4,10 +4,7 @@
 
 import { Context, createContext, useContext } from 'react';
 
-// TODO(wittjosiah): Derive graph nodes from selected.
-export type TreeViewContextValue = {
-  selected: string[];
-};
+import { TreeViewContextValue } from './types';
 
 export const TreeViewContext: Context<TreeViewContextValue> = createContext<TreeViewContextValue>({ selected: [] });
 

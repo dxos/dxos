@@ -4,31 +4,23 @@
 
 import {
   ArrowLineLeft,
-  Article,
-  ArticleMedium,
   Download,
   EyeSlash,
   Intersect,
   PaperPlane,
   PencilSimpleLine,
   Planet,
-  Plus,
-  Trash,
   Upload,
 } from '@phosphor-icons/react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
-import { TextKind } from '@dxos/aurora-composer';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import {
-  EchoDatabase,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
   ShellLayout,
@@ -40,48 +32,10 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
-import { getSpaceDisplayName } from './getSpaceDisplayName';
 import translations from './translations';
+import { getSpaceDisplayName, SPACE_PLUGIN, getSpaceId, isSpace, objectsToGraphNodes, spacePlugins } from './util';
 
-const SPACE_PLUGIN = 'dxos:space';
-
-export const isSpace = (datum: unknown): datum is Space =>
-  datum && typeof datum === 'object'
-    ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
-    : false;
-
-const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
-  return objects.map((obj) => ({
-    id: obj.id,
-    label: obj.title ?? 'Untitled',
-    description: obj.description,
-    icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
-    data: obj,
-    parent,
-    actions: [
-      {
-        id: 'delete',
-        label: ['delete document label', { ns: 'composer' }],
-        icon: Trash,
-        invoke: async () => {
-          parent.data?.db.remove(obj);
-        },
-      },
-    ],
-  }));
-};
-
-// TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
-const getSpaceId = (spaceKey: PublicKeyLike) => {
-  if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.truncate();
-  }
-
-  return `${SPACE_PLUGIN}/${spaceKey}`;
-};
-
-export type SpacePluginProvides = GraphProvides & TranslationsProvides;
-
+type SpacePluginProvides = GraphProvides & TranslationsProvides;
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const nodes = createStore<GraphNode<Space>[]>([]);
   const rootNodes = new Map<string, GraphNode<Space>>();
@@ -94,10 +48,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       id: SPACE_PLUGIN,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:GraphPlugin');
-      const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:graph');
+      const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
       if (!clientPlugin) {
         return;
       }
@@ -115,6 +69,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               node.label = getSpaceDisplayName(space);
               node.description = space.properties.description;
             } else {
+              const spaceTypes = spacePlugins(plugins)
+                .flatMap((p) => p.provides.space.types ?? [])
+                .map(
+                  (type): GraphNodeAction => ({
+                    ...type,
+                    invoke: async () => {
+                      const object = space.db.add(new type.Type());
+                      if (treeViewPlugin) {
+                        treeViewPlugin.provides.treeView.selected = [id, object.id];
+                      }
+                    },
+                  }),
+                );
               node = createStore<GraphNode<Space>>({
                 id,
                 label: getSpaceDisplayName(space),
@@ -122,18 +89,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 icon: Planet,
                 data: space,
                 actions: [
-                  {
-                    id: 'create-doc',
-                    testId: 'spacePlugin.createDocument',
-                    label: ['create document label', { ns: 'composer' }],
-                    icon: Plus,
-                    invoke: async () => {
-                      const document = space.db.add(new Document());
-                      if (treeViewPlugin) {
-                        treeViewPlugin.provides.treeView.selected = [id, document.id];
-                      }
-                    },
-                  },
+                  ...spaceTypes,
                   {
                     id: 'rename-space',
                     label: ['rename space label', { ns: 'composer' }],
@@ -223,7 +179,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             let children = rootObjects.get(id);
             if (!children) {
-              const query = space.db.query(Document.filter());
+              const typeNames = new Set(
+                spacePlugins(plugins)
+                  .flatMap((p) => p.provides.space.types ?? [])
+                  .map((type) => type.Type.type.name),
+              );
+              const query = space.db.query((obj: TypedObject) => {
+                return typeNames.has(obj.__typename);
+              });
               const objects = createStore(objectsToGraphNodes(node, query.objects));
               subscriptions.add(
                 query.subscribe((query) => {
@@ -315,8 +278,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       graph: {
         nodes: () => nodes,
         actions: (plugins) => {
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-          const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+          const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
           if (!clientPlugin) {
             return [];
           }
