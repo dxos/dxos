@@ -7,7 +7,7 @@ import React, { HTMLAttributes, useRef } from 'react';
 import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 
 export const MarkdownSection = ({
   data: { source, object },

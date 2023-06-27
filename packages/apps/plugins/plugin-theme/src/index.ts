@@ -3,3 +3,5 @@
 //
 
 export * from './ThemePlugin';
+export * from './types';
+export * from './util';

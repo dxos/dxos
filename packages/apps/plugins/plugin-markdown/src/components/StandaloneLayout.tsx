@@ -11,7 +11,7 @@ import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { observer } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 
 export const StandaloneLayout = observer(
   ({
