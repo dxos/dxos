@@ -30,7 +30,15 @@ import {
   EditorView,
 } from '@codemirror/view';
 import { useFocusableGroup } from '@fluentui/react-tabster';
-import React, { forwardRef, useEffect, useImperativeHandle, useState, useMemo, useCallback } from 'react';
+import React, {
+  KeyboardEvent,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
@@ -198,7 +206,7 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
     }, [parent, content, provider?.awareness, themeMode]);
 
     const handleKeyUp = useCallback(
-      ({ key }) => {
+      ({ key }: KeyboardEvent) => {
         switch (key) {
           case 'Enter':
             view?.contentDOM.focus();
