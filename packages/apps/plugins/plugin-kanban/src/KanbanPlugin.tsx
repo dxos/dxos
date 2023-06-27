@@ -18,8 +18,7 @@ export const KanbanPlugin: PluginDefinition = definePlugin({
     component: (datum, role) => {
       switch (role) {
         case 'main':
-          // TODO(burdon): Why array?
-          if (Array.isArray(datum) && isKanban(datum[0])) {
+          if (isKanban(datum)) {
             return KanbanMain;
           } else {
             return null;

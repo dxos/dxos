@@ -27,7 +27,7 @@ export const KanbanItemComponent: FC<{
   item: KanbanItem;
   debug?: boolean;
   onDelete?: () => void;
-}> = ({ column, item, debug = false, onDelete }) => {
+}> = ({ column, item, debug = true, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
@@ -41,7 +41,7 @@ export const KanbanItemComponent: FC<{
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
-      <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'invisible')}>
+      <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'opacity-10')}>
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
@@ -59,6 +59,7 @@ export const KanbanItemComponent: FC<{
               classNames='px-1 border-none resize-none'
             />
           </Input.Root>
+
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

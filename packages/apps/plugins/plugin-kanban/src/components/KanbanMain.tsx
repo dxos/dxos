@@ -3,18 +3,24 @@
 //
 
 import { faker } from '@faker-js/faker';
-import React from 'react';
+import React, { FC } from 'react';
 
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
 import { ObservableArray } from '@dxos/observable-object';
 
-import type { KanbanColumnModel, KanbanItem, KanbanModel } from '../props';
+import { isKanban } from '../props';
+import type { KanbanColumnModel, KanbanItem } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
-// TODO(burdon): Why array? Generalize to graph node (which may contain a collection)?
-export const KanbanMain = ({ data: [kanban] }: { data: [kanban: KanbanModel] }) => {
+// TODO(burdon): Constructor type? `data` vs. `datum`?
+// TODO(burdon): Generalize to graph node (which may contain a collection)?
+export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
+  const kanban = isKanban(data) ? data : null;
+  if (!kanban) {
+    return null;
+  }
 
   // TODO(burdon): External (needs space.db)? Via context?
   const handleAddColumn = () => {

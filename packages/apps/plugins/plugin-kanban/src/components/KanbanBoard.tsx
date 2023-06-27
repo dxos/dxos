@@ -5,6 +5,7 @@
 import {
   DndContext,
   DragEndEvent,
+  DragMoveEvent,
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
@@ -13,14 +14,14 @@ import {
   useSensor,
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
-import { ObservableArray, subscribe } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
-import { findLocation } from '../props';
+import { findLocation, Location } from '../props';
 import type { KanbanColumnModel, KanbanModel, KanbanItem } from '../props';
-import { KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
+import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 
 // TODO(burdon): Touch sensors.
@@ -31,10 +32,12 @@ export const KanbanBoard: FC<{
   onAddColumn?: () => KanbanColumnModel;
   onAddItem?: (column: KanbanColumnModel) => KanbanItem;
 }> = ({ model, onAddColumn, onAddItem }) => {
+  // TODO(burdon): Copying from Stack. Create custom hook?
   const [_, setIter] = useState([]);
   useEffect(() => {
-    // TODO(burdon): Copying from Stack. Create custom hook?
-    return model.columns[subscribe](() => setIter([])) as () => void;
+    const handle = createSubscription(() => setIter([]));
+    handle.update([model.columns]);
+    return () => handle.unsubscribe();
   }, []);
 
   const mouseSensor = useSensor(MouseSensor, {
@@ -43,67 +46,87 @@ export const KanbanBoard: FC<{
     },
   });
 
-  // Dragging state.
-  const [activeColumn, setActiveColumn] = useState<KanbanColumnModel | undefined>();
-  const [activeItem, setActiveItem] = useState<KanbanItem | undefined>();
+  // Dragging column.
+  // TODO(burdon): Dragging column causes flickering when dragging left to first column.
+  const [draggingColumn, setDraggingColumn] = useState<KanbanColumnModel | undefined>();
 
-  // Update observable state.
-  const handleDragOver = ({ active, over }: DragOverEvent) => {
-    const dragging = findLocation(model.columns, active.id as string)!;
-    if (dragging.item && over && active.id !== over.id) {
-      const droppable = findLocation(model.columns, over.id as string)!;
-      if (dragging?.column.id !== droppable?.column.id) {
-        dragging.column.items.splice(dragging.idx!, 1);
-        droppable.column.items.splice(droppable.idx ?? 0, 0, dragging.item);
+  // Dragging item.
+  const [draggingItem, setDraggingItem] = useState<{ source: Location; target?: Location }>();
+  // While dragging, temporarily remap which items should be visible inside each column.
+  const itemMapper: ItemsMapper = (column: string, items: KanbanItem[]) => {
+    const { source, target } = draggingItem ?? {};
+    if (source && target) {
+      if (source?.column.id !== target?.column.id && (column === source?.column.id || column === target?.column.id)) {
+        const modified = [...items];
+        if (column === source.column.id) {
+          // Temporarily remove from old column.
+          modified.splice(source.idx!, 1);
+        } else if (column === target.column.id) {
+          // Temporarily insert into new column.
+          // TODO(burdon): Use ref to track item being temporarily moved.
+          modified.splice(target.idx ?? modified.length, 0, source.item!);
+        }
+
+        return modified;
       }
     }
-  };
 
-  // TODO(burdon): Calculate items for columns.
-  const mapItems = (column: string, items: ObservableArray<KanbanItem>) => items;
+    return items;
+  };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     model.columns.forEach((column) => {
       if (column.id === active.id) {
-        setActiveColumn(column);
+        setDraggingColumn(column);
       } else {
-        const item = column.items.find((item) => item.id === active.id);
-        if (item) {
-          setActiveItem(item);
+        const idx = column.items.findIndex((item) => item.id === active.id);
+        if (idx !== -1) {
+          setDraggingItem({ source: { column, item: column.items[idx], idx } });
         }
       }
     });
   };
 
-  const handleDragCancel = () => {
-    setActiveColumn(undefined);
-    setActiveItem(undefined);
+  const handleDragMove = (event: DragMoveEvent) => {};
+
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    if (draggingItem) {
+      const { source } = draggingItem;
+      const target = findLocation(model.columns, over?.id as string);
+      if (active.id !== over?.id) {
+        setDraggingItem({ source, target });
+      }
+    }
   };
 
-  // TODO(burdon): Call model.
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id !== over?.id) {
-      switch ((active.data.current as any).type) {
-        case 'column': {
-          const oldIndex = model.columns.findIndex((column) => column.id === active.id);
-          const newIndex = model.columns.findIndex((column) => column.id === over?.id);
-          arrayMove(model.columns, oldIndex, newIndex);
-          break;
+  // TODO(burdon): Call model to update.
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (draggingColumn) {
+      const { active, over } = event;
+      const oldIndex = model.columns.findIndex((column) => column.id === active.id);
+      const newIndex = model.columns.findIndex((column) => column.id === over?.id);
+      arrayMove(model.columns, oldIndex, newIndex);
+    } else if (draggingItem) {
+      const { source, target } = draggingItem;
+      if (source.column.id === target!.column.id) {
+        if (target!.idx !== undefined) {
+          arrayMove(source.column.items, source.idx!, target!.idx);
         }
-
-        case 'item': {
-          const column = (active.data.current as any).column as KanbanColumnModel;
-          const oldIndex = column.items.findIndex((item) => item.id === active.id);
-          const newIndex = column.items.findIndex((item) => item.id === over?.id);
-          arrayMove(column.items, oldIndex, newIndex);
-        }
+      } else {
+        source.column.items.splice(source.idx!, 1);
+        // TODO(burdon): Incorrect position when moving to new column.
+        target!.column.items.splice(target!.idx ?? target!.column.items.length, 0, source.item!);
       }
     }
 
-    setActiveColumn(undefined);
-    setActiveItem(undefined);
-  }, []);
+    setDraggingColumn(undefined);
+    setDraggingItem(undefined);
+  };
+
+  const handleDragCancel = () => {
+    setDraggingColumn(undefined);
+    setDraggingItem(undefined);
+  };
 
   const handleAddColumn = onAddColumn
     ? () => {
@@ -120,7 +143,7 @@ export const KanbanBoard: FC<{
   };
 
   const customModifier: Modifier = ({ transform }) => {
-    if (activeColumn) {
+    if (draggingColumn) {
       return {
         ...transform,
         y: 0,
@@ -136,16 +159,18 @@ export const KanbanBoard: FC<{
         <DndContext
           sensors={[mouseSensor]}
           modifiers={[customModifier]}
-          onDragOver={handleDragOver}
           onDragStart={handleDragStart}
-          onDragCancel={handleDragCancel}
+          onDragMove={handleDragMove}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <SortableContext strategy={horizontalListSortingStrategy} items={model.columns?.map(({ id }) => id)}>
             {model.columns.map((column) => (
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
+                itemMapper={itemMapper}
                 onAdd={onAddItem}
                 onDelete={() => handleDeleteColumn(column.id)}
               />
@@ -153,9 +178,9 @@ export const KanbanBoard: FC<{
           </SortableContext>
 
           {/* Overlay required to drag across columns. */}
-          {activeItem && (
+          {draggingItem && (
             <DragOverlay style={{ margin: 0 }}>
-              <KanbanItemComponent item={activeItem} onDelete={() => {}} />
+              <KanbanItemComponent item={draggingItem.source.item!} onDelete={() => {}} />
             </DragOverlay>
           )}
         </DndContext>

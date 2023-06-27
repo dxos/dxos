@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ObservableArray, subscribe } from '@dxos/observable-object';
+import { subscribe } from '@dxos/observable-object';
 
 /**
  * Kanban data model.
@@ -39,7 +39,7 @@ export type GenericKanbanItem = KanbanItem & { [key: string]: any };
 export type KanbanColumnModel<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
   title: string;
-  items: ObservableArray<T>;
+  items: T[];
 };
 
 // TODO(burdon): When to use Model suffix?
@@ -47,10 +47,10 @@ export type KanbanModel<T extends KanbanItem = GenericKanbanItem> = {
   id: string;
   title: string;
   // TODO(burdon): How is this mapped onto ECHO?
-  columns: ObservableArray<KanbanColumnModel<T>>;
+  columns: KanbanColumnModel<T>[];
 };
 
-// TODO(burdon): Why array? Test data type?
+// TODO(burdon): Test data type?
 export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is KanbanModel<T> =>
   datum && typeof datum === 'object'
     ? 'id' in datum &&
@@ -66,21 +66,19 @@ export type Location = {
   idx?: number;
 };
 
+/**
+ * Find the column or item within the model.
+ */
 // TODO(burdon): Move to model.
 export const findLocation = (columns: KanbanColumnModel[], id: string): Location | undefined => {
-  let cell: Location | undefined;
   for (const column of columns) {
     if (column.id === id) {
-      cell = { column };
-      break;
+      return { column };
     } else {
       const idx = column.items.findIndex((item) => item.id === id);
       if (idx !== -1) {
-        cell = { column, item: column.items[idx], idx };
-        break;
+        return { column, item: column.items[idx], idx };
       }
     }
   }
-
-  return cell;
 };

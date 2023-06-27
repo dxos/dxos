@@ -10,10 +10,12 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { subscribe } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/observable-object';
 
 import type { KanbanColumnModel, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
+
+export type ItemsMapper = (column: string, items: KanbanItem[]) => KanbanItem[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -50,17 +52,22 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 
 export const KanbanColumnComponent: FC<{
   column: KanbanColumnModel;
+  itemMapper?: ItemsMapper;
   debug?: boolean;
   onAdd?: (column: KanbanColumnModel) => KanbanItem;
   onDelete?: () => void;
-}> = ({ column, debug = false, onAdd, onDelete }) => {
+}> = ({ column, itemMapper, debug = true, onAdd, onDelete }) => {
+  const { t } = useTranslation('dxos.org/plugin/kanban');
+
+  // TODO(burdon): Copying from Stack. Create custom hook?
   const [_, setIter] = useState([]);
   useEffect(() => {
-    // TODO(burdon): Copying from Stack. Create custom hook?
-    return column.items[subscribe](() => setIter([])) as () => void;
+    const handle = createSubscription(() => setIter([]));
+    handle.update([column.items]);
+    return () => handle.unsubscribe();
   }, []);
 
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const items = itemMapper?.(column.id, column.items) ?? column.items;
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
@@ -117,9 +124,9 @@ export const KanbanColumnComponent: FC<{
         </div>
 
         {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
-        <SortableContext strategy={verticalListSortingStrategy} items={column.items.map(({ id }) => id)}>
+        <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
-            {column.items.map((item) => (
+            {items.map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
                 <KanbanItemComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
               </div>

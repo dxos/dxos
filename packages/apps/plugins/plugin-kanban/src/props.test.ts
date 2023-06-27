@@ -5,51 +5,54 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
-import { ObservableArray, ObservableObject, ObservableObjectImpl, subscribe } from '@dxos/observable-object';
+import { createStore, createSubscription } from '@dxos/observable-object';
 import { describe, test } from '@dxos/test';
 
-import { GenericKanbanItem, KanbanColumnModel, KanbanModel } from './props';
+import { KanbanModel } from './props';
 
 describe('Models', () => {
   test('Reactivity', async () => {
     const done = new Trigger();
 
-    // TODO(burdon): Rename base type.
-    const object: ObservableObjectImpl<KanbanModel> = new ObservableObject<KanbanModel>({
+    const object: KanbanModel = createStore({
       id: 'test',
       title: 'Test',
       // TODO(burdon): Pass in array.
-      columns: new ObservableArray<KanbanColumnModel>(
+      columns: createStore([
         {
           id: 'column-1',
           title: 'Column 1',
-          items: new ObservableArray<GenericKanbanItem>(),
+          items: createStore([]),
         },
         {
           id: 'column-2',
           title: 'Column 2',
-          items: new ObservableArray<GenericKanbanItem>(),
+          items: createStore([]),
         },
-      ),
+      ]),
     });
 
     // TODO(burdon): IDE cannot understand type inference.
     expect(object.columns).to.have.length(2);
 
-    // TODO(burdon): Triggered twice.
-    const unsubscribe = object.columns[subscribe](() => {
-      expect(object.columns).to.have.length(3);
-      done.wake();
+    // TODO(burdon): Review API.
+    const handle = createSubscription(() => {
+      if (object.columns.length === 3) {
+        done.wake();
+      }
     });
+    handle.update([object.columns]);
 
     setTimeout(() => {
       // TODO(burdon): Doesn't type check (e.g., title is required).
       object.columns.push({
         id: 'column-3',
+        title: 'Column 3',
+        items: [],
       });
     });
 
     await done.wait();
-    unsubscribe();
+    handle.unsubscribe();
   });
 });
