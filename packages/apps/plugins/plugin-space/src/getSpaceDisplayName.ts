@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Space, SpaceState } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/react-client';
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   const disabled = space.state.get() !== SpaceState.READY;
