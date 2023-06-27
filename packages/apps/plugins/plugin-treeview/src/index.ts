@@ -4,3 +4,5 @@
 
 export * from './TreeViewContext';
 export * from './TreeViewPlugin';
+export * from './types';
+export * from './util';

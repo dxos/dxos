@@ -31,7 +31,7 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
       switch (role) {
         case 'dialog':
           switch (true) {
-            case datum === 'dxos:SplitViewPlugin/ProfileSettings':
+            case datum === 'dxos:splitview/ProfileSettings':
               return PatInput;
             case Array.isArray(datum) && datum[0] === 'dxos:github/BindDialog':
               return UrlDialog;
