@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
+import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
   Button,
@@ -34,7 +35,6 @@ import { useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 import { Surface } from '@dxos/react-surface';
 
-import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { useDocGhId } from '../../hooks';
 import { EditorViewState } from '../../props';
 import {

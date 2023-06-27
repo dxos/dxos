@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-markdown",
+  "name": "@braneframe/plugin-space",
   "version": "0.1.50",
-  "description": "DXOS Surface plugin for interacting with Markdown",
+  "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,13 +16,23 @@
   ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/observable-object": "workspace:*",
-    "@dxos/text-model": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "jszip": "^3.10.1",
+    "react-drag-drop-files": "^2.3.8",
+    "react-is": "^18.2.0"
   },
   "devDependencies": {
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -34,8 +44,11 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
