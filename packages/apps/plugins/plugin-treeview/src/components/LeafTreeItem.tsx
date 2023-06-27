@@ -5,6 +5,7 @@
 import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -17,10 +18,9 @@ import {
   useTranslation,
 } from '@dxos/aurora';
 import { appTx, getSize, mx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/react-client';
+import { observer } from '@dxos/observable-object/react';
 
-import { GraphNode } from '../GraphPlugin';
-import { useTreeView } from './TreeViewPlugin';
+import { useTreeView } from '../TreeViewPlugin';
 
 const spaceExp = /\s/g;
 

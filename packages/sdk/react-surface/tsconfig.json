@@ -16,23 +16,7 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/observable-object"
-    },
-    {
-      "path": "../../ui/aurora"
-    },
-    {
-      "path": "../../ui/aurora-theme"
-    },
-    {
-      "path": "../react-client"
-    }
-  ],
+  "references": [],
   "ts-node": {
     "compilerOptions": {
       "module": "CommonJS"

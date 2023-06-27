@@ -6,21 +6,13 @@ import { File as FileIcon, FilePlus, FloppyDisk, FolderPlus, Plugs, X } from '@p
 import localforage from 'localforage';
 import React from 'react';
 
+import { findGraphNode, GraphNode, GraphNodeAction, GraphProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
+import { RouterPluginProvides } from '@braneframe/plugin-router';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { createStore, createSubscription } from '@dxos/observable-object';
-import {
-  GraphNode,
-  GraphNodeAction,
-  GraphProvides,
-  isGraphNode,
-  RouterPluginProvides,
-  Surface,
-  TreeViewProvides,
-  definePlugin,
-  findPlugin,
-  findGraphNode,
-  TranslationsProvides,
-} from '@dxos/react-surface';
+import { Surface, definePlugin, findPlugin } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';

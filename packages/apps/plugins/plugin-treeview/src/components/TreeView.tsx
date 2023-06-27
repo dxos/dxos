@@ -4,11 +4,11 @@
 
 import React from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
 import { Tree } from '@dxos/aurora';
 import { observer } from '@dxos/observable-object/react';
+import { Surface } from '@dxos/react-surface';
 
-import { Surface } from '../../framework';
-import { GraphNode } from '../GraphPlugin';
 import { BranchTreeItem } from './BranchTreeItem';
 import { LeafTreeItem } from './LeafTreeItem';
 

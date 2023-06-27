@@ -8,8 +8,8 @@ import React from 'react';
 import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
 import { appTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
+import { definePlugin, Plugin } from '@dxos/react-surface';
 
-import { definePlugin, Plugin } from '../../framework';
 import compositeEnUs from './translations/en-US';
 
 export type TranslationsProvides = {
