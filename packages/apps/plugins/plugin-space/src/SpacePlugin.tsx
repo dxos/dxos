@@ -8,21 +8,21 @@ import {
   ArticleMedium,
   Download,
   EyeSlash,
+  IconProps,
   Intersect,
   PaperPlane,
   PencilSimpleLine,
   Planet,
-  Plus,
   Trash,
   Upload,
 } from '@phosphor-icons/react';
+import { FC } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { Document } from '@braneframe/types';
 import { EventSubscriptions } from '@dxos/async';
 import { TextKind } from '@dxos/aurora-composer';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
@@ -36,7 +36,7 @@ import {
   SpaceState,
   TypedObject,
 } from '@dxos/react-client';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { Plugin, PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
@@ -80,7 +80,27 @@ const getSpaceId = (spaceKey: PublicKeyLike) => {
   return `${SPACE_PLUGIN}/${spaceKey}`;
 };
 
-export type SpacePluginProvides = GraphProvides & TranslationsProvides;
+// TODO(wittjosiah): Remove. This is a workaround for the fact that graph plugin subtrees are currently isolated.
+export type SpaceProvides = {
+  space: {
+    types?: {
+      id: string;
+      testId: string;
+      label: string | [string, { ns: string }];
+      icon: FC<IconProps>;
+      // TODO(wittjosiah): Type?
+      Type: any;
+    }[];
+  };
+};
+
+type SpacePlugin = Plugin<SpaceProvides>;
+
+export const spacePlugins = (plugins: Plugin[]): SpacePlugin[] => {
+  return (plugins as SpacePlugin[]).filter((p) => Array.isArray(p.provides?.space?.types));
+};
+
+type SpacePluginProvides = GraphProvides & TranslationsProvides;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const nodes = createStore<GraphNode<Space>[]>([]);
@@ -115,6 +135,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               node.label = getSpaceDisplayName(space);
               node.description = space.properties.description;
             } else {
+              const spaceTypes = spacePlugins(plugins)
+                .flatMap((p) => p.provides.space.types ?? [])
+                .map(
+                  (type): GraphNodeAction => ({
+                    ...type,
+                    invoke: async () => {
+                      const object = space.db.add(new type.Type());
+                      if (treeViewPlugin) {
+                        treeViewPlugin.provides.treeView.selected = [id, object.id];
+                      }
+                    },
+                  }),
+                );
               node = createStore<GraphNode<Space>>({
                 id,
                 label: getSpaceDisplayName(space),
@@ -122,18 +155,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                 icon: Planet,
                 data: space,
                 actions: [
-                  {
-                    id: 'create-doc',
-                    testId: 'spacePlugin.createDocument',
-                    label: ['create document label', { ns: 'composer' }],
-                    icon: Plus,
-                    invoke: async () => {
-                      const document = space.db.add(new Document());
-                      if (treeViewPlugin) {
-                        treeViewPlugin.provides.treeView.selected = [id, document.id];
-                      }
-                    },
-                  },
+                  ...spaceTypes,
                   {
                     id: 'rename-space',
                     label: ['rename space label', { ns: 'composer' }],
@@ -223,7 +245,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             let children = rootObjects.get(id);
             if (!children) {
-              const query = space.db.query(Document.filter());
+              const typeNames = new Set(
+                spacePlugins(plugins)
+                  .flatMap((p) => p.provides.space.types ?? [])
+                  .map((type) => type.Type.type.name),
+              );
+              const query = space.db.query((obj: TypedObject) => {
+                return typeNames.has(obj.__typename);
+              });
               const objects = createStore(objectsToGraphNodes(node, query.objects));
               subscriptions.add(
                 query.subscribe((query) => {

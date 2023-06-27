@@ -18,6 +18,7 @@ export const SpaceMain: FC<{ data: unknown }> = observer(({ data }) => {
   const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) && isGraphNode(data[1]) ? data : [];
   const identity = useIdentity();
 
+  // TODO(wittjosiah): Factor out.
   const textModel = useTextModel({
     identity,
     space: parentNode?.data instanceof SpaceProxy ? parentNode.data : undefined,

@@ -15,11 +15,13 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/text-model": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
@@ -32,6 +34,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
