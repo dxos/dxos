@@ -4,35 +4,17 @@
 
 import React from 'react';
 
-import { GraphNode, useGraphContext } from '@braneframe/plugin-graph';
+import { useGraphContext } from '@braneframe/plugin-graph';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/react-client';
 import { PluginDefinition, Surface } from '@dxos/react-surface';
 
-import { TreeViewContext, TreeViewContextValue, useTreeView } from './TreeViewContext';
+import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
+import { TreeViewContextValue, TreeViewProvides } from './types';
+import { resolveNodes } from './util';
 
-export const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
-
-export const uriToSelected = (uri: string) => {
-  const [_, namespace, type, id, ...rest] = uri.split('/');
-  return [`${namespace}:${type}/${id}`, ...rest];
-};
-
-export const selectedToUri = (selected: string[]) => '/' + selected.join('/').replace(':', '/');
-
-export type TreeViewProvides = {
-  treeView: TreeViewContextValue;
-};
-
-const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
-  const node = graph.find((node) => node.id === id);
-  if (!node) {
-    return nodes;
-  }
-
-  return resolveNodes(node.children ?? [], path, [...nodes, node]);
-};
+export const TREE_VIEW_PLUGIN = 'dxos:treeview';
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
   const store = createStore<TreeViewContextValue>({ selected: [] });
@@ -56,10 +38,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
           if (treeView.selected.length === 0) {
             return (
               <Surface
-                component='dxos:SplitViewPlugin/SplitView'
+                component='dxos:splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                  main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
+                  sidebar: { component: 'dxos:treeview/TreeView' },
+                  main: { component: 'dxos:splitview/SplitViewMainContentEmpty' },
                 }}
               />
             );
@@ -68,9 +50,9 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
           } else {
             return (
               <Surface
-                component='dxos:SplitViewPlugin/SplitView'
+                component='dxos:splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                  sidebar: { component: 'dxos:treeview/TreeView' },
                   main: { component: `${plugin}/Main`, data: nodes },
                 }}
               />
