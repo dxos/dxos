@@ -5,11 +5,11 @@
 import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, getSize } from '@dxos/aurora-theme';
-import { observer } from '@dxos/react-client';
+import { observer } from '@dxos/observable-object/react';
 
-import { GraphNode } from '../GraphPlugin';
 import { TreeView } from './TreeView';
 
 export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {

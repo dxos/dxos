@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
 import { defaultDescription, mx } from '@dxos/aurora-theme';
-import { GraphNode } from '@dxos/react-surface';
 
 import { LocalFile, LocalFilesPlugin } from '../LocalFilesPlugin';
 

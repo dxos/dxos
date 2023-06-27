@@ -9,9 +9,7 @@ import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aur
 import { defaultDescription, fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-
-import { Surface, definePlugin } from '../framework';
-import { RouterPluginProvides } from './RoutesPlugin';
+import { Surface, definePlugin } from '@dxos/react-surface';
 
 export type SplitViewContextValue = {
   sidebarOpen: boolean;
@@ -104,28 +102,11 @@ export const SplitViewMainContentEmpty = () => {
     </div>
   );
 };
-
-export const SplitViewPlugin = definePlugin<RouterPluginProvides & SplitViewProvides>({
+export const SplitViewPlugin = definePlugin<SplitViewProvides>({
   meta: {
     id: 'dxos:SplitViewPlugin',
   },
   provides: {
-    router: {
-      routes: () => [
-        {
-          path: '/',
-          element: (
-            <Surface
-              component='dxos:SplitViewPlugin/SplitView'
-              surfaces={{
-                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
-                main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
-              }}
-            />
-          ),
-        },
-      ],
-    },
     context: (props: PropsWithChildren) => <Context.Provider value={store}>{props.children}</Context.Provider>,
     components: { SplitView, SplitViewMainContentEmpty },
     splitView: store,

@@ -4,12 +4,14 @@
 
 import React, { FC } from 'react';
 
+import { useGraphContext } from '@braneframe/plugin-graph';
+import { useTreeView } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
 import { isTypedObject, SpaceProxy } from '@dxos/client';
 import { observer } from '@dxos/observable-object/react';
 import { useIdentity } from '@dxos/react-client';
-import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
+import { Surface } from '@dxos/react-surface';
 
 import { SpacePlugin } from '../SpacePlugin';
 

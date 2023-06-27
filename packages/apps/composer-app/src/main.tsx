@@ -8,17 +8,15 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { GraphPlugin } from '@braneframe/plugin-graph';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+import { RoutesPlugin } from '@braneframe/plugin-router';
+import { SplitViewPlugin } from '@braneframe/plugin-splitview';
+import { ThemePlugin } from '@braneframe/plugin-theme';
+import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
-import {
-  GraphPlugin,
-  PluginContextProvider,
-  RoutesPlugin,
-  SplitViewPlugin,
-  ThemePlugin,
-  TreeViewPlugin,
-} from '@dxos/react-surface';
+import { PluginContextProvider } from '@dxos/react-surface';
 
 import { LocalFilesPlugin, GithubPlugin, SpacePlugin } from './plugins';
 

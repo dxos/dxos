@@ -5,6 +5,8 @@
 import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
 import React, { createContext, useContext, useRef, useState } from 'react';
 
+import { useGraphContext } from '@braneframe/plugin-graph';
+import { useSplitViewContext } from '@braneframe/plugin-splitview';
 import {
   Avatar,
   Tree,
@@ -22,12 +24,10 @@ import {
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
-import { useIdentity, observer } from '@dxos/react-client';
+import { observer, useIdentity } from '@dxos/react-client';
+import { definePlugin } from '@dxos/react-surface';
 
-import { definePlugin } from '../../framework';
-import { useGraphContext } from '../GraphPlugin';
-import { useSplitViewContext } from '../SplitViewPlugin';
-import { TreeView } from './TreeView';
+import { TreeView } from './components';
 
 const TREE_VIEW_PLUGIN = 'dxos:TreeViewPlugin';
 

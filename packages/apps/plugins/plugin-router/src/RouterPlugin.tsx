@@ -6,10 +6,9 @@ import React, { useEffect } from 'react';
 import { Outlet, Params, RouteObject, useLocation, useNavigate, useParams, useRoutes } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 
+import { selectedToUri, useTreeView } from '@braneframe/plugin-treeview';
 import { observer } from '@dxos/observable-object/react';
-
-import { definePlugin, Plugin, usePluginContext } from '../framework';
-import { selectedToUri, useTreeView } from './TreeViewPlugin';
+import { definePlugin, Plugin, Surface, usePluginContext } from '@dxos/react-surface';
 
 export type RouterPluginProvides = {
   router: {
@@ -58,7 +57,7 @@ const Root = observer(({ plugins }: { plugins: RouterPlugin[] }) => {
   return <Outlet />;
 });
 
-export const RoutesPlugin = definePlugin({
+export const RoutesPlugin = definePlugin<RouterPluginProvides>({
   meta: {
     id: 'dxos:routes',
   },
@@ -78,6 +77,23 @@ export const RoutesPlugin = definePlugin({
           },
         ]);
       },
+    },
+    router: {
+      // TODO(wittjosiah): Remove this.
+      routes: () => [
+        {
+          path: '/',
+          element: (
+            <Surface
+              component='dxos:SplitViewPlugin/SplitView'
+              surfaces={{
+                sidebar: { component: 'dxos:TreeViewPlugin/TreeView' },
+                main: { component: 'dxos:SplitViewPlugin/SplitViewMainContentEmpty' },
+              }}
+            />
+          ),
+        },
+      ],
     },
   },
 });

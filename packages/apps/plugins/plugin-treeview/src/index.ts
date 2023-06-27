@@ -3,4 +3,3 @@
 //
 
 export * from './TreeViewPlugin';
-export * from './TreeView';
