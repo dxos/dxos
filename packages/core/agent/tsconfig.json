@@ -58,6 +58,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../halo/credentials"
+    },
+    {
       "path": "../mesh/rpc"
     },
     {
