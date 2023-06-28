@@ -61,7 +61,7 @@ DX_PROFILE=test dx agent run --epoch=auto
 
 ## Development
 
-Source the following script to set an alias for `dx-dev` that can be called from any directory:
+Source the following script to set an alias for `dx` that can be called from any directory:
 
 ```bash
 cd packages/devtools/cli
@@ -71,7 +71,7 @@ cd packages/devtools/cli
 Example:
 
 ```bash
-DX_PROFILE=test dx-dev agent run --socket --web-socket=4567 --http=3000
+DX_PROFILE=test dx agent run --socket --web-socket=4567 --http=3000
 ```
 
 NOTE: The `agent` will need to be recompiled after any changes.
@@ -82,7 +82,7 @@ NOTE: The `agent` will need to be recompiled after any changes.
 Run the following command to reset all data for a given profile:
 
 ```bash
-DX_PROFILE=test dx-dev reset --force --no-agent
+DX_PROFILE=test dx reset --force --no-agent
 ```
 
 ### Devtools
@@ -111,18 +111,18 @@ NODE_OPTIONS="--inspect-brk"
 Use the [DXOS ZSH theme](../../../tools/zsh/ohmyz/themes/dxos.zsh-theme) to display the current profile in the shell prompt.
 
 ```bash
-# Source dx-dev alias.
+# Source dx alias.
 . ./packages/devtools/cli/scripts/dev.sh
 
 export DX_PROFILE=test
 
-dx-dev agent stop
-dx-dev agent list
-dx-dev reset --force --no-agent
-dx-dev halo create Tester --no-agent
-dx-dev halo --no-agent
+dx agent stop
+dx agent list
+dx reset --force --no-agent
+dx halo create Tester --no-agent
+dx halo --no-agent
 
-dx-dev agent run --socket --web-socket=4567 --http=3000
+dx agent run --socket --web-socket=4567 --http=3000
 ```
 
 ## Testing

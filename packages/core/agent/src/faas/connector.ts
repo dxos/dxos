@@ -122,7 +122,7 @@ export class FaasConnector implements Service {
     const oldTriggers = this._mountedTriggers.splice(0, this._mountedTriggers.length);
     for (const { clear, trigger } of oldTriggers) {
       await clear();
-      log.info('unmounted trigger', { trigger: trigger.id });
+      log('unmounted trigger', { trigger: trigger.id });
     }
   }
 
@@ -130,7 +130,7 @@ export class FaasConnector implements Service {
     await this._unmountTriggers();
 
     const triggers = await this._getTriggers();
-    log.info('discovered triggers', { triggers: triggers.length });
+    log('discovered triggers', { triggers: triggers.length });
 
     await Promise.all(
       triggers.map(async (trigger) => {
@@ -198,6 +198,6 @@ export class FaasConnector implements Service {
     selection.update(query.objects);
     ctx.onDispose(unsubscribe);
 
-    log.info('mounted trigger', { trigger: trigger.id });
+    log('mounted trigger', { trigger: trigger.id });
   }
 }

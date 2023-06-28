@@ -29,11 +29,17 @@ def insert_objects(key, objects):
   data = r.json()
   return data.get('objects', [])
 
-spaces = query_spaces()
-if len(spaces):
-  spaceKey = spaces[0]['key']
-  insert_objects(spaceKey, [{ "title": "object-" + str(random.randrange(0, 100)) }])
-  objects = query_objects(spaceKey)
-  data = { "spaceKey": spaceKey[:8], "objects": len(objects) }
-  print(json.dumps(data))
+def test():
+  spaces = query_spaces()
+  if len(spaces):
+    spaceKey = spaces[0]['key']
+    insert_objects(spaceKey, [{ "title": "object-" + str(random.randrange(0, 100)) }])
+    objects = query_objects(spaceKey)
+    data = { "spaceKey": spaceKey[:8], "objects": len(objects) }
+    print(json.dumps(data))
 #   print(json.dumps(objects, indent=2))
+
+try:
+  test()
+except:
+  print(json.dumps({"error": "Check endpoint: " + baseUrl}))
