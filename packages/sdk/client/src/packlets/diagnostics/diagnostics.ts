@@ -13,7 +13,7 @@ import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/proto
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
-import { Client } from './client';
+import { Client } from '../client';
 
 export type SpaceStats = {
   type: 'echo' | 'halo';

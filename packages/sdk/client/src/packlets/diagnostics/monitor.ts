@@ -18,16 +18,19 @@ type State = {
   }[];
 };
 
-export class Instrumentation {
+export class Monitor {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
     },
   });
 
-  private _state = new Map<string, State>();
+  private readonly _state = new Map<string, State>();
 
-  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
+  // prettier-ignore
+  constructor(
+    private readonly _serviceProvider: ClientServicesProvider
+  ) {}
 
   get state(): Record<string, State> {
     return Object.fromEntries(this._state.entries());
@@ -71,7 +74,6 @@ export class Instrumentation {
         {
           const { spaceKey } = event.context! as DataPipelineProcessed;
           const state = entry(this._state, spaceKey).orInsert({ processed: 0, throughput: [] }).value;
-
           state.processed++;
           if (state.throughput.length === 0) {
             state.throughput.push({ begin: Date.now(), end: 0, processed: 0 });
