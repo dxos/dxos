@@ -43,6 +43,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
