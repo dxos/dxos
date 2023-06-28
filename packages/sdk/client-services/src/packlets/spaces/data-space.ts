@@ -189,7 +189,6 @@ export class DataSpace {
     }
     this._state = SpaceState.INITIALIZING;
 
-    // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
