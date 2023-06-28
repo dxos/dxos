@@ -80,6 +80,7 @@ export class DataPipeline {
   public databaseHost?: DatabaseHost;
 
   public currentEpoch?: SpecificCredential<Epoch>;
+  private _lastProcessedEpoch = -1;
   public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
@@ -111,6 +112,7 @@ export class DataPipeline {
           log('new epoch', { credential });
           await this._processEpoch(credential.subject.assertion);
           this.currentEpoch = credential;
+          this.onNewEpoch.emit(credential);
         } else {
           // remember epoch
           log('searching last epoch', { credential });
@@ -150,11 +152,6 @@ export class DataPipeline {
     // Connect pipeline to the database.
     await this.databaseHost.open(this.itemManager, this._params.modelFactory);
 
-    // Load epoch if it is not genesis epoch.
-    if (this.currentEpoch && this.currentEpoch.subject.assertion.number > 0) {
-      await this._processEpoch(this.currentEpoch.subject.assertion);
-    }
-
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
       await this._consumePipeline();
@@ -190,6 +187,12 @@ export class DataPipeline {
   }
 
   private async _consumePipeline() {
+    // Load epoch if it is not genesis epoch.
+    if (this.currentEpoch) {
+      await this._processEpoch(this.currentEpoch.subject.assertion);
+      this.onNewEpoch.emit(this.currentEpoch);
+    }
+
     assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
@@ -277,6 +280,10 @@ export class DataPipeline {
 
   @synchronized
   private async _processEpoch(epoch: Epoch) {
+    if (epoch.number <= this._lastProcessedEpoch) {
+      return;
+    }
+    this._lastProcessedEpoch = epoch.number;
     assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
