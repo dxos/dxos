@@ -33,6 +33,10 @@ export class Timeframe implements Equatable {
       .join(', ')})`;
   }
 
+  equals(object: Timeframe) {
+    return this.size() === object.size() && this.frames().every(([key, seq]) => object.get(key) === seq);
+  }
+
   // TODO(burdon): Rename getFrame.
   get(key: PublicKey) {
     return this._frames.get(key);
@@ -96,10 +100,6 @@ export class Timeframe implements Equatable {
    */
   [inspect.custom]() {
     return `Timeframe${this.toString()}`;
-  }
-
-  equals(other: Timeframe) {
-    return this.size() === other.size() && this.frames().every(([key, seq]) => other.get(key) === seq);
   }
 
   [equalsSymbol](other: any) {
