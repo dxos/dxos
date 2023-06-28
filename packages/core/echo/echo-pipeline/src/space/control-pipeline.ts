@@ -8,14 +8,17 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
+import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+  metadataStore: MetadataStore;
 };
 
 /**
@@ -25,11 +28,17 @@ export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
 
+  private readonly _spaceKey: PublicKey;
+  private readonly _metadata: MetadataStore;
+  private _targetTimeframe?: Timeframe;
+
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
-  constructor({ spaceKey, genesisFeed, feedProvider }: ControlPipelineParams) {
+  constructor({ spaceKey, genesisFeed, feedProvider, metadataStore }: ControlPipelineParams) {
+    this._spaceKey = spaceKey;
+    this._metadata = metadataStore;
     this._pipeline = new Pipeline();
     void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
@@ -96,6 +105,13 @@ export class ControlPipeline {
   async stop() {
     log('stopping...');
     await this._pipeline.stop();
+    await this._saveTargetTimeframe(this._pipeline.state.timeframe);
     log('stopped');
+  }
+
+  private async _saveTargetTimeframe(timeframe: Timeframe) {
+    const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
+    await this._metadata.setSpaceDataLatestTimeframe(this._spaceKey, newTimeframe);
+    this._targetTimeframe = newTimeframe;
   }
 }
