@@ -122,12 +122,14 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
         variant='ordered-draggable'
         itemSizes='many'
         onDragEnd={handleDragEnd}
-        listItemIds={sections.map(({ object: { id } }) => id)}
+        listItemIds={sections
+          // todo(thure): DRY-out this filter, also should this be represented in the UI?
+          .filter((section) => !!section.object && !!section.object.id)
+          .map(({ object: { id } }) => id)}
         classNames='pis-1 pie-2'
       >
         {sections
-          // todo(thure): This filter should be unnecessary; why is the first (or only?) value sometimes some sort of array-like object?
-          .filter((section) => !!section.object)
+          .filter((section) => !!section.object && !!section.object.id)
           .map((section, start) => {
             return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
           })}
