@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Device, Identity, SpaceMember, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
@@ -123,18 +124,22 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
 };
 
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
+  const epochs: SpaceStats['epochs'] = [];
+  await space.waitUntilReady();
+
   const done = new Trigger();
   // TODO(burdon): Other stats from internal.data.
   const currentEpoch = space.internal.data.pipeline!.currentEpoch!;
+  if (!currentEpoch) {
+    log.warn('Invalid current epoch.');
+    setTimeout(() => done.wake(), 1000);
+  }
 
   // TODO(burdon): Hangs.
-  const epochs: SpaceStats['epochs'] = [];
   const stream = service.queryCredentials({ spaceKey: space.key });
   stream.subscribe(async (credential) => {
-    console.log('???');
     switch (credential.subject.assertion['@type']) {
       case 'dxos.halo.credentials.Epoch': {
-        console.log('ep');
         // TODO(burdon): Epoch number is not monotonic.
         const { number, timeframe } = credential.subject.assertion;
         if (number > 0) {
@@ -150,5 +155,6 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
 
   await done.wait();
   stream.close();
+
   return epochs;
 };
