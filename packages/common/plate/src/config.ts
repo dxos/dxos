@@ -3,7 +3,7 @@
 //
 
 import callsite from 'callsite';
-import path from 'path';
+import path from 'node:path';
 import { z } from 'zod';
 
 import {

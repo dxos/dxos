@@ -3,4 +3,4 @@
 //
 
 export * from './GithubPlugin';
-export * from './SpacePlugin';
+export * from './LocalFilesPlugin';

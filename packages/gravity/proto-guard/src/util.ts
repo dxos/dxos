@@ -23,7 +23,7 @@ export const getLatestStorage = () => {
     .readdirSync(getStorageDir())
     .map((version) => Number(version))
     .filter((version) => !Number.isNaN(version));
-  return Math.max(...versions, 1);
+  return Math.max(...versions, 0);
 };
 
 export const getConfig = (path: string) =>

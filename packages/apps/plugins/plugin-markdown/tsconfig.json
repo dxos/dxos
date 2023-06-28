@@ -37,6 +37,15 @@
     },
     {
       "path": "../../../ui/aurora-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

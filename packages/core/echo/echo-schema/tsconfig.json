@@ -50,6 +50,9 @@
       "path": "../echo-pipeline"
     },
     {
+      "path": "../echo-pipeline"
+    },
+    {
       "path": "../model-factory"
     },
     {

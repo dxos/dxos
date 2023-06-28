@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-markdown",
-  "version": "0.1.45",
+  "version": "0.1.50",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,11 +15,14 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/text-model": "workspace:*"
   },
   "devDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -31,9 +34,11 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/surface": "workspace:*",
+    "@dxos/react-surface": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

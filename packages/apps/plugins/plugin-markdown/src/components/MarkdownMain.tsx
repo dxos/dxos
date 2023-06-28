@@ -4,39 +4,23 @@
 
 import React, { HTMLAttributes, useRef } from 'react';
 
-import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
-
-export const MarkdownMainStandalone = ({
-  data: [model, properties],
-}: {
-  data: [ComposerModel, MarkdownProperties];
-  role?: string;
-}) => {
-  return <MarkdownMain model={model} properties={properties} layout='standalone' />;
-};
-
-export const MarkdownMainEmbedded = ({
-  data: [model, properties, _],
-}: {
-  data: [ComposerModel, MarkdownProperties, 'embedded'];
-  role?: string;
-}) => {
-  return <MarkdownMain model={model} properties={properties} layout='embedded' />;
-};
 
 export const MarkdownMain = ({
   model,
   properties,
   layout,
+  onChange,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
+  onChange?: MarkdownComposerProps['onChange'];
 }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
@@ -47,6 +31,7 @@ export const MarkdownMain = ({
         <MarkdownComposer
           ref={editorRef}
           model={model}
+          onChange={onChange}
           slots={{
             root: {
               role: 'none',

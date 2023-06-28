@@ -11,7 +11,7 @@ import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { observer } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 
 export const StandaloneLayout = observer(
   ({
@@ -22,7 +22,8 @@ export const StandaloneLayout = observer(
   }: PropsWithChildren<{
     model: ComposerModel;
     properties: MarkdownProperties;
-    editorRef: RefObject<MarkdownComposerRef>;
+    // TODO(wittjosiah): Support forwardRef with observer.
+    editorRef?: RefObject<MarkdownComposerRef>;
   }>) => {
     const { t } = useTranslation('composer');
     const themeContext = useThemeContext();
@@ -34,6 +35,7 @@ export const StandaloneLayout = observer(
               <Input.Label srOnly>{t('document title label')}</Input.Label>
               <Input.TextInput
                 variant='subdued'
+                disabled={properties.readOnly}
                 placeholder={t('untitled document title')}
                 value={properties.title ?? ''}
                 onChange={({ target: { value } }) => (properties.title = value)}
@@ -41,21 +43,23 @@ export const StandaloneLayout = observer(
                 data-testid='composer.documentTitle'
               />
             </Input.Root>
-            <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu.Root modal={false}>
-                <DropdownMenu.Trigger asChild>
-                  <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
-                    <DotsThreeVertical className={getSize(6)} />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content sideOffset={10} classNames='z-10'>
-                    <Surface data={[model, properties, editorRef]} role='menuitem' />
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </ThemeContext.Provider>
+            {!properties.readOnly && (
+              <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
+                <DropdownMenu.Root modal={false}>
+                  <DropdownMenu.Trigger asChild>
+                    <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
+                      <DotsThreeVertical className={getSize(6)} />
+                    </Button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content sideOffset={10} classNames='z-10'>
+                      <Surface data={[model, properties, editorRef]} role='menuitem' />
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </ThemeContext.Provider>
+            )}
           </div>
           <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 opacity-50')} />
           {children}

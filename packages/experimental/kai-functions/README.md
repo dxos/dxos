@@ -62,13 +62,13 @@ NOTE: Building the Docker image may take a few minutes (npm install is slow).
 List functions:
 
 ```bash
-DX_PROFILE=test dx-dev function list
+DX_PROFILE=test dx function list
 ```
 
 Invoke function:
 
 ```bash
-DX_PROFILE=test dx-dev function exec hello
+DX_PROFILE=test dx function exec hello
 ```
 
 View logs (https://docs.openfaas.com/cli/logs):
@@ -95,22 +95,22 @@ export OPENFAAS_URL="http://$IP:8080"
 2. From the CLI directory start the daemon:
 
 ```bash
-dx-dev agent list
-DX_PROFILE=test dx-dev agent start
+dx agent list
+DX_PROFILE=test dx agent start
 ```
 
 NOTE: Must invoke run to listen on socket (for functions and devtools).
 
 ```bash
-dx-dev agent list
-DX_PROFILE=test dx-dev agent run --web-socket=4567
+dx agent list
+DX_PROFILE=test dx agent run --web-socket=4567
 ```
 
 Test via the CLI:
 
 ```bash
-DX_PROFILE=test dx-dev halo
-DX_PROFILE=test dx-dev space list
+DX_PROFILE=test dx halo
+DX_PROFILE=test dx space list
 ```
 
 NOTE: Check/delete the socket file to troubleshoot.

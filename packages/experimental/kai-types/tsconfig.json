@@ -22,6 +22,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -32,6 +35,9 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
+    },
+    {
+      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/protocols"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observable-object",
-  "version": "0.1.48",
+  "version": "0.1.50",
   "description": "Javascript objects which can be observed in order to provide reactivity.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,6 +44,9 @@
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "*"
   },
   "optionalDependencies": {
     "react": "*"

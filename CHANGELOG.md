@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.1.50](https://github.com/dxos/dxos/compare/v0.1.49...v0.1.50) (2023-06-26)
+
+
+### Features
+
+* **client-services:** Add node lock file ([#3513](https://github.com/dxos/dxos/issues/3513)) ([38341b4](https://github.com/dxos/dxos/commit/38341b4187e74cb86de26564fde54898b826e171))
+* **composer-app:** local files ([#3484](https://github.com/dxos/dxos/issues/3484)) ([9f02c02](https://github.com/dxos/dxos/commit/9f02c02c97ea7212a2715f7616649a000fb2ccc6))
+* Epoch bench ([#3533](https://github.com/dxos/dxos/issues/3533)) ([64d796a](https://github.com/dxos/dxos/commit/64d796ab88016ad52f5c4458c9d07e7fab0db2ed))
+* **plugin-stack:** Add anywhere, remove, drag and drop ([#3532](https://github.com/dxos/dxos/issues/3532)) ([0803021](https://github.com/dxos/dxos/commit/08030210a92078dc7671ab8265d10efe3753bf71))
+
+
+### Bug Fixes
+
+* **cli:** Fix base command profile ([#3558](https://github.com/dxos/dxos/issues/3558)) ([29523e1](https://github.com/dxos/dxos/commit/29523e1345479fd7dfedd2571daaa204b8a073bf))
+* **cli:** Fix lock error on running agent ([#3554](https://github.com/dxos/dxos/issues/3554)) ([bc31057](https://github.com/dxos/dxos/commit/bc310579e902a800552f91d9c8257a47419a790f))
+* **feed-store:** change hypercore types imports ([3e02c56](https://github.com/dxos/dxos/commit/3e02c5651b84163bde5d56109537154f321b474f))
+* Fix storage path in browser ([#3563](https://github.com/dxos/dxos/issues/3563)) ([c18917d](https://github.com/dxos/dxos/commit/c18917dd365194364cfd63ded33fce2ece709060))
+* Port conflict on test signaling ([#3557](https://github.com/dxos/dxos/issues/3557)) ([24fefc9](https://github.com/dxos/dxos/commit/24fefc9c731a1b5ae25c78e5a0ee29579d39a3b8))
+* Stable signing ([#3556](https://github.com/dxos/dxos/issues/3556)) ([b2c0d7e](https://github.com/dxos/dxos/commit/b2c0d7eb7408aaff76545087bd31901c73bae574))
+
+## [0.1.49](https://github.com/dxos/dxos/compare/v0.1.48...v0.1.49) (2023-06-22)
+
+
+### Features
+
+* Agent config ([#3470](https://github.com/dxos/dxos/issues/3470)) ([104721c](https://github.com/dxos/dxos/commit/104721ccf902e76c4855b11a89f7dd908868b20d))
+* Agent management ([#3498](https://github.com/dxos/dxos/issues/3498)) ([801a360](https://github.com/dxos/dxos/commit/801a360345ddf4a7a56f0cc152f5275cf0e58b33))
+* **aurora:** `Link` ([#3467](https://github.com/dxos/dxos/issues/3467)) ([132de60](https://github.com/dxos/dxos/commit/132de605a8180837ab1aceac13224c19519e0bdc))
+* Bug fix agent startup ([#3489](https://github.com/dxos/dxos/issues/3489)) ([8d0f943](https://github.com/dxos/dxos/commit/8d0f9431945e333c01c827cb3e267141b8d01ea1))
+* **client-services:** Throw error on metadata version mismatch ([#3503](https://github.com/dxos/dxos/issues/3503)) ([0c14799](https://github.com/dxos/dxos/commit/0c14799af19e8ae6c689a0444a45f7096457813d))
+* **composer-app:** GitHub PAT link & description ([#3468](https://github.com/dxos/dxos/issues/3468)) ([563e737](https://github.com/dxos/dxos/commit/563e737b4cf712dafd2eb354a3665ce9e80028a4))
+* **composer-extension:** Space management increment ([#3466](https://github.com/dxos/dxos/issues/3466)) ([d01459e](https://github.com/dxos/dxos/commit/d01459e189ddf92f275db900acb74c0a5e26e1dd))
+* Echo bench ([#3463](https://github.com/dxos/dxos/issues/3463)) ([54716e2](https://github.com/dxos/dxos/commit/54716e2c41a343d216dbeb7f25d12fc0d158f78b))
+* Remote agent and functions ([#3217](https://github.com/dxos/dxos/issues/3217)) ([ed7acb4](https://github.com/dxos/dxos/commit/ed7acb441cf8f18bb2a9e6cc710695dede927eb1))
+
+
+### Bug Fixes
+
+* **aurora:** SW Toasts ([#3472](https://github.com/dxos/dxos/issues/3472)) ([7d6dc7b](https://github.com/dxos/dxos/commit/7d6dc7b2432bbf7b7cf2cd03179705a06ddf8b19))
+* **cli:** Fix CI error `No such file or directory` ([#3495](https://github.com/dxos/dxos/issues/3495)) ([6303c8f](https://github.com/dxos/dxos/commit/6303c8f449fdf2cd163bd4576b47de7a788e8347))
+* **composer-app:** Call `setSpaceProvider` correctly ([#3509](https://github.com/dxos/dxos/issues/3509)) ([64eca54](https://github.com/dxos/dxos/commit/64eca549a31593c80790ec43aac8315476541eea))
+* **composer-app:** join space selection ([c52b992](https://github.com/dxos/dxos/commit/c52b99220b66eb6656cbbbe9dc44d70e6bc42ad4))
+* **composer-app:** proper env config ([c1773e6](https://github.com/dxos/dxos/commit/c1773e67f8a8b1ef59c37f8863820bb4bb52f9ad))
+* **composer-extension:** reinject composer iframe if github ui remounts ([694d93f](https://github.com/dxos/dxos/commit/694d93f53319a1129a74834e3e956dd79e7369ca))
+* **feed-store:** missing types dependency ([#3521](https://github.com/dxos/dxos/issues/3521)) ([7ec9d52](https://github.com/dxos/dxos/commit/7ec9d52d426641d5b029c013357e165abc5e249c))
+* Fix CLI reset command and HALO join flow ([#3481](https://github.com/dxos/dxos/issues/3481)) ([0782032](https://github.com/dxos/dxos/commit/0782032359f74996a717a5fa32c80abcbcdfd06a))
+* Increase messaging timeouts ([#3500](https://github.com/dxos/dxos/issues/3500)) ([566bbfe](https://github.com/dxos/dxos/commit/566bbfef5fc965f290b08fbf673fa8a1228e97e2))
+* Increase on close delay ([#3504](https://github.com/dxos/dxos/issues/3504)) ([194f9e7](https://github.com/dxos/dxos/commit/194f9e797bd6045d3db3b113dc64419db9672c4b))
+* **react-shell:** handle url invitations in input ([#3444](https://github.com/dxos/dxos/issues/3444)) ([6cd67a5](https://github.com/dxos/dxos/commit/6cd67a5da1dcb645a46b1d4ee5e6e35b0a7c7dd8))
+
 ## [0.1.48](https://github.com/dxos/dxos/compare/v0.1.47...v0.1.48) (2023-06-13)
 
 

@@ -49,14 +49,12 @@ export class SpaceProxy implements Space {
    */
   public readonly _initializationComplete = new Trigger();
 
+  // TODO(burdon): Change to state property.
   private _initializing = false;
-
   /**
    * @internal
    */
   _initialized = false;
-
-  private readonly _membersUpdate = new Event<SpaceMember[]>();
 
   private readonly _db!: EchoDatabase;
   private readonly _internal!: SpaceInternal;
@@ -66,6 +64,7 @@ export class SpaceProxy implements Space {
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.CLOSED);
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
+  private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
   private _error: Error | undefined = undefined;
@@ -119,12 +118,12 @@ export class SpaceProxy implements Space {
     return this._data.spaceKey;
   }
 
-  get isOpen() {
-    return this._data.state === SpaceState.READY && this._initialized;
-  }
-
   get db() {
     return this._db;
+  }
+
+  get isOpen() {
+    return this._data.state === SpaceState.READY && this._initialized;
   }
 
   get properties() {

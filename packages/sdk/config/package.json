@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.1.48",
+  "version": "0.1.50",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,8 @@
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2"
+    "lodash.set": "^4.3.2",
+    "pkg-up": "^3.1.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

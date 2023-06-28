@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-bots",
-  "version": "0.1.48",
+  "version": "0.1.50",
   "private": true,
   "description": "Experimental bots.",
   "homepage": "https://dxos.org",
@@ -44,6 +44,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.startcase": "^4.4.0",
     "mailparser": "^3.6.4",
+    "node-fetch": "^2.6.0",
     "openai": "^3.2.1",
     "split2": "^4.1.0"
   },

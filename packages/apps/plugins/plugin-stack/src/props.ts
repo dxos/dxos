@@ -4,23 +4,27 @@
 
 import { subscribe, ObservableArray } from '@dxos/observable-object';
 
-export type StackSections = ObservableArray<StackSectionModel>;
+export type StackObject = { id: string };
 
-export type StackSectionModel = {
-  source: { resolver: string; guid: string };
-  object: unknown;
+export type GenericStackObject = StackObject & { [key: string]: any };
+
+export type StackSectionModel<T extends StackObject = GenericStackObject> = {
+  source: { resolver: string; guid: string }; // TODO(burdon): Why is this needed?
+  object: T;
 };
 
-export type StackModel = {
+export type StackSections<T extends StackObject = GenericStackObject> = ObservableArray<StackSectionModel<T>>;
+
+export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;
-  sections: ObservableArray<StackSectionModel>;
+  sections: StackSections<T>;
 };
 
 export type StackProperties = {
   title?: string;
 };
 
-export const isStack = (datum: unknown): datum is StackModel =>
+export const isStack = <T extends StackObject = GenericStackObject>(datum: unknown): datum is StackModel<T> =>
   datum && typeof datum === 'object'
     ? 'id' in datum &&
       typeof datum.id === 'string' &&

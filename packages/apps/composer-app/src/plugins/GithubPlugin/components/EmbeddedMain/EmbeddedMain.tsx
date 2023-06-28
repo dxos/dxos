@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
+import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
   Button,
@@ -34,7 +35,6 @@ import { useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 import { Surface } from '@dxos/react-surface';
 
-import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { useDocGhId } from '../../hooks';
 import { EditorViewState } from '../../props';
 import {
@@ -86,6 +86,7 @@ const EmbeddedLayoutImpl = () => {
   });
 
   const docGhId = useDocGhId(document?.meta?.keys ?? []);
+  const name = space && getSpaceDisplayName(space);
 
   return (
     <>
@@ -182,7 +183,7 @@ const EmbeddedLayoutImpl = () => {
                         <Avatar.Fallback href={spaceJdenticon} />
                       </Avatar.Frame>
                       <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                        {space && getSpaceDisplayName(t, space)}
+                        {Array.isArray(name) ? t(...name) : name}
                       </Avatar.Label>
                     </div>
                   </Avatar.Root>

@@ -1,0 +1,72 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/observable-object"
+    },
+    {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/react-surface"
+    },
+    {
+      "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../../../ui/aurora-composer"
+    },
+    {
+      "path": "../../../ui/aurora-theme"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
+    }
+  ]
+}

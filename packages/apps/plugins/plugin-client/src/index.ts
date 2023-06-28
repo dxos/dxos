@@ -3,3 +3,4 @@
 //
 
 export * from './ClientPlugin';
+export * from './types';

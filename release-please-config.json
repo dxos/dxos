@@ -38,12 +38,47 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-space/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-splitview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-treeview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-url-sync/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -154,6 +189,11 @@
         {
           "type": "json",
           "path": "packages/common/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/protobuf-compiler/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -578,7 +618,7 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/protobuf-compiler/package.json",
+          "path": "tools/executors/nx-protobuf-compiler/package.json",
           "jsonpath": "$.version"
         },
         {

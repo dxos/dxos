@@ -15,7 +15,7 @@ import {
 import { languages } from '@codemirror/language-data';
 import { lintKeymap } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateField, Text } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   keymap,
@@ -29,7 +29,16 @@ import {
   rectangularSelection,
   EditorView,
 } from '@codemirror/view';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState, KeyboardEvent } from 'react';
+import { useFocusableGroup } from '@fluentui/react-tabster';
+import React, {
+  KeyboardEvent,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import { yCollab } from 'y-codemirror.next';
 
 import { useThemeContext } from '@dxos/aurora';
@@ -44,6 +53,7 @@ import { markdownDarkHighlighting, markdownTheme } from './markdownTheme';
 export type MarkdownComposerProps = {
   model?: ComposerModel;
   slots?: ComposerSlots;
+  onChange?: (content: string | Text) => void;
 };
 
 export type MarkdownComposerRef = {
@@ -78,9 +88,10 @@ const shadeKeys = {
 };
 
 export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposerProps>(
-  ({ model, slots = {} }, forwardedRef) => {
+  ({ model, slots = {}, onChange }, forwardedRef) => {
     const { id, content, provider, peer } = model ?? {};
     const { themeMode } = useThemeContext();
+    const tabsterDOMAttribute = useFocusableGroup({ tabBehavior: 'limited' });
 
     const [parent, setParent] = useState<HTMLDivElement | null>(null);
     const [state, setState] = useState<EditorState>();
@@ -91,6 +102,20 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       state,
       view,
     }));
+
+    const listenChangesExtension = useMemo(
+      () =>
+        StateField.define({
+          create: () => null,
+          update: (_value, transaction) => {
+            if (transaction.docChanged && onChange) {
+              onChange(transaction.newDoc);
+            }
+            return null;
+          },
+        }),
+      [onChange],
+    );
 
     useEffect(() => {
       if (provider && peer) {
@@ -119,6 +144,9 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       const state = EditorState.create({
         doc: content?.toString(),
         extensions: [
+          // Based on https://github.com/codemirror/dev/issues/44#issuecomment-789093799.
+          listenChangesExtension,
+
           // All of https://github.com/codemirror/basic-setup minus line numbers and fold gutter.
           highlightActiveLineGutter(),
           highlightSpecialChars(),
@@ -177,15 +205,17 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       };
     }, [parent, content, provider?.awareness, themeMode]);
 
-    const escKeyUp = useCallback(
+    const handleKeyUp = useCallback(
       ({ key }: KeyboardEvent) => {
-        if (parent && key === 'Escape') {
-          parent.focus();
+        switch (key) {
+          case 'Enter':
+            view?.contentDOM.focus();
+            break;
         }
       },
-      [parent],
+      [view],
     );
 
-    return <div tabIndex={0} onKeyUp={escKeyUp} key={id} {...slots.root} ref={setParent} />;
+    return <div tabIndex={0} key={id} {...slots.root} onKeyUp={handleKeyUp} {...tabsterDOMAttribute} ref={setParent} />;
   },
 );

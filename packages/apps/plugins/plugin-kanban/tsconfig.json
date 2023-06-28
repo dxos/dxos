@@ -1,0 +1,48 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/observable-object"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/react-surface"
+    },
+    {
+      "path": "../../../ui/aurora"
+    },
+    {
+      "path": "../../../ui/aurora-theme"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}

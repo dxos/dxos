@@ -5,6 +5,7 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
 import { defaultDisabled } from '@dxos/aurora-theme';
@@ -12,7 +13,6 @@ import { Space, SpaceState } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-async';
 import { observer, useQuery } from '@dxos/react-client';
 
-import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { matchSpace } from './spaceResolvers';
 
@@ -35,7 +35,7 @@ export const SpacePickerTreeItem = observer(
     const { t } = useTranslation('composer');
     const spaceSate = useMulticastObservable(space.state);
     const disabled = spaceSate !== SpaceState.READY;
-    const spaceDisplayName = getSpaceDisplayName(t, space, disabled);
+    const spaceDisplayName = getSpaceDisplayName(space);
     const documents = useQuery(space, Document.filter());
     const hasDocuments = documents.length > 0;
 
@@ -71,7 +71,7 @@ export const SpacePickerTreeItem = observer(
             classNames='grow break-words pbs-1 text-base font-medium'
             data-testid='composer.spaceTreeItemHeading'
           >
-            {spaceDisplayName}
+            {Array.isArray(spaceDisplayName) ? t(...spaceDisplayName) : spaceDisplayName}
           </TreeItem.Heading>
           {nBoundMembers > 0 && (
             <Tooltip.Root>

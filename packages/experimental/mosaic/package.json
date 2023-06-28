@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mosaic",
-  "version": "0.1.48",
+  "version": "0.1.50",
   "private": true,
   "description": "Card layout and navigation.",
   "homepage": "https://dxos.org",
@@ -19,6 +19,7 @@
     "@dnd-kit/utilities": "^3.2.0",
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
+    "@dxos/aurora-theme": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-shell": "workspace:*",

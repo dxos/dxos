@@ -28,6 +28,7 @@ import {
   useListItemContext,
   arrayMove,
   DragEndEvent,
+  DragOverEvent,
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -142,7 +143,6 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
   ({ __listItemScope, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const density = useDensityContext();
-    const { toggleOpenLabel } = useListContext(LIST_NAME, __listItemScope);
     const { open } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
     const Icon = open ? CaretDown : CaretRight;
     return (
@@ -151,7 +151,6 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
         className={tx('list.item.openTrigger', 'list__listItem__openTrigger', { density }, classNames)}
         ref={forwardedRef}
       >
-        {typeof toggleOpenLabel === 'string' ? <span className='sr-only'>{toggleOpenLabel}</span> : toggleOpenLabel}
         {children || (
           <Icon
             {...{
@@ -216,4 +215,5 @@ export type {
   ListItemOpenTriggerProps,
   ListItemCollapsibleContentProps,
   DragEndEvent,
+  DragOverEvent,
 };
