@@ -49,8 +49,8 @@ export class LoggingServiceImpl implements LoggingService {
           context: jsonify(getContextFromEntry(entry)),
           meta: {
             // TODO(dmaretskyi): Fix proto.
-            file: entry.meta?.file!,
-            line: entry.meta?.line!,
+            file: entry.meta!.file!,
+            line: entry.meta!.line!,
           },
         };
 
