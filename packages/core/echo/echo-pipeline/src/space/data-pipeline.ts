@@ -106,11 +106,16 @@ export class DataPipeline {
           return;
         }
 
-        log('new epoch', { credential });
-        await this._processEpoch(credential.subject.assertion);
-
-        this.currentEpoch = credential;
-        this.onNewEpoch.emit(credential);
+        if (this._isOpen) {
+          // process epoch
+          log('new epoch', { credential });
+          await this._processEpoch(credential.subject.assertion);
+          this.currentEpoch = credential;
+        } else {
+          // remember epoch
+          log('searching last epoch', { credential });
+          this.currentEpoch = credential;
+        }
       },
     };
   }
@@ -144,6 +149,11 @@ export class DataPipeline {
 
     // Connect pipeline to the database.
     await this.databaseHost.open(this.itemManager, this._params.modelFactory);
+
+    // Load epoch if it is not genesis epoch.
+    if (this.currentEpoch && this.currentEpoch.subject.assertion.number > 0) {
+      await this._processEpoch(this.currentEpoch.subject.assertion);
+    }
 
     // Start message processing loop.
     scheduleTask(this._ctx, async () => {
