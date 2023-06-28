@@ -5,4 +5,5 @@
 export * from './MarkdownMainEmbedded';
 export * from './MarkdownMainEmpty';
 export * from './MarkdownMain';
+export * from './MarkdownSection';
 export * from './StandaloneLayout';

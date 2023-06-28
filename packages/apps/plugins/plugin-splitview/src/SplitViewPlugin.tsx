@@ -19,7 +19,7 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
 
   return {
     meta: {
-      id: 'dxos:SplitViewPlugin',
+      id: 'dxos:splitview',
     },
     provides: {
       context: (props: PropsWithChildren) => (

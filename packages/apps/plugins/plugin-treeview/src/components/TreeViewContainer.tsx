@@ -169,7 +169,7 @@ export const TreeViewContainer = observer(() => {
                           {...(!sidebarOpen && { tabIndex: -1 })}
                           onClick={() => {
                             splitViewContext.dialogOpen = true;
-                            splitViewContext.dialogContent = 'dxos:SplitViewPlugin/ProfileSettings';
+                            splitViewContext.dialogContent = 'dxos:splitview/ProfileSettings';
                           }}
                         >
                           <span className='sr-only'>{t('settings dialog title', { ns: 'os' })}</span>

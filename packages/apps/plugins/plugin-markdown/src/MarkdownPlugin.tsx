@@ -11,24 +11,12 @@ import { Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
-import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty } from './components';
-import { MarkdownSection } from './components/MarkdownSection';
-import { MarkdownProperties, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties } from './props';
+import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty, MarkdownSection } from './components';
 import translations from './translations';
-
-export type MarkdownProvides = {
-  markdown: {
-    onChange: MarkdownComposerProps['onChange'];
-  };
-};
-
-export type MarkdownPlugin = Plugin<MarkdownProvides>;
-
-export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
-  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
-};
+import { MarkdownProperties } from './types';
+import { isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
 type MarkdownPluginProvides = SpaceProvides & TranslationsProvides;
 
@@ -47,6 +35,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       );
     },
   );
+
   return {
     meta: {
       id: 'dxos:markdown',

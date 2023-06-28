@@ -11,15 +11,11 @@ import {
   ClientOptions,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
-  ShellController,
   SystemStatus,
 } from '@dxos/react-client';
 import { PluginDefinition } from '@dxos/react-surface';
 
-export type ClientPluginProvides = {
-  client: Client;
-  setLayout: ShellController['setLayout'];
-};
+import { ClientPluginProvides } from './types';
 
 export const ClientPlugin = (
   options: ClientOptions = { config: new Config(Envs(), Local(), Defaults()) },
@@ -28,7 +24,7 @@ export const ClientPlugin = (
 
   return {
     meta: {
-      id: 'dxos:ClientPlugin',
+      id: 'dxos:client',
     },
     init: async () => {
       await client.initialize();
