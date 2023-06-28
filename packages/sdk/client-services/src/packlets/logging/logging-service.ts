@@ -27,6 +27,11 @@ export class LoggingServiceImpl implements LoggingService {
     const filters = request.filters?.length ? request.filters : undefined;
     return new Stream<LogEntry>(({ ctx, next }) => {
       const handler = (entry: NaturalLogEntry) => {
+        // This call was caused by the logging service itself.
+        if(LOG_PROCESSING > 0) {
+          return;
+        }
+
         // Prevent logging feedback loop from logging service.
         if (
           entry.meta?.file.includes('logging-service') ||
@@ -36,14 +41,25 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
-        if (shouldLog(entry, filters)) {
-          const record = {
-            ...entry,
-            context: jsonify(getContextFromEntry(entry)),
-          } satisfies NaturalLogEntry;
-          delete record.meta?.bugcheck;
-          delete record.meta?.scope;
+        if (!shouldLog(entry, filters)) {
+          return;
+        }
+        
+        const record: LogEntry = {
+          ...entry,
+          context: jsonify(getContextFromEntry(entry)),
+          meta: {
+            // TODO(dmaretskyi): Fix proto.
+            file: entry.meta?.file!,
+            line: entry.meta?.line!,
+          }
+        };
+
+        try {
+          LOG_PROCESSING++;
           next(record);
+        } finally {
+          LOG_PROCESSING--;
         }
       };
 
@@ -59,3 +75,8 @@ export class LoggingServiceImpl implements LoggingService {
     this._logs.emit(entry);
   };
 }
+
+/**
+ * Counter that is used to track whether we are processing a log entry.
+ */
+let LOG_PROCESSING = 0;
