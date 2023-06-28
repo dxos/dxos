@@ -18,6 +18,9 @@ type State = {
   }[];
 };
 
+/**
+ * Activity monitor.
+ */
 export class Monitor {
   private readonly _ctx = new Context({
     onError: (err) => {
@@ -73,14 +76,17 @@ export class Monitor {
       case 'dxos.echo.data-pipeline.processed':
         {
           const { spaceKey } = event.context! as DataPipelineProcessed;
+          // TODO(burdon): Make default value a provider? entry(map, key, () => ({ value });
           const state = entry(this._state, spaceKey).orInsert({ processed: 0, throughput: [] }).value;
           state.processed++;
+
           if (state.throughput.length === 0) {
             state.throughput.push({ begin: Date.now(), end: 0, processed: 0 });
           }
 
+          // TODO(burdon): Configure option to just store everything and reduce when requested?
           let last = state.throughput[state.throughput.length - 1];
-          if (Date.now() - last.begin > 5_000) {
+          if (Date.now() - last.begin > 1_000) {
             last.end = Date.now();
             last = { begin: last.end, end: 0, processed: 0 };
             state.throughput.push(last);
