@@ -10,7 +10,9 @@ import { log } from '@dxos/log';
  * Intention is to use this to tag telemetry events as `internal`.
  */
 export const getLocalTelemetryTags = async (): Promise<string[]> => {
-  const localKubeConfigUrl = 'http://kube.local/.well-known/dx/config';
+  // NOTE: We use the local kube config to get the telemetry tags.
+  // We use localhost and not `kube.local` here because it is allowed to make requests to localhost without CORS.
+  const localKubeConfigUrl = 'http://localhost:80/.well-known/dx/config';
 
   log('fetching config...', { localKubeConfigUrl });
   try {
