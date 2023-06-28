@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsSixVertical, Minus, Plus } from '@phosphor-icons/react';
+import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Document } from '@braneframe/types';
 import {
   Main,
   Input,
@@ -19,21 +18,22 @@ import {
   arrayMoveInPlace,
   useListContext,
   ListScopedProps,
+  DropdownMenu,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
-import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
+import { stackSectionCreators } from '../StackPlugin';
+import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
 
 type StackSectionProps = {
-  onAdd: () => void;
   onRemove: () => void;
   section: StackSectionModel;
 };
 
-const StackSection = ({ onAdd, onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
+const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
   const { t } = useTranslation('dxos:stack');
   const { draggingId } = useListContext('StackSection', __listScope);
   const isDragging = draggingId === section.object.id;
@@ -91,10 +91,9 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   }
 
   const handleAdd = useCallback(
-    (start: number) => {
-      const nextDocument = new Document();
-      const section: StackSectionModel<Document> = {
-        object: nextDocument,
+    (start: number, nextSectionObject: GenericStackObject) => {
+      const section: StackSectionModel = {
+        object: nextSectionObject,
       };
       sections.splice(start, 0, section);
     },
@@ -130,21 +129,38 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           // todo(thure): This filter should be unnecessary; why is the first (or only?) value sometimes some sort of array-like object?
           .filter((section) => !!section.object)
           .map((section, start) => {
-            return (
-              <StackSection
-                key={section.object.id}
-                onAdd={() => handleAdd(start)}
-                onRemove={() => handleRemove(start)}
-                section={section}
-              />
-            );
+            return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
           })}
       </List>
       <div role='none' className='pis-1 pie-2'>
-        <Button variant='ghost' onClick={() => handleAdd(sections.length)} classNames='is-full gap-2'>
-          <Plus className={getSize(4)} />
-          <span>{t('add section label')}</span>
-        </Button>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Button variant='ghost' classNames='is-full gap-2'>
+              <Plus className={getSize(4)} />
+              <span>{t('add section label')}</span>
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Arrow />
+            {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
+              const Icon = icon ?? Placeholder;
+              return (
+                <DropdownMenu.Item
+                  key={id}
+                  id={id}
+                  data-testid={testId}
+                  onClick={() => {
+                    const nextSection = create();
+                    handleAdd(sections.length, nextSection);
+                  }}
+                >
+                  <Icon className={getSize(4)} />
+                  <span>{typeof label === 'string' ? label : t(...label)}</span>
+                </DropdownMenu.Item>
+              );
+            })}
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </div>
     </>
   );

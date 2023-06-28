@@ -7,6 +7,7 @@ export default [
     'en-US': {
       'dxos:markdown': {
         'plugin name': 'Markdown',
+        'create document section label': 'Create Markdown section',
       },
     },
   },

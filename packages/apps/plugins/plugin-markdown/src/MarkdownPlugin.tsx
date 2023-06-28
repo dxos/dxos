@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Plus, ArticleMedium } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SpaceProvides } from '@braneframe/plugin-space';
@@ -30,7 +30,11 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
-type MarkdownPluginProvides = SpaceProvides & TranslationsProvides;
+type MarkdownPluginProvides = SpaceProvides &
+  TranslationsProvides & {
+    // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
+    stack: { types: Record<string, any>[] };
+  };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
@@ -67,6 +71,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             label: ['create document label', { ns: 'composer' }],
             icon: Plus,
             Type: Document,
+          },
+        ],
+      },
+      stack: {
+        types: [
+          {
+            id: 'create-doc-section',
+            testId: 'markdownPlugin.createDocumentSection',
+            label: ['create document section label', { ns: 'dxos:markdown' }],
+            icon: ArticleMedium,
+            create: () => new Document(),
           },
         ],
       },

@@ -2,11 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { IconProps } from '@phosphor-icons/react';
+import type { FC } from 'react';
+
 import type { SpaceProvides } from '@braneframe/plugin-space';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { subscribe, ObservableArray } from '@dxos/observable-object';
 
-export type StackPluginProvides = SpaceProvides & TranslationsProvides;
+export type StackSectionCreator<T extends StackSectionModel['object'] = GenericStackObject> = {
+  id: string;
+  testId: string;
+  label: string | [string, { ns: string }];
+  icon: FC<IconProps>;
+  create: () => T;
+};
+
+export type StackProvides = {
+  stack: {
+    types?: StackSectionCreator[];
+  };
+};
+
+export type StackPluginProvides = SpaceProvides &
+  TranslationsProvides & { stackSectionCreators: StackSectionCreator[] };
 
 export type StackSections = ObservableArray<StackSectionModel<any>>;
 
