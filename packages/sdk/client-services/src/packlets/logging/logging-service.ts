@@ -4,9 +4,10 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { log, LogEntry as NaturalLogEntry, LogProcessor, shouldLog, getContextFromEntry } from '@dxos/log';
-import { LoggingService, LogEntry, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { LogLevel, LogProcessor, LogEntry as NaturalLogEntry, getContextFromEntry, log } from '@dxos/log';
+import { LogEntry, LoggingService, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify } from '@dxos/util';
+import { inspect } from 'node:util';
 
 /**
  * Logging service used to spy on logs of the host.
@@ -24,7 +25,6 @@ export class LoggingServiceImpl implements LoggingService {
   }
 
   queryLogs(request: QueryLogsRequest): Stream<LogEntry> {
-    const filters = request.filters?.length ? request.filters : undefined;
     return new Stream<LogEntry>(({ ctx, next }) => {
       const handler = (entry: NaturalLogEntry) => {
         // This call was caused by the logging service itself.
@@ -41,7 +41,13 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
-        if (!shouldLog(entry, filters)) {
+        console.log(inspect({
+          entry: entry.level,
+          request,
+          shouldLog: shouldLog(entry, request),
+        }, false, null, true));
+
+        if (!shouldLog(entry, request)) {
           return;
         }
         
@@ -63,11 +69,7 @@ export class LoggingServiceImpl implements LoggingService {
         }
       };
 
-      ctx.onDispose(() => {
-        this._logs.off(handler);
-      });
-
-      this._logs.on(handler);
+      this._logs.on(ctx, handler);
     });
   }
 
@@ -75,6 +77,28 @@ export class LoggingServiceImpl implements LoggingService {
     this._logs.emit(entry);
   };
 }
+
+const matchFilter = (filter: QueryLogsRequest.Filter, level: LogLevel, path: string, options: QueryLogsRequest.MatchingOptions) => {
+  switch (options) {
+    case QueryLogsRequest.MatchingOptions.INCLUSIVE:
+      return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
+    case QueryLogsRequest.MatchingOptions.EXPLICIT:
+      return level === filter.level && (!filter.pattern || path.includes(filter.pattern));
+  }
+};
+
+/**
+ * Determines if the current line should be logged (called by the processor).
+ */
+const shouldLog = (entry: LogEntry, request: QueryLogsRequest): boolean => {
+  const options = request.options ?? QueryLogsRequest.MatchingOptions.INCLUSIVE;
+  if (request.filters === undefined) {
+    return false;
+  } else {
+    return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? '', options));
+  }
+};
+
 
 /**
  * Counter that is used to track whether we are processing a log entry.
