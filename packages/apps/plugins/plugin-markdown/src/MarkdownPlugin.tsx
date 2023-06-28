@@ -85,7 +85,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
             break;
           case 'section':
-            if (datum && typeof datum === 'object' && 'object' in datum && isMarkdown(datum.object)) {
+            if (
+              datum &&
+              typeof datum === 'object' &&
+              typeof (datum as { [key: string]: any }).object === 'object' &&
+              isMarkdown((datum as { [key: string]: any }).object.content)
+            ) {
               return MarkdownSection;
             }
         }

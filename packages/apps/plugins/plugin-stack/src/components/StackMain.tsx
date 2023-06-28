@@ -6,6 +6,7 @@ import { DotsSixVertical, Minus, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Document } from '@braneframe/types';
 import {
   Main,
   Input,
@@ -13,7 +14,6 @@ import {
   ListItem,
   Button,
   useTranslation,
-  randomString,
   DensityProvider,
   DragEndEvent,
   arrayMoveInPlace,
@@ -92,11 +92,8 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
 
   const handleAdd = useCallback(
     (start: number) => {
-      const nextDocument = {
-        id: randomString(),
-        content: '',
-      };
-      const section: StackSectionModel = {
+      const nextDocument = new Document();
+      const section: StackSectionModel<Document> = {
         object: nextDocument,
       };
       sections.splice(start, 0, section);
