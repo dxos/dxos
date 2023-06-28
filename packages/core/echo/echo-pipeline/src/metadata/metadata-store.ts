@@ -154,7 +154,7 @@ export class MetadataStore {
     await this._save();
   }
 
-  async setSpaceLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+  async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
     this._getSpace(spaceKey).dataTimeframe = timeframe;
     await this._save();
   }

@@ -233,7 +233,7 @@ export class DataPipeline {
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
     const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
-    await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
+    await this._params.metadataStore.setSpaceDataLatestTimeframe(this._params.spaceKey, newTimeframe);
     this._targetTimeframe = newTimeframe;
   }
 
