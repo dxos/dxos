@@ -19,7 +19,8 @@ const encodeStructValue = (structValue: any, visitedObjects: WeakSet<any>): any 
     case 'boolean': {
       return { boolValue: structValue };
     }
-    case 'object': { // null, Array, Object will have typeof 'object'
+    case 'object': {
+      // null, Array, Object will have typeof 'object'
       if (structValue === null || visitedObjects.has(structValue)) {
         return { nullValue: 0 };
       }

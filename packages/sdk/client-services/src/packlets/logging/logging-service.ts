@@ -7,7 +7,6 @@ import { Stream } from '@dxos/codec-protobuf';
 import { LogLevel, LogProcessor, LogEntry as NaturalLogEntry, getContextFromEntry, log } from '@dxos/log';
 import { LogEntry, LoggingService, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify } from '@dxos/util';
-import { inspect } from 'node:util';
 
 /**
  * Logging service used to spy on logs of the host.
@@ -28,7 +27,7 @@ export class LoggingServiceImpl implements LoggingService {
     return new Stream<LogEntry>(({ ctx, next }) => {
       const handler = (entry: NaturalLogEntry) => {
         // This call was caused by the logging service itself.
-        if(LOG_PROCESSING > 0) {
+        if (LOG_PROCESSING > 0) {
           return;
         }
 
@@ -41,16 +40,10 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
-        console.log(inspect({
-          entry: entry.level,
-          request,
-          shouldLog: shouldLog(entry, request),
-        }, false, null, true));
-
         if (!shouldLog(entry, request)) {
           return;
         }
-        
+
         const record: LogEntry = {
           ...entry,
           context: jsonify(getContextFromEntry(entry)),
@@ -58,7 +51,7 @@ export class LoggingServiceImpl implements LoggingService {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta?.file!,
             line: entry.meta?.line!,
-          }
+          },
         };
 
         try {
@@ -78,7 +71,12 @@ export class LoggingServiceImpl implements LoggingService {
   };
 }
 
-const matchFilter = (filter: QueryLogsRequest.Filter, level: LogLevel, path: string, options: QueryLogsRequest.MatchingOptions) => {
+const matchFilter = (
+  filter: QueryLogsRequest.Filter,
+  level: LogLevel,
+  path: string,
+  options: QueryLogsRequest.MatchingOptions,
+) => {
   switch (options) {
     case QueryLogsRequest.MatchingOptions.INCLUSIVE:
       return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
@@ -98,7 +96,6 @@ const shouldLog = (entry: LogEntry, request: QueryLogsRequest): boolean => {
     return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? '', options));
   }
 };
-
 
 /**
  * Counter that is used to track whether we are processing a log entry.
