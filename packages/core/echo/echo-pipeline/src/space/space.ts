@@ -245,8 +245,8 @@ export class Space {
   async initializeDataPipeline() {
     log('initializeDataPipeline');
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    await this._dataPipeline.open();
     assert(this._dataPipelineCredentialConsumer);
     await this._dataPipelineCredentialConsumer.open();
+    await this._dataPipeline.open();
   }
 }
