@@ -70,7 +70,6 @@ export class InvitationsManager extends ShellManager {
   }
 
   async getAuthCode(): Promise<string> {
-    this._authCode = new Trigger<string>();
     return await this._authCode.wait();
   }
 
@@ -121,20 +120,21 @@ export class InvitationsManager extends ShellManager {
   }
 
   async createInvitation(id: number, type: 'device' | 'space', options?: Partial<Invitation>): Promise<string> {
+    this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
+
     if (!options) {
       const peer = this.peer(id);
-      this._invitationCode = new Trigger<string>();
       await peer.getByTestId(`${type}s-panel.create-invitation`).click();
       return this._invitationCode.wait();
     }
 
-    this._invitationCode = new Trigger<string>();
     await this.page.evaluate(
       ({ id, type, options }) => {
         if (type === 'device') {
-          (window as any)[`peer${id}client`].halo.createInvitation(options);
+          (window as any)[`peer${id}CreateHaloInvitation`](options);
         } else {
-          (window as any)[`peer${id}space`].createInvitation(options);
+          (window as any)[`peer${id}CreateSpaceInvitation`](options);
         }
       },
       { id, type, options },
@@ -157,7 +157,8 @@ export class InvitationsManager extends ShellManager {
       const json = JSON.parse(message.text());
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
-      } else if (json.authCode) {
+      }
+      if (json.authCode) {
         this._authCode.wake(json.authCode);
       }
     } catch {}

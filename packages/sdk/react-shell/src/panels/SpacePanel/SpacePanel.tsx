@@ -28,17 +28,14 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
   const invitations = useSpaceInvitations(space?.key);
   const name = space?.properties.name;
 
-  console.log('[space panel]', process.env.NODE_ENV);
-
   if (!space) {
     return null;
   }
 
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
-    console.log(JSON.stringify({ invitationCode }));
-    if (invitation.authCode) {
-      console.log(JSON.stringify({ authCode: invitation.authCode }));
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
 
@@ -60,6 +57,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
           classNames='is-full flex gap-2 mbs-2'
           onClick={() => {
             const invitation = space?.createInvitation();
+            // TODO(wittjosiah): Don't depend on NODE_ENV.
             if (process.env.NODE_ENV !== 'production') {
               invitation.subscribe(onInvitationEvent);
             }
