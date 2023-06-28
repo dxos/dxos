@@ -81,6 +81,7 @@ export class Space {
       spaceKey: params.spaceKey,
       genesisFeed: params.genesisFeed,
       feedProvider: params.feedProvider,
+      metadataStore: params.metadataStore,
     });
 
     // TODO(dmaretskyi): Feed set abstraction.
