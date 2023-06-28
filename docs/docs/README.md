@@ -4,9 +4,6 @@ title: Documentation
 heroImage: /images/logotype/dxos-hero.svg
 heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
-  - text: Learn more
-    link: /guide/
-    type: secondary
   - text: Get started
     link: /guide/getting-started
     type: primary
@@ -31,7 +28,7 @@ footer: MIT Licensed | Copyright © DXOS.org
 
 ## ECHO in Action
 
-This demonstrates how two peers would synchronize over ECHO (The Eventually Consistent Hierarhical Object store), a peer-to-peer graph database written in TypeScript. 
+This demonstrates how two peers would synchronize over ECHO (The Eventually Consistent Hierarhical Object store), a peer-to-peer graph database written in TypeScript.
 
 Type in the boxes below to create new list items and experiment with the replication toggle to see how clients reconcile when returning from offline mode. [Learn more about ECHO](/guide/).
 
@@ -90,6 +87,6 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 };
 ```
 
-The highlighted line above shows how easy it is to track state with ECHO. 
+The highlighted line above shows how easy it is to track state with ECHO.
 
 Simply mutate objects received from ECHO as you would any regular JavaScript object, and the changes will propagate to all connected peers automatically. Read more about [ECHO](/guide/echo/), [mutations in TypeScript](/guide/typescript/mutations/), and [React](/guide/react/mutations/).

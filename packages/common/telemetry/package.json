@@ -1,6 +1,6 @@
 {
   "name": "@dxos/telemetry",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "description": "Telemetry logging for product usage statistics",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@segment/snippet": "^4.15.3",

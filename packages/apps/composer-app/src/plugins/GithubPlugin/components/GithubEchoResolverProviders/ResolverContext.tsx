@@ -3,7 +3,6 @@
 //
 
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 import { Document } from '@braneframe/types';
 import { SpaceState } from '@dxos/client';
@@ -14,8 +13,8 @@ import { Space, useIdentity, useQuery, useSpaces, Text, observer } from '@dxos/r
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 import { displayName, matchSpace } from './spaceResolvers';
 
-const useLocationIdentifier = () => {
-  const [searchParams] = useSearchParams();
+const getLocationIdentifier = () => {
+  const searchParams = new URLSearchParams(window.location.search);
   const location = searchParams.get('location');
   let source, id;
   try {
@@ -36,7 +35,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
 export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
   const identity = useIdentity({ login: true });
   const identityHex = identity?.identityKey.toHex();
-  const [source, id] = useLocationIdentifier();
+  const [source, id] = getLocationIdentifier();
   const spaces = useSpaces({ all: true });
 
   const [nextSpace, setSpace] = useState<Space | null>(null);

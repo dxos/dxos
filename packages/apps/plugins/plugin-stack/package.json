@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-stack",
-  "version": "0.1.45",
+  "version": "0.1.50",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,10 +16,12 @@
   ],
   "dependencies": {
     "@dxos/observable-object": "workspace:*",
+    "@dxos/util": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
