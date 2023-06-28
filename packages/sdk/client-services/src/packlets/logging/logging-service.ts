@@ -91,7 +91,7 @@ const matchFilter = (
 const shouldLog = (entry: LogEntry, request: QueryLogsRequest): boolean => {
   const options = request.options ?? QueryLogsRequest.MatchingOptions.INCLUSIVE;
   if (request.filters === undefined) {
-    return false;
+    return options === QueryLogsRequest.MatchingOptions.INCLUSIVE;
   } else {
     return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? '', options));
   }
