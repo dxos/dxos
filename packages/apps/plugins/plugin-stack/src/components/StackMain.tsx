@@ -22,6 +22,7 @@ import {
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
+import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
@@ -79,19 +80,24 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
 
-  useEffect(() => {
-    // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
-    return sections[subscribe](() => setIter([])) as () => void;
-  }, []);
+  // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
+  if (subscribe in sections) {
+    useEffect(() => {
+      // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
+      return sections[subscribe](() => setIter([])) as () => void;
+    }, []);
+  } else {
+    useSubscription(() => setIter([]), [sections]);
+  }
 
   const handleAdd = useCallback(
     (start: number) => {
+      const nextDocument = {
+        id: randomString(),
+        content: '',
+      };
       const section: StackSectionModel = {
-        source: { resolver: 'dxos:markdown', guid: randomString() },
-        object: {
-          id: randomString(),
-          content: '',
-        },
+        object: nextDocument,
       };
       sections.splice(start, 0, section);
     },
@@ -125,7 +131,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
       >
         {sections
           // todo(thure): This filter should be unnecessary; why is the first (or only?) value sometimes some sort of array-like object?
-          .filter((section) => 'source' in section)
+          .filter((section) => !!section.object)
           .map((section, start) => {
             return (
               <StackSection
@@ -147,11 +153,8 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   );
 };
 
-export const StackMain = ({
-  data: [stack, properties],
-}: {
-  data: [stack: StackModel, properties: StackProperties];
-}) => {
+export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
+  const stack = data[data.length - 1] as StackModel & StackProperties;
   const { t } = useTranslation('dxos:stack');
   return (
     <Main.Content classNames='min-bs-[100vh] mli-auto max-is-[60rem]'>
@@ -160,8 +163,9 @@ export const StackMain = ({
         <Input.TextInput
           variant='subdued'
           classNames='flex-1 min-is-0 is-auto pis-2 plb-3.5 pointer-fine:plb-2.5'
-          defaultValue={properties.title}
-          onChange={({ target: { value } }) => (properties.title = value)}
+          placeholder={t('stack title placeholder')}
+          defaultValue={stack.title ?? ''}
+          onChange={({ target: { value } }) => (stack.title = value)}
         />
       </Input.Root>
       <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />

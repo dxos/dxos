@@ -33,7 +33,13 @@
       "path": "../../../ui/aurora-theme"
     },
     {
+      "path": "../../types"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-theme"

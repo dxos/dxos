@@ -2,7 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { SpaceProvides } from '@braneframe/plugin-space';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { subscribe, ObservableArray } from '@dxos/observable-object';
+
+export type StackPluginProvides = SpaceProvides & TranslationsProvides;
 
 export type StackSections = ObservableArray<StackSectionModel<any>>;
 
@@ -11,7 +15,6 @@ export type StackObject = { id: string };
 export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
-  source: { resolver: string; guid: string };
   object: T;
 };
 
@@ -28,9 +31,8 @@ export const isStack = <T extends StackObject = GenericStackObject>(datum: unkno
   datum && typeof datum === 'object'
     ? 'id' in datum &&
       typeof datum.id === 'string' &&
-      'sections' in datum &&
-      Array.isArray(datum.sections) &&
-      subscribe in datum.sections
+      typeof (datum as { [key: string]: any }).sections === 'object' &&
+      typeof (datum as { [key: string]: any }).sections?.length === 'number'
     : false;
 
 export const isStackProperties = (datum: unknown): datum is StackProperties =>
