@@ -159,6 +159,11 @@ export class MetadataStore {
     await this._save();
   }
 
+  async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
+    this._getSpace(spaceKey).controlTimeframe = timeframe;
+    await this._save();
+  }
+
   async setCache(spaceKey: PublicKey, cache: SpaceCache) {
     this._getSpace(spaceKey).cache = cache;
     await this._save();
