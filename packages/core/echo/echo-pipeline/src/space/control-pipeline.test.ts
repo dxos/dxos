@@ -45,11 +45,13 @@ describe('space/control-pipeline', () => {
     const storage = createStorage({ type: StorageType.RAM });
     const directory = storage.createDirectory();
     const genesisFeed = await createFeed();
+    const metadata = new MetadataStore(directory);
+    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
       feedProvider: (key) => feedStore.openFeed(key),
-      metadataStore: new MetadataStore(directory),
+      metadataStore: metadata,
     });
 
     const admittedFeeds: PublicKey[] = [];
