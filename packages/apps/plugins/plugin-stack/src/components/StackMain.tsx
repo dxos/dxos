@@ -19,13 +19,14 @@ import {
   useListContext,
   ListScopedProps,
   DropdownMenu,
+  ButtonGroup,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
-import { stackSectionCreators } from '../StackPlugin';
+import { stackSectionChoosers, stackSectionCreators } from '../StackPlugin';
 import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
 
 type StackSectionProps = {
@@ -134,35 +135,67 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
           })}
       </List>
-      <div role='none' className='pis-1 pie-2'>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <Button variant='ghost' classNames='is-full gap-2'>
-              <Plus className={getSize(4)} />
-              <span>{t('add section label')}</span>
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            <DropdownMenu.Arrow />
-            {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
-              const Icon = icon ?? Placeholder;
-              return (
-                <DropdownMenu.Item
-                  key={id}
-                  id={id}
-                  data-testid={testId}
-                  onClick={() => {
-                    const nextSection = create();
-                    handleAdd(sections.length, nextSection);
-                  }}
-                >
-                  <Icon className={getSize(4)} />
-                  <span>{typeof label === 'string' ? label : t(...label)}</span>
-                </DropdownMenu.Item>
-              );
-            })}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+      <div role='none' className='flex gap-4 justify-center items-center'>
+        <h2 className='text-sm font-normal flex items-center gap-1'>
+          <Plus className={getSize(4)} />
+          <span>{t('add section label')}</span>
+        </h2>
+        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
+          <DropdownMenu.Root modal={false}>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost'>
+                <span>{t('add new section label')}</span>
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Arrow />
+              {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
+                const Icon = icon ?? Placeholder;
+                return (
+                  <DropdownMenu.Item
+                    key={id}
+                    id={id}
+                    data-testid={testId}
+                    onClick={() => {
+                      const nextSection = create();
+                      handleAdd(sections.length, nextSection);
+                    }}
+                  >
+                    <Icon className={getSize(4)} />
+                    <span>{typeof label === 'string' ? label : t(...label)}</span>
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+
+          <DropdownMenu.Root modal={false}>
+            <DropdownMenu.Trigger asChild>
+              <Button variant='ghost'>
+                <span>{t('add existing section label')}</span>
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Arrow />
+              {stackSectionChoosers.map(({ id, testId, filter, icon, label }) => {
+                const Icon = icon ?? Placeholder;
+                return (
+                  <DropdownMenu.Item
+                    key={id}
+                    id={id}
+                    data-testid={testId}
+                    onClick={() => {
+                      console.warn('To implement: adding a section from an existing item.');
+                    }}
+                  >
+                    <Icon className={getSize(4)} />
+                    <span>{typeof label === 'string' ? label : t(...label)}</span>
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </ButtonGroup>
       </div>
     </>
   );

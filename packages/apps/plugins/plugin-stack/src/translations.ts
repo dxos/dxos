@@ -8,8 +8,11 @@ export default [
       'dxos:stack': {
         'plugin name': 'DXOS Stacks',
         'create stack label': 'Create stack',
-        'add section label': 'Add section',
+        'add section label': 'Add:',
+        'add new section label': 'New',
+        'add existing section label': 'Existing',
         'stack title placeholder': 'Untitled stack',
+        'add existing section dialog title': 'Choose an item to add',
       },
     },
   },

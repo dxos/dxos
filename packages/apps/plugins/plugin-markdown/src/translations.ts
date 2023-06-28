@@ -7,7 +7,9 @@ export default [
     'en-US': {
       'dxos:markdown': {
         'plugin name': 'Markdown',
-        'create document section label': 'Create Markdown section',
+        'create section space document label': 'Add as a new Document in this Space',
+        'choose section space document label': 'Add a Document from this Space',
+        'untitled document title': 'Untitled document',
       },
     },
   },

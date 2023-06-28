@@ -9,22 +9,30 @@ import type { SpaceProvides } from '@braneframe/plugin-space';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { subscribe, ObservableArray } from '@dxos/observable-object';
 
-export type StackSectionCreator<T extends StackSectionModel['object'] = GenericStackObject> = {
+type StackSectionAction = {
   id: string;
   testId: string;
   label: string | [string, { ns: string }];
   icon: FC<IconProps>;
+};
+
+export type StackSectionCreator<T extends StackSectionModel['object'] = GenericStackObject> = StackSectionAction & {
   create: () => T;
+};
+
+export type StackSectionChooser = StackSectionAction & {
+  filter: (datum: unknown) => boolean;
 };
 
 export type StackProvides = {
   stack: {
-    types?: StackSectionCreator[];
+    creators?: StackSectionCreator[];
+    choosers?: StackSectionChooser[];
   };
 };
 
 export type StackPluginProvides = SpaceProvides &
-  TranslationsProvides & { stackSectionCreators: StackSectionCreator[] };
+  TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
 
 export type StackSections = ObservableArray<StackSectionModel<any>>;
 

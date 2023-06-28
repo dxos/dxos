@@ -3,6 +3,7 @@
 //
 
 import { Plus, ArticleMedium } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { SpaceProvides } from '@braneframe/plugin-space';
@@ -33,7 +34,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 type MarkdownPluginProvides = SpaceProvides &
   TranslationsProvides & {
     // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
-    stack: { types: Record<string, any>[] };
+    stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
   };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
@@ -75,13 +76,23 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       stack: {
-        types: [
+        creators: [
           {
-            id: 'create-doc-section',
-            testId: 'markdownPlugin.createDocumentSection',
-            label: ['create document section label', { ns: 'dxos:markdown' }],
+            id: 'create-section-space-doc',
+            testId: 'markdownPlugin.createSectionSpaceDocument',
+            label: ['create section space document label', { ns: 'dxos:markdown' }],
             icon: ArticleMedium,
             create: () => new Document(),
+          },
+        ],
+        choosers: [
+          {
+            id: 'choose-section-space-doc',
+            testId: 'markdownPlugin.chooseSectionSpaceDocument',
+            label: ['choose section space document label', { ns: 'dxos:markdown' }],
+            icon: ArticleMedium,
+            // todo(thure): This feature is unfinished and may change
+            filter: (datum: unknown) => isMarkdown(get(datum, 'content', {})),
           },
         ],
       },
@@ -100,14 +111,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
             break;
           case 'section':
-            if (
-              datum &&
-              typeof datum === 'object' &&
-              typeof (datum as { [key: string]: any }).object === 'object' &&
-              isMarkdown((datum as { [key: string]: any }).object.content)
-            ) {
+            if (isMarkdown(get(datum, 'object.content', {}))) {
               return MarkdownSection;
             }
+            break;
         }
 
         return null;

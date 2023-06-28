@@ -9,10 +9,11 @@ import { createStore } from '@dxos/observable-object';
 import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain } from './components';
-import { isStack, StackPluginProvides, StackProvides, StackSectionCreator } from './props';
+import { isStack, StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './props';
 import translations from './translations';
 
 export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
+export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
   meta: {
@@ -20,8 +21,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
   },
   ready: async (plugins) => {
     return plugins.forEach((plugin) => {
-      if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.types)) {
-        stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.types!);
+      if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
+        stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
+      }
+      if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
+        stackSectionChoosers.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
       }
     });
   },
@@ -54,5 +58,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
       StackMain,
     },
     stackSectionCreators,
+    stackSectionChoosers,
   },
 });
