@@ -4,20 +4,20 @@
 
 import { subscribe, ObservableArray } from '@dxos/observable-object';
 
-export type StackSections = ObservableArray<StackSectionModel<any>>;
-
 export type StackObject = { id: string };
 
 export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
-  source: { resolver: string; guid: string };
+  source: { resolver: string; guid: string }; // TODO(burdon): Why is this needed?
   object: T;
 };
 
+export type StackSections<T extends StackObject = GenericStackObject> = ObservableArray<StackSectionModel<T>>;
+
 export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;
-  sections: ObservableArray<StackSectionModel<T>>;
+  sections: StackSections<T>;
 };
 
 export type StackProperties = {

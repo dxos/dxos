@@ -16,13 +16,13 @@ import {
   randomString,
   DensityProvider,
   DragEndEvent,
-  arrayMoveInPlace,
   useListContext,
   ListScopedProps,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
+import { arrayMove } from '@dxos/util';
 
 import { StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
 
@@ -76,9 +76,8 @@ const StackSection = ({ onAdd, onRemove, section, __listScope }: ListScopedProps
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
-
+  const [_, setIter] = useState([]);
   useEffect(() => {
     // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
     return sections[subscribe](() => setIter([])) as () => void;
@@ -89,7 +88,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
       const section: StackSectionModel = {
         source: { resolver: 'dxos:markdown', guid: randomString() },
         object: {
-          id: randomString(),
+          id: randomString(), // TODO(burdon): Must not use this for ECHO object.
           content: '',
         },
       };
@@ -110,7 +109,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     if (active.id !== over?.id) {
       const oldIndex = sections.findIndex((section) => section.object.id === active.id);
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
-      arrayMoveInPlace<StackSectionModel>(sections, oldIndex, newIndex);
+      arrayMove(sections, oldIndex, newIndex);
     }
   }, []);
 
