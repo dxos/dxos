@@ -8,6 +8,7 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -278,7 +279,15 @@ export class DataPipeline {
       return;
     }
     await this._epochCtx?.dispose();
-    const ctx = new Context();
+    const ctx = new Context({
+      onError: (err) => {
+        if (err instanceof CancelledError) {
+          log('Epoch processing cancelled.');
+        } else {
+          log.catch(err);
+        }
+      },
+    });
     this._epochCtx = ctx;
     scheduleTask(ctx, async () => {
       if (!this._isOpen) {
