@@ -81,6 +81,7 @@ export class Space {
       spaceKey: params.spaceKey,
       genesisFeed: params.genesisFeed,
       feedProvider: params.feedProvider,
+      metadataStore: params.metadataStore,
     });
 
     // TODO(dmaretskyi): Feed set abstraction.
@@ -218,6 +219,8 @@ export class Space {
       this._dataPipeline.createCredentialProcessor(),
     );
 
+    await this._dataPipelineCredentialConsumer.open();
+
     this._isOpen = true;
     log('opened');
   }
@@ -246,7 +249,5 @@ export class Space {
     log('initializeDataPipeline');
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
     await this._dataPipeline.open();
-    assert(this._dataPipelineCredentialConsumer);
-    await this._dataPipelineCredentialConsumer.open();
   }
 }
