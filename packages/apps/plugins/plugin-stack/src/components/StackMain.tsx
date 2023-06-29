@@ -6,6 +6,7 @@ import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react
 import get from 'lodash.get';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
   Input,
@@ -80,6 +81,7 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
+  const splitView = useSplitView();
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
@@ -125,12 +127,12 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
         onDragEnd={handleDragEnd}
         listItemIds={sections
           // todo(thure): DRY-out this filter, also should this be represented in the UI?
-          .filter((section) => !!section.object && !!section.object.id)
+          .filter((section) => !!section?.object?.id)
           .map(({ object: { id } }) => id)}
         classNames='pis-1 pie-2'
       >
         {sections
-          .filter((section) => !!section.object && !!section.object.id)
+          .filter((section) => !!section?.object?.id)
           .map((section, start) => {
             return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
           })}
@@ -177,7 +179,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
-              {stackSectionChoosers.map(({ id, testId, filter, icon, label }) => {
+              {stackSectionChoosers.map(({ id, testId, icon, label }) => {
                 const Icon = icon ?? Placeholder;
                 return (
                   <DropdownMenu.Item
@@ -185,7 +187,17 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
                     id={id}
                     data-testid={testId}
                     onClick={() => {
-                      console.warn('To implement: adding a section from an existing item.');
+                      splitView.dialogContent = {
+                        id,
+                        chooser: 'many',
+                        subject: 'dxos:stack/chooser',
+                        omit: new Set(
+                          sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
+                        ),
+                        onDone: (items: GenericStackObject[]) =>
+                          sections.splice(sections.length, 0, ...items.map((item) => ({ object: item }))),
+                      };
+                      splitView.dialogOpen = true;
                     }}
                   >
                     <Icon className={getSize(4)} />

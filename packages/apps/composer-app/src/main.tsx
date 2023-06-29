@@ -12,7 +12,7 @@ import { GraphPlugin } from '@braneframe/plugin-graph';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
-// import { StackPlugin } from '@braneframe/plugin-stack';
+import { StackPlugin } from '@braneframe/plugin-stack';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
@@ -36,7 +36,7 @@ createRoot(document.getElementById('root')!).render(
         SplitViewPlugin(),
         SpacePlugin(),
         MarkdownPlugin(),
-        // StackPlugin(),
+        StackPlugin(),
         GithubPlugin(),
         LocalFilesPlugin(),
       ]}

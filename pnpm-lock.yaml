@@ -595,8 +595,10 @@ importers:
 
   packages/apps/plugins/plugin-markdown:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -619,8 +621,10 @@ importers:
       '@dxos/text-model': link:../../../core/echo/text-model
       lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -716,6 +720,7 @@ importers:
     specifiers:
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
@@ -736,6 +741,7 @@ importers:
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora

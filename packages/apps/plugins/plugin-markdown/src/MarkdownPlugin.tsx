@@ -14,8 +14,13 @@ import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
-import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty } from './components';
-import { MarkdownSection } from './components/MarkdownSection';
+import {
+  MarkdownMain,
+  MarkdownMainEmbedded,
+  MarkdownMainEmpty,
+  MarkdownSection,
+  SpaceMarkdownChooser,
+} from './components';
 import { MarkdownProperties, isMarkdown, isMarkdownPlaceholder, isMarkdownProperties } from './props';
 import translations from './translations';
 
@@ -91,8 +96,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
             label: ['choose section space document label', { ns: 'dxos:markdown' }],
             icon: ArticleMedium,
-            // todo(thure): This feature is unfinished and may change
-            filter: (datum: unknown) => isMarkdown(get(datum, 'content', {})),
           },
         ],
       },
@@ -113,6 +116,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           case 'section':
             if (isMarkdown(get(datum, 'object.content', {}))) {
               return MarkdownSection;
+            }
+            break;
+          case 'dialog':
+            if (get(datum, 'subject') === 'dxos:stack/chooser' && get(datum, 'id') === 'choose-section-space-doc') {
+              return SpaceMarkdownChooser;
             }
             break;
         }

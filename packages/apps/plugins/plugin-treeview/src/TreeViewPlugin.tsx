@@ -25,7 +25,7 @@ export type TreeViewProvides = {
   treeView: TreeViewContextValue;
 };
 
-const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
+export const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
   const node = graph.find((node) => node.id === id);
   if (!node) {
     return nodes;
