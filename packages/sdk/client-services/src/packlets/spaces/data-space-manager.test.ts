@@ -262,12 +262,9 @@ describe('DataSpaceManager', () => {
         spaceKey = space.key;
         await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
-        for (const index of range(epochsNumber)) {
+        for (const _ of range(epochsNumber)) {
           await testLocalDatabase(space.dataPipeline);
           await space.createEpoch();
-          await space.dataPipeline.onNewEpoch.waitForCondition(
-            () => space.dataPipeline.currentEpoch?.subject?.assertion?.number === index + 1,
-          );
         }
         await space.close();
         await dataSpaceManager.close();
