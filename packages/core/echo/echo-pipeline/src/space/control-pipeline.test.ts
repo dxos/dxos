@@ -42,10 +42,8 @@ describe('space/control-pipeline', () => {
     };
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
-    const storage = createStorage({ type: StorageType.RAM });
-    const directory = storage.createDirectory();
     const genesisFeed = await createFeed();
-    const metadata = new MetadataStore(directory);
+    const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
     await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
     const controlPipeline = new ControlPipeline({
       spaceKey,
