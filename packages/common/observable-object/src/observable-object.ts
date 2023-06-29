@@ -14,7 +14,7 @@ export interface ObservableObject {
 }
 
 export class ObservableObjectImpl<T> implements ObservableObject {
-  private _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
+  private readonly _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
 
   constructor(initialData?: T) {
     if (initialData) {

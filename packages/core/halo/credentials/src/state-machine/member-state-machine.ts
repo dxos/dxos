@@ -22,6 +22,8 @@ export interface MemberInfo {
  * Provides a list of admitted feeds.
  */
 export class MemberStateMachine {
+  private _creator: MemberInfo | undefined;
+
   /**
    * Member IDENTITY key => info
    */
@@ -34,6 +36,10 @@ export class MemberStateMachine {
     private readonly _spaceKey: PublicKey
   ) {}
 
+  get creator(): MemberInfo | undefined {
+    return this._creator;
+  }
+
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members;
   }
@@ -44,9 +50,7 @@ export class MemberStateMachine {
 
   /**
    * Processes the SpaceMember credential.
-   * Assumes the credential is already pre-verified
-   * and the issuer has been authorized to issue credentials of this type.
-   * @param fromFeed Key of the feed where this credential is recorded.
+   * Assumes the credential is already pre-verified and the issuer has been authorized to issue credentials of this type.
    */
   async process(credential: Credential) {
     const assertion = getCredentialAssertion(credential);
@@ -59,6 +63,12 @@ export class MemberStateMachine {
       credential,
       assertion,
     };
+
+    // NOTE: Assumes the first member processed is the creator.
+    if (!this._creator) {
+      this._creator = info;
+    }
+
     this._members.set(credential.subject.id, info);
     log('member added', {
       member: credential.subject.id,
@@ -66,6 +76,7 @@ export class MemberStateMachine {
       role: assertion.role,
       profile: assertion.profile,
     });
+
     await this.onMemberAdmitted.callIfSet(info);
   }
 }

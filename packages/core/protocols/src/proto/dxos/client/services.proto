@@ -176,6 +176,9 @@ message Space {
     repeated dxos.keys.PublicKey control_feeds = 18;
     repeated dxos.keys.PublicKey data_feeds = 19;
 
+    /// Last processed epoch.
+    optional dxos.halo.Credential current_epoch = 20;
+
     /// Mutations already processed.
     optional timeframe.TimeframeVector current_control_timeframe = 10;
 
@@ -188,7 +191,7 @@ message Space {
     /// All mutations known to exist on the network.
     optional timeframe.TimeframeVector known_control_timeframe = 15;
 
-    /// Mutations alredy processed.
+    /// Mutations already processed.
     optional timeframe.TimeframeVector current_data_timeframe = 12;
 
     /// Minimum timeframe to consider the state to be up-to-date.
@@ -199,8 +202,6 @@ message Space {
 
     /// All mutations known to exist on the network.
     optional timeframe.TimeframeVector known_data_timeframe = 17;
-
-    // TODO(dmaretskyi): Snapshot & epoch info.
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -209,10 +210,13 @@ message Space {
   optional dxos.error.Error error = 4;
 
   repeated SpaceMember members = 10;
+  optional dxos.keys.PublicKey creator = 11;
 
   optional dxos.echo.metadata.SpaceCache cache = 20;
   Metrics metrics = 21;
 }
+
+// TODO(burdon): Create type for epoch?
 
 message UpdateSpaceRequest {
   optional Status status = 1;

@@ -18,6 +18,7 @@ export interface SpaceState {
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
+  readonly creator: MemberInfo | undefined;
 
   registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
@@ -46,7 +47,9 @@ export class SpaceStateMachine implements SpaceState {
     private readonly _spaceKey: PublicKey
   ) { }
 
-  // TODO(burdon): Return state object rather than extend.
+  get creator(): MemberInfo | undefined {
+    return this._members.creator;
+  }
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members.members;
@@ -91,6 +94,7 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   /**
+   * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
   async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {

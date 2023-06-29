@@ -4,7 +4,7 @@
 
 import { Flags } from '@oclif/core';
 
-import { Agent } from '@dxos/agent';
+import { Agent, AgentOptions } from '@dxos/agent';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
@@ -44,13 +44,20 @@ export default class Run extends BaseCommand<typeof Run> {
       listen.push(`http://localhost:${this.flags.http}`);
     }
 
-    const agent = new Agent(this.clientConfig, { profile: this.flags.profile, listen });
-    await agent.start();
+    const options: AgentOptions = {
+      profile: this.flags.profile,
+      listen,
+    };
 
+    // TODO(burdon): Build monitoring into agent start (not just epoch).
     if (this.flags.epoch && this.flags.epoch !== '0') {
-      const limit = safeParseInt(this.flags.epoch, undefined);
-      await agent.monitorEpochs({ limit });
+      options.monitor = {
+        limit: safeParseInt(this.flags.epoch, undefined),
+      };
     }
+
+    const agent = new Agent(this.clientConfig, options);
+    await agent.start();
 
     // NOTE: This is currently called by the agent's forever daemon.
     this.log('Agent started... (ctrl-c to exit)');
