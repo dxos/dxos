@@ -21,6 +21,8 @@ export type ControlPipelineParams = {
   metadataStore: MetadataStore;
 };
 
+const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
+
 /**
  * Processes HALO credentials, which include genesis and invitations.
  */
@@ -31,6 +33,7 @@ export class ControlPipeline {
   private readonly _spaceKey: PublicKey;
   private readonly _metadata: MetadataStore;
   private _targetTimeframe?: Timeframe;
+  private _lastTimeframeSaveTime: number = Date.now();
 
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
@@ -90,6 +93,8 @@ export class ControlPipeline {
             );
             if (!result) {
               log.warn('processing failed', { msg });
+            } else {
+              await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
             }
           }
         } catch (err: any) {
@@ -100,6 +105,16 @@ export class ControlPipeline {
 
     await this._pipeline.start();
     log('started');
+  }
+
+  private async _noteTargetStateIfNeeded(timeframe: Timeframe) {
+    // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
+
+    if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
+      this._lastTimeframeSaveTime = Date.now();
+
+      await this._saveTargetTimeframe(timeframe);
+    }
   }
 
   async stop() {
