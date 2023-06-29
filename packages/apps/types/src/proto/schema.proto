@@ -40,3 +40,23 @@ message Stack {
   string title = 1;
   repeated Section sections = 2;
 }
+
+message Kanban {
+  option (object) = true;
+
+  message Column {
+    // option (object) = true;
+
+    string title = 1;
+    repeated Item items = 2;
+  }
+
+  message Item {
+    // option (object) = true;
+
+    string content = 1;
+  }
+
+  string title = 1;
+  repeated Column columns = 2;
+}
