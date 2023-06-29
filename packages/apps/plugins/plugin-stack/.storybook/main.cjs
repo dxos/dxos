@@ -16,6 +16,10 @@ module.exports = {
   },
   viteFinal: async (config) =>
     mergeConfig(config, {
+      define: {
+        // TODO(thure): Why is this necessary?
+        'process.env.NODE_DEBUG': false,
+      },
       plugins: [
         ThemePlugin({
           root: __dirname,
