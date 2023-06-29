@@ -110,8 +110,8 @@ export class DataPipeline {
         if (this._isOpen) {
           // process epoch
           log('new epoch', { credential });
-          await this._processEpoch(credential.subject.assertion);
           this.currentEpoch = credential;
+          await this._processEpoch(credential.subject.assertion);
           this.onNewEpoch.emit(credential);
         } else {
           // remember epoch
