@@ -2,14 +2,43 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { IconProps } from '@phosphor-icons/react';
+import type { FC } from 'react';
+
+import type { SpaceProvides } from '@braneframe/plugin-space';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { subscribe, ObservableArray } from '@dxos/observable-object';
+
+type StackSectionAction = {
+  id: string;
+  testId: string;
+  label: string | [string, { ns: string }];
+  icon: FC<IconProps>;
+};
+
+export type StackSectionCreator<T extends StackSectionModel['object'] = GenericStackObject> = StackSectionAction & {
+  create: () => T;
+};
+
+export type StackSectionChooser = StackSectionAction & {
+  filter: (datum: unknown) => boolean;
+};
+
+export type StackProvides = {
+  stack: {
+    creators?: StackSectionCreator[];
+    choosers?: StackSectionChooser[];
+  };
+};
+
+export type StackPluginProvides = SpaceProvides &
+  TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
 
 export type StackObject = { id: string };
 
 export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
-  source: { resolver: string; guid: string }; // TODO(burdon): Why is this needed?
   object: T;
 };
 
@@ -28,9 +57,8 @@ export const isStack = <T extends StackObject = GenericStackObject>(datum: unkno
   datum && typeof datum === 'object'
     ? 'id' in datum &&
       typeof datum.id === 'string' &&
-      'sections' in datum &&
-      Array.isArray(datum.sections) &&
-      subscribe in datum.sections
+      typeof (datum as { [key: string]: any }).sections === 'object' &&
+      typeof (datum as { [key: string]: any }).sections?.length === 'number'
     : false;
 
 export const isStackProperties = (datum: unknown): datum is StackProperties =>

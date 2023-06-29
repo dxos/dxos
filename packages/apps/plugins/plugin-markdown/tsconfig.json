@@ -42,10 +42,16 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }
