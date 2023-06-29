@@ -162,8 +162,10 @@ export class MetadataStore {
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
     if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
       this._metadata.identity.haloSpace.controlTimeframe = timeframe;
-    } else {
+    } else if (this._metadata.spaces?.length !== 0) {
       this._getSpace(spaceKey).controlTimeframe = timeframe;
+    } else {
+      return;
     }
     await this._save();
   }

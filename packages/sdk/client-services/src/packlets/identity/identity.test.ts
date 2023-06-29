@@ -180,6 +180,8 @@ describe('identity/identity', () => {
         }),
       });
 
+      const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+      await metadata.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
       const space = new Space({
         spaceKey,
         protocol,
@@ -187,7 +189,7 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
-        metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        metadataStore: metadata,
         snapshotManager: new SnapshotManager(
           new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
         ),
@@ -265,6 +267,8 @@ describe('identity/identity', () => {
         }),
       });
 
+      const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+      await metadata.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey: identity1.identityKey, deviceKey });
       const space = new Space({
         spaceKey,
         protocol,
@@ -272,7 +276,7 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
-        metadataStore: new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+        metadataStore: metadata,
         snapshotManager: new SnapshotManager(
           new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
         ),
