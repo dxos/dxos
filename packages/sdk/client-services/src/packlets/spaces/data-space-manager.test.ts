@@ -6,11 +6,13 @@ import { expect } from 'chai';
 import path from 'node:path';
 
 import { latch } from '@dxos/async';
-import { createAdmissionCredentials } from '@dxos/credentials';
+import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -233,5 +235,69 @@ describe('DataSpaceManager', () => {
       await space.createEpoch();
       expect((await file.stat()).size === 0).to.be.true;
     }).onlyEnvironments('nodejs', 'chromium', 'firefox');
+
+    test.only('Loads only last epoch', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer({ storageType: StorageType.NODE });
+      const identity = await createSigningContext(peer.keyring);
+      const epochsNumber = 10;
+      const dataService = new DataServiceSubscriptions();
+      let spaceKey: PublicKey;
+      {
+        // Create space and create epochs in it.s
+        const dataSpaceManager = new DataSpaceManager(
+          peer.spaceManager,
+          peer.metadataStore,
+          dataService,
+          peer.keyring,
+          identity,
+          peer.feedStore,
+        );
+        await dataSpaceManager.open();
+        afterTest(() => dataSpaceManager.close());
+
+        const space = await dataSpaceManager.createSpace();
+        spaceKey = space.key;
+        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+        for (const index of range(epochsNumber)) {
+          await testLocalDatabase(space.dataPipeline);
+          await space.createEpoch();
+          await space.dataPipeline.onNewEpoch.waitForCondition(
+            () => space.dataPipeline.currentEpoch?.subject?.assertion?.number === index + 1,
+          );
+        }
+        await space.close();
+        await dataSpaceManager.close();
+      }
+
+
+      {
+        // Load same space and check if it loads only last epoch.s
+        const dataSpaceManager = new DataSpaceManager(
+          peer.spaceManager,
+          peer.metadataStore,
+          dataService,
+          peer.keyring,
+          identity,
+          peer.feedStore,
+        );
+        await dataSpaceManager.open();
+        afterTest(() => dataSpaceManager.close());
+
+        const space = dataSpaceManager.spaces.get(spaceKey)!;
+        const epochs: number[] = [];
+        space.dataPipeline.onNewEpoch.on((epoch: SpecificCredential<Epoch>) => {
+          epochs.push(epoch.subject.assertion.number);
+        });
+
+        const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(() => true);
+        await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+        await processedFirstEpoch;
+        expect(epochs).to.deep.equal([epochsNumber]);
+      }
+    });
   });
 });
