@@ -16,7 +16,7 @@ import { TestAgentBuilder, testLocalDatabase } from '../testing';
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 
 describe('space/space', () => {
-  test('crates a database with object model', async () => {
+  test.only('creates a database with object model', async () => {
     const builder = new TestAgentBuilder();
     afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
