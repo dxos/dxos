@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "@dxos/observable-object": "workspace:*",
+    "@dxos/util": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

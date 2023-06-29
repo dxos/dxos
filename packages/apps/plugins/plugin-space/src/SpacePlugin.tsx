@@ -4,19 +4,14 @@
 
 import {
   ArrowLineLeft,
-  Article,
-  ArticleMedium,
   Download,
   EyeSlash,
-  IconProps,
   Intersect,
   PaperPlane,
   PencilSimpleLine,
   Planet,
-  Trash,
   Upload,
 } from '@phosphor-icons/react';
-import { FC } from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
@@ -24,11 +19,8 @@ import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
-import { TextKind } from '@dxos/aurora-composer';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import {
-  EchoDatabase,
   IFrameClientServicesHost,
   IFrameClientServicesProxy,
   ShellLayout,
@@ -36,72 +28,14 @@ import {
   SpaceState,
   TypedObject,
 } from '@dxos/react-client';
-import { Plugin, PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
-import { getSpaceDisplayName } from './getSpaceDisplayName';
 import translations from './translations';
-
-const SPACE_PLUGIN = 'dxos:space';
-
-export const isSpace = (datum: unknown): datum is Space =>
-  datum && typeof datum === 'object'
-    ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
-    : false;
-
-const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
-  return objects.map((obj) => ({
-    id: obj.id,
-    label: obj.title ?? 'Untitled',
-    description: obj.description,
-    icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
-    data: obj,
-    parent,
-    actions: [
-      {
-        id: 'delete',
-        label: ['delete document label', { ns: 'composer' }],
-        icon: Trash,
-        invoke: async () => {
-          parent.data?.db.remove(obj);
-        },
-      },
-    ],
-  }));
-};
-
-// TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
-const getSpaceId = (spaceKey: PublicKeyLike) => {
-  if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.truncate();
-  }
-
-  return `${SPACE_PLUGIN}/${spaceKey}`;
-};
-
-// TODO(wittjosiah): Remove. This is a workaround for the fact that graph plugin subtrees are currently isolated.
-export type SpaceProvides = {
-  space: {
-    types?: {
-      id: string;
-      testId: string;
-      label: string | [string, { ns: string }];
-      icon: FC<IconProps>;
-      // TODO(wittjosiah): Type?
-      Type: any;
-    }[];
-  };
-};
-
-type SpacePlugin = Plugin<SpaceProvides>;
-
-export const spacePlugins = (plugins: Plugin[]): SpacePlugin[] => {
-  return (plugins as SpacePlugin[]).filter((p) => Array.isArray(p.provides?.space?.types));
-};
+import { getSpaceDisplayName, SPACE_PLUGIN, getSpaceId, isSpace, objectsToGraphNodes, spacePlugins } from './util';
 
 type SpacePluginProvides = GraphProvides & TranslationsProvides;
-
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   const nodes = createStore<GraphNode<Space>[]>([]);
   const rootNodes = new Map<string, GraphNode<Space>>();
@@ -114,10 +48,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       id: SPACE_PLUGIN,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:GraphPlugin');
-      const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:graph');
+      const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
       if (!clientPlugin) {
         return;
       }
@@ -344,8 +278,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       graph: {
         nodes: () => nodes,
         actions: (plugins) => {
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:ClientPlugin');
-          const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:SplitViewPlugin');
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+          const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
           if (!clientPlugin) {
             return [];
           }

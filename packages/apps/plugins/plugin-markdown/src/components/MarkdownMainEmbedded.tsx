@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ComposerModel } from '@dxos/aurora-composer';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 import { MarkdownMain } from './MarkdownMain';
 
 export const MarkdownMainEmbedded = ({

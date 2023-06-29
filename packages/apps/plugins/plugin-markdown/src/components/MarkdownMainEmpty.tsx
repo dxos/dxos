@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 import { StandaloneLayout } from './StandaloneLayout';
 
 export const MarkdownMainEmpty = ({ data: [model, properties] }: { data: [any, MarkdownProperties] }) => {

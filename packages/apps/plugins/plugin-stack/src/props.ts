@@ -34,8 +34,6 @@ export type StackProvides = {
 export type StackPluginProvides = SpaceProvides &
   TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
 
-export type StackSections = ObservableArray<StackSectionModel<any>>;
-
 export type StackObject = { id: string };
 
 export type GenericStackObject = StackObject & { [key: string]: any };
@@ -44,9 +42,11 @@ export type StackSectionModel<T extends StackObject = GenericStackObject> = {
   object: T;
 };
 
+export type StackSections<T extends StackObject = GenericStackObject> = ObservableArray<StackSectionModel<T>>;
+
 export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;
-  sections: ObservableArray<StackSectionModel<T>>;
+  sections: StackSections<T>;
 };
 
 export type StackProperties = {

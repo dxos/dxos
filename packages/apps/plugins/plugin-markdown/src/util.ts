@@ -4,12 +4,9 @@
 
 import { ComposerModel, YText } from '@dxos/aurora-composer';
 import { subscribe } from '@dxos/observable-object';
+import { Plugin } from '@dxos/react-surface';
 
-export type MarkdownProperties = {
-  title: string;
-  meta?: { keys?: { source?: string; id?: string }[] };
-  readOnly?: boolean;
-};
+import { MarkdownProperties, MarkdownProvides } from './types';
 
 export const isMarkdown = (datum: unknown): datum is ComposerModel =>
   datum && typeof datum === 'object'
@@ -28,3 +25,8 @@ export const isMarkdownProperties = (datum: unknown): datum is MarkdownPropertie
   datum && typeof datum === 'object'
     ? subscribe in datum || ('title' in datum && typeof datum.title === 'string')
     : false;
+
+type MarkdownPlugin = Plugin<MarkdownProvides>;
+export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
+  return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
+};

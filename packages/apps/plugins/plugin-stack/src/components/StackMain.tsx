@@ -16,7 +16,6 @@ import {
   useTranslation,
   DensityProvider,
   DragEndEvent,
-  arrayMoveInPlace,
   useListContext,
   ListScopedProps,
   DropdownMenu,
@@ -26,6 +25,7 @@ import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from
 import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
+import { arrayMove } from '@dxos/util';
 
 import { stackSectionChoosers, stackSectionCreators } from '../StackPlugin';
 import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
@@ -115,7 +115,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     if (active.id !== over?.id) {
       const oldIndex = sections.findIndex((section) => section.object.id === active.id);
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
-      arrayMoveInPlace<StackSectionModel>(sections, oldIndex, newIndex);
+      arrayMove(sections, oldIndex, newIndex);
     }
   }, []);
 

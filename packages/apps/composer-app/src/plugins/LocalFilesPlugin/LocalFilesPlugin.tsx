@@ -311,7 +311,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       });
       handle.update([nodes]);
 
-      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
       if (treeViewPlugin) {
         const handle = createSubscription(() => {
           store.current =
@@ -344,7 +344,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       graph: {
         nodes: () => nodes,
         actions: (plugins) => {
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:TreeViewPlugin');
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
 
           const actions: GraphNodeAction[] = [
             {
