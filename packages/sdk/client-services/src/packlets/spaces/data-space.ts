@@ -19,6 +19,7 @@ import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
@@ -284,7 +285,7 @@ export class DataSpace {
   async createEpoch() {
     const epoch = await this.dataPipeline.createEpoch();
 
-    await this.inner.controlPipeline.writer.write({
+    const receipt = await this.inner.controlPipeline.writer.write({
       credential: {
         credential: await this._signingContext.credentialSigner.createCredential({
           subject: this.key,
@@ -295,6 +296,8 @@ export class DataSpace {
         }),
       },
     });
+
+    await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
       const indexBeforeEpoch = epoch.timeframe.get(feed.key);
