@@ -219,6 +219,8 @@ export class Space {
       this._dataPipeline.createCredentialProcessor(),
     );
 
+    await this._dataPipelineCredentialConsumer.open();
+
     this._isOpen = true;
     log('opened');
   }
@@ -246,8 +248,6 @@ export class Space {
   async initializeDataPipeline() {
     log('initializeDataPipeline');
     assert(this._isOpen, 'Space must be open to initialize data pipeline.');
-    assert(this._dataPipelineCredentialConsumer);
-    await this._dataPipelineCredentialConsumer.open();
     await this._dataPipeline.open();
   }
 }
