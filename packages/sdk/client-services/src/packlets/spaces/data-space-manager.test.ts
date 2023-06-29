@@ -236,10 +236,11 @@ describe('DataSpaceManager', () => {
       expect((await file.stat()).size === 0).to.be.true;
     }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 
-    test.only('Loads only last epoch', async () => {
+    test('Loads only last epoch', async () => {
       const builder = new TestBuilder();
+      afterTest(async () => builder.destroy());
 
-      const peer = builder.createPeer({ storageType: StorageType.NODE });
+      const peer = builder.createPeer();
       const identity = await createSigningContext(peer.keyring);
       const epochsNumber = 10;
       const dataService = new DataServiceSubscriptions();
@@ -271,8 +272,6 @@ describe('DataSpaceManager', () => {
         await space.close();
         await dataSpaceManager.close();
       }
-
-
       {
         // Load same space and check if it loads only last epoch.s
         const dataSpaceManager = new DataSpaceManager(
@@ -287,12 +286,13 @@ describe('DataSpaceManager', () => {
         afterTest(() => dataSpaceManager.close());
 
         const space = dataSpaceManager.spaces.get(spaceKey)!;
+
         const epochs: number[] = [];
         space.dataPipeline.onNewEpoch.on((epoch: SpecificCredential<Epoch>) => {
           epochs.push(epoch.subject.assertion.number);
         });
-
         const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(() => true);
+
         await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
         await processedFirstEpoch;
