@@ -187,7 +187,6 @@ export class DataPipeline {
   }
 
   private async _consumePipeline() {
-    // Load epoch if it is not genesis epoch.
     if (this.currentEpoch) {
       await this._processEpoch(this.currentEpoch.subject.assertion);
       this.onNewEpoch.emit(this.currentEpoch);
