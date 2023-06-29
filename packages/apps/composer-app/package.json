@@ -14,6 +14,7 @@
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@braneframe/plugin-url-sync": "workspace:*",
