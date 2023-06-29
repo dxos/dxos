@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SpaceProvides } from '@braneframe/plugin-space/src';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { subscribe } from '@dxos/observable-object';
 
 /**
@@ -22,6 +24,8 @@ import { subscribe } from '@dxos/observable-object';
 //  - Consider projections (e.g., column objects from query).
 //  - Add/move/remove columns and items.
 //  - Coupling of model to proto typedefs.
+
+export type KanbanPluginProvides = SpaceProvides & TranslationsProvides;
 
 // TODO(burdon): How are types mapped onto ECHO? I.e., relationship between ECHO object/array and Observable.
 // TODO(burdon): Can the plugin configure the object based on the datum? E.g., how are the models constructed?

@@ -340,6 +340,7 @@ importers:
     specifiers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -394,6 +395,7 @@ importers:
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
@@ -19726,7 +19728,7 @@ packages:
   /axios/1.3.4_debug@4.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:

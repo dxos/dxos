@@ -4,15 +4,14 @@
 
 import { Plus } from '@phosphor-icons/react';
 
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Kanban } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
-import { isKanban } from './props';
+import { isKanban, KanbanPluginProvides } from './props';
 import translations from './translations';
 
-export const KanbanPlugin = (): PluginDefinition<TranslationsProvides> => ({
+export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
   meta: {
     // TODO(burdon): Make id consistent with other plugins.
     id: 'dxos.org/plugin/kanban',
