@@ -160,7 +160,11 @@ export class MetadataStore {
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    this._getSpace(spaceKey).controlTimeframe = timeframe;
+    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
+      this._metadata.identity.haloSpace.controlTimeframe = timeframe;
+    } else {
+      this._getSpace(spaceKey).controlTimeframe = timeframe;
+    }
     await this._save();
   }
 
@@ -176,4 +180,5 @@ export class MetadataStore {
     await this._save();
   }
 }
+
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
