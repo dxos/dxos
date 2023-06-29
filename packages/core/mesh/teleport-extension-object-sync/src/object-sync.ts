@@ -3,7 +3,7 @@
 //
 
 import { scheduleTask, trackLeaks, Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { cancelWithContext, Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
 import { entry } from '@dxos/util';
@@ -19,7 +19,7 @@ export type ObjectSyncParams = {
 export class ObjectSync {
   private readonly _ctx = new Context();
 
-  private readonly _downloadRequests = new Map<string, Trigger<DataObject>>();
+  private readonly _downloadRequests = new Map<string, { trigger: Trigger<DataObject>; counter: number }>();
   private readonly _extensions = new Set<ObjectSyncExtension>();
 
   constructor(private readonly _params: ObjectSyncParams) {}
@@ -30,15 +30,39 @@ export class ObjectSync {
     await this._ctx.dispose();
   }
 
-  download(id: string): Promise<DataObject> {
+  download({ id, ctx }: { id: string; ctx?: Context }): Promise<DataObject> {
     log('download', { id });
-    const trigger = entry(this._downloadRequests, id).orInsert(new Trigger<DataObject>()).value;
+
+    const existingRequest = this._downloadRequests.get(id);
+    if (existingRequest) {
+      existingRequest.counter++;
+      return existingRequest.trigger.wait();
+    }
+
+    const value = entry(this._downloadRequests, id).orInsert({
+      trigger: new Trigger<DataObject>(),
+      counter: 1,
+    }).value;
 
     for (const extension of this._extensions) {
       extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
     }
 
-    return trigger.wait();
+    ctx?.onDispose(() => {
+      // Remove request if context is disposed and nobody else requests it.
+      const request = entry(this._downloadRequests, id).value;
+      if (!request) {
+        return;
+      }
+      if (--request.counter === 0) {
+        this._downloadRequests.delete(id);
+      }
+      for (const extension of this._extensions) {
+        extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
+      }
+    });
+
+    return ctx ? cancelWithContext(ctx, value.trigger.wait()) : value.trigger.wait();
   }
 
   createExtension() {
@@ -69,7 +93,7 @@ export class ObjectSync {
         }
         log('received', { obj });
         await this._params.setObject(obj);
-        this._downloadRequests.get(obj.id)?.wake(obj);
+        this._downloadRequests.get(obj.id)?.trigger.wake(obj);
         this._downloadRequests.delete(obj.id);
 
         for (const extension of this._extensions) {

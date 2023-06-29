@@ -4,6 +4,8 @@
 
 import expect from 'expect';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
 import { TestBuilder, TestPeer, TestConnection } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
@@ -68,8 +70,126 @@ describe('ObjectSync', () => {
 
     await testBuilder.connect(peer1, peer2);
 
-    const obj = await peer2.objectSync.download('test');
+    const obj = await peer2.objectSync.download({ id: 'test' });
     expect(obj).toEqual({
+      id: 'test',
+      payload: {
+        '@type': 'google.protobuf.Any',
+        type_url: 'test',
+        value: Buffer.from('test'),
+      },
+    });
+  });
+
+  test('cancel request', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+
+    // Trigger to start the replication
+    const startTrigger = new Trigger();
+
+    const peer1 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              await startTrigger.wait();
+              return {
+                id,
+                payload: {
+                  '@type': 'google.protobuf.Any',
+                  type_url: 'test',
+                  value: Buffer.from(id),
+                },
+              };
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            },
+          }),
+        ),
+    });
+
+    const peer2 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              return undefined;
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            },
+          }),
+        ),
+    });
+
+    await testBuilder.connect(peer1, peer2);
+
+    // Start the test.
+    const ctx1 = new Context();
+    const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
+    await ctx1.dispose();
+    startTrigger.wake();
+    await expect(async () => asyncTimeout(obj1, 500)).rejects.toThrow();
+  });
+
+  test('object synchronization tracks amount of requests', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+
+    // Trigger to start the test.s
+    const startTrigger = new Trigger();
+
+    const peer1 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              await startTrigger.wait();
+              return {
+                id,
+                payload: {
+                  '@type': 'google.protobuf.Any',
+                  type_url: 'test',
+                  value: Buffer.from(id),
+                },
+              };
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            },
+          }),
+        ),
+    });
+
+    const peer2 = await testBuilder.createPeer({
+      factory: () =>
+        new TestAgent(
+          new ObjectSync({
+            getObject: async (id: string) => {
+              return undefined;
+            },
+            setObject: async (data: DataObject) => {
+              // console.log('setObject', data);
+            },
+          }),
+        ),
+    });
+
+    await testBuilder.connect(peer1, peer2);
+
+    const ctx1 = new Context();
+    const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
+
+    const ctx2 = new Context();
+    const obj2 = peer2.objectSync.download({ id: 'test', ctx: ctx2 });
+
+    // Start the test.
+    await ctx1.dispose();
+    startTrigger.wake();
+    await expect(async () => asyncTimeout(obj1, 500)).rejects.toThrow();
+    expect(await obj2).toEqual({
       id: 'test',
       payload: {
         '@type': 'google.protobuf.Any',
