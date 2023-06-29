@@ -12,8 +12,8 @@ export const isMarkdown = (datum: unknown): datum is ComposerModel =>
   datum && typeof datum === 'object'
     ? 'id' in datum &&
       typeof datum.id === 'string' &&
-      'content' in datum &&
-      (typeof datum.content === 'string' || datum.content instanceof YText)
+      (typeof (datum as { [key: string]: any }).content === 'string' ||
+        (datum as { [key: string]: any }).content instanceof YText)
     : false;
 
 export const isMarkdownPlaceholder = (datum: unknown): datum is ComposerModel =>
