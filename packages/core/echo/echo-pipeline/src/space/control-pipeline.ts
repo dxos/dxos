@@ -111,7 +111,7 @@ export class ControlPipeline {
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
     const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
-    await this._metadata.setSpaceDataLatestTimeframe(this._spaceKey, newTimeframe);
+    await this._metadata.setSpaceControlLatestTimeframe(this._spaceKey, newTimeframe);
     this._targetTimeframe = newTimeframe;
   }
 }
