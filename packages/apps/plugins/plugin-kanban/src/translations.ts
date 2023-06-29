@@ -15,6 +15,7 @@ export default [
         'add item label': 'add item',
         'delete column label': 'delete column',
         'delete item label': 'delete item',
+        'create kanban label': 'create kanban',
       },
     },
   },

@@ -4,7 +4,8 @@
 
 import { SpaceProvides } from '@braneframe/plugin-space/src';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { subscribe } from '@dxos/observable-object';
+import { Kanban as KanbanType } from '@braneframe/types';
+import { isTypedObject } from '@dxos/client';
 
 /**
  * Kanban data model.
@@ -62,14 +63,9 @@ export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
 }
 
 // TODO(burdon): Test data type?
-export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      'columns' in datum &&
-      Array.isArray(datum.columns) &&
-      subscribe in datum.columns
-    : false;
+export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> => {
+  return isTypedObject(datum) && KanbanType.type.name === datum.__typename;
+};
 
 export type Location = {
   column: KanbanColumn;

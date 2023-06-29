@@ -32,7 +32,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
     component: (datum, role) => {
       switch (role) {
         case 'main':
-          if (isKanban(datum)) {
+          if (Array.isArray(datum) && isKanban(datum[datum.length - 1])) {
             return KanbanMain;
           } else {
             return null;

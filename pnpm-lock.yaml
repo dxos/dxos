@@ -608,6 +608,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
@@ -626,6 +627,7 @@ importers:
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/client': link:../../../sdk/client
       '@dxos/keys': link:../../../common/keys
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/util': link:../../../common/util
