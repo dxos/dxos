@@ -64,7 +64,7 @@ export class SnapshotManager {
       return local;
     }
 
-    const remote = await cancelWithContext(ctx, this._objectSync.download(id));
+    const remote = await cancelWithContext(ctx, this._objectSync.download({ id, ctx }));
     return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((remote.payload as Any).value);
   }
 
