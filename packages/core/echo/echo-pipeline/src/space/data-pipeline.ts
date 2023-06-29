@@ -80,6 +80,7 @@ export class DataPipeline {
   public databaseHost?: DatabaseHost;
 
   public currentEpoch?: SpecificCredential<Epoch>;
+  private _lastProcessedEpoch = -1;
   public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
@@ -106,11 +107,17 @@ export class DataPipeline {
           return;
         }
 
-        log('new epoch', { credential });
-        await this._processEpoch(credential.subject.assertion);
-
-        this.currentEpoch = credential;
-        this.onNewEpoch.emit(credential);
+        if (this._isOpen) {
+          // process epoch
+          log('new epoch', { credential });
+          this.currentEpoch = credential;
+          await this._processEpoch(credential.subject.assertion);
+          this.onNewEpoch.emit(credential);
+        } else {
+          // remember epoch
+          log('searching last epoch', { credential });
+          this.currentEpoch = credential;
+        }
       },
     };
   }
@@ -180,6 +187,11 @@ export class DataPipeline {
   }
 
   private async _consumePipeline() {
+    if (this.currentEpoch) {
+      await this._processEpoch(this.currentEpoch.subject.assertion);
+      this.onNewEpoch.emit(this.currentEpoch);
+    }
+
     assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
@@ -223,7 +235,7 @@ export class DataPipeline {
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
     const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
-    await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
+    await this._params.metadataStore.setSpaceDataLatestTimeframe(this._params.spaceKey, newTimeframe);
     this._targetTimeframe = newTimeframe;
   }
 
@@ -267,6 +279,10 @@ export class DataPipeline {
 
   @synchronized
   private async _processEpoch(epoch: Epoch) {
+    if (epoch.number <= this._lastProcessedEpoch) {
+      return;
+    }
+    this._lastProcessedEpoch = epoch.number;
     assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
     assert(this._pipeline);
 
