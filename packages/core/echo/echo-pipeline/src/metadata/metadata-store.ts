@@ -119,6 +119,11 @@ export class MetadataStore {
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
+    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
+      // Check if the space is the identity space.
+      return this._metadata.identity.haloSpace;
+    }
+
     const space = this.spaces.find((space) => space.key === spaceKey);
     assert(space, 'Space not found');
     return space;
@@ -160,13 +165,7 @@ export class MetadataStore {
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe) {
-    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
-      this._metadata.identity.haloSpace.controlTimeframe = timeframe;
-    } else if (this._metadata.spaces?.length !== 0) {
-      this._getSpace(spaceKey).controlTimeframe = timeframe;
-    } else {
-      return;
-    }
+    this._getSpace(spaceKey).controlTimeframe = timeframe;
     await this._save();
   }
 

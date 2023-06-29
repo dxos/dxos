@@ -130,7 +130,7 @@ export class ControlPipeline {
       await this._metadata.setSpaceControlLatestTimeframe(this._spaceKey, newTimeframe);
       this._targetTimeframe = newTimeframe;
     } catch (err: any) {
-      log.catch(err);
+      log(err);
     }
   }
 }
