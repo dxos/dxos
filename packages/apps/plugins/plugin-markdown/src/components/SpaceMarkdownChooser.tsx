@@ -9,7 +9,7 @@ import { useGraphContext } from '@braneframe/plugin-graph';
 import { useTreeView } from '@braneframe/plugin-treeview';
 import { Button, Dialog, Input, useTranslation } from '@dxos/aurora';
 
-import { isMarkdown } from '../props';
+import { isMarkdown } from '../util';
 
 export const SpaceMarkdownChooser = ({
   data: { omit, onDone },
