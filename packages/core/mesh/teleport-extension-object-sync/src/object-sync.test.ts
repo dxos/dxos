@@ -138,7 +138,7 @@ describe('ObjectSync', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    // Trigger to start the test.s
+    // Trigger to start replication.
     const startTrigger = new Trigger();
 
     const peer1 = await testBuilder.createPeer({
@@ -177,7 +177,7 @@ describe('ObjectSync', () => {
         ),
     });
 
-    await testBuilder.connect(peer1, peer2);
+    await testBuilder.connzwect(peer1, peer2);
 
     const ctx1 = new Context();
     const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
