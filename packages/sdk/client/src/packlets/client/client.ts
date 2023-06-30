@@ -169,6 +169,13 @@ export class Client {
   }
 
   /**
+   * Debug monitor.
+   */
+  get monitor(): Monitor {
+    return this._monitor;
+  }
+
+  /**
    * @deprecated
    */
   get dbRouter(): DatabaseRouter {
