@@ -6,7 +6,6 @@ import { scheduleTask, trackLeaks, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
-import { entry } from '@dxos/util';
 
 import { ObjectSyncExtension } from './object-sync-extension';
 
@@ -44,10 +43,12 @@ export class ObjectSync {
       return existingRequest.trigger.wait();
     }
 
-    const value = entry(this._downloadRequests, id).orInsert({
+    const request = {
       trigger: new Trigger<DataObject>(),
       counter: 1,
-    }).value;
+    };
+
+    this._downloadRequests.set(id, request);
 
     for (const extension of this._extensions) {
       extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
@@ -55,7 +56,7 @@ export class ObjectSync {
 
     ctx?.onDispose(() => {
       // Remove request if context is disposed and nobody else requests it.
-      const request = entry(this._downloadRequests, id).value;
+      const request = this._downloadRequests.get(id);
       if (!request) {
         return;
       }
@@ -67,7 +68,7 @@ export class ObjectSync {
       }
     });
 
-    return ctx ? cancelWithContext(ctx, value.trigger.wait()) : value.trigger.wait();
+    return ctx ? cancelWithContext(ctx, request.trigger.wait()) : request.trigger.wait();
   }
 
   createExtension() {
