@@ -13,7 +13,7 @@ import { useClientServices, useStream } from '@dxos/react-client';
 
 import { MasterTable } from '../../components';
 
-const defaultEntry = { level: LogLevel.DEBUG, message: '' };
+const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
 const MAX_LOGS = 2000;
 
