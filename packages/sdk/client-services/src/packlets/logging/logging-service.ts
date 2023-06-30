@@ -50,8 +50,8 @@ export class LoggingServiceImpl implements LoggingService {
           timestamp: new Date(),
           meta: {
             // TODO(dmaretskyi): Fix proto.
-            file: entry.meta!.file!,
-            line: entry.meta!.line!,
+            file: entry.meta?.file ?? '',
+            line: entry.meta?.line ?? 0,
           },
         };
 
