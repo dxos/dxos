@@ -7,6 +7,7 @@ import React from 'react';
 
 import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { useTelemetry } from '@dxos/react-appkit';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import {
@@ -51,6 +52,12 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
       }
     },
     components: {
+      default: () => {
+        // TODO(wittjosiah): Factor out to a telemetry plugin.
+        useTelemetry({ namespace: 'composer-app', router: false });
+
+        return null;
+      },
       Main: EmbeddedMain,
     },
   },
