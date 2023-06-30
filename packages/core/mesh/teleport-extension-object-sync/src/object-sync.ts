@@ -50,9 +50,7 @@ export class ObjectSync {
 
     this._downloadRequests.set(id, request);
 
-    for (const extension of this._extensions) {
-      extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
-    }
+    this._updateExtensionsWantList();
 
     ctx?.onDispose(() => {
       // Remove request if context is disposed and nobody else requests it.
@@ -63,9 +61,7 @@ export class ObjectSync {
       if (--request.counter === 0) {
         this._downloadRequests.delete(id);
       }
-      for (const extension of this._extensions) {
-        extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
-      }
+      this._updateExtensionsWantList();
     });
 
     return ctx ? cancelWithContext(ctx, request.trigger.wait()) : request.trigger.wait();
@@ -110,5 +106,11 @@ export class ObjectSync {
       },
     });
     return extension;
+  }
+
+  private _updateExtensionsWantList() {
+    for (const extension of this._extensions) {
+      extension.updateWantListInASeparateTask(new Set(this._downloadRequests.keys()));
+    }
   }
 }
