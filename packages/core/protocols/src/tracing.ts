@@ -74,3 +74,13 @@ export const trace: Trace = {
     };
   },
 };
+
+//
+// Domain-specific tracing
+//
+
+export type DataPipelineProcessed = {
+  spaceKey: string;
+  feedKey: string;
+  seq: number;
+};

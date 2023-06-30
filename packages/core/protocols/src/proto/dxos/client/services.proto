@@ -426,13 +426,21 @@ enum LogLevel {
 }
 
 message QueryLogsRequest {
+  enum MatchingOptions {
+    /// Filters match all log levels above. Default behaviour for the logger.
+    INCLUSIVE = 1;
+
+    /// Explicitly specify all desired log levels.
+    EXPLICIT = 2;
+  }
+
   message Filter {
     LogLevel level = 1;
     optional string pattern = 2;
   }
 
-  /// Explicitly specify all desired log levels.
   repeated Filter filters = 1;
+  optional MatchingOptions options = 10;
 }
 
 message LogEntry {
@@ -447,6 +455,7 @@ message LogEntry {
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
   optional Error error = 5;
+  google.protobuf.Timestamp timestamp = 6;
 }
 
 service LoggingService {

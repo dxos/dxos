@@ -27,6 +27,7 @@ import { isNode } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
+import { Monitor } from '../diagnostics';
 import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
@@ -61,6 +62,7 @@ export class Client {
   private readonly _halo: HaloProxy;
   private readonly _echo: EchoProxy;
   private readonly _mesh: MeshProxy;
+  private readonly _monitor: Monitor;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
@@ -85,7 +87,7 @@ export class Client {
       window.location.protocol !== 'https:' &&
       !window.location.origin.includes('localhost')
     ) {
-      console.warn(`DXOS Client will not work in non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`);
+      console.warn(`DXOS Client will not function in a non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`);
     }
 
     this._config = config ?? new Config();
@@ -97,6 +99,7 @@ export class Client {
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory);
     this._mesh = new MeshProxy(this._services);
+    this._monitor = new Monitor(this._services);
     this._halo._traceParent = this._instanceId;
     this._echo._traceParent = this._instanceId;
     this._mesh._traceParent = this._instanceId;
@@ -163,6 +166,13 @@ export class Client {
    */
   get mesh(): MeshProxy {
     return this._mesh;
+  }
+
+  /**
+   * Debug monitor.
+   */
+  get monitor(): Monitor {
+    return this._monitor;
   }
 
   /**
@@ -251,6 +261,7 @@ export class Client {
     }
 
     // TODO(wittjosiah): Promise.all?
+    await this._monitor.open();
     await this._halo._open();
     await this._echo.open();
     await this._mesh._open();
@@ -272,6 +283,7 @@ export class Client {
     await this._halo._close();
     await this._echo.close();
     await this._mesh._close();
+    await this._monitor.close();
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
