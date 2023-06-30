@@ -4,6 +4,7 @@
 
 import { trackLeaks } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Context, cancelWithContext } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -57,13 +58,13 @@ export class SnapshotManager {
   }
 
   @timed(10_000)
-  async load(id: string): Promise<SpaceSnapshot> {
-    const local = await this._snapshotStore.loadSnapshot(id);
+  async load(ctx: Context, id: string): Promise<SpaceSnapshot> {
+    const local = await cancelWithContext(ctx, this._snapshotStore.loadSnapshot(id));
     if (local) {
       return local;
     }
 
-    const remote = await this._objectSync.download(id);
+    const remote = await cancelWithContext(ctx, this._objectSync.download(ctx, id));
     return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((remote.payload as Any).value);
   }
 
