@@ -70,7 +70,7 @@ describe('ObjectSync', () => {
 
     await testBuilder.connect(peer1, peer2);
 
-    const obj = await peer2.objectSync.download({ id: 'test' });
+    const obj = await peer2.objectSync.download(new Context(), 'test');
     expect(obj).toEqual({
       id: 'test',
       payload: {
@@ -128,7 +128,7 @@ describe('ObjectSync', () => {
 
     // Start the test.
     const ctx1 = new Context();
-    const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
+    const obj1 = peer2.objectSync.download(ctx1, 'test');
     await ctx1.dispose();
     startTrigger.wake();
     await expect(async () => asyncTimeout(obj1, 500)).rejects.toThrow();
@@ -180,10 +180,10 @@ describe('ObjectSync', () => {
     await testBuilder.connect(peer1, peer2);
 
     const ctx1 = new Context();
-    const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
+    const obj1 = peer2.objectSync.download(ctx1, 'test');
 
     const ctx2 = new Context();
-    const obj2 = peer2.objectSync.download({ id: 'test', ctx: ctx2 });
+    const obj2 = peer2.objectSync.download(ctx2, 'test');
 
     // Start the test.
     await ctx1.dispose();

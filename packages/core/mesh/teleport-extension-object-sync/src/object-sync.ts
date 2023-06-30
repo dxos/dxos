@@ -30,7 +30,7 @@ export class ObjectSync {
     await this._ctx.dispose();
   }
 
-  download({ id, ctx }: { id: string; ctx?: Context }): Promise<DataObject> {
+  download(ctx: Context, id: string): Promise<DataObject> {
     log('download', { id });
 
     const existingRequest = this._downloadRequests.get(id);
