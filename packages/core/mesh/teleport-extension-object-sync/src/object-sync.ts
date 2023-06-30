@@ -15,11 +15,16 @@ export type ObjectSyncParams = {
   setObject: (data: DataObject) => Promise<void>;
 };
 
+type DownloadRequest = {
+  trigger: Trigger<DataObject>;
+  counter: number;
+};
+
 @trackLeaks('open', 'close')
 export class ObjectSync {
   private readonly _ctx = new Context();
 
-  private readonly _downloadRequests = new Map<string, { trigger: Trigger<DataObject>; counter: number }>();
+  private readonly _downloadRequests = new Map<string, DownloadRequest>();
   private readonly _extensions = new Set<ObjectSyncExtension>();
 
   constructor(private readonly _params: ObjectSyncParams) {}
