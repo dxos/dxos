@@ -455,6 +455,7 @@ message LogEntry {
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
   optional Error error = 5;
+  google.protobuf.Timestamp timestamp = 6;
 }
 
 service LoggingService {

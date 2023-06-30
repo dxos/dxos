@@ -5,18 +5,9 @@
 import { ClientServicesProvider } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { DataPipelineProcessed } from '@dxos/protocols';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { entry } from '@dxos/util';
 
-type State = {
-  processed: number;
-  throughput: {
-    begin: number;
-    end: number;
-    processed: number;
-  }[];
-};
+import { createBucketReducer, createGroupReducer, reduceSeries } from './reducers';
 
 /**
  * Activity monitor.
@@ -28,16 +19,12 @@ export class Monitor {
     },
   });
 
-  private readonly _state = new Map<string, State>();
+  private _logs: LogEntry[] = [];
 
   // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider
-  ) {}
-
-  get state(): Record<string, State> {
-    return Object.fromEntries(this._state.entries());
-  }
+  ) { }
 
   async open() {
     const stream = this._serviceProvider.services.LoggingService!.queryLogs({
@@ -49,9 +36,12 @@ export class Monitor {
       options: QueryLogsRequest.MatchingOptions.EXPLICIT,
     });
 
+    this._logs = [];
     stream.subscribe(
       (msg) => {
-        this._update(msg);
+        if (msg.level === LogLevel.TRACE) {
+          this._logs.push(msg);
+        }
       },
       (err) => {
         if (err) {
@@ -67,34 +57,10 @@ export class Monitor {
     await this._ctx.dispose();
   }
 
-  private _update(event: LogEntry) {
-    if (event.level !== LogLevel.TRACE) {
-      return;
-    }
-
-    switch (event.message) {
-      case 'dxos.echo.data-pipeline.processed':
-        {
-          const { spaceKey } = event.context! as DataPipelineProcessed;
-          // TODO(burdon): Make default value a provider? entry(map, key, () => ({ value });
-          const state = entry(this._state, spaceKey).orInsert({ processed: 0, throughput: [] }).value;
-          state.processed++;
-
-          if (state.throughput.length === 0) {
-            state.throughput.push({ begin: Date.now(), end: 0, processed: 0 });
-          }
-
-          // TODO(burdon): Configure option to just store everything and reduce when requested?
-          let last = state.throughput[state.throughput.length - 1];
-          if (Date.now() - last.begin > 1_000) {
-            last.end = Date.now();
-            last = { begin: last.end, end: 0, processed: 0 };
-            state.throughput.push(last);
-          }
-
-          last.processed++;
-        }
-        break;
-    }
+  getPipelineStats(bucketSize = 100) {
+    return reduceSeries(
+      createGroupReducer((event) => event.context?.spaceKey, createBucketReducer<LogEntry>(bucketSize)),
+      this._logs.filter((event) => event.message === 'dxos.echo.data-pipeline.processed'),
+    );
   }
 }

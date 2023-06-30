@@ -47,6 +47,7 @@ export class LoggingServiceImpl implements LoggingService {
         const record: LogEntry = {
           ...entry,
           context: jsonify(getContextFromEntry(entry)),
+          timestamp: new Date(),
           meta: {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta!.file!,
@@ -88,7 +89,7 @@ const matchFilter = (
 /**
  * Determines if the current line should be logged (called by the processor).
  */
-const shouldLog = (entry: LogEntry, request: QueryLogsRequest): boolean => {
+const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean => {
   const options = request.options ?? QueryLogsRequest.MatchingOptions.INCLUSIVE;
   if (request.filters === undefined) {
     return options === QueryLogsRequest.MatchingOptions.INCLUSIVE;
