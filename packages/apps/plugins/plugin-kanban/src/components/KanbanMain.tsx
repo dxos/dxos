@@ -16,6 +16,9 @@ import { KanbanBoard } from './KanbanBoard';
 // TODO(burdon): Constructor type? `data` vs. `datum`?
 export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
+
+  console.log('>>>>>>>>>>', data);
+
   const kanban = isKanban(data) ? data : null;
   if (!kanban) {
     return null;
