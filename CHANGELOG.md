@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.51](https://github.com/dxos/dxos/compare/v0.1.50...v0.1.51) (2023-06-30)
+
+
+### Features
+
+* abbreviate space keys ([#3561](https://github.com/dxos/dxos/issues/3561)) ([24977a9](https://github.com/dxos/dxos/commit/24977a9f934fbcb57b8b15839e88e284afb4d721))
+* Agent CLI testing ([#3522](https://github.com/dxos/dxos/issues/3522)) ([b7fee56](https://github.com/dxos/dxos/commit/b7fee56fb4211805c8ca80610c23f4a4153c8280))
+* Agent monitor tracking epochs and members. ([#3548](https://github.com/dxos/dxos/issues/3548)) ([67da15d](https://github.com/dxos/dxos/commit/67da15d385fef429773bd1d799e48c2e84d2f5ce))
+* **composer-app:** Stack integration ([#3584](https://github.com/dxos/dxos/issues/3584)) ([70b4bf6](https://github.com/dxos/dxos/commit/70b4bf65908c454ef1736ae576dd41802acfae44))
+* **config:** Add telemetry flags ([#3493](https://github.com/dxos/dxos/issues/3493)) ([23e9d5d](https://github.com/dxos/dxos/commit/23e9d5d567c0fd5d47730dba7d4c221d47ea9867))
+* **echo-pipeline:** Cancel Epoch download if there is new Epoch detected ([#3589](https://github.com/dxos/dxos/issues/3589)) ([0e88376](https://github.com/dxos/dxos/commit/0e88376ab0fa7695be8274a9b9114012522d036f))
+* **echo-pipeline:** Make ECHO load only last epoch ([#3586](https://github.com/dxos/dxos/issues/3586)) ([b442c99](https://github.com/dxos/dxos/commit/b442c994ec805f870d6106e26e159d1b986ac4d1))
+* Kanban plugin ([#3553](https://github.com/dxos/dxos/issues/3553)) ([d63f207](https://github.com/dxos/dxos/commit/d63f2073e241b89455e6d9a910f1254b2acfcabb))
+* **telemetry:** Add ability to fetch tags from local kube ([#3574](https://github.com/dxos/dxos/issues/3574)) ([d71fd8c](https://github.com/dxos/dxos/commit/d71fd8c624b53a845d8e1ecb5c9a842e17f26bbf))
+
+
+### Bug Fixes
+
+* **aurora-composer:** Use Tabster Groupper for managing focus ([#3572](https://github.com/dxos/dxos/issues/3572)) ([b267b99](https://github.com/dxos/dxos/commit/b267b99236e71650d9b3875c9902637e39c52b27))
+* Graceful RPC closure & device join flow fixed ([#3576](https://github.com/dxos/dxos/issues/3576)) ([e7215ae](https://github.com/dxos/dxos/commit/e7215ae290a180e3f8fa8a40a658f69463ab3802))
+* **plugin-stack:** Stretching when dragging ([#3547](https://github.com/dxos/dxos/issues/3547)) ([2c48332](https://github.com/dxos/dxos/commit/2c4833229dc1928feafc59e0e2d37477d4d2eef1))
+* **telemetry:** Add segment telemetry back to apps ([#3592](https://github.com/dxos/dxos/issues/3592)) ([57ad9f3](https://github.com/dxos/dxos/commit/57ad9f315c0e49ce783446da3bf51f6b8568b224))
+* **telemetry:** Fix unsecure request ([#3582](https://github.com/dxos/dxos/issues/3582)) ([cb60375](https://github.com/dxos/dxos/commit/cb6037513e33da781c257b771935f4cf0c063e1a))
+* **telemetry:** Use localhost to make request to local kube ([#3585](https://github.com/dxos/dxos/issues/3585)) ([5c57788](https://github.com/dxos/dxos/commit/5c577885e3b8cbd43cbcfe7389185dfe3395bc56))
+
 ## [0.1.50](https://github.com/dxos/dxos/compare/v0.1.49...v0.1.50) (2023-06-26)
 
 
