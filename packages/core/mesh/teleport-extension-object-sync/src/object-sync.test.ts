@@ -177,7 +177,7 @@ describe('ObjectSync', () => {
         ),
     });
 
-    await testBuilder.connzwect(peer1, peer2);
+    await testBuilder.connect(peer1, peer2);
 
     const ctx1 = new Context();
     const obj1 = peer2.objectSync.download({ id: 'test', ctx: ctx1 });
