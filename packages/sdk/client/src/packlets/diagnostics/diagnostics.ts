@@ -13,7 +13,7 @@ import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/proto
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
-import { Client } from './client';
+import { Client } from '../client';
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
@@ -40,6 +40,7 @@ export type DiagnosticOptions = {
   humanize?: boolean;
 };
 
+// TODO(burdon): Move method to Monitor class.
 export const diagnostics = async (client: Client, options: DiagnosticOptions) => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<ClientStats> = {};
