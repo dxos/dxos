@@ -13,6 +13,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { DataPipelineProcessed } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -211,6 +212,12 @@ export class DataPipeline {
               memberKey: feedInfo.assertion.identityKey,
             },
           });
+
+          log.trace('dxos.echo.data-pipeline.processed', {
+            feedKey: feedKey.toHex(),
+            seq,
+            spaceKey: this._params.spaceKey.toHex(),
+          } satisfies DataPipelineProcessed);
 
           // Timeframe clock is not updated yet
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
