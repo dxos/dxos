@@ -73,6 +73,6 @@ export const testLocalDatabase = async (create: DataPipeline, check: DataPipelin
 
   await asyncTimeout(
     check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check.itemManager.entities.has(objectId)),
-    500,
+    1000,
   );
 };

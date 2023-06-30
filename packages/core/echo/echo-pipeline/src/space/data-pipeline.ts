@@ -8,6 +8,7 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialProcessor, FeedInfo, SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { getStateMachineFromItem, ItemManager } from '@dxos/echo-db';
+import { CancelledError } from '@dxos/errors';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -80,7 +81,9 @@ export class DataPipeline {
   public databaseHost?: DatabaseHost;
 
   public currentEpoch?: SpecificCredential<Epoch>;
+  private _lastProcessedEpoch = -1;
   public onNewEpoch = new Event<Credential>();
+  private _epochCtx?: Context;
 
   get isOpen() {
     return this._isOpen;
@@ -106,11 +109,11 @@ export class DataPipeline {
           return;
         }
 
-        log('new epoch', { credential });
-        await this._processEpoch(credential.subject.assertion);
-
         this.currentEpoch = credential;
-        this.onNewEpoch.emit(credential);
+        if (this._isOpen) {
+          // process epoch
+          await this._processEpochInSeparateTask(credential);
+        }
       },
     };
   }
@@ -180,6 +183,12 @@ export class DataPipeline {
   }
 
   private async _consumePipeline() {
+    if (this.currentEpoch) {
+      const waitForOneEpoch = this.onNewEpoch.waitFor(() => true);
+      await this._processEpochInSeparateTask(this.currentEpoch);
+      await waitForOneEpoch;
+    }
+
     assert(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
@@ -223,7 +232,7 @@ export class DataPipeline {
 
   private async _saveTargetTimeframe(timeframe: Timeframe) {
     const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
-    await this._params.metadataStore.setSpaceLatestTimeframe(this._params.spaceKey, newTimeframe);
+    await this._params.metadataStore.setSpaceDataLatestTimeframe(this._params.spaceKey, newTimeframe);
     this._targetTimeframe = newTimeframe;
   }
 
@@ -265,14 +274,41 @@ export class DataPipeline {
     }
   }
 
+  private async _processEpochInSeparateTask(epoch: SpecificCredential<Epoch>) {
+    if (epoch.subject.assertion.number <= this._lastProcessedEpoch) {
+      return;
+    }
+    await this._epochCtx?.dispose();
+    const ctx = new Context({
+      onError: (err) => {
+        if (err instanceof CancelledError) {
+          log('Epoch processing cancelled.');
+        } else {
+          log.catch(err);
+        }
+      },
+    });
+    this._epochCtx = ctx;
+    scheduleTask(ctx, async () => {
+      if (!this._isOpen) {
+        // Space closed before we got to process the epoch.
+        return;
+      }
+      log('process epoch', { epoch });
+      await this._processEpoch(ctx, epoch.subject.assertion);
+      this.onNewEpoch.emit(epoch);
+    });
+  }
+
   @synchronized
-  private async _processEpoch(epoch: Epoch) {
-    assert(this._isOpen); // TODO: In the future we might process epochs before we are open so that data pipeline starts from the last one.
+  private async _processEpoch(ctx: Context, epoch: Epoch) {
+    assert(this._isOpen, 'Space is closed.');
     assert(this._pipeline);
+    this._lastProcessedEpoch = epoch.number;
 
     log('Processing epoch', { epoch });
     if (epoch.snapshotCid) {
-      const snapshot = await this._params.snapshotManager.load(epoch.snapshotCid);
+      const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
 
       // TODO(dmaretskyi): Clearing old items + events.
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
