@@ -33,6 +33,7 @@ message Stack {
 
   // Sections may belong to different stacks.
   message Section {
+    // TODO(burdon): Should not be object.
     option (object) = true;
     dxos.schema.TypedObject object = 1;
   }
@@ -45,15 +46,15 @@ message Kanban {
   option (object) = true;
 
   message Column {
-    // option (object) = true;
-
     string title = 1;
     repeated Item items = 2;
   }
 
   message Item {
-    // option (object) = true;
+    // TODO(burdon): Should this be an object?
+    option (object) = true;
 
+    // TODO(burdon): Reference to content?
     string content = 1;
   }
 

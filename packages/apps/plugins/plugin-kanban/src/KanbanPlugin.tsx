@@ -22,8 +22,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
       types: [
         {
           id: 'create-kanban',
-          testId: 'kanbanPlugin.createStack',
-          label: ['create kanban label', { ns: 'dxos.org:plugin/kanban' }],
+          testId: 'xkanbanPlugin.createStack',
+          label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
           icon: Plus,
           Type: Kanban,
         },

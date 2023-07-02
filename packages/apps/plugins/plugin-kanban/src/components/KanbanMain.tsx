@@ -4,41 +4,44 @@
 
 import React, { FC } from 'react';
 
+import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceProxy } from '@dxos/client';
 import { createStore } from '@dxos/observable-object';
 
-import { isKanban } from '../props';
 import type { KanbanColumn, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
+export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  console.log('>>>>>>>>>>', data);
-
-  const kanban = isKanban(data) ? data : null;
-  if (!kanban) {
-    return null;
-  }
+  const space = data[0];
+  console.log('>>>>>>>>', space);
+  const kanban = data[data.length - 1] as KanbanType;
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: kanban,
+    // TODO(burdon): Type?
+    root: kanban as any,
     // TODO(burdon): External (needs space.db)?
     createColumn: () => {
       return {
+        // TODO(burdon): Required for tests.
         id: PublicKey.random().toHex(),
         items: createStore([]),
       };
     },
     // TODO(burdon): Add metadata from column in the case of projections?
     createItem: (column: KanbanColumn) => {
-      return {
-        id: PublicKey.random().toHex(),
-      };
+      console.log('create item', column);
+      return space.db.add(
+        new KanbanType.Item({
+          // TODO(burdon): Required for tests.
+          // id: PublicKey.random().toHex(),
+        }),
+      );
     },
   };
 

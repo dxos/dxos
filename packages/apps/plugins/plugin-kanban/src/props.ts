@@ -62,7 +62,6 @@ export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
   createItem(column: KanbanColumn): KanbanItem;
 }
 
-// TODO(burdon): Test data type?
 export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> => {
   return isTypedObject(datum) && KanbanType.type.name === datum.__typename;
 };
