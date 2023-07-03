@@ -222,17 +222,17 @@ describe('FeedWrapper', () => {
     }
 
     // Writer.
-    const writer = feed1.createFeedWriter();
-    const write = async (index: number) => {
-      const block = {
-        id: String(index + 1),
-        index,
-        value: faker.lorem.sentence(),
-      };
-      await writer.write(block);
-    };
-
     {
+      const writer = feed1.createFeedWriter();
+      const write = async (index: number) => {
+        const block = {
+          id: String(index + 1),
+          index,
+          value: faker.lorem.sentence(),
+        };
+        await writer.write(block);
+      };
+
       for (const i of Array.from(Array(numBlocks).keys())) {
         await write(i);
       }
