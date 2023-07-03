@@ -31,14 +31,32 @@ const SpacesPanel = () => {
       return undefined;
     }
 
+    const pipeline = space?.internal.data?.pipeline;
+    const epochTimeframe = pipeline?.currentEpoch?.subject.assertion.timeframe ?? new Timeframe();
+    const currentEpochNumber = pipeline?.currentEpoch?.subject.assertion.number;
+    const appliedEpochNumber = pipeline?.appliedEpoch?.subject.assertion.number;
+
+    const targetControlMessages = (pipeline?.targetControlTimeframe?.totalMessages() ?? 0)
+    const currentControlMessages = (pipeline?.currentControlTimeframe?.totalMessages() ?? 0)
+
+    const startDataMessages = (pipeline?.startDataTimeframe?.totalMessages() ?? 0);
+    const targetDataMessages = (pipeline?.targetDataTimeframe?.totalMessages() ?? 0)
+    const currentDataMessages = (pipeline?.currentDataTimeframe?.totalMessages() ?? 0)
+
+
     // TODO(burdon): List feeds and nav.
     return {
       id: metadata.key.truncate(),
-      name: humanize(metadata?.key),
+      name: space.properties.name ?? metadata?.key.truncate(),
       open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
-      genesisFeed: humanize(metadata?.genesisFeed),
-      controlFeed: humanize(metadata?.controlFeed),
-      dataFeed: humanize(metadata?.dataFeed),
+      genesisFeed: metadata?.genesisFeed.truncate(),
+      controlFeed: metadata?.controlFeed.truncate(),
+      dataFeed: metadata?.dataFeed.truncate(),
+      currentEpoch: currentEpochNumber === appliedEpochNumber ? currentEpochNumber : `${currentEpochNumber} (${appliedEpochNumber})`,
+      currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
+      mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
+      controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
+      dataProgress: `${(Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100).toFixed(0)}%`,
       startupTime:
         space?.internal.data?.metrics.open &&
         space?.internal.data?.metrics.ready &&
@@ -61,16 +79,16 @@ const SpacesPanel = () => {
 type PipelineTableRow = {
   feedKey: PublicKey;
   type: string;
+  start?: number;
   processed?: number;
   target?: number;
   total?: number;
-  known?: number;
 };
 
 const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'FeedKey',
-    width: 120,
+    width: 80,
     accessor: (block) => {
       const feedKey = block.feedKey;
       return `${feedKey.truncate()}`;
@@ -80,6 +98,22 @@ const columns: TableColumn<PipelineTableRow>[] = [
     Header: 'Type',
     width: 80,
     accessor: 'type',
+  },
+  {
+    Header: 'Progress',
+    width: 80,
+    accessor: (block) => {
+      const percent = ((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0)) * 100;
+      if (isNaN(percent)) {
+        return '';
+      }
+      return `${Math.min(percent, 100).toFixed(0)}%`;
+    },
+  },
+  {
+    Header: 'Start',
+    width: 80,
+    accessor: 'start',
   },
   {
     Header: 'Processed',
@@ -96,14 +130,11 @@ const columns: TableColumn<PipelineTableRow>[] = [
     width: 80,
     accessor: 'total',
   },
-  {
-    Header: 'Known',
-    width: 80,
-    accessor: 'known',
-  },
 ];
 
 const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
+  const epochTimeframe = state.currentEpoch?.subject.assertion.timeframe;
+
   const controlKeys = Array.from(
     new ComplexSet(PublicKey.hash, [
       ...(state.controlFeeds ?? []),
@@ -137,6 +168,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
       (feedKey): PipelineTableRow => ({
         feedKey,
         type: 'control',
+        start: 0,
         processed: state.currentControlTimeframe?.get(feedKey),
         target: state.targetControlTimeframe?.get(feedKey),
         total: state.totalControlTimeframe?.get(feedKey),
@@ -146,6 +178,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
       (feedKey): PipelineTableRow => ({
         feedKey,
         type: 'data',
+        start: state.startDataTimeframe?.get(feedKey) ?? 0,
         processed: state.currentDataTimeframe?.get(feedKey),
         target: state.targetDataTimeframe?.get(feedKey),
         total: state.totalDataTimeframe?.get(feedKey),
