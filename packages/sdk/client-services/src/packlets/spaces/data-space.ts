@@ -256,7 +256,10 @@ export class DataSpace {
       );
     }
     if (!this.inner.dataFeedKey) {
-      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
+      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), {
+        writable: true,
+        sparse: true,
+      });
       this.inner.setDataFeed(dataFeed);
 
       credentials.push(

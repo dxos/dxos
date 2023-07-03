@@ -51,7 +51,7 @@ export class FeedStore<T extends {}> {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  async openFeed(feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
+  async openFeed(feedKey: PublicKey, { writable, sparse }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
     assert(feedKey);
     assert(!this._closed, 'Feed store is closed');
@@ -68,7 +68,7 @@ export class FeedStore<T extends {}> {
       }
     }
 
-    const core = this._factory.createFeed(feedKey, { writable });
+    const core = this._factory.createFeed(feedKey, { writable, sparse });
     feed = new FeedWrapper<T>(core, feedKey);
     this._feeds.set(feed.key, feed);
 
