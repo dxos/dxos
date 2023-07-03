@@ -74,6 +74,7 @@ export class SpacesServiceImpl implements SpacesService {
           for (const space of dataSpaceManager.spaces.values()) {
             subscriptions.add(space.stateUpdate.on(ctx, onUpdate));
             subscriptions.add(space.presence.updated.on(ctx, onUpdate));
+            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, onUpdate));
 
             // Pipeline progress.
             space.inner.controlPipeline.state.timeframeUpdate
@@ -157,6 +158,7 @@ export class SpacesServiceImpl implements SpacesService {
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
         currentEpoch: space.dataPipeline.currentEpoch,
+        appliedEpoch: space.dataPipeline.appliedEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
@@ -164,6 +166,7 @@ export class SpacesServiceImpl implements SpacesService {
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
         dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
+        startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
         currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
         totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
