@@ -168,7 +168,7 @@ describe('Spaces', () => {
     await space1.waitUntilReady();
 
     {
-      // Create mutations and epoch.s
+      // Create mutations and epoch.
       const amount = 10;
       for (const i of range(amount)) {
         const expando = new Expando({ id: i.toString(), data: i.toString() });
