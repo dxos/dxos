@@ -197,7 +197,7 @@ describe('FeedWrapper', () => {
     await done();
   });
 
-  test.only('cancel download while replicating', async () => {
+  test('cancel download while replicating', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
