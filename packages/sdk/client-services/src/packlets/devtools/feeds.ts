@@ -40,6 +40,7 @@ export const subscribeToFeeds = (
           feedKey: feed.key,
           length: feed.properties.length,
           bytes: feed.core.byteLength,
+          downloaded: feed.core.bitfield?.data.toBuffer() ?? new Uint8Array(),
         })),
       });
     };

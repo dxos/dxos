@@ -81,7 +81,16 @@ export class DataPipeline {
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
 
+  /**
+   * Current epoch. Might be still processing.
+   */
   public currentEpoch?: SpecificCredential<Epoch>;
+
+  /**
+   * Epoch currently applied.
+   */
+  public appliedEpoch?: SpecificCredential<Epoch>;
+
   private _lastProcessedEpoch = -1;
   public onNewEpoch = new Event<Credential>();
   private _epochCtx?: Context;
@@ -185,7 +194,7 @@ export class DataPipeline {
 
   private async _consumePipeline() {
     if (this.currentEpoch) {
-      const waitForOneEpoch = this.onNewEpoch.waitFor(() => true);
+      const waitForOneEpoch = this.onNewEpoch.waitForCount(1);
       await this._processEpochInSeparateTask(this.currentEpoch);
       await waitForOneEpoch;
     }
@@ -303,6 +312,8 @@ export class DataPipeline {
       }
       log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
+
+      this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
     });
   }
