@@ -26,8 +26,6 @@ const SpacesPanel = () => {
 
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
-  console.log(space);
-
   const object = useMemo(() => {
     if (!metadata) {
       return undefined;
