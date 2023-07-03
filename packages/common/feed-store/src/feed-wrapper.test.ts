@@ -9,7 +9,8 @@ import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { FeedWrapper } from './feed-wrapper';
 import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
@@ -142,7 +143,6 @@ describe('FeedWrapper', () => {
     await done();
   });
 
-  // TODO(dmaretskyi): fix test.
   test('replicates with streams', async () => {
     const numBlocks = 10;
     const builder = new TestItemBuilder();
@@ -189,10 +189,64 @@ describe('FeedWrapper', () => {
 
     // Reader.
     await asyncTimeout(feed2.get(numBlocks - 1, { wait: true }), 500);
+    expect(feed2.properties.length).to.eq(numBlocks);
 
     stream1.end();
     stream2.end();
 
     await done();
+  });
+
+  test.only('cancel download while replicating', async () => {
+    const numBlocks = 10;
+    const builder = new TestItemBuilder();
+    const feedFactory = builder.createFeedFactory();
+
+    const key1 = await builder.keyring!.createKey();
+    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true, sparse: true }), key1);
+    const feed2 = new FeedWrapper(feedFactory.createFeed(key1, { sparse: true }), key1);
+
+    await feed1.open();
+    await feed2.open();
+    afterTest(() => feed2.close());
+    afterTest(() => feed1.close());
+
+    const stream1 = feed1.replicate(true, { live: true });
+    const stream2 = feed2.replicate(false, { live: true, download: false });
+
+    // Start replication.
+    {
+      stream1.pipe(stream2).pipe(stream1);
+
+      expect(feed1.properties.stats.peers).to.have.lengthOf(1);
+      expect(feed2.properties.stats.peers).to.have.lengthOf(1);
+    }
+
+    // Writer.
+    {
+      const writer = feed1.createFeedWriter();
+      for (const i of Array.from(Array(numBlocks).keys())) {
+        const block = {
+          id: String(i + 1),
+          index: i,
+          value: faker.lorem.sentence(),
+        };
+
+        const seq = await writer.write(block);
+        log('write', { seq, block });
+      }
+    }
+
+    // Reader.
+    {
+      const start = 5;
+      // Start downloading of last mutations.
+      const promise = asyncTimeout(feed2.download({ start, end: numBlocks }), 500);
+      feed2.setDownloading(true);
+      await promise;
+      for (const i of range(numBlocks)) {
+        expect(feed2.has(i)).to.eq(i >= start);
+      }
+    }
   });
 });
