@@ -212,7 +212,7 @@ describe('FeedWrapper', () => {
     afterTest(() => feed1.close());
 
     const stream1 = feed1.replicate(true, { live: true });
-    const stream2 = feed2.replicate(false, { live: true, download: false });
+    const stream2 = feed2.replicate(false, { live: true });
 
     // Start replication.
     {
@@ -241,9 +241,7 @@ describe('FeedWrapper', () => {
     {
       const start = 5;
       // Start downloading of last mutations.
-      const promise = asyncTimeout(feed2.download({ start, end: numBlocks }), 500);
-      feed2.setDownloading(true);
-      await promise;
+      await asyncTimeout(feed2.download({ start, end: feed1.length }), 1000);
       for (const i of range(numBlocks)) {
         expect(feed2.has(i)).to.eq(i >= start);
       }
