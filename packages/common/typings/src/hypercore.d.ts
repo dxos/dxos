@@ -229,7 +229,7 @@ declare module 'hypercore' {
     getBatch(start: number, end: number, options?: GetOptions, cb?: Callback<T[]>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-    download(range?: Range, cb?: Callback<number>): any;
+    download(range?: Range, cb?: Callback<number>): number;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
     downloaded(start?: number, end?: number): boolean;
@@ -240,6 +240,9 @@ declare module 'hypercore' {
     // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
     registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
+
+    // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedsetdownloadingbool
+    setDownloading(bool): void;
 
     // TODO(dmaretskyi): Add other events.
     on(event: string, cb: (...args: any) => void): void;
