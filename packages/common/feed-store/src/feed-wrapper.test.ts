@@ -4,12 +4,13 @@
 
 import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FeedWrapper } from './feed-wrapper';
@@ -208,8 +209,6 @@ describe('FeedWrapper', () => {
 
     await feed1.open();
     await feed2.open();
-    afterTest(() => feed2.close());
-    afterTest(() => feed1.close());
 
     const stream1 = feed1.replicate(true, { live: true });
     const stream2 = feed2.replicate(false, { live: true });
@@ -223,25 +222,29 @@ describe('FeedWrapper', () => {
     }
 
     // Writer.
-    {
-      const writer = feed1.createFeedWriter();
-      for (const i of Array.from(Array(numBlocks).keys())) {
-        const block = {
-          id: String(i + 1),
-          index: i,
-          value: faker.lorem.sentence(),
-        };
+    const writer = feed1.createFeedWriter();
+    const write = async (index: number) => {
+      const block = {
+        id: String(index + 1),
+        index,
+        value: faker.lorem.sentence(),
+      };
+      await writer.write(block);
+    };
 
-        const seq = await writer.write(block);
-        log('write', { seq, block });
+    {
+      for (const i of Array.from(Array(numBlocks).keys())) {
+        await write(i);
       }
     }
 
     // Reader.
     {
       const start = 5;
-      // Start downloading of last mutations.
-      await asyncTimeout(feed2.download({ start, end: feed1.length }), 1000);
+      feed2.download({ start });
+      await waitForExpect(async () => {
+        expect(feed2.has(start)).to.be.true;
+      }, 500);
       for (const i of range(numBlocks)) {
         expect(feed2.has(i)).to.eq(i >= start);
       }
