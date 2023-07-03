@@ -42,6 +42,11 @@ export class PipelineState {
   public readonly stalled = new Event();
 
   /**
+   * @internal
+   */
+  _startTimeframe: Timeframe = new Timeframe();
+
+  /**
    * Target timeframe we are waiting to reach.
    */
   private _targetTimeframe: Timeframe | undefined;
@@ -68,6 +73,10 @@ export class PipelineState {
           index: feed.length - 1,
         })),
     );
+  }
+
+  get startTimeframe() {
+    return this._startTimeframe;
   }
 
   get timeframe() {
@@ -275,6 +284,7 @@ export class Pipeline implements PipelineAccessor {
   async setCursor(timeframe: Timeframe) {
     assert(!this._isStarted || this._isPaused, 'Invalid state.');
 
+    this._state._startTimeframe = timeframe;
     this._timeframeClock.setTimeframe(timeframe);
 
     if (this._feedSetIterator) {
