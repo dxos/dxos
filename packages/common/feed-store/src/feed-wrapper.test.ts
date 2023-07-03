@@ -204,7 +204,7 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true, sparse: true }), key1);
+    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true }), key1);
     const feed2 = new FeedWrapper(feedFactory.createFeed(key1, { sparse: true }), key1);
 
     await feed1.open();
