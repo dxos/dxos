@@ -154,6 +154,10 @@ export class FeedWrapper<T extends {}> {
   has = this._binder.fn(this._hypercore.has);
   get = this._binder.async(this._hypercore.get);
   append = this._binder.async(this._hypercore.append);
+
+  /**
+   * Will not resolve if `end` parameter is not specified and the feed is not closed.
+   */
   download = this._binder.async(this._hypercore.download);
   undownload = this._binder.fn(this._hypercore.undownload);
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
