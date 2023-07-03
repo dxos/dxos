@@ -312,7 +312,7 @@ export class DataPipeline {
       }
       log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
-      
+
       this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
     });
