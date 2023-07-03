@@ -293,7 +293,8 @@ export class Pipeline implements PipelineAccessor {
       if (!feed) {
         throw new Error('Feed not found');
       }
-      await feed.undownload({});
+
+      feed.undownload({ callback: () => log('Undownloaded') });
 
       feed.download({ start: seq + 1 }).catch((err: Error) => {
         log.catch(err);
