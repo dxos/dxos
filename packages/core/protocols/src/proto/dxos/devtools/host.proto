@@ -208,6 +208,9 @@ message SubscribeToFeedsResponse {
     dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
     int32 bytes = 3;
+
+    /// Bitfield of downloaded blocks.
+    bytes downloaded = 4;
   }
 
   repeated Feed feeds = 1;

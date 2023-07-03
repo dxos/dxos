@@ -172,6 +172,12 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
     readonly stats: Stats;
+
+    bitfield?: {
+      data: any; // sparse-bitfield package
+
+      // TODO(dmaretskyi): More props.
+    };
   }
 
   /**
