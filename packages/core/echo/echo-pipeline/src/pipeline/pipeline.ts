@@ -293,10 +293,8 @@ export class Pipeline implements PipelineAccessor {
       if (!feed) {
         throw new Error('Feed not found');
       }
-      feed.setDownloading(false);
-      (feed.download({ start: seq + 1, end: -1, linear: true }) as Promise<number>).catch((err) => {
-        log.warn('Failed to download feed', { err });
-      });
+      feed.undownload({});
+      feed.download({ start: seq + 1 });
     });
 
     if (this._feedSetIterator) {
