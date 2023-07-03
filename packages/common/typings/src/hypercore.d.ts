@@ -133,6 +133,7 @@ declare module 'hypercore' {
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
    */
   export type HypercoreOptions = {
+    sparse?: boolean; // do not mark the entire feed to be downloaded
     createIfMissing?: boolean;
     secretKey?: Buffer;
     valueEncoding?: ValueEncoding;
@@ -210,6 +211,7 @@ declare module 'hypercore' {
     audit(cb: Callback<{ valid: number; invalid: number }>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
+    has(index: number): void;
     has(start: number, end?: number): boolean;
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedclearstart-end-callback
