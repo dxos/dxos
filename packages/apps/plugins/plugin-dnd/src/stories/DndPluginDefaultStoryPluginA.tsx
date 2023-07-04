@@ -9,7 +9,7 @@ import React, { useContext, useState } from 'react';
 import { arrayMove } from '@dxos/util';
 
 import { useDragEnd, useDragStart } from '../DndPlugin';
-import { DndPluginStoryPluginContext, StoryItem, StoryItemDragOverlay } from './DndPluginDefaultStoryPlugin';
+import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
 
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
@@ -49,8 +49,6 @@ export const DndPluginDefaultStoryPluginA = () => {
         switch (role) {
           case 'dndpluginstory':
             return DefaultDndPluginStoryPluginA;
-          case 'dragoverlay':
-            return StoryItemDragOverlay;
           default:
             return null;
         }

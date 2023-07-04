@@ -51,7 +51,11 @@ export const StoryItem = ({ id, title, dragging }: StoryItemProps & { dragOverla
   );
 };
 
-export const DndPluginStoryPluginContext = createContext<{ items: StoryItemProps[] }>(defaultItems);
+const store = createStore<DndPluginDefaultStoryContextValue>(defaultItems);
+
+export type DndPluginDefaultStoryContextValue = { items: StoryItemProps[] };
+
+export const DndPluginStoryPluginContext = createContext<DndPluginDefaultStoryContextValue>(store);
 
 const DndPluginDefaultStoryPluginDefault = () => {
   return (
@@ -62,7 +66,6 @@ const DndPluginDefaultStoryPluginDefault = () => {
 };
 
 export const DndPluginDefaultStoryPlugin = () => {
-  const store = createStore<{ items: StoryItemProps[] }>(defaultItems);
   return {
     meta: {
       id: 'dxos:dndStoryPluginA',
@@ -73,6 +76,14 @@ export const DndPluginDefaultStoryPlugin = () => {
       ),
       components: {
         default: DndPluginDefaultStoryPluginDefault,
+      },
+      component: (daum: unknown, role?: string) => {
+        switch (role) {
+          case 'dragoverlay':
+            return StoryItemDragOverlay;
+          default:
+            return null;
+        }
       },
       dndStory: store,
     },
