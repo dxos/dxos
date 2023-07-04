@@ -91,7 +91,6 @@ export class Space {
         await this._addFeedLock.executeSynchronized(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              debugger;
               return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse: true }));
             }
           }
@@ -99,7 +98,7 @@ export class Space {
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key));
+        this.protocol.addFeed(await params.feedProvider(info.key, { sparse: true }));
       }
     });
 
