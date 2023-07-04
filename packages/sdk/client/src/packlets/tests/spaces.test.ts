@@ -12,6 +12,7 @@ import { Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -150,7 +151,7 @@ describe('Spaces', () => {
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
   });
 
-  test.only('Peer do not load mutations before epoch', async () => {
+  test('Peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
     const services1 = testBuilder.createLocal();
@@ -167,17 +168,21 @@ describe('Spaces', () => {
     const space1 = await client1.createSpace();
     await space1.waitUntilReady();
 
+    const feedKey = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key)?.inner.dataFeedKey;
+    const dataSpace1 = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+
     {
       // Create mutations and epoch.
       const amount = 10;
       for (const i of range(amount)) {
         const expando = new Expando({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
-        expando.data = 'updated';
       }
+      // Wait to process all mutations.
+      await dataSpace1!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount]]));
+      // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
-    const feedKey = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key)?.inner.dataFeedKey;
 
     await Promise.all(performInvitation({ host: space1, guest: client2 }));
 
@@ -185,7 +190,7 @@ describe('Spaces', () => {
     await space2.waitUntilReady();
 
     for (const i of range(services1.host._serviceContext.feedStore.getFeed(feedKey!)?.length)) {
-      log.info(services2.host._serviceContext.feedStore.getFeed(feedKey!)?.has(i));
+      expect(services2.host._serviceContext.feedStore.getFeed(feedKey!)?.has(i)).to.be.false;
     }
   });
 });
