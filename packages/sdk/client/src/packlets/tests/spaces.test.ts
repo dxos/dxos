@@ -168,8 +168,8 @@ describe('Spaces', () => {
     const space1 = await client1.createSpace();
     await space1.waitUntilReady();
 
-    const feedKey = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key)?.inner.dataFeedKey;
     const dataSpace1 = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feedKey = dataSpace1!.inner.dataFeedKey;
     const feed1 = services1.host._serviceContext.feedStore.getFeed(feedKey!)!;
 
     const amount = 10;
