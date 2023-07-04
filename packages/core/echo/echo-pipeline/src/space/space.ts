@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
 import { CredentialConsumer, FeedInfo } from '@dxos/credentials';
-import { FeedWrapper } from '@dxos/feed-store';
+import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -23,7 +23,7 @@ import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out?
-type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
   spaceKey: PublicKey;
@@ -91,7 +91,8 @@ export class Space {
         await this._addFeedLock.executeSynchronized(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key));
+              debugger;
+              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse: true }));
             }
           }
         });
