@@ -5,7 +5,7 @@
 import { scheduleTask, trackLeaks, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
+import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 
 import { ObjectSyncExtension } from './object-sync-extension';
 
