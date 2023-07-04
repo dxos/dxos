@@ -3,6 +3,7 @@
 //
 
 export * from './binder';
+export * from './bitfield'
 export * from './callback';
 export * from './complex';
 export * from './default-map';
