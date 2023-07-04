@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+import { UniqueIdentifier, useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
@@ -11,30 +12,40 @@ import React, { createContext, PropsWithChildren, useContext, useState } from 'r
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { randomString } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { DndPlugin, useDragEnd } from '../DndPlugin';
+import { DndPlugin, useDragEnd, useDragStart } from '../DndPlugin';
 
 type StoryItemProps = { id: string; title: string };
 
 faker.seed(1111);
 
-const StoryItem = (props: StoryItemProps) => {
+const defaultItems = {
+  items: [
+    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+  ],
+};
+
+const StoryItem = ({ id, title, dragging }: StoryItemProps & { dragOverlay?: boolean; dragging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: props.id,
+    id,
   });
   return (
     <div
-      className='p-2 flex gap-2 items-center'
+      className={mx('p-2 flex gap-2 items-center', dragging && 'invisible')}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       {...attributes}
       {...listeners}
       ref={setNodeRef}
     >
       <DotsSixVertical />
-      {props.title}
+      {title}
     </div>
   );
 };
@@ -42,6 +53,10 @@ const StoryItem = (props: StoryItemProps) => {
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
   const store = useContext(DndPluginStoryPluginContext);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  useDragStart(({ active: { id } }) => {
+    setActiveId(id);
+  }, []);
   useDragEnd(({ active, over }) => {
     if (active.id !== over?.id) {
       const oldIndex = store.items.findIndex((item) => item.id === active.id);
@@ -49,20 +64,25 @@ const DefaultDndPluginStoryPluginA = () => {
       arrayMove(store.items, oldIndex, newIndex);
       setIter([]);
     }
+    setActiveId(null);
   }, []);
 
   return (
-    <div className=''>
+    <div className='p-2 min-is-[300px] rounded-xl border-dashed border border-neutral-500/50'>
       <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
         {store.items.map((item) => (
-          <StoryItem key={item.id} {...item} />
+          <StoryItem key={item.id} {...item} dragging={item.id === activeId} />
         ))}
       </SortableContext>
     </div>
   );
 };
 
-const DndPluginStoryPluginContext = createContext<{ items: StoryItemProps[] }>({ items: [] });
+const StoryItemDragOverlay = ({ data }: { data: string }) => {
+  const store = useContext(DndPluginStoryPluginContext);
+  const item = store.items.find(({ id }) => id === data);
+  return item ? <StoryItem {...item} dragOverlay /> : null;
+};
 
 const DndPluginStoryPluginA = () => {
   return {
@@ -71,8 +91,41 @@ const DndPluginStoryPluginA = () => {
     },
     provides: {
       component: (datum: unknown, role?: string) => {
+        switch (role) {
+          case 'dndpluginstory':
+            return DefaultDndPluginStoryPluginA;
+          case 'dragoverlay':
+            return StoryItemDragOverlay;
+          default:
+            return null;
+        }
+      },
+    },
+  };
+};
+
+const DefaultDndPluginStoryPluginB = () => {
+  const { setNodeRef, isOver } = useDroppable({ id: 'dndStoryPluginB' });
+  return (
+    <div
+      className={mx(
+        'p-2 min-is-[300px] rounded-xl border-dashed border border-neutral-500/50',
+        isOver && 'bg-neutral-500/20',
+      )}
+      ref={setNodeRef}
+    ></div>
+  );
+};
+
+const DndPluginStoryPluginB = () => {
+  return {
+    meta: {
+      id: 'dxos:dndStoryPluginB',
+    },
+    provides: {
+      component: (datum: unknown, role?: string) => {
         if (role === 'dndpluginstory') {
-          return DefaultDndPluginStoryPluginA;
+          return DefaultDndPluginStoryPluginB;
         } else {
           return null;
         }
@@ -81,23 +134,18 @@ const DndPluginStoryPluginA = () => {
   };
 };
 
+const DndPluginStoryPluginContext = createContext<{ items: StoryItemProps[] }>(defaultItems);
+
 const DefaultDndPluginStoryPlugin = () => {
   return (
-    <div role='none' className='flex'>
+    <div role='none' className='flex p-4 gap-4'>
       <Surface role='dndpluginstory' />
     </div>
   );
 };
 
 const DndPluginStoryPlugin = () => {
-  const store = createStore<{ items: StoryItemProps[] }>({
-    items: [
-      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-    ],
-  });
+  const store = createStore<{ items: StoryItemProps[] }>(defaultItems);
   return {
     meta: {
       id: 'dxos:dndStoryPluginA',
@@ -115,7 +163,9 @@ const DndPluginStoryPlugin = () => {
 };
 
 const DndSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), DndPlugin(), DndPluginStoryPlugin(), DndPluginStoryPluginA()]} />
+  <PluginContextProvider
+    plugins={[ThemePlugin(), DndPlugin(), DndPluginStoryPlugin(), DndPluginStoryPluginA(), DndPluginStoryPluginB()]}
+  />
 );
 
 export default {

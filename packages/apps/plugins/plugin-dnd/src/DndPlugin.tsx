@@ -2,10 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DndContext, DragCancelEvent, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import React, { DependencyList, useEffect } from 'react';
+import {
+  defaultDropAnimationSideEffects,
+  DndContext,
+  DragCancelEvent,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  DropAnimation,
+  UniqueIdentifier,
+} from '@dnd-kit/core';
+import React, { DependencyList, useEffect, useState } from 'react';
 
-import { PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition, Surface } from '@dxos/react-surface';
 
 export type DndPluginProvides = {};
 
@@ -73,6 +83,26 @@ export const useDragCancel = (callback: (event: DragCancelEvent) => void, depend
   }, dependencies);
 };
 
+const dropAnimation: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0',
+      },
+    },
+  }),
+};
+
+const DndOverlay = () => {
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  useDragStart(({ active: { id } }) => setActiveId(id), []);
+  return (
+    <DragOverlay adjustScale={false} dropAnimation={dropAnimation}>
+      {activeId ? <Surface role='dragoverlay' data={activeId} limit={1} /> : null}
+    </DragOverlay>
+  );
+};
+
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => ({
   meta: {
     id: 'dxos:dnd',
@@ -86,6 +116,7 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => ({
         onDragEnd={handleDragEnd}
       >
         {children}
+        <DndOverlay />
       </DndContext>
     ),
   },
