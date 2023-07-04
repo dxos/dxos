@@ -9,7 +9,7 @@ import React, { useContext, useState } from 'react';
 import { arrayMove } from '@dxos/util';
 
 import { useDragEnd, useDragStart } from '../DndPlugin';
-import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
+import { CompactStoryItem, DndPluginStoryPluginContext } from './DndPluginDefaultStoryPlugin';
 
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
@@ -32,7 +32,7 @@ const DefaultDndPluginStoryPluginA = () => {
     <div className='p-2 is-72 rounded-xl border-dashed border border-neutral-500/50'>
       <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
         {store.items.map((item) => (
-          <StoryItem key={item.id} {...item} dragging={item.id === activeId} />
+          <CompactStoryItem key={item.id} item={item} dragging={item.id === activeId} />
         ))}
       </SortableContext>
     </div>

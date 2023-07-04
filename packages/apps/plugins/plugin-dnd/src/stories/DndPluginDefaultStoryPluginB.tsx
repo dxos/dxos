@@ -9,9 +9,9 @@ import { mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 
 import { useDragEnd } from '../DndPlugin';
-import { DndPluginStoryPluginContext, StoryItemProps } from './DndPluginDefaultStoryPlugin';
+import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
 
-const store = createStore<{ items: StoryItemProps[] }>({ items: [] });
+const store = createStore<{ items: StoryItem[] }>({ items: [] });
 
 const droppableId = 'dndPluginDefaultStoryPluginB';
 
@@ -25,8 +25,10 @@ const DndPluginDefaultStoryPluginBDefault = () => {
         const inStore = store.items.findIndex(({ id }) => id === active.id) >= 0;
         if (!inStore) {
           const item = allItems.find(({ id }) => id === active.id);
-          item && store.items.splice(store.items.length, 0, item);
-          setIter([]);
+          if (item && item.type === 'fruit') {
+            item && store.items.splice(store.items.length, 0, item);
+            setIter([]);
+          }
         }
       }
     },

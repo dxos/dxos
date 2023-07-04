@@ -13,7 +13,7 @@ import { mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
-export type StoryItemProps = { id: string; title: string; description: string };
+export type StoryItem = { id: string; title: string; description: string; type: 'fruit' | 'vegetable' };
 
 faker.seed(1111);
 
@@ -23,21 +23,25 @@ const defaultItems = {
       id: `storyItem:${randomString()}`,
       title: faker.commerce.product(),
       description: faker.commerce.productDescription(),
+      type: 'fruit' as const,
     },
     {
       id: `storyItem:${randomString()}`,
       title: `${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.product()}`,
       description: faker.commerce.productDescription(),
+      type: 'fruit' as const,
+    },
+    {
+      id: `storyItem:${randomString()}`,
+      title: `[Not accepted] ${faker.commerce.product()}`,
+      description: faker.commerce.productDescription(),
+      type: 'vegetable' as const,
     },
     {
       id: `storyItem:${randomString()}`,
       title: faker.commerce.product(),
       description: faker.commerce.productDescription(),
-    },
-    {
-      id: `storyItem:${randomString()}`,
-      title: faker.commerce.product(),
-      description: faker.commerce.productDescription(),
+      type: 'fruit' as const,
     },
   ],
 };
@@ -45,12 +49,20 @@ const defaultItems = {
 export const StoryItemDragOverlay = ({ data }: { data: string }) => {
   // (thure) Note that this is rendered as part of DndPlugin’s context, so it may not have access to other contexts.
   const item = store.items.find(({ id }) => id === data);
-  return item ? <StoryItem {...item} dragOverlay /> : null;
+  return item ? <CompactStoryItem item={item} dragOverlay /> : null;
 };
 
-export const StoryItem = ({ id, title, dragging }: StoryItemProps & { dragOverlay?: boolean; dragging?: boolean }) => {
+export const CompactStoryItem = ({
+  item,
+  dragging,
+}: {
+  item: StoryItem;
+  dragOverlay?: boolean;
+  dragging?: boolean;
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id,
+    id: item.id,
+    data: item,
   });
   return (
     <div
@@ -61,14 +73,14 @@ export const StoryItem = ({ id, title, dragging }: StoryItemProps & { dragOverla
       ref={setNodeRef}
     >
       <DotsSixVertical className='shrink-0' />
-      {title}
+      {item.title}
     </div>
   );
 };
 
 const store = createStore<DndPluginDefaultStoryContextValue>(defaultItems);
 
-export type DndPluginDefaultStoryContextValue = { items: StoryItemProps[] };
+export type DndPluginDefaultStoryContextValue = { items: StoryItem[] };
 
 export const DndPluginStoryPluginContext = createContext<DndPluginDefaultStoryContextValue>(store);
 
