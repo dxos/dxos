@@ -29,7 +29,7 @@ const DefaultDndPluginStoryPluginA = () => {
   }, []);
 
   return (
-    <div className='p-2 min-is-[300px] rounded-xl border-dashed border border-neutral-500/50'>
+    <div className='p-2 is-72 rounded-xl border-dashed border border-neutral-500/50'>
       <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
         {store.items.map((item) => (
           <StoryItem key={item.id} {...item} dragging={item.id === activeId} />
@@ -42,7 +42,7 @@ const DefaultDndPluginStoryPluginA = () => {
 export const DndPluginDefaultStoryPluginA = () => {
   return {
     meta: {
-      id: 'dxos:dndStoryPluginA',
+      id: 'dxos:dndPluginDefaultStoryPluginA',
     },
     provides: {
       component: (datum: unknown, role?: string) => {

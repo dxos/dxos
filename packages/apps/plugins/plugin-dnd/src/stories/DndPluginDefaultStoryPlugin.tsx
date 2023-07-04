@@ -13,16 +13,32 @@ import { mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 import { Surface } from '@dxos/react-surface';
 
-type StoryItemProps = { id: string; title: string };
+export type StoryItemProps = { id: string; title: string; description: string };
 
 faker.seed(1111);
 
 const defaultItems = {
   items: [
-    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
-    { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+    {
+      id: `storyItem:${randomString()}`,
+      title: faker.commerce.product(),
+      description: faker.commerce.productDescription(),
+    },
+    {
+      id: `storyItem:${randomString()}`,
+      title: `${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.productAdjective()} ${faker.commerce.product()}`,
+      description: faker.commerce.productDescription(),
+    },
+    {
+      id: `storyItem:${randomString()}`,
+      title: faker.commerce.product(),
+      description: faker.commerce.productDescription(),
+    },
+    {
+      id: `storyItem:${randomString()}`,
+      title: faker.commerce.product(),
+      description: faker.commerce.productDescription(),
+    },
   ],
 };
 
@@ -44,7 +60,7 @@ export const StoryItem = ({ id, title, dragging }: StoryItemProps & { dragOverla
       {...listeners}
       ref={setNodeRef}
     >
-      <DotsSixVertical />
+      <DotsSixVertical className='shrink-0' />
       {title}
     </div>
   );
