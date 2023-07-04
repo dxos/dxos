@@ -95,10 +95,12 @@ export class Space {
             }
           }
         });
+        // Open data feeds with sparse option, so that we don't have to download full feed in case of Epoch.
+        await params.feedProvider(info.key, { sparse: true });
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key, { sparse: true }));
+        this.protocol.addFeed(await params.feedProvider(info.key));
       }
     });
 
