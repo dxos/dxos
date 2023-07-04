@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
-import React, { createContext, PropsWithChildren, useContext } from 'react';
+import React, { createContext, PropsWithChildren } from 'react';
 
 import { randomString } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
@@ -27,8 +27,7 @@ const defaultItems = {
 };
 
 export const StoryItemDragOverlay = ({ data }: { data: string }) => {
-  // todo(thure): the `store` here is not the one set by the provider, why is that?
-  const store = useContext(DndPluginStoryPluginContext);
+  // (thure) Note that this is rendered as part of DndPlugin’s context, so it may not have access to other contexts.
   const item = store.items.find(({ id }) => id === data);
   return item ? <StoryItem {...item} dragOverlay /> : null;
 };
