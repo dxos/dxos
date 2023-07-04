@@ -1,0 +1,53 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+package dxos.mesh.teleport.blobsync;
+
+message BlobHeader {
+  string id = 1;
+
+  /// Size of chunk in bytes. Must be a power of 2. Default is 4096.
+  optional int32 chunk_size = 2;
+
+  /**
+   * Bitfield of present chunks.
+   * Every bit represents a chunk.
+   * Chunks are indexed from MSB to LSB.
+   **/
+  optional bytes bitfield = 3;
+}
+
+message WantList {
+  /// Requested blobs. If bitfield is empty, all chunks are requested.
+  repeated BlobHeader blobs = 1;
+}
+
+message BlobChunk {
+  string id = 1;
+
+  optional int32 chunk_size = 2;
+  optional int32 chunk_index = 3;
+
+  /// Total length of blob.
+  optional int32 total_length = 4;
+
+  bytes payload = 100;
+}
+
+/**
+ * Allows synchronization of opaque data objects between two peers.
+ * Loosely based on Bittorrent protocol.
+ */
+service BlobSyncService {
+  /// Notify the peer that we want to receive specified objects.
+  rpc Want(WantList) returns (google.protobuf.Empty);
+
+  /// Send an object to the peer.
+  rpc Push(BlobChunk) returns (google.protobuf.Empty);
+}

@@ -19,6 +19,7 @@ type DownloadRequest = {
   counter: number;
 };
 
+// TODO(dmaretskyi): Rename to blob-sync.
 @trackLeaks('open', 'close')
 export class ObjectSync {
   private readonly _ctx = new Context();

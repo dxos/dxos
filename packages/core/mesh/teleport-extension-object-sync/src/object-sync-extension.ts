@@ -8,14 +8,16 @@ import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { DataObject, ObjectSyncService } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
+import { BlobChunk, BlobSyncService } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+
+const BlobSyncService = schema.getService('dxos.mesh.teleport.blobsync.BlobSyncService');
 
 export type ObjectSyncExtensionParams = {
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onWantListUpdated: (wantList: Set<string>) => void;
-  onPush: (data: DataObject) => Promise<void>;
+  onPush: (data: BlobChunk) => Promise<void>;
 };
 
 /**
@@ -34,10 +36,10 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   ) {
     super({
       exposed: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
+        BlobSyncService,
       },
       requested: {
-        ObjectSyncService: schema.getService('dxos.mesh.teleport.objectsync.ObjectSyncService'),
+        BlobSyncService,
       },
       encodingOptions: {
         preserveAny: true,
@@ -72,7 +74,7 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
   }
 
   @synchronized
-  async push(data: DataObject) {
+  async push(data: BlobChunk) {
     if (this._ctx.disposed) {
       return;
     }
@@ -94,7 +96,7 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
     }
   }
 
-  pushInASeparateTask(data: DataObject) {
+  pushInASeparateTask(data: BlobChunk) {
     scheduleTask(this._ctx, () => this.push(data));
   }
 
@@ -104,5 +106,5 @@ export class ObjectSyncExtension extends RpcExtension<ServiceBundle, ServiceBund
 }
 
 type ServiceBundle = {
-  ObjectSyncService: ObjectSyncService;
+  BlobSyncService: BlobSyncService;
 };
