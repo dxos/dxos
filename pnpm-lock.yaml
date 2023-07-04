@@ -765,6 +765,7 @@ importers:
 
   packages/apps/plugins/plugin-splitview:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/observable-object': workspace:*
@@ -778,6 +779,7 @@ importers:
     dependencies:
       '@dxos/observable-object': link:../../../common/observable-object
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface

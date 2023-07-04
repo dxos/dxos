@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft, Intersect, Planet } from '@phosphor-icons/react';
+import { Intersect, Planet } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
-import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
@@ -145,7 +144,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
-          const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
           if (!clientPlugin) {
             return [];
           }
@@ -157,6 +155,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               testId: 'spacePlugin.createSpace',
               label: ['create space label', { ns: 'os' }],
               icon: (props) => <Planet {...props} />,
+              disposition: 'toolbar',
               invoke: async () => {
                 await clientPlugin.provides.client.createSpace();
               },
@@ -166,19 +165,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               testId: 'spacePlugin.joinSpace',
               label: ['join space label', { ns: 'os' }],
               icon: (props) => <Intersect {...props} />,
+              disposition: 'toolbar',
               invoke: async () => {
                 await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
-              },
-            },
-            {
-              // TODO(wittjosiah): Move to SplitViewPlugin.
-              id: 'close-sidebar',
-              label: ['close sidebar label', { ns: 'os' }],
-              icon: (props) => <ArrowLineLeft {...props} />,
-              invoke: async () => {
-                if (splitViewPlugin?.provides.splitView) {
-                  splitViewPlugin.provides.splitView.sidebarOpen = false;
-                }
               },
             },
           ];

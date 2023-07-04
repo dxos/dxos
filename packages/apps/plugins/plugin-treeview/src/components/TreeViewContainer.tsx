@@ -5,7 +5,7 @@
 import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { GraphNode, GraphNodeAction, useGraph } from '@braneframe/plugin-graph';
+import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Avatar,
@@ -44,7 +44,7 @@ export const TreeViewContainer = observer(() => {
 
   const branches = Object.entries(graph.pluginChildren ?? {}).filter(([, items]) => (items as []).length > 0);
 
-  const [primary, secondary, ...actions] = Object.values(graph.pluginActions ?? {}).flat() as GraphNodeAction[];
+  const [primary, secondary, ...actions] = getActions(graph as GraphNode);
   const hoistedActions = [primary, secondary].filter(Boolean);
 
   return (

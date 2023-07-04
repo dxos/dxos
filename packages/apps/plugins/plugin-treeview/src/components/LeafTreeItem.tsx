@@ -5,7 +5,7 @@
 import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { GraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
+import { GraphNode, getActions } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -35,7 +35,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const active = node.id === treeView.selected.at(-1);
   const modified = node.attributes?.modified ?? false;
   const Icon = node.icon ?? Placeholder;
-  const actions = Object.values(node.pluginActions ?? {}).flat() as GraphNodeAction[];
+  const actions = getActions(node);
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);

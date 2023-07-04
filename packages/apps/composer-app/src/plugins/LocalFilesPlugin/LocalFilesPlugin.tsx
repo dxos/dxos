@@ -83,7 +83,6 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
       subscriptions.add(
         state.$files!.subscribe(async (files) => {
-          console.log('files', files);
           await localforage.setItem(LOCAL_FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
           onFilesUpdate?.();
         }),

@@ -10,30 +10,31 @@ export const ROOT: GraphNode = {
   id: 'root',
   label: 'Root',
   description: 'Root node',
-  children: [],
-  actions: [],
-};
-
-export const findGraphNode = (nodes: GraphNode[], [id, ...path]: string[]): GraphNode | undefined => {
-  const node = nodes.find((n) => n.id === id);
-  if (!node) {
-    return undefined;
-  }
-
-  if (path.length === 0 || !node.children || node.children.length === 0) {
-    return node;
-  }
-
-  return findGraphNode(node.children, path);
 };
 
 export const isGraphNode = (datum: unknown): datum is GraphNode =>
   datum && typeof datum === 'object' ? 'id' in datum && 'label' in datum : false;
 
 type GraphPlugin = Plugin<GraphProvides>;
-export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] => {
-  return (plugins as GraphPlugin[]).filter((p) => typeof p.provides?.graph?.nodes === 'function');
-};
+export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] =>
+  (plugins as GraphPlugin[]).filter(
+    (p) => typeof p.provides?.graph?.nodes === 'function' || typeof p.provides?.graph?.actions === 'function',
+  );
+
+export const getActions = (node: GraphNode): GraphNodeAction[] =>
+  Object.values(node.pluginActions ?? {})
+    .flat()
+    .sort((a, b) => {
+      if (a.disposition === b.disposition) {
+        return 0;
+      }
+
+      if (a.disposition === 'toolbar') {
+        return -1;
+      }
+
+      return 1;
+    });
 
 export const buildGraph = (
   from: GraphNode,

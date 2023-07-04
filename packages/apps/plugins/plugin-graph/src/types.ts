@@ -21,8 +21,9 @@ export type GraphNode<TDatum = any> = {
   parent?: GraphNode;
   pluginChildren?: { [key: string]: GraphNode[] };
   pluginActions?: { [key: string]: GraphNodeAction[] };
-  readonly children?: GraphNode[];
-  readonly actions?: GraphNodeAction[];
+  // TODO(wittjosiah): https://github.com/luisherranz/deepsignal/issues/32
+  // readonly children?: GraphNode[];
+  // readonly actions?: GraphNodeAction[];
 };
 
 export type GraphNodeAction = {
@@ -31,6 +32,7 @@ export type GraphNodeAction = {
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
   label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
+  disposition?: 'menu' | 'toolbar';
   invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };
 

@@ -155,6 +155,7 @@ const localDirectoryToGraphNode = (
       id: 're-open',
       label: ['re-open directory label', { ns: LOCAL_FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
+      disposition: 'toolbar',
       invoke: async () => {
         const permission = await (directory.handle as any).requestPermission({ mode: 'readwrite' });
         if (permission === 'granted') {
@@ -227,6 +228,7 @@ const localFileToGraphNode = (
       id: 're-open',
       label: ['re-open file label', { ns: LOCAL_FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
+      disposition: 'toolbar',
       invoke: async () => {
         const permission = await (file.handle as any).requestPermission({ mode: 'readwrite' });
         if (permission === 'granted') {

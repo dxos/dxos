@@ -113,6 +113,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               testId: 'spacePlugin.createDocument',
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
+              disposition: 'toolbar',
               invoke: async () => {
                 const object = space.db.add(new Document());
                 if (treeViewPlugin) {
