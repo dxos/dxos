@@ -180,7 +180,7 @@ describe('Spaces', () => {
         space1.db.add(expando);
       }
       // Wait to process all mutations.
-      await dataSpace1!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount]]));
+      await space1.db.flush();
       // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
