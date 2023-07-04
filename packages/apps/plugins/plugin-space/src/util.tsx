@@ -58,6 +58,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
     icon: (props) => <Planet {...props} />,
     data: space,
     attributes: {
+      role: 'branch',
       hidden: identity && space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,
       disabled: space.state.get() !== SpaceState.READY,
       error: space.state.get() === SpaceState.ERROR,
