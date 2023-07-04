@@ -21,6 +21,7 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",

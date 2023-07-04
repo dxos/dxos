@@ -582,6 +582,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
+      '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       react: ^18.2.0
@@ -598,6 +599,7 @@ importers:
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@dxos/util': link:../../../common/util
       '@faker-js/faker': 7.6.0
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0

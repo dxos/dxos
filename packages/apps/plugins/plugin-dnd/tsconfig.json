@@ -19,6 +19,9 @@
       "path": "../../../common/observable-object"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {

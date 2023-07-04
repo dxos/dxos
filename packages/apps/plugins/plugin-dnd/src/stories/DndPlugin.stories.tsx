@@ -7,14 +7,15 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
-import React, { createContext, PropsWithChildren, useContext } from 'react';
+import React, { createContext, PropsWithChildren, useContext, useState } from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { randomString } from '@dxos/aurora';
 import { createStore } from '@dxos/observable-object';
 import { PluginContextProvider } from '@dxos/react-surface';
+import { arrayMove } from '@dxos/util';
 
-import { DndPlugin } from '../DndPlugin';
+import { DndPlugin, useDragEnd } from '../DndPlugin';
 
 type StoryItemProps = { id: string; title: string };
 
@@ -39,10 +40,20 @@ const StoryItem = (props: StoryItemProps) => {
 };
 
 const DefaultDndPluginStoryPluginA = () => {
-  const { items } = useContext(DndPluginStoryPluginAContext);
+  const [_, setIter] = useState([]);
+  const store = useContext(DndPluginStoryPluginAContext);
+  useDragEnd(({ active, over }) => {
+    if (active.id !== over?.id) {
+      const oldIndex = store.items.findIndex((item) => item.id === active.id);
+      const newIndex = store.items.findIndex((item) => item.id === over?.id);
+      arrayMove(store.items, oldIndex, newIndex);
+      setIter([]);
+    }
+  }, []);
+
   return (
-    <SortableContext items={items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-      {items.map((item) => (
+    <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+      {store.items.map((item) => (
         <StoryItem key={item.id} {...item} />
       ))}
     </SortableContext>
