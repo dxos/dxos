@@ -20,7 +20,7 @@ import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
 
-import { LocalFilesPlugin, GithubPlugin } from './plugins';
+import { GithubPlugin } from './plugins';
 
 void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defaults()) });
 
@@ -38,7 +38,7 @@ createRoot(document.getElementById('root')!).render(
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
-        LocalFilesPlugin(),
+        // LocalFilesPlugin(),
       ]}
     />
   </StrictMode>,

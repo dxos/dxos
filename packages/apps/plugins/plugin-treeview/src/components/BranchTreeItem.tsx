@@ -5,7 +5,7 @@
 import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, getSize } from '@dxos/aurora-theme';
 import { observer } from '@dxos/observable-object/react';
@@ -13,7 +13,7 @@ import { observer } from '@dxos/observable-object/react';
 import { TreeView } from './TreeView';
 
 export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
-  const [primaryAction, ...actions] = node.actions ?? [];
+  const [primaryAction, ...actions] = Object.values(node.pluginActions ?? {}).flat() as GraphNodeAction[];
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
   const hasActiveDocument = false;
@@ -159,7 +159,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={node.children} parent={node} />
+        <TreeView items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]} parent={node} />
       </TreeItem.Body>
     </TreeItem.Root>
   );

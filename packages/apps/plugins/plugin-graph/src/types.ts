@@ -3,6 +3,7 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
+import type { DeepSignal } from 'deepsignal';
 import type { UIEvent, FC } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
@@ -16,10 +17,12 @@ export type GraphNode<TDatum = any> = {
   description?: string;
   icon?: FC;
   data?: TDatum; // nit about naming this
-  parent?: GraphNode;
-  children?: GraphNode[];
-  actions?: GraphNodeAction[];
   attributes?: { [key: string]: any };
+  parent?: GraphNode;
+  pluginChildren?: { [key: string]: GraphNode[] };
+  pluginActions?: { [key: string]: GraphNodeAction[] };
+  readonly children?: GraphNode[];
+  readonly actions?: GraphNodeAction[];
 };
 
 export type GraphNodeAction = {
@@ -38,11 +41,11 @@ export type GraphContextValue = {
 
 export type GraphProvides = {
   graph: {
-    nodes?: (plugins: Plugin[]) => GraphNode[];
-    actions?: (plugins: Plugin[]) => GraphNodeAction[];
+    nodes?: (parent: GraphNode, emit: (node?: GraphNode) => void, plugins: Plugin[]) => GraphNode[];
+    actions?: (parent: GraphNode, emit: () => void, plugins: Plugin[]) => GraphNodeAction[];
   };
 };
 
 export type GraphPluginProvides = {
-  graph: GraphContextValue;
+  graph: DeepSignal<GraphNode>;
 };

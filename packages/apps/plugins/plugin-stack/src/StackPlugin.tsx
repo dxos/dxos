@@ -3,6 +3,7 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
+import React from 'react';
 
 import { Stack } from '@braneframe/types';
 import { createStore } from '@dxos/observable-object';
@@ -37,7 +38,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
           id: 'create-stack',
           testId: 'stackPlugin.createStack',
           label: ['create stack label', { ns: 'dxos:stack' }],
-          icon: Plus,
+          icon: (props) => <Plus {...props} />,
           Type: Stack,
         },
       ],

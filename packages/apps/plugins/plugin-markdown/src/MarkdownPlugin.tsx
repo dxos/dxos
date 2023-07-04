@@ -65,7 +65,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             id: 'create-doc',
             testId: 'spacePlugin.createDocument',
             label: ['create document label', { ns: 'composer' }],
-            icon: Plus,
+            icon: (props) => <Plus {...props} />,
             Type: Document,
           },
         ],
