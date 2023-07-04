@@ -12,7 +12,7 @@ import React, { createContext, PropsWithChildren, useContext, useState } from 'r
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { randomString } from '@dxos/aurora';
 import { createStore } from '@dxos/observable-object';
-import { PluginContextProvider } from '@dxos/react-surface';
+import { PluginContextProvider, Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { DndPlugin, useDragEnd } from '../DndPlugin';
@@ -41,7 +41,7 @@ const StoryItem = (props: StoryItemProps) => {
 
 const DefaultDndPluginStoryPluginA = () => {
   const [_, setIter] = useState([]);
-  const store = useContext(DndPluginStoryPluginAContext);
+  const store = useContext(DndPluginStoryPluginContext);
   useDragEnd(({ active, over }) => {
     if (active.id !== over?.id) {
       const oldIndex = store.items.findIndex((item) => item.id === active.id);
@@ -52,23 +52,50 @@ const DefaultDndPluginStoryPluginA = () => {
   }, []);
 
   return (
-    <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
-      {store.items.map((item) => (
-        <StoryItem key={item.id} {...item} />
-      ))}
-    </SortableContext>
+    <div className=''>
+      <SortableContext items={store.items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+        {store.items.map((item) => (
+          <StoryItem key={item.id} {...item} />
+        ))}
+      </SortableContext>
+    </div>
   );
 };
 
-const DndPluginStoryPluginAContext = createContext<{ items: StoryItemProps[] }>({ items: [] });
+const DndPluginStoryPluginContext = createContext<{ items: StoryItemProps[] }>({ items: [] });
 
 const DndPluginStoryPluginA = () => {
+  return {
+    meta: {
+      id: 'dxos:dndStoryPluginA',
+    },
+    provides: {
+      component: (datum: unknown, role?: string) => {
+        if (role === 'dndpluginstory') {
+          return DefaultDndPluginStoryPluginA;
+        } else {
+          return null;
+        }
+      },
+    },
+  };
+};
+
+const DefaultDndPluginStoryPlugin = () => {
+  return (
+    <div role='none' className='flex'>
+      <Surface role='dndpluginstory' />
+    </div>
+  );
+};
+
+const DndPluginStoryPlugin = () => {
   const store = createStore<{ items: StoryItemProps[] }>({
     items: [
-      { id: `dndStoryPluginA:${randomString()}`, title: faker.commerce.product() },
-      { id: `dndStoryPluginA:${randomString()}`, title: faker.commerce.product() },
-      { id: `dndStoryPluginA:${randomString()}`, title: faker.commerce.product() },
-      { id: `dndStoryPluginA:${randomString()}`, title: faker.commerce.product() },
+      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
+      { id: `storyItem:${randomString()}`, title: faker.commerce.product() },
     ],
   });
   return {
@@ -77,17 +104,19 @@ const DndPluginStoryPluginA = () => {
     },
     provides: {
       context: ({ children }: PropsWithChildren) => (
-        <DndPluginStoryPluginAContext.Provider value={store}>{children}</DndPluginStoryPluginAContext.Provider>
+        <DndPluginStoryPluginContext.Provider value={store}>{children}</DndPluginStoryPluginContext.Provider>
       ),
       components: {
-        default: DefaultDndPluginStoryPluginA,
+        default: DefaultDndPluginStoryPlugin,
       },
-      dndStoryPluginA: store,
+      dndStory: store,
     },
   };
 };
 
-const DndSurfacesApp = () => <PluginContextProvider plugins={[ThemePlugin(), DndPlugin(), DndPluginStoryPluginA()]} />;
+const DndSurfacesApp = () => (
+  <PluginContextProvider plugins={[ThemePlugin(), DndPlugin(), DndPluginStoryPlugin(), DndPluginStoryPluginA()]} />
+);
 
 export default {
   component: DndSurfacesApp,
