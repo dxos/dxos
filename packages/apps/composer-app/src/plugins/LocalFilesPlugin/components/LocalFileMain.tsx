@@ -11,7 +11,7 @@ import { Surface } from '@dxos/react-surface';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 
 export const LocalFileMain: FC<{ data: unknown }> = observer(({ data }) => {
-  const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) && isGraphNode(data[1]) ? data : [];
+  const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) ? data : [];
   const node = childNode ?? parentNode;
   const transformedData = useMemo(
     () =>
@@ -28,7 +28,7 @@ export const LocalFileMain: FC<{ data: unknown }> = observer(({ data }) => {
         : node?.data
         ? node.data
         : null,
-    [node?.data],
+    [node?.id, Boolean(node?.data?.text)],
   );
 
   return <Surface role='main' data={transformedData} />;
