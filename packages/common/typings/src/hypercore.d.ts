@@ -179,6 +179,8 @@ declare module 'hypercore' {
 
       // TODO(dmaretskyi): More props.
     };
+
+    readonly sparse: boolean;
   }
 
   /**
