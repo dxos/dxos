@@ -42,6 +42,8 @@ export const TreeViewContainer = observer(() => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
+  const branches = Object.entries(graph.pluginChildren ?? {}).filter(([, items]) => (items as []).length > 0);
+
   const [primary, secondary, ...actions] = Object.values(graph.pluginActions ?? {}).flat() as GraphNodeAction[];
   const hoistedActions = [primary, secondary].filter(Boolean);
 
@@ -52,7 +54,7 @@ export const TreeViewContainer = observer(() => {
           <div role='none' className='flex flex-col bs-full'>
             <div role='separator' className='order-1 bs-px mli-2.5 bg-neutral-500/20' />
             <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain'>
-              {Object.entries(graph.pluginChildren ?? {}).map(([key, items]) => (
+              {branches.map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='pl-2'>{t('plugin name', { ns: key })}</TreeItem.Heading>
                   <TreeView items={items as GraphNode[]} parent={graph.id} />

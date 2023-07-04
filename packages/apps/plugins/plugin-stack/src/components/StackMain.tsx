@@ -28,7 +28,7 @@ import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { stackSectionChoosers, stackSectionCreators } from '../StackPlugin';
-import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
+import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
 
 type StackSectionProps = {
   onRemove: () => void;

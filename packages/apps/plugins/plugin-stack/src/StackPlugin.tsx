@@ -5,60 +5,109 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
-import { createStore } from '@dxos/observable-object';
-import { Plugin, PluginDefinition } from '@dxos/react-surface';
+import { UnsubscribeCallback } from '@dxos/async';
+import { SpaceProxy } from '@dxos/client';
+import { createStore, subscribe } from '@dxos/observable-object';
+import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain } from './components';
-import { isStack, StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './props';
 import translations from './translations';
+import { StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './types';
+import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
 
 export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
 export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);
 
-export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
-  meta: {
-    id: 'dxos:stack',
-  },
-  ready: async (plugins) => {
-    return plugins.forEach((plugin) => {
-      if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-        stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
-      }
-      if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-        stackSectionChoosers.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
-      }
-    });
-  },
-  provides: {
-    translations,
-    space: {
-      types: [
-        {
-          id: 'create-stack',
-          testId: 'stackPlugin.createStack',
-          label: ['create stack label', { ns: 'dxos:stack' }],
-          icon: (props) => <Plus {...props} />,
-          Type: Stack,
-        },
-      ],
+export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
+  const subscriptions = new Map<string, UnsubscribeCallback>();
+  return {
+    meta: {
+      id: STACK_PLUGIN,
     },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isStack(datum[datum.length - 1])) {
-            return StackMain;
-          } else {
-            return null;
+    ready: async (plugins) => {
+      return plugins.forEach((plugin) => {
+        if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
+          stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
+        }
+        if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
+          stackSectionChoosers.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
+        }
+      });
+    },
+    unload: async () => {
+      subscriptions.forEach((unsubscribe) => unsubscribe());
+      subscriptions.clear();
+    },
+    provides: {
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
-          return null;
-      }
+
+          const space = parent.data;
+          const query = space.db.query(Stack.filter());
+          if (!subscriptions.has(parent.id)) {
+            subscriptions.set(
+              parent.id,
+              query.subscribe(() => emit()),
+            );
+          }
+
+          for (const stack of query.objects) {
+            if (!subscriptions.has(stack.id)) {
+              subscriptions.set(
+                stack.id,
+                stack[subscribe](() => emit(stackToGraphNode(stack, parent))),
+              );
+            }
+          }
+
+          return query.objects.map((stack) => stackToGraphNode(stack, parent));
+        },
+        actions: (parent, _, plugins) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const space = parent.data;
+          return [
+            {
+              id: 'create-stack',
+              testId: 'stackPlugin.createStack',
+              label: ['create stack label', { ns: STACK_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              invoke: async () => {
+                const object = space.db.add(new Stack());
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
+                }
+              },
+            },
+          ];
+        },
+      },
+      translations,
+      component: (datum, role) => {
+        switch (role) {
+          case 'main':
+            if (Array.isArray(datum) && isStack(datum[datum.length - 1])) {
+              return StackMain;
+            } else {
+              return null;
+            }
+          default:
+            return null;
+        }
+      },
+      components: {
+        StackMain,
+      },
+      stackSectionCreators,
+      stackSectionChoosers,
     },
-    components: {
-      StackMain,
-    },
-    stackSectionCreators,
-    stackSectionChoosers,
-  },
-});
+  };
+};

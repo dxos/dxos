@@ -3,5 +3,4 @@
 //
 
 export * from './SpacePlugin';
-export * from './types';
 export * from './util';

@@ -16,7 +16,9 @@
   ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "lodash.get": "^4.4.2"

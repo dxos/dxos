@@ -18,13 +18,12 @@ import {
   ShellLayout,
   Space,
   SpaceProxy,
-  TypedObject,
 } from '@dxos/react-client';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import translations from './translations';
-import { SPACE_PLUGIN, getSpaceId, isSpace, spacePlugins, spaceToGraphNode } from './util';
+import { SPACE_PLUGIN, getSpaceId, isSpace, spaceToGraphNode } from './util';
 
 type SpacePluginProvides = GraphProvides & TranslationsProvides;
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
@@ -54,20 +53,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             });
             handle.update([space.properties]);
             spaceSubs.add(handle.unsubscribe);
-
-            const typeNames = new Set(
-              spacePlugins(plugins)
-                .flatMap((p) => p.provides.space.types ?? [])
-                .map((type) => type.Type.type.name),
-            );
-            const query = space.db.query((obj: TypedObject) => {
-              return typeNames.has(obj.__typename);
-            });
-            spaceSubs.add(
-              query.subscribe(() => {
-                onSpaceUpdate?.(spaceToGraphNode(space, plugins));
-              }),
-            );
           });
           onSpaceUpdate?.();
         }).unsubscribe,
