@@ -170,10 +170,11 @@ describe('Spaces', () => {
 
     const feedKey = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key)?.inner.dataFeedKey;
     const dataSpace1 = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feed1 = services1.host._serviceContext.feedStore.getFeed(feedKey!)!;
 
+    const amount = 10;
     {
       // Create mutations and epoch.
-      const amount = 10;
       for (const i of range(amount)) {
         const expando = new Expando({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
@@ -188,9 +189,22 @@ describe('Spaces', () => {
 
     const space2 = client2.getSpace(space1.key)!;
     await space2.waitUntilReady();
+    const dataSpace2 = services2.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feed2 = services2.host._serviceContext.feedStore.getFeed(feedKey!)!;
 
-    for (const i of range(services1.host._serviceContext.feedStore.getFeed(feedKey!)?.length)) {
-      expect(services2.host._serviceContext.feedStore.getFeed(feedKey!)?.has(i)).to.be.false;
+    // Check that second peer does not have mutations before epoch.
+    for (const i of range(feed1.length)) {
+      expect(feed2.has(i)).to.be.false;
+    }
+
+    {
+      // Create more mutations on first peer.
+      const expando = new Expando({ id: 'another one', data: 'something' });
+      space1.db.add(expando);
+
+      // Wait to process new mutation on second peer.
+      await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
+      expect(feed2.has(amount + 1)).to.be.true;
     }
   });
 });
