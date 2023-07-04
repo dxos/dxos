@@ -86,21 +86,22 @@ export class Space {
 
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
+      // Enable sparse replication to not download mutations covered by prior epochs. 
+      const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
+
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
         await this._addFeedLock.executeSynchronized(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse: true }));
+              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
             }
           }
         });
-        // Open data feeds with sparse option, so that we don't have to download full feed in case of Epoch.
-        await params.feedProvider(info.key, { sparse: true });
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key));
+        this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
       }
     });
 
@@ -131,7 +132,7 @@ export class Space {
         await this._addFeedLock.executeSynchronized(async () => {
           for (const feed of this._controlPipeline.spaceState.feeds.values()) {
             if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-              await pipeline.addFeed(await this._feedProvider(feed.key));
+              await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));
             }
           }
         });
