@@ -62,7 +62,7 @@ export class FeedStore<T extends {}> {
       // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
       if (writable && !feed.properties.writable) {
         throw new Error(`Read-only feed is already open: ${feedKey.truncate()}`);
-      } else if ((sparse ?? false) !== feed?.properties.sparse) {
+      } else if ((sparse ?? false) !== feed.properties.sparse) {
         throw new Error(`Feed already open with different sparse setting: ${feedKey.truncate()}`);
       } else {
         await feed.open();
