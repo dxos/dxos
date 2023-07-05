@@ -124,16 +124,16 @@ export class BlobStore {
     }
 
     assert(meta.bitfield, 'Bitfield not present');
-    assert(chunk.chunkOffset, 'chunkOffset is not present');
+    assert(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
     // Write chunk.
     await this._getDataFile(chunk.id).write(chunk.chunkOffset, Buffer.from(chunk.payload));
 
     // Update bitfield.
-    BitField.set(meta.bitfield, chunk.chunkOffset / meta.chunkSize, true);
+    BitField.set(meta.bitfield, Math.floor(chunk.chunkOffset / meta.chunkSize), true);
 
     // Update metadata.
-    if (BitField.count(meta.bitfield, 0, meta.bitfield.length) * meta.chunkSize >= meta.length) {
+    if (BitField.count(meta.bitfield, 0, meta.length) * meta.chunkSize >= meta.length) {
       meta.state = BlobMeta.State.FULLY_PRESENT;
     }
     meta.updated = new Date();
