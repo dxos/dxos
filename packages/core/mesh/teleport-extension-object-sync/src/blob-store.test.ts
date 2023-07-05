@@ -14,17 +14,20 @@ import { describe, test } from '@dxos/test';
 
 import { BlobStore } from './blob-store';
 
-describe('BlobStore', () => {
+describe.only('BlobStore', () => {
   test('set/get', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     const blobStore = new BlobStore(storage.createDirectory('blobs'));
     const data = Buffer.from('hello');
     const meta1 = await blobStore.set(data);
-    expect(meta1.bitfield).toEqual(new Uint8Array([0b10000000]));
+    expect(Uint8Array.from(meta1.bitfield!)).toEqual(new Uint8Array([0b10000000]));
     expect(meta1.state).toEqual(BlobMeta.State.FULLY_PRESENT);
 
     const meta2 = await blobStore.getMeta(meta1.id);
-    expect(meta2).toEqual(meta1);
+    expect(Uint8Array.from(meta2!.id)).toEqual(meta1.id);
+
+    const partialData = await blobStore.get(meta1.id, { offset: 1, length: 2 });
+    expect(partialData).toEqual(Buffer.from('el'));
   });
 
   test('set chunk', async () => {
@@ -41,8 +44,10 @@ describe('BlobStore', () => {
         payload: Buffer.from(new Uint8Array(4096).fill(0)),
       });
       const readData = await blobStore.get(meta.id);
-      expect(readData).toEqual(new Uint8Array([...new Array(4096).fill(1), ...new Array(4096).fill(0)]));
-      expect(newMeta.bitfield).toEqual(new Uint8Array([0b11000000]));
+      expect(Uint8Array.from(readData)).toEqual(
+        new Uint8Array([...new Array(4096).fill(1), ...new Array(4096).fill(0)]),
+      );
+      expect(Uint8Array.from(newMeta.bitfield!)).toEqual(new Uint8Array([0b11000000]));
     }
 
     // Set data chunk by chunk.
@@ -58,7 +63,7 @@ describe('BlobStore', () => {
         payload: Buffer.from(new Uint8Array(chunkSize).fill(1)),
       });
       expect(meta1.state).toEqual(BlobMeta.State.PARTIALLY_PRESENT);
-      expect(meta1.bitfield).toEqual(new Uint8Array([0b10000000]));
+      expect(Uint8Array.from(meta1.bitfield!)).toEqual(new Uint8Array([0b10000000]));
 
       const meta2 = await blobStore.setChunk({
         id,
@@ -68,9 +73,9 @@ describe('BlobStore', () => {
         payload: Buffer.from(new Uint8Array(length - chunkSize).fill(2)),
       });
       expect(meta2.state).toEqual(BlobMeta.State.FULLY_PRESENT);
-      expect(meta2.bitfield).toEqual(new Uint8Array([0b11000000]));
+      expect(Uint8Array.from(meta2.bitfield!)).toEqual(new Uint8Array([0b11000000]));
       const readData = await blobStore.get(id);
-      expect(readData).toEqual(
+      expect(Uint8Array.from(readData)).toEqual(
         new Uint8Array([...new Array(chunkSize).fill(1), ...new Array(length - chunkSize).fill(2)]),
       );
     }

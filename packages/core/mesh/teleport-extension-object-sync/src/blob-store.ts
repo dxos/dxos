@@ -32,10 +32,7 @@ export class BlobStore {
       return;
     }
     const data = await file.read(0, size);
-    const meta = schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
-    meta.id = Uint8Array.from(meta.id);
-    meta.bitfield = Uint8Array.from(meta.bitfield ?? []);
-    return meta;
+    return schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
   }
 
   /**
@@ -56,7 +53,7 @@ export class BlobStore {
 
     if (metadata.state === BlobMeta.State.FULLY_PRESENT) {
       const file = this._getDataFile(id);
-      return Uint8Array.from(await file.read(offset, length));
+      return file.read(offset, length);
     } else if (options.offset === undefined && options.length === undefined) {
       throw new Error('Blob not available');
     }
@@ -74,7 +71,7 @@ export class BlobStore {
     }
 
     const file = this._getDataFile(id);
-    return Uint8Array.from(await file.read(offset, length));
+    return file.read(offset, length);
   }
 
   async list(): Promise<BlobMeta[]> {
