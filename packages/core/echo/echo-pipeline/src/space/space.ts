@@ -86,7 +86,7 @@ export class Space {
 
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
-      // Enable sparse replication to not download mutations covered by prior epochs.
+      // Enable sparse replication to not download mutations covered by prior epochs. 
       const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
 
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {

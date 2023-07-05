@@ -157,7 +157,10 @@ export class TestAgent {
     }
 
     const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
-    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), { writable: true });
+    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), {
+      writable: true,
+      sparse: true,
+    });
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
