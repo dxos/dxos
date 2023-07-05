@@ -8,7 +8,7 @@ import React, { useContext, useState } from 'react';
 import { mx } from '@dxos/aurora-theme';
 import { createStore } from '@dxos/observable-object';
 
-import { useDragEnd, useDragOver } from '../DndPlugin';
+import { useDnd, useDragEnd, useDragOver } from '../DndPlugin';
 import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
 
 const store = createStore<{ items: StoryItem[] }>({ items: [] });
@@ -27,6 +27,7 @@ const DescribedStoryItem = ({ item, preview }: { item?: StoryItem; preview?: boo
 const DndPluginDefaultStoryPluginBDefault = () => {
   const { setNodeRef } = useDroppable({ id: droppableId });
   const { items: allItems } = useContext(DndPluginStoryPluginContext);
+  const dnd = useDnd();
   const [preview, setPreview] = useState<StoryItem | null>(null);
   const [iter, setIter] = useState([]);
   useDragEnd(
@@ -36,6 +37,7 @@ const DndPluginDefaultStoryPluginBDefault = () => {
         if (!inStore) {
           const item = allItems.find(({ id }) => id === active.id);
           if (item && item.type === 'fruit') {
+            dnd.overlayDropAnimation = 'into';
             item && store.items.splice(store.items.length, 0, item);
             setIter([]);
           }

@@ -54,11 +54,11 @@ export const StoryItemDragOverlay = ({ data }: { data: string }) => {
 
 export const CompactStoryItem = ({
   item,
-  dragging,
+  rearranging,
 }: {
   item: StoryItem;
   dragOverlay?: boolean;
-  dragging?: boolean;
+  rearranging?: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: item.id,
@@ -66,7 +66,7 @@ export const CompactStoryItem = ({
   });
   return (
     <div
-      className={mx('p-2 flex gap-2 items-center', dragging && 'invisible')}
+      className={mx('p-2 flex gap-2 items-center', rearranging && 'invisible')}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       {...attributes}
       {...listeners}
