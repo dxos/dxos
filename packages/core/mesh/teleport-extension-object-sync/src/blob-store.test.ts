@@ -15,13 +15,16 @@ import { describe, test } from '@dxos/test';
 import { BlobStore } from './blob-store';
 
 describe('BlobStore', () => {
-  test('set', async () => {
+  test('set/get', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     const blobStore = new BlobStore(storage.createDirectory('blobs'));
     const data = Buffer.from('hello');
-    const meta = await blobStore.set(data);
-    expect(meta.bitfield).toEqual(new Uint8Array([0b10000000]));
-    expect(meta.state).toEqual(BlobMeta.State.FULLY_PRESENT);
+    const meta1 = await blobStore.set(data);
+    expect(meta1.bitfield).toEqual(new Uint8Array([0b10000000]));
+    expect(meta1.state).toEqual(BlobMeta.State.FULLY_PRESENT);
+
+    const meta2 = await blobStore.getMeta(meta1.id);
+    expect(meta2).toEqual(meta1);
   });
 
   test('set chunk', async () => {

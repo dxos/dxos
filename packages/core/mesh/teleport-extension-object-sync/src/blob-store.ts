@@ -33,6 +33,7 @@ export class BlobStore {
     }
     const data = await file.read(0, size);
     const meta = schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
+    meta.id = Uint8Array.from(meta.id);
     meta.bitfield = Uint8Array.from(meta.bitfield ?? []);
     return meta;
   }
