@@ -98,7 +98,7 @@ export class SpaceManager {
       spaceKey,
       protocol,
       genesisFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
+      feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
       modelFactory: this._modelFactory,
       metadataStore: this._metadataStore,
       snapshotManager,
