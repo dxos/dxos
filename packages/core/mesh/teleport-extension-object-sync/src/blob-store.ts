@@ -25,10 +25,16 @@ export class BlobStore {
     private readonly _directory: Directory
   ) { }
 
-  async getMeta(id: Uint8Array): Promise<BlobMeta> {
-    const file = this._directory.getOrCreateFile(path.join(Buffer.from(id).toString('hex'), 'meta'));
-    const data = await file.read(0, (await file.stat()).size);
-    return schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
+  async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {
+    const file = this._getMetaFile(id);
+    const size = (await file.stat()).size;
+    if (size === 0) {
+      return;
+    }
+    const data = await file.read(0, size);
+    const meta = schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
+    meta.bitfield = Uint8Array.from(meta.bitfield ?? []);
+    return meta;
   }
 
   /**
@@ -36,6 +42,10 @@ export class BlobStore {
    */
   async get(id: Uint8Array, options: GetOptions = {}): Promise<Uint8Array> {
     const metadata = await this.getMeta(id);
+
+    if (!metadata) {
+      throw new Error('Blob not available');
+    }
 
     const { offset = 0, length = metadata.length } = options;
 
@@ -45,7 +55,7 @@ export class BlobStore {
 
     if (metadata.state === BlobMeta.State.FULLY_PRESENT) {
       const file = this._getDataFile(id);
-      return file.read(offset, length);
+      return Uint8Array.from(await file.read(offset, length));
     } else if (options.offset === undefined && options.length === undefined) {
       throw new Error('Blob not available');
     }
@@ -63,7 +73,7 @@ export class BlobStore {
     }
 
     const file = this._getDataFile(id);
-    return file.read(offset, length);
+    return Uint8Array.from(await file.read(offset, length));
   }
 
   async list(): Promise<BlobMeta[]> {
@@ -75,7 +85,7 @@ export class BlobStore {
     const bitFieldLength = Math.ceil(data.length / DEFAULT_CHUNK_SIZE / 8);
     const bitfield = new Uint8Array(bitFieldLength).fill(0xff);
 
-    // Note: Only last chung may be incomplete, because of alignment. So we need to calculate last byte of bitfield.
+    // Note: We need to calculate last byte of bitfield.
     const amountOfChunksInLastByteOfBitfield = Math.ceil((data.length / DEFAULT_CHUNK_SIZE) % 8);
     bitfield[bitFieldLength - 1] = 0xff << (8 - amountOfChunksInLastByteOfBitfield);
 
@@ -94,7 +104,48 @@ export class BlobStore {
     return meta;
   }
 
-  async setChunk(chunk: BlobChunk): Promise<Uint8Array> {}
+  async setChunk(chunk: BlobChunk): Promise<BlobMeta> {
+    // Init metadata.
+    let meta = await this.getMeta(chunk.id);
+    if (!meta) {
+      assert(chunk.totalLength, 'totalLength is not present');
+      meta = {
+        id: chunk.id,
+        state: BlobMeta.State.PARTIALLY_PRESENT,
+        length: chunk.totalLength,
+        chunkSize: chunk.chunkSize ?? DEFAULT_CHUNK_SIZE,
+        created: new Date(),
+      };
+      meta.bitfield = new Uint8Array(Math.ceil(meta.length / meta.chunkSize / 8)).fill(0);
+    }
+
+    if (chunk.chunkSize && chunk.chunkSize !== meta.chunkSize) {
+      throw new Error('Invalid chunk size');
+    }
+
+    assert(meta.bitfield, 'Bitfield not present');
+    assert(chunk.chunkOffset, 'chunkOffset is not present');
+
+    // Write chunk.
+    await this._getDataFile(chunk.id).write(chunk.chunkOffset, Buffer.from(chunk.payload));
+
+    // Update bitfield.
+    BitField.set(meta.bitfield, chunk.chunkOffset / meta.chunkSize, true);
+
+    // Update metadata.
+    if (BitField.count(meta.bitfield, 0, meta.bitfield.length) * meta.chunkSize >= meta.length) {
+      meta.state = BlobMeta.State.FULLY_PRESENT;
+    }
+    meta.updated = new Date();
+
+    // Write metadata.
+    await this._getMetaFile(chunk.id).write(
+      0,
+      Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta)),
+    );
+
+    return meta;
+  }
 
   private _getMetaFile(id: Uint8Array) {
     return this._directory.getOrCreateFile(path.join(Buffer.from(id).toString('hex'), 'meta'));
