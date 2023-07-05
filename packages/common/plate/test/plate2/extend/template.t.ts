@@ -1,10 +1,10 @@
-import template from '../simple/template.t';
+import inherited from '../simple/template.t';
 import { directory } from '..';
 
 export default directory({
-  inputShape: template.inputShape,
-  inherits: (context) => {
+  inputShape: inherited.inputShape,
+  inherits: async (context) => {
     const { input } = context;
-    return template.execute({ ...context, input: { name: `prefixed ${input.name}` } });
+    return inherited.apply({ ...context, input: { name: `prefixed ${input?.name}` } });
   }
 });
