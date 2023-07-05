@@ -287,6 +287,20 @@ export class Pipeline implements PipelineAccessor {
     this._state._startTimeframe = timeframe;
     this._timeframeClock.setTimeframe(timeframe);
 
+    // Cancel downloads of mutations before the cursor.
+    for (const [key, seq] of timeframe.frames()) {
+      const feed = this._feeds.get(key);
+      if (!feed) {
+        throw new Error('Feed not found');
+      }
+
+      feed.undownload({ callback: () => log('Undownloaded') });
+
+      feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
+        log('failed to download feed', { err });
+      });
+    }
+
     if (this._feedSetIterator) {
       await this._feedSetIterator.close();
       await this._initIterator();

@@ -207,7 +207,7 @@ describe('space/space', () => {
     expect(space1.isOpen).toBeFalsy();
 
     // Clear the data feed - epoch snapshot should have the data.
-    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!);
+    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!, { sparse: true });
     await promisify(feed.core.clear.bind(feed.core))(0, feed.length);
 
     // Re-open.
