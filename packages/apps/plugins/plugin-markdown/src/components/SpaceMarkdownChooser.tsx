@@ -22,9 +22,11 @@ export const SpaceMarkdownChooser = ({
   const graph = useGraph();
   const [plugin] = treeView.selected[0]?.split('/') ?? [];
   const nodes =
-    (graph.pluginChildren ?? {})[plugin]
-      .find(({ id }) => id === treeView.selected[0])
-      ?.children?.filter((node) => {
+    Object.values(
+      (graph.pluginChildren ?? {})[plugin].find(({ id }) => id === treeView.selected[0])?.pluginChildren ?? {},
+    )
+      .flat()
+      ?.filter((node) => {
         return isMarkdown(get(node, 'data.content')) && !omit.has(get(node, 'data.id', 'never'));
       }) ?? [];
 
