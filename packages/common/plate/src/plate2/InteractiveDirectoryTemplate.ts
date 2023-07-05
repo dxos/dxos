@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { z, InquirableZodType } from '..';
-import { DirectoryTemplate, DirectoryTemplateOptions } from './DirectoryTemplate';
+import { z, InquirableZodType, QuestionOptions, inquire, unDefault } from '..';
+import { logger } from '../util/logger';
+import { DirectoryTemplate, DirectoryTemplateOptions, ExecuteDirectoryTemplateOptions } from './DirectoryTemplate';
+import { FileResults } from './util/template';
 
 export interface InteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>
   extends DirectoryTemplateOptions<z.infer<IShape>> {
@@ -11,14 +13,65 @@ export interface InteractiveDirectoryTemplateOptions<IShape extends InquirableZo
   inputQuestions?: any;
 }
 
+export interface ExecuteInteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>
+  extends ExecuteDirectoryTemplateOptions<z.infer<IShape>> {
+  interactive?: boolean;
+}
+
+const acquireInput = async <TInput>(
+  inputShape: InquirableZodType,
+  input?: Partial<TInput> | undefined,
+  questionOptions?: QuestionOptions<TInput>,
+  verbose?: boolean
+): Promise<TInput> => {
+  const log = logger(!!verbose);
+  const parse = unDefault(inputShape).safeParse(input);
+  if (!parse.success) {
+    const inquired = (await inquire(inputShape, {
+      initialAnswers: input,
+      questions: questionOptions
+    })) as TInput;
+    log('inquired result:');
+    log(inquired);
+    const inquiredParsed = inputShape.safeParse(inquired);
+    if (!inquiredParsed.success) {
+      throw new Error('invalid input: ' + formatErrors(inquiredParsed.error.errors));
+    }
+    input = inquiredParsed.data as TInput;
+  } else {
+    const parseWithEffects = inputShape.safeParse(input);
+    if (!parseWithEffects.success) {
+      throw new Error('invalid input: ' + formatErrors(parseWithEffects.error.errors));
+    }
+    input = parse.data as TInput;
+  }
+  return input as TInput;
+};
+
+const formatErrors = (errors?: { message: string }[]) => errors?.map((e) => e?.message)?.join(', ');
+
 export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends DirectoryTemplate<z.infer<I>> {
   public readonly inputShape: I;
   constructor(public override readonly options: InteractiveDirectoryTemplateOptions<I>) {
     super(options);
     this.inputShape = options.inputShape;
   }
-}
 
-export const executeDirectoryTemplate = <IShape extends InquirableZodType>(
-  context: InteractiveDirectoryTemplateOptions<IShape>
-) => {};
+  override async apply(options: ExecuteInteractiveDirectoryTemplateOptions<I>): Promise<FileResults> {
+    const { inputShape, inputQuestions } = this.options;
+    const { interactive, input, ...rest } = options;
+    let acquired = input;
+    if (inputShape) {
+      if (interactive) {
+        acquired = await acquireInput(inputShape, input, inputQuestions, options.verbose);
+      } else {
+        const parse = inputShape.safeParse(input);
+        if (!parse.success) {
+          throw new Error('invalid input: ' + formatErrors([parse.error]));
+        }
+        acquired = parse.data as any;
+      }
+    }
+    return super.apply({ input: acquired, ...rest });
+  }
+}
