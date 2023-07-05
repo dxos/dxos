@@ -191,7 +191,8 @@ export class DataSpaceManager {
 
     const controlFeed =
       metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
-    const dataFeed = metadata.dataFeedKey && (await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true }));
+    const dataFeed =
+      metadata.dataFeedKey && (await this._feedStore.openFeed(metadata.dataFeedKey, { writable: true, sparse: true }));
 
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
