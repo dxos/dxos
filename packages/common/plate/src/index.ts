@@ -14,3 +14,5 @@ export * from './config';
 export * from './executeFileTemplate';
 export * from './executeDirectoryTemplate';
 export { z } from 'zod';
+
+export * from './plate2';

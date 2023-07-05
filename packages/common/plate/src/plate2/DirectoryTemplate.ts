@@ -24,7 +24,6 @@ import {
   isTemplateFile,
   Options
 } from './util/template';
-import { mergeConfigs } from '../config';
 
 export const BASENAME = 'template.t';
 

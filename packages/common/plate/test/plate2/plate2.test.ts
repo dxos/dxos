@@ -11,7 +11,7 @@ import simpleDir from './simple/template.t';
 
 chai.use(chaiAsPromised);
 
-describe.only('plate 2 templates', () => {
+describe('plate 2 templates', () => {
   it('exists', () => {
     expect(simpleDir).to.exist;
     expect(extended).to.exist;
