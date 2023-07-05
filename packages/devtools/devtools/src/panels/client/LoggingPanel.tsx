@@ -13,7 +13,7 @@ import { useClientServices, useStream } from '@dxos/react-client';
 
 import { MasterTable } from '../../components';
 
-const defaultEntry = { level: LogLevel.DEBUG, message: '' };
+const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
 const MAX_LOGS = 2000;
 
@@ -22,6 +22,11 @@ const columns: TableColumn<LogEntry>[] = [
     Header: 'Level',
     width: 30,
     accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0]
+  },
+  {
+    Header: 'File',
+    width: 80,
+    accessor: entry => `${entry.meta?.file}:${entry.meta?.line}`
   },
   {
     Header: 'Message',

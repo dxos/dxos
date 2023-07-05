@@ -176,8 +176,11 @@ message Space {
     repeated dxos.keys.PublicKey control_feeds = 18;
     repeated dxos.keys.PublicKey data_feeds = 19;
 
-    /// Last processed epoch.
+    /// Last processed epoch. Might now have been applied yet.
     optional dxos.halo.Credential current_epoch = 20;
+
+    /// Epoch that is currently applied.
+    optional dxos.halo.Credential applied_epoch = 21;
 
     /// Mutations already processed.
     optional timeframe.TimeframeVector current_control_timeframe = 10;
@@ -190,6 +193,9 @@ message Space {
 
     /// All mutations known to exist on the network.
     optional timeframe.TimeframeVector known_control_timeframe = 15;
+
+    /// Start timeframe of the pipeline.
+    optional timeframe.TimeframeVector start_data_timeframe = 100;
 
     /// Mutations already processed.
     optional timeframe.TimeframeVector current_data_timeframe = 12;
@@ -426,13 +432,21 @@ enum LogLevel {
 }
 
 message QueryLogsRequest {
+  enum MatchingOptions {
+    /// Filters match all log levels above. Default behaviour for the logger.
+    INCLUSIVE = 1;
+
+    /// Explicitly specify all desired log levels.
+    EXPLICIT = 2;
+  }
+
   message Filter {
     LogLevel level = 1;
     optional string pattern = 2;
   }
 
-  /// Explicitly specify all desired log levels.
   repeated Filter filters = 1;
+  optional MatchingOptions options = 10;
 }
 
 message LogEntry {
@@ -447,6 +461,7 @@ message LogEntry {
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
   optional Error error = 5;
+  google.protobuf.Timestamp timestamp = 6;
 }
 
 service LoggingService {

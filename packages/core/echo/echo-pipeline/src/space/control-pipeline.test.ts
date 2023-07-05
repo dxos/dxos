@@ -16,6 +16,7 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
+import { MetadataStore } from '../metadata';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
@@ -42,10 +43,13 @@ describe('space/control-pipeline', () => {
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
+    const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
+    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
       feedProvider: (key) => feedStore.openFeed(key),
+      metadataStore: metadata,
     });
 
     const admittedFeeds: PublicKey[] = [];

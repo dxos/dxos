@@ -10,14 +10,16 @@ import { defaultFocus, mx } from '@dxos/aurora-theme';
 import { MarkdownProperties } from '../types';
 
 export const MarkdownSection = ({
-  data: { source, object },
+  data: {
+    object: { content: document },
+  },
 }: {
-  data: { source: { guid: string; resolver: string }; object: MarkdownProperties & ComposerModel };
+  data: { object: { content: MarkdownProperties & ComposerModel } };
 }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const model: ComposerModel = {
-    id: object.id,
-    content: object.content,
+    id: document.id,
+    content: document.content,
   };
   return (
     <MarkdownComposer

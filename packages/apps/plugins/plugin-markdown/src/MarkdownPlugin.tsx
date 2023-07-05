@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Plus, ArticleMedium } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { SpaceProvides } from '@braneframe/plugin-space';
@@ -13,12 +14,22 @@ import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { MarkdownMain, MarkdownMainEmbedded, MarkdownMainEmpty, MarkdownSection } from './components';
+import {
+  MarkdownMain,
+  MarkdownMainEmbedded,
+  MarkdownMainEmpty,
+  MarkdownSection,
+  SpaceMarkdownChooser,
+} from './components';
 import translations from './translations';
 import { MarkdownProperties } from './types';
 import { isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
-type MarkdownPluginProvides = SpaceProvides & TranslationsProvides;
+type MarkdownPluginProvides = SpaceProvides &
+  TranslationsProvides & {
+    // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
+    stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
+  };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
@@ -59,6 +70,25 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         ],
       },
+      stack: {
+        creators: [
+          {
+            id: 'create-section-space-doc',
+            testId: 'markdownPlugin.createSectionSpaceDocument',
+            label: ['create section space document label', { ns: 'dxos:markdown' }],
+            icon: ArticleMedium,
+            create: () => new Document(),
+          },
+        ],
+        choosers: [
+          {
+            id: 'choose-section-space-doc',
+            testId: 'markdownPlugin.chooseSectionSpaceDocument',
+            label: ['choose section space document label', { ns: 'dxos:markdown' }],
+            icon: ArticleMedium,
+          },
+        ],
+      },
       translations,
       component: (datum, role) => {
         switch (role) {
@@ -74,9 +104,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             }
             break;
           case 'section':
-            if (datum && typeof datum === 'object' && 'object' in datum && isMarkdown(datum.object)) {
+            if (isMarkdown(get(datum, 'object.content', {}))) {
               return MarkdownSection;
             }
+            break;
+          case 'dialog':
+            if (get(datum, 'subject') === 'dxos:stack/chooser' && get(datum, 'id') === 'choose-section-space-doc') {
+              return SpaceMarkdownChooser;
+            }
+            break;
         }
 
         return null;

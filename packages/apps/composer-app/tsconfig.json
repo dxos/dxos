@@ -87,6 +87,9 @@
       "path": "../plugins/plugin-splitview"
     },
     {
+      "path": "../plugins/plugin-stack"
+    },
+    {
       "path": "../plugins/plugin-theme"
     },
     {

@@ -133,6 +133,7 @@ declare module 'hypercore' {
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
    */
   export type HypercoreOptions = {
+    sparse?: boolean; // do not mark the entire feed to be downloaded
     createIfMissing?: boolean;
     secretKey?: Buffer;
     valueEncoding?: ValueEncoding;
@@ -172,6 +173,14 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
     readonly stats: Stats;
+
+    bitfield?: {
+      data: any; // sparse-bitfield package
+
+      // TODO(dmaretskyi): More props.
+    };
+
+    readonly sparse: boolean;
   }
 
   /**
@@ -204,6 +213,7 @@ declare module 'hypercore' {
     audit(cb: Callback<{ valid: number; invalid: number }>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
+    has(index: number): void;
     has(start: number, end?: number): boolean;
 
     // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedclearstart-end-callback
@@ -223,7 +233,7 @@ declare module 'hypercore' {
     getBatch(start: number, end: number, options?: GetOptions, cb?: Callback<T[]>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-    download(range?: Range, cb?: Callback<number>): any;
+    download(range?: Range, cb?: Callback<number>): number;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
     downloaded(start?: number, end?: number): boolean;
@@ -234,6 +244,9 @@ declare module 'hypercore' {
     // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
     registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
+
+    // https://github.com/holepunchto/hypercore/tree/v9.12.0#feedsetdownloadingbool
+    setDownloading(bool): void;
 
     // TODO(dmaretskyi): Add other events.
     on(event: string, cb: (...args: any) => void): void;
