@@ -13,13 +13,18 @@ message WantList {
   message Entry {
     bytes id = 1;
   
-    /// Size of chunk in bytes. Must be a power of 2. Default is 4096.
+    /**
+     * Size of chunk in bytes. Must be a power of 2. Default is 4096.
+     * If chunk_size is missing, host will provide it.
+     **/
     optional int32 chunk_size = 2;
   
     /**
-     * Bitfield of present chunks.
+     * Bitfield of requested chunks.
      * Every bit represents a chunk.
      * Chunks are indexed from MSB to LSB.
+     *
+     * If bitfield is missing, all chunks are requested.
      **/
     optional bytes bitfield = 3;
   }
