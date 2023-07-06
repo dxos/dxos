@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
-import { PublicKey, SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client';
 
 import type { KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
@@ -22,14 +22,15 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
     root: kanban,
-    createColumn: () => ({
-      id: PublicKey.random().toHex(),
-    }),
+    createColumn: () =>
+      space.db.add(
+        new KanbanType.Column({
+          // id: PublicKey.random().toHex(),
+          // items: [],
+        }),
+      ),
     // TODO(burdon): Add metadata from column in the case of projections.
-    createItem: (column) => {
-      console.log('create item', column);
-      return space.db.add(new KanbanType.Item());
-    },
+    createItem: (column) => space.db.add(new KanbanType.Item()),
   };
 
   // TODO(burdon): Style/color standards for panels, borders, text, etc.

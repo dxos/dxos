@@ -52,6 +52,7 @@ export const KanbanItemComponent: FC<{
             <Input.TextArea
               rows={3}
               variant='subdued'
+              placeholder={t('item content placeholder')}
               defaultValue={item.content}
               onChange={({ target: { value } }) => (item.content = value)}
               // TODO(burdon): Consistent vertical padding with input.

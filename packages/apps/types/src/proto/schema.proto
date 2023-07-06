@@ -46,7 +46,10 @@ message Kanban {
   option (object) = true;
 
   message Column {
-    string id = 1;
+    // TODO(burdon): Should this be an object?
+    option (object) = true;
+//    string id = 1;
+
     string title = 2;
     repeated Item items = 3;
   }

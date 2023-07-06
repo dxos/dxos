@@ -12,6 +12,7 @@ export default [
         'column title label': 'Column title',
         'column title placeholder': 'New Column',
         'item content label': 'Item content',
+        'item content placeholder': 'New Item',
         'add column label': 'Add column',
         'add item label': 'Add item',
         'delete column label': 'Delete column',
