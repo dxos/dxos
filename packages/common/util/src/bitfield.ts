@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 /**
  * Bitfield encodes indices from MSB to LSB.
@@ -68,5 +68,15 @@ export class BitField {
       }
     }
     return result;
+  }
+
+  static ones(count: number): Uint8Array {
+    const res = new Uint8Array(Math.ceil(count / 8)).fill(0xff)
+
+    // Note: We need to calculate last byte of bitfield.
+    const bitInLastByte = Math.ceil(count % 8);
+    res[res.length - 1] = 0xff << (8 - bitInLastByte);
+
+    return res;
   }
 }

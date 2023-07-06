@@ -80,12 +80,7 @@ export class BlobStore {
 
   async set(data: Uint8Array): Promise<BlobMeta> {
     const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data));
-    const bitFieldLength = Math.ceil(data.length / DEFAULT_CHUNK_SIZE / 8);
-    const bitfield = new Uint8Array(bitFieldLength).fill(0xff);
-
-    // Note: We need to calculate last byte of bitfield.
-    const amountOfChunksInLastByteOfBitfield = Math.ceil((data.length / DEFAULT_CHUNK_SIZE) % 8);
-    bitfield[bitFieldLength - 1] = 0xff << (8 - amountOfChunksInLastByteOfBitfield);
+    const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
 
     const meta: BlobMeta = {
       id,

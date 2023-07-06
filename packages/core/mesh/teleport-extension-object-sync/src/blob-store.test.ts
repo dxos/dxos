@@ -14,7 +14,7 @@ import { describe, test } from '@dxos/test';
 
 import { BlobStore } from './blob-store';
 
-describe.only('BlobStore', () => {
+describe('BlobStore', () => {
   test('set/get', async () => {
     const storage = createStorage({ type: StorageType.RAM });
     const blobStore = new BlobStore(storage.createDirectory('blobs'));

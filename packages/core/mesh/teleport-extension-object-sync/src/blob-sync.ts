@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { trackLeaks, Trigger, Lock } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
@@ -121,13 +121,12 @@ export class BlobSync {
         if (meta.state === BlobMeta.State.FULLY_PRESENT) {
           this._downloadRequests.get(encodedId)?.trigger.wake();
           this._downloadRequests.delete(encodedId);
-          this._updateExtensionsWantList();
         } else {
           assert(meta.bitfield);
           this._downloadRequests.get(encodedId)!.want.bitfield = BitField.invert(meta.bitfield);
-          this._updateExtensionsWantList();
         }
-
+        
+        this._updateExtensionsWantList();
         for (const extension of this._extensions) {
           extension.reconcileUploads();
         }

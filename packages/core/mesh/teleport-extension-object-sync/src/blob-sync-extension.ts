@@ -4,7 +4,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -35,6 +35,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
   private _lastWantListUpdate = 0;
   private _localWantList: WantList = { blobs: [] };
+
   private readonly _updateWantList = new DeferredTask(this._ctx, async () => {
     // Throttle want list updates.
     if (this._lastWantListUpdate + MIN_WANT_LIST_UPDATE_INTERVAL > Date.now()) {
@@ -50,6 +51,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   });
 
   private _currentUploads = 0;
+
   private readonly _upload = new DeferredTask(this._ctx, async () => {
     if (this._currentUploads >= MAX_CONCURRENT_UPLOADS) {
       return;
@@ -60,6 +62,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     }
     for (const blobChunk of blobChunks) {
       this._currentUploads++;
+
       this.push(blobChunk)
         .catch((err) => log.warn('push failed', { err }))
         .finally(() => {
@@ -149,13 +152,11 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       return;
     }
 
-    const shuffled = this.remoteWantList.blobs.sort(() => Math.random() - 0.5);
+    const shuffled = [...this.remoteWantList.blobs].sort(() => Math.random() - 0.5);
 
     const chunks: BlobChunk[] = [];
 
     for (const header of shuffled) {
-      assert(header.bitfield);
-
       const meta = await this._params.blobStore.getMeta(header.id);
 
       if (!meta) {
@@ -164,12 +165,19 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       }
       assert(meta.bitfield);
       assert(meta.chunkSize);
-      assert(!header.chunkSize || header.chunkSize === meta.chunkSize);
+      assert(meta.length);
 
-      const presentData = BitField.and(header.bitfield, meta.bitfield);
-      const chunkIdxes = BitField.findIndexes(presentData);
+      if (!header.chunkSize || header.chunkSize === meta.chunkSize) {
+        log.warn('Invalid chunk size', { header, meta });
+        continue;
+      }
 
-      for (const idx of chunkIdxes) {
+      const requestBitfield = header.bitfield ?? BitField.ones(meta.length / meta.chunkSize)
+
+      const presentData = BitField.and(requestBitfield, meta.bitfield);
+      const chunkIndices = BitField.findIndexes(presentData);
+
+      for (const idx of chunkIndices) {
         const chunkData = await this._params.blobStore.get(header.id, {
           offset: idx * meta.chunkSize,
           length: meta.chunkSize,
