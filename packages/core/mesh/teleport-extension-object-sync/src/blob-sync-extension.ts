@@ -4,20 +4,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, scheduleTask, sleep, synchronized } from '@dxos/async';
+import assert from 'assert';
+
+import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { BlobChunk, BlobSyncService, WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { BitField } from '@dxos/util';
+
+import { BlobStore } from './blob-store';
 
 export type BlobSyncExtensionParams = {
+  blobStore: BlobStore;
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onPush: (data: BlobChunk) => Promise<void>;
 };
 
 const MIN_WANT_LIST_UPDATE_INTERVAL = 1000;
+
+const MAX_CONCURRENT_UPLOADS = 5;
 
 /**
  * Manages replication between a set of feeds for a single teleport session.
@@ -41,13 +49,14 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     this._lastWantListUpdate = Date.now();
   });
 
+  private _currentUploads = 0;
   /**
    * Set of id's remote peer wants.
    */
   public remoteWantList: WantList = { blobs: [] };
 
   constructor(
-    private readonly _syncParams: BlobSyncExtensionParams, // to not conflict with the base class
+    private readonly _params: BlobSyncExtensionParams, // to not conflict with the base class
   ) {
     super({
       exposed: {
@@ -64,11 +73,11 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
   override async onOpen(context: ExtensionContext): Promise<void> {
     await super.onOpen(context);
-    await this._syncParams.onOpen();
+    await this._params.onOpen();
   }
 
   override async onClose(err?: Error | undefined): Promise<void> {
-    await this._syncParams.onClose();
+    await this._params.onClose();
     await super.onClose(err);
   }
 
@@ -76,13 +85,12 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     return {
       BlobSyncService: {
         want: async (wantList) => {
-          log('remote want', wantList);
+          log('remote want', { remoteWantList: wantList });
           this.remoteWantList = wantList;
-          this._syncParams.onWantListUpdated(this.remoteWantList);
         },
         push: async (data) => {
           log('received', { data });
-          await this._syncParams.onPush(data);
+          await this._params.onPush(data);
         },
       },
     };
@@ -105,8 +113,77 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     this._updateWantList.schedule();
   }
 
-  pushInASeparateTask(data: BlobChunk) {
-    scheduleTask(this._ctx, () => this.push(data));
+  async reconcileUploads() {
+    if (this._ctx.disposed) {
+      return;
+    }
+
+    if (this._currentUploads >= MAX_CONCURRENT_UPLOADS) {
+      return;
+    }
+    const blobChunks = await this._pickBlobChunks(MAX_CONCURRENT_UPLOADS - this._currentUploads);
+    if (!blobChunks) {
+      return;
+    }
+    for (const blobChunk of blobChunks) {
+      this._currentUploads++;
+      this.push(blobChunk)
+        .catch((err) => log.warn('push failed', { err }))
+        .finally(() => {
+          this._currentUploads--;
+          this.reconcileUploads().catch((err) => log.warn('reconcile uploads failed', { err }));
+        });
+    }
+  }
+
+  private async _pickBlobChunks(amount = 1): Promise<BlobChunk[] | void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+
+    if (!this.remoteWantList.blobs || this.remoteWantList.blobs?.length === 0) {
+      return;
+    }
+
+    const shuffled = this.remoteWantList.blobs.sort(() => Math.random() - 0.5);
+
+    const chunks: BlobChunk[] = [];
+
+    for (const header of shuffled) {
+      assert(header.bitfield);
+
+      const meta = await this._params.blobStore.getMeta(header.id);
+
+      if (!meta) {
+        // Skip this header
+        continue;
+      }
+      assert(meta.bitfield);
+      assert(meta.chunkSize);
+      assert(!header.chunkSize || header.chunkSize === meta.chunkSize);
+
+      const presentData = BitField.and(header.bitfield, meta.bitfield);
+      const chunkIdxes = BitField.findIndexes(presentData);
+
+      for (const idx of chunkIdxes) {
+        const chunkData = await this._params.blobStore.get(header.id, {
+          offset: idx * meta.chunkSize,
+          length: meta.chunkSize,
+        });
+        chunks.push({
+          id: header.id,
+          chunkSize: meta.chunkSize,
+          chunkOffset: idx * meta.chunkSize,
+          payload: chunkData,
+        });
+
+        if (chunks.length >= amount) {
+          return chunks;
+        }
+      }
+    }
+
+    return chunks;
   }
 }
 

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import assert from 'assert';
+
 /**
  * Bitfield encodes indices from MSB to LSB.
  * Index 0 is the MSB of the first byte.
@@ -42,6 +44,28 @@ export class BitField {
     const result = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
       result[i] = ~data[i];
+    }
+    return result;
+  }
+
+  static and(first: Uint8Array, second: Uint8Array) {
+    assert(first.length === second.length, 'Bitfields must be of the same length');
+    const result = new Uint8Array(first.length);
+    for (let i = 0; i < first.length; i++) {
+      result[i] = first[i] & second[i];
+    }
+    return result;
+  }
+
+  static findIndexes(data: Uint8Array, opts: { start?: number; end?: number; value?: boolean } = {}): number[] {
+    const { start = 0, end = data.length * 8, value = true } = opts;
+
+    const result = [];
+
+    for (let i = start; i < end; i++) {
+      if (BitField.get(data, i) === value) {
+        result.push(i);
+      }
     }
     return result;
   }

@@ -101,12 +101,11 @@ export class BlobSync {
 
   createExtension() {
     const extension = new BlobSyncExtension({
+      blobStore: this._params.blobStore,
       onOpen: async () => {
         log('extension opened');
         this._extensions.add(extension);
-        extension.updateWantListInASeparateTask({
-          blobs: Array.from(this._downloadRequests.values()).map((r) => r.want),
-        });
+        extension.updateWantList(this._getWantList());
       },
       onClose: async () => {
         log('extension closed');
@@ -135,11 +134,15 @@ export class BlobSync {
     return extension;
   }
 
+  private _getWantList(): WantList {
+    return {
+      blobs: Array.from(this._downloadRequests.values()).map((request) => request.want),
+    };
+  }
+
   private _updateExtensionsWantList() {
     for (const extension of this._extensions) {
-      extension.updateWantList({
-        blobs: Array.from(this._downloadRequests.values()).map((r) => r.want),
-      });
+      extension.updateWantList(this._getWantList());
     }
   }
 }
