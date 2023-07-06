@@ -17,13 +17,6 @@ import { BlobSyncExtension } from './blob-sync-extension';
 
 export type BlobSyncParams = {
   blobStore: BlobStore;
-
-  /**
-   * Legacy fallback while we are migrating from ObjectStore to BlobStore.
-   * TODO(mykola): delete once DXOS space process few Epochs.
-   * @deprecated
-   */
-  fallbackGetObject: (id: string) => Promise<Uint8Array | undefined>;
 };
 
 type DownloadRequest = {
