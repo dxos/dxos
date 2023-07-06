@@ -128,7 +128,9 @@ export class BlobSync {
           this._updateExtensionsWantList();
         }
 
-        // TODO(Mykola): !!!!!!!!!!!!!!!! Push chunk to all extensions. But avoid flood.
+        for (const extension of this._extensions) {
+          extension.reconcileUploads();
+        }
       },
     });
     return extension;

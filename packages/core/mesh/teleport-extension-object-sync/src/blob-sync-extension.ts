@@ -50,6 +50,25 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   });
 
   private _currentUploads = 0;
+  private readonly _upload = new DeferredTask(this._ctx, async () => {
+    if (this._currentUploads >= MAX_CONCURRENT_UPLOADS) {
+      return;
+    }
+    const blobChunks = await this._pickBlobChunks(MAX_CONCURRENT_UPLOADS - this._currentUploads);
+    if (!blobChunks) {
+      return;
+    }
+    for (const blobChunk of blobChunks) {
+      this._currentUploads++;
+      this.push(blobChunk)
+        .catch((err) => log.warn('push failed', { err }))
+        .finally(() => {
+          this._currentUploads--;
+          this.reconcileUploads();
+        });
+    }
+  });
+
   /**
    * Set of id's remote peer wants.
    */
@@ -87,6 +106,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
         want: async (wantList) => {
           log('remote want', { remoteWantList: wantList });
           this.remoteWantList = wantList;
+          this.reconcileUploads();
         },
         push: async (data) => {
           log('received', { data });
@@ -113,27 +133,11 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     this._updateWantList.schedule();
   }
 
-  async reconcileUploads() {
+  reconcileUploads() {
     if (this._ctx.disposed) {
       return;
     }
-
-    if (this._currentUploads >= MAX_CONCURRENT_UPLOADS) {
-      return;
-    }
-    const blobChunks = await this._pickBlobChunks(MAX_CONCURRENT_UPLOADS - this._currentUploads);
-    if (!blobChunks) {
-      return;
-    }
-    for (const blobChunk of blobChunks) {
-      this._currentUploads++;
-      this.push(blobChunk)
-        .catch((err) => log.warn('push failed', { err }))
-        .finally(() => {
-          this._currentUploads--;
-          this.reconcileUploads().catch((err) => log.warn('reconcile uploads failed', { err }));
-        });
-    }
+    this._upload.schedule();
   }
 
   private async _pickBlobChunks(amount = 1): Promise<BlobChunk[] | void> {
