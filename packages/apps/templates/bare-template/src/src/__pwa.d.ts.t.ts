@@ -1,13 +1,10 @@
-import { defineTemplate, text } from "@dxos/plate"
-import config from "../config.t";
+import { defineTemplate, text } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(({ input }) => {
-  const { pwa } = input;
-  return !pwa ? null : text`
-  //
-  // Copyright 2022 DXOS.org
-  //
-
+export default template.define.text({
+  content: ({ input: { pwa } }) =>
+    pwa &&
+    text`
   // TODO(wittjosiah): Including 'vite-plugin-pwa/client' in tsconfig types breaks react typing.
   // Taken from https://github.com/vite-pwa/vite-plugin-pwa/blob/bc3fab15d0b73994c57435ee13d7d9ce8c18cd55/client.d.ts.
   declare module 'virtual:pwa-register/react' {
@@ -41,5 +38,5 @@ export default defineTemplate(({ input }) => {
       offlineReady: [boolean, Dispatch<SetStateAction<boolean>>];
       updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
     };
-  }`;
-}, { config });
+  }`,
+});

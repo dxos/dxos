@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import path from 'path';
+import path from 'node:path';
 import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef } from 'zod';
 
@@ -77,14 +77,14 @@ export type DirectoryTemplateOptions<I = any> = IncludeExclude<I> & {
   src?: Path;
   inherits?: Template<I>;
   defaultInput?: Partial<I>;
-  before?: Template<I>;
-  after?: Template<FileResults[]>;
+  before?: () => any;
+  after?: (options: Required<ExecuteDirectoryTemplateOptions<I>>, results: FileResults) => any;
   context?: (context: Context<I>) => MaybePromise<Context<I>>;
 };
 
 export type DirectoryTemplateContext<I> = Context<I>;
 
-export const defaultOptions: Partial<DirectoryTemplateOptions> = {
+export const defaultOptions: Partial<ExecuteDirectoryTemplateOptions<any>> = {
   exclude: [/\.t\//, /node_modules/, ...TEMPLATE_FILE_IGNORE]
 };
 
@@ -109,7 +109,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       defaultOptions,
       this.options,
       options
-    );
+    ) as Required<ExecuteDirectoryTemplateOptions<I>>;
     const { src, parallel, include, exclude, outputDirectory, verbose, input } = mergedOptions;
     if (!src) {
       throw new Error('a template src file is required');
@@ -189,7 +189,9 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
     const combined = [...inheritedOutputMinusFlatOutput, ...flatOutput].filter(Boolean);
     debug(`${combined.length} combined results`);
     debug(combined.map((r) => r.path).join('\n'));
-    return results(combined);
+    const result = results(combined);
+    options?.after?.(mergedOptions, result)
+    return result;
   }
 }
 

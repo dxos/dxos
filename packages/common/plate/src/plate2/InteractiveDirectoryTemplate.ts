@@ -22,14 +22,14 @@ const acquireInput = async <TInput>(
   inputShape: InquirableZodType,
   input?: Partial<TInput> | undefined,
   questionOptions?: QuestionOptions<TInput>,
-  verbose?: boolean
+  verbose?: boolean,
 ): Promise<TInput> => {
   const log = logger(!!verbose);
   const parse = unDefault(inputShape).safeParse(input);
   if (!parse.success) {
     const inquired = (await inquire(inputShape, {
       initialAnswers: input,
-      questions: questionOptions
+      questions: questionOptions,
     })) as TInput;
     log('inquired result:');
     log(inquired);
@@ -75,3 +75,9 @@ export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends D
     return super.apply({ input: acquired, ...rest });
   }
 }
+
+export type InputOf<T> = T extends InteractiveDirectoryTemplate<infer U>
+  ? z.TypeOf<U>
+  : T extends DirectoryTemplate<infer Z>
+  ? Z
+  : never;

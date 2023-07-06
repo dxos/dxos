@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ExtractInput } from '@dxos/plate';
+import { InputOf } from '@dxos/plate';
 
-import config from '../src/config.t';
+import template from '../src/template.t';
 
-export const configs: ExtractInput<typeof config>[] = [
+export const configs: InputOf<typeof template>[] = [
   {
     name: 'min',
     monorepo: true,
@@ -15,6 +15,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: false,
     storybook: false,
     tailwind: false,
+    createFolder: false,
   },
   {
     name: 'pwa',
@@ -24,6 +25,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: false,
     storybook: false,
     tailwind: false,
+    createFolder: false,
   },
   {
     name: 'dxosui',
@@ -33,6 +35,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: true,
     storybook: false,
     tailwind: true,
+    createFolder: false,
   },
   {
     name: 'react',
@@ -42,6 +45,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: true,
     storybook: false,
     tailwind: false,
+    createFolder: false,
   },
   {
     name: 'storybook',
@@ -51,6 +55,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: true,
     storybook: true,
     tailwind: false,
+    createFolder: false,
   },
   {
     name: 'tailwind',
@@ -60,6 +65,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: false,
     storybook: false,
     tailwind: true,
+    createFolder: false,
   },
   {
     name: 'react-tailwind',
@@ -69,6 +75,7 @@ export const configs: ExtractInput<typeof config>[] = [
     react: true,
     storybook: false,
     tailwind: true,
+    createFolder: false,
   },
   {
     name: 'max',
@@ -78,5 +85,6 @@ export const configs: ExtractInput<typeof config>[] = [
     react: true,
     storybook: true,
     tailwind: true,
+    createFolder: false,
   },
 ];

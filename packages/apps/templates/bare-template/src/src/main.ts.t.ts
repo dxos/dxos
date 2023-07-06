@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { text } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
-  const { react, dxosUi } = input;
-  return !react
-    ? text`
+export default template.define.text({
+  content: ({ input: { react, dxosUi } }) => {
+    return (
+      !react &&
+      text`
     import { Client } from '@dxos/client';
     import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 
@@ -42,5 +43,6 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
       element.innerText = JSON.stringify(client.toJSON(), null, 2);
       if (element.getRootNode() === element) document.body.appendChild(element);
     })();`
-    : null;
+    );
+  },
 });

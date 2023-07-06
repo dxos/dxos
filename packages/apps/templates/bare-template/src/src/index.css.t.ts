@@ -1,20 +1,15 @@
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { text } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input }) => {
-    const { dxosUi, tailwind } = input;
-    return !dxosUi
-      ? text`
+export default template.define.text({
+  content: ({ input: { dxosUi, tailwind } }) =>
+    !dxosUi &&
+    text`
       ${
         tailwind &&
-        !dxosUi &&
         text`
         @tailwind base;
         @tailwind components;
-        @tailwind utilities;`}
-        `
-      : null;
-  },
-  { config }
-);
+        @tailwind utilities;`
+      }`,
+});
