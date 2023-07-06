@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { useDnd, useDragEnd } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -15,13 +19,11 @@ import {
   Button,
   useTranslation,
   DensityProvider,
-  DragEndEvent,
-  useListContext,
   ListScopedProps,
   DropdownMenu,
   ButtonGroup,
 } from '@dxos/aurora';
-import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
@@ -37,8 +39,7 @@ type StackSectionProps = {
 
 const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
   const { t } = useTranslation('dxos:stack');
-  const { draggingId } = useListContext('StackSection', __listScope);
-  const isDragging = draggingId === section.object.id;
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: section.object.id });
   return (
     <DensityProvider density='fine'>
       <ListItem.Root
@@ -49,18 +50,23 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
           '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
           isDragging && 'relative z-10',
         ]}
+        ref={setNodeRef}
+        style={{ transform: CSS.Translate.toString(transform) }}
       >
         <ListItem.Heading classNames='sr-only'>
           {get(section, 'object.title', t('generic section heading'))}
         </ListItem.Heading>
-        <ListItem.DragHandle
-          classNames={[
+        <div
+          className={mx(
             buttonFine,
-            'self-stretch flex items-center rounded-ie-none justify-center bs-auto is-auto focus:[--controls-opacity:1]',
-          ]}
+            defaultFocus,
+            'self-stretch flex items-center rounded-ie-none justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+          )}
+          {...attributes}
+          {...listeners}
         >
           <DotsSixVertical className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')} />
-        </ListItem.DragHandle>
+        </div>
         <div role='none' className='flex-1'>
           <Surface role='section' data={section} />
         </div>
@@ -82,6 +88,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
+  const dnd = useDnd();
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
@@ -92,6 +99,12 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   } else {
     useSubscription(() => setIter([]), [sections]);
   }
+
+  useEffect(() => {
+    if (subscribe in dnd) {
+      return dnd[subscribe](() => setIter([])) as () => void;
+    }
+  }, [dnd]);
 
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -110,9 +123,9 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sections],
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  useDragEnd((event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = sections.findIndex((section) => section.object.id === active.id);
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
       arrayMove(sections, oldIndex, newIndex);
@@ -121,21 +134,20 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
 
   return (
     <>
-      <List
-        variant='ordered-draggable'
-        itemSizes='many'
-        onDragEnd={handleDragEnd}
-        listItemIds={sections
-          // todo(thure): DRY-out this filter, also should this be represented in the UI?
-          .filter((section) => !!section?.object?.id)
-          .map(({ object: { id } }) => id)}
-        classNames='pis-1 pie-2'
-      >
-        {sections
-          .filter((section) => !!section?.object?.id)
-          .map((section, start) => {
-            return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
-          })}
+      <List variant='ordered' itemSizes='many' classNames='pis-1 pie-2'>
+        <SortableContext
+          items={sections
+            // todo(thure): DRY-out this filter, also should this be represented in the UI?
+            .filter((section) => !!section?.object?.id)
+            .map(({ object: { id } }) => id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {sections
+            .filter((section) => !!section?.object?.id)
+            .map((section, start) => {
+              return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
+            })}
+        </SortableContext>
       </List>
       <div role='none' className='flex gap-4 justify-center items-center'>
         <h2 className='text-sm font-normal flex items-center gap-1'>
