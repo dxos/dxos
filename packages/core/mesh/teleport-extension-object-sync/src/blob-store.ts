@@ -17,7 +17,7 @@ export type GetOptions = {
   length?: number;
 };
 
-const DEFAULT_CHUNK_SIZE = 4096;
+export const DEFAULT_CHUNK_SIZE = 4096;
 
 export class BlobStore {
   // prettier-ignore
