@@ -29,12 +29,20 @@ export class BitField {
   /**
    * [start; end)
    */
-  static count(data: Uint8Array, begin: number, end: number) {
+  static count(data: Uint8Array, begin: number, end: number): number {
     let count = 0;
     for (let i = begin; i < end; i++) {
       const bit = (data[i >> 3] >> (7 - (i % 8))) & 0x1;
       count += bit;
     }
     return count;
+  }
+
+  static invert(data: Uint8Array): Uint8Array {
+    const result = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      result[i] = ~data[i];
+    }
+    return result;
   }
 }
