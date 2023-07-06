@@ -35,40 +35,56 @@ export type KanbanPluginProvides = SpaceProvides & TranslationsProvides;
 //  Can plugin inject context for model?
 
 // TODO(burdon): Pluggable content (e.g., support text document for title).
-export type KanbanItem = { id: string; content?: string };
+// export type KanbanItem = { id: string; content?: string };
 
 // TODO(burdon): Use protobuf typedefs?
-export type GenericKanbanItem = KanbanItem & { [key: string]: any };
+// export type GenericKanbanItem = KanbanItem & { [key: string]: any };
 
 // TODO(burdon): Implement ColumnModel with callbacks.
-export type KanbanColumn<T extends KanbanItem = GenericKanbanItem> = {
-  id: string;
-  title?: string;
-  items: T[];
-};
+// export type KanbanColumn<T extends KanbanItem = GenericKanbanItem> = {
+// id: string;
+// title?: string;
+// items: T[];
+// };
 
 // TODO(burdon): When to use Model suffix?
-export type Kanban<T extends KanbanItem = GenericKanbanItem> = {
-  id: string;
-  title?: string;
-  // TODO(burdon): How is this mapped onto ECHO?
-  columns: KanbanColumn<T>[];
-};
+// export type Kanban<T extends KanbanItem = GenericKanbanItem> = {
+//   id: string;
+//   title?: string;
+//   TODO(burdon): How is this mapped onto ECHO?
+//   columns: KanbanColumn<T>[];
+// };
 
 // TODO(burdon): Add other methods: Move, Delete, etc.
-export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
-  root: Kanban<T>;
-  createColumn(): KanbanColumn;
-  createItem(column: KanbanColumn): KanbanItem;
+// export interface KanbanModel<T extends KanbanItem = GenericKanbanItem> {
+//   root: Kanban<T>;
+//   createColumn(): KanbanColumn;
+//   createItem(column: KanbanColumn): KanbanItem;
+// }
+
+export interface KanbanModel {
+  root: KanbanType;
+  createColumn(): KanbanType.Column;
+  createItem(column: KanbanType.Column): KanbanType.Item;
 }
 
-export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> => {
+// export const isKanban = <T extends KanbanItem = GenericKanbanItem>(datum: unknown): datum is Kanban<T> => {
+//   return isTypedObject(datum) && KanbanType.type.name === datum.__typename;
+// };
+
+export const isKanban = (datum: unknown): datum is KanbanType => {
   return isTypedObject(datum) && KanbanType.type.name === datum.__typename;
 };
 
+// export type Location = {
+//   column: KanbanColumn;
+//   item?: KanbanItem;
+//   idx?: number;
+// };
+
 export type Location = {
-  column: KanbanColumn;
-  item?: KanbanItem;
+  column: KanbanType.Column;
+  item?: KanbanType.Item;
   idx?: number;
 };
 
@@ -76,14 +92,15 @@ export type Location = {
  * Find the column or item within the model.
  */
 // TODO(burdon): Move to model.
-export const findLocation = (columns: KanbanColumn[], id: string): Location | undefined => {
+export const findLocation = (columns: KanbanType.Column[], id: string): Location | undefined => {
   for (const column of columns) {
+    // TODO(burdon): Need transient ID for UX.
     if (column.id === id) {
       return { column };
     } else {
-      const idx = column.items.findIndex((item) => item.id === id);
+      const idx = column.items!.findIndex((item) => item.id === id);
       if (idx !== -1) {
-        return { column, item: column.items[idx], idx };
+        return { column, item: column.items![idx], idx };
       }
     }
   }

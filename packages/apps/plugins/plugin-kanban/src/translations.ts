@@ -10,6 +10,7 @@ export default [
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
         'column title label': 'Column title',
+        'column title placeholder': 'New Column',
         'item content label': 'Item content',
         'add column label': 'Add column',
         'add item label': 'Add item',

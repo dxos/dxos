@@ -7,10 +7,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-
-import type { KanbanColumn, KanbanItem } from '../props';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -23,8 +22,8 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanItemComponent: FC<{
-  column?: KanbanColumn;
-  item: KanbanItem;
+  column?: KanbanType.Column;
+  item: KanbanType.Item;
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {

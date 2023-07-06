@@ -7,10 +7,8 @@ import { faker } from '@faker-js/faker';
 import { PublicKey } from '@dxos/keys';
 import { createStore } from '@dxos/observable-object';
 
-import { Kanban } from '../props';
-
 // TODO(burdon): Types.
-export const createKanban = (): Kanban => {
+export const createKanban = () => {
   return createStore({
     id: 'test',
     title: faker.lorem.words(3),

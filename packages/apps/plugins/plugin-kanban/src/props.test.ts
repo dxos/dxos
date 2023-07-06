@@ -8,16 +8,14 @@ import { Trigger } from '@dxos/async';
 import { createStore, createSubscription } from '@dxos/observable-object';
 import { describe, test } from '@dxos/test';
 
-import { Kanban } from './props';
-
 describe('Models', () => {
   test('Reactivity', async () => {
     const done = new Trigger();
 
-    const object: Kanban = createStore({
+    const object = createStore({
       id: 'test',
       title: 'Test',
-      // TODO(burdon): Pass in array.
+      // TODO(burdon): Does this work?
       columns: createStore([
         {
           id: 'column-1',

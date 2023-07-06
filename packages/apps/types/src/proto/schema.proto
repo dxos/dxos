@@ -46,8 +46,9 @@ message Kanban {
   option (object) = true;
 
   message Column {
-    string title = 1;
-    repeated Item items = 2;
+    string id = 1;
+    string title = 2;
+    repeated Item items = 3;
   }
 
   message Item {

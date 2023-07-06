@@ -4,7 +4,7 @@
 
 import { Plus } from '@phosphor-icons/react';
 
-import { Kanban } from '@braneframe/types';
+import { Kanban as KanbanType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
@@ -25,7 +25,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
           testId: 'xkanbanPlugin.createStack',
           label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
           icon: Plus,
-          Type: Kanban,
+          Type: KanbanType,
         },
       ],
     },
