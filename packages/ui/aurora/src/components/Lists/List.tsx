@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretRight, DotsSixVertical } from '@phosphor-icons/react';
+import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { ComponentPropsWithoutRef, FC, forwardRef, ForwardRefExoticComponent } from 'react';
 
@@ -13,8 +13,6 @@ import {
   ListScopedProps,
   ListItemHeading as ListPrimitiveItemHeading,
   ListItemHeadingProps as ListPrimitiveItemHeadingProps,
-  ListItemDragHandle as ListPrimitiveItemDragHandle,
-  ListItemDragHandleProps as ListPrimitiveItemDragHandleProps,
   ListItemOpenTrigger as ListPrimitiveItemOpenTrigger,
   ListItemOpenTriggerProps as ListPrimitiveItemOpenTriggerProps,
   ListItemCollapsibleContent,
@@ -26,9 +24,6 @@ import {
   useListContext,
   LIST_ITEM_NAME,
   useListItemContext,
-  arrayMove,
-  DragEndEvent,
-  DragOverEvent,
 } from '@dxos/react-list';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -37,14 +32,9 @@ import { DensityProvider } from '../DensityProvider';
 
 type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
 
-const useListDensity = ({ density, variant }: Pick<ListProps, 'density' | 'variant'>) => {
-  const contextDensity = useDensityContext(density);
-  return variant === 'ordered-draggable' ? 'coarse' : contextDensity ?? 'coarse';
-};
-
 const List = forwardRef<HTMLOListElement, ListProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const density = useListDensity(props);
+  const density = useDensityContext(props.density);
 
   return (
     <DensityProvider density={density}>
@@ -118,25 +108,6 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
   },
 );
 
-type ListItemDragHandleProps = ThemedClassName<ListPrimitiveItemDragHandleProps>;
-
-const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemDragHandleProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <ListPrimitiveItemDragHandle
-        {...props}
-        className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, classNames)}
-        ref={forwardedRef}
-      >
-        {children || (
-          <DotsSixVertical className={tx('list.item.dragHandleIcon', 'list__listItem__dragHandle__icon', {})} />
-        )}
-      </ListPrimitiveItemDragHandle>
-    );
-  },
-);
-
 type ListItemOpenTriggerProps = ThemedClassName<ListPrimitiveItemOpenTriggerProps>;
 
 const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerProps>(
@@ -186,7 +157,6 @@ export const ListItem: {
   Root: ForwardRefExoticComponent<ListItemRootProps>;
   Endcap: ForwardRefExoticComponent<ListItemEndcapProps>;
   Heading: ForwardRefExoticComponent<ListItemHeadingProps>;
-  DragHandle: ForwardRefExoticComponent<ListItemDragHandleProps>;
   OpenTrigger: ForwardRefExoticComponent<ListItemOpenTriggerProps>;
   CollapsibleContent: ForwardRefExoticComponent<ListItemCollapsibleContentProps>;
   MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
@@ -195,14 +165,13 @@ export const ListItem: {
   Root: ListItemRoot,
   Endcap: ListItemEndcap,
   Heading: ListItemHeading,
-  DragHandle: ListItemDragHandle,
   OpenTrigger: ListItemOpenTrigger,
   CollapsibleContent: ListItemCollapsibleContent,
   MockOpenTrigger: MockListItemOpenTrigger,
   MockDragHandle: MockListItemDragHandle,
 };
 
-export { List, useListDensity, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME, arrayMove };
+export { List, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME };
 
 export type {
   ListProps,
@@ -211,9 +180,6 @@ export type {
   ListItemScopedProps,
   ListItemEndcapProps,
   ListItemHeadingProps,
-  ListItemDragHandleProps,
   ListItemOpenTriggerProps,
   ListItemCollapsibleContentProps,
-  DragEndEvent,
-  DragOverEvent,
 };

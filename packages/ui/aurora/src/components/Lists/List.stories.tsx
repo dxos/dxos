@@ -3,15 +3,39 @@
 //
 
 import '@dxosTheme';
-import { Play, PushPin } from '@phosphor-icons/react';
+import { DndContext, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { FC, ReactNode, useState } from 'react';
 
 import { getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 
-import { List, ListItem, arrayMove, DragEndEvent, ListProps, useListContext, ListScopedProps } from './List';
+import { List, ListItem, ListProps, ListScopedProps } from './List';
 
 export default {
   component: List as FC<ListProps>,
+};
+
+const UniformListItem = ({ id, text }: { id: string; text: string }) => {
+  const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
+  return (
+    <ListItem.Root
+      id={id}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ transform: CSS.Transform.toString(transform) }}
+    >
+      <ListItem.Endcap>
+        <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
+      </ListItem.Endcap>
+      <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
+      <ListItem.Endcap>
+        <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+      </ListItem.Endcap>
+    </ListItem.Root>
+  );
 };
 
 export const UniformSizeDraggable = {
@@ -35,39 +59,39 @@ export const UniformSizeDraggable = {
       }
     };
     return (
-      <List {...args} itemSizes='one' onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
-        {items.map(({ id, text }) => (
-          <ListItem.Root key={id} id={id}>
-            {args.variant === 'ordered-draggable' && <ListItem.DragHandle />}
-            <ListItem.Endcap>
-              <Play className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItem.Endcap>
-            <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
-            <ListItem.Endcap>
-              <PushPin className={mx(getSize(5), 'mbs-2.5')} />
-            </ListItem.Endcap>
-          </ListItem.Root>
-        ))}
-      </List>
+      <DndContext onDragEnd={handleDragEnd}>
+        <SortableContext items={items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+          <List {...args} itemSizes='one'>
+            {items.map((item) => (
+              <UniformListItem key={item.id} {...item} />
+            ))}
+          </List>
+        </SortableContext>
+      </DndContext>
     );
   },
-  args: {
-    variant: 'ordered-draggable',
-  },
+  args: {},
 };
 
 const ManySizesDraggableListItem = ({
   id,
   text,
   className,
+  dragging,
   __listScope,
-}: ListScopedProps<{ id: string; text: ReactNode; className?: string }>) => {
-  const { draggingId } = useListContext('ManySizesDraggableListItem', __listScope);
+}: ListScopedProps<{ id: string; text: ReactNode; className?: string; dragging?: boolean }>) => {
+  const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
   return (
-    <ListItem.Root key={id} id={id} classNames={[id === draggingId && 'relative z-10', className]}>
-      <ListItem.DragHandle />
+    <ListItem.Root
+      id={id}
+      classNames={[dragging && 'relative z-10', className]}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ transform: CSS.Translate.toString(transform) }}
+    >
       <ListItem.Endcap>
-        <Play className={mx(getSize(5), 'mbs-2.5')} />
+        <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
       <ListItem.Heading classNames='grow pbs-2' asChild>
         {text}
@@ -95,6 +119,10 @@ export const ManySizesDraggable = {
       })),
     );
 
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    const handleDragStart = ({ active: { id } }: DragStartEvent) => setActiveId(id.toString());
+
     const handleDragEnd = (event: DragEndEvent) => {
       const { active, over } = event;
 
@@ -109,16 +137,18 @@ export const ManySizesDraggable = {
     };
 
     return (
-      <List {...args} onDragEnd={handleDragEnd} listItemIds={items.map(({ id }) => id)}>
-        {items.map(({ id, text }) => (
-          <ManySizesDraggableListItem key={id} {...{ id, text }} />
-        ))}
-      </List>
+      <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+        <SortableContext items={items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
+          <List {...args}>
+            {items.map(({ id, text }) => (
+              <ManySizesDraggableListItem key={id} {...{ id, text }} dragging={activeId === id} />
+            ))}
+          </List>
+        </SortableContext>
+      </DndContext>
     );
   },
-  args: {
-    variant: 'ordered-draggable',
-  },
+  args: {},
 };
 
 export const Collapsible = {
