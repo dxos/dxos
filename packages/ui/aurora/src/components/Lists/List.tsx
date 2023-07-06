@@ -80,16 +80,6 @@ const MockListItemOpenTrigger = ({
   );
 };
 
-const MockListItemDragHandle = ({
-  classNames,
-  ...props
-}: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
-  const { tx } = useThemeContext();
-  return (
-    <div role='none' {...props} className={tx('list.item.dragHandle', 'list__listItem__dragHandle', {}, classNames)} />
-  );
-};
-
 type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;
 
 const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
@@ -160,7 +150,6 @@ export const ListItem: {
   OpenTrigger: ForwardRefExoticComponent<ListItemOpenTriggerProps>;
   CollapsibleContent: ForwardRefExoticComponent<ListItemCollapsibleContentProps>;
   MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
-  MockDragHandle: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
 } = {
   Root: ListItemRoot,
   Endcap: ListItemEndcap,
@@ -168,7 +157,6 @@ export const ListItem: {
   OpenTrigger: ListItemOpenTrigger,
   CollapsibleContent: ListItemCollapsibleContent,
   MockOpenTrigger: MockListItemOpenTrigger,
-  MockDragHandle: MockListItemDragHandle,
 };
 
 export { List, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME };

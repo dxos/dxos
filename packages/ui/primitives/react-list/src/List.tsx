@@ -26,7 +26,9 @@ type ListProps = ComponentPropsWithRef<typeof Primitive.ol> & {
 
 const [createListContext, createListScope] = createContextScope(LIST_NAME, []);
 
-type ListContextValue = Pick<ListProps, 'selectable' | 'variant'> & {
+type ListContextValue = {
+  selectable: Exclude<ListProps['selectable'], undefined>;
+  variant: Exclude<ListProps['variant'], undefined>;
   itemSizes?: ListItemSizes;
 };
 
