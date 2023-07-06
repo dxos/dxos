@@ -11,6 +11,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { Directory } from '@dxos/random-access-storage';
 import { BitField } from '@dxos/util';
+import { synchronized } from '@dxos/async';
 
 export type GetOptions = {
   offset?: number;
@@ -25,21 +26,17 @@ export class BlobStore {
     private readonly _directory: Directory
   ) { }
 
+  @synchronized
   async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {
-    const file = this._getMetaFile(id);
-    const size = (await file.stat()).size;
-    if (size === 0) {
-      return;
-    }
-    const data = await file.read(0, size);
-    return schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data);
+    return this._getMeta(id);
   }
 
   /**
    * @throws If range is not available.
    */
+  @synchronized
   async get(id: Uint8Array, options: GetOptions = {}): Promise<Uint8Array> {
-    const metadata = await this.getMeta(id);
+    const metadata = await this._getMeta(id);
 
     if (!metadata) {
       throw new Error('Blob not available');
@@ -74,10 +71,12 @@ export class BlobStore {
     return file.read(offset, length);
   }
 
+  @synchronized
   async list(): Promise<BlobMeta[]> {
     throw new Error('Not implemented');
   }
 
+  @synchronized
   async set(data: Uint8Array): Promise<BlobMeta> {
     const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data));
     const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
@@ -93,13 +92,15 @@ export class BlobStore {
     };
 
     await this._getDataFile(id).write(0, Buffer.from(data));
-    await this._getMetaFile(id).write(0, Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta)));
+    await this._writeMeta(id, meta);
     return meta;
   }
 
+  // TODO(dmaretskyi): Optimize locking.
+  @synchronized
   async setChunk(chunk: BlobChunk): Promise<BlobMeta> {
     // Init metadata.
-    let meta = await this.getMeta(chunk.id);
+    let meta = await this._getMeta(chunk.id);
     if (!meta) {
       assert(chunk.totalLength, 'totalLength is not present');
       meta = {
@@ -131,13 +132,30 @@ export class BlobStore {
     }
     meta.updated = new Date();
 
-    // Write metadata.
-    await this._getMetaFile(chunk.id).write(
-      0,
-      Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta)),
-    );
+    await this._writeMeta(chunk.id, meta);
 
     return meta;
+  }
+
+  private async _writeMeta(id: Uint8Array, meta: BlobMeta): Promise<void> {
+    const encoded = Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta))
+    const data = Buffer.alloc(encoded.length + 4);
+    data.writeUInt32LE(encoded.length, 0);
+    encoded.copy(data, 4);
+
+    // Write metadata.
+    await this._getMetaFile(id).write(0, data);
+  }
+
+  private async _getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {
+    const file = this._getMetaFile(id);
+    const size = (await file.stat()).size;
+    if (size === 0) {
+      return;
+    }
+    const data = await file.read(0, size);
+    const protoSize = data.readUInt32LE(0);
+    return schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data.subarray(4, protoSize + 4));
   }
 
   private _getMetaFile(id: Uint8Array) {

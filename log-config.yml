@@ -6,8 +6,8 @@ formatter:
 filter:
   - warn
   - info
-  - debug
-  - rpc:debug
+  # - debug
+  - sync:debug
   # - test.ts:debug
   # - database:debug
   # - notarization:debug

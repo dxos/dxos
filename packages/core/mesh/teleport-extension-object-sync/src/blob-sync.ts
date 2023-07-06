@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
-import { BitField } from '@dxos/util';
+import { BitField, ComplexMap } from '@dxos/util';
 
 import { BlobStore } from './blob-store';
 import { BlobSyncExtension } from './blob-sync-extension';
@@ -31,7 +31,7 @@ export class BlobSync {
   private readonly _ctx = new Context();
   private readonly _lock = new Lock();
 
-  private readonly _downloadRequests = new Map<string, DownloadRequest>();
+  private readonly _downloadRequests = new ComplexMap<Uint8Array, DownloadRequest>(key => PublicKey.from(key).toHex());
   private readonly _extensions = new Set<BlobSyncExtension>();
 
   constructor(private readonly _params: BlobSyncParams) {}
@@ -47,7 +47,7 @@ export class BlobSync {
    *
    * @param id hex-encoded id of the object to download.
    */
-  async download(ctx: Context, id: string): Promise<void> {
+  async download(ctx: Context, id: Uint8Array): Promise<void> {
     log('download', { id });
     const request = await this._lock.executeSynchronized(async () => {
       const existingRequest = this._downloadRequests.get(id);
@@ -57,20 +57,24 @@ export class BlobSync {
         return existingRequest;
       }
 
-      const decodedId = PublicKey.from(id).asUint8Array();
-      const meta = await this._params.blobStore.getMeta(decodedId);
+      const meta = await this._params.blobStore.getMeta(id);
       const request: DownloadRequest = {
         trigger: new Trigger(),
         counter: 1,
         want: {
-          id: decodedId,
+          id,
           chunkSize: meta?.chunkSize,
           bitfield: meta?.bitfield && Uint8Array.from(BitField.invert(meta.bitfield)),
         },
       };
 
-      this._downloadRequests.set(id, request);
-      this._updateExtensionsWantList();
+      // Check if the object is already fully downloaded.
+      if(meta?.state === BlobMeta.State.FULLY_PRESENT) {
+        request.trigger.wake();
+      } else {
+        this._downloadRequests.set(id, request);
+        this._updateExtensionsWantList();
+      }
 
       return request;
     });
@@ -105,33 +109,43 @@ export class BlobSync {
         this._extensions.delete(extension);
       },
       onPush: async (blobChunk) => {
-        const encodedId = PublicKey.from(blobChunk.id).toHex();
-        if (!this._downloadRequests.has(encodedId)) {
+        if (!this._downloadRequests.has(blobChunk.id)) {
           return;
         }
         log('received', { blobChunk });
         const meta = await this._params.blobStore.setChunk(blobChunk);
         if (meta.state === BlobMeta.State.FULLY_PRESENT) {
-          this._downloadRequests.get(encodedId)?.trigger.wake();
-          this._downloadRequests.delete(encodedId);
+          this._downloadRequests.get(blobChunk.id)?.trigger.wake();
+          this._downloadRequests.delete(blobChunk.id);
         } else {
           assert(meta.bitfield);
-          this._downloadRequests.get(encodedId)!.want.bitfield = BitField.invert(meta.bitfield);
+          this._downloadRequests.get(blobChunk.id)!.want.bitfield = BitField.invert(meta.bitfield);
         }
         
         this._updateExtensionsWantList();
-        for (const extension of this._extensions) {
-          extension.reconcileUploads();
-        }
+        this._reconcileUploads();
       },
     });
     return extension;
+  }
+
+  /**
+   * Notify extensions that a blob with the given id was added to the blob store.
+   */
+  notifyBlobAdded(_id: string) {
+    this._reconcileUploads();
   }
 
   private _getWantList(): WantList {
     return {
       blobs: Array.from(this._downloadRequests.values()).map((request) => request.want),
     };
+  }
+
+  private _reconcileUploads() {
+    for (const extension of this._extensions) {
+      extension.reconcileUploads();
+    }
   }
 
   private _updateExtensionsWantList() {

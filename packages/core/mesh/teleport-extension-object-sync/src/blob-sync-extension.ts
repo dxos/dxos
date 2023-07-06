@@ -23,9 +23,9 @@ export type BlobSyncExtensionParams = {
   onPush: (data: BlobChunk) => Promise<void>;
 };
 
-const MIN_WANT_LIST_UPDATE_INTERVAL = 1000;
+const MIN_WANT_LIST_UPDATE_INTERVAL = 500;
 
-const MAX_CONCURRENT_UPLOADS = 5;
+const MAX_CONCURRENT_UPLOADS = 20;
 
 /**
  * Manages replication between a set of feeds for a single teleport session.
@@ -61,6 +61,10 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       return;
     }
     for (const blobChunk of blobChunks) {
+      if(this._ctx.disposed) {
+        break;
+      }
+
       this._currentUploads++;
 
       this.push(blobChunk)
@@ -94,11 +98,14 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   }
 
   override async onOpen(context: ExtensionContext): Promise<void> {
+    log('open')
     await super.onOpen(context);
     await this._params.onOpen();
   }
 
   override async onClose(err?: Error | undefined): Promise<void> {
+    log('close')
+    await this._ctx.dispose();
     await this._params.onClose();
     await super.onClose(err);
   }
@@ -167,7 +174,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       assert(meta.chunkSize);
       assert(meta.length);
 
-      if (!header.chunkSize || header.chunkSize === meta.chunkSize) {
+      if (header.chunkSize && header.chunkSize !== meta.chunkSize) {
         log.warn('Invalid chunk size', { header, meta });
         continue;
       }
@@ -180,10 +187,11 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       for (const idx of chunkIndices) {
         const chunkData = await this._params.blobStore.get(header.id, {
           offset: idx * meta.chunkSize,
-          length: meta.chunkSize,
+          length: Math.min(meta.chunkSize, meta.length - idx * meta.chunkSize),
         });
         chunks.push({
           id: header.id,
+          totalLength: meta.length,
           chunkSize: meta.chunkSize,
           chunkOffset: idx * meta.chunkSize,
           payload: chunkData,
