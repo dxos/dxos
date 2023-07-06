@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-dnd/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/plugins/plugin-dnd/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-dnd/dist",
+        "tsConfig": "packages/apps/plugins/plugin-dnd/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-dnd/src/**/*.{ts,js,tsx,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-dnd/.storybook"
+      }
+    }
+  }
+}
