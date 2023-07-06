@@ -1,62 +1,59 @@
-import { defineTemplate, renderSlots, text, Imports } from '@dxos/plate';
-import config from '../config.t';
+import { text } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate(
-  ({ input, defaultOutputFile, slots, ...rest }) => {
-    const { react, pwa, dxosUi, name } = input;
-    const imports = new Imports();
-    const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
-    const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.lazy(
-      ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
-      '@dxos/react-client',
-    );
-    const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-appkit');
-    const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');
-    const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.lazy(
-      ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
-      '@dxos/react-appkit',
-    );
+export default template.define
+  .slots({
+    content: '<div>Your code goes here</div>',
+    extraImports: '',
+  })
+  .script({
+    content: ({ input, slots, imports }) => {
+      const { react, pwa, dxosUi, name } = input;
+      const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.use(
+        ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
+        '@dxos/react-client',
+      );
+      const ThemeProvider = imports.use('ThemeProvider', '@dxos/react-appkit');
+      const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
+      const { ResetDialog, ServiceWorkerToastContainer, GenericFallback, appkitTranslations } = imports.use(
+        ['ResetDialog', 'ServiceWorkerToastContainer', 'GenericFallback', 'appkitTranslations'],
+        '@dxos/react-appkit',
+      );
 
-    const swToast = () => `<${ServiceWorkerToastContainer()} {...serviceWorker} />`;
+      const swToast = () => text`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
 
-    const coreContent = text`
-    <ErrorBoundary fallback={({ error }) => <${ResetDialog()} error={error} config={config} />}>
-      <${ClientProvider()} config={config} ${dxosUi ? `fallback={${GenericFallback()}}` : ''}>
-        ${render?.content?.()}
-        ${dxosUi && pwa && swToast()}
-      </${ClientProvider()}>
+      const coreContent = text`
+    <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
+      <${ClientProvider} config={config} ${dxosUi ? `fallback={${GenericFallback}}` : ''}>
+        ${slots.content}
+        ${dxosUi && pwa && swToast}
+      </${ClientProvider}>
     </ErrorBoundary>`;
 
-    const themeProvider = (content: string) => text`
-    <${ThemeProvider()} appNs='${name}' resourceExtensions={[${appkitTranslations()}]} fallback={<${GenericFallback()} />}>
+      const themeProvider = (content: string) => text`
+    <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
       ${content}
-    </${ThemeProvider()}>
+    </${ThemeProvider}>
     `;
 
-    return !react
-      ? null
-      : text`
+      return (
+        react &&
+        text`
       import React from 'react';
-      ${() => imports.render(defaultOutputFile)}
+      ${imports}
       import { ErrorBoundary } from './ErrorBoundary';
       
-      ${render?.extraImports?.()}
+      ${slots.extraImports}
       
       // Dynamics allows configuration to be supplied by the hosting KUBE.
-      const config = async () => new ${Config()}(await ${Dynamics()}(), ${Local()}(), ${Defaults()}());
+      const config = async () => new ${Config}(await ${Dynamics}(), ${Local}(), ${Defaults}());
 
       export const App = () => {
-        ${pwa && `const serviceWorker = ${useRegisterSW()}();`}
+        ${pwa && `const serviceWorker = ${useRegisterSW}();`}
         return (
           ${dxosUi ? themeProvider(coreContent) : coreContent}
         )
-      }`;
-  },
-  {
-    config,
-    slots: {
-      content: '<div>Your code goes here</div>',
-      extraImports: '',
+      }`
+      );
     },
-  },
-);
+  });

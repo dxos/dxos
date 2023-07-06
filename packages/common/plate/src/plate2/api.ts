@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 import callsite from 'callsite';
-import path from 'path';
+import path from 'node:path';
 
 import { InquirableZodType } from '..';
 import { InteractiveDirectoryTemplate, InteractiveDirectoryTemplateOptions } from './InteractiveDirectoryTemplate';
 import { FileSlots, FileEffect } from './util/file';
+import { imports, Imports } from './util/imports';
 import { Optional } from './util/optional';
+import { pretty } from './util/pretty';
 import {
   Context,
   Template,
@@ -15,7 +17,8 @@ import {
   Slots,
   results,
   renderSlots,
-  getOutputNameFromTemplateName
+  getOutputNameFromTemplateName,
+  RenderedSlots,
 } from './util/template';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
@@ -23,19 +26,25 @@ export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
   constructor(private parentSlots?: TSlots) {}
 
-  text(slots: FileSlots<I, TSlots>): Template<I, TSlots> & { slots: TSlots } {
-    const stack = callsite();
-    const templateFile = stack[1].getFileName();
+  protected template<TContext extends Context<I, TSlots> = Context<I, TSlots>>(
+    templateFile: string,
+    slots: FileSlots<I, TSlots, TContext>,
+    extraContext?: (rendered: Partial<RenderedSlots<FileSlots<I, TSlots, TContext>>>) => Partial<TContext>,
+  ) {
     const template = async (options: Options<I, TSlots>) => {
       const { outputDirectory, relativeTo } = {
         outputDirectory: process.cwd(),
-        ...options
+        ...options,
       };
       const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? '');
       const relativeOutputPath = getOutputNameFromTemplateName(templateFile).slice(
-        absoluteTemplateRelativeTo.length + 1
+        absoluteTemplateRelativeTo.length + 1,
       );
-      const context: Context<I, TSlots> = {
+      const {
+        content,
+        path: p,
+        copyOf,
+      } = await renderSlots(slots, (rendered) => ({
         input: {} as I,
         slots: this.parentSlots ?? ({} as TSlots),
         overwrite: false,
@@ -43,28 +52,37 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
         outputDirectory,
         outputFile: relativeOutputPath,
         inherited: undefined,
-        relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile)
-      };
-      const { content, path: p, copyOf } = await renderSlots(slots, context);
+        relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
+        ...extraContext?.(rendered),
+      }));
+      const outPath = p ?? getOutputNameFromTemplateName(path.basename(templateFile));
       return results([
         new FileEffect({
-          path: p ?? getOutputNameFromTemplateName(path.basename(templateFile)),
-          content,
-          copyOf
-        })
+          path: outPath,
+          content: typeof content === 'string' ? pretty(content, outPath) : content,
+          copyOf,
+        }),
       ]);
     };
     template.slots = this.parentSlots!;
     return template;
   }
 
-  // ecmascript(slots: FileSlots<I, TSlots>): Template<I, TSlots> {
-  //   return async (context: Context<I>) => {
-  //     const imports = new Imports();
-  //     const effects: FileEffect[] = []; // ? compute results here
-  //     return results(effects);
-  //   };
-  // }
+  text(slots: FileSlots<I, TSlots>): Template<I, TSlots> & { slots: TSlots } {
+    const stack = callsite();
+    const templateFile = stack[1].getFileName();
+    const template = this.template(templateFile, slots);
+    return template;
+  }
+
+  script(slots: FileSlots<I, TSlots, Context<I, TSlots> & { imports: Imports }>): Template<I, TSlots> {
+    const stack = callsite();
+    const templateFile = stack[1].getFileName();
+    const template = this.template(templateFile, slots, ({ path }) => ({
+      imports: path ? imports(path) : imports(),
+    }));
+    return template;
+  }
 
   slots<TNewSlots extends Slots<I>>(slots: TNewSlots) {
     return new TemplateFactory<I, TNewSlots>(slots);
@@ -93,6 +111,6 @@ export const directory = <I extends InquirableZodType>(options: TemplateOptions<
   const { src, ...rest } = { src: dir, ...options };
   return new InteractiveDirectoryTemplate({
     src: path.isAbsolute(src) ? src : path.resolve(dir, src),
-    ...rest
+    ...rest,
   });
 };

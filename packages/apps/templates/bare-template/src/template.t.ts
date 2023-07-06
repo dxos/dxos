@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { defineConfig, z, text } from '@dxos/plate';
+import { z, directory, text } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
 export * from './utils.t/getDxosRepoInfo';
@@ -10,10 +10,10 @@ import appTsx from './src/App.tsx.t';
 import indexHtml from './index.html.t';
 import path from 'path';
 import filenamify from 'filenamify';
-import { exec } from '@dxos/process';
 export { appTsx, indexHtml };
 
-export default defineConfig({
+export default directory({
+  src: path.resolve(__dirname, '../src'),
   exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
   inputShape: z
     .object({
@@ -31,12 +31,12 @@ export default defineConfig({
     })
     .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
     .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' }),
-  inputQuestions: {
-    dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
-    tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
-    storybook: { when: ({ react }) => react, default: ({ react }) => react }
-  },
-  prepareContext({ input, outputDirectory, ...rest }) {
+  // inputQuestions: {
+  //   dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
+  //   tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
+  //   storybook: { when: ({ react }) => react, default: ({ react }) => react }
+  // },
+  context({ input, outputDirectory, ...rest }) {
     const { name, createFolder } = input;
     return {
       input,
@@ -44,13 +44,7 @@ export default defineConfig({
       ...rest
     };
   },
-  events: {
-    async after({ outputDirectory }) {
-      console.log(`running ${chalk.gray('npm install')}...`);
-      await exec('npm install', { cwd: outputDirectory });
-    }
-  },
-  message: ({ outputDirectory, input: { name } }) => {
+  after({ outputDirectory, input: { name } }) {
     const cwd = process.cwd();
     const relative = path.relative(cwd, outputDirectory);
     return text`

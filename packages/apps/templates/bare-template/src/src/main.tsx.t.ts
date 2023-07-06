@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defineTemplate, text } from '@dxos/plate';
-import config from '../config.t';
+import { text } from '@dxos/plate';
+import template from '../template.t';
 
-export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
-  const { react, dxosUi } = input;
-  return !react
-    ? null
-    : text`
+export default template.define.text({
+  content: ({ input: { react, dxosUi } }) =>
+    react &&
+    text`
     import React from 'react';
     import { createRoot } from 'react-dom/client';
 
@@ -31,5 +30,5 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
     import { App } from './App';
 
     createRoot(document.getElementById('root')!).render(<App />);
-    `;
+    `,
 });

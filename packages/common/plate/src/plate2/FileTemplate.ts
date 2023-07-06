@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import path from 'path';
+import path from 'node:path';
 
 import { isTemplateFile, getOutputNameFromTemplateName } from '../util/filenames';
 import { LoadModuleOptions, loadModule } from '../util/loadModule';

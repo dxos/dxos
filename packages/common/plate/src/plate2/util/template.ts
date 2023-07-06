@@ -21,11 +21,17 @@ export const getOutputNameFromTemplateName = (s: string): string => {
 
 export type Transform<I, O> = (input: I) => MaybePromise<O>;
 
-export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>> = R | Transform<Context<I, S>, R>;
+export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>, C extends Context<I, S> = Context<I, S>> =
+  | R
+  | Transform<C, R>;
+// export type Slot<R = string, I = any, S extends Slots<I> = Slots<I>> = R | Transform<Context<I, S>, R>;
 
 export type ExtractResult<S extends Slot> = S extends Slot<infer U> ? U : never;
 
-export type Slots<I = any, TSlots extends Slots = {}> = Record<string, Slot<any, I, TSlots>>;
+export type Slots<I = any, TSlots extends Slots = {}, C extends Context<I, TSlots> = Context<I, TSlots>> = Record<
+  string,
+  Slot<any, I, TSlots, C>
+>;
 
 export type Options<I, S extends Slots<I> = Slots<I>> = {
   input?: I;
@@ -44,13 +50,17 @@ export type Template<I = any, TSlots extends Slots<I> = Slots<I>> = Transform<Op
 
 export type RenderedSlots<TSlots extends Slots> = { [key in keyof TSlots]: ExtractResult<TSlots[key]> };
 
-export const renderSlots = async <I = any, TSlots extends Slots<I> = {}>(
+export const renderSlots = async <
+  I = any,
+  TSlots extends Slots<I, {}, TContext> = {},
+  TContext extends Context<I, TSlots> = Context<I, TSlots>,
+>(
   slots: TSlots,
-  context: Context<I, TSlots>
+  context: (rendered: Partial<RenderedSlots<TSlots>>) => TContext,
 ): Promise<RenderedSlots<TSlots>> => {
   const result: RenderedSlots<TSlots> = {} as any;
   for (const key in slots) {
-    result[key] = typeof slots[key] === 'function' ? await slots[key](context) : slots[key];
+    result[key] = typeof slots[key] === 'function' ? await slots[key](context?.(result)) : slots[key];
   }
   return result;
 };
@@ -65,5 +75,5 @@ export type FileResults<I = any, S extends FileSlots<I> = FileSlots<I>> = Effect
 
 export const results = (files: FileEffect[]): FileResults => ({
   files,
-  apply: async ({ overwrite }) => Promise.all(files.map((e) => e.apply({ overwrite })))
+  apply: async ({ overwrite }) => Promise.all(files.map((e) => e.apply({ overwrite }))),
 });

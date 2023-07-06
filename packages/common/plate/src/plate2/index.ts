@@ -3,3 +3,4 @@
 //
 
 export * from './api';
+export { InputOf } from './InteractiveDirectoryTemplate';

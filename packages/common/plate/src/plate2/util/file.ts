@@ -2,20 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { promises as fs } from 'fs';
 import mkdirp from 'mkdirp';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 import { Effect } from './effect';
 import { fileExists } from './fileExists';
-import { Slot, Slots, RenderedSlots } from './template';
+import { Slot, Slots, Context, RenderedSlots } from './template';
 
 export type Path = string;
 
-export type FileSlots<I = any, TSlots extends Slots<I> = {}> = {
-  path?: Slot<Path, I, TSlots>;
-  content?: Slot<string | undefined, I, TSlots>;
-  copyOf?: Slot<string, I, TSlots>;
+export type FileSlots<
+  I = any,
+  TSlots extends Slots<I> = {},
+  TContext extends Context<I, TSlots> = Context<I, TSlots>,
+> = {
+  path?: Slot<Path, I, TSlots, TContext>;
+  content?: Slot<string | undefined | null | false, I, TSlots, TContext>;
+  copyOf?: Slot<string, I, TSlots, TContext>;
 };
 
 export class FileEffect implements Effect<{ overwrite?: boolean }> {

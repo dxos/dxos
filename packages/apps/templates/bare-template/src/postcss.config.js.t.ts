@@ -1,11 +1,12 @@
-import { text, defineTemplate } from '@dxos/plate';
-import config from './config.t';
+import { text } from '@dxos/plate';
+import template from './template.t';
 
-export default defineTemplate(
-  ({ input }) => {
-    const { tailwind, dxosUi } = input;
-    return tailwind && !dxosUi
-      ? text`
+export default template.define.text({
+  content: ({ input: { tailwind, dxosUi } }) => {
+    return (
+      tailwind &&
+      !dxosUi &&
+      text`
       module.exports = {
         plugins: {
           'tailwindcss/nesting': {},
@@ -14,7 +15,6 @@ export default defineTemplate(
         },
       }
       `
-      : null;
+    );
   },
-  { config }
-);
+});
