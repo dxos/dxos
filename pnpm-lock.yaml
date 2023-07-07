@@ -591,11 +591,11 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/observable-object': link:../../../common/observable-object
     devDependencies:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@dxos/util': link:../../../common/util
       '@faker-js/faker': 7.6.0
