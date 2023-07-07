@@ -9,7 +9,7 @@ import React, { FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
-import { RichTextComposer, useTextModel } from '@dxos/aurora-composer';
+import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
@@ -34,10 +34,7 @@ export const KanbanItemComponent: FC<{
     data: { type: 'item', column },
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
-
-  // TODO(burdon): Uncaught TypeError: yDomFragment.toArray is not a function
   const model = useTextModel({ text: item.title });
-  console.log('RENDER', { title: item.title, model });
 
   return (
     <div
@@ -51,7 +48,7 @@ export const KanbanItemComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow'>
-          <RichTextComposer
+          <MarkdownComposer
             // TODO(burdon): Placeholder ignored.
             slots={{ root: { className: 'p-1' }, editor: { placeholder: t('item title placeholder') } }}
             model={model}
