@@ -132,7 +132,7 @@ export class BlobSync {
   /**
    * Notify extensions that a blob with the given id was added to the blob store.
    */
-  notifyBlobAdded(_id: string) {
+  async notifyBlobAdded(_id: Uint8Array) {
     this._reconcileUploads();
   }
 

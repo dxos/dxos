@@ -14,3 +14,5 @@ export {
   format,
   parse,
 } from 'path-browserify';
+
+export default 'path-browserify';

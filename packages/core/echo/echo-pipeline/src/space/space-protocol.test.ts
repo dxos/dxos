@@ -13,6 +13,8 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 describe('space/space-protocol', () => {
   test('two peers discover each other via presence', async () => {
@@ -45,7 +47,7 @@ describe('space/space-protocol', () => {
   test('failing authentication', async () => {
     const [topic, peerId1, peerId2] = PublicKey.randomSequence();
     const signalContext = new MemorySignalManagerContext();
-
+    
     const protocol1 = new SpaceProtocol({
       topic,
       swarmIdentity: {
@@ -53,6 +55,7 @@ describe('space/space-protocol', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false, // Reject everyone.
       },
+      blobStore: new BlobStore(createStorage({ type: StorageType.RAM  }).createDirectory()),
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
@@ -66,6 +69,7 @@ describe('space/space-protocol', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
+      blobStore: new BlobStore(createStorage({ type: StorageType.RAM  }).createDirectory()),
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,

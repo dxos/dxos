@@ -21,6 +21,7 @@ import { SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 export type NetworkManagerProvider = () => NetworkManager;
 
@@ -105,6 +106,11 @@ export class TestAgent {
     return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
   }
 
+  private _blobStore?: BlobStore;
+  get blobStore() {
+    return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
+  }
+
   public modelFactory = new ModelFactory().registerModel(DocumentModel);
 
   constructor(
@@ -138,6 +144,7 @@ export class TestAgent {
       modelFactory: this.modelFactory,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
+      blobStore: this.blobStore,
     }));
   }
 
@@ -206,6 +213,7 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: this._networkManagerProvider(),
+      blobStore: this.blobStore,
       onSessionAuth: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',

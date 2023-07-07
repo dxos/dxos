@@ -3,73 +3,57 @@
 //
 
 import { trackLeaks } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
 import { timed } from '@dxos/debug';
-import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { DataObject } from '@dxos/protocols/proto/dxos/mesh/teleport/objectsync';
-import { ObjectSync } from '@dxos/teleport-extension-object-sync';
 
 import { SnapshotStore } from './snapshot-store';
+import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
+import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
+import { PublicKey } from '@dxos/keys';
+import { schema } from '@dxos/protocols';
 
 /**
  * Snapshot manager for a specific space.
  */
 @trackLeaks('open', 'close')
 export class SnapshotManager {
-  private readonly _objectSync: ObjectSync;
 
   // prettier-ignore
   constructor(
-    private readonly _snapshotStore: SnapshotStore
+    private readonly _snapshotStore: SnapshotStore,
+    private readonly _blobStore: BlobStore,
+    private readonly _blobSync: BlobSync,
   ) {
-    this._objectSync = new ObjectSync({
-      getObject: async (id: string) => {
-        const snapshot = await this._snapshotStore.loadSnapshot(id);
-        log('getObject', { id, snapshot });
-        if (!snapshot) {
-          return undefined;
-        }
-        return {
-          id,
-          payload: schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encodeAsAny(snapshot)
-        };
-      },
-      setObject: async (data: DataObject) => {
-        log('setObject', { data });
-        const snapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((data.payload as Any).value);
-        await this._snapshotStore.saveSnapshot(snapshot);
-      }
-    });
   }
 
-  get objectSync() {
-    return this._objectSync;
-  }
-
-  async open() {
-    await this._objectSync.open();
-  }
-
-  async close() {
-    await this._objectSync.close();
+  private async _getBlob(blobId: Uint8Array): Promise<SpaceSnapshot> {
+    const blob = await this._blobStore.get(blobId)
+    return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(blob);
   }
 
   @timed(10_000)
   async load(ctx: Context, id: string): Promise<SpaceSnapshot> {
-    const local = await cancelWithContext(ctx, this._snapshotStore.loadSnapshot(id));
-    if (local) {
-      return local;
+    const blobId = PublicKey.fromHex(id).asUint8Array();
+    const blobMeta = await this._blobStore.getMeta(blobId);
+    if(blobMeta && blobMeta.state === BlobMeta.State.FULLY_PRESENT) {
+      return this._getBlob(blobId);
     }
 
-    const remote = await cancelWithContext(ctx, this._objectSync.download(ctx, id));
-    return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode((remote.payload as Any).value);
+    // TODO(dmaretskyi): Remove once we fully migrate to blob store.
+    const fallbackStore = await cancelWithContext(ctx, this._snapshotStore.loadSnapshot(id));
+    if (fallbackStore) {
+      return fallbackStore;
+    }
+
+    await this._blobSync.download(ctx, blobId);
+
+    return this._getBlob(blobId);
   }
 
   async store(snapshot: SpaceSnapshot): Promise<string> {
-    const id = await this._snapshotStore.saveSnapshot(snapshot);
-    return id;
+    const {id} = await this._blobStore.set(schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot));
+    await this._blobSync.notifyBlobAdded(id);
+    return PublicKey.from(id).toHex();
   }
 }

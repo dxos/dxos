@@ -206,7 +206,6 @@ export class DataSpaceManager {
           'dxos.mesh.teleport.gossip',
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
-        session.addExtension('dxos.mesh.teleport.objectsync', space.snapshotManager.objectSync.createExtension());
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
       },
       onAuthFailure: () => {

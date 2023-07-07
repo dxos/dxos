@@ -25,11 +25,29 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { Identity } from './identity';
 
+
+const createStores = () => {
+  const storage = createStorage({ type: StorageType.RAM });
+  const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+  const blobStore = new BlobStore(storage.createDirectory('blobs'));
+  const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+
+  return {
+    storage,
+    metadataStore,
+    blobStore,
+    snapshotStore,
+  };
+}
+
 describe('identity/identity', () => {
   test('create', async () => {
+    const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
@@ -37,7 +55,7 @@ describe('identity/identity', () => {
 
     const feedStore = new FeedStore<FeedMessage>({
       factory: new FeedFactory<FeedMessage>({
-        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        root: storage.createDirectory('feeds'),
         signer: keyring,
         hypercore: {
           valueEncoding,
@@ -60,14 +78,14 @@ describe('identity/identity', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
+      blobStore,
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
       }),
     });
 
-    const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-    await metadata.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
+    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
     const space: Space = new Space({
       spaceKey,
       protocol,
@@ -75,10 +93,8 @@ describe('identity/identity', () => {
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
       memberKey: identityKey,
       modelFactory: createDefaultModelFactory(),
-      metadataStore: metadata,
-      snapshotManager: new SnapshotManager(
-        new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-      ),
+      metadataStore,
+      snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       snapshotId: undefined,
     })
       .setControlFeed(controlFeed)
@@ -142,6 +158,8 @@ describe('identity/identity', () => {
     // First device
     //
     {
+      const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+
       const keyring = new Keyring();
       identityKey = await keyring.createKey();
       const deviceKey = await keyring.createKey();
@@ -149,7 +167,7 @@ describe('identity/identity', () => {
 
       const feedStore = new FeedStore<FeedMessage>({
         factory: new FeedFactory<FeedMessage>({
-          root: createStorage({ type: StorageType.RAM }).createDirectory(),
+          root: storage.createDirectory(),
           signer: keyring,
           hypercore: {
             valueEncoding,
@@ -174,14 +192,14 @@ describe('identity/identity', () => {
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
+        blobStore,
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
       });
 
-      const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-      await metadata.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
+      await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
       const space = new Space({
         spaceKey,
         protocol,
@@ -189,10 +207,8 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
-        metadataStore: metadata,
-        snapshotManager: new SnapshotManager(
-          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-        ),
+        metadataStore,
+        snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);
@@ -233,6 +249,8 @@ describe('identity/identity', () => {
     // Second device
     //
     {
+      const { storage, metadataStore, blobStore, snapshotStore } = createStores();
+
       const keyring = new Keyring();
       const deviceKey = await keyring.createKey();
 
@@ -261,14 +279,14 @@ describe('identity/identity', () => {
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
+        blobStore,
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
       });
 
-      const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-      await metadata.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey: identity1.identityKey, deviceKey });
+      await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey: identity1.identityKey, deviceKey });
       const space = new Space({
         spaceKey,
         protocol,
@@ -276,10 +294,8 @@ describe('identity/identity', () => {
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
         modelFactory: createDefaultModelFactory(),
-        metadataStore: metadata,
-        snapshotManager: new SnapshotManager(
-          new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory()),
-        ),
+        metadataStore,
+        snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       })
         .setControlFeed(controlFeed)
         .setDataFeed(dataFeed);

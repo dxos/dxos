@@ -35,6 +35,7 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, SigningContext } from '../spaces';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 /**
  * Shared backend for all client services.
@@ -44,7 +45,11 @@ export class ServiceContext {
   public readonly initialized = new Trigger();
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
+  /**
+   * @deprecated
+   */
   public readonly snapshotStore: SnapshotStore;
+  public readonly blobStore: BlobStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
@@ -73,6 +78,7 @@ export class ServiceContext {
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    this.blobStore = new BlobStore(storage.createDirectory('blobs'));
 
     this.keyring = new Keyring(storage.createDirectory('keyring'));
     this.feedStore = new FeedStore<FeedMessage>({
@@ -88,6 +94,7 @@ export class ServiceContext {
     this.spaceManager = new SpaceManager({
       feedStore: this.feedStore,
       networkManager: this.networkManager,
+      blobStore: this.blobStore,
       metadataStore: this.metadataStore,
       modelFactory: this.modelFactory,
       snapshotStore: this.snapshotStore,

@@ -19,13 +19,20 @@ import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
   modelFactory: ModelFactory;
   metadataStore: MetadataStore;
+
+  /**
+   * @deprecated Replaced by BlobStore.
+   */
   snapshotStore: SnapshotStore;
+
+  blobStore: BlobStore;
 };
 
 export type ConstructSpaceParams = {
@@ -47,15 +54,17 @@ export class SpaceManager {
   private readonly _modelFactory: ModelFactory;
   private readonly _metadataStore: MetadataStore;
   private readonly _snapshotStore: SnapshotStore;
+  private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor({ feedStore, networkManager, modelFactory, metadataStore, snapshotStore }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, modelFactory, metadataStore, snapshotStore, blobStore }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._modelFactory = modelFactory;
     this._metadataStore = metadataStore;
     this._snapshotStore = snapshotStore;
+    this._blobStore = blobStore;
   }
 
   // TODO(burdon): Remove.
@@ -91,8 +100,9 @@ export class SpaceManager {
       networkManager: this._networkManager,
       onSessionAuth: onNetworkConnection,
       onAuthFailure,
+      blobStore: this._blobStore,
     });
-    const snapshotManager = new SnapshotManager(this._snapshotStore);
+    const snapshotManager = new SnapshotManager(this._snapshotStore, this._blobStore, protocol.blobSync);
 
     const space = new Space({
       spaceKey,
