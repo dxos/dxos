@@ -8,7 +8,7 @@ import { Stack } from '@braneframe/types';
 import { createStore } from '@dxos/observable-object';
 import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
-import { StackMain } from './components';
+import { StackMain, StackSectionOverlay } from './components';
 import { isStack, StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './props';
 import translations from './translations';
 
@@ -47,6 +47,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
         case 'main':
           if (Array.isArray(datum) && isStack(datum[datum.length - 1])) {
             return StackMain;
+          } else {
+            return null;
+          }
+        case 'dragoverlay':
+          if (datum && typeof datum === 'object' && 'object' in datum) {
+            return StackSectionOverlay;
           } else {
             return null;
           }

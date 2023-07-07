@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent } from '@dnd-kit/core';
+import { DragEndEvent, DraggableAttributes } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
@@ -22,9 +22,10 @@ import {
   ListScopedProps,
   DropdownMenu,
   ButtonGroup,
+  ListItemRootProps,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { subscribe } from '@dxos/observable-object';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
@@ -37,9 +38,25 @@ type StackSectionProps = {
   section: StackSectionModel;
 };
 
-const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
+export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
+  return (
+    <List variant='ordered'>
+      <StackSectionImpl onRemove={() => {}} section={data} isOverlay />
+    </List>
+  );
+};
+
+const StackSectionImpl = forwardRef<
+  HTMLLIElement,
+  ListScopedProps<StackSectionProps> & {
+    draggableAttributes?: DraggableAttributes;
+    draggableListeners?: ReturnType<typeof useSortable>['listeners'];
+    style?: ListItemRootProps['style'];
+    rearranging?: boolean;
+    isOverlay?: boolean;
+  }
+>(({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
   const { t } = useTranslation('dxos:stack');
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: section.object.id });
   return (
     <DensityProvider density='fine'>
       <ListItem.Root
@@ -48,10 +65,11 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
           surfaceElevation({ elevation: 'group' }),
           'bg-white dark:bg-neutral-925 grow rounded mbe-2',
           '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
-          isDragging && 'relative z-10',
+          isOverlay && 'hover-hover:[--controls-opacity:1]',
+          rearranging && 'invisible',
         ]}
-        ref={setNodeRef}
-        style={{ transform: CSS.Translate.toString(transform) }}
+        ref={forwardedRef}
+        style={style}
       >
         <ListItem.Heading classNames='sr-only'>
           {get(section, 'object.title', t('generic section heading'))}
@@ -60,12 +78,16 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
           className={mx(
             buttonFine,
             defaultFocus,
-            'self-stretch flex items-center rounded-ie-none justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+            'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+            isOverlay && 'text-primary-600 dark:text-primary-300',
           )}
-          {...attributes}
-          {...listeners}
+          {...draggableAttributes}
+          {...draggableListeners}
         >
-          <DotsSixVertical className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')} />
+          <DotsSixVertical
+            weight={isOverlay ? 'bold' : 'regular'}
+            className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
+          />
         </div>
         <div role='none' className='flex-1'>
           <Surface role='section' data={section} />
@@ -80,6 +102,26 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
         </Button>
       </ListItem.Root>
     </DensityProvider>
+  );
+});
+
+const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
+  const { attributes, listeners, setNodeRef, transform } = useSortable({
+    id: props.section.object.id,
+    data: { entity: props.section },
+  });
+  return (
+    <StackSectionImpl
+      {...props}
+      draggableListeners={listeners}
+      draggableAttributes={attributes}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        // todo(thure): Why does `useSortable`’s `transition` become `undefined` or `transform 0ms linear` at the wrong times? Fortunately it should always be this value, but still.
+        transition: 'transform 200ms ease',
+      }}
+      ref={setNodeRef}
+    />
   );
 };
 
@@ -102,9 +144,17 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
 
   useEffect(() => {
     if (subscribe in dnd) {
-      return dnd[subscribe](() => setIter([])) as () => void;
+      return (dnd as ObservableObject)[subscribe](() => setIter([])) as () => void;
     }
   }, [dnd]);
+
+  const overIsMember = useMemo(() => {
+    if (!dnd.over) {
+      return false;
+    }
+    const index = sections.findIndex((section) => section.object.id === dnd.over?.id);
+    return index >= 0;
+  }, [dnd.over]);
 
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -145,7 +195,14 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           {sections
             .filter((section) => !!section?.object?.id)
             .map((section, start) => {
-              return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
+              return (
+                <StackSection
+                  key={section.object.id}
+                  onRemove={() => handleRemove(start)}
+                  section={section}
+                  rearranging={overIsMember && dnd.active?.id === section.object.id}
+                />
+              );
             })}
         </SortableContext>
       </List>
