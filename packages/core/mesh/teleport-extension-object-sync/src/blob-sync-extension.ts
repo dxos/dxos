@@ -91,6 +91,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       requested: {
         BlobSyncService: schema.getService('dxos.mesh.teleport.blobsync.BlobSyncService'),
       },
+      timeout: 20_000,
       encodingOptions: {
         preserveAny: true,
       },
