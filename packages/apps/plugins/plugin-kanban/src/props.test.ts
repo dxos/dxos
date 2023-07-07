@@ -15,7 +15,6 @@ describe('Models', () => {
     const object = createStore({
       id: 'test',
       title: 'Test',
-      // TODO(burdon): Does this work?
       columns: createStore([
         {
           id: 'column-1',
@@ -30,7 +29,6 @@ describe('Models', () => {
       ]),
     });
 
-    // TODO(burdon): IDE cannot understand type inference.
     expect(object.columns).to.have.length(2);
 
     // TODO(burdon): Review API.
@@ -42,7 +40,6 @@ describe('Models', () => {
     handle.update([object.columns]);
 
     setTimeout(() => {
-      // TODO(burdon): Doesn't type check (e.g., title is required).
       object.columns.push({
         id: 'column-3',
         title: 'Column 3',
