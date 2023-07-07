@@ -7,13 +7,12 @@ import path from 'node:path';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { Directory } from '@dxos/random-access-storage';
 import { BitField } from '@dxos/util';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 export type GetOptions = {
   offset?: number;
@@ -82,9 +81,9 @@ export class BlobStore {
     "e9b9aa7a21c2c55a9eca333cd59975633157562ca0a0f4f243d4778f192c291e_data"
     "5001de5a47191357c075aeee6451c4cc323f3a8ada24dd1191e83403608a38d5_meta
      */
-    const files = new Set((await this._directory.list()).map(f => f.split('_')[0]));
+    const files = new Set((await this._directory.list()).map((f) => f.split('_')[0]));
 
-    let res: BlobMeta[] = [];
+    const res: BlobMeta[] = [];
 
     for (const file of files) {
       const id = PublicKey.from(file).asUint8Array();

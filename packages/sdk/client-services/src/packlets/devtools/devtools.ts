@@ -62,7 +62,7 @@ export type DevtoolsServiceParams = {
  * @deprecated
  */
 export class DevtoolsServiceImpl implements DevtoolsHost {
-  constructor(private readonly params: DevtoolsServiceParams) { }
+  constructor(private readonly params: DevtoolsServiceParams) {}
 
   events(request: void): Stream<Event> {
     return new Stream<Event>(({ next }) => {

@@ -289,7 +289,7 @@ export class Pipeline implements PipelineAccessor {
     this._timeframeClock.setTimeframe(timeframe);
 
     // Cancel downloads of mutations before the cursor.
-    for(const feed of this._feeds.values()) {
+    for (const feed of this._feeds.values()) {
       this._setFeedDownloadState(feed);
     }
 
