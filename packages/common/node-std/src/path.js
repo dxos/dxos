@@ -15,4 +15,5 @@ export {
   parse,
 } from 'path-browserify';
 
-export default 'path-browserify';
+import * as path from 'path-browserify';
+export default path;
