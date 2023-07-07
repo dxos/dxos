@@ -40,6 +40,8 @@ const DndPluginDefaultStoryPluginBDefault = () => {
             dnd.overlayDropAnimation = 'into';
             item && store.items.splice(store.items.length, 0, item);
             setIter([]);
+          } else {
+            dnd.overlayDropAnimation = 'away';
           }
         }
       }
