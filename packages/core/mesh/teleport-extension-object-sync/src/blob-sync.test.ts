@@ -94,4 +94,42 @@ describe('BlobSync', () => {
     }
   });
 
+  test('3 peers in a chain', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+    const [peer1, peer2, peer3] = await Promise.all(range(3).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    await testBuilder.connect(peer1, peer2);
+    await testBuilder.connect(peer2, peer3);
+
+    const id = await peer1.generateBlob();
+    expect(await peer2.blobStore.getMeta(id)).toBeUndefined();
+
+    await Promise.all([
+      peer2.blobSync.download(new Context(), id),
+      peer3.blobSync.download(new Context(), id),
+    ]);
+
+    const blob1 = await peer1.blobStore.get(id);
+    const blob2 = await peer2.blobStore.get(id);
+    const blob3 = await peer3.blobStore.get(id);
+    expect(Buffer.from(blob1).equals(blob2)).toBeTruthy();
+    expect(Buffer.from(blob1).equals(blob3)).toBeTruthy();
+  });
+
+  test('cancel download', async () => {
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+    const [peer1, peer2] = await Promise.all(range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    await testBuilder.connect(peer1, peer2);
+
+    const id = await peer1.generateBlob();
+    expect(await peer2.blobStore.getMeta(id)).toBeUndefined();
+
+    const ctx = new Context();
+    void peer2.blobSync.download(ctx, id).catch(() => {});
+    await ctx.dispose();
+
+    const meta = await peer2.blobStore.getMeta(id);
+    expect(meta).toBeUndefined();
+  });
 });
