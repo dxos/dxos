@@ -46,9 +46,9 @@ const defaultItems = {
   ],
 };
 
-export const StoryItemDragOverlay = ({ data }: { data: string }) => {
+export const StoryItemDragOverlay = ({ data }: { data: { id: string } }) => {
   // (thure) Note that this is rendered as part of DndPlugin’s context, so it may not have access to other contexts.
-  const item = store.items.find(({ id }) => id === data);
+  const item = store.items.find(({ id }) => id === data.id);
   return item ? <CompactStoryItem item={item} dragOverlay /> : null;
 };
 
@@ -62,7 +62,7 @@ export const CompactStoryItem = ({
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: item.id,
-    data: item,
+    data: { entity: item },
   });
   return (
     <div
@@ -104,7 +104,7 @@ export const DndPluginDefaultStoryPlugin = () => {
       components: {
         default: DndPluginDefaultStoryPluginDefault,
       },
-      component: (daum: unknown, role?: string) => {
+      component: (datum: unknown, role?: string) => {
         switch (role) {
           case 'dragoverlay':
             return StoryItemDragOverlay;

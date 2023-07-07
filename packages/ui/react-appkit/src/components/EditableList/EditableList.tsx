@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent } from '@dnd-kit/core';
-import { X, Plus } from '@phosphor-icons/react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { X, Plus, DotsSixVertical } from '@phosphor-icons/react';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { ChangeEvent, ComponentPropsWithoutRef, forwardRef, KeyboardEvent, ReactNode, useCallback } from 'react';
 
 import {
@@ -15,11 +18,11 @@ import {
   DensityProvider,
   List,
   ListItem,
-  useListDensity,
   ListItemRootProps,
   ListScopedProps,
   useListContext,
   LIST_NAME,
+  useDensityContext,
 } from '@dxos/aurora';
 import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
 
@@ -128,7 +131,7 @@ export const EditableList = ({
   slots = {},
 }: EditableListProps) => {
   const { t } = useTranslation('appkit');
-  const density = useListDensity({ density: propsDensity, variant });
+  const density = useDensityContext(propsDensity);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -139,20 +142,24 @@ export const EditableList = ({
     }
   };
 
+  const listContent = (
+    <List variant={variant === 'ordered-draggable' ? 'ordered' : 'unordered'} selectable={completable}>
+      {children}
+    </List>
+  );
+
   return (
     <div role='none' {...slots.root} className={mx('contents', slots.root?.className)}>
-      <List
-        variant={variant}
-        selectable={completable}
-        onDragEnd={handleDragEnd}
-        listItemIds={itemIdOrder ?? []}
-        density={density}
-      >
-        {children}
-      </List>
+      {variant === 'ordered-draggable' ? (
+        <DndContext onDragEnd={handleDragEnd}>
+          <SortableContext items={itemIdOrder!}>{listContent}</SortableContext>
+        </DndContext>
+      ) : (
+        listContent
+      )}
       <div className='flex'>
         <DensityProvider density={density}>
-          {variant === 'ordered-draggable' && <ListItem.MockDragHandle />}
+          {variant === 'ordered-draggable' && <ListItem.Endcap classNames='is-5 invisible' />}
           {completable && <ListItem.Endcap classNames='invisible' />}
           <Input
             variant='subdued'
@@ -217,17 +224,24 @@ export const EditableListItem = forwardRef<HTMLLIElement, ListScopedProps<Editab
   ) => {
     const { t } = useTranslation('appkit');
     const { variant, selectable } = useListContext(LIST_NAME, __listScope);
+    const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
+    const ref = useComposedRefs(setNodeRef, forwardedRef) as ListItemRootProps['ref'];
     return (
       <ListItem.Root
-        ref={forwardedRef}
+        ref={ref}
         {...{
           id,
           defaultSelected: defaultCompleted,
           selected: completed,
           onSelectedChange: onChangeCompleted,
         }}
+        style={{ transform: CSS.Translate.toString(transform) }}
       >
-        {variant === 'ordered-draggable' && <ListItem.DragHandle />}
+        {variant === 'ordered' && (
+          <ListItem.Endcap classNames='items-center is-5' {...attributes} {...listeners}>
+            <DotsSixVertical className={getSize(5)} />
+          </ListItem.Endcap>
+        )}
         {selectable && (
           <ListItem.Endcap classNames='items-center'>
             <NaturalInput.Root id={`${id}__checkbox`}>
