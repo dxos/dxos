@@ -27,19 +27,14 @@ const dragOverSubscriptions: ((event: DragOverEvent) => void)[] = [];
 type OverlayDropAnimation = 'around' | 'away' | 'into';
 
 export type DndPluginStoreValue = {
-  active: DragOverEvent['active'] | null;
-  over: DragOverEvent['over'] | null;
   overlayDropAnimation: OverlayDropAnimation;
 };
 
 const store = createStore<DndPluginStoreValue>({
-  active: null,
-  over: null,
-  overlayDropAnimation: 'around',
+  overlayDropAnimation: 'away',
 });
 
 const handleDragOver = (event: DragOverEvent) => {
-  store.over = event.over ?? null;
   dragOverSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -56,7 +51,6 @@ export const useDragOver = (callback: (event: DragOverEvent) => void, dependenci
 const dragStartSubscriptions: ((event: DragStartEvent) => void)[] = [];
 
 const handleDragStart = (event: DragStartEvent) => {
-  store.active = event.active;
   dragStartSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -73,8 +67,7 @@ export const useDragStart = (callback: (event: DragStartEvent) => void, dependen
 const dragEndSubscriptions: ((event: DragEndEvent) => void)[] = [];
 
 const handleDragEnd = (event: DragEndEvent) => {
-  store.active = null;
-  store.over = null;
+  store.overlayDropAnimation = 'away';
   dragEndSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -91,8 +84,6 @@ export const useDragEnd = (callback: (event: DragEndEvent) => void, dependencies
 const dragCancelSubscriptions: ((event: DragCancelEvent) => void)[] = [];
 
 const handleDragCancel = (event: DragCancelEvent) => {
-  store.active = null;
-  store.over = null;
   dragCancelSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 

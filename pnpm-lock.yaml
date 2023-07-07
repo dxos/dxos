@@ -372,6 +372,7 @@ importers:
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.7.2
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/dompurify': ^3.0.2
       '@types/lodash.update': ^4.10.7
       '@types/react': ^18.0.21
@@ -422,6 +423,7 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
+      '@tldraw/indices': 2.0.0-alpha.14
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
@@ -612,6 +614,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       react: ^18.2.0
@@ -622,6 +625,7 @@ importers:
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -737,6 +741,7 @@ importers:
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       jszip: ^3.10.1
@@ -754,6 +759,7 @@ importers:
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
@@ -16339,6 +16345,9 @@ packages:
     transitivePeerDependencies:
       - '@tiptap/pm'
     dev: false
+
+  /@tldraw/indices/2.0.0-alpha.14:
+    resolution: {integrity: sha512-XAEr6THe5c+j+AngtF03llMFDkdaO7zzwFNdo/du9yN5vdF19t5GrgaDwnjEoPZWEvXWc3GXoGzBja8Xqf2wNQ==}
 
   /@tootallnate/once/1.1.2:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}

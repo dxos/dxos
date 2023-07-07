@@ -9,7 +9,7 @@ import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react
 import get from 'lodash.get';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
+import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -66,7 +66,7 @@ const StackSectionImpl = forwardRef<
           'bg-white dark:bg-neutral-925 grow rounded mbe-2',
           '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
           isOverlay && 'hover-hover:[--controls-opacity:1]',
-          rearranging && 'invisible',
+          rearranging && 'opacity-0',
         ]}
         ref={forwardedRef}
         style={style}
@@ -106,10 +106,11 @@ const StackSectionImpl = forwardRef<
 });
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
     id: props.section.object.id,
     data: { entity: props.section },
   });
+  console.log('[isSorting]', isSorting);
   return (
     <StackSectionImpl
       {...props}
@@ -126,9 +127,10 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [iter, setIter] = useState([]);
+  const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
+  const dnd = useDnd();
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
@@ -150,10 +152,10 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
       if (!over) {
         return setOverIsMember(false);
       }
-      const index = sections.findIndex((section) => section.object.id === over.id);
-      return setOverIsMember(index >= 0);
+      const nextOverIsMember = sections.findIndex((section) => section.object.id === over.id) >= 0;
+      return setOverIsMember(nextOverIsMember);
     },
-    [iter, sections],
+    [sections],
   );
 
   const handleAdd = useCallback(
@@ -173,15 +175,21 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sections],
   );
 
-  useDragEnd((event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = sections.findIndex((section) => section.object.id === active.id);
-      const newIndex = sections.findIndex((section) => section.object.id === over?.id);
-      arrayMove(sections, oldIndex, newIndex);
-    }
-    setActiveId(null);
-  }, []);
+  useDragEnd(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = sections.findIndex((section) => section.object.id === active.id);
+        const newIndex = sections.findIndex((section) => section.object.id === over?.id);
+        arrayMove(sections, oldIndex, newIndex);
+        dnd.overlayDropAnimation = 'around';
+      } else if (active.id === over?.id) {
+        dnd.overlayDropAnimation = 'around';
+      }
+      setActiveId(null);
+    },
+    [sections],
+  );
 
   return (
     <>

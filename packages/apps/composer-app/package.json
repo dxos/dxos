@@ -38,6 +38,7 @@
     "@dxos/text-model": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@sentry/react": "^7.41.0",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "dompurify": "^3.0.3",
     "github-markdown-css": "^5.2.0",
     "isomorphic-fetch": "^3.0.0",

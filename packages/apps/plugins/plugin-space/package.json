@@ -23,6 +23,7 @@
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "jszip": "^3.10.1",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "^18.2.0"
