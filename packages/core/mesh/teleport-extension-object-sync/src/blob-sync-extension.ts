@@ -61,7 +61,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       return;
     }
     for (const blobChunk of blobChunks) {
-      if(this._ctx.disposed) {
+      if (this._ctx.disposed) {
         break;
       }
 
@@ -98,13 +98,13 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   }
 
   override async onOpen(context: ExtensionContext): Promise<void> {
-    log('open')
+    log('open');
     await super.onOpen(context);
     await this._params.onOpen();
   }
 
   override async onClose(err?: Error | undefined): Promise<void> {
-    log('close')
+    log('close');
     await this._ctx.dispose();
     await this._params.onClose();
     await super.onClose(err);
@@ -179,7 +179,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
         continue;
       }
 
-      const requestBitfield = header.bitfield ?? BitField.ones(meta.length / meta.chunkSize)
+      const requestBitfield = header.bitfield ?? BitField.ones(meta.length / meta.chunkSize);
 
       const presentData = BitField.and(requestBitfield, meta.bitfield);
       const chunkIndices = BitField.findIndexes(presentData);

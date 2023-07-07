@@ -26,6 +26,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
@@ -35,7 +36,6 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, SigningContext } from '../spaces';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 /**
  * Shared backend for all client services.

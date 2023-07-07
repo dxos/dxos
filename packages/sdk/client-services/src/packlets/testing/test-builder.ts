@@ -13,10 +13,10 @@ import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { ClientServicesHost, ServiceContext } from '../services';
 import { SigningContext } from '../spaces';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -132,7 +132,6 @@ export class TestPeer {
   get metadataStore() {
     return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
-
 
   get blobStore() {
     return (this._props.blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));

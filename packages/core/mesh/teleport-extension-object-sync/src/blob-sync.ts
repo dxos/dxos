@@ -31,7 +31,10 @@ export class BlobSync {
   private readonly _ctx = new Context();
   private readonly _lock = new Lock();
 
-  private readonly _downloadRequests = new ComplexMap<Uint8Array, DownloadRequest>(key => PublicKey.from(key).toHex());
+  private readonly _downloadRequests = new ComplexMap<Uint8Array, DownloadRequest>((key) =>
+    PublicKey.from(key).toHex(),
+  );
+
   private readonly _extensions = new Set<BlobSyncExtension>();
 
   constructor(private readonly _params: BlobSyncParams) {}
@@ -69,7 +72,7 @@ export class BlobSync {
       };
 
       // Check if the object is already fully downloaded.
-      if(meta?.state === BlobMeta.State.FULLY_PRESENT) {
+      if (meta?.state === BlobMeta.State.FULLY_PRESENT) {
         request.trigger.wake();
       } else {
         this._downloadRequests.set(id, request);
@@ -121,7 +124,7 @@ export class BlobSync {
           assert(meta.bitfield);
           this._downloadRequests.get(blobChunk.id)!.want.bitfield = BitField.invert(meta.bitfield);
         }
-        
+
         this._updateExtensionsWantList();
         this._reconcileUploads();
       },

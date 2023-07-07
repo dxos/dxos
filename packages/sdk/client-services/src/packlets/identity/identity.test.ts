@@ -24,11 +24,10 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
-
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
@@ -42,7 +41,7 @@ const createStores = () => {
     blobStore,
     snapshotStore,
   };
-}
+};
 
 describe('identity/identity', () => {
   test('create', async () => {
@@ -256,7 +255,7 @@ describe('identity/identity', () => {
 
       const feedStore = new FeedStore<FeedMessage>({
         factory: new FeedFactory<FeedMessage>({
-          root: createStorage({ type: StorageType.RAM }).createDirectory(),
+          root: storage.createDirectory(),
           signer: keyring,
           hypercore: {
             valueEncoding,
@@ -286,7 +285,11 @@ describe('identity/identity', () => {
         }),
       });
 
-      await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey: identity1.identityKey, deviceKey });
+      await metadataStore.setIdentityRecord({
+        haloSpace: { key: spaceKey },
+        identityKey: identity1.identityKey,
+        deviceKey,
+      });
       const space = new Space({
         spaceKey,
         protocol,

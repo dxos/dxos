@@ -16,11 +16,11 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
+import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
 import { AuthExtension, AuthProvider, AuthVerifier } from './auth';
-import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
@@ -130,7 +130,7 @@ export class SpaceProtocol {
 
   async stop() {
     await this.blobSync.close();
-    
+
     if (this._connection) {
       log('stopping...');
       await this._connection.close();
@@ -145,7 +145,7 @@ export class SpaceProtocol {
         swarmIdentity: this._swarmIdentity,
         onSessionAuth: this._onSessionAuth,
         onAuthFailure: this._onAuthFailure,
-        blobSync: this.blobSync
+        blobSync: this.blobSync,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 

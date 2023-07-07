@@ -3,21 +3,21 @@
 //
 
 import expect from 'expect';
+import { randomBytes } from 'node:crypto';
 
 import { Context } from '@dxos/context';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder, TestConnection, TestPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, test } from '@dxos/test';
-import { range, } from '@dxos/util';
-import { randomBytes } from 'node:crypto';
+import { range } from '@dxos/util';
+
 import { BlobStore, DEFAULT_CHUNK_SIZE } from './blob-store';
 import { BlobSync } from './blob-sync';
 
 class TestAgent extends TestPeer {
-
   storage = createStorage({ type: StorageType.RAM });
 
-  blobStore = new BlobStore(this.storage.createDirectory('blobs'))
+  blobStore = new BlobStore(this.storage.createDirectory('blobs'));
 
   blobSync = new BlobSync({ blobStore: this.blobStore });
 
@@ -41,7 +41,9 @@ describe('BlobSync', () => {
   test('two peers synchronize', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const [peer1, peer2] = await Promise.all(range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    const [peer1, peer2] = await Promise.all(
+      range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
+    );
     await testBuilder.connect(peer1, peer2);
 
     const id = await peer1.generateBlob();
@@ -57,7 +59,9 @@ describe('BlobSync', () => {
   test('downloading existing chunk completes immediately', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const [peer1, peer2] = await Promise.all(range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    const [peer1, peer2] = await Promise.all(
+      range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
+    );
     await testBuilder.connect(peer1, peer2);
 
     const id = await peer1.generateBlob();
@@ -68,7 +72,9 @@ describe('BlobSync', () => {
   test('different blob sizes', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const [peer1, peer2] = await Promise.all(range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    const [peer1, peer2] = await Promise.all(
+      range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
+    );
     await testBuilder.connect(peer1, peer2);
 
     const sizes = [
@@ -80,12 +86,14 @@ describe('BlobSync', () => {
       DEFAULT_CHUNK_SIZE + 1,
       10_000,
       100_000,
-    ]
-    const ids = await Promise.all(sizes.map(size => peer1.generateBlob(size)));
+    ];
+    const ids = await Promise.all(sizes.map((size) => peer1.generateBlob(size)));
 
-    await Promise.all(ids.map(async id => {
-      await peer2.blobSync.download(new Context(), id);
-    }))
+    await Promise.all(
+      ids.map(async (id) => {
+        await peer2.blobSync.download(new Context(), id);
+      }),
+    );
 
     for (const id of ids) {
       const blob1 = await peer1.blobStore.get(id);
@@ -97,17 +105,16 @@ describe('BlobSync', () => {
   test('3 peers in a chain', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const [peer1, peer2, peer3] = await Promise.all(range(3).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    const [peer1, peer2, peer3] = await Promise.all(
+      range(3).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
+    );
     await testBuilder.connect(peer1, peer2);
     await testBuilder.connect(peer2, peer3);
 
     const id = await peer1.generateBlob();
     expect(await peer2.blobStore.getMeta(id)).toBeUndefined();
 
-    await Promise.all([
-      peer2.blobSync.download(new Context(), id),
-      peer3.blobSync.download(new Context(), id),
-    ]);
+    await Promise.all([peer2.blobSync.download(new Context(), id), peer3.blobSync.download(new Context(), id)]);
 
     const blob1 = await peer1.blobStore.get(id);
     const blob2 = await peer2.blobStore.get(id);
@@ -119,7 +126,9 @@ describe('BlobSync', () => {
   test('cancel download', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const [peer1, peer2] = await Promise.all(range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })));
+    const [peer1, peer2] = await Promise.all(
+      range(2).map(() => testBuilder.createPeer({ factory: () => new TestAgent() })),
+    );
     await testBuilder.connect(peer1, peer2);
 
     const id = await peer1.generateBlob();

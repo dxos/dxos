@@ -5,13 +5,13 @@
 import assert from 'node:assert';
 import path from 'node:path';
 
+import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { Directory } from '@dxos/random-access-storage';
 import { BitField } from '@dxos/util';
-import { synchronized } from '@dxos/async';
 
 export type GetOptions = {
   offset?: number;
@@ -138,7 +138,7 @@ export class BlobStore {
   }
 
   private async _writeMeta(id: Uint8Array, meta: BlobMeta): Promise<void> {
-    const encoded = Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta))
+    const encoded = Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta));
     const data = Buffer.alloc(encoded.length + 4);
     data.writeUInt32LE(encoded.length, 0);
     encoded.copy(data, 4);

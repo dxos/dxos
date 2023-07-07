@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as path from 'path-browserify';
+
 export {
   resolve,
   normalize,
@@ -14,6 +16,4 @@ export {
   format,
   parse,
 } from 'path-browserify';
-
-import * as path from 'path-browserify';
 export default path;

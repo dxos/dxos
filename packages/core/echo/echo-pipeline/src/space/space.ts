@@ -21,7 +21,6 @@ import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;

@@ -13,13 +13,13 @@ import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Teleport } from '@dxos/teleport';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { SnapshotManager, SnapshotStore } from '../dbhost';
 import { MetadataStore } from '../metadata';
 import { Space } from './space';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
@@ -57,7 +57,14 @@ export class SpaceManager {
   private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor({ feedStore, networkManager, modelFactory, metadataStore, snapshotStore, blobStore }: SpaceManagerParams) {
+  constructor({
+    feedStore,
+    networkManager,
+    modelFactory,
+    metadataStore,
+    snapshotStore,
+    blobStore,
+  }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
