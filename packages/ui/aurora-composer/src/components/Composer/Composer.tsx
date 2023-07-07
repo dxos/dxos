@@ -24,7 +24,6 @@ export type ComposerProps = UseTextModelOptions & {
 export const Composer = memo(
   forwardRef<TipTapEditor | MarkdownComposerRef, ComposerProps>(({ slots, ...options }, forwardedRef) => {
     const model = useTextModel(options);
-
     if (model?.content instanceof YXmlFragment) {
       return <RichTextComposer ref={forwardedRef as Ref<TipTapEditor>} model={model} slots={slots} />;
     } else {

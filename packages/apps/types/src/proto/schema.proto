@@ -8,16 +8,6 @@ import "dxos/schema.proto";
 
 package braneframe;
 
-message Document {
-  option (object) = true;
-
-  string title = 1;
-  dxos.schema.Text content = 2;
-
-  // TODO(wittjosiah): Make system-level prop.
-  Meta meta = 1000;
-}
-
 // TODO(burdon): Move into object.
 message Meta {
   message ForeignKey {
@@ -26,6 +16,16 @@ message Meta {
   }
 
   repeated ForeignKey keys = 1;
+}
+
+message Document {
+  option (object) = true;
+
+  string title = 1;
+  dxos.schema.Text content = 2;
+
+  // TODO(wittjosiah): Make system-level prop.
+  Meta meta = 1000;
 }
 
 message Stack {
@@ -48,7 +48,6 @@ message Kanban {
   message Column {
     // TODO(burdon): Should this be an object?
     option (object) = true;
-//    string id = 1;
 
     string title = 2;
     repeated Item items = 3;
@@ -58,8 +57,9 @@ message Kanban {
     // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    // TODO(burdon): Reference to content?
-    string content = 1;
+    dxos.schema.Text title = 1;
+    // TODO(burdon): Optional content
+    dxos.schema.TypedObject object = 2;
   }
 
   string title = 1;

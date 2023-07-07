@@ -19,7 +19,7 @@ export const createKanban = () => {
         items: createStore(
           faker.datatype.array(faker.datatype.number(8)).map(() => ({
             id: PublicKey.random().toHex(),
-            content: faker.lorem.words(faker.datatype.number({ min: 3, max: 8 })) + '.',
+            title: faker.lorem.words(faker.datatype.number({ min: 3, max: 8 })) + '.',
           })),
         ),
       })),

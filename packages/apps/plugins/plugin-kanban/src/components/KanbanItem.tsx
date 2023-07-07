@@ -8,7 +8,8 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { Button, Input, useTranslation } from '@dxos/aurora';
+import { Button, useTranslation } from '@dxos/aurora';
+import { RichTextComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
@@ -34,6 +35,10 @@ export const KanbanItemComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
+  // TODO(burdon): Uncaught TypeError: yDomFragment.toArray is not a function
+  const model = useTextModel({ text: item.title });
+  console.log('RENDER', { title: item.title, model });
+
   return (
     <div
       ref={setNodeRef}
@@ -41,25 +46,16 @@ export const KanbanItemComponent: FC<{
       className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
       <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'opacity-10')}>
+        {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow'>
-          <Input.Root>
-            <Input.Label srOnly>{t('item content label')}</Input.Label>
-            {/* TODO(burdon): Pluggable content; e.g., use text document. */}
-            {/* TODO(burdon): Remove border when focused; Auto-expand height */}
-            <Input.TextArea
-              rows={3}
-              variant='subdued'
-              placeholder={t('item content placeholder')}
-              defaultValue={item.content}
-              onChange={({ target: { value } }) => (item.content = value)}
-              // TODO(burdon): Consistent vertical padding with input.
-              classNames='px-1 border-none resize-none'
-            />
-          </Input.Root>
-
+          <RichTextComposer
+            // TODO(burdon): Placeholder ignored.
+            slots={{ root: { className: 'p-1' }, editor: { placeholder: t('item title placeholder') } }}
+            model={model}
+          />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (
