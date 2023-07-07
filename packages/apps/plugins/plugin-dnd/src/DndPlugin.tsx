@@ -11,7 +11,6 @@ import {
   DragOverlay,
   DragStartEvent,
   DropAnimation,
-  UniqueIdentifier,
 } from '@dnd-kit/core';
 import React, { createContext, DependencyList, useContext, useEffect, useState } from 'react';
 
@@ -169,11 +168,11 @@ export const useDnd = () => useContext(DndPluginContext);
 
 const DndOverlay = observer(() => {
   const dnd = useDnd();
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  useDragStart(({ active: { id } }) => setActiveId(id), []);
+  const [activeDatum, setActiveDatum] = useState<unknown | null>(null);
+  useDragStart(({ active: { data } }) => setActiveDatum(data.current?.entity), []);
   return (
     <DragOverlay adjustScale={false} dropAnimation={dropAnimations[dnd.overlayDropAnimation]}>
-      <Surface role='dragoverlay' data={activeId} limit={1} />
+      <Surface role='dragoverlay' data={activeDatum} limit={1} />
     </DragOverlay>
   );
 });

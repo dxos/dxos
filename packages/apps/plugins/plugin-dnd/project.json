@@ -6,8 +6,23 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/apps/plugins/plugin-dnd/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-dnd/dist",
+        "outputPath": "packages/apps/plugins/plugin-dnd/dist/types",
         "tsConfig": "packages/apps/plugins/plugin-dnd/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-dnd/src/index.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-dnd/dist/lib",
+        "platforms": [
+          "browser"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
