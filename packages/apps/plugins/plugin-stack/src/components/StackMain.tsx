@@ -185,7 +185,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
 
   return (
     <>
-      <List variant='ordered' itemSizes='many' classNames='pis-1 pie-2'>
+      <List variant='ordered' itemSizes='many' classNames='pli-2'>
         <SortableContext
           items={Array.from(sections)
             // todo(thure): DRY-out this filter, also should this be represented in the UI?
@@ -207,7 +207,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             })}
         </SortableContext>
       </List>
-      <div role='none' className='flex gap-4 justify-center items-center'>
+      <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
         <h2 className='text-sm font-normal flex items-center gap-1'>
           <Plus className={getSize(4)} />
           <span>{t('add section label')}</span>
@@ -287,19 +287,21 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
   const stack = data[data.length - 1] as StackModel & StackProperties;
   const { t } = useTranslation('dxos:stack');
   return (
-    <Main.Content classNames='min-bs-[100vh] mli-auto max-is-[60rem]'>
-      <Input.Root>
-        <Input.Label srOnly>{t('stack title label')}</Input.Label>
-        <Input.TextInput
-          variant='subdued'
-          classNames='flex-1 min-is-0 is-auto pis-2 plb-3.5 pointer-fine:plb-2.5'
-          placeholder={t('stack title placeholder')}
-          defaultValue={stack.title ?? ''}
-          onChange={({ target: { value } }) => (stack.title = value)}
-        />
-      </Input.Root>
-      <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />
-      <StackMainImpl sections={stack.sections} />
+    <Main.Content classNames='min-bs-[100vh]'>
+      <div role='none' className='mli-auto max-is-[60rem]'>
+        <Input.Root>
+          <Input.Label srOnly>{t('stack title label')}</Input.Label>
+          <Input.TextInput
+            variant='subdued'
+            classNames='flex-1 min-is-0 is-auto pis-4 pointer-fine:pis-12 lg:pis-4 pointer-fine:lg:pis-4 plb-3.5 pointer-fine:plb-2.5'
+            placeholder={t('stack title placeholder')}
+            defaultValue={stack.title ?? ''}
+            onChange={({ target: { value } }) => (stack.title = value)}
+          />
+        </Input.Root>
+        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 mbe-2 opacity-50')} />
+        <StackMainImpl sections={stack.sections} />
+      </div>
     </Main.Content>
   );
 };
