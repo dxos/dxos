@@ -183,7 +183,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       const requestBitfield = header.bitfield ?? BitField.ones(meta.length / meta.chunkSize);
 
       const presentData = BitField.and(requestBitfield, meta.bitfield);
-      const chunkIndices = BitField.findIndexes(presentData);
+      const chunkIndices = BitField.findIndexes(presentData).sort(() => Math.random() - 0.5);
 
       for (const idx of chunkIndices) {
         const chunkData = await this._params.blobStore.get(header.id, {

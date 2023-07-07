@@ -4,7 +4,7 @@
 
 import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button, ButtonGroup } from '@dxos/aurora';
 import {
@@ -107,6 +107,7 @@ const StoragePanel = () => {
 
   const refresh = async () => {
     setIsRefreshing(true);
+    let retry = false;
 
     let storageInfo: StorageInfo | undefined = undefined;
     let snapshotInfo: GetSnapshotsResponse | undefined = undefined;
@@ -116,31 +117,57 @@ const StoragePanel = () => {
       storageInfo = await devtoolsHost.getStorageInfo();
     } catch (err) {
       console.error(err);
+      retry = true;
     }
 
     try {
       snapshotInfo = await devtoolsHost.getSnapshots();
     } catch (err) {
       console.error(err);
+      retry = true;
     }
 
     try {
       blobsInfo = await devtoolsHost.getBlobs();
     } catch (err) {
       console.error(err);
+      retry = true;
     }
 
     setBlobsInfo(blobsInfo);
     setStorageInfo(storageInfo);
     setSnapshotInfo(snapshotInfo);
     setIsRefreshing(false);
+
+    if (retry) {
+      setTimeout(refresh, 500);
+    }
   };
 
   useAsyncEffect(refresh, []);
 
-  if (!storageInfo) {
-    return <div>Loading...</div>;
-  }
+  const items = useMemo(() => getInfoTree(storageInfo ?? {
+    type: '',
+    originUsage: 0,
+    storageUsage: 0,
+    usageQuota: 0,
+  }, feeds, snapshotInfo?.snapshots ?? [], blobsInfo?.blobs ?? []), [storageInfo, snapshotInfo, blobsInfo]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const rec = (items: TreeViewItem[]) => {
+      for (const item of items) {
+        if (item.id !== undefined && item.id === selected.id) {
+          setSelected(item);
+          return;
+        }
+        if (item.items) {
+          rec(item.items);
+        }
+      }
+    }
+    rec(items);
+  }, [items])
 
   const selectedValue = selected?.value as SelectionValue | undefined
 
@@ -154,7 +181,7 @@ const StoragePanel = () => {
       <div className='flex h-full overflow-hidden'>
         <div className='flex flex-col w-1/3 overflow-auto border-r'>
           <TreeView
-            items={getInfoTree(storageInfo, feeds, snapshotInfo?.snapshots ?? [], blobsInfo?.blobs ?? [])}
+            items={items}
             expanded={['origin', 'storage']}
             onSelect={item => setSelected(item)}
             selected={selected?.id}
@@ -179,7 +206,7 @@ const StoragePanel = () => {
                 />
               </>
             )}
-             {selectedValue.kind === 'feed' && (
+            {selectedValue.kind === 'feed' && (
               <>
                 <BitfieldDisplay
                   value={selectedValue.feed.downloaded ?? new Uint8Array()}
@@ -198,7 +225,7 @@ const StoragePanel = () => {
 };
 
 const calculateBlobProgress = (blob: BlobMeta) => {
-  if(blob.state === BlobMeta.State.FULLY_PRESENT) {
+  if (blob.state === BlobMeta.State.FULLY_PRESENT) {
     return 1;
   }
 
