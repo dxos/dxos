@@ -7,9 +7,9 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useDnd, useDragEnd } from '@braneframe/plugin-dnd';
+import { useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -25,7 +25,7 @@ import {
   ListItemRootProps,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { ObservableObject, subscribe } from '@dxos/observable-object';
+import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
@@ -106,7 +106,7 @@ const StackSectionImpl = forwardRef<
 });
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props.section.object.id,
     data: { entity: props.section },
   });
@@ -117,8 +117,7 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
       draggableAttributes={attributes}
       style={{
         transform: CSS.Translate.toString(transform),
-        // todo(thure): Why does `useSortable`’s `transition` become `undefined` or `transform 0ms linear` at the wrong times? Fortunately it should always be this value, but still.
-        transition: 'transform 200ms ease',
+        transition,
       }}
       ref={setNodeRef}
     />
@@ -127,10 +126,9 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [_, setIter] = useState([]);
+  const [iter, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
-  const dnd = useDnd();
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
@@ -142,19 +140,21 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     useSubscription(() => setIter([]), [sections]);
   }
 
-  useEffect(() => {
-    if (subscribe in dnd) {
-      return (dnd as ObservableObject)[subscribe](() => setIter([])) as () => void;
-    }
-  }, [dnd]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overIsMember, setOverIsMember] = useState(false);
 
-  const overIsMember = useMemo(() => {
-    if (!dnd.over) {
-      return false;
-    }
-    const index = sections.findIndex((section) => section.object.id === dnd.over?.id);
-    return index >= 0;
-  }, [dnd.over]);
+  useDragStart(({ active: { id } }) => setActiveId(id.toString()), []);
+
+  useDragOver(
+    ({ over }) => {
+      if (!over) {
+        return setOverIsMember(false);
+      }
+      const index = sections.findIndex((section) => section.object.id === over.id);
+      return setOverIsMember(index >= 0);
+    },
+    [iter, sections],
+  );
 
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -180,13 +180,14 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
       arrayMove(sections, oldIndex, newIndex);
     }
+    setActiveId(null);
   }, []);
 
   return (
     <>
       <List variant='ordered' itemSizes='many' classNames='pis-1 pie-2'>
         <SortableContext
-          items={sections
+          items={Array.from(sections)
             // todo(thure): DRY-out this filter, also should this be represented in the UI?
             .filter((section) => !!section?.object?.id)
             .map(({ object: { id } }) => id)}
@@ -200,7 +201,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
                   key={section.object.id}
                   onRemove={() => handleRemove(start)}
                   section={section}
-                  rearranging={overIsMember && dnd.active?.id === section.object.id}
+                  rearranging={overIsMember && activeId === section.object.id}
                 />
               );
             })}
