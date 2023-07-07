@@ -189,7 +189,6 @@ export class DataPipeline {
 
     await this.databaseHost?.close();
     await this.itemManager?.destroy();
-    await this._params.snapshotManager.close();
   }
 
   private async _consumePipeline() {
