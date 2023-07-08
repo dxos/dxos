@@ -65,3 +65,7 @@ message Kanban {
   string title = 1;
   repeated Column columns = 2;
 }
+
+message Drawing {
+  option (object) = true;
+}

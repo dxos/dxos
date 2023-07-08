@@ -38,6 +38,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-drawing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },

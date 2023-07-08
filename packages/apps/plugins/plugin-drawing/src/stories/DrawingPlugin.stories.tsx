@@ -9,11 +9,11 @@ import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
+import { Drawing as DrawingType } from '@braneframe/types';
 import { mx } from '@dxos/aurora-theme';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
-import { KanbanPlugin } from '../KanbanPlugin';
-import { createKanban } from './testing';
+import { DrawingPlugin } from '../DrawingPlugin';
 
 faker.seed(7);
 
@@ -26,29 +26,28 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
   );
 };
 
-const DefaultKanbanPluginStory = () => {
-  const object = createKanban();
-  // TODO(burdon): Why array? Should first be space?
+const DefaultDrawingPluginStory = () => {
+  const object = new DrawingType({});
   return <Surface role='main' data={[object, object]} />;
 };
 
-const KanbanPluginStoryPlugin = () => ({
+const DrawingPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/KanbanPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
+    id: 'dxos.org/plugin/DrawingPluginStoryPlugin',
   },
   provides: {
     components: {
-      default: DefaultKanbanPluginStory,
+      default: DefaultDrawingPluginStory,
     },
   },
 });
 
-const KanbanSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), KanbanPlugin(), KanbanPluginStoryPlugin()]} />
+const DrawingSurfacesApp = () => (
+  <PluginContextProvider plugins={[ThemePlugin(), DrawingPlugin(), DrawingPluginStoryPlugin()]} />
 );
 
 export default {
-  component: KanbanSurfacesApp,
+  component: DrawingSurfacesApp,
 };
 
 export const Default = {
