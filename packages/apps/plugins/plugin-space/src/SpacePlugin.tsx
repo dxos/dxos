@@ -12,7 +12,7 @@ import {
   Planet,
   Upload,
 } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
+import { getIndexAbove, getIndexBetween, getIndices } from '@tldraw/indices';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
@@ -60,10 +60,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       const client = clientPlugin.provides.client;
       const identity = client.halo.identity.get();
       const subscription = client.spaces.subscribe((spaces) => {
+        const spaceIndices = getIndices(spaces.length - 1);
         nodes.splice(
           0,
           nodes.length,
-          ...spaces.map((space) => {
+          ...spaces.map((space, spaceIndex) => {
             const id = getSpaceId(space.key);
             let node = rootNodes.get(id);
             if (node) {
@@ -71,7 +72,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               node.description = space.properties.description;
             } else {
               const spaceTypes = spacePlugins(plugins).flatMap((p) => p.provides.space.types ?? []);
-              const indices = getIndices(spaceTypes.length + 5);
+              const indices = getIndices(spaceTypes.length + 4);
               const spaceTypeActions = spaceTypes.map(
                 (type, index): GraphNodeAction => ({
                   ...type,
@@ -86,7 +87,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               );
               node = createStore<GraphNode<Space>>({
                 id,
-                index: getIndices(1)[0],
+                index: spaceIndices[spaceIndex],
                 label: getSpaceDisplayName(space),
                 description: space.properties.description,
                 icon: Planet,
@@ -206,7 +207,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               rootObjects.set(id, children);
             }
             node.children = children ?? [];
-
+            node.onChildrenRearrange = (child: GraphNode<TypedObject>, below, above) => {
+              if (child.data) {
+                child.data.meta = {
+                  ...child.data?.meta,
+                  index: above ? getIndexBetween(below, above) : getIndexAbove(below),
+                };
+              }
+            };
             return node;
           }),
         );
@@ -291,7 +299,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           if (!clientPlugin) {
             return [];
           }
-          const indices = getIndices(3);
+          const indices = getIndices(2);
 
           // TODO(wittjosiah): Disable if no identity.
           return [

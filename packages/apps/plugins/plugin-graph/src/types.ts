@@ -3,13 +3,14 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { getIndices } from '@tldraw/indices';
+import type { getIndices, getIndexBetween } from '@tldraw/indices';
 import type { UIEvent, FC } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
 import type { Plugin } from '@dxos/react-surface';
 
 type Index = ReturnType<typeof getIndices>[number];
+type RearrangeParams = Parameters<typeof getIndexBetween>;
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -22,6 +23,7 @@ export type GraphNode<TDatum = any> = {
   data?: TDatum; // nit about naming this
   parent?: GraphNode;
   children?: GraphNode[];
+  onChildrenRearrange?: (child: GraphNode, below: RearrangeParams[0], above: RearrangeParams[1]) => void;
   actions?: GraphNodeAction[];
   attributes?: { [key: string]: any };
 };

@@ -12,7 +12,9 @@ import { observer } from '@dxos/observable-object/react';
 
 import { TreeView } from './TreeView';
 
-export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
+export const BranchTreeItem = observer(({ node, sortable }: { node: GraphNode; sortable?: boolean }) => {
+  // todo(thure): Handle `sortable`
+
   const [primaryAction, ...actions] = node.actions ?? [];
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');

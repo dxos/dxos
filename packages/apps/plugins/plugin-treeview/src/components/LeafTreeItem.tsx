@@ -24,7 +24,9 @@ import { useTreeView } from '../TreeViewContext';
 
 const spaceExp = /\s/g;
 
-export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
+export const LeafTreeItem = observer(({ node, sortable }: { node: GraphNode; sortable?: boolean }) => {
+  // todo(thure): Handle `sortable`
+
   const { sidebarOpen, closeSidebar } = useSidebar();
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');

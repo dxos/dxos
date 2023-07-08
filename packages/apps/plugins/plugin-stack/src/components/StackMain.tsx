@@ -106,11 +106,10 @@ const StackSectionImpl = forwardRef<
 });
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isSorting } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props.section.object.id,
     data: { entity: props.section },
   });
-  console.log('[isSorting]', isSorting);
   return (
     <StackSectionImpl
       {...props}

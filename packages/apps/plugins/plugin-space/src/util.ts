@@ -21,10 +21,10 @@ export const isSpace = (datum: unknown): datum is Space =>
     : false;
 
 export const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
-  const indices = getIndices(objects.length);
+  const defaultIndices = getIndices(objects.length);
   return objects.map((obj, index) => ({
     id: obj.id,
-    index: indices[index],
+    index: obj.meta?.index ?? defaultIndices[index],
     label: obj.title ?? 'Untitled',
     description: obj.description,
     icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
@@ -33,7 +33,7 @@ export const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObje
     actions: [
       {
         id: 'delete',
-        index: getIndices(1)[0],
+        index: getIndices(0)[0],
         label: ['delete document label', { ns: 'composer' }],
         icon: Trash,
         invoke: async () => {
