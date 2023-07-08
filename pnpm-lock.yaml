@@ -575,7 +575,6 @@ importers:
 
   packages/apps/plugins/plugin-drawing:
     specifiers:
-      '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -583,19 +582,15 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
-      '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/assets': ^2.0.0-alpha.14
       '@tldraw/state': ^2.0.0-alpha.14
       '@tldraw/tldraw': ^2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
       signia: ^0.1.4
@@ -603,17 +598,12 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/observable-object': link:../../../common/observable-object
-      '@dxos/util': link:../../../common/util
+      '@tldraw/assets': 2.0.0-canary.225e3969
       '@tldraw/state': 2.0.0-canary.5cb08711c19c_react@18.2.0
       '@tldraw/tldraw': 2.0.0-canary.ffda4cfb_nrbxc2w4wbu6ie35ksc4otzutq
-      lodash.get: 4.4.2
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
     devDependencies:
-      '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
@@ -16516,6 +16506,12 @@ packages:
       - '@tiptap/pm'
     dev: false
 
+  /@tldraw/assets/2.0.0-canary.225e3969:
+    resolution: {integrity: sha512-ku/512ejbqKSikk9NbDQ/LOXX0LDU+Mdb10lS1aXOjnzrfLyxxp4yJ3sIFEOsO2Tq0SdF3Y1L4vzkyFmffff0g==}
+    dependencies:
+      '@tldraw/utils': 2.0.0-canary.225e3969
+    dev: false
+
   /@tldraw/editor/2.0.0-canary.ffda4cfb_pa4zxo7x24r45bxd6rdia72u2y:
     resolution: {integrity: sha512-3Nh9HyrTvo3V8PvBP5Q91VenvjKQ9JrqFkFQ9UzClsm5ec5Jyyge/NQy1LE1nf71BWK6zaAdfJjlvSEaODTqCg==}
     peerDependencies:
@@ -16664,6 +16660,10 @@ packages:
       - '@types/react'
       - '@types/react-dom'
       - typescript
+    dev: false
+
+  /@tldraw/utils/2.0.0-canary.225e3969:
+    resolution: {integrity: sha512-xbGf2+qNvKIu1QZ2QS2p0bgskZ08TSOm0FetYBmvzlsPoP/4B3OLgl2B1BxTognxxa0VFDwe3fUfYc83+3x82w==}
     dev: false
 
   /@tldraw/utils/2.0.0-canary.ffda4cfb:

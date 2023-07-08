@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-kanban",
   "version": "0.1.45",
-  "description": "Kanban DXOS Surface plugin",
+  "description": "Braneframe kanban plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

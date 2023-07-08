@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-drawing",
   "version": "0.1.45",
-  "description": "Drawing DXOS Surface plugin",
+  "description": "Braneframe drawing plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,18 +16,13 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/observable-object": "workspace:*",
-    "@dxos/util": "workspace:*",
+    "@tldraw/assets": "^2.0.0-alpha.14",
     "@tldraw/state": "^2.0.0-alpha.14",
     "@tldraw/tldraw": "^2.0.0-alpha.14",
-    "lodash.get": "^4.4.2",
     "signia": "^0.1.4",
     "signia-react": "^0.1.4"
   },
   "devDependencies": {
-    "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",

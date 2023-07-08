@@ -21,18 +21,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/observable-object"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../../core/echo/echo-schema"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
@@ -46,9 +34,6 @@
     },
     {
       "path": "../../types"
-    },
-    {
-      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
