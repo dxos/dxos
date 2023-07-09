@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-drawing": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",

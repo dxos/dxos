@@ -2,27 +2,74 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createTLStore, defaultShapes, TLRecord } from '@tldraw/tldraw';
+import { transact } from '@tldraw/state';
+import {
+  createTLStore,
+  defaultShapes,
+  DocumentRecordType,
+  PageRecordType,
+  TLDocument,
+  TLPageId,
+  TLRecord,
+} from '@tldraw/tldraw';
 import { useEffect, useState } from 'react';
-import { Doc, YEvent, Transaction } from 'yjs';
+import { Transaction, YEvent } from 'yjs';
 
 import { Drawing as DrawingType } from '@braneframe/types';
 
 import { DrawingModel } from '../props';
 
+/**
+ * Constructs model from ECHO object.
+ * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
+ * @param object
+ */
 export const useDrawingModel = (object: DrawingType): DrawingModel => {
   const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
   useEffect(() => {
     const subscriptions: (() => void)[] = [];
 
-    // TODO(burdon): Get from item.
+    // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
     // TODO(burdon): Live-mode toggle (e.g., transient feeds?)
-    const doc = new Doc({ gc: true });
-    const yRecords = doc.getMap<TLRecord>('__records__');
+    const doc = object.content.doc!; // ?? new Doc({ gc: true });
+    const yRecords = doc.getMap<TLRecord>('content');
+
+    // Initialize the store with the yjs doc records.
+    // If the yjs doc is empty, initialize the yjs doc with the default store records.
+    if (yRecords.size === 0) {
+      // Create the initial store records.
+      transact(() => {
+        store.clear();
+        store.put([
+          DocumentRecordType.create({
+            id: 'document:document' as TLDocument['id'],
+          }),
+          // TODO(burdon): Manage pages?
+          PageRecordType.create({
+            id: 'page:page' as TLPageId,
+            name: 'Page 1',
+            index: 'a1',
+          }),
+        ]);
+      });
+
+      // Sync the store records to the yjs doc.
+      doc.transact(() => {
+        for (const record of store.allRecords()) {
+          yRecords.set(record.id, record);
+        }
+      });
+    } else {
+      // Replace the store records with the yjs doc records.
+      transact(() => {
+        store.clear();
+        store.put([...yRecords.values()]);
+      });
+    }
 
     //
-    // Read from YJS.
+    // TODO(burdon): Read from model.
     //
     const handleChange = (events: YEvent<any>[], transaction: Transaction) => {
       if (transaction.local) {
@@ -63,7 +110,7 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
     subscriptions.push(() => yRecords.unobserveDeep(handleChange));
 
     //
-    // Write to YJS.
+    // Subscribe to YJS events to update ECHO object.
     //
     subscriptions.push(
       store.listen(

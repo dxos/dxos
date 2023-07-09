@@ -49,8 +49,8 @@ message Kanban {
     // TODO(burdon): Should this be an object?
     option (object) = true;
 
-    string title = 2;
-    repeated Item items = 3;
+    string title = 1;
+    repeated Item items = 2;
   }
 
   message Item {
@@ -69,5 +69,7 @@ message Kanban {
 message Drawing {
   option (object) = true;
 
+  string title = 1;
   // TODO(burdon): YJS document (map).
+  dxos.schema.Text content = 2;
 }

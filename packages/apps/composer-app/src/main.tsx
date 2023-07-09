@@ -8,6 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
         StackPlugin(),
         GithubPlugin(),
         LocalFilesPlugin(),
+        DrawingPlugin(),
         KanbanPlugin(),
       ]}
     />

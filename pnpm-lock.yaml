@@ -339,6 +339,7 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-drawing': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
@@ -394,6 +395,7 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
@@ -619,6 +621,8 @@ importers:
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/assets': 2.0.0-alpha.14
+      '@tldraw/editor': 2.0.0-alpha.14
+      '@tldraw/state': 2.0.0-alpha.14
       '@tldraw/tldraw': 2.0.0-alpha.14
       '@tldraw/tlschema': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
@@ -633,6 +637,8 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
+      '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
+      '@tldraw/state': 2.0.0-alpha.14_react@18.2.0
       '@tldraw/tldraw': 2.0.0-alpha.14_5uumaiclxbdbzaqafclbf6maf4
       '@tldraw/tlschema': 2.0.0-alpha.14_react@18.2.0
       signia: 0.1.4
