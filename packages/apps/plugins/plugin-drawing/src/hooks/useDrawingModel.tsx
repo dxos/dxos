@@ -17,6 +17,7 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
 
     // TODO(burdon): Get from item.
     // TODO(burdon): Garbage collection (gc)?
+    // TODO(burdon): Live-mode toggle (e.g., transient feeds?)
     const doc = new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('__records__');
 

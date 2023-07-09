@@ -9,6 +9,7 @@ import { Drawing as DrawingType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { SpaceProxy } from '@dxos/client';
 
+// TODO(burdon): Plugin?
 import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
@@ -18,10 +19,14 @@ export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) =
   const drawing = data[data.length - 1] as DrawingType;
   const model = useDrawingModel(drawing);
 
-  // https://tldraw.dev/docs/assets
+  const readonly = false;
+
+  // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
+  // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
+  // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
-      <Tldraw store={model.store} />
+      <Tldraw store={model.store} hideUi={readonly} />
     </Main.Content>
   );
 };
