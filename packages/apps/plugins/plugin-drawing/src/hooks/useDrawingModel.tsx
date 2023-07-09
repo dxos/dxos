@@ -31,7 +31,8 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
 
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    // TODO(burdon): Live-mode toggle (e.g., transient feeds?)
+    // TODO(burdon): Buffer to shadow yjs document then save to object on release.
+    // TODO(burdon): Live mode via transient feeds?
     const doc = object.content.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
 
@@ -69,7 +70,7 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
     }
 
     //
-    // TODO(burdon): Read from model.
+    // Subscribe to changes component's model.
     //
     const handleChange = (events: YEvent<any>[], transaction: Transaction) => {
       if (transaction.local) {
