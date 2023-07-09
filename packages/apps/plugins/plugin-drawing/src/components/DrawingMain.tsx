@@ -24,6 +24,7 @@ export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) =
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+  // TODO(burdon): When expanded, the sidebar icon disappears.
   // TODO(burdon): Dark mode.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
