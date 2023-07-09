@@ -585,8 +585,6 @@ importers:
       '@dxos/react-surface': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
-      '@tldraw/assets': ^2.0.0-alpha.14
-      '@tldraw/state': ^2.0.0-alpha.14
       '@tldraw/tldraw': ^2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
@@ -598,8 +596,6 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
-      '@tldraw/assets': 2.0.0-canary.225e3969
-      '@tldraw/state': 2.0.0-canary.5cb08711c19c_react@18.2.0
       '@tldraw/tldraw': 2.0.0-canary.ffda4cfb_nrbxc2w4wbu6ie35ksc4otzutq
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
@@ -16506,12 +16502,6 @@ packages:
       - '@tiptap/pm'
     dev: false
 
-  /@tldraw/assets/2.0.0-canary.225e3969:
-    resolution: {integrity: sha512-ku/512ejbqKSikk9NbDQ/LOXX0LDU+Mdb10lS1aXOjnzrfLyxxp4yJ3sIFEOsO2Tq0SdF3Y1L4vzkyFmffff0g==}
-    dependencies:
-      '@tldraw/utils': 2.0.0-canary.225e3969
-    dev: false
-
   /@tldraw/editor/2.0.0-canary.ffda4cfb_pa4zxo7x24r45bxd6rdia72u2y:
     resolution: {integrity: sha512-3Nh9HyrTvo3V8PvBP5Q91VenvjKQ9JrqFkFQ9UzClsm5ec5Jyyge/NQy1LE1nf71BWK6zaAdfJjlvSEaODTqCg==}
     peerDependencies:
@@ -16551,14 +16541,6 @@ packages:
       '@tldraw/tlschema': 2.0.0-canary.ffda4cfb_signia@0.1.4
     transitivePeerDependencies:
       - signia
-    dev: false
-
-  /@tldraw/state/2.0.0-canary.5cb08711c19c_react@18.2.0:
-    resolution: {integrity: sha512-BVMGZvP17pwVh3c3LlSEGFxcwG4+69bQcoH+B4CZ8z/r179iUF4BbSw9BYwq5V5LaiM8oSIctGxZEsb3XBs94A==}
-    peerDependencies:
-      react: ^18
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /@tldraw/tldraw/2.0.0-canary.ffda4cfb_nrbxc2w4wbu6ie35ksc4otzutq:
@@ -16660,10 +16642,6 @@ packages:
       - '@types/react'
       - '@types/react-dom'
       - typescript
-    dev: false
-
-  /@tldraw/utils/2.0.0-canary.225e3969:
-    resolution: {integrity: sha512-xbGf2+qNvKIu1QZ2QS2p0bgskZ08TSOm0FetYBmvzlsPoP/4B3OLgl2B1BxTognxxa0VFDwe3fUfYc83+3x82w==}
     dev: false
 
   /@tldraw/utils/2.0.0-canary.ffda4cfb:
