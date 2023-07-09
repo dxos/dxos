@@ -12,7 +12,7 @@ import { isTypedObject } from '@dxos/client';
 export type DrawingPluginProvides = SpaceProvides & TranslationsProvides;
 
 export interface DrawingModel {
-  root: DrawingType;
+  object: DrawingType;
   store: TLStore;
 }
 

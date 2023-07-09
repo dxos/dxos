@@ -68,4 +68,6 @@ message Kanban {
 
 message Drawing {
   option (object) = true;
+
+  // TODO(burdon): YJS document (map).
 }

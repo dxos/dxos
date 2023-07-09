@@ -11,10 +11,10 @@ import { SpaceProxy } from '@dxos/client';
 
 import '@tldraw/tldraw/tldraw.css';
 
-import { useDrawingModel } from './useDrawingModel';
+import { useDrawingModel } from '../hooks';
 
 export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) => {
-  const space = data[0];
+  // const space = data[0];
   const drawing = data[data.length - 1] as DrawingType;
   const model = useDrawingModel(drawing);
 

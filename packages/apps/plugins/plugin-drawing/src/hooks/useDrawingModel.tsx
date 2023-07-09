@@ -6,13 +6,11 @@ import { createTLStore, defaultShapes, TLRecord } from '@tldraw/tldraw';
 import { useEffect, useState } from 'react';
 import { Doc, YEvent, Transaction } from 'yjs';
 
-import '@tldraw/tldraw/tldraw.css';
-
 import { Drawing as DrawingType } from '@braneframe/types';
 
 import { DrawingModel } from '../props';
 
-export const useDrawingModel = (root: DrawingType): DrawingModel => {
+export const useDrawingModel = (object: DrawingType): DrawingModel => {
   const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
   useEffect(() => {
     const subscriptions: (() => void)[] = [];
@@ -30,19 +28,19 @@ export const useDrawingModel = (root: DrawingType): DrawingModel => {
         return;
       }
 
-      const toPut: TLRecord[] = [];
-      const toRemove: TLRecord['id'][] = [];
+      const updated: TLRecord[] = [];
+      const removed: TLRecord['id'][] = [];
 
       events.forEach((event) => {
         event.changes.keys.forEach((change: any, id: string) => {
           switch (change.action) {
             case 'add':
             case 'update': {
-              toPut.push(yRecords.get(id)!);
+              updated.push(yRecords.get(id)!);
               break;
             }
             case 'delete': {
-              toRemove.push(id as TLRecord['id']);
+              removed.push(id as TLRecord['id']);
               break;
             }
           }
@@ -51,11 +49,11 @@ export const useDrawingModel = (root: DrawingType): DrawingModel => {
 
       // Update/remove the records in the store.
       store.mergeRemoteChanges(() => {
-        if (toRemove.length) {
-          store.remove(toRemove);
+        if (removed.length) {
+          store.remove(removed);
         }
-        if (toPut.length) {
-          store.put(toPut);
+        if (updated.length) {
+          store.put(updated);
         }
       });
     };
@@ -94,7 +92,7 @@ export const useDrawingModel = (root: DrawingType): DrawingModel => {
   }, [store]);
 
   return {
-    root,
+    object,
     store,
   };
 };
