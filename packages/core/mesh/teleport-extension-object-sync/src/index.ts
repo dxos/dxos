@@ -2,5 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './object-sync-extension';
-export * from './object-sync';
+export * from './blob-sync-extension';
+export * from './blob-sync';
+export * from './blob-store';
