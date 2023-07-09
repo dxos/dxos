@@ -587,6 +587,7 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/tldraw': 2.0.0-alpha.14
+      '@tldraw/tlschema': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -600,6 +601,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/tldraw': 2.0.0-alpha.14_5uumaiclxbdbzaqafclbf6maf4
+      '@tldraw/tlschema': 2.0.0-alpha.14_react@18.2.0
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44

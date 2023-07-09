@@ -18,6 +18,7 @@
     "@dxos/client": "workspace:*",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/tldraw": "2.0.0-alpha.14",
+    "@tldraw/tlschema": "2.0.0-alpha.14",
     "signia": "^0.1.4",
     "signia-react": "^0.1.4",
     "yjs": "^13.5.44"

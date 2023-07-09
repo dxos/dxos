@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { TLStore } from '@tldraw/tlschema';
+
 import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
@@ -11,6 +13,7 @@ export type DrawingPluginProvides = SpaceProvides & TranslationsProvides;
 
 export interface DrawingModel {
   root: DrawingType;
+  store: TLStore;
 }
 
 export const isDrawing = (datum: unknown): datum is DrawingType => {
