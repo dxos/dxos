@@ -17,15 +17,15 @@ export type DrawingMainOptions = {
   readonly: boolean;
 };
 
-export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType]; options: DrawingMainOptions }> = ({
-  data,
-  options = { readonly: false },
-}) => {
+export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) => {
   // const space = data[0];
   const drawing = data[data.length - 1] as DrawingType;
   const { store } = useDrawingModel(drawing);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {}, [editor]);
+
+  // TODO(burdon): Config.
+  const readonly = false;
 
   // Tool events.
   const handleUiEvent = (name: string, data: any) => {
@@ -40,7 +40,7 @@ export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType]; options: Drawing
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
       <div className='h-screen'>
-        <Tldraw autoFocus store={store} hideUi={options.readonly} onUiEvent={handleUiEvent} onMount={setEditor} />
+        <Tldraw autoFocus store={store} hideUi={readonly} onUiEvent={handleUiEvent} onMount={setEditor} />
       </div>
     </Main.Content>
   );
