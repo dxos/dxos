@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DragEndEvent, DraggableAttributes } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
+import { useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -15,13 +19,12 @@ import {
   Button,
   useTranslation,
   DensityProvider,
-  DragEndEvent,
-  useListContext,
   ListScopedProps,
   DropdownMenu,
   ButtonGroup,
+  ListItemRootProps,
 } from '@dxos/aurora';
-import { buttonFine, defaultBlockSeparator, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
@@ -35,10 +38,25 @@ type StackSectionProps = {
   section: StackSectionModel;
 };
 
-const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackSectionProps>) => {
+export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
+  return (
+    <List variant='ordered'>
+      <StackSectionImpl onRemove={() => {}} section={data} isOverlay />
+    </List>
+  );
+};
+
+const StackSectionImpl = forwardRef<
+  HTMLLIElement,
+  ListScopedProps<StackSectionProps> & {
+    draggableAttributes?: DraggableAttributes;
+    draggableListeners?: ReturnType<typeof useSortable>['listeners'];
+    style?: ListItemRootProps['style'];
+    rearranging?: boolean;
+    isOverlay?: boolean;
+  }
+>(({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
   const { t } = useTranslation('dxos:stack');
-  const { draggingId } = useListContext('StackSection', __listScope);
-  const isDragging = draggingId === section.object.id;
   return (
     <DensityProvider density='fine'>
       <ListItem.Root
@@ -47,20 +65,30 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
           surfaceElevation({ elevation: 'group' }),
           'bg-white dark:bg-neutral-925 grow rounded mbe-2',
           '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
-          isDragging && 'relative z-10',
+          isOverlay && 'hover-hover:[--controls-opacity:1]',
+          rearranging && 'invisible',
         ]}
+        ref={forwardedRef}
+        style={style}
       >
         <ListItem.Heading classNames='sr-only'>
           {get(section, 'object.title', t('generic section heading'))}
         </ListItem.Heading>
-        <ListItem.DragHandle
-          classNames={[
+        <div
+          className={mx(
             buttonFine,
-            'self-stretch flex items-center rounded-ie-none justify-center bs-auto is-auto focus:[--controls-opacity:1]',
-          ]}
+            defaultFocus,
+            'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+            isOverlay && 'text-primary-600 dark:text-primary-300',
+          )}
+          {...draggableAttributes}
+          {...draggableListeners}
         >
-          <DotsSixVertical className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')} />
-        </ListItem.DragHandle>
+          <DotsSixVertical
+            weight={isOverlay ? 'bold' : 'regular'}
+            className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
+          />
+        </div>
         <div role='none' className='flex-1'>
           <Surface role='section' data={section} />
         </div>
@@ -75,11 +103,30 @@ const StackSection = ({ onRemove, section, __listScope }: ListScopedProps<StackS
       </ListItem.Root>
     </DensityProvider>
   );
+});
+
+const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: props.section.object.id,
+    data: { entity: props.section },
+  });
+  return (
+    <StackSectionImpl
+      {...props}
+      draggableListeners={listeners}
+      draggableAttributes={attributes}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+      }}
+      ref={setNodeRef}
+    />
+  );
 };
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [_, setIter] = useState([]);
+  const [iter, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
 
@@ -92,6 +139,22 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   } else {
     useSubscription(() => setIter([]), [sections]);
   }
+
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overIsMember, setOverIsMember] = useState(false);
+
+  useDragStart(({ active: { id } }) => setActiveId(id.toString()), []);
+
+  useDragOver(
+    ({ over }) => {
+      if (!over) {
+        return setOverIsMember(false);
+      }
+      const index = sections.findIndex((section) => section.object.id === over.id);
+      return setOverIsMember(index >= 0);
+    },
+    [iter, sections],
+  );
 
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -110,32 +173,39 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sections],
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  useDragEnd((event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = sections.findIndex((section) => section.object.id === active.id);
       const newIndex = sections.findIndex((section) => section.object.id === over?.id);
       arrayMove(sections, oldIndex, newIndex);
     }
+    setActiveId(null);
   }, []);
 
   return (
     <>
-      <List
-        variant='ordered-draggable'
-        itemSizes='many'
-        onDragEnd={handleDragEnd}
-        listItemIds={sections
-          // todo(thure): DRY-out this filter, also should this be represented in the UI?
-          .filter((section) => !!section?.object?.id)
-          .map(({ object: { id } }) => id)}
-        classNames='pis-1 pie-2'
-      >
-        {sections
-          .filter((section) => !!section?.object?.id)
-          .map((section, start) => {
-            return <StackSection key={section.object.id} onRemove={() => handleRemove(start)} section={section} />;
-          })}
+      <List variant='ordered' itemSizes='many' classNames='pis-1 pie-2'>
+        <SortableContext
+          items={Array.from(sections)
+            // todo(thure): DRY-out this filter, also should this be represented in the UI?
+            .filter((section) => !!section?.object?.id)
+            .map(({ object: { id } }) => id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {sections
+            .filter((section) => !!section?.object?.id)
+            .map((section, start) => {
+              return (
+                <StackSection
+                  key={section.object.id}
+                  onRemove={() => handleRemove(start)}
+                  section={section}
+                  rearranging={overIsMember && activeId === section.object.id}
+                />
+              );
+            })}
+        </SortableContext>
       </List>
       <div role='none' className='flex gap-4 justify-center items-center'>
         <h2 className='text-sm font-normal flex items-center gap-1'>

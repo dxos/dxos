@@ -16,6 +16,7 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
+import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
 
@@ -35,6 +36,9 @@ export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
   swarmIdentity: SwarmIdentity;
   networkManager: NetworkManager;
+
+  blobStore: BlobStore;
+
   /**
    * Called when new session is authenticated.
    * Additional extensions can be added here.
@@ -51,6 +55,8 @@ export class SpaceProtocol {
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;
+
+  public readonly blobSync: BlobSync;
 
   @logInfo
   private readonly _topic: PublicKey;
@@ -73,11 +79,12 @@ export class SpaceProtocol {
     return this._swarmIdentity.peerKey;
   }
 
-  constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure }: SpaceProtocolOptions) {
+  constructor({ topic, swarmIdentity, networkManager, onSessionAuth, onAuthFailure, blobStore }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
     this._onAuthFailure = onAuthFailure;
+    this.blobSync = new BlobSync({ blobStore });
 
     this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
   }
@@ -107,6 +114,8 @@ export class SpaceProtocol {
       sampleSize: 20,
     };
 
+    await this.blobSync.open();
+
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
@@ -120,6 +129,8 @@ export class SpaceProtocol {
   }
 
   async stop() {
+    await this.blobSync.close();
+
     if (this._connection) {
       log('stopping...');
       await this._connection.close();
@@ -134,6 +145,7 @@ export class SpaceProtocol {
         swarmIdentity: this._swarmIdentity,
         onSessionAuth: this._onSessionAuth,
         onAuthFailure: this._onAuthFailure,
+        blobSync: this.blobSync,
       });
       this._sessions.set(wireParams.remotePeerId, session);
 
@@ -149,6 +161,9 @@ export class SpaceProtocol {
 export type SpaceProtocolSessionParams = {
   wireParams: WireProtocolParams;
   swarmIdentity: SwarmIdentity;
+
+  blobSync: BlobSync;
+
   /**
    * Called when new session is authenticated.
    * Additional extensions can be added here.
@@ -175,6 +190,7 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
+  private readonly _blobSync: BlobSync;
 
   private readonly _teleport: Teleport;
 
@@ -189,11 +205,12 @@ export class SpaceProtocolSession implements WireProtocol {
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.
-  constructor({ wireParams, swarmIdentity, onSessionAuth, onAuthFailure }: SpaceProtocolSessionParams) {
+  constructor({ wireParams, swarmIdentity, onSessionAuth, onAuthFailure, blobSync }: SpaceProtocolSessionParams) {
     this._wireParams = wireParams;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
     this._onAuthFailure = onAuthFailure;
+    this._blobSync = blobSync;
 
     this._teleport = new Teleport(wireParams);
   }
@@ -222,6 +239,7 @@ export class SpaceProtocolSession implements WireProtocol {
       }),
     );
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
+    this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
   async destroy(): Promise<void> {
