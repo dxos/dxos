@@ -50,25 +50,6 @@
       "options": {
         "configDir": "packages/apps/plugins/plugin-drawing/.storybook"
       }
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-drawing",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-drawing",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-drawing",
-        "testPatterns": [
-          "packages/apps/plugins/plugin-drawing/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/plugins/plugin-drawing/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
     }
   },
   "implicitDependencies": [
