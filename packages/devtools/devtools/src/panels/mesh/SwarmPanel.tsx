@@ -37,7 +37,7 @@ const SwarmPanel = () => {
 
   return (
     <div className='flex h-full overflow-hidden'>
-      <div className='flex flex-col w-1/3 overflow-auto border-r'>
+      <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
         <TreeView
           items={getSwarmInfoTree(data ?? [])}
           slots={{
