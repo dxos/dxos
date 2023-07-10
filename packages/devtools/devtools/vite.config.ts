@@ -15,7 +15,6 @@ import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
 
 const PACKAGE_VERSION = require('./package.json').version;
-console.log(`Version: ${PACKAGE_VERSION}`);
 
 // https://vitejs.dev/config/
 export default defineConfig({
