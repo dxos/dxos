@@ -20,9 +20,6 @@ const Footer = () => {
   if (!services) {
     return null;
   }
-
-  console.log('RootContainer: services:', process.env.PACKAGE_VERSION);
-
   return (
     <div className='flex flex-col shrink-0 m-2'>
       {/* Print current package version */}

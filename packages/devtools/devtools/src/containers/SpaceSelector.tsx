@@ -64,11 +64,11 @@ export const SpaceSelector = () => {
 
 export const SpaceToolbar: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
-    <div className='flex w-full border-b'>
-      <div className='flex-shrink p-2'>
+    <div className='flex w-full border-b p-2 gap-2'>
+      <div className='flex-shrink'>
         <SpaceSelector />
       </div>
-      <div className='flex-1  flex-row p-2 gap-2'>{children}</div>
+      <div className='flex flex-1 flex-row'>{children}</div>
     </div>
   );
 };
