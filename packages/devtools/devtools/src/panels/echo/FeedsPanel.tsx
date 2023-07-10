@@ -71,7 +71,7 @@ const FeedsPanel = () => {
   return (
     <div className='flex flex-col overflow-hidden'>
       <SpaceToolbar>
-        <div className='flex w-[400px] flex-row space-x-4'>
+        <div className='flex flex-row space-x-4'>
           <PublicKeySelector
             keys={feedKeys}
             Icon={Rows}
@@ -84,9 +84,13 @@ const FeedsPanel = () => {
           <Button onClick={refresh}>Refresh</Button>
         </div>
       </SpaceToolbar>
-      <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
+      <BitfieldDisplay value={meta?.downloaded} length={meta?.length} />
       <div className='flex flex-1 overflow-hidden'>
-        <MasterTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+        <MasterTable<SubscribeToFeedBlocksResponse.Block>
+          columns={columns}
+          data={messages}
+          slots={{ selected: { className: 'bg-slate-200' } }}
+        />
       </div>
     </div>
   );
