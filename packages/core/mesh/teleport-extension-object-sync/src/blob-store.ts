@@ -130,14 +130,14 @@ export class BlobStore {
         chunkSize: chunk.chunkSize ?? DEFAULT_CHUNK_SIZE,
         created: new Date(),
       };
-      meta.bitfield = new Uint8Array(Math.ceil(meta.length / meta.chunkSize / 8)).fill(0);
+      meta.bitfield = BitField.zeros(meta.length / meta.chunkSize);
     }
 
     if (chunk.chunkSize && chunk.chunkSize !== meta.chunkSize) {
       throw new Error('Invalid chunk size');
     }
 
-    assert(meta.bitfield, 'Bitfield not present');
+  assert(meta.bitfield, 'Bitfield not present');
     assert(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
     // Write chunk.
