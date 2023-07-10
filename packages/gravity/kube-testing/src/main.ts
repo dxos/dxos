@@ -7,6 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { EchoTestPlan } from './plan/echo-spec';
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
+import { TransportTestPlan } from './plan/transport-spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const runSignal = () =>
@@ -39,6 +40,7 @@ const runSignal = () =>
     },
   });
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const runEcho = () =>
   runPlan({
     plan: new EchoTestPlan(),
@@ -63,4 +65,25 @@ const runEcho = () =>
     },
   });
 
-void runEcho();
+const runTransport = () =>
+  runPlan({
+    plan: new TransportTestPlan(),
+    spec: {
+      agents: 6,
+      swarmsPerAgent: 5,
+      duration: 5_000,
+      iterationDelay: 1000,
+      operationCount: 100,
+      signalArguments: ['globalsubserver'],
+    },
+    options: {
+      staggerAgents: 1000,
+      randomSeed: PublicKey.random().toHex(),
+      profile: true,
+      // repeatAnalysis:
+      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+    },
+  });
+
+// void runEcho();
+void runTransport();
