@@ -4,39 +4,34 @@
 
 import React, { FC } from 'react';
 
+import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
-import { createStore } from '@dxos/observable-object';
+import { SpaceProxy } from '@dxos/client';
+import { Text } from '@dxos/echo-schema';
 
-import { isKanban } from '../props';
-import type { KanbanColumn, KanbanModel } from '../props';
+import type { KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: unknown }> = ({ data }) => {
+export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
-  const kanban = isKanban(data) ? data : null;
-  if (!kanban) {
-    return null;
-  }
+
+  const space = data[0];
+  const kanban = data[data.length - 1] as KanbanType;
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
     root: kanban,
-    // TODO(burdon): External (needs space.db)?
-    createColumn: () => {
-      return {
-        id: PublicKey.random().toHex(),
-        items: createStore([]),
-      };
-    },
-    // TODO(burdon): Add metadata from column in the case of projections?
-    createItem: (column: KanbanColumn) => {
-      return {
-        id: PublicKey.random().toHex(),
-      };
-    },
+    createColumn: () => space.db.add(new KanbanType.Column()),
+    // TODO(burdon): Add metadata from column in the case of projections.
+    createItem: (column) =>
+      space.db.add(
+        new KanbanType.Item({
+          // TODO(burdon): Make automatic?
+          title: new Text(),
+        }),
+      ),
   };
 
   // TODO(burdon): Style/color standards for panels, borders, text, etc.

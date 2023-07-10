@@ -16,11 +16,12 @@ import {
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import React, { FC, useEffect, useState } from 'react';
 
+import type { Kanban as KanbanType } from '@braneframe/types';
 import { createSubscription } from '@dxos/observable-object';
 import { arrayMove } from '@dxos/util';
 
 import { findLocation } from '../props';
-import type { Location, KanbanColumn, KanbanModel, KanbanItem } from '../props';
+import type { Location, KanbanModel } from '../props';
 import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
@@ -47,12 +48,12 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
 
   // Dragging column.
   // TODO(burdon): Dragging column causes flickering when dragging left to first column.
-  const [draggingColumn, setDraggingColumn] = useState<KanbanColumn | undefined>();
+  const [draggingColumn, setDraggingColumn] = useState<KanbanType.Column | undefined>();
 
   // Dragging item.
   const [draggingItem, setDraggingItem] = useState<{ source: Location; target?: Location }>();
   // While dragging, temporarily remap which items should be visible inside each column.
-  const itemMapper: ItemsMapper = (column: string, items: KanbanItem[]) => {
+  const itemMapper: ItemsMapper = (column: string, items: KanbanType.Item[]) => {
     const { source, target } = draggingItem ?? {};
     if (source && target) {
       if (source?.column.id !== target?.column.id && (column === source?.column.id || column === target?.column.id)) {
@@ -78,9 +79,9 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
       if (column.id === active.id) {
         setDraggingColumn(column);
       } else {
-        const idx = column.items.findIndex((item) => item.id === active.id);
+        const idx = column.items!.findIndex((item) => item.id === active.id);
         if (idx !== -1) {
-          setDraggingItem({ source: { column, item: column.items[idx], idx } });
+          setDraggingItem({ source: { column, item: column.items![idx], idx } });
         }
       }
     });
@@ -109,12 +110,12 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
       const { source, target } = draggingItem;
       if (source.column.id === target!.column.id) {
         if (target!.idx !== undefined) {
-          arrayMove(source.column.items, source.idx!, target!.idx);
+          arrayMove(source.column.items!, source.idx!, target!.idx);
         }
       } else {
-        source.column.items.splice(source.idx!, 1);
+        source.column.items!.splice(source.idx!, 1);
         // TODO(burdon): Incorrect position when moving to new column.
-        target!.column.items.splice(target!.idx ?? target!.column.items.length, 0, source.item!);
+        target!.column.items!.splice(target!.idx ?? target!.column.items!.length, 0, source.item!);
       }
     }
 
@@ -163,14 +164,14 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <SortableContext strategy={horizontalListSortingStrategy} items={kanban.columns?.map(({ id }) => id)}>
+          <SortableContext strategy={horizontalListSortingStrategy} items={kanban.columns?.map(({ id }) => id!)}>
             {kanban.columns.map((column) => (
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
                 itemMapper={itemMapper}
-                onCreate={(column: KanbanColumn) => model.createItem(column)}
-                onDelete={() => handleDeleteColumn(column.id)}
+                onCreate={(column: KanbanType.Column) => model.createItem(column)}
+                onDelete={() => handleDeleteColumn(column.id!)}
               />
             ))}
           </SortableContext>

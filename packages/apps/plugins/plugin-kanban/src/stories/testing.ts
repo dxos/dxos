@@ -4,27 +4,24 @@
 
 import { faker } from '@faker-js/faker';
 
-import { PublicKey } from '@dxos/keys';
-import { createStore } from '@dxos/observable-object';
-
-import { Kanban } from '../props';
+import { Kanban as KanbanType } from '@braneframe/types';
+import { Text } from '@dxos/echo-schema';
 
 // TODO(burdon): Types.
-export const createKanban = (): Kanban => {
-  return createStore({
-    id: 'test',
+export const createKanban = () => {
+  return new KanbanType({
     title: faker.lorem.words(3),
-    columns: createStore(
-      faker.datatype.array(faker.datatype.number({ min: 2, max: 8 })).map(() => ({
-        id: PublicKey.random().toHex(),
-        title: faker.lorem.words(3),
-        items: createStore(
-          faker.datatype.array(faker.datatype.number(8)).map(() => ({
-            id: PublicKey.random().toHex(),
-            content: faker.lorem.words(faker.datatype.number({ min: 3, max: 8 })) + '.',
-          })),
-        ),
-      })),
+    columns: faker.datatype.array(faker.datatype.number({ min: 2, max: 8 })).map(
+      () =>
+        new KanbanType.Column({
+          title: faker.lorem.words(3),
+          items: faker.datatype.array(faker.datatype.number(8)).map(
+            () =>
+              new KanbanType.Item({
+                title: new Text(faker.lorem.words(faker.datatype.number({ min: 3, max: 24 })) + '.'),
+              }),
+          ),
+        }),
     ),
   });
 };
