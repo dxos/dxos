@@ -13,6 +13,10 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
 
+
+const PACKAGE_VERSION = require('./package.json').version;
+console.log(`Version: ${PACKAGE_VERSION}`);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
@@ -38,7 +42,15 @@ export default defineConfig({
     },
   },
   plugins: [
-    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'] }),
+    {
+      name: 'package-version',
+      config: () => ({ 
+        define: {
+          'process.env.PACKAGE_VERSION': `'${PACKAGE_VERSION}'`,
+        } 
+      })
+    },
+    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
     ThemePlugin({
       root: __dirname,
       content: [

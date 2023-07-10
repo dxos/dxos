@@ -20,8 +20,16 @@ const Footer = () => {
   if (!services) {
     return null;
   }
+
+  console.log('RootContainer: services:', process.env.PACKAGE_VERSION);
+
   return (
     <div className='flex flex-col shrink-0 m-2'>
+      {/* Print current package version */}
+      <div className='flex flex-row justify-center p-2'>
+        <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
+      </div>
+
       <Button
         variant='outline'
         onClick={async () => {
