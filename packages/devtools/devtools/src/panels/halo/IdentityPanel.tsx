@@ -13,7 +13,7 @@ const IdentityPanel = () => {
   const identity = useIdentity();
   const devices = useDevices();
 
-  return <JsonView data={{ ...identity, devices }} />;
+  return <JsonView className='flex flex-1 overflow-hidden ml-2 mt-2' data={{ ...identity, devices }} />;
 };
 
 export default IdentityPanel;
