@@ -28,9 +28,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    const { path: socketFile } = parseAddress(getUnixSocket(profile));
     return (
-      fs.existsSync(socketFile) ||
       isLocked(lockFilePath(profile)) ||
       (await this.list()).some((process) => process.profile === profile && process.running)
     );
