@@ -69,6 +69,7 @@ const SignalStatusComp = () => {
     <div>
       {status.map((status) => (
         <div
+          className='flex flex-col justify-between p-2'
           style={{
             color: getColor(status.state),
           }}
