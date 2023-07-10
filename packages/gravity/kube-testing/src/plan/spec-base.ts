@@ -11,6 +11,7 @@ export type TestParams<S> = {
 };
 
 export type AgentParams<S, C> = {
+  agentIdx: number;
   agentId: string;
   outDir: string;
   config: C;
