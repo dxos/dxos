@@ -11,7 +11,7 @@ import { schema } from '@dxos/protocols';
 // TODO(mykola): Add proto schema. Decode bytes.
 export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, className }) => {
   // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
-  const replaced = JSON.parse(JSON.stringify(data, replacer, 2));
+  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
   return <ReactJson src={replaced} collapsed={false} />;
 };
 
