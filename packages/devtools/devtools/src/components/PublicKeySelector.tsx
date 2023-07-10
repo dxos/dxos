@@ -35,8 +35,8 @@ export const PublicKeySelector = (props: PublicKeySelectorProps) => {
                 <Icon />
               </div>
             )}
-            {getLabel(key)}
             <span className='text-neutral-250'>{key.truncate()}</span>
+            {getLabel(key)}
           </div>
         </Select.Item>
       ))}

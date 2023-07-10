@@ -6,7 +6,7 @@ import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 import { Button } from '@dxos/aurora';
-import { TreeView, TreeViewItem, Fallback } from '@dxos/react-appkit';
+import { Fallback, TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
