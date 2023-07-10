@@ -13,6 +13,7 @@ import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { DataPipelineProcessed } from '@dxos/protocols';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
@@ -80,7 +81,16 @@ export class DataPipeline {
   public itemManager!: ItemManager;
   public databaseHost?: DatabaseHost;
 
+  /**
+   * Current epoch. Might be still processing.
+   */
   public currentEpoch?: SpecificCredential<Epoch>;
+
+  /**
+   * Epoch currently applied.
+   */
+  public appliedEpoch?: SpecificCredential<Epoch>;
+
   private _lastProcessedEpoch = -1;
   public onNewEpoch = new Event<Credential>();
   private _epochCtx?: Context;
@@ -179,12 +189,11 @@ export class DataPipeline {
 
     await this.databaseHost?.close();
     await this.itemManager?.destroy();
-    await this._params.snapshotManager.close();
   }
 
   private async _consumePipeline() {
     if (this.currentEpoch) {
-      const waitForOneEpoch = this.onNewEpoch.waitFor(() => true);
+      const waitForOneEpoch = this.onNewEpoch.waitForCount(1);
       await this._processEpochInSeparateTask(this.currentEpoch);
       await waitForOneEpoch;
     }
@@ -211,6 +220,12 @@ export class DataPipeline {
               memberKey: feedInfo.assertion.identityKey,
             },
           });
+
+          log.trace('dxos.echo.data-pipeline.processed', {
+            feedKey: feedKey.toHex(),
+            seq,
+            spaceKey: this._params.spaceKey.toHex(),
+          } satisfies DataPipelineProcessed);
 
           // Timeframe clock is not updated yet
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
@@ -296,6 +311,8 @@ export class DataPipeline {
       }
       log('process epoch', { epoch });
       await this._processEpoch(ctx, epoch.subject.assertion);
+
+      this.appliedEpoch = epoch;
       this.onNewEpoch.emit(epoch);
     });
   }

@@ -200,7 +200,10 @@ export class IdentityManager {
       writable: true,
     });
     assert(identityRecord.haloSpace.dataFeedKey);
-    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, {
+      writable: true,
+      sparse: true,
+    });
 
     const space = await this._constructSpace({
       spaceRecord: identityRecord.haloSpace,

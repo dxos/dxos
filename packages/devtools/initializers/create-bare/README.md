@@ -7,7 +7,7 @@ Creates an empty DXOS application
 Use with npm init like this:
 
 ```bash
-npm init @dxos/bare
+npm init @dxos/bare@latest
 ```
 
 ## DXOS Resources

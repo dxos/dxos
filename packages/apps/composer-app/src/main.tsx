@@ -9,7 +9,6 @@ import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { GraphPlugin } from '@braneframe/plugin-graph';
-import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
@@ -40,7 +39,6 @@ createRoot(document.getElementById('root')!).render(
         StackPlugin(),
         GithubPlugin(),
         LocalFilesPlugin(),
-        KanbanPlugin(),
       ]}
     />
   </StrictMode>,

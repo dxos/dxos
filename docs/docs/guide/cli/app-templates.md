@@ -11,9 +11,9 @@ DXOS provides turnkey application templates complete with all the essentials for
 To create a new DXOS project:
 
 ```bash
-npm init @dxos
+npm init @dxos@latest
 # or
-npm init @dxos/bare
+npm init @dxos/bare@latest
 ```
 
 These can also be used from the `dx` CLI:
@@ -26,7 +26,7 @@ dx app create --template bare <project-name>
 
 ## `hello` template
 
-This is the default template when using `npm init @dxos` or `dx app create`. It inherits everything from the `bare` template and adds a single-page welcome guide which is easy to delete.
+This is the default template when using `npm init @dxos@latest` or `dx app create`. It inherits everything from the `bare` template and adds a single-page welcome guide which is easy to delete.
 
 ## `bare` template
 
