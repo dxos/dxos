@@ -14,14 +14,14 @@ import {
   StoredSnapshotInfo,
   SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
+import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useDevtools, useStream } from '@dxos/react-client';
 import { BitField } from '@dxos/util';
 
-import { TreeItemText } from '../../components/TreeItemText';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BitfieldDisplay, JsonView } from '../../components';
+import { TreeItemText } from '../../components/TreeItemText';
 
 type SelectionValue =
   | {
@@ -114,9 +114,9 @@ const StoragePanel = () => {
     setIsRefreshing(true);
     let retry = false;
 
-    let storageInfo: StorageInfo | undefined = undefined;
-    let snapshotInfo: GetSnapshotsResponse | undefined = undefined;
-    let blobsInfo: GetBlobsResponse | undefined = undefined;
+    let storageInfo: StorageInfo | undefined;
+    let snapshotInfo: GetSnapshotsResponse | undefined;
+    let blobsInfo: GetBlobsResponse | undefined;
 
     try {
       storageInfo = await devtoolsHost.getStorageInfo();
@@ -168,7 +168,9 @@ const StoragePanel = () => {
   );
 
   useEffect(() => {
-    if (!selected) return;
+    if (!selected) {
+      return;
+    }
     const rec = (items: TreeViewItem[]) => {
       for (const item of items) {
         if (item.id !== undefined && item.id === selected.id) {
