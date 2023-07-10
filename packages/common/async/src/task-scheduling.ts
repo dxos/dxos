@@ -68,9 +68,9 @@ export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs
   });
 
   const timeout = setTimeout(async () => {
+    clearDispose();
     await runInContextAsync(ctx, fn);
     clearTracking();
-    clearDispose();
   }, afterMs);
 
   const clearDispose = ctx.onDispose(() => {
