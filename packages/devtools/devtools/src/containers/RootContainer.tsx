@@ -6,7 +6,7 @@ import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 import { Button } from '@dxos/aurora';
-import { Fallback, TreeView, TreeViewItem } from '@dxos/react-appkit';
+import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
@@ -60,7 +60,7 @@ export const RootContainer = () => {
 
       <div className='flex flex-1 flex-col overflow-hidden bg-white'>
         <ErrorBoundary key={pathname}>
-          <Suspense fallback={<Fallback message='Loading...' />}>
+          <Suspense>
             <Outlet />
           </Suspense>
         </ErrorBoundary>
