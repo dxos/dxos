@@ -69,7 +69,7 @@ export const appkit = {
   'list description label': 'List description',
   'list description placeholder': 'Add an optional description',
   'list item title label': 'List item title',
-  'list item title placeholder': 'Type here',
+  'list item title placeholder': 'New item',
   'list item description label': 'List item description',
   'list item description placeholder': 'Add an optional description',
   'move list item up label': 'Move list item up',
