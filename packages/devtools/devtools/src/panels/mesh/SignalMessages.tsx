@@ -29,7 +29,7 @@ const views = [
     columns: [
       {
         Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
       },
       {
         Header: 'TYPE',
@@ -39,19 +39,19 @@ const views = [
           } else if (response.swarmEvent?.peerLeft) {
             return 'PeerLeft';
           }
-        }
+        },
       },
       {
         Header: 'Peer',
         accessor: (response: SignalResponse) =>
           (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
-          (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer))
+          (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
       },
       {
         Header: 'Since',
-        accessor: (response: SignalResponse) => response.swarmEvent!.peerAvailable?.since?.toJSON()
-      }
-    ]
+        accessor: (response: SignalResponse) => response.swarmEvent!.peerAvailable?.since?.toJSON(),
+      },
+    ],
   },
   {
     id: 'message',
@@ -62,23 +62,23 @@ const views = [
     columns: [
       {
         Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
       },
       {
         Header: 'Author',
-        accessor: (response: SignalResponse) => humanize(response.message!.author)
+        accessor: (response: SignalResponse) => humanize(response.message!.author),
       },
       {
         Header: 'Recipient',
-        accessor: (response: SignalResponse) => humanize(response.message!.recipient)
+        accessor: (response: SignalResponse) => humanize(response.message!.recipient),
       },
       { Header: 'MessageID', accessor: (response: SignalResponse) => humanize(response.message?.payload.messageId) },
       {
         Header: 'Topic',
         accessor: (response: SignalResponse) =>
-          response.message!.payload?.payload?.topic && humanize(response.message!.payload?.payload?.topic)
-      }
-    ]
+          response.message!.payload?.payload?.topic && humanize(response.message!.payload?.payload?.topic),
+      },
+    ],
   },
   {
     id: 'ack',
@@ -89,25 +89,25 @@ const views = [
     columns: [
       {
         Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON()
+        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
       },
       {
         Header: 'Author',
-        accessor: (response: SignalResponse) => humanize(response.message!.author)
+        accessor: (response: SignalResponse) => humanize(response.message!.author),
       },
       {
         Header: 'Recipient',
-        accessor: (response: SignalResponse) => humanize(response.message!.recipient)
+        accessor: (response: SignalResponse) => humanize(response.message!.recipient),
       },
       {
         Header: 'MessageID',
-        accessor: (response: SignalResponse) => humanize(response.message!.payload.messageId)
-      }
-    ]
-  }
+        accessor: (response: SignalResponse) => humanize(response.message!.payload.messageId),
+      },
+    ],
+  },
 ] as const; // this is ok because getView below will fail typecheck if this array is misdefined
 
-export type ViewType = typeof views[number]['id'];
+export type ViewType = (typeof views)[number]['id'];
 
 const getView = (id: ViewType): View<SignalResponse> => views.find((type) => type.id === id)!;
 
