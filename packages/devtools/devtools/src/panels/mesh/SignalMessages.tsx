@@ -123,7 +123,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
   const filteredMessages = getFilteredData(messages, view, search);
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3 border-b border-slate-200 border-solid'>
+      <div className='flex p-3 border-b gap-2 border-slate-200 border-solid'>
         <Select className='mr-2' defaultValue={viewType} onValueChange={(s) => setViewType(s as ViewType)}>
           {views.map(({ id, title }) => (
             <Select.Item value={id} key={id}>
@@ -134,7 +134,13 @@ export const SignalMessages = (props: SignalMessagesProps) => {
         <Searchbar onSearch={setSearch} />
       </div>
       <div className='flex flex-1 overflow-hidden'>
-        {view ? <MasterTable columns={view.columns as any} data={filteredMessages} /> : null}
+        {view ? (
+          <MasterTable
+            columns={view.columns as any}
+            data={filteredMessages}
+            slots={{ selected: { className: 'bg-slate-200' } }}
+          />
+        ) : null}
       </div>
     </div>
   );
