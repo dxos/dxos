@@ -18,9 +18,7 @@ const CredentialsPanel = () => {
     <div className='flex flex-1 flex-col overflow-hidden'>
       <SpaceToolbar />
 
-      <div className='flex flex-1 overflow-auto'>
-        <JsonView data={credentials} />
-      </div>
+      <JsonView className='flex flex-1 overflow-auto ml-2 mt-2' data={credentials} />
     </div>
   );
 };
