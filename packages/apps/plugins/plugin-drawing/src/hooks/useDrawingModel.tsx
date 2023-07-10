@@ -119,6 +119,8 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 500 })
       store.listen(
         ({ changes }) => {
           doc.transact(() => {
+            clearTimeout(timeout);
+
             Object.values(changes.added).forEach((record) => {
               mutations.set(record.id, { type: 'added', record });
             });
@@ -131,7 +133,6 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 500 })
               mutations.set(record.id, { type: 'removed', record });
             });
 
-            clearTimeout(timeout);
             timeout = setTimeout(() => {
               mutations.forEach(({ type, record }) => {
                 switch (type) {
