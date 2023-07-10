@@ -12,7 +12,12 @@ import { schema } from '@dxos/protocols';
 export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, className }) => {
   // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
   const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
-  return <ReactJson src={replaced} collapsed={false} />;
+
+  return (
+    <div className={className}>
+      <ReactJson src={replaced} collapsed={false} />
+    </div>
+  );
 };
 
 const replacer = (key: string, value: any) => {
