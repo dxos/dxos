@@ -26,9 +26,11 @@ const Footer = () => {
   return (
     <div className='flex flex-col shrink-0 m-2'>
       {/* Print current package version */}
-      <div className='flex flex-row justify-center p-2'>
-        <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
-      </div>
+      {process.env.PACKAGE_VERSION && (
+        <div className='flex flex-row justify-center p-2'>
+          <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
+        </div>
+      )}
 
       <Button
         variant='outline'
