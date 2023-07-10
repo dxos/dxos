@@ -21,7 +21,7 @@ const ConfigPanel = () => {
     setConfig(await services.SystemService.getConfig());
   }, []);
 
-  return <JsonView className='flex flex-1 overflow-hidden ml-2 mt-2' data={config} />;
+  return <JsonView className='flex flex-1 overflow-auto ml-2 mt-2' data={config} />;
 };
 
 export default ConfigPanel;
