@@ -65,7 +65,7 @@ export const SpaceSelector = () => {
 export const SpaceToolbar: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
     <div className='flex w-full border-b'>
-      <div className='flex-shrink w-[400px] p-2'>
+      <div className='flex-shrink p-2'>
         <SpaceSelector />
       </div>
       <div className='flex-1 p-2 mr-2 flex-row'>{children}</div>
