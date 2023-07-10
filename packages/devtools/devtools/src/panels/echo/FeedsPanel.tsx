@@ -3,18 +3,18 @@
 //
 
 import { Rows } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
+import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { humanize, range } from '@dxos/util';
+import { useDevtools, useStream } from '@dxos/react-client';
+import { humanize } from '@dxos/util';
 
 import { BitfieldDisplay, MasterTable, PublicKeySelector } from '../../components';
 import { SpaceToolbar } from '../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages, useSpacesInfo } from '../../hooks';
-import { Button } from '@dxos/aurora';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
 const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
@@ -40,7 +40,6 @@ const FeedsPanel = () => {
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
   const devtoolsHost = useDevtools();
-  const spacesInfo = useSpacesInfo();
   const [refreshCount, setRefreshCount] = useState(0);
 
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
@@ -72,7 +71,7 @@ const FeedsPanel = () => {
   return (
     <div className='flex flex-col overflow-hidden'>
       <SpaceToolbar>
-        <div className='w-[400px]'>
+        <div className='flex w-[400px] flex-row space-x-4'>
           <PublicKeySelector
             keys={feedKeys}
             Icon={Rows}
@@ -81,6 +80,7 @@ const FeedsPanel = () => {
             getLabel={getLabel}
             onChange={handleSelect}
           />
+
           <Button onClick={refresh}>Refresh</Button>
         </div>
       </SpaceToolbar>

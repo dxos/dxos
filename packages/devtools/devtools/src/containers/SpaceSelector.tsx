@@ -29,7 +29,7 @@ export const SpaceSelector = () => {
     }));
 
     if (spaceKey) {
-      localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+      void localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
     }
   };
 
