@@ -16,12 +16,14 @@ import { AgentEnv } from './agent-env';
 import { AgentParams, PlanResults, TestPlan } from './spec-base';
 
 const AGENT_LOG_FILE = 'agent.log';
+const DEBUG_PORT_START = 9229;
 
 type PlanOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
   profile?: boolean;
+  debug?: boolean;
 };
 
 type TestSummary = {
@@ -95,8 +97,11 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     //
     // Start agents
     //
-    for (const [agentId, agentConfig] of Object.entries(agents)) {
+
+    for (const [agentIdx, [agentId, agentConfig]] of Object.entries(agents).entries()) {
+      log.debug('runPlanner starting agent', { agentIdx });
       const agentParams: AgentParams<S, C> = {
+        agentIdx,
         agentId,
         spec,
         agents,
@@ -111,17 +116,25 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
+      const execArgv = process.execArgv;
+
+      if (options.profile) {
+        execArgv.push(
+          '--cpu-prof', //
+          '--cpu-prof-dir',
+          agentParams.outDir,
+          '--cpu-prof-name',
+          'agent.cpuprofile',
+        );
+      }
+
       const childProcess = fork(process.argv[1], {
-        execArgv: options.profile
+        execArgv: options.debug
           ? [
-              '--cpu-prof',
-              '--cpu-prof-dir',
-              agentParams.outDir,
-              '--cpu-prof-name',
-              'agent.cpuprofile',
-              ...process.execArgv,
+              '--inspect=:' + (DEBUG_PORT_START + agentIdx), //
+              ...execArgv,
             ]
-          : [...process.execArgv],
+          : execArgv,
         env: {
           ...process.env,
           GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
@@ -191,6 +204,7 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
     console.error(err);
     process.exit(1);
   } finally {
+    log.info('agent complete', { agentId: params.agentId });
     process.exit(0);
   }
 };

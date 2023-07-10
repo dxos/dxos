@@ -49,6 +49,9 @@
       "path": "../../core/mesh/messaging"
     },
     {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
       "path": "../../core/mesh/signal"
     },
     {
