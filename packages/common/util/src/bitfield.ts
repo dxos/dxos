@@ -71,12 +71,16 @@ export class BitField {
   }
 
   static ones(count: number): Uint8Array {
-    const res = new Uint8Array(Math.ceil(count / 8)).fill(0xff);
+    const res = new Uint8Array(Math.ceil(Math.ceil(count) / 8)).fill(0xff);
 
     // Note: We need to calculate last byte of bitfield.
     const bitInLastByte = Math.ceil(count % 8);
     res[res.length - 1] = 0xff << (8 - bitInLastByte);
 
     return res;
+  }
+
+  static zeros(count: number): Uint8Array {
+    return new Uint8Array(Math.ceil(Math.ceil(count) / 8)).fill(0);
   }
 }
