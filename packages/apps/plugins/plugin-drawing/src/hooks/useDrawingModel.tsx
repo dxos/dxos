@@ -23,7 +23,7 @@ import { DrawingModel } from '../props';
  * Constructs model from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
  */
-export const useDrawingModel = (object: DrawingType, options = { timeout: 500 }): DrawingModel => {
+export const useDrawingModel = (object: DrawingType, options = { timeout: 250 }): DrawingModel => {
   const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
 
   useEffect(() => {
