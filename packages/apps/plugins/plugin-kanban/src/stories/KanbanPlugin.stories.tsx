@@ -4,24 +4,33 @@
 
 import '@dxosTheme';
 import { faker } from '@faker-js/faker';
+import { DecoratorFunction } from '@storybook/csf';
+import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
 import { ThemePlugin } from '@braneframe/plugin-theme';
+import { mx } from '@dxos/aurora-theme';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
 import { KanbanPlugin } from '../KanbanPlugin';
 import { createKanban } from './testing';
 
-faker.seed(1);
+faker.seed(7);
+
+// TODO(burdon): Factor out.
+const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
+  return (Story) => (
+    // TODO(burdon): Fixed vs absolute?
+    <div className={mx('absolute flex inset-0 overflow-hidden', className)}>
+      <Story />
+    </div>
+  );
+};
 
 const DefaultKanbanPluginStory = () => {
   const object = createKanban();
-  return (
-    // TODO(burdon): Factor out container.
-    <div className='flex overflow-hidden absolute left-0 right-0 top-0 bottom-0'>
-      <Surface role='main' data={object} />
-    </div>
-  );
+  // TODO(burdon): Why array? Should first be space?
+  return <Surface role='main' data={[object, object]} />;
 };
 
 const KanbanPluginStoryPlugin = () => ({
@@ -44,5 +53,6 @@ export default {
 };
 
 export const Default = {
+  decorators: [FullscreenDecorator()],
   args: {},
 };

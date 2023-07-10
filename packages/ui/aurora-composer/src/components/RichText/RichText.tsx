@@ -165,6 +165,10 @@ export type RichTextComposerProps = UseEditorOptions & {
   slots?: ComposerSlots;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Currently broken.
 export const RichTextComposer = forwardRef<Editor | null, RichTextComposerProps>((props, ref) => {
   const editor = useEditor(props);
   useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [editor]);

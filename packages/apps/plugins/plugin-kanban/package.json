@@ -19,14 +19,21 @@
     "@dnd-kit/modifiers": "^6.0.0",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
+    "@dxos/aurora-composer": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/observable-object": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -40,6 +47,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",

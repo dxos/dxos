@@ -30,16 +30,37 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {
       "path": "../../../ui/aurora"
     },
     {
+      "path": "../../../ui/aurora-composer"
+    },
+    {
       "path": "../../../ui/aurora-theme"
     },
     {
+      "path": "../../types"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"
