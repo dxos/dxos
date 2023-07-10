@@ -22,17 +22,15 @@ import { DrawingModel } from '../props';
 /**
  * Constructs model from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
- * @param object
  */
-export const useDrawingModel = (object: DrawingType): DrawingModel => {
+export const useDrawingModel = (object: DrawingType, options = { timeout: 500 }): DrawingModel => {
   const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
+
   useEffect(() => {
     const subscriptions: (() => void)[] = [];
 
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    // TODO(burdon): Buffer to shadow yjs document then save to object on release.
-    // TODO(burdon): Live mode via transient feeds?
     const doc = object.content.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
 
@@ -70,7 +68,7 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
     }
 
     //
-    // Subscribe to changes component's model.
+    // Subscribe to ECHO YJS mutations (events) to update ECHO object.
     //
     const handleChange = (events: YEvent<any>[], transaction: Transaction) => {
       if (transaction.local) {
@@ -111,26 +109,53 @@ export const useDrawingModel = (object: DrawingType): DrawingModel => {
     subscriptions.push(() => yRecords.unobserveDeep(handleChange));
 
     //
-    // Subscribe to YJS events to update ECHO object.
+    // Subscribe to changes from component's store (model).
+    // Throttle update events by tracking the last mutation and submitted after timeout.
+    // TODO(burdon): Live mode via transient feeds?
     //
+    let timeout: ReturnType<typeof setTimeout>;
+    const mutations = new Map();
     subscriptions.push(
       store.listen(
         ({ changes }) => {
           doc.transact(() => {
             Object.values(changes.added).forEach((record) => {
-              yRecords.set(record.id, record);
+              mutations.set(record.id, { type: 'added', record });
             });
 
             Object.values(changes.updated).forEach(([_, record]) => {
-              yRecords.set(record.id, record);
+              mutations.set(record.id, { type: 'updated', record });
             });
 
             Object.values(changes.removed).forEach((record) => {
-              yRecords.delete(record.id);
+              mutations.set(record.id, { type: 'removed', record });
             });
+
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+              mutations.forEach(({ type, record }) => {
+                switch (type) {
+                  case 'added': {
+                    yRecords.set(record.id, record);
+                    break;
+                  }
+                  case 'updated': {
+                    yRecords.set(record.id, record);
+                    break;
+                  }
+                  case 'removed': {
+                    yRecords.delete(record.id);
+                    break;
+                  }
+                }
+              });
+
+              mutations.clear();
+            }, options.timeout);
           });
         },
-        { source: 'user', scope: 'document' }, // Only sync user's document changes.
+        // Only sync user's document changes.
+        { source: 'user', scope: 'document' },
       ),
     );
 
