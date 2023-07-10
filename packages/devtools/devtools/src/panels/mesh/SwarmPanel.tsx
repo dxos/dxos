@@ -24,10 +24,10 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
       Icon:
         {
           CONNECTED: LinkSimple,
-          CLOSED: LinkBreak
+          CLOSED: LinkBreak,
         }[connection.state] ?? LinkSimpleBreak,
-      value: connection
-    }))
+      value: connection,
+    })),
   }));
 
 const SwarmPanel = () => {
@@ -42,8 +42,8 @@ const SwarmPanel = () => {
           items={getSwarmInfoTree(data ?? [])}
           slots={{
             value: {
-              className: 'overflow-hidden text-gray-400 truncate pl-2'
-            }
+              className: 'overflow-hidden text-gray-400 truncate pl-2',
+            },
           }}
           onSelect={(item: any) => setSelectedItem(item.value)}
           selected={selectedItem?.sessionId.toHex()}

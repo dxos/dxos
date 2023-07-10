@@ -19,22 +19,22 @@ export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, clas
   );
 };
 
-
 const replacer = (key: string, value: any) => {
-  if(typeof value === 'object') {
-    if(value instanceof Uint8Array) {
+  if (typeof value === 'object') {
+    if (value instanceof Uint8Array) {
       return Buffer.from(value).toString('hex');
-    } if(value?.type === 'Buffer') {
+    }
+    if (value?.type === 'Buffer') {
       return Buffer.from(value.data).toString('hex');
-    } else if(value?.['@type'] === 'google.protobuf.Any') {
+    } else if (value?.['@type'] === 'google.protobuf.Any') {
       try {
         const codec = schema.getCodecForType(value.type_url);
         return {
           '@type': value.type_url,
-          ...codec.decode(value.value)
+          ...codec.decode(value.value),
         };
       } catch {}
     }
-  } 
+  }
   return value;
-}
+};

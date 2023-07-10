@@ -25,7 +25,7 @@ const Telemetry = ({ namespace }: { namespace: string }) => {
 // Entry point that does not have opinion on Client, so it can be reused in extension.
 export const Devtools = ({
   context,
-  namespace = telemetryNamespace
+  namespace = telemetryNamespace,
 }: {
   context?: { client: Client; services?: ClientServices };
   namespace?: string;
