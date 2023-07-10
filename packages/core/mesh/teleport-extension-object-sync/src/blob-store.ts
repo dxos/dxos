@@ -137,7 +137,7 @@ export class BlobStore {
       throw new Error('Invalid chunk size');
     }
 
-  assert(meta.bitfield, 'Bitfield not present');
+    assert(meta.bitfield, 'Bitfield not present');
     assert(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
     // Write chunk.
