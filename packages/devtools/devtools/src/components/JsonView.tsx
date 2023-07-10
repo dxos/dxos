@@ -3,20 +3,16 @@
 //
 
 import React, { FC } from 'react';
-import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
-import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
+import ReactJson from 'react-json-view';
 
-import { mx } from '@dxos/aurora-theme';
 import { schema } from '@dxos/protocols';
 
 // TODO(mykola): Add proto schema. Decode bytes.
 export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, className }) => {
-  return (
-    <SyntaxHighlighter className={mx('flex flex-1 text-xs', className)} language='json' style={style}>
-      {JSON.stringify(data, replacer, 2)}
-    </SyntaxHighlighter>
-  );
+  // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
+  const replaced = JSON.parse(JSON.stringify(data, replacer, 2));
+  return <ReactJson src={replaced} collapsed={false} />;
 };
 
 const replacer = (key: string, value: any) => {
@@ -26,7 +22,8 @@ const replacer = (key: string, value: any) => {
     }
     if (value?.type === 'Buffer') {
       return Buffer.from(value.data).toString('hex');
-    } else if (value?.['@type'] === 'google.protobuf.Any') {
+    }
+    if (value?.['@type'] === 'google.protobuf.Any') {
       try {
         const codec = schema.getCodecForType(value.type_url);
         return {
