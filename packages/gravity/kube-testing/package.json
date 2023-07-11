@@ -33,10 +33,10 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^7.3.0",
-    "redis": "^4.6.6",
-    "seedrandom": "^3.0.5",
+    "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
-    "chartjs-node-canvas": "^4.1.6"
+    "redis": "^4.6.6",
+    "seedrandom": "^3.0.5"
   },
   "devDependencies": {
     "@types/faker": "^5.5.9",
