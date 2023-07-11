@@ -40,8 +40,8 @@
     "localforage": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-editable-json-tree": "^2.3.0",
     "react-router-dom": "^6.4.0",
-    "react-syntax-highlighter": "^15.5.0",
     "react-vis": "^1.11.12"
   },
   "devDependencies": {
@@ -51,7 +51,6 @@
     "@dxos/react-shell": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@types/react-syntax-highlighter": "^15.5.5",
     "@types/react-vis": "^1.11.11",
     "@vitejs/plugin-react": "^3.0.1",
     "postcss": "^8.4.21",
