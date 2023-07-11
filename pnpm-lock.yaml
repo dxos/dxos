@@ -13783,7 +13783,7 @@ packages:
       '@emotion/cache': 11.10.3
       '@emotion/react': 11.10.4(@babel/core@7.19.3)(@types/react@18.0.21)(react@18.2.0)
       '@emotion/styled': 11.10.4(@babel/core@7.19.3)(@emotion/react@11.10.4)(@types/react@18.0.21)(react@18.2.0)
-      csstype: 3.1.1
+      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
