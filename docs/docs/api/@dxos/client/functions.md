@@ -22,7 +22,7 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [diagnostics(client, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/diagnostics.ts#L40)
+### [diagnostics(client, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/diagnostics/diagnostics.ts#L44)
 
 
 
