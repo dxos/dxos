@@ -75,9 +75,6 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-drawing"
-    },
-    {
       "path": "../plugins/plugin-graph"
     },
     {
