@@ -2787,7 +2787,7 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-editable-json-tree: ^2.3.0
+      react-json-tree: ^0.18.0
       react-router-dom: ^6.4.0
       react-vis: ^1.11.12
       tailwindcss: ~3.3.2
@@ -2824,7 +2824,7 @@ importers:
       localforage: 1.10.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-editable-json-tree: 2.3.0_biqbaboplfbrettd7655fr4n2y
+      react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
     devDependencies:
@@ -9147,7 +9147,7 @@ packages:
       '@emotion/memoize': 0.8.0
       '@emotion/unitless': 0.8.0
       '@emotion/utils': 1.2.0
-      csstype: 3.1.1
+      csstype: 3.1.2
 
   /@emotion/sheet/1.2.0:
     resolution: {integrity: sha512-OiTkRgpxescko+M51tZsMq7Puu/KP55wMT8BgpcXVG2hqXc0Vo0mfymJ/Uj24Hp0i083ji/o0aLddh08UEjq8w==}
@@ -11286,7 +11286,7 @@ packages:
       '@emotion/cache': 11.10.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      csstype: 3.1.1
+      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
@@ -11316,7 +11316,7 @@ packages:
       '@mui/utils': 5.10.9_react@18.2.0
       '@types/react': 18.0.21
       clsx: 1.2.1
-      csstype: 3.1.1
+      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
@@ -16028,7 +16028,7 @@ packages:
       '@emotion/react': ^11
     dependencies:
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: true
 
   /@theme-ui/mdx/0.14.7_kw33ahswscikfvijozsocpg2v4:
@@ -17538,7 +17538,7 @@ packages:
   /@types/styled-system/5.1.15:
     resolution: {integrity: sha512-1uls4wipZn8FtYFZ7upRVFDoEeOXTQTs2zuyOZPn02T6rjIxtvj2P2lG5qsxXHhKuKsu3thveCZrtaeLE/ibLg==}
     dependencies:
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: true
 
   /@types/stylus/0.48.38:
@@ -22287,7 +22287,6 @@ packages:
 
   /csstype/3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
-    dev: false
 
   /csv-parse/5.3.6:
     resolution: {integrity: sha512-WI330GjCuEioK/ii8HM2YE/eV+ynpeLvU+RXw4R8bRU8R0laK5zO3fDsc4gH8s472e3Ga38rbIjCAiQh+tEHkw==}
@@ -23342,7 +23341,7 @@ packages:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
     dependencies:
       '@babel/runtime': 7.21.0
-      csstype: 3.1.1
+      csstype: 3.1.2
     dev: false
 
   /dom-serializer/1.4.1:
@@ -35092,7 +35091,7 @@ packages:
       '@types/lodash': 4.14.191
       base16: 1.0.0
       color: 3.2.1
-      csstype: 3.1.1
+      csstype: 3.1.2
       lodash.curry: 4.1.1
     dev: false
 
@@ -35268,18 +35267,6 @@ packages:
       styled-components: 5.3.6_7i5myeigehqah43i5u7wbekgba
     transitivePeerDependencies:
       - react-is
-    dev: false
-
-  /react-editable-json-tree/2.3.0_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-OG7VBoYAkl9zFRU3NKCklwaKYannFz/mckg5OauFZKZ0WU7zeuK49y3trC7M4obnxOafbfzPdY5H06Yk5ztGiw==}
-    engines: {node: '>= 8'}
-    peerDependencies:
-      react: ^16 || ^17 || ^18
-      react-dom: ^16 || ^17 || ^18
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react-element-to-jsx-string/15.0.0_biqbaboplfbrettd7655fr4n2y:
