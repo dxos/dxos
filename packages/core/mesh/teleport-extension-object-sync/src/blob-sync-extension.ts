@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { RpcClosedError, schema } from '@dxos/protocols';
 import { BlobChunk, BlobSyncService, WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
@@ -68,7 +68,12 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
       this._currentUploads++;
 
       this.push(blobChunk)
-        .catch((err) => log.warn('push failed', { err }))
+        .catch((err) => {
+          if (err instanceof RpcClosedError) {
+            return;
+          }
+          log.warn('push failed', { err });
+        })
         .finally(() => {
           this._currentUploads--;
           this.reconcileUploads();
