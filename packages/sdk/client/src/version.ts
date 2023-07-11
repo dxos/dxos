@@ -1,1 +1,1 @@
-export const DXOS_VERSION = "0.1.50"; // {x-release-please-version}
+export const DXOS_VERSION = "0.1.51"; // {x-release-please-version}
