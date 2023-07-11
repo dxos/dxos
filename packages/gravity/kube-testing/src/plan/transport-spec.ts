@@ -85,7 +85,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       log.info('testRun iteration', { iterationId: testCounter });
 
-      // How many connections established within the duration.
+      // How many connections established within the desired duration.
       await Promise.all(
         swarms.map(async (swarm, swarmIdx) => {
           log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
@@ -105,8 +105,6 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           }, spec.fullSwarmTimeout);
         }),
       );
-
-      log.info('WE ARE OUT', { agentIdx });
 
       await env.syncBarrier(`swarms are ready on ${testCounter}`);
 
