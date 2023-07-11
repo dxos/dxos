@@ -35,7 +35,7 @@ const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterTable columns={columns} data={keys} />;
+  return <MasterTable columns={columns} data={keys} slots={{ selected: { className: 'bg-slate-200' } }} />;
 };
 
 export default KeyringPanel;

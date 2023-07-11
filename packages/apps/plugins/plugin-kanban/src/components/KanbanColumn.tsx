@@ -8,14 +8,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import type { KanbanColumn, KanbanItem } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 
-export type ItemsMapper = (column: string, items: KanbanItem[]) => KanbanItem[];
+export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -51,20 +51,20 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export const KanbanColumnComponent: FC<{
-  column: KanbanColumn;
+  column: KanbanType.Column;
   itemMapper?: ItemsMapper;
   debug?: boolean; // TODO(burdon): Context.
-  onCreate?: (column: KanbanColumn) => KanbanItem;
+  onCreate?: (column: KanbanType.Column) => KanbanType.Item;
   onDelete?: () => void;
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
   useSubscription([column.items]);
-  const items = itemMapper?.(column.id, column.items) ?? column.items;
+  const items = itemMapper?.(column.id!, column.items!) ?? column.items!;
 
-  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id });
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id! });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
-    id: column.id,
+    id: column.id!,
     data: { type: 'column' },
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
@@ -72,14 +72,14 @@ export const KanbanColumnComponent: FC<{
   const handleAddItem = onCreate
     ? () => {
         const item = onCreate(column);
-        column.items.splice(column.items.length, 0, item);
+        column.items!.splice(column.items!.length, 0, item);
       }
     : undefined;
 
   const handleDeleteItem = (id: string) => {
-    const index = column.items.findIndex((column) => column.id === id);
+    const index = column.items!.findIndex((column) => column.id === id);
     if (index >= 0) {
-      column.items.splice(index, 1);
+      column.items!.splice(index, 1);
     }
   };
 
@@ -103,12 +103,12 @@ export const KanbanColumnComponent: FC<{
 
           <Input.Root>
             <Input.Label srOnly>{t('column title label')}</Input.Label>
-            {/* TODO(burdon): Is classNames boilerplate required everywhere? How to make consistent across plugins? Same for separator, etc. */}
             <Input.TextInput
               variant='subdued'
+              classNames='px-2'
+              placeholder={t('column title placeholder')}
               defaultValue={column.title}
               onChange={({ target: { value } }) => (column.title = value)}
-              classNames='px-2'
             />
           </Input.Root>
 
@@ -133,7 +133,7 @@ export const KanbanColumnComponent: FC<{
           </div>
         )}
 
-        {debug && <div className='px-2 text-xs text-red-800'>{column.id.slice(0, 9)}</div>}
+        {debug && <div className='px-2 text-xs text-red-800'>{column.id!.slice(0, 9)}</div>}
       </div>
     </div>
   );

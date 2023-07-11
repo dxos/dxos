@@ -24,13 +24,13 @@ const segments = sequence.reduce<Data>(
 
     return { current, stack };
   },
-  { current: undefined, stack: [] }
+  { current: undefined, stack: [] },
 );
 
 const data = segments.stack.flatMap(([i, length]) => {
   return [
     { color: 'darkred', values: feeds.map((f) => ({ y: f, x: f === i ? length : 0 })) }, // Current span.
-    { color: 'white', values: feeds.map((f) => ({ y: f, x: f !== i ? length : 0 })) } // Gap for others.
+    { color: 'white', values: feeds.map((f) => ({ y: f, x: f !== i ? length : 0 })) }, // Gap for others.
   ];
 });
 

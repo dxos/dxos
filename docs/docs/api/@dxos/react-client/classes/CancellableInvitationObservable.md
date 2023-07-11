@@ -1,5 +1,5 @@
 # Class `CancellableInvitationObservable`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:15]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/invitations/invitations.d.ts:14]()</sub>
 
 
 Base class for all invitation observables and providers.

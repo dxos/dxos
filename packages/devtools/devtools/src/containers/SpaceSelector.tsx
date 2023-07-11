@@ -29,7 +29,7 @@ export const SpaceSelector = () => {
     }));
 
     if (spaceKey) {
-      localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+      void localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
     }
   };
 
@@ -64,11 +64,11 @@ export const SpaceSelector = () => {
 
 export const SpaceToolbar: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
-    <div className='flex w-full border-b'>
-      <div className='flex-shrink w-[400px] p-2'>
+    <div className='flex w-full border-b p-2 gap-2'>
+      <div className='flex-shrink'>
         <SpaceSelector />
       </div>
-      <div className='flex-1 p-2 mr-2 flex-row'>{children}</div>
+      <div className='flex flex-1 flex-row'>{children}</div>
     </div>
   );
 };

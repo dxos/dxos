@@ -61,5 +61,6 @@ export const isStack = <T extends StackObject = GenericStackObject>(datum: unkno
       typeof (datum as { [key: string]: any }).sections?.length === 'number'
     : false;
 
+// TODO(burdon): Unused?
 export const isStackProperties = (datum: unknown): datum is StackProperties =>
   datum && typeof datum === 'object' ? subscribe in datum : false;

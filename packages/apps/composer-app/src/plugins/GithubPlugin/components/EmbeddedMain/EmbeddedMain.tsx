@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-import './embedded.css';
 
 import {
   ArrowSquareOut,
@@ -45,6 +44,7 @@ import {
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
 import { GfmPreview } from './GfmPreview';
+import './embedded.css';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 

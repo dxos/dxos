@@ -109,6 +109,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return MarkdownSection;
             }
             break;
+          // TODO(burdon): Can this be decoupled from this plugin?
           case 'dialog':
             if (get(datum, 'subject') === 'dxos:stack/chooser' && get(datum, 'id') === 'choose-section-space-doc') {
               return SpaceMarkdownChooser;
