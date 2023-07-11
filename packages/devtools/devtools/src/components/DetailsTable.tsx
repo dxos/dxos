@@ -13,7 +13,7 @@ export type DetailsTableSlots = {
 export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: DetailsTableSlots; expand?: boolean }> = ({
   object,
   slots,
-  expand,
+  expand
 }) => {
   return (
     <div className='flex overflow-x-hidden'>
@@ -23,8 +23,8 @@ export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: Detail
             <tr key={key}>
               <td
                 className={mx(
-                  'py-1 pl-4 pr-1 pt-[7px] w-1/6 align-baseline text-right text-sm bg-gray-200 text-gray-500 overflow-hidden',
-                  slots?.label,
+                  'py-1 pl-4 pr-1 pt-[7px] w-1/6 align-baseline text-right text-sm bg-gray-200 text-gray-500',
+                  slots?.label
                 )}
               >
                 {key}:
