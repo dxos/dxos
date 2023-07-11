@@ -21,18 +21,18 @@ const columns: TableColumn<LogEntry>[] = [
   {
     Header: 'Level',
     width: 30,
-    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
+    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0]
   },
   {
     Header: 'File',
     width: 80,
-    accessor: (entry) => `${entry.meta?.file}:${entry.meta?.line}`,
+    accessor: entry => `${entry.meta?.file}:${entry.meta?.line}`
   },
   {
     Header: 'Message',
     width: 200,
-    accessor: 'message',
-  },
+    accessor: 'message'
+  }
 ];
 
 // TODO(wittjosiah): Virtualization.

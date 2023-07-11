@@ -5,13 +5,12 @@
 import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { DocumentModel, TypedObject, TextModel, PublicKey } from '@dxos/client';
+import { DocumentModel, TypedObject, TextModel } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { TableColumn } from '@dxos/mosaic';
-import { TreeViewItem, Searchbar } from '@dxos/react-appkit';
+import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
 
-import { JsonView, MasterTable } from '../../components';
+import { DetailsTable, JsonView } from '../../components';
 import { SpaceToolbar } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 // TODO(burdon): Factor out.
@@ -56,32 +55,12 @@ const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   Icon: getObjectIcon(item),
 });
 
-const columns: TableColumn<TypedObject>[] = [
-  {
-    Header: 'Id',
-    width: 60,
-    accessor: (item) => {
-      const id = item.id;
-      return `${PublicKey.from(id).truncate()}`;
-    },
-  },
-  {
-    Header: 'Model',
-    width: 120,
-    accessor: (item) => item.toJSON()['@model'],
-  },
-  {
-    Header: 'Type',
-    width: 120,
-    accessor: (item) => item.__typename ?? '',
-  },
-];
-
 const ItemsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
+  const [selectedItem, setSelectedItem] = useState<TypedObject>();
   const [filter, setFilter] = useState('');
 
   return (
@@ -93,12 +72,25 @@ const ItemsPanel = () => {
       </SpaceToolbar>
 
       <div className='flex h-full overflow-hidden'>
-        {/* TODO(burdon): Convert to list with new API. */}
-        <MasterTable<TypedObject>
-          columns={columns}
-          data={items.filter(textFilter(filter))}
-          slots={{ selected: { className: 'bg-slate-200' } }}
-        />
+        <div className='flex flex-col w-1/3 overflow-auto border-r'>
+          {/* TODO(burdon): Convert to list with new API. */}
+          <TreeView
+            items={items.map(getHierarchicalItem).filter(textFilter(filter))}
+            slots={{
+              value: {
+                className: 'overflow-hidden text-gray-400 truncate pl-2',
+              },
+            }}
+            onSelect={(item: any) => setSelectedItem(item.value)}
+            selected={selectedItem?.id}
+          />
+        </div>
+
+        {selectedItem && (
+          <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
+            <DetailsTable object={getItemDetails(selectedItem)} expand />
+          </div>
+        )}
       </div>
     </div>
   );
