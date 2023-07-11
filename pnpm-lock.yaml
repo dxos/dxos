@@ -13750,7 +13750,7 @@ packages:
       '@emotion/cache': 11.10.3
       '@emotion/react': 11.10.4(@babel/core@7.19.3)(@types/react@18.0.21)(react@18.2.0)
       '@emotion/styled': 11.10.4(@babel/core@7.19.3)(@emotion/react@11.10.4)(@types/react@18.0.21)(react@18.2.0)
-      csstype: 3.1.2
+      csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
@@ -18494,7 +18494,7 @@ packages:
       '@emotion/react': ^11
     dependencies:
       '@emotion/react': 11.10.4(@babel/core@7.19.3)(@types/react@18.0.21)(react@18.2.0)
-      csstype: 3.1.2
+      csstype: 3.1.1
     dev: true
 
   /@theme-ui/mdx@0.14.7(@emotion/react@11.10.4)(@mdx-js/react@2.1.5)(react@18.2.0):
@@ -20004,7 +20004,7 @@ packages:
   /@types/styled-system@5.1.15:
     resolution: {integrity: sha512-1uls4wipZn8FtYFZ7upRVFDoEeOXTQTs2zuyOZPn02T6rjIxtvj2P2lG5qsxXHhKuKsu3thveCZrtaeLE/ibLg==}
     dependencies:
-      csstype: 3.1.2
+      csstype: 3.1.1
     dev: true
 
   /@types/stylus@0.48.38:
@@ -24750,6 +24750,7 @@ packages:
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
+    dev: false
 
   /csv-parse@5.3.6:
     resolution: {integrity: sha512-WI330GjCuEioK/ii8HM2YE/eV+ynpeLvU+RXw4R8bRU8R0laK5zO3fDsc4gH8s472e3Ga38rbIjCAiQh+tEHkw==}
@@ -37503,7 +37504,7 @@ packages:
       '@types/lodash': 4.14.191
       base16: 1.0.0
       color: 3.2.1
-      csstype: 3.1.2
+      csstype: 3.1.1
       lodash.curry: 4.1.1
     dev: false
 
