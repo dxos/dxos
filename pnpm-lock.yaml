@@ -3895,9 +3895,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -3907,12 +3904,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/document-model':
-        specifier: workspace:*
-        version: link:../../core/echo/document-model
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../common/feed-store
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -3922,12 +3913,6 @@ importers:
       '@dxos/messaging':
         specifier: workspace:*
         version: link:../../core/mesh/messaging
-      '@dxos/messenger-model':
-        specifier: workspace:*
-        version: link:../../core/echo/messenger-model
-      '@dxos/model-factory':
-        specifier: workspace:*
-        version: link:../../core/echo/model-factory
       '@dxos/mosaic':
         specifier: workspace:*
         version: link:../../experimental/mosaic
@@ -3964,12 +3949,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.0.5
         version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/bytes':
-        specifier: ^3.1.1
-        version: 3.1.1
-      bytes:
-        specifier: ^3.1.2
-        version: 3.1.2
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -3985,40 +3964,22 @@ importers:
       react-router-dom:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0)(react@18.2.0)
-      react-syntax-highlighter:
-        specifier: ^15.5.0
-        version: 15.5.0(react@18.2.0)
       react-vis:
         specifier: ^1.11.12
         version: 1.11.12(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@babel/core':
-        specifier: ^7.18.13
-        version: 7.19.3
-      '@dxos/aurora-composer':
-        specifier: workspace:*
-        version: link:../../ui/aurora-composer
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../experimental/gem-spore
-      '@dxos/plexus':
-        specifier: workspace:*
-        version: link:../../experimental/plexus
       '@dxos/react-shell':
         specifier: workspace:*
         version: link:../../sdk/react-shell
-      '@types/faker':
-        specifier: ^5.5.9
-        version: 5.5.9
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
-      '@types/react-syntax-highlighter':
-        specifier: ^15.5.5
-        version: 15.5.5
       '@types/react-vis':
         specifier: ^1.11.11
         version: 1.11.11
@@ -18957,10 +18918,6 @@ packages:
     resolution: {integrity: sha512-wJsiX1tosQ+J5+bY5LrSahHxr2wT+uME5UDwdN1kg4frt40euqA+wzECkmq4t5QbveHiJepfdThgQrPw6KiSlg==}
     dev: false
 
-  /@types/bytes@3.1.1:
-    resolution: {integrity: sha512-lOGyCnw+2JVPKU3wIV0srU0NyALwTBJlVSx5DfMQOFuuohA8y9S8orImpuIQikZ0uIQ8gehrRjxgQC1rLRi11w==}
-    dev: false
-
   /@types/cacheable-request@6.0.3:
     resolution: {integrity: sha512-IQ3EbTzGxIigb1I3qPZc1rWJnH0BmSKv5QYTalEwweFvyBDLSAe24zP0le/hyi7ecGfZVlIVAg4BZqb8WBwKqw==}
     dependencies:
@@ -23120,6 +23077,7 @@ packages:
   /bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
+    dev: true
 
   /c8@7.12.0:
     resolution: {integrity: sha512-CtgQrHOkyxr5koX1wEUmN/5cfDa2ckbHRA4Gy5LAL0zaCFtVWJS5++n+w4/sr2GWGerBxgTjpKeDclk/Qk6W/A==}
