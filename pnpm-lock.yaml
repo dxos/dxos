@@ -194,10 +194,6 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
-<<<<<<< HEAD
-=======
-      esbuild-node-externals: 1.8.0_esbuild@0.16.14
->>>>>>> d8c2157... Change deps
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -4562,6 +4558,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
@@ -4588,6 +4585,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
@@ -21216,10 +21214,10 @@ packages:
       '@types/node': 18.11.9
     dev: false
 
-<<<<<<< HEAD
   /canvas-size/1.2.6:
     resolution: {integrity: sha512-x2iVHOrZ5x9V0Hwx6kBz+Yxf/VCAII+jrD6WLjJbytJLozHq/oDJjEva432Os0eHxWMFR0vYlLJwTr6QxyxQqw==}
-=======
+    dev: false
+
   /canvas/2.11.2:
     resolution: {integrity: sha512-ItanGBMrmRV7Py2Z+Xhs7cT+FNt5K0vPL4p9EZ/UX/Mu7hFbkxSjKF2KVtPwX7UYWp7dRKnrTvReflgrItJbdw==}
     engines: {node: '>=6'}
@@ -21231,12 +21229,7 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
-<<<<<<< HEAD
->>>>>>> 5f3d200... Charts
-    dev: false
-=======
     dev: true
->>>>>>> d8f659a... Tweak rendering
 
   /capital-case/1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
@@ -21450,9 +21443,9 @@ packages:
     resolution: {integrity: sha512-Ro2JbLmvg83gXF5F4sniaQ+lTbSv18E+TIf2cOeiH1Iqd2PGFOtem+DUufMZsCJwFE7ywPOpfXFBwRTGq7dh6w==}
     dev: true
 
-  /chart.js/4.3.0:
-    resolution: {integrity: sha512-ynG0E79xGfMaV2xAHdbhwiPLczxnNNnasrmPEXriXsPJGjmhOBYzFVEsB65w2qMDz+CaBJJuJD0inE/ab/h36g==}
-    engines: {pnpm: '>=7'}
+  /chart.js/4.2.1:
+    resolution: {integrity: sha512-6YbpQ0nt3NovAgOzbkSSeeAQu/3za1319dPUQTXn9WcOpywM8rGKxJHrhS8V8xEkAlk8YhEfjbuAPfUyp6jIsw==}
+    engines: {pnpm: ^7.0.0}
     dependencies:
       '@kurkle/color': 0.3.2
     dev: true
@@ -22398,7 +22391,6 @@ packages:
   /core-js/3.29.0:
     resolution: {integrity: sha512-VG23vuEisJNkGl6XQmFJd3rEG/so/CNatqeE+7uZAwTSwFeB/qaO0be8xZYUNWprJ/GIwL8aMt9cj1kvbpTZhg==}
     requiresBuild: true
-    dev: true
 
   /core-util-is/1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
@@ -24421,20 +24413,6 @@ packages:
     dev: true
     optional: true
 
-<<<<<<< HEAD
-=======
-  /esbuild-node-externals/1.8.0_esbuild@0.16.14:
-    resolution: {integrity: sha512-pYslmT8Bl383UnfxzHQQRpCgBNIOwAzDaYheuIeI4CODxelsN/eQroVn5STDow5QOpRalMgWUR+R8LfSgUROcw==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      esbuild: 0.12 - 0.18
-    dependencies:
-      esbuild: 0.16.14
-      find-up: 5.0.0
-      tslib: 2.5.0
-    dev: true
-
->>>>>>> d8c2157... Change deps
   /esbuild-openbsd-64/0.14.54:
     resolution: {integrity: sha512-Qyk7ikT2o7Wu76UsvvDS5q0amJvmRzDyVlL0qf5VLsLchjCa1+IAvd8kTBgUxD7VBUUVgItLkk609ZHUc1oCaw==}
     engines: {node: '>=12'}
@@ -37594,7 +37572,6 @@ packages:
       varint: 5.0.2
     dev: true
 
-<<<<<<< HEAD
   /signia-react/0.1.4_react@18.2.0:
     resolution: {integrity: sha512-sIb6z+8FdJGxgYokp/00D9I+ftb+Y3CaA9Dy0aFdD17mQ2nBDHKQQKsrnD/QkCHPTKDe6jB96JlmlOvoHps4RQ==}
     peerDependencies:
@@ -37606,7 +37583,8 @@ packages:
 
   /signia/0.1.4:
     resolution: {integrity: sha512-ES2fuLU2iVY/f3dOk41vTTGlRfOps5z/ixEZKXJz2ibRotvFoemN7aHxPNAJjQE94BU1ZWLRBO6/1dpFK8uZmA==}
-=======
+    dev: false
+
   /simple-concat/1.0.1:
     resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
     dev: true
@@ -37617,12 +37595,7 @@ packages:
       decompress-response: 4.2.1
       once: 1.4.0
       simple-concat: 1.0.1
-<<<<<<< HEAD
->>>>>>> 5f3d200... Charts
-    dev: false
-=======
     dev: true
->>>>>>> d8f659a... Tweak rendering
 
   /simple-handshake/3.0.0:
     resolution: {integrity: sha512-8Te0vlxvhpNCMgwnWFTbRR6Re2l8hq8wyXQc3lY9dPYXFxYwVkh79LhDQHFCOWRavmbiOdfqq1l5HT/73Rn2/w==}
@@ -41244,7 +41217,7 @@ packages:
       '@vuepress/utils': 2.0.0-beta.61
       '@vueuse/core': 9.13.0_vue@3.2.47
       balloon-css: 1.2.0
-      chart.js: 4.3.0
+      chart.js: 4.2.1
       echarts: 5.4.1
       flowchart.ts: 0.1.2
       katex: 0.16.4
