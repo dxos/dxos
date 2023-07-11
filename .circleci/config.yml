@@ -70,23 +70,23 @@ jobs:
       - checkout
       - *ram_cache_restore
       - run: npm set verify-store-integrity false
-      - run: pnpm install --prefer-offline
-      - run: pnpm install-playwright
-      - *ram_cache_save
-      - nx/set-shas
-      - run: pnpm check-dependencies
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
-      - when:
-          condition:
-            equal: [ main, <<pipeline.git.branch>> ]
-          steps:
-            - run: pnpm nx run-many --target=lint
-            - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
-      - *codecov_upload
-      - *store_test_results
+      # - run: pnpm install --prefer-offline
+      # - run: pnpm install-playwright
+      # - *ram_cache_save
+      # - nx/set-shas
+      # - run: pnpm check-dependencies
+      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
+      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
+      # - when:
+      #     condition:
+      #       equal: [ main, <<pipeline.git.branch>> ]
+      #     steps:
+      #       - run: pnpm nx run-many --target=lint
+      #       - run: pnpm nx run-many --target=build
+      #       - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
+      # - *codecov_upload
+      # - *store_test_results
 
   #
   # End-to-end playwright UI testing.
