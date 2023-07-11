@@ -14,7 +14,7 @@ export default class Start extends BaseCommand<typeof Start> {
     return await this.execWithDaemon(async (daemon) => {
       const { flags } = await this.parse(Start);
       if (await daemon.isRunning(flags.profile)) {
-        this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx agent reset')`);
+        this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
       }
       await daemon.start(this.flags.profile);
       this.log('Agent started');
