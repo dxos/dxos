@@ -19,13 +19,14 @@ import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import { randomInt, range } from '@dxos/util';
+import { entry, randomInt, range } from '@dxos/util';
 import { LocalClientServices } from '@dxos/client-services';
 
 import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
+import { Chart } from 'chart.js';
 
 export type EchoTestSpec = {
   agents: number;
@@ -142,6 +143,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
           const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
+          const totalMutations  = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
           // compute throughput
           const mutationsSinceLastIter =
@@ -152,10 +154,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
           const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
-          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
-          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog);
+          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
+          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations } satisfies StatsLog);
 
-          for (const _ of range(spec.operationCount)) {
+          for (const idx of range(spec.operationCount)) {
             // TODO: extract size and random seed
             this.getObj().model!.content.insert(
               randomInt(this.getObj().text.length, 0),
@@ -163,6 +165,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
             );
             if (this.getObj().text.length > 100) {
               this.getObj().model!.content.delete(randomInt(this.getObj().text.length, 0), randomInt(this.getObj().text.length, 100));
+            }
+
+            if(idx % 100 === 0) {
+              await this.space.db.flush();
             }
           }
 
@@ -181,6 +187,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
 
           log.info('sync time', { time: performance.now() - begin, agentIdx, iter });
+          log.trace('dxos.test.echo.sync', { time: performance.now() - begin, agentIdx, iter } satisfies SyncTimeLog);
 
           await this.client.destroy();
         }
@@ -233,32 +240,54 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
 
-    const dataPoints: SerializedLogEntry<StatsLog>[] = [];
+    const statsLogs: SerializedLogEntry<StatsLog>[] = [];
+    const syncLogs: SerializedLogEntry<SyncTimeLog>[] = [];
 
     const reader = getReader(results);
     for await (const entry of reader) {
       switch (entry.message) {
         case 'dxos.test.echo.stats':
-          dataPoints.push(entry);
+          statsLogs.push(entry);
+        case 'dxos.test.echo.sync':
+          syncLogs.push(entry);
       }
     }
 
-    const chart = await renderPNG({
-      type: 'scatter',
-      data: {
-        datasets: [
-          {
-            label: 'First Dataset',
-            showLine: true,
-            data: Array.from(Array(150).fill(0).keys()).map((i) => ({ x: i, y: i + 10 * Math.random() })),
-            backgroundColor: 'rgb(255, 99, 132)',
-          },
-        ],
-      },
-      options: {},
-    });
-
-    showPng(chart);
+    if(!params.spec.measureNewAgentSyncTime) {
+      showPng(await renderPNG({
+        type: 'scatter',
+        data: {
+          datasets: 
+            range(params.spec.agents).map((agentIdx) => ({
+              label: `Agent #${agentIdx}`,
+              showLine: true,
+              data: statsLogs.filter(entry => entry.context.agentIdx === agentIdx).map((entry) => ({
+                x: entry.timestamp,
+                y: entry.context.totalMutations,
+              })),
+              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+            })),
+        },
+        options: {},
+      }));
+    } else {
+      showPng(await renderPNG({
+        type: 'scatter',
+        data: {
+          datasets: 
+            range(params.spec.agents).map((agentIdx) => ({
+              label: `Agent #${agentIdx}`,
+              showLine: true,
+              data: syncLogs.filter(entry => entry.context.agentIdx === agentIdx).map((entry) => ({
+                x: entry.timestamp,
+                y: entry.context.time,
+              })),
+              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+            })),
+        },
+        options: {},
+      }));
+    }
   }
 }
 
@@ -273,7 +302,14 @@ type StatsLog = {
   mutationsPerSec: number;
   epoch: number;
   agentIdx: number;
+  totalMutations: number;
 };
+
+type SyncTimeLog = {
+  time: number;
+  agentIdx: number;
+  iter: number;
+}
 
 const renderPNG = async (
   configuration: ChartConfiguration,
@@ -291,3 +327,13 @@ const showPng = (data: Buffer) => {
   writeFileSync(filename, data);
   exec(`open ${filename}`);
 };
+
+const BORDER_COLORS = [
+  'rgb(54, 162, 235)', // blue
+  'rgb(255, 99, 132)', // red
+  'rgb(255, 159, 64)', // orange
+  'rgb(255, 205, 86)', // yellow
+  'rgb(75, 192, 192)', // green
+  'rgb(153, 102, 255)', // purple
+  'rgb(201, 203, 207)' // grey
+];

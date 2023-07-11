@@ -46,14 +46,14 @@ const runEcho = () =>
     plan: new EchoTestPlan(),
     spec: {
       agents: 2,
-      duration: 30_000,
-      iterationDelay: 1000,
+      duration: 300_000,
+      iterationDelay: 300,
 
-      epochPeriod: 4,
-      measureNewAgentSyncTime: false,
+      epochPeriod: 8,
+      measureNewAgentSyncTime: true,
 
-      insertionSize: 1024,
-      operationCount: 500,
+      insertionSize: 512,
+      operationCount: 1000,
       
       signalArguments: ['globalsubserver'],
     },
@@ -61,8 +61,8 @@ const runEcho = () =>
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
       profile: true,
-      repeatAnalysis:
-        '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-06-23T13:02:40-3e0596c2/test.json',
+      // repeatAnalysis:
+      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json',
     },
   });
 
