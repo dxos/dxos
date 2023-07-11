@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SpaceProvides } from '@braneframe/plugin-space/src';
+import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
