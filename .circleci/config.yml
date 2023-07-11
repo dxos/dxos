@@ -70,7 +70,7 @@ jobs:
       - checkout
       - *ram_cache_restore
       - run: npm set verify-store-integrity false
-      - run: pnpm install --prefer-offline
+      - run: pnpm install --prefer-offline --verbose
       - run: pnpm install-playwright
       - *ram_cache_save
       - nx/set-shas
