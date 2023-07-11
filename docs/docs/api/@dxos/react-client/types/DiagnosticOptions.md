@@ -1,5 +1,5 @@
 # Type `DiagnosticOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/diagnostics.d.ts:26]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/diagnostics/diagnostics.d.ts:26]()</sub>
 
 
 
