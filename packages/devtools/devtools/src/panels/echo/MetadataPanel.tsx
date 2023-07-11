@@ -10,7 +10,7 @@ import { useMetadata } from '../../hooks';
 const MetadataPanel = () => {
   const metadata = useMetadata();
 
-  return <JsonView data={metadata} />;
+  return <JsonView className='flex flex-1 overflow-auto ml-2 mt-2' data={metadata} />;
 };
 
 export default MetadataPanel;
