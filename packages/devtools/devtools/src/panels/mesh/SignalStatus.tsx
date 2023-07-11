@@ -35,7 +35,7 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
     lastStateChange: server.lastStateChange!,
     reconnectIn: server.reconnectIn!,
     host: server.host!,
-    state: server.state!,
+    state: server.state!
   };
 };
 
@@ -52,7 +52,7 @@ const SignalStatusComp = () => {
       async () => {
         setTime(new Date());
       },
-      1000,
+      1000
     );
     return () => {
       void ctx.dispose();
@@ -69,9 +69,8 @@ const SignalStatusComp = () => {
     <div>
       {status.map((status) => (
         <div
-          className='flex flex-col justify-between p-2'
           style={{
-            color: getColor(status.state),
+            color: getColor(status.state)
           }}
           key={status.host}
         >
