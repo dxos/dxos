@@ -3964,9 +3964,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-      react-json-tree:
-        specifier: ^0.18.0
-        version: 0.18.0(@types/react@18.0.21)(react@18.2.0)
+      react-editable-json-tree:
+        specifier: ^2.3.0
+        version: 2.3.0(react-dom@18.2.0)(react@18.2.0)
       react-router-dom:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0)(react@18.2.0)
@@ -37680,6 +37680,18 @@ packages:
       styled-components: 5.3.6(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - react-is
+    dev: false
+
+  /react-editable-json-tree@2.3.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-OG7VBoYAkl9zFRU3NKCklwaKYannFz/mckg5OauFZKZ0WU7zeuK49y3trC7M4obnxOafbfzPdY5H06Yk5ztGiw==}
+    engines: {node: '>= 8'}
+    peerDependencies:
+      react: ^16 || ^17 || ^18
+      react-dom: ^16 || ^17 || ^18
+    dependencies:
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /react-element-to-jsx-string@15.0.0(react-dom@18.2.0)(react@18.2.0):
