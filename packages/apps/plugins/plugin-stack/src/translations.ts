@@ -7,7 +7,12 @@ export default [
     'en-US': {
       'dxos:stack': {
         'plugin name': 'DXOS Stacks',
-        'add section label': 'Add section',
+        'create stack label': 'Create stack',
+        'add section label': 'Add:',
+        'add new section label': 'New',
+        'add existing section label': 'Existing',
+        'stack title placeholder': 'Untitled stack',
+        'add existing section dialog title': 'Choose an item to add',
       },
     },
   },

@@ -15,6 +15,7 @@ import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { SnapshotStore } from '../dbhost';
@@ -105,6 +106,11 @@ export class TestAgent {
     return (this._snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
   }
 
+  private _blobStore?: BlobStore;
+  get blobStore() {
+    return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
+  }
+
   public modelFactory = new ModelFactory().registerModel(DocumentModel);
 
   constructor(
@@ -138,6 +144,7 @@ export class TestAgent {
       modelFactory: this.modelFactory,
       metadataStore: this.metadataStore,
       snapshotStore: this.snapshotStore,
+      blobStore: this.blobStore,
     }));
   }
 
@@ -157,7 +164,10 @@ export class TestAgent {
     }
 
     const controlFeed = await this.feedStore.openFeed(genesisKey, { writable: true });
-    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), { writable: true });
+    const dataFeed = await this.feedStore.openFeed(dataKey ?? (await this.keyring.createKey()), {
+      writable: true,
+      sparse: true,
+    });
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
@@ -203,6 +213,7 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: this._networkManagerProvider(),
+      blobStore: this.blobStore,
       onSessionAuth: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',

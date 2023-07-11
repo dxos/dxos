@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-import './embedded.css';
 
 import {
   ArrowSquareOut,
@@ -14,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
+import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
   Button,
@@ -34,7 +34,6 @@ import { useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 import { Surface } from '@dxos/react-surface';
 
-import { getSpaceDisplayName } from '../../../SpacePlugin/getSpaceDisplayName';
 import { useDocGhId } from '../../hooks';
 import { EditorViewState } from '../../props';
 import {
@@ -45,6 +44,7 @@ import {
   SpaceResolverContext,
 } from '../GithubEchoResolverProviders';
 import { GfmPreview } from './GfmPreview';
+import './embedded.css';
 
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 

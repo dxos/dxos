@@ -19,6 +19,7 @@ import { SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
@@ -189,7 +190,6 @@ export class DataSpace {
     }
     this._state = SpaceState.INITIALIZING;
 
-    // TODO(dmaretskyi): Cancel with context.
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
@@ -256,7 +256,10 @@ export class DataSpace {
       );
     }
     if (!this.inner.dataFeedKey) {
-      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
+      const dataFeed = await this._feedStore.openFeed(await this._keyring.createKey(), {
+        writable: true,
+        sparse: true,
+      });
       this.inner.setDataFeed(dataFeed);
 
       credentials.push(
@@ -285,7 +288,7 @@ export class DataSpace {
   async createEpoch() {
     const epoch = await this.dataPipeline.createEpoch();
 
-    await this.inner.controlPipeline.writer.write({
+    const receipt = await this.inner.controlPipeline.writer.write({
       credential: {
         credential: await this._signingContext.credentialSigner.createCredential({
           subject: this.key,
@@ -296,6 +299,8 @@ export class DataSpace {
         }),
       },
     });
+
+    await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
       const indexBeforeEpoch = epoch.timeframe.get(feed.key);

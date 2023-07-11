@@ -53,8 +53,8 @@ export class TestBuilder {
     return new MemorySignalManager(this._signalContext);
   }
 
-  createPeer() {
-    return new TestPeer(this);
+  createPeer(peerId: PublicKey = PublicKey.random()) {
+    return new TestPeer(this, peerId);
   }
 }
 
@@ -62,8 +62,6 @@ export class TestBuilder {
  * Testing network peer.
  */
 export class TestPeer {
-  readonly peerId = PublicKey.random();
-
   private readonly _swarms = new ComplexMap<PublicKey, TestSwarmConnection>(PublicKey.hash);
 
   /**
@@ -79,7 +77,7 @@ export class TestPeer {
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
-  constructor(private readonly testBuilder: TestBuilder) {
+  constructor(private readonly testBuilder: TestBuilder, public readonly peerId: PublicKey) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager();
   }

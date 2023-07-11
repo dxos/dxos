@@ -38,6 +38,7 @@ import {
   StorageInfo,
   GetSnapshotsResponse,
   SubscribeToMetadataResponse,
+  GetBlobsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ServiceContext } from '../services';
@@ -85,6 +86,12 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
       storageUsage: storageUsage.used,
       originUsage: navigatorInfo?.usage ?? 0,
       usageQuota: navigatorInfo?.quota ?? 0,
+    };
+  }
+
+  async getBlobs(): Promise<GetBlobsResponse> {
+    return {
+      blobs: await this.params.context.blobStore.list(),
     };
   }
 

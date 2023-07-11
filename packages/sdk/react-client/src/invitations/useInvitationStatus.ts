@@ -180,14 +180,6 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       authMethod: invitation?.authMethod,
     };
 
-    // TODO(wittjosiah): Remove. Playwright currently only supports reading clipboard in chromium.
-    //   https://github.com/microsoft/playwright/issues/13037
-    if (result.status === Invitation.State.READY_FOR_AUTHENTICATION && result.authCode) {
-      log.info(JSON.stringify({ authCode: result.authCode }));
-    } else if (result.status === Invitation.State.INIT && result.invitationCode) {
-      log.info(JSON.stringify({ invitationCode: result.invitationCode }));
-    }
-
     return result;
   }, [state, cancel, connect, authenticate]);
 };

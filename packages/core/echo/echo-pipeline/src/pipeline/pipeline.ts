@@ -42,6 +42,11 @@ export class PipelineState {
   public readonly stalled = new Event();
 
   /**
+   * @internal
+   */
+  _startTimeframe: Timeframe = new Timeframe();
+
+  /**
    * Target timeframe we are waiting to reach.
    */
   private _targetTimeframe: Timeframe | undefined;
@@ -68,6 +73,10 @@ export class PipelineState {
           index: feed.length - 1,
         })),
     );
+  }
+
+  get startTimeframe() {
+    return this._startTimeframe;
   }
 
   get timeframe() {
@@ -230,6 +239,7 @@ export class Pipeline implements PipelineAccessor {
     if (this._feedSetIterator) {
       await this._feedSetIterator.addFeed(feed);
     }
+    this._setFeedDownloadState(feed);
   }
 
   hasFeed(feedKey: PublicKey) {
@@ -275,7 +285,13 @@ export class Pipeline implements PipelineAccessor {
   async setCursor(timeframe: Timeframe) {
     assert(!this._isStarted || this._isPaused, 'Invalid state.');
 
+    this._state._startTimeframe = timeframe;
     this._timeframeClock.setTimeframe(timeframe);
+
+    // Cancel downloads of mutations before the cursor.
+    for (const feed of this._feeds.values()) {
+      this._setFeedDownloadState(feed);
+    }
 
     if (this._feedSetIterator) {
       await this._feedSetIterator.close();
@@ -346,6 +362,17 @@ export class Pipeline implements PipelineAccessor {
 
     // TODO(burdon): Test re-entrant?
     this._isOpen = false;
+  }
+
+  private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
+    const timeframe = this._state._startTimeframe;
+    const seq = timeframe.get(feed.key) ?? 0;
+
+    feed.undownload({ callback: () => log('Undownloaded') });
+
+    feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
+      log('failed to download feed', { err });
+    });
   }
 
   private async _initIterator() {

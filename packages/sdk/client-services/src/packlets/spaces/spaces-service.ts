@@ -42,6 +42,7 @@ export class SpacesServiceImpl implements SpacesService {
     if (!this._identityManager.identity) {
       throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/halo');
     }
+
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
     return this._transformSpace(space);
@@ -73,6 +74,7 @@ export class SpacesServiceImpl implements SpacesService {
           for (const space of dataSpaceManager.spaces.values()) {
             subscriptions.add(space.stateUpdate.on(ctx, onUpdate));
             subscriptions.add(space.presence.updated.on(ctx, onUpdate));
+            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, onUpdate));
 
             // Pipeline progress.
             space.inner.controlPipeline.state.timeframeUpdate
@@ -155,12 +157,16 @@ export class SpacesServiceImpl implements SpacesService {
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
+        currentEpoch: space.dataPipeline.currentEpoch,
+        appliedEpoch: space.dataPipeline.appliedEpoch,
+
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
         dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
+        startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
         currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
         totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
@@ -178,6 +184,7 @@ export class SpacesServiceImpl implements SpacesService {
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
+      creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
     };

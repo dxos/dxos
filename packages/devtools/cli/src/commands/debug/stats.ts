@@ -9,7 +9,7 @@ import { Client, diagnostics } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 
 /**
- * DX_PROFILE=test dx-dev debug stats --json
+ * DX_PROFILE=test dx debug stats --json
  */
 export default class Stats extends BaseCommand<typeof Stats> {
   static override enableJsonFlag = true;

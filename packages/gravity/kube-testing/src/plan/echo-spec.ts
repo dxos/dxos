@@ -232,6 +232,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     //       console.log(entry.context)
     //   }
     // }
+    log.info('finished shutdown');
   }
 }
 

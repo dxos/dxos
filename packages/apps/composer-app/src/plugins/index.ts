@@ -4,4 +4,3 @@
 
 export * from './GithubPlugin';
 export * from './LocalFilesPlugin';
-export * from './SpacePlugin';
