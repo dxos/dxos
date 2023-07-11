@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DraggableAttributes } from '@dnd-kit/core';
+import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
+import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -22,7 +22,6 @@ import {
   ListScopedProps,
   DropdownMenu,
   ButtonGroup,
-  ListItemRootProps,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { subscribe } from '@dxos/observable-object';
@@ -46,64 +45,57 @@ export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
   );
 };
 
-const StackSectionImpl = forwardRef<
-  HTMLLIElement,
-  ListScopedProps<StackSectionProps> & {
-    draggableAttributes?: DraggableAttributes;
-    draggableListeners?: ReturnType<typeof useSortable>['listeners'];
-    style?: ListItemRootProps['style'];
-    rearranging?: boolean;
-    isOverlay?: boolean;
-  }
->(({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
-  const { t } = useTranslation('dxos:stack');
-  return (
-    <DensityProvider density='fine'>
-      <ListItem.Root
-        id={section.object.id}
-        classNames={[
-          surfaceElevation({ elevation: 'group' }),
-          'bg-white dark:bg-neutral-925 grow rounded mbe-2',
-          '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
-          isOverlay && 'hover-hover:[--controls-opacity:1]',
-          rearranging && 'opacity-0',
-        ]}
-        ref={forwardedRef}
-        style={style}
-      >
-        <ListItem.Heading classNames='sr-only'>
-          {get(section, 'object.title', t('generic section heading'))}
-        </ListItem.Heading>
-        <div
-          className={mx(
-            buttonFine,
-            defaultFocus,
-            'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
-            isOverlay && 'text-primary-600 dark:text-primary-300',
-          )}
-          {...draggableAttributes}
-          {...draggableListeners}
+const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
+  ({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
+    const { t } = useTranslation('dxos:stack');
+    return (
+      <DensityProvider density='fine'>
+        <ListItem.Root
+          id={section.object.id}
+          classNames={[
+            surfaceElevation({ elevation: 'group' }),
+            'bg-white dark:bg-neutral-925 grow rounded mbe-2',
+            '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
+            isOverlay && 'hover-hover:[--controls-opacity:1]',
+            rearranging && 'opacity-0',
+          ]}
+          ref={forwardedRef}
+          style={style}
         >
-          <DotsSixVertical
-            weight={isOverlay ? 'bold' : 'regular'}
-            className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
-          />
-        </div>
-        <div role='none' className='flex-1'>
-          <Surface role='section' data={section} />
-        </div>
-        <Button
-          variant='ghost'
-          classNames='self-stretch justify-start rounded-is-none focus:[--controls-opacity:1]'
-          onClick={onRemove}
-        >
-          <span className='sr-only'>{t('remove section label')}</span>
-          <Minus className={mx(getSize(4), 'transition-opacity opacity-[--controls-opacity]')} />
-        </Button>
-      </ListItem.Root>
-    </DensityProvider>
-  );
-});
+          <ListItem.Heading classNames='sr-only'>
+            {get(section, 'object.title', t('generic section heading'))}
+          </ListItem.Heading>
+          <div
+            className={mx(
+              buttonFine,
+              defaultFocus,
+              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+              isOverlay && 'text-primary-600 dark:text-primary-300',
+            )}
+            {...draggableAttributes}
+            {...draggableListeners}
+          >
+            <DotsSixVertical
+              weight={isOverlay ? 'bold' : 'regular'}
+              className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
+            />
+          </div>
+          <div role='none' className='flex-1'>
+            <Surface role='section' data={section} />
+          </div>
+          <Button
+            variant='ghost'
+            classNames='self-stretch justify-start rounded-is-none focus:[--controls-opacity:1]'
+            onClick={onRemove}
+          >
+            <span className='sr-only'>{t('remove section label')}</span>
+            <Minus className={mx(getSize(4), 'transition-opacity opacity-[--controls-opacity]')} />
+          </Button>
+        </ListItem.Root>
+      </DensityProvider>
+    );
+  },
+);
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -144,10 +136,10 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
 
-  useDragStart(({ active: { id } }) => setActiveId(id.toString()), []);
+  useDragStart(({ active: { id } }: DragStartEvent) => setActiveId(id.toString()), []);
 
   useDragOver(
-    ({ over }) => {
+    ({ over }: DragOverEvent) => {
       if (!over) {
         return setOverIsMember(false);
       }

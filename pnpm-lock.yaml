@@ -880,6 +880,7 @@ importers:
 
   packages/apps/plugins/plugin-treeview:
     specifiers:
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@dnd-kit/core': ^6.0.5
@@ -892,8 +893,10 @@ importers:
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
@@ -904,13 +907,16 @@ importers:
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@tldraw/indices': 2.0.0-alpha.14
+      lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0

@@ -11,7 +11,13 @@ import {
   DragOverlay,
   DragStartEvent,
   DropAnimation,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import React, { createContext, DependencyList, useContext, useEffect, useState } from 'react';
 
 import { createStore } from '@dxos/observable-object';
@@ -176,18 +182,39 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => ({
     components: {
       default: DndOverlay,
     },
-    context: ({ children }) => (
-      <DndPluginContext.Provider value={store}>
-        <DndContext
-          onDragOver={handleDragOver}
-          onDragStart={handleDragStart}
-          onDragCancel={handleDragCancel}
-          onDragEnd={handleDragEnd}
-        >
-          {children}
-        </DndContext>
-      </DndPluginContext.Provider>
-    ),
+    context: ({ children }) => {
+      const sensors = useSensors(
+        useSensor(MouseSensor, {
+          // Require the mouse to move by 10 pixels before activating
+          activationConstraint: {
+            distance: 10,
+          },
+        }),
+        useSensor(TouchSensor, {
+          // Press delay of 200ms, with tolerance of 5px of movement
+          activationConstraint: {
+            delay: 200,
+            tolerance: 5,
+          },
+        }),
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+        }),
+      );
+      return (
+        <DndPluginContext.Provider value={store}>
+          <DndContext
+            onDragOver={handleDragOver}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
+          >
+            {children}
+          </DndContext>
+        </DndPluginContext.Provider>
+      );
+    },
     dnd: store,
   },
 });
