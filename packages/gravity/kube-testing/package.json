@@ -33,8 +33,8 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^7.3.0",
-    "canvas": "^2.11.2",
-    "chart.js": "^4.3.0",
+    "chart.js": "^3.9.1",
+    "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "redis": "^4.6.6",
     "seedrandom": "^3.0.5"

@@ -194,6 +194,10 @@ importers:
       chai-dom: 1.11.0_chai@4.3.6+mocha@8.4.0
       chalk: 4.1.2
       esbuild: 0.16.14
+<<<<<<< HEAD
+=======
+      esbuild-node-externals: 1.8.0_esbuild@0.16.14
+>>>>>>> d8c2157... Change deps
       esbuild-plugin-raw: 0.1.7_esbuild@0.16.14
       esbuild-plugin-yaml: 0.0.1
       eslint: 8.41.0
@@ -4575,7 +4579,8 @@ importers:
       '@types/node': ^18.11.9
       '@types/seedrandom': ^3.0.5
       canvas: ^2.11.2
-      chart.js: ^4.3.0
+      chart.js: ^3.9.1
+      chartjs-node-canvas: ^4.1.6
       danfojs-node: ^1.1.2
       redis: ^4.6.6
       seedrandom: ^3.0.5
@@ -4598,7 +4603,8 @@ importers:
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 7.6.0
       canvas: 2.11.2
-      chart.js: 4.3.0
+      chart.js: 3.9.1
+      chartjs-node-canvas: 4.1.6_chart.js@3.9.1
       danfojs-node: 1.1.2_ihcuhbzspmrdikxur7i6vc4ele
       redis: 4.6.6
       seedrandom: 3.0.5
@@ -10719,6 +10725,7 @@ packages:
 
   /@kurkle/color/0.3.2:
     resolution: {integrity: sha512-fuscdXJ9G1qb7W8VdHi+IwRqij3lBkosAm4ydQtEmbY58OzHXqQhvlxqEkoz0yssNVn38bcpRWgA9PP+OGoisw==}
+    dev: true
 
   /@lezer/common/1.0.2:
     resolution: {integrity: sha512-SVgiGtMnMnW3ActR8SXgsDhw7a0w0ChHSYAyAUxxrOiJ1OqYWEKk/xJd84tTSPo1mo6DXLObAJALNnd0Hrv7Ng==}
@@ -21431,18 +21438,28 @@ packages:
   /charenc/0.0.2:
     resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
 
-  /chart.js/4.2.1:
-    resolution: {integrity: sha512-6YbpQ0nt3NovAgOzbkSSeeAQu/3za1319dPUQTXn9WcOpywM8rGKxJHrhS8V8xEkAlk8YhEfjbuAPfUyp6jIsw==}
-    engines: {pnpm: ^7.0.0}
-    dependencies:
-      '@kurkle/color': 0.3.2
-    dev: true
+  /chart.js/3.9.1:
+    resolution: {integrity: sha512-Ro2JbLmvg83gXF5F4sniaQ+lTbSv18E+TIf2cOeiH1Iqd2PGFOtem+DUufMZsCJwFE7ywPOpfXFBwRTGq7dh6w==}
+    dev: false
 
   /chart.js/4.3.0:
     resolution: {integrity: sha512-ynG0E79xGfMaV2xAHdbhwiPLczxnNNnasrmPEXriXsPJGjmhOBYzFVEsB65w2qMDz+CaBJJuJD0inE/ab/h36g==}
     engines: {pnpm: '>=7'}
     dependencies:
       '@kurkle/color': 0.3.2
+    dev: true
+
+  /chartjs-node-canvas/4.1.6_chart.js@3.9.1:
+    resolution: {integrity: sha512-UQJbPWrvqB/FoLclGA9BaLQmZbzSYlujF4w8NZd6Xzb+sqgACBb2owDX6m7ifCXLjUW5Nz0Qx0qqrTtQkkSoYw==}
+    peerDependencies:
+      chart.js: ^3.5.1
+    dependencies:
+      canvas: 2.11.2
+      chart.js: 3.9.1
+      tslib: 2.5.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
     dev: false
 
   /check-error/1.0.2:
@@ -24389,6 +24406,20 @@ packages:
     dev: true
     optional: true
 
+<<<<<<< HEAD
+=======
+  /esbuild-node-externals/1.8.0_esbuild@0.16.14:
+    resolution: {integrity: sha512-pYslmT8Bl383UnfxzHQQRpCgBNIOwAzDaYheuIeI4CODxelsN/eQroVn5STDow5QOpRalMgWUR+R8LfSgUROcw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      esbuild: 0.12 - 0.18
+    dependencies:
+      esbuild: 0.16.14
+      find-up: 5.0.0
+      tslib: 2.5.0
+    dev: true
+
+>>>>>>> d8c2157... Change deps
   /esbuild-openbsd-64/0.14.54:
     resolution: {integrity: sha512-Qyk7ikT2o7Wu76UsvvDS5q0amJvmRzDyVlL0qf5VLsLchjCa1+IAvd8kTBgUxD7VBUUVgItLkk609ZHUc1oCaw==}
     engines: {node: '>=12'}
@@ -41172,7 +41203,7 @@ packages:
       '@vuepress/utils': 2.0.0-beta.61
       '@vueuse/core': 9.13.0_vue@3.2.47
       balloon-css: 1.2.0
-      chart.js: 4.2.1
+      chart.js: 4.3.0
       echarts: 5.4.1
       flowchart.ts: 0.1.2
       katex: 0.16.4
