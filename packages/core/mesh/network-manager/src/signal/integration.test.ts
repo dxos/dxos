@@ -23,7 +23,7 @@ describe('Signal Integration Test', () => {
   });
 
   afterAll(() => {
-    broker.stop();
+    void broker.stop();
   });
 
   const setupPeer = async ({ peerId, topic = PublicKey.random() }: { peerId: PublicKey; topic?: PublicKey }) => {
