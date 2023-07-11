@@ -82,11 +82,11 @@ export class SignalServerRunner {
     });
 
     server.stdout.on('data', (data) => {
-      log.info(`TestServer stdout: ${data}`);
+      log(`TestServer stdout: ${data}`);
     });
 
     server.stderr.on('data', (data) => {
-      log.warn(`TestServer stderr: ${data}`);
+      log(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
