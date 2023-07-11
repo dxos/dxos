@@ -36,13 +36,12 @@ const SpacesPanel = () => {
     const currentEpochNumber = pipeline?.currentEpoch?.subject.assertion.number;
     const appliedEpochNumber = pipeline?.appliedEpoch?.subject.assertion.number;
 
-    const targetControlMessages = (pipeline?.targetControlTimeframe?.totalMessages() ?? 0)
-    const currentControlMessages = (pipeline?.currentControlTimeframe?.totalMessages() ?? 0)
+    const targetControlMessages = pipeline?.targetControlTimeframe?.totalMessages() ?? 0;
+    const currentControlMessages = pipeline?.currentControlTimeframe?.totalMessages() ?? 0;
 
-    const startDataMessages = (pipeline?.startDataTimeframe?.totalMessages() ?? 0);
-    const targetDataMessages = (pipeline?.targetDataTimeframe?.totalMessages() ?? 0)
-    const currentDataMessages = (pipeline?.currentDataTimeframe?.totalMessages() ?? 0)
-
+    const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
+    const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+    const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
 
     // TODO(burdon): List feeds and nav.
     return {
@@ -52,11 +51,16 @@ const SpacesPanel = () => {
       genesisFeed: metadata?.genesisFeed.truncate(),
       controlFeed: metadata?.controlFeed.truncate(),
       dataFeed: metadata?.dataFeed.truncate(),
-      currentEpoch: currentEpochNumber === appliedEpochNumber ? currentEpochNumber : `${currentEpochNumber} (${appliedEpochNumber})`,
+      currentEpoch:
+        currentEpochNumber === appliedEpochNumber
+          ? currentEpochNumber
+          : `${currentEpochNumber} (${appliedEpochNumber})`,
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
       mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
       controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
-      dataProgress: `${(Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100).toFixed(0)}%`,
+      dataProgress: `${(
+        Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100
+      ).toFixed(0)}%`,
       startupTime:
         space?.internal.data?.metrics.open &&
         space?.internal.data?.metrics.ready &&
@@ -103,7 +107,8 @@ const columns: TableColumn<PipelineTableRow>[] = [
     Header: 'Progress',
     width: 80,
     accessor: (block) => {
-      const percent = ((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0)) * 100;
+      const percent =
+        (((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0))) * 100;
       if (isNaN(percent)) {
         return '';
       }
