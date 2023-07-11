@@ -6,7 +6,7 @@ import React, { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 import { Button } from '@dxos/aurora';
-import { TreeView, TreeViewItem } from '@dxos/react-appkit';
+import { TreeView, TreeViewItem, Fallback } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
@@ -22,13 +22,6 @@ const Footer = () => {
   }
   return (
     <div className='flex flex-col shrink-0 m-2'>
-      {/* Print current package version */}
-      {process.env.PACKAGE_VERSION && (
-        <div className='flex flex-row justify-center p-2'>
-          <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
-        </div>
-      )}
-
       <Button
         variant='outline'
         onClick={async () => {
@@ -67,7 +60,7 @@ export const RootContainer = () => {
 
       <div className='flex flex-1 flex-col overflow-hidden bg-white'>
         <ErrorBoundary key={pathname}>
-          <Suspense>
+          <Suspense fallback={<Fallback message='Loading...' />}>
             <Outlet />
           </Suspense>
         </ErrorBoundary>
