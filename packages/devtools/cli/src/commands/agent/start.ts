@@ -39,19 +39,12 @@ export default class Start extends BaseCommand<typeof Start> {
   };
 
   async run(): Promise<any> {
-<<<<<<< HEAD
-    return await this.execWithDaemon(async (daemon) => {
-      const { flags } = await this.parse(Start);
-      if (await daemon.isRunning(flags.profile)) {
-        this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
-=======
     const { flags } = await this.parse(Start);
 
     if (flags.foreground) {
       const listen = [];
       if (this.flags.socket) {
         listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
->>>>>>> 870d94856 (Delete `run` command)
       }
       if (this.flags['web-socket']) {
         listen.push(`ws://localhost:${this.flags['web-socket']}`);
@@ -88,7 +81,7 @@ export default class Start extends BaseCommand<typeof Start> {
     } else {
       return await this.execWithDaemon(async (daemon) => {
         if (await daemon.isRunning(flags.profile)) {
-          this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx agent reset')`);
+          this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
         }
         await daemon.start(this.flags.profile);
         this.log('Agent started');
