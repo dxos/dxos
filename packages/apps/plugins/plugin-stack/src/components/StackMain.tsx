@@ -135,19 +135,29 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   }
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
 
-  useDragStart(({ active: { data } }: DragStartEvent) => {
-    console.log('[drag start]', get(data.current, 'section.object.id', 'no active section object id'));
-    setActiveId(get(data.current, 'section.object.id', null));
-  }, []);
+  useDragStart(
+    ({ active: { data } }: DragStartEvent) => {
+      const nextActiveId = get(data.current, 'section.object.id', null);
+      if (nextActiveId) {
+        setActiveId(nextActiveId);
+        setActiveAddableObject(null);
+      } else {
+        const chooserDatum = get(data.current, 'treeitem.data', null);
+        const validChooser = chooserDatum && stackSectionChoosers.find((chooser) => chooser?.filter(chooserDatum));
+        setActiveAddableObject(validChooser && !sectionIds.has(get(chooserDatum, 'id')) ? chooserDatum : null);
+      }
+    },
+    [sectionIds],
+  );
 
   useDragOver(
     ({ over }: DragOverEvent) => {
       if (!over) {
         return setOverIsMember(false);
       }
-      console.log('[drag over]', get(over.data.current, 'section.object.id', 'no over section object id'));
       return setOverIsMember(sectionIds.has(get(over, 'data.current.section.object.id', null)));
     },
     [sectionIds],
@@ -182,21 +192,16 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             const activeIndex = sections.findIndex((section) => section.object.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
           }
-        } else {
-          // Check if the dropped item can be added.
-          const datum = get(active, 'data.current.treeitem.data', null);
-          const validChooser = stackSectionChoosers.find((chooser) => chooser?.filter(datum));
-          console.log('[drag end]', get(datum, 'content'), get(datum, 'content.content'));
-          if (validChooser) {
-            dnd.overlayDropAnimation = 'into';
-            handleAdd(nextIndex, datum as GenericStackObject);
-          }
+        } else if (activeAddableObject) {
+          dnd.overlayDropAnimation = 'into';
+          handleAdd(nextIndex, activeAddableObject);
         }
       }
       setActiveId(null);
+      setActiveAddableObject(null);
       setOverIsMember(false);
     },
-    [sections, activeId, overIsMember, stackSectionChoosers],
+    [sections, overIsMember],
   );
 
   return (
