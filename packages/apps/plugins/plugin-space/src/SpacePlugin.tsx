@@ -12,7 +12,7 @@ import {
   Planet,
   Upload,
 } from '@phosphor-icons/react';
-import { getIndexAbove, getIndexBetween, getIndices } from '@tldraw/indices';
+import { getIndices } from '@tldraw/indices';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
@@ -207,11 +207,11 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               rootObjects.set(id, children);
             }
             node.children = children ?? [];
-            node.onChildrenRearrange = (child: GraphNode<TypedObject>, below, above) => {
+            node.onChildrenRearrange = (child: GraphNode<TypedObject>, nextIndex) => {
               if (child.data) {
                 child.data.meta = {
                   ...child.data?.meta,
-                  index: above ? getIndexBetween(below, above) : getIndexAbove(below),
+                  index: nextIndex,
                 };
               }
             };

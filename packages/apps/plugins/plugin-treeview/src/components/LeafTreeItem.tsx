@@ -5,7 +5,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import React, { FC, forwardRef, ForwardRefExoticComponent, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -20,7 +20,7 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, getSize, mx } from '@dxos/aurora-theme';
+import { appTx, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 
@@ -28,7 +28,12 @@ import { useTreeView } from '../TreeViewContext';
 
 const spaceExp = /\s/g;
 
-export const SortableLeafTreeItem = ({ node }: { node: GraphNode }) => {
+type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+
+export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
+  node,
+  rearranging,
+}: SortableLeafTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: `treeitem:${node.id}`,
     data: { entity: node },
@@ -38,14 +43,17 @@ export const SortableLeafTreeItem = ({ node }: { node: GraphNode }) => {
       node={node}
       draggableAttributes={attributes}
       draggableListeners={listeners}
+      rearranging={rearranging}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       ref={setNodeRef}
     />
   );
 };
 
-export const LeafTreeItem = forwardRef<HTMLLIElement, { node: GraphNode } & SortableProps>(
-  ({ node, draggableListeners, draggableAttributes, style }, forwardedRef) => {
+type LeafTreeItemProps = { node: GraphNode } & SortableProps;
+
+export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps> = forwardRef<HTMLLIElement, LeafTreeItemProps>(
+  ({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
     // todo(thure): Handle `sortable`
 
     const { sidebarOpen, closeSidebar } = useSidebar();
@@ -78,7 +86,11 @@ export const LeafTreeItem = forwardRef<HTMLLIElement, { node: GraphNode } & Sort
 
     return (
       <TreeItem.Root
-        classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'
+        classNames={[
+          'pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded',
+          defaultFocus,
+          rearranging && 'invisible',
+        ]}
         {...draggableAttributes}
         {...draggableListeners}
         style={style}
@@ -98,7 +110,14 @@ export const LeafTreeItem = forwardRef<HTMLLIElement, { node: GraphNode } & Sort
             role='link'
             {...(!sidebarOpen && { tabIndex: -1 })}
             data-itemid={node.id}
-            onClick={() => {
+            onKeyDown={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.stopPropagation();
+                treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
+                !isLg && closeSidebar();
+              }
+            }}
+            onClick={(event) => {
               // TODO(wittjosiah): Make recursive.
               treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
               !isLg && closeSidebar();
@@ -111,66 +130,69 @@ export const LeafTreeItem = forwardRef<HTMLLIElement, { node: GraphNode } & Sort
             </p>
           </button>
         </TreeItem.Heading>
-        <Tooltip.Root
-          open={optionsTooltipOpen}
-          onOpenChange={(nextOpen) => {
-            if (suppressNextTooltip.current) {
-              setOptionsTooltipOpen(false);
-              suppressNextTooltip.current = false;
-            } else {
-              setOptionsTooltipOpen(nextOpen);
-            }
-          }}
-        >
-          <Tooltip.Portal>
-            <Tooltip.Content classNames='z-[31]' side='bottom'>
-              {t('tree leaf options label')}
-              <Tooltip.Arrow />
-            </Tooltip.Content>
-          </Tooltip.Portal>
-          <DropdownMenu.Root
-            {...{
-              open: optionsMenuOpen,
-              onOpenChange: (nextOpen: boolean) => {
-                if (!nextOpen) {
-                  suppressNextTooltip.current = true;
-                }
-                return setOptionsMenuOpen(nextOpen);
-              },
+        {!isOverlay && (
+          <Tooltip.Root
+            open={optionsTooltipOpen}
+            onOpenChange={(nextOpen) => {
+              if (suppressNextTooltip.current) {
+                setOptionsTooltipOpen(false);
+                suppressNextTooltip.current = false;
+              } else {
+                setOptionsTooltipOpen(nextOpen);
+              }
             }}
           >
-            <DropdownMenu.Trigger asChild>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant='ghost'
-                  classNames='shrink-0 pli-2 pointer-fine:pli-1 self-start'
-                  {...(!sidebarOpen && { tabIndex: -1 })}
-                >
-                  <DotsThreeVertical className={getSize(4)} />
-                </Button>
-              </Tooltip.Trigger>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content classNames='z-[31]'>
-                {node.actions?.map((action) => (
-                  <DropdownMenu.Item
-                    key={action.id}
-                    onClick={(event) => {
-                      suppressNextTooltip.current = true;
-                      setOptionsMenuOpen(false);
-                      void action.invoke(t, event);
-                    }}
-                    classNames='gap-2'
+            <Tooltip.Portal>
+              <Tooltip.Content classNames='z-[31]' side='bottom'>
+                {t('tree leaf options label')}
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+            <DropdownMenu.Root
+              {...{
+                open: optionsMenuOpen,
+                onOpenChange: (nextOpen: boolean) => {
+                  if (!nextOpen) {
+                    suppressNextTooltip.current = true;
+                  }
+                  return setOptionsMenuOpen(nextOpen);
+                },
+              }}
+            >
+              <DropdownMenu.Trigger asChild>
+                <Tooltip.Trigger asChild>
+                  <Button
+                    variant='ghost'
+                    classNames='shrink-0 pli-2 pointer-fine:pli-1 self-start'
+                    {...(!sidebarOpen && { tabIndex: -1 })}
                   >
-                    {action.icon && <action.icon className={getSize(4)} />}
-                    <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                  </DropdownMenu.Item>
-                ))}
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </Tooltip.Root>
+                    <DotsThreeVertical className={getSize(4)} />
+                  </Button>
+                </Tooltip.Trigger>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content classNames='z-[31]'>
+                  {node.actions?.map((action) => (
+                    <DropdownMenu.Item
+                      key={action.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        suppressNextTooltip.current = true;
+                        setOptionsMenuOpen(false);
+                        void action.invoke(t, event);
+                      }}
+                      classNames='gap-2'
+                    >
+                      {action.icon && <action.icon className={getSize(4)} />}
+                      <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
+                    </DropdownMenu.Item>
+                  ))}
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </Tooltip.Root>
+        )}
         <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
           <Circle
             weight='fill'

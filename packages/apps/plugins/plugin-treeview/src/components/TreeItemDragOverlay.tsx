@@ -12,7 +12,7 @@ import { LeafTreeItem } from './LeafTreeItem';
 export const TreeItemDragOverlay = ({ data }: { data: GraphNode }) => {
   return (
     <List variant='unordered'>
-      <LeafTreeItem node={data} />
+      <LeafTreeItem node={data} isOverlay />
     </List>
   );
 };
