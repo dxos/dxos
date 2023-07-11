@@ -62,7 +62,7 @@ const runEcho = () =>
       randomSeed: PublicKey.random().toHex(),
       profile: true,
       repeatAnalysis:
-        '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-06-23T11:16:27-03a06479/test.json'
+        '/Users/mykola/Documents/dev/dxos/packages/gravity/kube-testing/out/results/2023-06-23T13:02:40-3e0596c2/test.json',
     },
   });
 
