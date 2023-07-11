@@ -54,6 +54,7 @@ const runEcho = () =>
 
       insertionSize: 1024,
       operationCount: 500,
+      
       signalArguments: ['globalsubserver'],
     },
     options: {
@@ -85,5 +86,5 @@ const runTransport = () =>
     },
   });
 
-// void runEcho();
-void runTransport();
+void runEcho();
+// void runTransport();

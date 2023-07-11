@@ -16,6 +16,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
+import { LocalClientServices } from '@dxos/client-services';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
@@ -58,6 +59,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
   builder = new TestBuilder();
 
+  services!: LocalClientServices;
+  client!: Client;
+  space!: Space;
+
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
@@ -86,40 +91,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         },
       },
     });
+
     this.builder.storage = createStorage({ type: StorageType.RAM });
-
-    const services = this.builder.createLocal();
-    const client = new Client({ services });
-    await client.initialize();
-    await client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
-
-    let space: Space;
-    if (config.creator) {
-      space = await client.createSpace({ name: 'test space' });
-      space.createInvitation({
-        swarmKey: PublicKey.from(invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-      });
-    } else {
-      const invitation = client.acceptInvitation({
-        swarmKey: PublicKey.from(invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-        kind: Invitation.Kind.SPACE,
-      } as any); // TODO(dmaretskyi): Fix types.
-      space = await new Promise<Space>((resolve) => {
-        invitation.subscribe((event) => {
-          switch (event.state) {
-            case Invitation.State.SUCCESS:
-              resolve(client.getSpace(event.spaceKey!)!);
-          }
-        });
-      });
-    }
-
-    const getSpaceBackend = () => services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
-    const getObj = () => space.db.objects.find((obj) => obj instanceof Text) as Text;
+    await this._init(env);
 
     const getMaximalTimeframe = async () => {
       const timeframes = await Promise.all(
@@ -132,23 +106,17 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       return Timeframe.merge(...timeframes);
     };
 
-    assert(space);
-    log.info('space joined', { agentIdx, spaceKey: space.key });
-    await env.syncBarrier('space joined');
-
-    await space.waitUntilReady();
-    log.info('space ready', { agentIdx, spaceKey: space.key });
-    await env.syncBarrier('space ready');
-
-    space.db.add(new Text('', TextKind.PLAIN));
-    await space.db.flush();
+    if (config.creator) {
+      this.space.db.add(new Text('', TextKind.PLAIN));
+      await this.space.db.flush();
+    }
 
     if (config.ephemeral) {
-      await client.destroy();
+      await this.client.destroy();
     }
 
     let iter = 0;
-    const lastTimeframe = getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
+    const lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
     let lastTime = Date.now();
     const ctx = new Context();
     scheduleTaskInterval(
@@ -159,7 +127,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         if (!config.ephemeral) {
           await env.redis.set(
             `${env.params.testId}:timeframe:${env.params.agentId}`,
-            serializeTimeframe(getSpaceBackend().dataPipeline.pipelineState!.timeframe),
+            serializeTimeframe(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe),
           );
         }
 
@@ -168,49 +136,48 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         if (!config.ephemeral) {
           // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
-          const lag = maximalTimeframe.newMessages(getSpaceBackend().dataPipeline.pipelineState!.timeframe);
+          const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
 
           // compute throughput
           const mutationsSinceLastIter =
-            getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+            this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
           const timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
           const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-          const epoch = getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+          const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
           log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
           log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog);
 
           for (const _ of range(spec.operationCount)) {
             // TODO: extract size and random seed
-            getObj().model!.content.insert(
-              randomInt(getObj().text.length, 0),
+            this.getObj().model!.content.insert(
+              randomInt(this.getObj().text.length, 0),
               randomBytes(spec.insertionSize).toString('hex') as any,
             );
-            if (getObj().text.length > 100) {
-              getObj().model!.content.delete(randomInt(getObj().text.length, 0), randomInt(getObj().text.length, 100));
+            if (this.getObj().text.length > 100) {
+              this.getObj().model!.content.delete(randomInt(this.getObj().text.length, 0), randomInt(this.getObj().text.length, 100));
             }
           }
 
-          await space.db.flush();
+          await this.space.db.flush();
 
           if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
-            await space.internal.createEpoch();
+            await this.space.internal.createEpoch();
           }
         } else {
-          await client.initialize();
+          const begin = performance.now();
 
-          const begin = Date.now();
-          const space = client.spaces.get()[0];
-          await space.waitUntilReady();
+          this.builder.storage = createStorage({ type: StorageType.RAM });
+          await this._init(env);
 
           const maximalTimeframe = await getMaximalTimeframe();
-          await getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
+          await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
 
-          log.info('sync time', { time: Date.now() - begin, agentIdx, iter });
+          log.info('sync time', { time: performance.now() - begin, agentIdx, iter });
 
-          await client.destroy();
+          await this.client.destroy();
         }
 
         iter++;
@@ -221,6 +188,42 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     await sleep(spec.duration);
     await ctx.dispose();
   }
+
+  private async _init(env: AgentEnv<EchoTestSpec, EchoAgentConfig>) {
+    this.services = this.builder.createLocal();
+    this.client = new Client({ services: this.services });
+    await this.client.initialize();
+    await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
+
+    if (env.params.config.creator) {
+      this.space = await this.client.createSpace({ name: 'test space' });
+      this.space.createInvitation({
+        swarmKey: PublicKey.from(env.params.config.invitationTopic),
+        authMethod: Invitation.AuthMethod.NONE,
+        type: Invitation.Type.MULTIUSE,
+      });
+    } else {
+      const invitation = this.client.acceptInvitation({
+        swarmKey: PublicKey.from(env.params.config.invitationTopic),
+        authMethod: Invitation.AuthMethod.NONE,
+        type: Invitation.Type.MULTIUSE,
+        kind: Invitation.Kind.SPACE,
+      } as any); // TODO(dmaretskyi): Fix types.
+      this.space = await new Promise<Space>((resolve) => {
+        invitation.subscribe((event) => {
+          switch (event.state) {
+            case Invitation.State.SUCCESS:
+              resolve(this.client.getSpace(event.spaceKey!)!);
+          }
+        });
+      });
+    }
+    await this.space.waitUntilReady();
+  }
+
+  getSpaceBackend = () => this.services.host._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+
+  getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
