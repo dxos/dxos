@@ -10,9 +10,9 @@ export const parameters = {
   controls: {
     matchers: {
       color: /(background|color)$/i,
-      date: /Date$/
-    }
-  }
+      date: /Date$/,
+    },
+  },
 };
 
 export const globalTypes = {
@@ -32,14 +32,14 @@ export const globalTypes = {
       showName: true,
     },
   },
-}
+};
 
 const withTheme = (StoryFn, context) => {
   const theme = context?.parameters?.theme || context?.globals?.theme;
-  useEffect(()=>{
-    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark')
-  }, [theme])
-  return createElement(ThemeProvider, {children: createElement(StoryFn)})
-}
+  useEffect(() => {
+    document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
+  }, [theme]);
+  return createElement(ThemeProvider, { children: createElement(StoryFn) });
+};
 
 export const decorators = [withTheme];

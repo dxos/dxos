@@ -10,7 +10,7 @@ import { FeedGraph } from './FeedGraph';
 
 export default {
   component: FeedGraph,
-  argTypes: {}
+  argTypes: {},
 };
 
 export const Default = {
@@ -20,5 +20,5 @@ export const Default = {
         <FeedGraph />
       </div>
     );
-  }
+  },
 };
