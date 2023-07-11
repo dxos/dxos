@@ -2,11 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import { ChartConfiguration } from 'chart.js';
+import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
+import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config, Invitation, Space, Text } from '@dxos/client';
+import { LocalClientServices } from '@dxos/client-services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
@@ -17,6 +21,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
+import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
@@ -58,6 +63,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   signalBuilder = new SignalTestBuilder();
   builder = new TestBuilder();
 
+  services!: LocalClientServices;
+  client!: Client;
+  space!: Space;
+
   async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
@@ -73,7 +82,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
-    const { agentIdx, invitationTopic, signalUrl } = config;
+    const { agentIdx, signalUrl } = config;
 
     this.builder.config = new Config({
       runtime: {
@@ -86,40 +95,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         },
       },
     });
+
     this.builder.storage = createStorage({ type: StorageType.RAM });
-
-    const services = this.builder.createLocal();
-    const client = new Client({ services });
-    await client.initialize();
-    await client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
-
-    let space: Space;
-    if (config.creator) {
-      space = await client.createSpace({ name: 'test space' });
-      space.createInvitation({
-        swarmKey: PublicKey.from(invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-      });
-    } else {
-      const invitation = client.acceptInvitation({
-        swarmKey: PublicKey.from(invitationTopic),
-        authMethod: Invitation.AuthMethod.NONE,
-        type: Invitation.Type.MULTIUSE,
-        kind: Invitation.Kind.SPACE,
-      } as any); // TODO(dmaretskyi): Fix types.
-      space = await new Promise<Space>((resolve) => {
-        invitation.subscribe((event) => {
-          switch (event.state) {
-            case Invitation.State.SUCCESS:
-              resolve(client.getSpace(event.spaceKey!)!);
-          }
-        });
-      });
-    }
-
-    const getSpaceBackend = () => services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
-    const getObj = () => space.db.objects.find((obj) => obj instanceof Text) as Text;
+    await this._init(env);
 
     const getMaximalTimeframe = async () => {
       const timeframes = await Promise.all(
@@ -132,23 +110,17 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       return Timeframe.merge(...timeframes);
     };
 
-    assert(space);
-    log.info('space joined', { agentIdx, spaceKey: space.key });
-    await env.syncBarrier('space joined');
-
-    await space.waitUntilReady();
-    log.info('space ready', { agentIdx, spaceKey: space.key });
-    await env.syncBarrier('space ready');
-
-    space.db.add(new Text('', TextKind.PLAIN));
-    await space.db.flush();
+    if (config.creator) {
+      this.space.db.add(new Text('', TextKind.PLAIN));
+      await this.space.db.flush();
+    }
 
     if (config.ephemeral) {
-      await client.destroy();
+      await this.client.destroy();
     }
 
     let iter = 0;
-    const lastTimeframe = getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
+    const lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
     let lastTime = Date.now();
     const ctx = new Context();
     scheduleTaskInterval(
@@ -159,7 +131,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         if (!config.ephemeral) {
           await env.redis.set(
             `${env.params.testId}:timeframe:${env.params.agentId}`,
-            serializeTimeframe(getSpaceBackend().dataPipeline.pipelineState!.timeframe),
+            serializeTimeframe(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe),
           );
         }
 
@@ -168,49 +140,63 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         if (!config.ephemeral) {
           // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
-          const lag = maximalTimeframe.newMessages(getSpaceBackend().dataPipeline.pipelineState!.timeframe);
+          const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
+          const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
           // compute throughput
           const mutationsSinceLastIter =
-            getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+            this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
           const timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
           const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
 
-          const epoch = getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
+          const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
-          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch });
-          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch } satisfies StatsLog);
+          log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
+          log.trace('dxos.test.echo.stats', {
+            lag,
+            mutationsPerSec,
+            agentIdx,
+            epoch,
+            totalMutations,
+          } satisfies StatsLog);
 
-          for (const _ of range(spec.operationCount)) {
+          for (const idx of range(spec.operationCount)) {
             // TODO: extract size and random seed
-            getObj().model!.content.insert(
-              randomInt(getObj().text.length, 0),
+            this.getObj().model!.content.insert(
+              randomInt(this.getObj().text.length, 0),
               randomBytes(spec.insertionSize).toString('hex') as any,
             );
-            if (getObj().text.length > 100) {
-              getObj().model!.content.delete(randomInt(getObj().text.length, 0), randomInt(getObj().text.length, 100));
+            if (this.getObj().text.length > 100) {
+              this.getObj().model!.content.delete(
+                randomInt(this.getObj().text.length, 0),
+                randomInt(this.getObj().text.length, 100),
+              );
+            }
+
+            if (idx % 100 === 0) {
+              await this.space.db.flush();
             }
           }
 
-          await space.db.flush();
+          await this.space.db.flush();
 
           if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
-            await space.internal.createEpoch();
+            await this.space.internal.createEpoch();
           }
         } else {
-          await client.initialize();
+          const begin = performance.now();
 
-          const begin = Date.now();
-          const space = client.spaces.get()[0];
-          await space.waitUntilReady();
+          this.builder.storage = createStorage({ type: StorageType.RAM });
+          await this._init(env);
 
           const maximalTimeframe = await getMaximalTimeframe();
-          await getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
+          await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
 
-          log.info('sync time', { time: Date.now() - begin, agentIdx, iter });
+          log.info('sync time', { time: performance.now() - begin, agentIdx, iter });
+          log.trace('dxos.test.echo.sync', { time: performance.now() - begin, agentIdx, iter } satisfies SyncTimeLog);
 
-          await client.destroy();
+          await this.client.destroy();
         }
 
         iter++;
@@ -222,17 +208,101 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     await ctx.dispose();
   }
 
+  private async _init(env: AgentEnv<EchoTestSpec, EchoAgentConfig>) {
+    this.services = this.builder.createLocal();
+    this.client = new Client({ services: this.services });
+    await this.client.initialize();
+    await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
+
+    if (env.params.config.creator) {
+      this.space = await this.client.createSpace({ name: 'test space' });
+      this.space.createInvitation({
+        swarmKey: PublicKey.from(env.params.config.invitationTopic),
+        authMethod: Invitation.AuthMethod.NONE,
+        type: Invitation.Type.MULTIUSE,
+      });
+    } else {
+      const invitation = this.client.acceptInvitation({
+        swarmKey: PublicKey.from(env.params.config.invitationTopic),
+        authMethod: Invitation.AuthMethod.NONE,
+        type: Invitation.Type.MULTIUSE,
+        kind: Invitation.Kind.SPACE,
+      } as any); // TODO(dmaretskyi): Fix types.
+      this.space = await new Promise<Space>((resolve) => {
+        invitation.subscribe((event) => {
+          switch (event.state) {
+            case Invitation.State.SUCCESS:
+              resolve(this.client.getSpace(event.spaceKey!)!);
+          }
+        });
+      });
+    }
+    await this.space.waitUntilReady();
+  }
+
+  getSpaceBackend = () => this.services.host._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+
+  getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
+
   async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
 
-    // const reader = getReader(results);
-    // for await(const entry of reader) {
-    //   switch(entry.message) {
-    //     case 'dxos.test.echo.stats':
-    //       console.log(entry.context)
-    //   }
-    // }
-    log.info('finished shutdown');
+    const statsLogs: SerializedLogEntry<StatsLog>[] = [];
+    const syncLogs: SerializedLogEntry<SyncTimeLog>[] = [];
+
+    const reader = getReader(results);
+    for await (const entry of reader) {
+      switch (entry.message) {
+        case 'dxos.test.echo.stats':
+          statsLogs.push(entry);
+          break;
+        case 'dxos.test.echo.sync':
+          syncLogs.push(entry);
+          break;
+      }
+    }
+
+    if (!params.spec.measureNewAgentSyncTime) {
+      showPng(
+        await renderPNG({
+          type: 'scatter',
+          data: {
+            datasets: range(params.spec.agents).map((agentIdx) => ({
+              label: `Agent #${agentIdx}`,
+              showLine: true,
+              data: statsLogs
+                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .map((entry) => ({
+                  x: entry.timestamp,
+                  y: entry.context.totalMutations,
+                })),
+              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+            })),
+          },
+          options: {},
+        }),
+      );
+    } else {
+      showPng(
+        await renderPNG({
+          type: 'scatter',
+          data: {
+            datasets: range(params.spec.agents).map((agentIdx) => ({
+              label: `Agent #${agentIdx}`,
+              showLine: true,
+              data: syncLogs
+                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .map((entry) => ({
+                  x: entry.timestamp,
+                  y: entry.context.time,
+                })),
+              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+            })),
+          },
+          options: {},
+        }),
+      );
+    }
   }
 }
 
@@ -247,4 +317,38 @@ type StatsLog = {
   mutationsPerSec: number;
   epoch: number;
   agentIdx: number;
+  totalMutations: number;
 };
+
+type SyncTimeLog = {
+  time: number;
+  agentIdx: number;
+  iter: number;
+};
+
+const renderPNG = async (
+  configuration: ChartConfiguration,
+  opts: ChartJSNodeCanvasOptions = { width: 1920, height: 1080, backgroundColour: 'white' },
+) => {
+  // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
+  const chartJSNodeCanvas = new ChartJSNodeCanvas(opts);
+
+  const image = await chartJSNodeCanvas.renderToBuffer(configuration as any);
+  return image;
+};
+
+const showPng = (data: Buffer) => {
+  const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
+  writeFileSync(filename, data);
+  exec(`open ${filename}`);
+};
+
+const BORDER_COLORS = [
+  'rgb(54, 162, 235)', // blue
+  'rgb(255, 99, 132)', // red
+  'rgb(255, 159, 64)', // orange
+  'rgb(255, 205, 86)', // yellow
+  'rgb(75, 192, 192)', // green
+  'rgb(153, 102, 255)', // purple
+  'rgb(201, 203, 207)', // grey
+];
