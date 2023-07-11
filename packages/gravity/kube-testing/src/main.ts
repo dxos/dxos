@@ -69,12 +69,14 @@ const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
-      agents: 6,
+      agents: 2,
       swarmsPerAgent: 5,
-      duration: 5_000,
+      duration: 120_000,
+      desiredSwarmTimeout: 10_000,
+      fullSwarmTimeout: 30_000,
       iterationDelay: 1000,
-      operationCount: 100,
       signalArguments: ['globalsubserver'],
+      repeatInterval: 5_000,
     },
     options: {
       staggerAgents: 1000,

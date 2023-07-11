@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
+import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
@@ -16,10 +17,11 @@ export type TransportTestSpec = {
   agents: number;
   swarmsPerAgent: number;
   duration: number;
-  iterationDelay: number;
 
-  insertionSize: number;
-  operationCount: number;
+  desiredSwarmTimeout: number;
+  fullSwarmTimeout: number;
+  iterationDelay: number;
+  repeatInterval: number;
 
   signalArguments: string[];
 };
@@ -33,14 +35,10 @@ export type TransportAgentConfig = {
 export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportAgentConfig> {
   signalBuilder = new SignalTestBuilder();
 
-  // networkManagerBuilder  = new NetworkManagerTestBuilder();
-  // builder = new NetworkManagerTestBuilder();
-
   async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
-    // this.builder = new NetworkManagerTestBuilder({ signalHost: signal.url() });
     return range(spec.agents).map((agentIdx) => ({
       agentIdx,
       signalUrl: signal.url(),
@@ -49,7 +47,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
   }
 
   async run(env: AgentEnv<TransportTestSpec, TransportAgentConfig>): Promise<void> {
-    const { config, spec } = env.params;
+    const { config, spec, agents } = env.params;
     const { agentIdx, swarmTopicIds, signalUrl } = config;
 
     log.info('run', {
@@ -75,36 +73,95 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     log.info('swarms created', { agentIdx });
 
-    await Promise.all(
-      swarms.map(async (swarm, swarmIdx) => {
-        log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        await swarm.join();
-        await env.syncBarrier(`swarm ${swarmIdx} joined`);
-        log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      }),
-    );
+    const ctx = new Context();
+    let testCounter = 0;
 
-    log.info('all swarms joined', { agentIdx });
+    const testRun = async () => {
+      const context = ctx.derive({
+        onError: (err) => {
+          log.info('testRun iterration error', { iterationId: testCounter, err });
+        },
+      });
 
-    log.info('create test connections');
-    await Promise.all(
-      Object.keys(env.params.agents)
-        .filter((agentId) => agentId !== env.params.agentId)
-        .map(async (agentId) => {
-          swarms.forEach(async (swarm, swarmIdx) => {
-            log.info('testing connection', { agentIdx, swarmIdx });
-            try {
-              await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
-              log.info('test connection succeded', { agentIdx, swarmIdx });
-            } catch (error) {
-              log.info('test connection failed', { agentIdx, swarmIdx });
-            }
-          });
+      log.info('testRun iteration', { iterationId: testCounter });
+
+      // How many connections established within the duration.
+      await Promise.all(
+        swarms.map(async (swarm, swarmIdx) => {
+          log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+          await cancelWithContext(context, swarm.join());
+
+          log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+          await sleep(spec.desiredSwarmTimeout);
+          log.info('number of connections within duration', { agentIdx, swarmIdx, swarmTopic: swarm.topic, connections: swarm.protocol.connections.size, totalAgents: Object.keys(agents).length });
+
+          // Wait till all peers are connected (with timeout).
+          asyncTimeout(async () => {
+            await cancelWithContext(
+              context,
+              swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === Object.keys(agents).length - 1)
+            );
+            log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+          }, spec.fullSwarmTimeout);
         }),
-    );
+      );
 
-    log.info('sleeping', { agentIdx });
+      log.info('WE ARE OUT', { agentIdx });
+
+      await env.syncBarrier(`swarms are ready on ${testCounter}`);
+
+      log.info('create test connections');
+
+      // Test connections.
+      await Promise.all(
+        Object.keys(env.params.agents)
+          .filter((agentId) => agentId !== env.params.agentId)
+          .map(async (agentId) => {
+            swarms.forEach(async (swarm, swarmIdx) => {
+              log.info('testing connection', { agentIdx, swarmIdx });
+              try {
+                await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+                log.info('test connection succeded', { agentIdx, swarmIdx });
+              } catch (error) {
+                log.info('test connection failed', { agentIdx, swarmIdx });
+              }
+            });
+          })
+      );
+
+      await env.syncBarrier(`connections are tested on ${testCounter}`);
+
+      log.info('closing swarms');
+      await Promise.all(
+        swarms.map(async (swarm, swarmIdx) => {
+          log.info('closing swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+          await cancelWithContext(context, swarm.leave());
+          log.info('swarm closed', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+
+          // Wait till all peers are disconnected (with timeout).
+          asyncTimeout(async () => {
+            await cancelWithContext(
+              context,
+              swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0)
+            );
+            log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+          }, spec.fullSwarmTimeout);
+        })
+      );
+    }
+
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        await env.syncBarrier(`iteration-${testCounter}`);
+        await cancelWithContext(ctx, testRun());
+        testCounter++;
+      },
+      spec.repeatInterval,
+    );
     await sleep(spec.duration);
+    await ctx.dispose();
+
     log.info('test completed', { agentIdx });
   }
 
