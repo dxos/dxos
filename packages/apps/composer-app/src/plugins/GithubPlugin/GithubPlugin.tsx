@@ -6,7 +6,9 @@
 import React from 'react';
 
 import { isMarkdown, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { definePlugin, PluginDefinition, Surface } from '@dxos/react-surface';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { useTelemetry } from '@dxos/react-appkit';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import {
   MarkdownActions,
@@ -19,7 +21,7 @@ import {
 } from './components';
 import translations from './translations';
 
-export const GithubPlugin: PluginDefinition = definePlugin({
+export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
   meta: {
     id: 'dxos:github',
   },
@@ -30,7 +32,7 @@ export const GithubPlugin: PluginDefinition = definePlugin({
       switch (role) {
         case 'dialog':
           switch (true) {
-            case datum === 'dxos:SplitViewPlugin/ProfileSettings':
+            case datum === 'dxos:splitview/ProfileSettings':
               return PatInput;
             case Array.isArray(datum) && datum[0] === 'dxos:github/BindDialog':
               return UrlDialog;
@@ -49,16 +51,14 @@ export const GithubPlugin: PluginDefinition = definePlugin({
           return null;
       }
     },
-    router: {
-      routes: () => [
-        {
-          path: '/embedded',
-          element: <Surface component='dxos:github/EmbeddedMain' />,
-        },
-      ],
-    },
     components: {
-      EmbeddedMain,
+      default: () => {
+        // TODO(wittjosiah): Factor out to a telemetry plugin.
+        useTelemetry({ namespace: 'composer-app', router: false });
+
+        return null;
+      },
+      Main: EmbeddedMain,
     },
   },
 });

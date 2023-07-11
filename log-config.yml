@@ -6,7 +6,8 @@ formatter:
 filter:
   - warn
   - info
-  - debug
+  # - debug
+  - sync:debug
   # - test.ts:debug
   # - database:debug
   # - notarization:debug
@@ -16,7 +17,7 @@ filter:
   # - feed-store:debug
   # - client-services:debug
   # - space.ts:debug
-  - space.ts:debug
+  # - space.ts:debug
   # - debug
   # - space-invitations-handler.ts:debug
   # - entity:debug
@@ -29,8 +30,8 @@ filter:
   # - auth:debug
   # - control-pipeline:debug
   # - notarization:debug
-  - pipeline:debug
-  - iterator:debug
+  # - pipeline:debug
+  # - iterator:debug
   # - test:debug
   # - debug
   # - swarm.ts:debug

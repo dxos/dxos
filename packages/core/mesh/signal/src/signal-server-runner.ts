@@ -77,6 +77,8 @@ export class SignalServerRunner {
         ...process.env,
         ...this._env,
       },
+      // force creation of process group to ensure all child processes are killed https://nodejs.org/api/child_process.html#optionsdetached
+      detached: true,
     });
 
     server.stdout.on('data', (data) => {
@@ -114,7 +116,7 @@ export class SignalServerRunner {
     }
 
     if (waited >= this._timeout) {
-      this.stop();
+      await this.stop();
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
@@ -125,8 +127,15 @@ export class SignalServerRunner {
     }
   }
 
-  public stop(): void {
-    const delivered = this._serverProcess.kill('SIGINT');
+  public async stop(): Promise<void> {
+    const pid = this._serverProcess.pid;
+    if (!pid) {
+      log.warn('pid not found');
+      return;
+    }
+    log.info(`sending SIGINT to process group ${pid}`);
+    // kill process group so that all child processes can be killed, e.g. https://github.com/golang/go/issues/40467
+    const delivered = process.kill(-pid, 'SIGINT');
     if (!delivered) {
       log.warn('kill signal was not delivered to child process');
     }

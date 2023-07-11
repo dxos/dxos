@@ -78,9 +78,6 @@ Type: "3000"
 Timeout for space properties to be loaded in the set of tracked items.
 Accounts for latency between SpaceService reporting the space as READY and DataService streaming the item states.
 
-### [`ON_CLOSE_DELAY`]()
-Type: "3000"
-
 ### [`PROXY_CONNECTION_TIMEOUT`]()
 Type: "30000"
 

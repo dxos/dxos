@@ -43,7 +43,7 @@ describe('Messenger', () => {
   });
 
   afterAll(() => {
-    broker.stop();
+    void broker.stop();
   });
 
   test('Message between peers', async () => {

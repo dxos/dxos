@@ -3,12 +3,19 @@
 //
 
 import { UserPlus, X } from '@phosphor-icons/react';
-import React, { cloneElement, useReducer } from 'react';
+import React, { cloneElement, useCallback, useReducer } from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '@dxos/react-appkit';
-import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
+import {
+  Invitation,
+  InvitationEncoder,
+  useClient,
+  useDevices,
+  useHaloInvitations,
+  useIdentity,
+} from '@dxos/react-client';
 
 import { DeviceList, InvitationList, PanelSeparator } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
@@ -33,6 +40,13 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
   if (!identity) {
     return null;
   }
+
+  const onInvitationEvent = useCallback((invitation: Invitation) => {
+    const invitationCode = InvitationEncoder.encode(invitation);
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    }
+  }, []);
 
   const doneButton = (
     <Button variant='ghost' onClick={() => onDone?.()} data-testid='show-all-spaces'>
@@ -62,7 +76,13 @@ const DeviceListView = ({ createInvitationUrl, titleId, onDone, doneActionParent
         />
         <Button
           classNames='is-full flex gap-2 mbs-2'
-          onClick={() => client.halo.createInvitation()}
+          onClick={() => {
+            const invitation = client.halo.createInvitation();
+            // TODO(wittjosiah): Don't depend on NODE_ENV.
+            if (process.env.NODE_ENV !== 'production') {
+              invitation.subscribe(onInvitationEvent);
+            }
+          }}
           data-testid='devices-panel.create-invitation'
         >
           <span>{t('create device invitation label')}</span>

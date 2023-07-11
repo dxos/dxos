@@ -113,7 +113,7 @@ export class Messenger {
     scheduleTask(
       messageContext,
       () => {
-        log('message not delivered', { messageId: reliablePayload.messageId });
+        log.warn('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
         timeoutHit(new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'));
         void messageContext.dispose();

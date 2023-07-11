@@ -7,17 +7,19 @@ import React, { HTMLAttributes, useRef } from 'react';
 import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { defaultFocus, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../props';
+import { MarkdownProperties } from '../types';
 
 export const MarkdownSection = ({
-  data: { source, object },
+  data: {
+    object: { content: document },
+  },
 }: {
-  data: { source: { guid: string; resolver: string }; object: MarkdownProperties & ComposerModel };
+  data: { object: { content: MarkdownProperties & ComposerModel } };
 }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const model: ComposerModel = {
-    id: object.id,
-    content: object.content,
+    id: document.id,
+    content: document.content,
   };
   return (
     <MarkdownComposer
@@ -38,7 +40,7 @@ export const MarkdownSection = ({
               inlineSize: '100%',
             },
             '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-            '& .cm-line': { paddingInline: '1.5rem' },
+            '& .cm-line': { paddingInline: '0' },
           },
         },
       }}

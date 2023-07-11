@@ -2,23 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 
+import { isGraphNode } from '@braneframe/plugin-graph';
 import { observer } from '@dxos/observable-object/react';
-import { Surface, useGraphContext, useTreeView } from '@dxos/react-surface';
+import { Surface } from '@dxos/react-surface';
 
-import { LocalFilesPlugin } from '../LocalFilesPlugin';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 
-export const LocalFileMain = observer(() => {
-  const treeView = useTreeView();
-  const graph = useGraphContext();
-  const [parentId, childId] = treeView.selected;
-
-  const parentNode = graph.roots[LocalFilesPlugin.meta.id].find((node) => node.id === parentId);
-  const childNode = parentNode?.children?.find((node) => node.id === childId);
+export const LocalFileMain: FC<{ data: unknown }> = observer(({ data }) => {
+  const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) && isGraphNode(data[1]) ? data : [];
   const node = childNode ?? parentNode;
-  const data = useMemo(
+  const transformedData = useMemo(
     () =>
       node?.attributes?.disabled
         ? [
@@ -36,5 +31,5 @@ export const LocalFileMain = observer(() => {
     [node?.data],
   );
 
-  return <Surface role='main' data={data} />;
+  return <Surface role='main' data={transformedData} />;
 });

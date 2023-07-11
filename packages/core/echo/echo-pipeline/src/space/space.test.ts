@@ -7,7 +7,6 @@ import assert from 'node:assert';
 import { promisify } from 'node:util';
 
 import { createCredential, CredentialGenerator } from '@dxos/credentials';
-import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
@@ -16,7 +15,7 @@ import { TestAgentBuilder, testLocalDatabase } from '../testing';
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 
 describe('space/space', () => {
-  test('crates a database with object model', async () => {
+  test('creates a database with object model', async () => {
     const builder = new TestAgentBuilder();
     afterTest(async () => await builder.close());
     const agent = await builder.createPeer();
@@ -208,10 +207,8 @@ describe('space/space', () => {
     expect(space1.isOpen).toBeFalsy();
 
     // Clear the data feed - epoch snapshot should have the data.
-    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!);
+    const feed = await agent.feedStore.openFeed(space1.dataFeedKey!, { sparse: true });
     await promisify(feed.core.clear.bind(feed.core))(0, feed.length);
-
-    log.break();
 
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
