@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:27]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:28]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.50"</code>
+Type: <code>"0.1.51"</code>
 
 The version of this client API
 
@@ -45,6 +45,11 @@ Returns true if the client has been initialized. Initialize by calling  `.initia
 Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
 
 MESH networking.
+
+### [monitor]()
+Type: <code>[Monitor](/api/@dxos/react-client/classes/Monitor)</code>
+
+Debug monitor.
 
 ### [services]()
 Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientServicesProvider)</code>
