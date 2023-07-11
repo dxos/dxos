@@ -8,7 +8,9 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
@@ -22,7 +24,7 @@ import { PluginContextProvider } from '@dxos/react-surface';
 
 import { LocalFilesPlugin, GithubPlugin } from './plugins';
 
-void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defaults()) });
+void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -39,6 +41,8 @@ createRoot(document.getElementById('root')!).render(
         StackPlugin(),
         GithubPlugin(),
         LocalFilesPlugin(),
+        DrawingPlugin(),
+        KanbanPlugin(),
       ]}
     />
   </StrictMode>,

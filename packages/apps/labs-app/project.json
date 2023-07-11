@@ -19,7 +19,7 @@
     "bundle": {
       "executor": "@nrwl/vite:build",
       "options": {
-        "outputPath": "packages/apps/labs-app/out/composer"
+        "outputPath": "packages/apps/labs-app/out/labs"
       },
       "outputs": [
         "{options.outputPath}"
@@ -69,7 +69,7 @@
       "executor": "@nrwl/web:file-server",
       "options": {
         "buildTarget": "labs-app:bundle",
-        "staticFilePath": "packages/apps/labs-app/out/composer"
+        "staticFilePath": "packages/apps/labs-app/out/labs"
       }
     },
     "serve": {

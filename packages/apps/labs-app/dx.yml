@@ -2,14 +2,14 @@ version: 1
 
 package:
   modules:
-    - name: composer
+    - name: labs
       type: dxos:type/app
-      displayName: Composer
-      description: Self-sovereign text documents.
+      displayName: Labs
+      description: DXOS Labs Plugins
       tags:
         - showcase
       build:
-        command: pnpm -w nx bundle composer-app
+        command: pnpm -w nx bundle labs-app
 
 runtime:
   client:

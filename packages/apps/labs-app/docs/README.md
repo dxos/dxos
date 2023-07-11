@@ -1,6 +1,6 @@
-# @dxos/composer-app
+# @dxos/labs-app
 
-DXOS composer application.
+DXOS Labs application.
 
 ## Dependency Graph
 
@@ -17,8 +17,8 @@ flowchart LR
 
 subgraph apps [apps]
   style apps fill:transparent
-  dxos/composer-app("@dxos/composer-app"):::root
-  click dxos/composer-app "dxos/dxos/tree/main/packages/apps/composer-app/docs"
+  dxos/labs-app("@dxos/labs-app"):::root
+  click dxos/labs-app "dxos/dxos/tree/main/packages/apps/labs-app/docs"
 
   subgraph patterns [patterns]
     style patterns fill:transparent
@@ -184,13 +184,13 @@ dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
-dxos/composer-app --> dxos/react-appkit
+dxos/labs-app --> dxos/react-appkit
 dxos/react-client --> dxos/client
 dxos/react-client --> dxos/react-async
 dxos/react-appkit --> @dxos/react-components
 dxos/react-appkit --> dxos/telemetry
 dxos/telemetry --> dxos/sentry
-dxos/composer-app --> dxos/aurora-composer
+dxos/labs-app --> dxos/aurora-composer
 dxos/aurora-composer --> @dxos/react-components
 dxos/aurora-composer --> dxos/vite-plugin
 dxos/vite-plugin --> dxos/config

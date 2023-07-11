@@ -64,9 +64,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'DXOS Composer',
-        short_name: 'Composer',
-        description: 'DXOS Composer Application',
+        name: 'DXOS Labs',
+        short_name: 'Labs',
+        description: 'DXOS Labs Application',
         theme_color: '#ffffff',
         icons: [
           {
@@ -86,9 +86,9 @@ export default defineConfig({
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
       org: 'dxos',
-      project: 'composer-app',
+      project: 'labs-app',
       sourcemaps: {
-        assets: './packages/apps/composer-app/out/composer/**',
+        assets: './packages/apps/labs-app/out/labs/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       dryRun: process.env.DX_ENVIRONMENT !== 'production',

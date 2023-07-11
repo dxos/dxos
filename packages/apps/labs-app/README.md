@@ -3,5 +3,5 @@
 To run the app with HALO.
 
 ```bash
-pnpm -w nx run composer-app:serve-with-vault
+pnpm -w nx run labs-app:serve-with-vault
 ```

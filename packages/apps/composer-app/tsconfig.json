@@ -78,9 +78,6 @@
       "path": "../plugins/plugin-graph"
     },
     {
-      "path": "../plugins/plugin-kanban"
-    },
-    {
       "path": "../plugins/plugin-markdown"
     },
     {
