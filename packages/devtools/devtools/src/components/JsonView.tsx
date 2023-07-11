@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { JsonTree } from 'react-editable-json-tree';
+import { JSONTree } from 'react-json-tree';
 
 import { schema } from '@dxos/protocols';
 
@@ -15,7 +15,7 @@ export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, clas
 
   return (
     <div className={className}>
-      <JsonTree data={replaced} readOnly={true} isCollapsed={() => false} />
+      <JSONTree data={replaced} theme='monokai' invertTheme={true} />
     </div>
   );
 };
