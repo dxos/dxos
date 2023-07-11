@@ -9,7 +9,7 @@ import { SignalMessages } from './SignalMessages';
 
 export default {
   component: SignalMessages,
-  actions: { argTypesRegex: '^on.*' }
+  actions: { argTypesRegex: '^on.*' },
 };
 
 export const Normal = (props: any) => {

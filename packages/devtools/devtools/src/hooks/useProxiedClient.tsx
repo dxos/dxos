@@ -28,9 +28,9 @@ const createClientContext = async () => {
       window.parent.postMessage(
         {
           data: Array.from(message),
-          source: 'content-script' // content-script is required for RPC port to work because services port on window.__DXOS__ hook expect such source.
+          source: 'content-script', // content-script is required for RPC port to work because services port on window.__DXOS__ hook expect such source.
         },
-        '*'
+        '*',
       ),
     subscribe: (callback) => {
       const handler = (event: MessageEvent<any>) => {
@@ -44,7 +44,7 @@ const createClientContext = async () => {
 
       window.addEventListener('message', handler);
       return () => window.removeEventListener('message', handler);
-    }
+    },
   };
 
   const servicesProvider = new ClientServicesProxy(port);
