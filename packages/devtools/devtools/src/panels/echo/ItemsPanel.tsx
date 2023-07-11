@@ -11,10 +11,9 @@ import { TableColumn } from '@dxos/mosaic';
 import { TreeViewItem, Searchbar } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
 
-import { JsonView, MasterTable } from '../../components';
-import { SpaceToolbar } from '../../containers';
+import { JsonView, MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-// TODO(burdon): Factor out.
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -60,6 +59,7 @@ const columns: TableColumn<TypedObject>[] = [
   {
     Header: 'Id',
     width: 60,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (item) => {
       const id = item.id;
       return `${PublicKey.from(id).truncate()}`;
@@ -85,22 +85,20 @@ const ItemsPanel = () => {
   const [filter, setFilter] = useState('');
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <SpaceToolbar>
-        <div className='w-1/2'>
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <SpaceSelector />
           <Searchbar onSearch={setFilter} />
-        </div>
-      </SpaceToolbar>
-
-      <div className='flex h-full overflow-hidden'>
-        {/* TODO(burdon): Convert to list with new API. */}
-        <MasterTable<TypedObject>
-          columns={columns}
-          data={items.filter(textFilter(filter))}
-          slots={{ selected: { className: 'bg-slate-200' } }}
-        />
-      </div>
-    </div>
+        </Toolbar>
+      }
+    >
+      <MasterDetailTable<TypedObject>
+        columns={columns}
+        data={items.filter(textFilter(filter))}
+        slots={{ selected: { className: 'bg-slate-200' } }}
+      />
+    </PanelContainer>
   );
 };
 

@@ -49,9 +49,9 @@ export const Searchbar: FC<SearchbarProps> = ({ slots = {}, onSearch }) => {
         placeholder={slots.root?.placeholder ?? 'Search...'}
         variant={slots.root?.variant ?? 'default'}
         slots={{
-          root: {
-            className: 'flex w-full overflow-hidden',
-          },
+          // root: {
+          //   className: 'flex w-full overflow-hidden',
+          // },
           input: {
             onKeyDown: ({ key }) => key === 'Escape' && handleReset(),
             spellCheck: false,

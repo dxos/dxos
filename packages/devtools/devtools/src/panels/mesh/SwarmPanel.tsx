@@ -10,6 +10,7 @@ import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
+import { PanelContainer } from '../../components';
 import { ConnectionInfoView } from '../../components/ConnectionInfoView';
 import { TreeItemText } from '../../components/TreeItemText';
 
@@ -36,7 +37,7 @@ const SwarmPanel = () => {
   const [selectedItem, setSelectedItem] = useState<ConnectionInfo | undefined>();
 
   return (
-    <div className='flex h-full overflow-hidden'>
+    <PanelContainer>
       <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
         <TreeView
           items={getSwarmInfoTree(data ?? [])}
@@ -54,7 +55,7 @@ const SwarmPanel = () => {
           <ConnectionInfoView connectionInfo={selectedItem} />
         </div>
       )}
-    </div>
+    </PanelContainer>
   );
 };
 

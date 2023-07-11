@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// import { LocalFilesPlugin, GithubPlugin } from '@braneframe/composer-app';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
@@ -22,9 +23,11 @@ import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
 
-import { LocalFilesPlugin, GithubPlugin } from './plugins';
-
 void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
+
+// TODO(burdon): Move GH plugins out of composer.
+// TODO(burdon): Rename aurora-composer => aurora-editor.
+// TODO(burdon): Remove plugin deps on composer (e.g., translations).
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -39,8 +42,8 @@ createRoot(document.getElementById('root')!).render(
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),
-        GithubPlugin(),
-        LocalFilesPlugin(),
+        // GithubPlugin(),
+        // LocalFilesPlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
       ]}

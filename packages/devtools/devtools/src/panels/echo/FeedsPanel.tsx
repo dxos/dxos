@@ -10,19 +10,20 @@ import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
-import { humanize } from '@dxos/util';
 
-import { BitfieldDisplay, MasterTable, PublicKeySelector } from '../../components';
-import { SpaceToolbar } from '../../containers';
+import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector, Toolbar } from '../../components';
+import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
 const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
     Header: 'FeedKey',
     width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (block) => {
       const feedKey = block.feedKey;
-      return `${feedKey.truncate()} (${humanize(feedKey)})`;
+      return feedKey.truncate();
+      // return `${feedKey.truncate()} (${humanize(feedKey)})`;
     },
   },
   {
@@ -69,28 +70,30 @@ const FeedsPanel = () => {
   const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
   return (
-    <div className='flex flex-col overflow-hidden'>
-      <SpaceToolbar>
-        <PublicKeySelector
-          keys={feedKeys}
-          Icon={Rows}
-          defaultValue={feedKey}
-          placeholder={'Select feed'}
-          getLabel={getLabel}
-          onChange={handleSelect}
-        />
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <SpaceSelector />
+          <PublicKeySelector
+            keys={feedKeys}
+            Icon={Rows}
+            defaultValue={feedKey}
+            placeholder={'Select feed'}
+            getLabel={getLabel}
+            onChange={handleSelect}
+          />
 
-        <Button onClick={refresh}>Refresh</Button>
-      </SpaceToolbar>
+          <Button onClick={refresh}>Refresh</Button>
+        </Toolbar>
+      }
+    >
       <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
-      <div className='flex flex-1 overflow-hidden'>
-        <MasterTable<SubscribeToFeedBlocksResponse.Block>
-          columns={columns}
-          data={messages}
-          slots={{ selected: { className: 'bg-slate-200' } }}
-        />
-      </div>
-    </div>
+      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block>
+        columns={columns}
+        data={messages}
+        slots={{ selected: { className: 'bg-slate-200' } }}
+      />
+    </PanelContainer>
   );
 };
 

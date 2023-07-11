@@ -14,19 +14,16 @@ export type MasterTableProps<T extends {}> = {
   slots?: TableSlots;
 };
 
-// TODO(burdon): Create storybook.
-export const MasterTable = <T extends {}>({ columns, data, slots }: MasterTableProps<T>) => {
+export const MasterDetailTable = <T extends {}>({ columns, data, slots }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
 
   return (
-    <div className='flex flex-1 overflow-hidden'>
-      <div className='flex w-1/2 overflow-hidden border-r'>
+    <div className='flex flex-1 overflow-hidden divide-x'>
+      <div className='flex w-1/2 overflow-hidden'>
         <Table<T> columns={columns} data={data} slots={slots} selected={selected} onSelect={setSelected} />
       </div>
 
-      <div className='flex w-1/2 overflow-hidden ml-2 mt-2'>
-        {selected && <JsonView className='flex overflow-auto' data={selected} />}
-      </div>
+      <div className='flex w-1/2 overflow-hidden'>{selected && <JsonView data={selected} />}</div>
     </div>
   );
 };

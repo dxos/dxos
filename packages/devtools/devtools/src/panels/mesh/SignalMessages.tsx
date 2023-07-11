@@ -9,7 +9,7 @@ import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Searchbar, Select } from '@dxos/react-appkit';
 import { humanize } from '@dxos/util';
 
-import { MasterTable } from '../../components';
+import { MasterDetailTable, Toolbar } from '../../components';
 
 export type View<T extends {}> = {
   id: string;
@@ -105,7 +105,7 @@ const views = [
       },
     ],
   },
-] as const; // this is ok because getView below will fail typecheck if this array is misdefined
+] as const; // This is ok because getView below will fail typecheck if this array is misdefined.
 
 export type ViewType = (typeof views)[number]['id'];
 
@@ -121,9 +121,10 @@ export const SignalMessages = (props: SignalMessagesProps) => {
   const [search, setSearch] = useState('');
   const view = viewType ? getView(viewType) : undefined;
   const filteredMessages = getFilteredData(messages, view, search);
+
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <div className='flex p-3 border-b gap-2 border-slate-200 border-solid'>
+      <Toolbar>
         <Select className='mr-2' defaultValue={viewType} onValueChange={(s) => setViewType(s as ViewType)}>
           {views.map(({ id, title }) => (
             <Select.Item value={id} key={id}>
@@ -132,10 +133,11 @@ export const SignalMessages = (props: SignalMessagesProps) => {
           ))}
         </Select>
         <Searchbar onSearch={setSearch} />
-      </div>
+      </Toolbar>
+
       <div className='flex flex-1 overflow-hidden'>
         {view ? (
-          <MasterTable
+          <MasterDetailTable
             columns={view.columns as any}
             data={filteredMessages}
             slots={{ selected: { className: 'bg-slate-200' } }}

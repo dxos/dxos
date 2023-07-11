@@ -10,7 +10,7 @@ import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { MasterTable } from '../../components';
+import { MasterDetailTable } from '../../components';
 
 const columns: TableColumn<KeyRecord>[] = [
   {
@@ -35,7 +35,7 @@ const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterTable columns={columns} data={keys} slots={{ selected: { className: 'bg-slate-200' } }} />;
+  return <MasterDetailTable columns={columns} data={keys} slots={{ selected: { className: 'bg-slate-200' } }} />;
 };
 
 export default KeyringPanel;

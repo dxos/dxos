@@ -6,7 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Button, ButtonGroup } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
 import {
   GetBlobsResponse,
   GetSnapshotsResponse,
@@ -17,10 +17,10 @@ import {
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { PublicKey, useDevtools, useStream } from '@dxos/react-client';
+import { PublicKey, useClientServices, useDevtools, useStream } from '@dxos/react-client';
 import { BitField } from '@dxos/util';
 
-import { BitfieldDisplay, JsonView } from '../../components';
+import { BitfieldDisplay, JsonView, PanelContainer, Toolbar } from '../../components';
 import { TreeItemText } from '../../components/TreeItemText';
 
 type SelectionValue =
@@ -107,6 +107,10 @@ const StoragePanel = () => {
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
   const [selected, setSelected] = useState<TreeViewItem | undefined>();
 
@@ -188,53 +192,64 @@ const StoragePanel = () => {
   const selectedValue = selected?.value as SelectionValue | undefined;
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='flex items-end m-2 gap-2 w-[600px]'>
-        <ButtonGroup>
+    <PanelContainer
+      className='flex-row divide-x'
+      toolbar={
+        <Toolbar>
           <Button onClick={refresh} disabled={isRefreshing}>
             Refresh
           </Button>
-        </ButtonGroup>
-      </div>
-      <div className='flex h-full overflow-hidden'>
-        <div className='flex flex-col w-1/3 overflow-auto border-r'>
-          <TreeView
-            items={items}
-            expanded={['origin', 'storage']}
-            onSelect={(item) => setSelected(item)}
-            selected={selected?.id}
-            slots={{
-              value: {
-                className: 'overflow-hidden text-gray-400 truncate pl-2',
-              },
+
+          <div className='flex-1' />
+          <Button
+            onClick={async () => {
+              // await services?.SystemService.reset();
             }}
-          />
-        </div>
-        {selectedValue && (
-          <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
-            {selectedValue.kind === 'blob' && (
-              <>
-                <div>Downloaded: {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-                <BitfieldDisplay
-                  value={selectedValue.blob.bitfield ?? new Uint8Array()}
-                  length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
-                />
-                <JsonView data={selectedValue.blob} />
-              </>
-            )}
-            {selectedValue.kind === 'feed' && (
-              <>
-                <BitfieldDisplay
-                  value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                  length={Math.ceil(selectedValue.feed.length ?? 0)}
-                />
-                <JsonView data={selectedValue.feed} />
-              </>
-            )}
-          </div>
-        )}
+          >
+            Reset Storage
+          </Button>
+        </Toolbar>
+      }
+    >
+      <div className='flex w-1/3 overflow-auto'>
+        <TreeView
+          items={items}
+          expanded={['origin', 'storage']}
+          onSelect={(item) => setSelected(item)}
+          selected={selected?.id}
+          slots={{
+            value: {
+              className: 'overflow-hidden text-gray-400 truncate pl-2',
+            },
+          }}
+        />
       </div>
-    </div>
+
+      {selectedValue && (
+        <div className='flex flex-1 flex-col w-2/3 overflow-auto divide-y'>
+          {selectedValue.kind === 'blob' && (
+            <>
+              <div>Downloaded: {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
+              <BitfieldDisplay
+                value={selectedValue.blob.bitfield ?? new Uint8Array()}
+                length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+              />
+              <JsonView data={selectedValue.blob} />
+            </>
+          )}
+
+          {selectedValue.kind === 'feed' && (
+            <>
+              <BitfieldDisplay
+                value={selectedValue.feed.downloaded ?? new Uint8Array()}
+                length={Math.ceil(selectedValue.feed.length ?? 0)}
+              />
+              <JsonView data={selectedValue.feed} />
+            </>
+          )}
+        </div>
+      )}
+    </PanelContainer>
   );
 };
 
