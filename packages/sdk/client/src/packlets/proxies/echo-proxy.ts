@@ -89,7 +89,11 @@ export class EchoProxy implements Echo {
 
   async open() {
     log.trace('dxos.sdk.echo-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
-    this._ctx = new Context();
+    this._ctx = new Context({
+      onError: (error) => {
+        log.catch(error);
+      },
+    });
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     assert(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
