@@ -1,6 +1,6 @@
 {
   "name": "@dxos/create-tasks",
-  "version": "0.1.50",
+  "version": "0.1.51",
   "description": "Creates a sample todo list app with DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
