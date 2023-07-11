@@ -69,10 +69,10 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 
       this.push(blobChunk)
         .catch((err) => {
-          if(err instanceof RpcClosedError) {
+          if (err instanceof RpcClosedError) {
             return;
           }
-          log.warn('push failed', { err })
+          log.warn('push failed', { err });
         })
         .finally(() => {
           this._currentUploads--;

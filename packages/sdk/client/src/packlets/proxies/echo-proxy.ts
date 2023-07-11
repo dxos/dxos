@@ -92,7 +92,7 @@ export class EchoProxy implements Echo {
     this._ctx = new Context({
       onError: (error) => {
         log.catch(error);
-      }
+      },
     });
 
     assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');

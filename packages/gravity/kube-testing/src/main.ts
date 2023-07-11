@@ -54,7 +54,7 @@ const runEcho = () =>
 
       insertionSize: 512,
       operationCount: 1000,
-      
+
       signalArguments: ['globalsubserver'],
     },
     options: {
@@ -66,6 +66,7 @@ const runEcho = () =>
     },
   });
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),

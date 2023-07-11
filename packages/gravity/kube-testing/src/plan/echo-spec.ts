@@ -4,13 +4,13 @@
 
 import { ChartConfiguration } from 'chart.js';
 import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
-import assert from 'node:assert';
 import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config, Invitation, Space, Text } from '@dxos/client';
+import { LocalClientServices } from '@dxos/client-services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
@@ -19,14 +19,12 @@ import { log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
-import { entry, randomInt, range } from '@dxos/util';
-import { LocalClientServices } from '@dxos/client-services';
+import { randomInt, range } from '@dxos/util';
 
 import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
-import { Chart } from 'chart.js';
 
 export type EchoTestSpec = {
   agents: number;
@@ -84,7 +82,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
-    const { agentIdx, invitationTopic, signalUrl } = config;
+    const { agentIdx, signalUrl } = config;
 
     this.builder.config = new Config({
       runtime: {
@@ -143,7 +141,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
           const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
-          const totalMutations  = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
+          const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
           // compute throughput
           const mutationsSinceLastIter =
@@ -155,7 +153,13 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
           log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
-          log.trace('dxos.test.echo.stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations } satisfies StatsLog);
+          log.trace('dxos.test.echo.stats', {
+            lag,
+            mutationsPerSec,
+            agentIdx,
+            epoch,
+            totalMutations,
+          } satisfies StatsLog);
 
           for (const idx of range(spec.operationCount)) {
             // TODO: extract size and random seed
@@ -164,10 +168,13 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
               randomBytes(spec.insertionSize).toString('hex') as any,
             );
             if (this.getObj().text.length > 100) {
-              this.getObj().model!.content.delete(randomInt(this.getObj().text.length, 0), randomInt(this.getObj().text.length, 100));
+              this.getObj().model!.content.delete(
+                randomInt(this.getObj().text.length, 0),
+                randomInt(this.getObj().text.length, 100),
+              );
             }
 
-            if(idx % 100 === 0) {
+            if (idx % 100 === 0) {
               await this.space.db.flush();
             }
           }
@@ -248,45 +255,53 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       switch (entry.message) {
         case 'dxos.test.echo.stats':
           statsLogs.push(entry);
+          break;
         case 'dxos.test.echo.sync':
           syncLogs.push(entry);
+          break;
       }
     }
 
-    if(!params.spec.measureNewAgentSyncTime) {
-      showPng(await renderPNG({
-        type: 'scatter',
-        data: {
-          datasets: 
-            range(params.spec.agents).map((agentIdx) => ({
+    if (!params.spec.measureNewAgentSyncTime) {
+      showPng(
+        await renderPNG({
+          type: 'scatter',
+          data: {
+            datasets: range(params.spec.agents).map((agentIdx) => ({
               label: `Agent #${agentIdx}`,
               showLine: true,
-              data: statsLogs.filter(entry => entry.context.agentIdx === agentIdx).map((entry) => ({
-                x: entry.timestamp,
-                y: entry.context.totalMutations,
-              })),
+              data: statsLogs
+                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .map((entry) => ({
+                  x: entry.timestamp,
+                  y: entry.context.totalMutations,
+                })),
               backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
             })),
-        },
-        options: {},
-      }));
+          },
+          options: {},
+        }),
+      );
     } else {
-      showPng(await renderPNG({
-        type: 'scatter',
-        data: {
-          datasets: 
-            range(params.spec.agents).map((agentIdx) => ({
+      showPng(
+        await renderPNG({
+          type: 'scatter',
+          data: {
+            datasets: range(params.spec.agents).map((agentIdx) => ({
               label: `Agent #${agentIdx}`,
               showLine: true,
-              data: syncLogs.filter(entry => entry.context.agentIdx === agentIdx).map((entry) => ({
-                x: entry.timestamp,
-                y: entry.context.time,
-              })),
+              data: syncLogs
+                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .map((entry) => ({
+                  x: entry.timestamp,
+                  y: entry.context.time,
+                })),
               backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
             })),
-        },
-        options: {},
-      }));
+          },
+          options: {},
+        }),
+      );
     }
   }
 }
@@ -309,7 +324,7 @@ type SyncTimeLog = {
   time: number;
   agentIdx: number;
   iter: number;
-}
+};
 
 const renderPNG = async (
   configuration: ChartConfiguration,
@@ -335,5 +350,5 @@ const BORDER_COLORS = [
   'rgb(255, 205, 86)', // yellow
   'rgb(75, 192, 192)', // green
   'rgb(153, 102, 255)', // purple
-  'rgb(201, 203, 207)' // grey
+  'rgb(201, 203, 207)', // grey
 ];

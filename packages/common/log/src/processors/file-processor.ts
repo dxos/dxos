@@ -47,4 +47,7 @@ const getLogFilePath = () => {
   return logFilePath!;
 };
 
-export const FILE_PROCESSOR: LogProcessor = createFileProcessor({ path: getLogFilePath(), levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE] });
+export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
+  path: getLogFilePath(),
+  levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+});
