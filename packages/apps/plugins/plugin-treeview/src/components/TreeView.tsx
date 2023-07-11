@@ -4,7 +4,7 @@
 
 import { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { getIndexBetween, sortByIndex } from '@tldraw/indices';
+import { getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
 import get from 'lodash.get';
 import React, { useState } from 'react';
 
@@ -22,16 +22,12 @@ export type TreeViewProps = {
   parent?: string | GraphNode;
 };
 
-const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; items: GraphNode[] }) => {
-  const [_, setIter] = useState([]);
+const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: GraphNode[] }) => {
+  // todo(thure): `observer` does not trigger updates when node indices are updated.
+  const [iter, setIter] = useState([]);
   const itemsInOrder = items.sort(sortByIndex);
   const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
   const dnd = useDnd();
-
-  console.log(
-    '[tree view sortable]',
-    itemsInOrder.map(({ index }) => index),
-  );
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
@@ -39,22 +35,21 @@ const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; i
       if (node && get(node, 'parent.id') === parent.id && get(over, 'data.current.entity.parent.id') === parent.id) {
         dnd.overlayDropAnimation = 'around';
         const overId = get(over, 'data.current.entity.id', 'never');
-        if (overId !== 'never' && overId !== get(node, 'id')) {
-          const index = itemsInOrder.findIndex(({ id }) => id === overId);
-          const nextIndex = getIndexBetween(itemsInOrder[index].index, itemsInOrder[index + 1]?.index);
-          console.log(
-            '[drag end]',
-            itemsInOrder[index].index,
-            itemsInOrder[index + 1]?.index,
-            itemsInOrder.map(({ index }) => index),
-            nextIndex,
-          );
-          (node as GraphNode).index = nextIndex;
+        if (overId !== 'never' && overId !== node.id) {
+          const activeIndex = itemsInOrder.findIndex(({ id }) => id === node.id);
+          const overIndex = itemsInOrder.findIndex(({ id }) => id === overId);
+          (node as GraphNode).index =
+            overIndex < 1
+              ? getIndexBelow(itemsInOrder[0].index)
+              : getIndexBetween(
+                  itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1].index,
+                  itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex]?.index,
+                );
           setIter([]);
         }
       }
     },
-    [parent],
+    [parent, itemsInOrder, iter],
   );
 
   return (
@@ -68,7 +63,7 @@ const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; i
       )}
     </SortableContext>
   );
-});
+};
 
 export const TreeView = observer((props: TreeViewProps) => {
   const { items } = props;
