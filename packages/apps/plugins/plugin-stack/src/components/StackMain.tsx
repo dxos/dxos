@@ -7,7 +7,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
@@ -29,8 +29,8 @@ import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { stackSectionChoosers, stackSectionCreators } from '../StackPlugin';
 import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
+import { stackSectionChoosers, stackSectionCreators } from '../stores';
 
 type StackSectionProps = {
   onRemove: () => void;
@@ -100,7 +100,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props.section.object.id,
-    data: { entity: props.section },
+    data: { section: props.section, dragoverlay: props.section },
   });
   return (
     <StackSectionImpl
@@ -122,6 +122,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
   const dnd = useDnd();
+  const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
@@ -136,17 +137,20 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
 
-  useDragStart(({ active: { id } }: DragStartEvent) => setActiveId(id.toString()), []);
+  useDragStart(({ active: { data } }: DragStartEvent) => {
+    console.log('[drag start]', get(data.current, 'section.object.id', 'no active section object id'));
+    setActiveId(get(data.current, 'section.object.id', null));
+  }, []);
 
   useDragOver(
     ({ over }: DragOverEvent) => {
       if (!over) {
         return setOverIsMember(false);
       }
-      const nextOverIsMember = sections.findIndex((section) => section.object.id === over.id) >= 0;
-      return setOverIsMember(nextOverIsMember);
+      console.log('[drag over]', get(over.data.current, 'section.object.id', 'no over section object id'));
+      return setOverIsMember(sectionIds.has(get(over, 'data.current.section.object.id', null)));
     },
-    [sections],
+    [sectionIds],
   );
 
   const handleAdd = useCallback(
@@ -167,19 +171,32 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   );
 
   useDragEnd(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (over && active.id !== over.id) {
-        const oldIndex = sections.findIndex((section) => section.object.id === active.id);
-        const newIndex = sections.findIndex((section) => section.object.id === over?.id);
-        arrayMove(sections, oldIndex, newIndex);
-        dnd.overlayDropAnimation = 'around';
-      } else if (active.id === over?.id) {
-        dnd.overlayDropAnimation = 'around';
+    ({ active, over }: DragEndEvent) => {
+      if (overIsMember) {
+        const overSectionId = get(over, 'data.current.section.object.id');
+        const activeSectionId = get(active, 'data.current.section.object.id', null);
+        const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
+        if (activeSectionId) {
+          dnd.overlayDropAnimation = 'around';
+          if (activeSectionId !== overSectionId) {
+            const activeIndex = sections.findIndex((section) => section.object.id === active.id);
+            arrayMove(sections, activeIndex, nextIndex);
+          }
+        } else {
+          // Check if the dropped item can be added.
+          const datum = get(active, 'data.current.treeitem.data', null);
+          const validChooser = stackSectionChoosers.find((chooser) => chooser?.filter(datum));
+          console.log('[drag end]', get(datum, 'content'), get(datum, 'content.content'));
+          if (validChooser) {
+            dnd.overlayDropAnimation = 'into';
+            handleAdd(nextIndex, datum as GenericStackObject);
+          }
+        }
       }
       setActiveId(null);
+      setOverIsMember(false);
     },
-    [sections],
+    [sections, activeId, overIsMember, stackSectionChoosers],
   );
 
   return (

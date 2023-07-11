@@ -33,15 +33,15 @@ const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; i
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
-      const node: GraphNode | null = get(active, 'data.current.entity', null);
+      const node: GraphNode | null = get(active, 'data.current.treeitem', null);
       if (
         parent.onChildrenRearrange &&
         node &&
         get(node, 'parent.id') === parent.id &&
-        get(over, 'data.current.entity.parent.id') === parent.id
+        get(over, 'data.current.treeitem.parent.id') === parent.id
       ) {
         dnd.overlayDropAnimation = 'around';
-        const overId = get(over, 'data.current.entity.id', null);
+        const overId = get(over, 'data.current.treeitem.id', null);
         if (overId !== null && overId !== node.id) {
           const activeIndex = itemsInOrder.findIndex(({ id }) => id === node.id);
           const overIndex = itemsInOrder.findIndex(({ id }) => id === overId);
@@ -64,9 +64,9 @@ const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; i
 
   useDragOver(
     ({ active, over }) => {
-      const node: GraphNode | null = get(active, 'data.current.entity', null);
+      const node: GraphNode | null = get(active, 'data.current.treeitem', null);
       setOverIsMember(
-        !!node && get(node, 'parent.id') === parent.id && get(over, 'data.current.entity.parent.id') === parent.id,
+        !!node && get(node, 'parent.id') === parent.id && get(over, 'data.current.treeitem.parent.id') === parent.id,
       );
       setActiveId(node?.id ?? null);
     },

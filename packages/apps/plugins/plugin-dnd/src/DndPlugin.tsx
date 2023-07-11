@@ -166,7 +166,7 @@ export const useDnd = () => useContext(DndPluginContext);
 const DndOverlay = observer(() => {
   const dnd = useDnd();
   const [activeDatum, setActiveDatum] = useState<unknown | null>(null);
-  useDragStart(({ active: { data } }) => setActiveDatum(data.current?.entity), []);
+  useDragStart(({ active: { data } }) => setActiveDatum(data.current?.dragoverlay), []);
   return (
     <DragOverlay adjustScale={false} dropAnimation={dropAnimations[dnd.overlayDropAnimation]}>
       <Surface role='dragoverlay' data={activeDatum} limit={1} />

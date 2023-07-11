@@ -5,15 +5,12 @@
 import { Plus } from '@phosphor-icons/react';
 
 import { Stack } from '@braneframe/types';
-import { createStore } from '@dxos/observable-object';
 import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
-import { isStack, StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './props';
+import { isStack, StackPluginProvides, StackProvides } from './props';
+import { stackSectionChoosers, stackSectionCreators } from './stores';
 import translations from './translations';
-
-export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
-export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => ({
   meta: {

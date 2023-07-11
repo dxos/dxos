@@ -24,7 +24,7 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
 }: SortableBranchTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: `treeitem:${node.id}`,
-    data: { entity: node },
+    data: { dragoverlay: node, treeitem: node },
   });
   return (
     <BranchTreeItem

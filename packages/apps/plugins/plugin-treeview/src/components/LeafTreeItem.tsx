@@ -36,7 +36,7 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
 }: SortableLeafTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: `treeitem:${node.id}`,
-    data: { entity: node },
+    data: { dragoverlay: node, treeitem: node },
   });
   return (
     <LeafTreeItem

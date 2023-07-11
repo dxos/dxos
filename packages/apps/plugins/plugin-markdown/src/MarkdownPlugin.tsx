@@ -23,7 +23,7 @@ import {
 } from './components';
 import translations from './translations';
 import { MarkdownProperties } from './types';
-import { isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
 type MarkdownPluginProvides = SpaceProvides &
   TranslationsProvides & {
@@ -86,6 +86,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
             label: ['choose section space document label', { ns: 'dxos:markdown' }],
             icon: ArticleMedium,
+            filter: isMarkdownContent,
           },
         ],
       },
