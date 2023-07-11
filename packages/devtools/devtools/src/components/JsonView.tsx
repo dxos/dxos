@@ -15,7 +15,7 @@ export const JsonView: FC<{ data?: Object; className?: string }> = ({ data, clas
 
   return (
     <div className={className}>
-      <JsonTree data={replaced} readOnly={true} />
+      <JsonTree data={replaced} readOnly={true} isCollapsed={(keyPath: string, depth: number) => depth > 1} />
     </div>
   );
 };
