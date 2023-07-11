@@ -20,16 +20,12 @@ const encodeStructValue = (structValue: any, visitedObjects: WeakSet<any>): any 
       return { boolValue: structValue };
     }
     case 'object': {
-      if (visitedObjects.has(structValue)) {
+      // null, Array, Object will have typeof 'object'
+      if (structValue === null || visitedObjects.has(structValue)) {
         return { nullValue: 0 };
       }
-      visitedObjects.add(structValue);
 
       try {
-        // null, Array, Object will have typeof 'object'
-        if (structValue === null) {
-          return { nullValue: 0 };
-        }
         if (Array.isArray(structValue)) {
           return { listValue: { values: structValue.map((value) => encodeStructValue(value, visitedObjects)) } };
         }

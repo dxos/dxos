@@ -24,6 +24,9 @@
       "path": "../../../common/observable-object"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {
@@ -33,7 +36,22 @@
       "path": "../../../ui/aurora-theme"
     },
     {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-dnd"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

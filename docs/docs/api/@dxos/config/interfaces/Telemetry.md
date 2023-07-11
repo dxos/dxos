@@ -7,3 +7,6 @@ Defined in:
 ## Properties
 ### [disabled]()
 Type: <code>boolean</code>
+
+### [tags]()
+Type: <code>string[]</code>

@@ -24,12 +24,12 @@ export interface SpaceInternal {
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space {
   get key(): PublicKey;
-  get isOpen(): boolean;
 
   /**
    * Echo database.
    */
   get db(): EchoDatabase;
+  get isOpen(): boolean;
 
   /**
    * Properties object.

@@ -8,12 +8,13 @@ import { logObjectAccess } from './access-observer';
 
 export const subscribe = Symbol.for('dxos.observable-object.subscribe');
 
+// TODO(burdon): Name clash with const below. Rename Observable and rename ObservableObjectImpl => ObservableObject.
 export interface ObservableObject {
   [subscribe]: (callback: (value: any) => void) => UnsubscribeCallback;
 }
 
-class ObservableObjectImpl<T> implements ObservableObject {
-  private _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
+export class ObservableObjectImpl<T> implements ObservableObject {
+  private readonly _subscriptions = new Set<(value: ObservableObjectImpl<T>) => void>();
 
   constructor(initialData?: T) {
     if (initialData) {
@@ -22,7 +23,7 @@ class ObservableObjectImpl<T> implements ObservableObject {
       });
     }
 
-    // TODO(wittjosiah): Implement other proxy methods here: enuming properties, instanceof, etc.
+    // TODO(wittjosiah): Implement other proxy methods here: enumerating properties, instanceof, etc.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
     return new Proxy(this, {
       get: (_target, property, receiver) => {
@@ -53,6 +54,7 @@ class ObservableObjectImpl<T> implements ObservableObject {
 export class ObservableArray<T> extends Array<T> implements ObservableObject {
   private _subscriptions = new Set<(value: ObservableArray<T>) => void>();
 
+  // TODO(burdon): Pass in array.
   constructor(...args: T[]) {
     super(...args);
 
@@ -84,6 +86,7 @@ export class ObservableArray<T> extends Array<T> implements ObservableObject {
   }
 }
 
+// TODO(burdon): Rename createObservable? Does "store" imply some specialization?
 export const createStore = <T extends object | any[]>(data?: T): T => {
   if (Array.isArray(data)) {
     return new ObservableArray(...data) as T;

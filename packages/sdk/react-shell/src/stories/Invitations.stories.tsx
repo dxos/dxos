@@ -9,9 +9,17 @@ import React, { useMemo, useState } from 'react';
 
 import { Button, ButtonGroup } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { Group } from '@dxos/react-appkit';
-import { Space, SpaceProxy, useClient, useIdentity, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import {
+  InvitationEncoder,
+  Space,
+  SpaceProxy,
+  useClient,
+  useIdentity,
+  useNetworkStatus,
+  useSpaces,
+} from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { IdentityListItem, SpaceListItem } from '../components';
@@ -31,7 +39,16 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
   useMemo(() => {
     if (panel instanceof SpaceProxy) {
-      (window as any)[`peer${id}space`] = panel;
+      (window as any)[`peer${id}CreateSpaceInvitation`] = (options?: Partial<Invitation>) => {
+        const invitation = panel.createInvitation(options);
+
+        invitation.subscribe((invitation) => {
+          const invitationCode = InvitationEncoder.encode(invitation);
+          if (invitation.state === Invitation.State.CONNECTING) {
+            console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          }
+        });
+      };
     }
   }, [panel]);
 
@@ -104,7 +121,16 @@ const Invitations = ({ id }: { id: number }) => {
   const [panel, setPanel] = useState<PanelType>();
 
   useMemo(() => {
-    (window as any)[`peer${id}client`] = client;
+    (window as any)[`peer${id}CreateHaloInvitation`] = (options?: Partial<Invitation>) => {
+      const invitation = client.halo.createInvitation(options);
+
+      invitation.subscribe((invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        if (invitation.state === Invitation.State.CONNECTING) {
+          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+        }
+      });
+    };
   }, [client]);
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.

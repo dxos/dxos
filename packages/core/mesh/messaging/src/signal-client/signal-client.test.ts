@@ -30,7 +30,7 @@ describe('SignalClient', () => {
   });
 
   afterAll(() => {
-    broker1.stop();
+    void broker1.stop();
     // code await broker2.stop();
   });
 

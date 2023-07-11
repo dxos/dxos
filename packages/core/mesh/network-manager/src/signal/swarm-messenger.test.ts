@@ -31,7 +31,7 @@ describe('SwarmMessenger', () => {
   });
 
   afterAll(() => {
-    broker1.stop();
+    void broker1.stop();
   });
 
   const createSignalClientAndMessageRouter = async ({

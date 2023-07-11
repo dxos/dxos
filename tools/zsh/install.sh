@@ -13,4 +13,4 @@ DEST=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
 
 rm -f "$DEST/plugins/dxos"
 ln -s "$DIR/ohmyz/plugins/dxos" "$DEST/plugins/"
-ln -s "$DIR/ohmyz/themes/dxos" "$DEST/themes/"
+ln -s "$DIR/ohmyz/themes/dxos.zsh-theme" "$DEST/themes/"

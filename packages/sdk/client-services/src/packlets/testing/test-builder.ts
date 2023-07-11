@@ -13,6 +13,7 @@ import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { ClientServicesHost, ServiceContext } from '../services';
 import { SigningContext } from '../spaces';
@@ -97,6 +98,7 @@ export type TestPeerProps = {
   networkManager?: NetworkManager;
   spaceManager?: SpaceManager;
   snapshotStore?: SnapshotStore;
+  blobStore?: BlobStore;
 };
 
 export class TestPeer {
@@ -131,6 +133,10 @@ export class TestPeer {
     return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
 
+  get blobStore() {
+    return (this._props.blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
+  }
+
   get snapshotStore() {
     return (this._props.snapshotStore ??= new SnapshotStore(this.storage.createDirectory('snapshots')));
   }
@@ -149,6 +155,7 @@ export class TestPeer {
       metadataStore: this.metadataStore,
       modelFactory: createDefaultModelFactory(),
       snapshotStore: this.snapshotStore,
+      blobStore: this.blobStore,
     }));
   }
 

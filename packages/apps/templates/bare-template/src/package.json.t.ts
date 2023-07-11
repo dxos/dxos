@@ -93,8 +93,8 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     devDependencies: {
       '@types/node': '^18.11.9',
       '@dxos/cli': depVersion,
-      typescript: '^4.8.4',
-      vite: '^4.3.0'
+      typescript: '^5.0.4',
+      vite: '^4.3.9'
     }
   };
 };
