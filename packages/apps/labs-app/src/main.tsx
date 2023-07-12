@@ -22,7 +22,8 @@ import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
 
-import { LocalFilesPlugin, GithubPlugin } from './plugins';
+// TODO(burdon): Factor out from composer-app.
+// import { LocalFilesPlugin, GithubPlugin } from './plugins';
 
 void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
 
@@ -39,8 +40,8 @@ createRoot(document.getElementById('root')!).render(
         SpacePlugin(),
         MarkdownPlugin(),
         StackPlugin(),
-        GithubPlugin(),
-        LocalFilesPlugin(),
+        // GithubPlugin(),
+        // LocalFilesPlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
       ]}
