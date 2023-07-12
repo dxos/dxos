@@ -15,6 +15,14 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 import { Monitor, MonitorOptions, Plugin, ProxyServer } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
+// TODO(burdon): Plugin from global config and/or options/command line.
+// Plugins:
+// - ClientServices PLUGIN OR CORE?
+// - EchoProxy
+// - EpochMonitor
+// - Functions
+// - Subscriptions
+
 export type AgentOptions = {
   profile: string;
   listen: string[]; // TODO(burdon): Rename endpoints/plugins.
@@ -38,9 +46,6 @@ export class Agent {
     assert(this._options);
   }
 
-  // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
-  //  https://www.npmjs.com/package/lockfile
-
   // TODO(burdon): Initialize/destroy.
   async initialize() {}
 
@@ -48,7 +53,6 @@ export class Agent {
     await this.stop();
 
     // Create client services.
-    // TODO(burdon): Check lock.
     this._clientServices = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
     await this._clientServices.open();
 
@@ -63,13 +67,13 @@ export class Agent {
     // TODO(burdon): Plugin dependencies.
     let socketUrl: string | undefined;
 
-    // TODO(burdon): Replace with config.
     for await (const address of this._options.listen) {
       let plugin: Plugin | null = null;
       const { protocol, path } = parseAddress(address);
       switch (protocol) {
         //
         // Unix socket (accessed via CLI).
+        // TODO(burdon): Configure ClientServices plugin with multiple endpoints.
         //
         case 'unix': {
           socketUrl = address;
@@ -117,7 +121,6 @@ export class Agent {
     }
 
     // OpenFaaS connector.
-    // TODO(burdon): Manual trigger.
     const faasConfig = this._config.values.runtime?.services?.faasd;
     if (faasConfig) {
       const { FaasConnector } = await import('./plugins/faas/connector');
@@ -149,15 +152,15 @@ export class Agent {
   }
 }
 
-const createServer = (services: ClientServicesProvider, options: WebSocket.ServerOptions) => {
+const createServer = (clientServices: ClientServicesProvider, options: WebSocket.ServerOptions) => {
   return new WebsocketRpcServer<{}, ClientServices>({
     ...options,
     onConnection: async () => {
       let start = 0;
       const connection = PublicKey.random().toHex();
       return {
-        exposed: services.descriptors,
-        handlers: services.services as ClientServices,
+        exposed: clientServices.descriptors,
+        handlers: clientServices.services as ClientServices,
         onOpen: async () => {
           start = Date.now();
           log('open', { connection });
