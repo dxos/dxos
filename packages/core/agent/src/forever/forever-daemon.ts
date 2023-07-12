@@ -8,11 +8,12 @@ import path from 'node:path';
 
 import { sleep } from '@dxos/async';
 import { getUnixSocket } from '@dxos/client';
+import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../timeouts';
-import { parseAddress, removeSocketFile, waitFor } from '../util';
+import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -28,7 +29,10 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (await this.list()).some((process) => process.profile === profile && process.running);
+    return (
+      isLocked(lockFilePath(profile)) ||
+      (await this.list()).some((process) => process.profile === profile && process.running)
+    );
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -57,7 +61,11 @@ export class ForeverDaemon implements Daemon {
       log('starting...', { profile, logDir });
 
       const daemonLogFile = path.join(logDir, 'daemon.log');
+      const outFile = path.join(logDir, 'out.log');
       const errFile = path.join(logDir, 'err.log');
+
+      // Clear err file.
+      fs.unlinkSync(errFile);
 
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
@@ -65,7 +73,7 @@ export class ForeverDaemon implements Daemon {
         args: ['agent', 'start', '--foreground', `--profile=${profile}`, '--socket'],
         uid: profile,
         logFile: daemonLogFile, // Forever daemon process.
-        outFile: path.join(logDir, 'out.log'), // Child stdout.
+        outFile, // Child stdout.
         errFile, // Child stderr.
       });
 
