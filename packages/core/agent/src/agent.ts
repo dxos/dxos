@@ -47,10 +47,13 @@ export class Agent {
   }
 
   // TODO(burdon): Initialize/destroy.
-  async initialize() {}
+  // async initialize() {}
 
   async start() {
-    await this.stop();
+    log('starting...');
+
+    // TODO(burdon): Check if running.
+    // await this.stop();
 
     // Create client services.
     this._clientServices = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
@@ -68,8 +71,9 @@ export class Agent {
     let socketUrl: string | undefined;
 
     for await (const address of this._options.listen) {
-      let plugin: Plugin | null = null;
       const { protocol, path } = parseAddress(address);
+
+      let plugin: Plugin | null = null;
       switch (protocol) {
         //
         // Unix socket (accessed via CLI).
@@ -122,7 +126,7 @@ export class Agent {
 
     // OpenFaaS connector.
     const faasConfig = this._config.values.runtime?.services?.faasd;
-    if (faasConfig) {
+    if (faasConfig && socketUrl) {
       const { FaasConnector } = await import('./plugins/faas/connector');
       const connector = new FaasConnector(this._clientServices!, faasConfig, { clientUrl: socketUrl });
       this._plugins.push(connector);
@@ -134,10 +138,12 @@ export class Agent {
       log('open', { plugin });
     }
 
-    log('running...');
+    log('started...');
   }
 
   async stop() {
+    log('stopping...');
+
     // Close plugins.
     await Promise.all(this._plugins.map((plugin) => plugin.close()));
     this._plugins.length = 0;
@@ -149,6 +155,7 @@ export class Agent {
     this._clientServices = undefined;
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
+    log('stopped');
   }
 }
 
