@@ -226,10 +226,10 @@ const StoragePanel = () => {
       </div>
 
       {selectedValue && (
-        <div className='flex flex-1 flex-col w-2/3 overflow-auto divide-y'>
+        <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
           {selectedValue.kind === 'blob' && (
             <>
-              <div>Downloaded: {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
+              <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
               <BitfieldDisplay
                 value={selectedValue.blob.bitfield ?? new Uint8Array()}
                 length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
