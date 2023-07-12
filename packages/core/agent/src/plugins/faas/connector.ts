@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { Service } from '../service';
+import { Service } from '../plugin';
 import { FaasClient, InvocationContext, Trigger } from './faas-client';
 
 type MountedTrigger = {

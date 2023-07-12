@@ -12,15 +12,13 @@ import { fromHost, ClientServices, Config, Client, ClientServicesProvider, Publi
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { Monitor, MonitorOptions } from './monitor';
-import { ProxyServer, ProxyServerOptions } from './proxy';
-import { Service } from './service';
+import { Monitor, MonitorOptions, Plugin, ProxyServer, ProxyServerOptions, Service } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 export type AgentOptions = {
   profile: string;
-  listen: string[]; // TODO(burdon): Rename endpoints.
-  monitor?: MonitorOptions;
+  listen: string[]; // TODO(burdon): Rename endpoints/plugins.
+  monitor?: MonitorOptions; // TODO(burdon): YML file?
 };
 
 /**
@@ -28,9 +26,9 @@ export type AgentOptions = {
  */
 export class Agent {
   private _endpoints: Service[] = [];
+  private _plugins: Plugin[] = []; // TODO(burdon): Merge with endpoints?
   private _client?: Client;
-  private _services?: ClientServicesProvider;
-  private _monitor?: Monitor;
+  private _clientServices?: ClientServicesProvider;
 
   // prettier-ignore
   constructor(
@@ -45,18 +43,20 @@ export class Agent {
   //  https://www.npmjs.com/package/lockfile
 
   async start() {
+    await this.stop();
+
     // Create client services.
     // TODO(burdon): Check lock.
-    this._services = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
-    await this._services.open();
+    this._clientServices = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
+    await this._clientServices.open();
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
-    this._client = new Client({ config: this._config, services: this._services });
+    this._client = new Client({ config: this._config, services: this._clientServices });
     await this._client.initialize();
 
     // Global hook for debuggers.
-    ((globalThis as any).__DXOS__ ??= {}).host = (this._services as any)._host;
+    ((globalThis as any).__DXOS__ ??= {}).host = (this._clientServices as any)._host;
 
     // Create socket servers.
     let socketUrl: string | undefined;
@@ -75,7 +75,7 @@ export class Agent {
               rmSync(path, { force: true });
               const httpServer = http.createServer();
               httpServer.listen(path);
-              server = createServer(this._services!, { server: httpServer });
+              server = createServer(this._clientServices!, { server: httpServer });
               await server.open();
               break;
             }
@@ -86,7 +86,7 @@ export class Agent {
             //
             case 'ws': {
               const { port } = new URL(address);
-              server = createServer(this._services!, { port: parseInt(port) });
+              server = createServer(this._clientServices!, { port: parseInt(port) });
               await server.open();
               break;
             }
@@ -117,16 +117,20 @@ export class Agent {
 
     // Epoch monitor.
     if (this._options.monitor) {
-      this._monitor = new Monitor(this._client!, this._services!, this._options.monitor!);
-      await this._monitor.start();
+      this._plugins.push(new Monitor(this._client!, this._clientServices!, this._options.monitor!));
+    }
+
+    // Start plugins.
+    for (const plugin of this._plugins) {
+      await plugin.start();
     }
 
     // OpenFaaS connector.
     // TODO(burdon): Manual trigger.
     const faasConfig = this._config.values.runtime?.services?.faasd;
     if (faasConfig) {
-      const { FaasConnector } = await import('./faas/connector');
-      const connector = new FaasConnector(this._services!, faasConfig, { clientUrl: socketUrl });
+      const { FaasConnector } = await import('./plugins/faas/connector');
+      const connector = new FaasConnector(this._clientServices!, faasConfig, { clientUrl: socketUrl });
       await connector.open();
       this._endpoints.push(connector);
       log('connector open', { gateway: faasConfig.gateway });
@@ -136,23 +140,19 @@ export class Agent {
   }
 
   async stop() {
-    // Stop monitor.
-    if (this._monitor) {
-      await this._monitor.stop();
-      this._monitor = undefined;
-    }
+    // Stop plugins.
+    await Promise.all(this._plugins.map((plugin) => plugin.stop()));
+    this._plugins = [];
 
     // Close service endpoints.
     await Promise.all(this._endpoints.map((server) => server.close()));
     this._endpoints = [];
 
-    // Close client.
+    // Close client and services.
     await this._client?.destroy();
+    await this._clientServices?.close();
     this._client = undefined;
-
-    // Close service.
-    await this._services?.close();
-    this._services = undefined;
+    this._clientServices = undefined;
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
   }

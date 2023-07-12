@@ -8,7 +8,7 @@ import http from 'http';
 import { Client, Expando, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { Service } from '../service';
+import { Service } from '../plugin';
 
 export type ProxyServerOptions = {
   port: number;

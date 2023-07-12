@@ -10,6 +10,8 @@ import { log } from '@dxos/log';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
+import { Plugin } from '../plugin';
+
 type SpaceState = {
   spaceKey: PublicKey;
   currentEpoch?: SpecificCredential<Epoch>;
@@ -28,7 +30,7 @@ export type MonitorOptions = {
  * - Triggers new epochs.
  * - Updates address book.
  */
-export class Monitor {
+export class Monitor implements Plugin {
   private _subscriptions: ZenObservable.Subscription[] = [];
   private _spaceStates = new ComplexMap<PublicKey, SpaceState>(PublicKey.hash);
 
@@ -39,12 +41,6 @@ export class Monitor {
     private readonly _services: ClientServicesProvider,
     private readonly _options: MonitorOptions
   ) {}
-
-  async stop() {
-    this._subscriptions.forEach((subscription) => subscription.unsubscribe());
-    this._spaceStates.forEach((state) => state.subscriptions.forEach((subscription) => subscription.unsubscribe()));
-    this._spaceStates.clear();
-  }
 
   /**
    * Monitor all epochs for which the agent is the leader.
@@ -111,5 +107,11 @@ export class Monitor {
         });
       }),
     );
+  }
+
+  async stop() {
+    this._subscriptions.forEach((subscription) => subscription.unsubscribe());
+    this._spaceStates.forEach((state) => state.subscriptions.forEach((subscription) => subscription.unsubscribe()));
+    this._spaceStates.clear();
   }
 }

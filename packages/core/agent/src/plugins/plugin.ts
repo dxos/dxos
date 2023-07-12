@@ -7,3 +7,8 @@ export interface Service {
   open(): Promise<void>;
   close(): Promise<void>;
 }
+
+export interface Plugin {
+  start(): Promise<void>;
+  stop(): Promise<void>;
+}
