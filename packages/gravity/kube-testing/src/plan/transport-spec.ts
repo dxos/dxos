@@ -116,23 +116,28 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       log.info('create test connections');
 
+      const desiderConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
+      let actualtConnections = 0;
+
       // Test connections.
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
           .map(async (agentId) => {
-            swarms.forEach(async (swarm, swarmIdx) => {
+            for await (const [swarmIdx, swarm] of swarms.entries()) {
               log.info('testing connection', { agentIdx, swarmIdx });
               try {
                 await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+                actualtConnections++;
                 log.info('test connection succeded', { agentIdx, swarmIdx });
               } catch (error) {
                 log.info('test connection failed', { agentIdx, swarmIdx });
               }
-            });
-          })
+            }
+          }),
       );
 
+      log.info('test connections done', { testCounter, agentIdx, desiderConnections, actualtConnections });
       await env.syncBarrier(`connections are tested on ${testCounter}`);
 
       log.info('closing swarms');
