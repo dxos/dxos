@@ -3,9 +3,12 @@
 //
 
 import { Flags } from '@oclif/core';
+import assert from 'assert';
 import chalk from 'chalk';
 
 import { AgentOptions, Agent } from '@dxos/agent';
+import { Trigger } from '@dxos/async';
+import { SystemStatus, fromAgent } from '@dxos/client';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
@@ -86,6 +89,23 @@ export default class Start extends BaseCommand<typeof Start> {
         try {
           await daemon.start(this.flags.profile);
           this.log('Agent started');
+
+          // Check if agent is running.
+          {
+            const services = fromAgent({ profile: this.flags.profile });
+            await services.open();
+
+            const stream = services.services.SystemService!.queryStatus();
+            const trigger = new Trigger();
+
+            stream.subscribe(({ status }) => {
+              assert(status === SystemStatus.ACTIVE);
+              trigger.wake();
+            });
+            await trigger.wait();
+            stream.close();
+            await services.close();
+          }
         } catch (err) {
           this.log(chalk`{red Failed to start daemon}: ${err}`);
           await daemon.stop(this.flags.profile);
