@@ -53,7 +53,7 @@ export const SpaceSelector = () => {
             <div className='pr-1'>
               <Planet />
             </div>
-            <span className='font-mono text-neutral-250'>{space.key.truncate()}</span>
+            <span className='text-lg font-mono text-neutral-250'>{space.key.truncate()}</span>
             <span className='whitespace-nowrap'>{space.properties.name ?? humanize(space.key)}</span>
           </div>
         </Select.Item>

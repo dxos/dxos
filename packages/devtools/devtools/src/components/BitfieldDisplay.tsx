@@ -6,8 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { BitField, range } from '@dxos/util';
 
-const MIN_SUBDIVISION_PIXELS = 4;
-const MAX_SUBDIVISIONS = 500;
+const MIN_SUBDIVISION_PIXELS = 8;
+const MAX_SUBDIVISIONS = 400;
 
 export const BitfieldDisplay = ({ value, length }: { value: Uint8Array; length: number }) => {
   const container = useRef<HTMLDivElement>(null);

@@ -2966,12 +2966,14 @@ importers:
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/bytes': ^3.1.1
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
       localforage: ^1.10.0
+      lodash.defaultsdeep: ^4.6.1
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3010,6 +3012,7 @@ importers:
       '@types/bytes': 3.1.1
       bytes: 3.1.2
       localforage: 1.10.0
+      lodash.defaultsdeep: 4.6.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
@@ -3018,6 +3021,7 @@ importers:
     devDependencies:
       '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/react-shell': link:../../sdk/react-shell
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@types/react-vis': 1.11.11

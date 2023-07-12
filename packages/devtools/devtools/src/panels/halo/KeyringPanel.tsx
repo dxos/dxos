@@ -19,7 +19,7 @@ const columns: TableColumn<KeyRecord>[] = [
     accessor: (record) => PublicKey.from(record.publicKey).truncate(),
   },
   {
-    Header: 'Humanized Pub Key',
+    Header: 'Pub Key Name',
     accessor: (record) => humanize(record.publicKey),
   },
   {
@@ -35,7 +35,7 @@ const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterDetailTable columns={columns} data={keys} slots={{ selected: { className: 'bg-slate-200' } }} />;
+  return <MasterDetailTable columns={columns} data={keys} />;
 };
 
 export default KeyringPanel;

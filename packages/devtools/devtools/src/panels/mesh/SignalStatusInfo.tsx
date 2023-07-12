@@ -103,7 +103,7 @@ export const SignalStatusInfo = () => {
 
   return (
     <div>
-      <Table columns={columns} data={status} />
+      <Table compact columns={columns} data={status} />
     </div>
   );
 };

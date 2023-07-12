@@ -88,11 +88,7 @@ const FeedsPanel = () => {
       }
     >
       <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />
-      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block>
-        columns={columns}
-        data={messages}
-        slots={{ selected: { className: 'bg-slate-200' } }}
-      />
+      <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
     </PanelContainer>
   );
 };

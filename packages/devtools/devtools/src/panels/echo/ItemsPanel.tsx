@@ -20,10 +20,15 @@ const textFilter = (text?: string) => {
     return () => true;
   }
 
+  // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: TreeViewItem) => {
-    const match = item.title?.match(matcher);
-    return match !== null;
+  return (item: TypedObject) => {
+    const model = item.toJSON()['@model'];
+    let match = false;
+    match ||= !!model?.match(matcher);
+    match ||= !!item.__typename?.match(matcher);
+    match ||= !!String(item.title).match(matcher);
+    return match;
   };
 };
 
@@ -68,11 +73,13 @@ const columns: TableColumn<TypedObject>[] = [
   {
     Header: 'Model',
     width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (item) => item.toJSON()['@model'],
   },
   {
     Header: 'Type',
     width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (item) => item.__typename ?? '',
   },
 ];
@@ -93,11 +100,7 @@ const ItemsPanel = () => {
         </Toolbar>
       }
     >
-      <MasterDetailTable<TypedObject>
-        columns={columns}
-        data={items.filter(textFilter(filter))}
-        slots={{ selected: { className: 'bg-slate-200' } }}
-      />
+      <MasterDetailTable<TypedObject> columns={columns} data={items.filter(textFilter(filter))} />
     </PanelContainer>
   );
 };

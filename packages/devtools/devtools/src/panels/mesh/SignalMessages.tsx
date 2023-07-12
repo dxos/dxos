@@ -136,13 +136,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
       </Toolbar>
 
       <div className='flex flex-1 overflow-hidden'>
-        {view ? (
-          <MasterDetailTable
-            columns={view.columns as any}
-            data={filteredMessages}
-            slots={{ selected: { className: 'bg-slate-200' } }}
-          />
-        ) : null}
+        {view ? <MasterDetailTable columns={view.columns as any} data={filteredMessages} /> : null}
       </div>
     </div>
   );

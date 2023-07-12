@@ -95,7 +95,13 @@ const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar>
-          <Input label='Filters' labelVisuallyHidden placeholder='Filters' ref={inputRef} />
+          <Input
+            ref={inputRef}
+            slots={{ root: { className: 'w-full ' } }}
+            label='Filter'
+            labelVisuallyHidden
+            placeholder='Filter (e.g., "info", "client:debug")'
+          />
           <Button onClick={handleQueryLogs}>Refresh</Button>
           <Button onClick={() => setLogs([])}>Clear</Button>
         </Toolbar>

@@ -47,6 +47,7 @@ export type TableProps<T extends {}> = {
   slots?: TableSlots;
   selected?: T;
   onSelect?: (item: T) => void;
+  compact?: boolean;
 };
 
 /**
@@ -54,7 +55,14 @@ export type TableProps<T extends {}> = {
  * https://react-table-v7.tanstack.com/docs/overview
  */
 // TODO(burdon): Checkbox in left gutter.
-export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, selected }: TableProps<T>) => {
+export const Table = <T extends {}>({
+  columns,
+  data = [],
+  slots = {},
+  compact = false,
+  selected,
+  onSelect,
+}: TableProps<T>) => {
   const defaultColumn = useMemo(
     () => ({
       // When using the useFlexLayout:
@@ -115,7 +123,10 @@ export const Table = <T extends {}>({ columns, data = [], slots = {}, onSelect, 
                   return (
                     // TODO(burdon): Factor out defaults.
                     // eslint-disable-next-line react/jsx-key
-                    <div {...cell.getCellProps(cellProps)} className={mx('td px-4 py-2', slots?.cell?.className)}>
+                    <div
+                      {...cell.getCellProps(cellProps)}
+                      className={mx('td px-4', compact ? 'py-1' : 'py-2', slots?.cell?.className)}
+                    >
                       <div className='truncate'>{cell.render('Cell')}</div>
                     </div>
                   );

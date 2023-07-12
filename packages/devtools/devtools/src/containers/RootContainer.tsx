@@ -46,10 +46,10 @@ export const RootContainer = () => {
       <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-100'}>
         <TreeView
           items={sections}
-          slots={{ selected: { className: 'bg-gray-300' } }}
+          expanded={sections.map((section) => section.id)}
+          slots={{ selected: { className: 'bg-blue-600 text-white' } }}
           selected={pathname}
           onSelect={handleSelect}
-          expanded={sections.map((section) => section.id)}
         />
         <div className='flex-1' />
         <Footer />

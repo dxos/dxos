@@ -198,7 +198,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
     ),
   ];
 
-  return <Table columns={columns} data={data} />;
+  return <Table compact columns={columns} data={data} />;
 };
 
 const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {

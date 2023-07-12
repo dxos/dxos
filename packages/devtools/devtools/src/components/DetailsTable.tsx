@@ -16,7 +16,7 @@ export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: Detail
   expand,
 }) => {
   return (
-    <div className='p-2'>
+    <div className='px-4 py-2'>
       <table className='table-fixed border-collapse __w-full'>
         <tbody>
           {Object.entries(object).map(([key, value]) => (
