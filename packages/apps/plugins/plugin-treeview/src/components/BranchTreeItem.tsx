@@ -5,7 +5,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { FC, forwardRef, ForwardRefExoticComponent, useEffect, useRef, useState } from 'react';
+import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -40,7 +40,7 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
 
 type BranchTreeItemProps = { node: GraphNode } & SortableProps;
 
-export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps> = forwardRef<
+export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   BranchTreeItemProps
 >(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
