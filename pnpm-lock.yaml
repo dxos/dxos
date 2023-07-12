@@ -1678,7 +1678,10 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@types/fs-ext': ^2.0.0
+      '@types/node': ^18.11.9
       fs-ext: ^2.0.0
+      ts-node: 10.9.1
+      typescript: ^5.0.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/log': link:../log
@@ -1686,6 +1689,9 @@ importers:
       fs-ext: 2.0.0
     devDependencies:
       '@types/fs-ext': 2.0.0
+      '@types/node': 18.11.9
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
+      typescript: 5.0.4
 
   packages/common/log:
     specifiers:
