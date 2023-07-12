@@ -20,7 +20,10 @@
           "packages/common/lock-file/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/common/lock-file/dist/lib"
+        "outputPath": "packages/common/lock-file/dist/lib",
+        "platforms": [
+          "node"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
