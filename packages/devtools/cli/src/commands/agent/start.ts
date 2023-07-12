@@ -3,17 +3,12 @@
 //
 
 import { Flags } from '@oclif/core';
-import assert from 'assert';
 import chalk from 'chalk';
-import fs from 'node:fs';
 
-import { AgentOptions, Agent, parseAddress } from '@dxos/agent';
-import { Trigger, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
+import { AgentOptions, Agent } from '@dxos/agent';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
-import { AGENT_START_TIMEOUT } from '../../timeouts';
 import { safeParseInt } from '../../util';
 
 export default class Start extends BaseCommand<typeof Start> {
@@ -99,29 +94,6 @@ export default class Start extends BaseCommand<typeof Start> {
       try {
         await daemon.start(this.flags.profile);
         this.log('Agent started');
-
-        // Wait for socket file to appear.
-        {
-          const { path: socketFile } = parseAddress(getUnixSocket(this.flags.profile));
-          await waitForCondition(() => fs.existsSync(socketFile), AGENT_START_TIMEOUT);
-        }
-
-        // Check if agent is running.
-        {
-          const services = fromAgent({ profile: this.flags.profile });
-          await services.open();
-
-          const stream = services.services.SystemService!.queryStatus();
-          const trigger = new Trigger();
-
-          stream.subscribe(({ status }) => {
-            assert(status === SystemStatus.ACTIVE);
-            trigger.wake();
-          });
-          await trigger.wait();
-          stream.close();
-          await services.close();
-        }
       } catch (err) {
         this.log(chalk`{red Failed to start daemon}: ${err}`);
         await daemon.stop(this.flags.profile);

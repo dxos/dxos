@@ -3,15 +3,18 @@
 //
 import forever, { ForeverProcess } from 'forever';
 import GrowingFile from 'growing-file';
+import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { sleep } from '@dxos/async';
+import { Trigger, waitForCondition } from '@dxos/async';
+import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
 import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
-import { lockFilePath, removeSocketFile, waitFor } from '../util';
+import { DAEMON_START_TIMEOUT } from '../timeouts';
+import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -74,11 +77,30 @@ export class ForeverDaemon implements Daemon {
         outFile, // Child stdout.
         errFile, // Child stderr.
       });
-
-      await sleep(50);
-
       const stream = await printFile(errFile);
 
+      // Wait for socket file to appear.
+      {
+        const { path: socketFile } = parseAddress(getUnixSocket(profile));
+        await waitForCondition(() => fs.existsSync(socketFile), DAEMON_START_TIMEOUT);
+      }
+
+      // Check if agent is running.
+      {
+        const services = fromAgent({ profile });
+        await services.open();
+
+        const stream = services.services.SystemService!.queryStatus();
+        const trigger = new Trigger();
+
+        stream.subscribe(({ status }) => {
+          assert(status === SystemStatus.ACTIVE);
+          trigger.wake();
+        });
+        await trigger.wait();
+        stream.close();
+        await services.close();
+      }
       stream.destroy();
     }
 
