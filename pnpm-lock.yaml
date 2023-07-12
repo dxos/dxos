@@ -341,7 +341,6 @@ importers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
-      '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -398,7 +397,6 @@ importers:
       '@braneframe/plugin-client': link:../plugins/plugin-client
       '@braneframe/plugin-dnd': link:../plugins/plugin-dnd
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
-      '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
@@ -553,6 +551,121 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
       typescript: 5.0.4
       vite: 4.3.9_@types+node@18.11.9
+      vite-plugin-pwa: 0.14.1_vite@4.3.9
+      workbox-window: 6.5.4
+
+  packages/apps/labs-app:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-drawing': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-kanban': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/plugin-url-sync': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-shell': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/vault': workspace:*
+      '@octokit/openapi-types': ^16.0.0
+      '@phosphor-icons/react': ^2.0.5
+      '@remix-run/router': ^1.0.2
+      '@sentry/react': ^7.41.0
+      '@sentry/vite-plugin': ^0.7.2
+      '@types/dompurify': ^3.0.2
+      '@types/lodash.update': ^4.10.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@types/showdown': ^2.0.0
+      '@types/turndown': ^5.0.1
+      '@vitejs/plugin-react': ^3.0.1
+      dompurify: ^3.0.3
+      github-markdown-css: ^5.2.0
+      isomorphic-fetch: ^3.0.0
+      localforage: ^1.10.0
+      lodash.update: ^4.10.2
+      octokit: ^2.0.14
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      showdown: ^2.1.0
+      turndown: ^7.1.1
+      vite: ^4.3.9
+      vite-plugin-pwa: ^0.14.1
+      workbox-window: ^6.5.4
+    dependencies:
+      '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
+      '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
+      '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
+      '@braneframe/plugin-space': link:../plugins/plugin-space
+      '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
+      '@braneframe/plugin-stack': link:../plugins/plugin-stack
+      '@braneframe/plugin-theme': link:../plugins/plugin-theme
+      '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
+      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
+      '@braneframe/types': link:../types
+      '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-composer': link:../../ui/aurora-composer
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/observable-object': link:../../common/observable-object
+      '@dxos/react-appkit': link:../../ui/react-appkit
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-shell': link:../../sdk/react-shell
+      '@dxos/react-surface': link:../../sdk/react-surface
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/text-model': link:../../core/echo/text-model
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@sentry/react': 7.42.0_react@18.2.0
+      dompurify: 3.0.3
+      github-markdown-css: 5.2.0
+      isomorphic-fetch: 3.0.0
+      localforage: 1.10.0
+      lodash.update: 4.10.2
+      octokit: 2.0.14
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      showdown: 2.1.0
+      turndown: 7.1.1
+    devDependencies:
+      '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/vault': link:../../sdk/vault
+      '@octokit/openapi-types': 16.0.0
+      '@remix-run/router': 1.0.2
+      '@sentry/vite-plugin': 0.7.2
+      '@types/dompurify': 3.0.2
+      '@types/lodash.update': 4.10.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@types/showdown': 2.0.0
+      '@types/turndown': 5.0.1
+      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
+      vite: 4.3.9
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
@@ -14270,7 +14383,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.2_rollup@3.20.4:
+  /@rollup/plugin-replace/5.0.2_rollup@3.23.0:
     resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14279,9 +14392,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.20.4
+      '@rollup/pluginutils': 5.0.2_rollup@3.23.0
       magic-string: 0.27.0
-      rollup: 3.20.4
+      rollup: 3.23.0
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.79.1:
@@ -14318,7 +14431,7 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /@rollup/pluginutils/5.0.2_rollup@3.20.4:
+  /@rollup/pluginutils/5.0.2_rollup@3.23.0:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14330,7 +14443,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.20.4
+      rollup: 3.23.0
     dev: true
 
   /@rushstack/debug-certificate-manager/1.1.83:
@@ -22151,7 +22264,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -27737,13 +27850,8 @@ packages:
       postcss: 8.4.21
     dev: false
 
-  /idb/7.1.0:
-    resolution: {integrity: sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==}
-    dev: true
-
   /idb/7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
-    dev: false
 
   /identity-obj-proxy/3.0.0:
     resolution: {integrity: sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA==}
@@ -40622,11 +40730,11 @@ packages:
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
     dependencies:
-      '@rollup/plugin-replace': 5.0.2_rollup@3.20.4
+      '@rollup/plugin-replace': 5.0.2_rollup@3.23.0
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.20.4
+      rollup: 3.23.0
       vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
@@ -42116,7 +42224,7 @@ packages:
   /workbox-background-sync/6.5.4:
     resolution: {integrity: sha512-0r4INQZMyPky/lj4Ou98qxcThrETucOde+7mRGJl13MPJugQNKeZQOdIJe/1AchOP23cTqHcN/YVpD6r8E6I8g==}
     dependencies:
-      idb: 7.1.0
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 
@@ -42185,7 +42293,7 @@ packages:
   /workbox-expiration/6.5.4:
     resolution: {integrity: sha512-jUP5qPOpH1nXtjGGh1fRBa1wJL2QlIb5mGpct3NzepjGG2uFFBn4iiEBiI9GUmfAFR2ApuRhDydjcRmYXddiEQ==}
     dependencies:
-      idb: 7.1.0
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 
