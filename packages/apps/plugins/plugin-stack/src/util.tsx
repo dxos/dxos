@@ -3,6 +3,7 @@
 //
 
 import { Article, IconProps, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import type { GraphNode } from '@braneframe/plugin-graph';
@@ -27,7 +28,7 @@ export const isStackProperties = (datum: unknown): datum is StackProperties =>
 
 export const stackToGraphNode = (obj: Stack, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: obj.id,
-  index,
+  index: get(obj, 'meta.index', index),
   label: obj.title ?? 'Untitled Stack',
   icon: (props: IconProps) => <Article {...props} />,
   data: obj,
