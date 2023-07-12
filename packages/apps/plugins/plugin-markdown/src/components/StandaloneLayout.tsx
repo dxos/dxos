@@ -30,7 +30,7 @@ export const StandaloneLayout = observer(
     return (
       <Main.Content classNames='min-bs-full'>
         <div role='none' className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white dark:bg-neutral-925 flex flex-col'>
-          <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
+          <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-6 lg:pis-0 pointer-fine:lg:pis-0'>
             <Input.Root id={`input--${model.id}`}>
               <Input.Label srOnly>{t('document title label')}</Input.Label>
               <Input.TextInput
@@ -39,7 +39,7 @@ export const StandaloneLayout = observer(
                 placeholder={t('untitled document title')}
                 value={properties.title ?? ''}
                 onChange={({ target: { value } }) => (properties.title = value)}
-                classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
+                classNames='flex-1 min-is-0 is-auto pis-4 plb-3.5 pointer-fine:plb-2.5'
                 data-testid='composer.documentTitle'
               />
             </Input.Root>
@@ -61,7 +61,7 @@ export const StandaloneLayout = observer(
               </ThemeContext.Provider>
             )}
           </div>
-          <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 opacity-50')} />
+          <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
           {children}
         </div>
         {/* <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}> */}

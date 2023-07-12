@@ -3,6 +3,7 @@
 //
 
 import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 
 import { GraphNode } from '@braneframe/plugin-graph';
 import { TextKind } from '@dxos/aurora-composer';
@@ -20,8 +21,10 @@ export const isSpace = (datum: unknown): datum is Space =>
     : false;
 
 export const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObject[]): GraphNode[] => {
-  return objects.map((obj) => ({
+  const defaultIndices = getIndices(objects.length);
+  return objects.map((obj, index) => ({
     id: obj.id,
+    index: obj.meta?.index ?? defaultIndices[index],
     label: obj.title ?? 'Untitled',
     description: obj.description,
     icon: obj.content?.kind === TextKind.PLAIN ? ArticleMedium : Article,
@@ -30,6 +33,7 @@ export const objectsToGraphNodes = (parent: GraphNode<Space>, objects: TypedObje
     actions: [
       {
         id: 'delete',
+        index: getIndices(0)[0],
         label: ['delete document label', { ns: 'composer' }],
         icon: Trash,
         invoke: async () => {
