@@ -7,13 +7,11 @@ import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { getUnixSocket } from '@dxos/client';
 import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
-import { DAEMON_START_TIMEOUT } from '../timeouts';
-import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+import { lockFilePath, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -80,11 +78,6 @@ export class ForeverDaemon implements Daemon {
       await sleep(50);
 
       const stream = await printFile(errFile);
-      const { path: socketFile } = parseAddress(getUnixSocket(profile));
-      await waitFor({
-        condition: async () => fs.existsSync(socketFile),
-        timeout: DAEMON_START_TIMEOUT,
-      });
 
       stream.destroy();
     }
