@@ -15,6 +15,7 @@ const PATH_TO_KUBE_REPO =
   {
     mykola: '/Users/mykola/Documents/dev/kube/',
     dmaretskyi: '/Users/dmaretskyi/Projects/kube/',
+    nf: '/Users/nf/work/kube/',
   }[execSync('whoami').toString().trim()] ?? raise(new Error('Who are you?'));
 const BIN_PATH = './cmds/signal-test/main.go';
 

@@ -12,3 +12,6 @@ Serve the devtools app:
 `pnpm -w nx serve devtools`
 
 Then open the testbench: `http://localhost:5173/testbench.html`
+
+Alternatively, connect devtools to a remote client, 
+e.g., `http://localhost:5173?target=vault:http://localhost:3967/vault.html`

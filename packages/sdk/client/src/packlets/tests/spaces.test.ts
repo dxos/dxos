@@ -8,9 +8,12 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
+import { Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
+import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceProxy } from '../proxies';
@@ -146,5 +149,62 @@ describe('Spaces', () => {
     }
 
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
+  });
+
+  test('Peer do not load mutations before epoch', async () => {
+    const testBuilder = new TestBuilder();
+
+    const services1 = testBuilder.createLocal();
+    const client1 = new Client({ services: services1 });
+
+    const services2 = testBuilder.createLocal();
+    const client2 = new Client({ services: services2 });
+    await client1.initialize();
+    afterTest(() => client1.destroy());
+    await client2.initialize();
+    afterTest(() => client2.destroy());
+    await client1.halo.createIdentity({ displayName: 'Peer 1' });
+    await client2.halo.createIdentity({ displayName: 'Peer 2' });
+    const space1 = await client1.createSpace();
+    await space1.waitUntilReady();
+
+    const dataSpace1 = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feedKey = dataSpace1!.inner.dataFeedKey;
+    const feed1 = services1.host._serviceContext.feedStore.getFeed(feedKey!)!;
+
+    const amount = 10;
+    {
+      // Create mutations and epoch.
+      for (const i of range(amount)) {
+        const expando = new Expando({ id: i.toString(), data: i.toString() });
+        space1.db.add(expando);
+      }
+      // Wait to process all mutations.
+      await space1.db.flush();
+      // Create epoch.
+      await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
+    }
+
+    await Promise.all(performInvitation({ host: space1, guest: client2 }));
+
+    const space2 = client2.getSpace(space1.key)!;
+    await space2.waitUntilReady();
+    const dataSpace2 = services2.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feed2 = services2.host._serviceContext.feedStore.getFeed(feedKey!)!;
+
+    // Check that second peer does not have mutations before epoch.
+    for (const i of range(feed1.length)) {
+      expect(feed2.has(i)).to.be.false;
+    }
+
+    {
+      // Create more mutations on first peer.
+      const expando = new Expando({ id: 'another one', data: 'something' });
+      space1.db.add(expando);
+
+      // Wait to process new mutation on second peer.
+      await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
+      expect(feed2.has(amount + 1)).to.be.true;
+    }
   });
 });

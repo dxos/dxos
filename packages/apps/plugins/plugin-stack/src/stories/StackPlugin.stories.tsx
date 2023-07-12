@@ -5,6 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
+import { DndPlugin } from '@braneframe/plugin-dnd';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ObservableArray, ObservableObject } from '@dxos/observable-object';
@@ -33,7 +34,9 @@ const StackPluginStoryPlugin = () => ({
 });
 
 const StackSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]} />
+  <PluginContextProvider
+    plugins={[ThemePlugin(), DndPlugin(), StackPlugin(), MarkdownPlugin(), StackPluginStoryPlugin()]}
+  />
 );
 
 export default {

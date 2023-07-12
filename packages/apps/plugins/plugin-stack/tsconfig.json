@@ -45,6 +45,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-dnd"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {

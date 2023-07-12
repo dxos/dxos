@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
+import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions } from '@braneframe/plugin-graph';
 import {
   Button,
@@ -17,14 +20,44 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, defaultDisabled, getSize, mx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/observable-object/react';
+import { appTx, defaultDisabled, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
+import { useSubscription } from '@dxos/observable-object/react';
 
 import { useTreeView } from '../TreeViewContext';
 
 const spaceExp = /\s/g;
 
-export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
+type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+
+export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
+  node,
+  rearranging,
+}: SortableLeafTreeItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: `treeitem:${node.id}`,
+    data: { dragoverlay: node, treeitem: node },
+  });
+  return (
+    <LeafTreeItem
+      node={node}
+      draggableAttributes={attributes}
+      draggableListeners={listeners}
+      rearranging={rearranging}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      ref={setNodeRef}
+    />
+  );
+};
+
+type LeafTreeItemProps = { node: GraphNode } & SortableProps;
+
+export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttributes<any>> = forwardRef<
+  HTMLLIElement,
+  LeafTreeItemProps
+>(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
+  // todo(thure): Handle `sortable`
+
   const { sidebarOpen, closeSidebar } = useSidebar();
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
@@ -48,8 +81,28 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
   const label = Array.isArray(node.label) ? t(...node.label) : node.label;
   const wrap = spaceExp.test(label);
 
+  // TODO(thure): This replaces `observer` since we need to `forwardRef`.
+  const [_, setIter] = useState([]);
+  if (subscribe in node) {
+    useEffect(() => {
+      return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
+    }, [node]);
+  } else {
+    useSubscription(() => setIter([]), [node]);
+  }
+
   return (
-    <TreeItem.Root classNames='pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex'>
+    <TreeItem.Root
+      classNames={[
+        'pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded',
+        defaultFocus,
+        rearranging && 'invisible',
+      ]}
+      {...draggableAttributes}
+      {...draggableListeners}
+      style={style}
+      ref={forwardedRef}
+    >
       <TreeItem.Heading
         asChild
         data-testid='spacePlugin.documentTreeItemHeading'
@@ -68,7 +121,14 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           role='link'
           {...(!sidebarOpen && { tabIndex: -1 })}
           data-itemid={node.id}
-          onClick={() => {
+          onKeyDown={(event) => {
+            if (event.key === ' ' || event.key === 'Enter') {
+              event.stopPropagation();
+              treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
+              !isLg && closeSidebar();
+            }
+          }}
+          onClick={(event) => {
             // TODO(wittjosiah): Make recursive.
             treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
             !isLg && closeSidebar();
@@ -81,7 +141,7 @@ export const LeafTreeItem = observer(({ node }: { node: GraphNode }) => {
           </p>
         </button>
       </TreeItem.Heading>
-      {menuActions.length > 0 && (
+      {menuActions.length > 0 && !isOverlay && (
         <Tooltip.Root
           open={optionsTooltipOpen}
           onOpenChange={(nextOpen) => {

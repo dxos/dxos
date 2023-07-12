@@ -4,19 +4,25 @@
 
 import type { IconProps } from '@phosphor-icons/react';
 import type { DeepSignal } from 'deepsignal';
+import type { getIndices } from '@tldraw/indices';
 import type { UIEvent, FC } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
 import type { Plugin } from '@dxos/react-surface';
 
+type Index = ReturnType<typeof getIndices>[number];
+
 export type MaybePromise<T> = T | Promise<T>;
 
 export type GraphNode<TDatum = any> = {
   id: string;
+  index: Index;
   label: string | [string, { ns: string; count?: number }];
   description?: string;
   icon?: FC;
   data?: TDatum; // nit about naming this
+  parent?: GraphNode;
+  onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
   parent?: GraphNode;
   pluginChildren?: { [key: string]: GraphNode[] };
@@ -28,6 +34,7 @@ export type GraphNode<TDatum = any> = {
 
 export type GraphNodeAction = {
   id: string;
+  index: Index;
   testId?: string;
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
   label: string | [string, { ns: string; count?: number }];

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-space",
-  "version": "0.1.50",
+  "version": "0.1.51",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,6 +23,7 @@
     "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "jszip": "^3.10.1",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "^18.2.0"

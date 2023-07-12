@@ -12,13 +12,12 @@ import { SpaceProxy } from '@dxos/client';
 import { createStore, subscribe } from '@dxos/observable-object';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
-import { StackMain } from './components';
+import { StackMain, StackSectionOverlay } from './components';
+import { isStack, StackPluginProvides, StackProvides } from './props';
+import { stackSectionChoosers, stackSectionCreators } from './stores';
 import translations from './translations';
 import { StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './types';
 import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
-
-export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
-export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const subscriptions = new Map<string, UnsubscribeCallback>();
@@ -99,7 +98,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             } else {
               return null;
             }
-          default:
+          case 'dragoverlay':
+          if (datum && typeof datum === 'object' && 'object' in datum) {
+            return StackSectionOverlay;
+          } else {
+            return null;
+          }default:
             return null;
         }
       },

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
 import { CredentialConsumer, FeedInfo } from '@dxos/credentials';
-import { FeedWrapper } from '@dxos/feed-store';
+import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -23,7 +23,7 @@ import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out?
-type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
   spaceKey: PublicKey;
@@ -86,19 +86,22 @@ export class Space {
 
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
+      // Enable sparse replication to not download mutations covered by prior epochs.
+      const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
+
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
         await this._addFeedLock.executeSynchronized(async () => {
           if (this._dataPipeline.pipeline) {
             if (!this._dataPipeline.pipeline.hasFeed(info.key)) {
-              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key));
+              return this._dataPipeline.pipeline.addFeed(await this._feedProvider(info.key, { sparse }));
             }
           }
         });
       }
 
       if (!info.key.equals(params.genesisFeed.key)) {
-        this.protocol.addFeed(await params.feedProvider(info.key));
+        this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
       }
     });
 
@@ -129,7 +132,7 @@ export class Space {
         await this._addFeedLock.executeSynchronized(async () => {
           for (const feed of this._controlPipeline.spaceState.feeds.values()) {
             if (feed.assertion.designation === AdmittedFeed.Designation.DATA && !pipeline.hasFeed(feed.key)) {
-              await pipeline.addFeed(await this._feedProvider(feed.key));
+              await pipeline.addFeed(await this._feedProvider(feed.key, { sparse: true }));
             }
           }
         });

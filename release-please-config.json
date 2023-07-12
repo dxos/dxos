@@ -33,7 +33,22 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/labs-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-dnd/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-drawing/package.json",
           "jsonpath": "$.version"
         },
         {

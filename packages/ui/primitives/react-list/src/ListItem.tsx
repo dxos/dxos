@@ -2,13 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DraggableAttributes } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { CollapsibleContentProps, CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContextScope, Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -50,17 +46,12 @@ type ListItemElement = React.ElementRef<typeof Primitive.li>;
 
 const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
 
-type DraggableListItemContextValue = {
-  draggableAttributes: DraggableAttributes;
-  draggableListeners: ReturnType<typeof useSortable>['listeners'];
-};
-
 type ListItemContextValue = {
   headingId: string;
   open: boolean;
   selected: CheckboxProps['checked'];
   setSelected: Dispatch<SetStateAction<CheckboxProps['checked']>>;
-} & Partial<DraggableListItemContextValue>;
+};
 
 const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
 
@@ -80,19 +71,6 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
   },
 );
 
-type ListItemDragHandleProps = ComponentPropsWithRef<typeof Primitive.div>;
-
-const ListItemDragHandle = forwardRef<HTMLDivElement, ListItemScopedProps<ListItemDragHandleProps>>(
-  ({ __listItemScope, children, ...props }, forwardedRef) => {
-    const { draggableAttributes, draggableListeners } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    return (
-      <div role='button' ref={forwardedRef} {...props} {...draggableAttributes} {...draggableListeners}>
-        {children}
-      </div>
-    );
-  },
-);
-
 type ListItemOpenTriggerProps = ListItemScopedProps<CollapsibleTriggerProps>;
 
 const ListItemOpenTrigger = Collapsible.Trigger;
@@ -101,16 +79,10 @@ type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content
 
 const ListItemCollapsibleContent: ForwardRefExoticComponent<CollapsibleContentProps> = Collapsible.Content;
 
-const ListItemImpl = forwardRef<
-  ListItemElement,
-  ListItemProps & { id: string } & Partial<DraggableListItemContextValue>
->(
-  (
-    props: ListItemScopedProps<
-      ListScopedProps<ListItemProps & { id: string } & Partial<DraggableListItemContextValue>>
-    >,
-    forwardedRef,
-  ) => {
+const ListItem = forwardRef<ListItemElement, ListItemProps>(
+  (props: ListItemScopedProps<ListScopedProps<ListItemProps>>, forwardedRef) => {
+    const id = useId('listItem', props.id);
+
     const {
       __listScope,
       __listItemScope,
@@ -122,9 +94,6 @@ const ListItemImpl = forwardRef<
       defaultOpen,
       onOpenChange,
       collapsible,
-      id,
-      draggableAttributes,
-      draggableListeners,
       ...listItemProps
     } = props;
     const { selectable } = useListContext(LIST_NAME, __listScope);
@@ -162,7 +131,6 @@ const ListItemImpl = forwardRef<
         open={open}
         selected={selected}
         setSelected={setSelected}
-        {...{ draggableAttributes, draggableListeners }}
       >
         {collapsible ? (
           <Collapsible.Root asChild open={open} onOpenChange={setOpen}>
@@ -176,50 +144,12 @@ const ListItemImpl = forwardRef<
   },
 );
 
-const DraggableListItem = forwardRef<ListItemElement, ListItemProps & { id: string }>(
-  (props: ListItemScopedProps<ListScopedProps<ListItemProps & { id: string }>>, forwardedRef) => {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-      id: props.id,
-    });
-    const { itemSizes } = useListContext(LIST_NAME, props.__listScope);
-    const ref = useComposedRefs(forwardedRef, setNodeRef) as ComponentPropsWithRef<typeof Primitive.li>['ref'];
-
-    return (
-      <ListItemImpl
-        {...props}
-        style={{
-          ...props.style,
-          transform: CSS[itemSizes === 'one' ? 'Transform' : 'Translate'].toString(transform),
-          transition,
-        }}
-        ref={ref}
-        {...{
-          draggableAttributes: attributes,
-          draggableListeners: listeners,
-        }}
-      />
-    );
-  },
-);
-
-const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListScopedProps<ListItemProps>, forwardedRef) => {
-  const { variant } = useListContext(LIST_NAME, props.__listScope);
-  const listItemId = useId('listItem', props.id);
-
-  if (variant === 'ordered-draggable') {
-    return <DraggableListItem {...props} ref={forwardedRef} id={listItemId} />;
-  } else {
-    return <ListItemImpl {...props} ref={forwardedRef} id={listItemId} />;
-  }
-});
-
 ListItem.displayName = LIST_ITEM_NAME;
 
 export {
   ListItem,
   ListItemHeading,
   ListItemCollapsibleContent,
-  ListItemDragHandle,
   ListItemOpenTrigger,
   createListItemScope,
   useListItemContext,
@@ -230,7 +160,6 @@ export type {
   ListItemProps,
   ListItemHeadingProps,
   ListItemCollapsibleContentProps,
-  ListItemDragHandleProps,
   ListItemOpenTriggerProps,
   ListItemScopedProps,
 };

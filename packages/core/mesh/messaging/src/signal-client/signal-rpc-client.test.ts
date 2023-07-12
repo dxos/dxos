@@ -22,7 +22,7 @@ describe('SignalRPCClient', () => {
   });
 
   afterAll(() => {
-    broker.stop();
+    void broker.stop();
   });
 
   // TODO(burdon): Convert to TestBuilder pattern.

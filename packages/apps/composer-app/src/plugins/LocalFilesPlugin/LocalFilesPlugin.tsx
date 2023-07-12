@@ -67,11 +67,12 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       window.addEventListener('keydown', handleKeyDown);
 
       const value = await localforage.getItem<FileSystemHandle[]>(LOCAL_FILES_PLUGIN);
+      const indices = getIndices(value?.length ?? 1);
       if (Array.isArray(value)) {
         await Promise.all(
-          value.map(async (handle) => {
+          value.map(async (handle, index) => {
             if (handle.kind === 'file') {
-              const file = await handleToLocalFile(handle);
+              const file = await handleToLocalFile(handle, indices[index]);
               state.files = [file, ...state.files];
             } else if (handle.kind === 'directory') {
               const directory = await handleToLocalDirectory(handle);
@@ -148,9 +149,12 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
           }
 
           const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const actionIndices = getIndices(2);
+
           const actions: GraphNodeAction[] = [
             {
               id: 'open-file-handle',
+              index: actionIndices[0],
               label: ['open file label', { ns: LOCAL_FILES_PLUGIN }],
               icon: (props) => <FilePlus {...props} />,
               invoke: async () => {
@@ -164,7 +168,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                       },
                     ],
                   });
-                  const file = await handleToLocalFile(handle);
+                  const file = await handleToLocalFile(handle, getIndexBelow(nodes[0].index));
                   state.files = [file, ...state.files];
                   if (treeViewPlugin) {
                     treeViewPlugin.provides.treeView.selected = [file.id];
@@ -194,6 +198,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
           if ('showDirectoryPicker' in window) {
             actions.push({
               id: 'open-directory',
+              index: actionIndices[1],
               label: ['open directory label', { ns: LOCAL_FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
               invoke: async () => {

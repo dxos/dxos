@@ -147,11 +147,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           if (!clientPlugin) {
             return [];
           }
+          const indices = getIndices(2);
 
           // TODO(wittjosiah): Disable if no identity.
           return [
             {
               id: 'create-space',
+              index: indices[0],
               testId: 'spacePlugin.createSpace',
               label: ['create space label', { ns: 'os' }],
               icon: (props) => <Planet {...props} />,
@@ -162,6 +164,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
             {
               id: 'join-space',
+              index: indices[1],
               testId: 'spacePlugin.joinSpace',
               label: ['join space label', { ns: 'os' }],
               icon: (props) => <Intersect {...props} />,

@@ -6,7 +6,7 @@ export default [
   {
     'en-US': {
       'dxos:space': {
-        'plugin name': 'DXOS Spaces',
+        'plugin name': 'Spaces',
       },
     },
   },
