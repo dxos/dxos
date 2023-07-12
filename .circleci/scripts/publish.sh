@@ -3,6 +3,7 @@
 APPS=(
   ./packages/apps/composer-app
   ./packages/apps/halo-app
+  ./packages/apps/labs-app
   ./packages/apps/tasks-app
   ./packages/apps/todomvc
   ./packages/devtools/devtools
