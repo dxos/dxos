@@ -43,3 +43,5 @@ export class Lock implements ResourceLock {
     await LockFile.release(this._fileHandle);
   }
 }
+
+export const isLocked = (lockPath: string) => LockFile.isLocked(lockPath);

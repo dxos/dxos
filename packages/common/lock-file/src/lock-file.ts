@@ -32,4 +32,16 @@ export class LockFile {
     });
     await handle.close();
   }
+
+  static async isLocked(filename: string): Promise<boolean> {
+    try {
+      const handle = await LockFile.acquire(filename);
+      await LockFile.release(handle);
+      await handle.close();
+
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
 }
