@@ -55,6 +55,8 @@ export default defineConfig({
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
       ],
+      // TODO(burdon): Adjust font size.
+      extensions: []
     }),
     ReactPlugin(),
     VitePWA({
@@ -101,7 +103,6 @@ export default defineConfig({
           'Montserrat'
         ],
       },
-
       custom: {
         preload: false,
         injectTo: 'head-prepend',

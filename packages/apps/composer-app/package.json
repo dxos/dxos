@@ -2,7 +2,7 @@
   "name": "@braneframe/composer-app",
   "version": "0.1.51",
   "private": true,
-  "description": "DXOS composer application.",
+  "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",

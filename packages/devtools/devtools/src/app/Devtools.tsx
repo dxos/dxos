@@ -31,7 +31,6 @@ export const Devtools = ({
   namespace?: string;
 }) => {
   const fallback = <Fallback message='Loading...' />;
-
   if (!context) {
     return fallback;
   }
