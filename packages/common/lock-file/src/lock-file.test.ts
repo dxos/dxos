@@ -28,29 +28,6 @@ describe('LockFile', () => {
 
   test('released when process exists', async () => {
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
-
-    // TODO(dmaretskyi): Self-contained so when function.toString is called the code runs.
-    const lockInProcess = (filename: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { open, constants } = require('node:fs/promises');
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { flock } = require('fs-ext');
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      open(filename, constants.O_CREAT).then((handle) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        flock(handle.fd, 'exnb', (err) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          // Hang
-          setTimeout(() => {}, 1_000_000);
-        });
-      });
-    };
     const processHandle = spawn('node', ['-e', `(${lockInProcess.toString()})(${JSON.stringify(filename)})`], {
       stdio: 'inherit',
     });
@@ -68,3 +45,26 @@ describe('LockFile', () => {
     await LockFile.release(handle);
   });
 });
+
+// NOTE: Self-contained so when function.toString is called the code runs.
+const lockInProcess = (filename: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { open, constants } = require('node:fs/promises');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { flock } = require('fs-ext');
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  open(filename, constants.O_CREAT).then((handle) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    flock(handle.fd, 'exnb', (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      // Hang
+      setTimeout(() => {}, 1_000_000);
+    });
+  });
+};
