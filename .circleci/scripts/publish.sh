@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# In the case of a new package to publish, add it to the array below.
+# A corresponding CNAME (with proxy) could be created in Cloudflare DNS to improve page load time.
 APPS=(
   ./packages/apps/composer-app
   ./packages/apps/halo-app
