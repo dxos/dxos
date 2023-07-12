@@ -2972,6 +2972,7 @@ importers:
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
+      date-fns: ^2.29.3
       localforage: ^1.10.0
       lodash.defaultsdeep: ^4.6.1
       postcss: ^8.4.21
@@ -3011,6 +3012,7 @@ importers:
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@types/bytes': 3.1.1
       bytes: 3.1.2
+      date-fns: 2.29.3
       localforage: 1.10.0
       lodash.defaultsdeep: 4.6.1
       react: 18.2.0

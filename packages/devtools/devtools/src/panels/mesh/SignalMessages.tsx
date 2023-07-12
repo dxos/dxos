@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { format } from 'date-fns';
 import React, { useState } from 'react';
 
+import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Searchbar, Select } from '@dxos/react-appkit';
@@ -29,27 +32,43 @@ const views = [
     columns: [
       {
         Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
+        width: 100,
+        accessor: (response: SignalResponse) => format(response.receivedAt, 'MM/dd HH:mm:ss'),
       },
       {
         Header: 'TYPE',
+        width: 100,
         accessor: (response: SignalResponse) => {
           if (response.swarmEvent?.peerAvailable) {
-            return 'PeerAvailable';
+            return 'Available';
           } else if (response.swarmEvent?.peerLeft) {
-            return 'PeerLeft';
+            return 'Left';
           }
         },
       },
       {
-        Header: 'Peer',
+        Header: 'Peer Key',
+        width: 100,
+        Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+        accessor: (response: SignalResponse) =>
+          (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).truncate()) ||
+          (response.swarmEvent!.peerLeft && truncateKey(response.swarmEvent!.peerLeft.peer)),
+      },
+      {
+        Header: 'Peer Name',
+        width: 180,
         accessor: (response: SignalResponse) =>
           (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
           (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
       },
+      // TODO(burdon): Time delta since last message?
       {
         Header: 'Since',
-        accessor: (response: SignalResponse) => response.swarmEvent!.peerAvailable?.since?.toJSON(),
+        width: 100,
+        accessor: (response: SignalResponse) =>
+          response.swarmEvent!.peerAvailable?.since
+            ? format(response.swarmEvent!.peerAvailable?.since, 'MM/dd HH:mm:ss')
+            : '',
       },
     ],
   },

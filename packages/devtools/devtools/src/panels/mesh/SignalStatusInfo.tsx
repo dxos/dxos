@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
@@ -55,9 +56,6 @@ export const SignalStatusInfo = () => {
     };
   }, []);
 
-  // TODO(burdon): Use util.
-  const formatDate = (milliseconds: number) => new Date(milliseconds).toISOString().split('T')[1].split('Z')[0];
-
   if (!servers) {
     return null;
   }
@@ -88,15 +86,17 @@ export const SignalStatusInfo = () => {
       width: 80,
       accessor: (status) => {
         return status.state === SignalState.CONNECTED
-          ? formatDate(time.getTime() - status.lastStateChange.getTime())
-          : `Reconnecting in ${status.lastStateChange.getTime() + status.reconnectIn - time.getTime()}s`;
+          ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
+          : `Reconnecting ${formatDistance(status.lastStateChange.getTime() + status.reconnectIn, time.getTime(), {
+              addSuffix: true,
+            })}`;
       },
     },
     {
       Header: 'Error',
       width: 160,
       accessor: (status) => {
-        return status.error;
+        return status.error ?? 'none';
       },
     },
   ];

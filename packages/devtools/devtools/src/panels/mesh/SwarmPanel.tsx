@@ -37,7 +37,7 @@ const SwarmPanel = () => {
   const [selectedItem, setSelectedItem] = useState<ConnectionInfo | undefined>();
 
   return (
-    <PanelContainer>
+    <PanelContainer className='flex-row'>
       <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
         <TreeView
           items={getSwarmInfoTree(data ?? [])}

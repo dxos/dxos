@@ -47,7 +47,7 @@ export const RootContainer = () => {
         <TreeView
           items={sections}
           expanded={sections.map((section) => section.id)}
-          slots={{ selected: { className: 'bg-blue-600 text-white' } }}
+          slots={{ title: { className: 'ml-1' }, selected: { className: 'bg-blue-600 text-white' } }}
           selected={pathname}
           onSelect={handleSelect}
         />

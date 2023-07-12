@@ -20,7 +20,6 @@ export interface ConnectionInfoViewProps {
 // TODO(burdon): Convert to table.
 export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
   <DetailsTable
-    expand
     object={{
       state: connectionInfo.state,
       sessionId: connectionInfo.sessionId.toHex(),

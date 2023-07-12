@@ -78,7 +78,7 @@ const SpacesPanel = () => {
       }
       className='overflow-auto'
     >
-      <div className='flex flex-col flex-1 overflow-auto divide-y'>
+      <div className='flex flex-col flex-1 overflow-auto divide-y space-y-2'>
         {object && <DetailsTable object={object} />}
         <PipelineTable state={pipelineState ?? {}} />
       </div>

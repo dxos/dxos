@@ -32,7 +32,15 @@ const theme = {
   base0F: '#b3588e',
 };
 
-export const JsonView: FC<{ data?: Object; className?: string; level?: number }> = ({ data, className, level = 3 }) => {
+// const getItemString = (type: string) => <span className='text-sm'>[{type}]</span>;
+
+export const JsonView: FC<{
+  data?: Object;
+  className?: string;
+  level?: number;
+  showRoot?: boolean;
+  showMeta?: boolean;
+}> = ({ data, className, level = 3, showRoot = false, showMeta = false }) => {
   // TODO(mykola): Add proto schema. Decode bytes.
   // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
   const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
@@ -40,8 +48,14 @@ export const JsonView: FC<{ data?: Object; className?: string; level?: number }>
   return (
     <div className={mx('m-2', className)}>
       <JSONTree
-        theme={theme}
-        // hideRoot
+        hideRoot={!showRoot}
+        theme={{
+          extend: theme,
+          valueLabel: {
+            textDecoration: 'underline',
+          },
+        }}
+        getItemString={showMeta ? undefined : () => null}
         data={replaced}
         shouldExpandNodeInitially={(_, __, _level) => _level < level}
         labelRenderer={([key]) => key}

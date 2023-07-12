@@ -7,21 +7,23 @@ import React, { FC } from 'react';
 import { mx } from '@dxos/aurora-theme';
 
 export type DetailsTableSlots = {
-  label?: string;
+  keys?: { className?: string };
 };
 
 export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: DetailsTableSlots; expand?: boolean }> = ({
   object,
   slots,
-  expand,
+  expand = false,
 }) => {
   return (
-    <div className='px-4 py-2'>
-      <table className='table-fixed border-collapse __w-full'>
+    <div>
+      <table className='table-fixed border-collapse'>
         <tbody>
           {Object.entries(object).map(([key, value]) => (
             <tr key={key} className='align-baseline'>
-              <td className={mx('pr-2 align-baseline text-sm text-gray-500 overflow-hidden', slots?.label)}>{key}</td>
+              <td className={mx('px-4 align-baseline text-sm text-gray-500 overflow-hidden', slots?.keys?.className)}>
+                {key}
+              </td>
               {/* eslint-disable-next-line no-octal-escape */}
               <td className='px-2 empty:after:content-["\00a0"]'>
                 <div className='font-mono overflow-x-scroll'>{value ?? ''}</div>
@@ -31,7 +33,7 @@ export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: Detail
 
           {expand && (
             <tr className='h-screen'>
-              <td className='bg-gray-200' />
+              <td className={slots?.keys?.className} />
             </tr>
           )}
         </tbody>
