@@ -3,6 +3,7 @@
 //
 
 import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -47,7 +48,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 
 export const documentToGraphNode = (document: Document, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: document.id,
-  index,
+  index: get(document, 'meta.index', index),
   label: document.title ?? 'Untitled Document',
   icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
   data: document,
