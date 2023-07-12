@@ -12,7 +12,7 @@ import { fromHost, ClientServices, Config, Client, ClientServicesProvider, Publi
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { Monitor, MonitorOptions, Plugin, ProxyServer, ProxyServerOptions, Service } from './plugins';
+import { Monitor, MonitorOptions, Plugin, ProxyServer, ProxyServerOptions } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 export type AgentOptions = {
@@ -25,7 +25,7 @@ export type AgentOptions = {
  * The remote agent exposes Client services via multiple transports.
  */
 export class Agent {
-  private _endpoints: Service[] = [];
+  private _endpoints: Plugin[] = [];
   private _plugins: Plugin[] = []; // TODO(burdon): Merge with endpoints?
   private _client?: Client;
   private _clientServices?: ClientServicesProvider;
@@ -63,7 +63,7 @@ export class Agent {
     this._endpoints = (
       await Promise.all(
         this._options.listen.map(async (address) => {
-          let server: Service | null = null;
+          let server: Plugin | null = null;
           const { protocol, path } = parseAddress(address);
           switch (protocol) {
             //
@@ -113,7 +113,7 @@ export class Agent {
           }
         }),
       )
-    ).filter(Boolean) as Service[];
+    ).filter(Boolean) as Plugin[];
 
     // Epoch monitor.
     if (this._options.monitor) {
@@ -122,7 +122,7 @@ export class Agent {
 
     // Start plugins.
     for (const plugin of this._plugins) {
-      await plugin.start();
+      await plugin.open();
     }
 
     // OpenFaaS connector.
@@ -141,7 +141,7 @@ export class Agent {
 
   async stop() {
     // Stop plugins.
-    await Promise.all(this._plugins.map((plugin) => plugin.stop()));
+    await Promise.all(this._plugins.map((plugin) => plugin.close()));
     this._plugins = [];
 
     // Close service endpoints.

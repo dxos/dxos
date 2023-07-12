@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { Service } from '../plugin';
+import { Plugin } from '../plugin';
 import { FaasClient, InvocationContext, Trigger } from './faas-client';
 
 type MountedTrigger = {
@@ -23,7 +23,7 @@ type MountedTrigger = {
  * Connects to the OpenFaaS service and mounts triggers.
  * The lightweight `faasd` OpenFaaS service wraps `containerd` to spawn Docker containers for each function.
  */
-export class FaasConnector implements Service {
+export class FaasConnector implements Plugin {
   private readonly _ctx = new Context();
 
   // TODO(burdon): Factor out triggers.

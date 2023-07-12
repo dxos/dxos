@@ -45,7 +45,7 @@ export class Monitor implements Plugin {
   /**
    * Monitor all epochs for which the agent is the leader.
    */
-  async start() {
+  async open() {
     assert(this._client);
     this._subscriptions.push(
       this._client.spaces.subscribe((spaces) => {
@@ -109,7 +109,7 @@ export class Monitor implements Plugin {
     );
   }
 
-  async stop() {
+  async close() {
     this._subscriptions.forEach((subscription) => subscription.unsubscribe());
     this._spaceStates.forEach((state) => state.subscriptions.forEach((subscription) => subscription.unsubscribe()));
     this._spaceStates.clear();
