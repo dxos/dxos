@@ -8,7 +8,7 @@ import { Config } from '@dxos/protocols/proto/dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClientServices } from '@dxos/react-client';
 
-import { JsonView } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 
 const ConfigPanel = () => {
   const services = useClientServices();
@@ -21,7 +21,11 @@ const ConfigPanel = () => {
     setConfig(await services.SystemService.getConfig());
   }, []);
 
-  return <JsonView className='flex flex-1 overflow-auto ml-2 mt-2' data={config} />;
+  return (
+    <PanelContainer>
+      <JsonView data={config} />
+    </PanelContainer>
+  );
 };
 
 export default ConfigPanel;
