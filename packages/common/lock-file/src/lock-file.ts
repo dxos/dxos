@@ -3,7 +3,8 @@
 //
 
 import { flock } from 'fs-ext';
-import { constants, open, FileHandle } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { open, FileHandle } from 'node:fs/promises';
 
 export class LockFile {
   static async acquire(filename: string): Promise<FileHandle> {
