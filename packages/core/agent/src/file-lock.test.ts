@@ -42,7 +42,7 @@ const unlock = async (handle: FileHandle) => {
   await handle.close();
 };
 
-describe('FileLocking', () => {
+describe.only('FileLocking', () => {
   test('basic', async () => {
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
 
@@ -67,8 +67,12 @@ describe('FileLocking', () => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { flock } = require('fs-ext');
 
-      open(filename, constants.O_CREAT).then((handle: FileHandle) => {
-        flock(handle.fd, 'exnb', (err: Error) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      open(filename, constants.O_CREAT).then((handle) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        flock(handle.fd, 'exnb', (err) => {
           if (err) {
             console.error(err);
             return;
@@ -78,13 +82,12 @@ describe('FileLocking', () => {
         });
       });
     };
-    const processHandle = spawn('ts-node', ['-e', `(${lockInProcess.toString()})(${JSON.stringify(filename)})`], {
+    const processHandle = spawn('node', ['-e', `(${lockInProcess.toString()})(${JSON.stringify(filename)})`], {
       stdio: 'inherit',
     });
 
     // Wait for process to start
     await sleep(50);
-
     await expect(lock(filename)).to.be.rejected;
 
     processHandle.kill();
