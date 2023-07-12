@@ -10,11 +10,11 @@ import { jsonify } from '@dxos/util';
 import { LogLevel } from '../config';
 import { LogProcessor, getContextFromEntry } from '../context';
 
-export const createFileProcessor = ({ path, level }: { path: string; level: LogLevel }): LogProcessor => {
+export const createFileProcessor = ({ path, levels }: { path: string; levels: LogLevel[] }): LogProcessor => {
   let fd: number | undefined;
 
   return (config, entry) => {
-    if (entry.level < level) {
+    if (!levels.includes(entry.level)) {
       return;
     }
     if (!fd) {
@@ -47,4 +47,7 @@ const getLogFilePath = () => {
   return logFilePath!;
 };
 
-export const FILE_PROCESSOR: LogProcessor = createFileProcessor({ path: getLogFilePath(), level: LogLevel.TRACE });
+export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
+  path: getLogFilePath(),
+  levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+});

@@ -3,6 +3,7 @@
 //
 
 import { File as FileIcon, FilePlus, FloppyDisk, FolderPlus, Plugs, X } from '@phosphor-icons/react';
+import { getIndexBelow, getIndices } from '@tldraw/indices';
 import localforage from 'localforage';
 
 import { findGraphNode, GraphNode, GraphNodeAction, GraphProvides, isGraphNode } from '@braneframe/plugin-graph';
@@ -68,6 +69,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
   const handleDirectory = async (handle: any /* FileSystemDirectoryHandle */) => {
     const node = createStore<GraphNode<LocalFile>>({
       id: `${LOCAL_FILES_PLUGIN}/${handle.name.replaceAll(/\.| /g, '-')}`,
+      index: getIndexBelow(getIndices(1)[0]),
       label: handle.name,
       data: {
         handle,
@@ -75,8 +77,11 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       },
     });
 
+    const actionIndices = getIndices(2);
+
     const closeAction: GraphNodeAction = {
       id: 'close-directory',
+      index: actionIndices[0],
       label: ['close directory label', { ns: LOCAL_FILES_PLUGIN }],
       icon: X,
       invoke: async () => {
@@ -90,6 +95,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
     const defaultActions: GraphNodeAction[] = [
       {
         id: 're-open',
+        index: actionIndices[1],
         label: ['re-open directory label', { ns: LOCAL_FILES_PLUGIN }],
         icon: Plugs,
         invoke: async () => {
@@ -121,14 +127,18 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
   const handleDirectoryChildren = async (handle: any /* FileSystemDirectoryHandle */, parent: GraphNode<LocalFile>) => {
     const children: GraphNode<LocalFile>[] = [];
 
-    for await (const child of handle.values()) {
+    const values = await handle.values();
+    const indices = getIndices(values.length);
+    let cursor = 0;
+
+    for (const child of values) {
       if (child.kind !== 'file' || !child.name.endsWith('.md')) {
         continue;
       }
-
       const file = await child.getFile();
       const node = createStore<GraphNode<LocalFile>>({
         id: child.name.replaceAll(/\.| /g, '-'),
+        index: indices[cursor],
         label: child.name,
         icon: FileIcon,
         parent,
@@ -140,6 +150,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         actions: [
           {
             id: 'save',
+            index: getIndices(1)[0],
             label: ['save label', { ns: LOCAL_FILES_PLUGIN }],
             icon: FloppyDisk,
             invoke: async () => {
@@ -148,14 +159,16 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
           },
         ],
       });
+      cursor += 1;
       children.push(node);
     }
 
     return children;
   };
 
-  const handleFile = async (handle: any /* FileSystemFileHandle */) => {
+  const handleFile = async (handle: any /* FileSystemFileHandle */, index: string) => {
     const id = `${LOCAL_FILES_PLUGIN}/${handle.name.replaceAll(/\.| /g, '-')}`;
+    const actionIndices = getIndices(3);
 
     const permission = await handle.queryPermission({ mode: 'readwrite' });
     const data: LocalFile = {
@@ -165,6 +178,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
     const node = createStore<GraphNode<LocalFile>>({
       id,
+      index,
       label: handle.name,
       icon: FileIcon,
       data,
@@ -172,6 +186,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
     const closeAction: GraphNodeAction = {
       id: 'close-directory',
+      index: actionIndices[2],
       label: ['close file label', { ns: LOCAL_FILES_PLUGIN }],
       icon: X,
       invoke: async () => {
@@ -183,6 +198,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
     const grantedActions: GraphNodeAction[] = [
       {
         id: 'save',
+        index: actionIndices[1],
         label: ['save label', { ns: LOCAL_FILES_PLUGIN }],
         icon: FloppyDisk,
         invoke: async () => {
@@ -195,6 +211,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
     const defaultActions: GraphNodeAction[] = [
       {
         id: 're-open',
+        index: actionIndices[0],
         label: ['re-open file label', { ns: LOCAL_FILES_PLUGIN }],
         icon: Plugs,
         invoke: async () => {
@@ -225,8 +242,9 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
     return node;
   };
 
-  const handleLegacyFile = async (file: File) => {
+  const handleLegacyFile = async (file: File, index: string) => {
     const id = `${LOCAL_FILES_PLUGIN}/${file.name.replaceAll(/\.| /g, '-')}`;
+    const actionIndices = getIndices(2);
     const text = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.addEventListener('loadend', (event) => {
@@ -238,6 +256,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
     const node = createStore<GraphNode<LocalFile>>({
       id,
+      index,
       label: file.name,
       icon: FileIcon,
       data: {
@@ -247,6 +266,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       actions: [
         {
           id: 'save-as',
+          index: actionIndices[0],
           label: ['save as label', { ns: LOCAL_FILES_PLUGIN }],
           icon: FloppyDisk,
           invoke: async () => {
@@ -255,6 +275,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         },
         {
           id: 'close-directory',
+          index: actionIndices[1],
           label: ['close file label', { ns: LOCAL_FILES_PLUGIN }],
           icon: X,
           invoke: async () => {
@@ -287,11 +308,12 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       window.addEventListener('keydown', handleKeyDown);
 
       const value = await localforage.getItem<FileSystemHandle[]>(LOCAL_FILES_PLUGIN);
+      const indices = getIndices(value?.length ?? 1);
       if (Array.isArray(value)) {
         await Promise.all(
-          value.map(async (handle) => {
+          value.map(async (handle, index) => {
             if (handle.kind === 'file') {
-              const node = await handleFile(handle);
+              const node = await handleFile(handle, indices[index]);
               nodes.unshift(node);
             } else if (handle.kind === 'directory') {
               const node = await handleDirectory(handle);
@@ -345,10 +367,12 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         nodes: () => nodes,
         actions: (plugins) => {
           const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const actionIndices = getIndices(2);
 
           const actions: GraphNodeAction[] = [
             {
               id: 'open-file-handle',
+              index: actionIndices[0],
               label: ['open file label', { ns: LOCAL_FILES_PLUGIN }],
               icon: FilePlus,
               invoke: async () => {
@@ -362,7 +386,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                       },
                     ],
                   });
-                  const node = await handleFile(handle);
+                  const node = await handleFile(handle, getIndexBelow(nodes[0].index));
                   nodes.unshift(node);
                   if (treeViewPlugin) {
                     treeViewPlugin.provides.treeView.selected = [node.id];
@@ -377,7 +401,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                 input.onchange = async () => {
                   const [file] = input.files ? Array.from(input.files) : [];
                   if (file) {
-                    const node = await handleLegacyFile(file);
+                    const node = await handleLegacyFile(file, getIndexBelow(nodes[0].index));
                     nodes.unshift(node);
                     if (treeViewPlugin) {
                       treeViewPlugin.provides.treeView.selected = [node.id];
@@ -392,6 +416,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
           if ('showDirectoryPicker' in window) {
             actions.push({
               id: 'open-directory',
+              index: actionIndices[1],
               label: ['open directory label', { ns: LOCAL_FILES_PLUGIN }],
               icon: FolderPlus,
               invoke: async () => {
