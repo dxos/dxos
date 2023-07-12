@@ -339,7 +339,9 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -371,6 +373,7 @@ importers:
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.7.2
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/dompurify': ^3.0.2
       '@types/lodash.update': ^4.10.7
       '@types/react': ^18.0.21
@@ -393,7 +396,9 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-dnd': link:../plugins/plugin-dnd
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
@@ -420,6 +425,7 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@sentry/react': 7.42.0_react@18.2.0
+      '@tldraw/indices': 2.0.0-alpha.14
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
@@ -550,121 +556,6 @@ importers:
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
-  packages/apps/labs-app:
-    specifiers:
-      '@braneframe/plugin-client': workspace:*
-      '@braneframe/plugin-drawing': workspace:*
-      '@braneframe/plugin-graph': workspace:*
-      '@braneframe/plugin-kanban': workspace:*
-      '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-space': workspace:*
-      '@braneframe/plugin-splitview': workspace:*
-      '@braneframe/plugin-stack': workspace:*
-      '@braneframe/plugin-theme': workspace:*
-      '@braneframe/plugin-treeview': workspace:*
-      '@braneframe/plugin-url-sync': workspace:*
-      '@braneframe/types': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-composer': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/text-model': workspace:*
-      '@dxos/vault': workspace:*
-      '@octokit/openapi-types': ^16.0.0
-      '@phosphor-icons/react': ^2.0.5
-      '@remix-run/router': ^1.0.2
-      '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.7.2
-      '@types/dompurify': ^3.0.2
-      '@types/lodash.update': ^4.10.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@types/showdown': ^2.0.0
-      '@types/turndown': ^5.0.1
-      '@vitejs/plugin-react': ^3.0.1
-      dompurify: ^3.0.3
-      github-markdown-css: ^5.2.0
-      isomorphic-fetch: ^3.0.0
-      localforage: ^1.10.0
-      lodash.update: ^4.10.2
-      octokit: ^2.0.14
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      showdown: ^2.1.0
-      turndown: ^7.1.1
-      vite: ^4.3.9
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@braneframe/plugin-client': link:../plugins/plugin-client
-      '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
-      '@braneframe/plugin-graph': link:../plugins/plugin-graph
-      '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
-      '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
-      '@braneframe/plugin-space': link:../plugins/plugin-space
-      '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
-      '@braneframe/plugin-stack': link:../plugins/plugin-stack
-      '@braneframe/plugin-theme': link:../plugins/plugin-theme
-      '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
-      '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
-      '@braneframe/types': link:../types
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-composer': link:../../ui/aurora-composer
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@dxos/react-surface': link:../../sdk/react-surface
-      '@dxos/sentry': link:../../common/sentry
-      '@dxos/text-model': link:../../core/echo/text-model
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@sentry/react': 7.42.0_react@18.2.0
-      dompurify: 3.0.3
-      github-markdown-css: 5.2.0
-      isomorphic-fetch: 3.0.0
-      localforage: 1.10.0
-      lodash.update: 4.10.2
-      octokit: 2.0.14
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      showdown: 2.1.0
-      turndown: 7.1.1
-    devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/vault': link:../../sdk/vault
-      '@octokit/openapi-types': 16.0.0
-      '@remix-run/router': 1.0.2
-      '@sentry/vite-plugin': 0.7.2
-      '@types/dompurify': 3.0.2
-      '@types/lodash.update': 4.10.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@types/showdown': 2.0.0
-      '@types/turndown': 5.0.1
-      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
-      vite: 4.3.9
-      vite-plugin-pwa: 0.14.1_vite@4.3.9
-      workbox-window: 6.5.4
-
   packages/apps/plugins/plugin-client:
     specifiers:
       '@dxos/config': workspace:*
@@ -778,6 +669,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       react: ^18.2.0
@@ -788,6 +680,7 @@ importers:
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -917,6 +810,7 @@ importers:
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       jszip: ^3.10.1
@@ -934,6 +828,7 @@ importers:
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
@@ -1054,29 +949,43 @@ importers:
 
   packages/apps/plugins/plugin-treeview:
     specifiers:
+      '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-splitview': workspace:*
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
+      '@tldraw/indices': 2.0.0-alpha.14
+      lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -4671,6 +4580,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
@@ -4687,6 +4597,8 @@ importers:
       '@types/faker': ^5.5.9
       '@types/node': ^18.11.9
       '@types/seedrandom': ^3.0.5
+      chart.js: ^3.9.1
+      chartjs-node-canvas: ^4.1.6
       danfojs-node: ^1.1.2
       redis: ^4.6.6
       seedrandom: ^3.0.5
@@ -4695,6 +4607,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
@@ -4708,6 +4621,7 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 7.6.0
+      chartjs-node-canvas: 4.1.6_chart.js@3.9.1
       danfojs-node: 1.1.2_seedrandom@3.0.5
       redis: 4.6.6
       seedrandom: 3.0.5
@@ -4715,6 +4629,7 @@ importers:
       '@types/faker': 5.5.9
       '@types/node': 18.11.9
       '@types/seedrandom': 3.0.5
+      chart.js: 3.9.1
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4
 
@@ -14355,7 +14270,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.2_rollup@3.23.0:
+  /@rollup/plugin-replace/5.0.2_rollup@3.20.4:
     resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14364,9 +14279,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.23.0
+      '@rollup/pluginutils': 5.0.2_rollup@3.20.4
       magic-string: 0.27.0
-      rollup: 3.23.0
+      rollup: 3.20.4
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.79.1:
@@ -14403,7 +14318,7 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /@rollup/pluginutils/5.0.2_rollup@3.23.0:
+  /@rollup/pluginutils/5.0.2_rollup@3.20.4:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14415,7 +14330,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.23.0
+      rollup: 3.20.4
     dev: true
 
   /@rushstack/debug-certificate-manager/1.1.83:
@@ -16666,7 +16581,6 @@ packages:
 
   /@tldraw/indices/2.0.0-alpha.14:
     resolution: {integrity: sha512-XAEr6THe5c+j+AngtF03llMFDkdaO7zzwFNdo/du9yN5vdF19t5GrgaDwnjEoPZWEvXWc3GXoGzBja8Xqf2wNQ==}
-    dev: false
 
   /@tldraw/polyfills/2.0.0-alpha.14:
     resolution: {integrity: sha512-/vdbB7udZpyUygKLfKLgBjbqUNhHPer52aeAXFxF+rf3Uj3wUpEnN7ViQQIx3whXc/e17zdeONOp4xaFGaxmIg==}
@@ -21297,6 +21211,19 @@ packages:
     resolution: {integrity: sha512-x2iVHOrZ5x9V0Hwx6kBz+Yxf/VCAII+jrD6WLjJbytJLozHq/oDJjEva432Os0eHxWMFR0vYlLJwTr6QxyxQqw==}
     dev: false
 
+  /canvas/2.11.2:
+    resolution: {integrity: sha512-ItanGBMrmRV7Py2Z+Xhs7cT+FNt5K0vPL4p9EZ/UX/Mu7hFbkxSjKF2KVtPwX7UYWp7dRKnrTvReflgrItJbdw==}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@mapbox/node-pre-gyp': 1.0.10
+      nan: 2.17.0
+      simple-get: 3.1.1
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: false
+
   /capital-case/1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
     dependencies:
@@ -21504,12 +21431,28 @@ packages:
   /charenc/0.0.2:
     resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
 
+  /chart.js/3.9.1:
+    resolution: {integrity: sha512-Ro2JbLmvg83gXF5F4sniaQ+lTbSv18E+TIf2cOeiH1Iqd2PGFOtem+DUufMZsCJwFE7ywPOpfXFBwRTGq7dh6w==}
+
   /chart.js/4.2.1:
     resolution: {integrity: sha512-6YbpQ0nt3NovAgOzbkSSeeAQu/3za1319dPUQTXn9WcOpywM8rGKxJHrhS8V8xEkAlk8YhEfjbuAPfUyp6jIsw==}
     engines: {pnpm: ^7.0.0}
     dependencies:
       '@kurkle/color': 0.3.2
     dev: true
+
+  /chartjs-node-canvas/4.1.6_chart.js@3.9.1:
+    resolution: {integrity: sha512-UQJbPWrvqB/FoLclGA9BaLQmZbzSYlujF4w8NZd6Xzb+sqgACBb2owDX6m7ifCXLjUW5Nz0Qx0qqrTtQkkSoYw==}
+    peerDependencies:
+      chart.js: ^3.5.1
+    dependencies:
+      canvas: 2.11.2
+      chart.js: 3.9.1
+      tslib: 2.5.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: false
 
   /check-error/1.0.2:
     resolution: {integrity: sha512-BrgHpW9NURQgzoNyjfq0Wu6VFO6D7IZEmJNdtgNqpzGG8RuNFHt2jQxWlAs4HMe119chBnv+34syEZtc6IhLtA==}
@@ -22208,7 +22151,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -23347,6 +23290,13 @@ packages:
     dependencies:
       mimic-response: 1.0.1
     dev: true
+
+  /decompress-response/4.2.1:
+    resolution: {integrity: sha512-jOSne2qbyE+/r8G1VU+G/82LBs2Fs4LAsTiLSHOCOMZQl2OKZ6i8i4IyHemTe+/yIXOtTcRQMzPcgyhoFlqPkw==}
+    engines: {node: '>=8'}
+    dependencies:
+      mimic-response: 2.1.0
+    dev: false
 
   /decompress-response/6.0.0:
     resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
@@ -27787,8 +27737,13 @@ packages:
       postcss: 8.4.21
     dev: false
 
+  /idb/7.1.0:
+    resolution: {integrity: sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==}
+    dev: true
+
   /idb/7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
+    dev: false
 
   /identity-obj-proxy/3.0.0:
     resolution: {integrity: sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA==}
@@ -32239,6 +32194,11 @@ packages:
   /mimic-response/1.0.1:
     resolution: {integrity: sha512-j5EctnkH7amfV/q5Hgmoal1g2QHFJRraOtmx0JpIqkxhBhI/lJSl1nMpQ45hVarwNETOoWEimndZ4QK0RHxuxQ==}
     engines: {node: '>=4'}
+
+  /mimic-response/2.1.0:
+    resolution: {integrity: sha512-wXqjST+SLt7R009ySCglWBCFpjUygmCIfD790/kVbiGmUgfYGuB14PiTd5DwVxSV4NcYHjzMkoj5LjQZwTQLEA==}
+    engines: {node: '>=8'}
+    dev: false
 
   /mimic-response/3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
@@ -37591,6 +37551,18 @@ packages:
     resolution: {integrity: sha512-ES2fuLU2iVY/f3dOk41vTTGlRfOps5z/ixEZKXJz2ibRotvFoemN7aHxPNAJjQE94BU1ZWLRBO6/1dpFK8uZmA==}
     dev: false
 
+  /simple-concat/1.0.1:
+    resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
+    dev: false
+
+  /simple-get/3.1.1:
+    resolution: {integrity: sha512-CQ5LTKGfCpvE1K0n2us+kuMPbk/q0EKl82s4aheV9oXjFEz6W/Y7oQFVJuU6QG77hRT4Ghb5RURteF5vnWjupA==}
+    dependencies:
+      decompress-response: 4.2.1
+      once: 1.4.0
+      simple-concat: 1.0.1
+    dev: false
+
   /simple-handshake/3.0.0:
     resolution: {integrity: sha512-8Te0vlxvhpNCMgwnWFTbRR6Re2l8hq8wyXQc3lY9dPYXFxYwVkh79LhDQHFCOWRavmbiOdfqq1l5HT/73Rn2/w==}
     dependencies:
@@ -40650,11 +40622,11 @@ packages:
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
     dependencies:
-      '@rollup/plugin-replace': 5.0.2_rollup@3.23.0
+      '@rollup/plugin-replace': 5.0.2_rollup@3.20.4
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.23.0
+      rollup: 3.20.4
       vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
@@ -42144,7 +42116,7 @@ packages:
   /workbox-background-sync/6.5.4:
     resolution: {integrity: sha512-0r4INQZMyPky/lj4Ou98qxcThrETucOde+7mRGJl13MPJugQNKeZQOdIJe/1AchOP23cTqHcN/YVpD6r8E6I8g==}
     dependencies:
-      idb: 7.1.1
+      idb: 7.1.0
       workbox-core: 6.5.4
     dev: true
 
@@ -42213,7 +42185,7 @@ packages:
   /workbox-expiration/6.5.4:
     resolution: {integrity: sha512-jUP5qPOpH1nXtjGGh1fRBa1wJL2QlIb5mGpct3NzepjGG2uFFBn4iiEBiI9GUmfAFR2ApuRhDydjcRmYXddiEQ==}
     dependencies:
-      idb: 7.1.1
+      idb: 7.1.0
       workbox-core: 6.5.4
     dev: true
 
