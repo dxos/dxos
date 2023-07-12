@@ -6,7 +6,8 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { flock } from 'fs-ext';
 import { spawn } from 'node:child_process';
-import { FileHandle, constants, open } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { FileHandle, open } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { sleep } from '@dxos/async';
@@ -42,7 +43,7 @@ const unlock = async (handle: FileHandle) => {
   await handle.close();
 };
 
-describe.only('FileLocking', () => {
+describe('FileLocking', () => {
   test('basic', async () => {
     const filename = join('/tmp', `lock-${Math.random()}.lock`);
 
