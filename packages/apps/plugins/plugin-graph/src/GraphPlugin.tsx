@@ -9,22 +9,23 @@ import React from 'react';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { GraphNode, GraphNodeAction, GraphPluginProvides } from './types';
+import { GraphNode, GraphPluginProvides } from './types';
 import { ROOT, buildGraph } from './util';
 
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const graph: DeepSignal<GraphNode> = deepSignal({
     id: 'root',
+    index: 'a1',
     label: 'Root',
     description: 'Root node',
     pluginChildren: {},
     pluginActions: {},
-    get children(): GraphNode[] {
-      return [];
-    },
-    get actions(): GraphNodeAction[] {
-      return [];
-    },
+    // get children(): GraphNode[] {
+    //   return [];
+    // },
+    // get actions(): GraphNodeAction[] {
+    //   return [];
+    // },
   });
 
   return {

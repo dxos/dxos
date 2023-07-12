@@ -3,6 +3,7 @@
 //
 
 import { Intersect, Planet } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -46,9 +47,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubs.clear();
-          spaces.forEach((space) => {
+          const spaceIndices = getIndices(spaces.length);
+          spaces.forEach((space, index) => {
             const handle = createSubscription(() => {
-              onSpaceUpdate?.(spaceToGraphNode(space, plugins));
+              onSpaceUpdate?.(spaceToGraphNode(space, plugins, spaceIndices[index]));
             });
             handle.update([space.properties]);
             spaceSubs.add(handle.unsubscribe);
@@ -136,7 +138,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           onSpaceUpdate = emit;
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
-          return clientPlugin?.provides.client.spaces.get().map((space) => spaceToGraphNode(space, plugins)) ?? [];
+          const spaces = clientPlugin?.provides.client.spaces.get();
+          const indices = spaces?.length ? getIndices(spaces.length) : [];
+          return spaces?.map((space, index) => spaceToGraphNode(space, plugins, indices[index])) ?? [];
         },
         actions: (parent, emit, plugins) => {
           if (parent.id !== 'root') {

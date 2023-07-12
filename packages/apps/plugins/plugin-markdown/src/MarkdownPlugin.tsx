@@ -3,6 +3,7 @@
 //
 
 import { Plus, ArticleMedium } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -30,7 +31,8 @@ import {
   MARKDOWN_PLUGIN,
   documentToGraphNode,
   isMarkdown,
- isMarkdownContent, isMarkdownPlaceholder,
+  isMarkdownContent,
+  isMarkdownPlaceholder,
   isMarkdownProperties,
   markdownPlugins,
 } from './util';
@@ -82,6 +84,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           const space = parent.data;
           const query = space.db.query(Document.filter());
+          const documentIndices = getIndices(query.objects.length);
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -89,16 +92,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             );
           }
 
-          for (const document of query.objects) {
+          query.objects.forEach((document, index) => {
             if (!subscriptions.has(document.id)) {
               subscriptions.set(
                 document.id,
-                document[subscribe](() => emit(documentToGraphNode(document, parent))),
+                document[subscribe](() => emit(documentToGraphNode(document, parent, documentIndices[index]))),
               );
             }
-          }
+          });
 
-          return query.objects.map((document) => documentToGraphNode(document, parent));
+          return query.objects.map((document, index) => documentToGraphNode(document, parent, documentIndices[index]));
         },
         actions: (parent, _, plugins) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -110,6 +113,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           return [
             {
               id: 'create-doc',
+              index: 'a1',
               testId: 'spacePlugin.createDocument',
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <Plus {...props} />,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, Trash } from '@phosphor-icons/react';
+import { Article, IconProps, Trash } from '@phosphor-icons/react';
 import React from 'react';
 
 import type { GraphNode } from '@braneframe/plugin-graph';
@@ -25,18 +25,20 @@ export const isStack = <T extends StackObject = GenericStackObject>(datum: unkno
 export const isStackProperties = (datum: unknown): datum is StackProperties =>
   datum && typeof datum === 'object' ? subscribe in datum : false;
 
-export const stackToGraphNode = (obj: Stack, parent: GraphNode<Space>): GraphNode => ({
+export const stackToGraphNode = (obj: Stack, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: obj.id,
+  index,
   label: obj.title ?? 'Untitled Stack',
-  icon: (props) => <Article {...props} />,
+  icon: (props: IconProps) => <Article {...props} />,
   data: obj,
   parent,
   pluginActions: {
     [STACK_PLUGIN]: [
       {
         id: 'delete',
+        index: 'a1',
         label: ['delete stack label', { ns: STACK_PLUGIN }],
-        icon: (props) => <Trash {...props} />,
+        icon: (props: IconProps) => <Trash {...props} />,
         invoke: async () => {
           parent.data?.db.remove(obj);
         },

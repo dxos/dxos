@@ -37,6 +37,7 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
           return [
             {
               id: 'close-sidebar',
+              index: 'a1',
               label: ['close sidebar label', { ns: 'os' }],
               icon: (props) => <ArrowLineLeft {...props} />,
               invoke: async () => {

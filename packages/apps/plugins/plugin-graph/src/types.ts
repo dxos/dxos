@@ -3,8 +3,8 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { DeepSignal } from 'deepsignal';
 import type { getIndices } from '@tldraw/indices';
+import type { DeepSignal } from 'deepsignal';
 import type { UIEvent, FC } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
@@ -24,7 +24,6 @@ export type GraphNode<TDatum = any> = {
   parent?: GraphNode;
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
-  parent?: GraphNode;
   pluginChildren?: { [key: string]: GraphNode[] };
   pluginActions?: { [key: string]: GraphNodeAction[] };
   // TODO(wittjosiah): https://github.com/luisherranz/deepsignal/issues/32

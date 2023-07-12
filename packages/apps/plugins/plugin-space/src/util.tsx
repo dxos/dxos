@@ -14,6 +14,7 @@ import { EchoDatabase, Space, SpaceState, ShellLayout } from '@dxos/react-client
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
+import { getIndices } from '@tldraw/indices';
 
 export const SPACE_PLUGIN = 'dxos:space';
 
@@ -40,7 +41,7 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
     : ['untitled space title', { ns: 'composer' }];
 };
 
-export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Space> => {
+export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string): GraphNode<Space> => {
   const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
   const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
   const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
@@ -51,8 +52,10 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
   const client = clientPlugin.provides.client;
   const identity = client.halo.identity.get();
   const id = getSpaceId(space.key);
+  const actionIndices = getIndices(5);
   const node: GraphNode = {
     id,
+    index,
     label: getSpaceDisplayName(space),
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
@@ -67,6 +70,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
       [SPACE_PLUGIN]: [
         {
           id: 'rename-space',
+          index: actionIndices[0],
           label: ['rename space label', { ns: 'composer' }],
           icon: (props) => <PencilSimpleLine {...props} />,
           invoke: async () => {
@@ -78,6 +82,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
         },
         {
           id: 'view-invitations',
+          index: actionIndices[1],
           label: ['view invitations label', { ns: 'composer' }],
           icon: (props) => <PaperPlane {...props} />,
           invoke: async () => {
@@ -86,6 +91,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
         },
         {
           id: 'hide-space',
+          index: actionIndices[2],
           label: ['hide space label', { ns: 'composer' }],
           icon: (props) => <EyeSlash {...props} />,
           invoke: async () => {
@@ -106,6 +112,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
         },
         {
           id: 'backup-space',
+          index: actionIndices[3],
           label: ['download all docs in space label', { ns: 'composer' }],
           icon: (props) => <Download {...props} />,
           invoke: async (t) => {
@@ -120,6 +127,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[]): GraphNode<Spa
         },
         {
           id: 'restore-space',
+          index: actionIndices[4],
           label: ['upload all docs in space label', { ns: 'composer' }],
           icon: (props) => <Upload {...props} />,
           invoke: async () => {

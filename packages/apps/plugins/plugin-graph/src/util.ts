@@ -8,6 +8,7 @@ import { GraphNode, GraphNodeAction, GraphProvides } from './types';
 
 export const ROOT: GraphNode = {
   id: 'root',
+  index: 'a1',
   label: 'Root',
   description: 'Root node',
 };

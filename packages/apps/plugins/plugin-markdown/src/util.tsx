@@ -45,8 +45,9 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
-export const documentToGraphNode = (document: Document, parent: GraphNode<Space>): GraphNode => ({
+export const documentToGraphNode = (document: Document, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: document.id,
+  index,
   label: document.title ?? 'Untitled Document',
   icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
   data: document,
@@ -55,6 +56,7 @@ export const documentToGraphNode = (document: Document, parent: GraphNode<Space>
     [MARKDOWN_PLUGIN]: [
       {
         id: 'delete',
+        index: 'a1',
         label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
         icon: (props) => <Trash {...props} />,
         invoke: async () => {

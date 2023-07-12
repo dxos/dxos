@@ -3,6 +3,7 @@
 //
 
 import { FilePlus, FolderPlus } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import { deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
@@ -67,12 +68,11 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       window.addEventListener('keydown', handleKeyDown);
 
       const value = await localforage.getItem<FileSystemHandle[]>(LOCAL_FILES_PLUGIN);
-      const indices = getIndices(value?.length ?? 1);
       if (Array.isArray(value)) {
         await Promise.all(
           value.map(async (handle, index) => {
             if (handle.kind === 'file') {
-              const file = await handleToLocalFile(handle, indices[index]);
+              const file = await handleToLocalFile(handle);
               state.files = [file, ...state.files];
             } else if (handle.kind === 'directory') {
               const directory = await handleToLocalDirectory(handle);
@@ -137,8 +137,9 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
           }
 
           onFilesUpdate = emit;
-          return state.files.map((entity) =>
-            localEntityToGraphNode(entity, emit, undefined, (file) => {
+          const fileIndices = getIndices(state.files.length);
+          return state.files.map((entity, index) =>
+            localEntityToGraphNode(entity, fileIndices[index], emit, undefined, (file) => {
               state.files = state.files.filter((f) => f !== file);
             }),
           );
@@ -168,7 +169,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                       },
                     ],
                   });
-                  const file = await handleToLocalFile(handle, getIndexBelow(nodes[0].index));
+                  const file = await handleToLocalFile(handle);
                   state.files = [file, ...state.files];
                   if (treeViewPlugin) {
                     treeViewPlugin.provides.treeView.selected = [file.id];

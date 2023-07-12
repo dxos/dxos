@@ -53,6 +53,7 @@ const testPlugin = (id: number, depth = 1): [Plugin<GraphProvides>, Map<string, 
             nodes = [
               {
                 id: `${parent.id}-node${id}`,
+                index: 'a1',
                 label: `${parent.id}-node${id}`,
                 parent,
               },
@@ -71,6 +72,7 @@ const testPlugin = (id: number, depth = 1): [Plugin<GraphProvides>, Map<string, 
           return [
             {
               id: `${parent.id}-action${id}`,
+              index: 'a1',
               label: `${parent.id}-action${id}`,
               invoke: () => {},
             },
@@ -172,6 +174,7 @@ describe('buildGraph', () => {
     const plugin2Node = graph.pluginChildren![testPlugin2.meta.id][0];
     const newNode = {
       id: 'root-node22-node1',
+      index: 'a1',
       label: 'root-node22-node1',
       parent: plugin1Node,
       pluginChildren: {},

@@ -21,6 +21,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/observable-object": "workspace:*",
     "@dxos/text-model": "workspace:*",
+    "@tldraw/indices": "2.0.0-alpha.14",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

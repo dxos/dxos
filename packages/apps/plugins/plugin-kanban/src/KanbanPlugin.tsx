@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
-
-import { Kanban as KanbanType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
@@ -18,17 +15,18 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
   },
   provides: {
     translations,
-    space: {
-      types: [
-        {
-          id: 'create-kanban',
-          testId: 'kanbanPlugin.createStack',
-          label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
-          icon: Plus,
-          Type: KanbanType,
-        },
-      ],
-    },
+    // todo(thure): Do graph nodes.
+    // space: {
+    //   types: [
+    //     {
+    //       id: 'create-kanban',
+    //       testId: 'kanbanPlugin.createStack',
+    //       label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
+    //       icon: Plus,
+    //       Type: KanbanType,
+    //     },
+    //   ],
+    // },
     component: (datum, role) => {
       switch (role) {
         case 'main':

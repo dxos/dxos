@@ -3,6 +3,7 @@
 //
 
 import { File as FileIcon, FloppyDisk, Folder, Plugs, X } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { GraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
@@ -110,25 +111,28 @@ const handleLegacySave = (file: LocalFile) => {
 
 export const localEntityToGraphNode = (
   entity: LocalEntity,
+  index: string,
   emit: () => void,
   parent?: GraphNode<LocalDirectory>,
   removeEntity?: (entity: LocalEntity) => void,
 ) => {
   if ('children' in entity) {
-    return localDirectoryToGraphNode(entity, emit, parent, removeEntity);
+    return localDirectoryToGraphNode(entity, index, emit, parent, removeEntity);
   } else {
-    return localFileToGraphNode(entity, emit, parent, removeEntity);
+    return localFileToGraphNode(entity, index, emit, parent, removeEntity);
   }
 };
 
 const localDirectoryToGraphNode = (
   directory: LocalDirectory,
+  index: string,
   emit: () => void,
   parent?: GraphNode<LocalDirectory>,
   removeEntity?: (entity: LocalEntity) => void,
 ) => {
   const node: GraphNode<LocalDirectory> = {
     id: directory.id,
+    index,
     label: directory.title,
     icon: (props) => <Folder {...props} />,
     data: directory,
@@ -140,6 +144,7 @@ const localDirectoryToGraphNode = (
 
   const closeAction: GraphNodeAction = {
     id: 'close-directory',
+    index: 'a1',
     label: ['close directory label', { ns: LOCAL_FILES_PLUGIN }],
     icon: (props) => <X {...props} />,
     invoke: async () => {
@@ -153,6 +158,7 @@ const localDirectoryToGraphNode = (
   const defaultActions: GraphNodeAction[] = [
     {
       id: 're-open',
+      index: 'a0',
       label: ['re-open directory label', { ns: LOCAL_FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
       disposition: 'toolbar',
@@ -169,12 +175,13 @@ const localDirectoryToGraphNode = (
   ];
 
   node.pluginActions = { [LOCAL_FILES_PLUGIN]: directory.permission === 'granted' ? grantedActions : defaultActions };
+  const childIndices = getIndices(directory.children.length);
   node.pluginChildren = {
-    [LOCAL_FILES_PLUGIN]: directory.children.map((entity) => {
+    [LOCAL_FILES_PLUGIN]: directory.children.map((entity, index) => {
       if ('children' in entity) {
-        return localDirectoryToGraphNode(entity, emit, node);
+        return localDirectoryToGraphNode(entity, childIndices[index], emit, node);
       } else {
-        return localFileToGraphNode(entity, emit, node);
+        return localFileToGraphNode(entity, childIndices[index], emit, node);
       }
     }),
   };
@@ -184,12 +191,14 @@ const localDirectoryToGraphNode = (
 
 const localFileToGraphNode = (
   file: LocalFile,
+  index: string,
   emit: () => void,
   parent?: GraphNode<LocalDirectory>,
   removeEntity?: (entity: LocalEntity) => void,
 ) => {
   const node: GraphNode<LocalFile> = {
     id: file.id,
+    index,
     label: file.title,
     icon: (props) => <FileIcon {...props} />,
     data: file,
@@ -202,6 +211,7 @@ const localFileToGraphNode = (
 
   const closeAction: GraphNodeAction = {
     id: 'close-directory',
+    index: 'a1',
     label: ['close file label', { ns: LOCAL_FILES_PLUGIN }],
     icon: (props) => <X {...props} />,
     invoke: async () => {
@@ -213,6 +223,7 @@ const localFileToGraphNode = (
   const grantedActions: GraphNodeAction[] = [
     {
       id: 'save',
+      index: 'a2',
       label: [file.handle ? 'save label' : 'save as label', { ns: LOCAL_FILES_PLUGIN }],
       icon: (props) => <FloppyDisk {...props} />,
       invoke: async () => {
@@ -226,6 +237,7 @@ const localFileToGraphNode = (
   const defaultActions: GraphNodeAction[] = [
     {
       id: 're-open',
+      index: 'a0',
       label: ['re-open file label', { ns: LOCAL_FILES_PLUGIN }],
       icon: (props) => <Plugs {...props} />,
       disposition: 'toolbar',

@@ -29,8 +29,8 @@ import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
 import { stackSectionChoosers, stackSectionCreators } from '../stores';
+import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
 
 type StackSectionProps = {
   onRemove: () => void;

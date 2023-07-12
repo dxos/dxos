@@ -3,20 +3,20 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
 import { SpaceProxy } from '@dxos/client';
-import { createStore, subscribe } from '@dxos/observable-object';
+import { subscribe } from '@dxos/observable-object';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
-import { isStack, StackPluginProvides, StackProvides } from './props';
 import { stackSectionChoosers, stackSectionCreators } from './stores';
 import translations from './translations';
-import { StackPluginProvides, StackProvides, StackSectionChooser, StackSectionCreator } from './types';
+import { StackPluginProvides, StackProvides } from './types';
 import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
@@ -48,6 +48,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
           const space = parent.data;
           const query = space.db.query(Stack.filter());
+          const stackIndices = getIndices(query.objects.length);
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -55,16 +56,16 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             );
           }
 
-          for (const stack of query.objects) {
+          query.objects.forEach((stack, index) => {
             if (!subscriptions.has(stack.id)) {
               subscriptions.set(
                 stack.id,
-                stack[subscribe](() => emit(stackToGraphNode(stack, parent))),
+                stack[subscribe](() => emit(stackToGraphNode(stack, parent, stackIndices[index]))),
               );
             }
-          }
+          });
 
-          return query.objects.map((stack) => stackToGraphNode(stack, parent));
+          return query.objects.map((stack, index) => stackToGraphNode(stack, parent, stackIndices[index]));
         },
         actions: (parent, _, plugins) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -76,6 +77,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           return [
             {
               id: 'create-stack',
+              index: getIndices(1)[0],
               testId: 'stackPlugin.createStack',
               label: ['create stack label', { ns: STACK_PLUGIN }],
               icon: (props) => <Plus {...props} />,
@@ -99,11 +101,12 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return null;
             }
           case 'dragoverlay':
-          if (datum && typeof datum === 'object' && 'object' in datum) {
-            return StackSectionOverlay;
-          } else {
-            return null;
-          }default:
+            if (datum && typeof datum === 'object' && 'object' in datum) {
+              return StackSectionOverlay;
+            } else {
+              return null;
+            }
+          default:
             return null;
         }
       },
