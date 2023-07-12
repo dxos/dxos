@@ -84,7 +84,8 @@ export default class Start extends BaseCommand<typeof Start> {
     } else {
       return await this.execWithDaemon(async (daemon) => {
         if (await daemon.isRunning(flags.profile)) {
-          this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
+          this.log(chalk`{red Warning}: '${flags.profile}' is already running (Maybe run 'dx reset')`);
+          return;
         }
         try {
           await daemon.start(this.flags.profile);
