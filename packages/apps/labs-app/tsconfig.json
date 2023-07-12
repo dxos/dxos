@@ -75,10 +75,13 @@
       "path": "../plugins/plugin-client"
     },
     {
-      "path": "../plugins/plugin-dnd"
+      "path": "../plugins/plugin-drawing"
     },
     {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-kanban"
     },
     {
       "path": "../plugins/plugin-markdown"
