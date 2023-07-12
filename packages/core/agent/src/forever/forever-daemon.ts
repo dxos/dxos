@@ -1,18 +1,18 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import forever, { ForeverProcess } from 'forever';
+import GrowingFile from 'growing-file';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
+import { sleep } from '@dxos/async';
 import { getUnixSocket } from '@dxos/client';
-import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../timeouts';
-import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+import { parseAddress, removeSocketFile, waitFor } from '../util';
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -28,10 +28,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
-    return (
-      isLocked(lockFilePath(profile)) ||
-      (await this.list()).some((process) => process.profile === profile && process.running)
-    );
+    return (await this.list()).some((process) => process.profile === profile && process.running);
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -59,35 +56,40 @@ export class ForeverDaemon implements Daemon {
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
+      const daemonLogFile = path.join(logDir, 'daemon.log');
+      const errFile = path.join(logDir, 'err.log');
+
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'start', '--foreground', `--profile=${profile}`, '--socket'],
         uid: profile,
-        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
+        logFile: daemonLogFile, // Forever daemon process.
         outFile: path.join(logDir, 'out.log'), // Child stdout.
-        errFile: path.join(logDir, 'err.log'), // Child stderr.
+        errFile, // Child stderr.
       });
-    }
 
-    // TODO(burdon): Display to user the error file.
-    const { path: socketFile } = parseAddress(getUnixSocket(profile));
-    await waitFor({
-      condition: async () => fs.existsSync(socketFile),
-      timeout: DAEMON_START_TIMEOUT,
-    });
+      await sleep(50);
+
+      const stream = await printFile(errFile);
+      const { path: socketFile } = parseAddress(getUnixSocket(profile));
+      await waitFor({
+        condition: async () => fs.existsSync(socketFile),
+        timeout: DAEMON_START_TIMEOUT,
+      });
+
+      stream.destroy();
+    }
 
     const proc = await this._getProcess(profile);
     log.info('started', { profile: proc.profile, pid: proc.pid });
+
     return proc;
   }
 
   async stop(profile: string): Promise<ProcessInfo> {
     if (await this.isRunning(profile)) {
       forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
-      await waitFor({
-        condition: async () => !isLocked(lockFilePath(profile)),
-      });
     }
 
     await waitFor({
@@ -109,3 +111,13 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
+
+const printFile = async (filename: string) => {
+  await waitFor({ condition: async () => fs.existsSync(filename) });
+  const stream = GrowingFile.open(filename);
+  stream.on('data', (data: Buffer) => {
+    log.info(data.toString());
+  });
+
+  return stream;
+};

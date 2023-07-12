@@ -83,8 +83,13 @@ export default class Start extends BaseCommand<typeof Start> {
         if (await daemon.isRunning(flags.profile)) {
           this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
         }
-        await daemon.start(this.flags.profile);
-        this.log('Agent started');
+        try {
+          await daemon.start(this.flags.profile);
+          this.log('Agent started');
+        } catch (err) {
+          this.log(chalk`{red Failed to start daemon}: ${err}`);
+          await daemon.stop(this.flags.profile);
+        }
       });
     }
   }
