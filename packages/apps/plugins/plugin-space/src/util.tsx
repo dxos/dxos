@@ -3,6 +3,7 @@
 //
 
 import { Download, EyeSlash, PaperPlane, PencilSimpleLine, Planet, Upload } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
@@ -10,11 +11,10 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { EchoDatabase, Space, SpaceState, ShellLayout } from '@dxos/react-client';
+import { EchoDatabase, Space, SpaceState, ShellLayout, TypedObject } from '@dxos/react-client';
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
-import { getIndices } from '@tldraw/indices';
 
 export const SPACE_PLUGIN = 'dxos:space';
 
@@ -60,6 +60,15 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
     data: space,
+    onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
+      console.log('[plugin-space]', 'on children rearrange', child.data?.meta, nextIndex);
+      if (child.data) {
+        child.data.meta = {
+          ...child.data?.meta,
+          index: nextIndex,
+        };
+      }
+    },
     attributes: {
       role: 'branch',
       hidden: identity && space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,

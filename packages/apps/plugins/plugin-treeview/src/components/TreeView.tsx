@@ -100,10 +100,10 @@ export const TreeView = observer((props: TreeViewProps) => {
             .sort(sortByIndex)
             .map((item) =>
               item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length > 0 ? (
-            <BranchTreeItem key={item.id} node={item} />
-          ) : (
-            <LeafTreeItem key={item.id} node={item} />
-          ),
+                <BranchTreeItem key={item.id} node={item} />
+              ) : (
+                <LeafTreeItem key={item.id} node={item} />
+              ),
             )
         )
       ) : (
