@@ -115,7 +115,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       await env.syncBarrier(`swarms are ready on ${testCounter}`);
       await sleep(10_000);
 
-      log.info('create test connections');
+      log.info('start testing connections', { agentIdx, testCounter });
 
       const desiderConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
       let actualtConnections = 0;
