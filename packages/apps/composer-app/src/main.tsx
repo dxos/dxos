@@ -8,6 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { DndPlugin } from '@braneframe/plugin-dnd';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         ThemePlugin(),
+        DndPlugin(),
         ClientPlugin(),
         GraphPlugin(),
         TreeViewPlugin(),

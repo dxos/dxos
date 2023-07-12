@@ -11,7 +11,13 @@ import {
   DragOverlay,
   DragStartEvent,
   DropAnimation,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import React, { createContext, DependencyList, useContext, useEffect, useState } from 'react';
 
 import { createStore } from '@dxos/observable-object';
@@ -27,19 +33,14 @@ const dragOverSubscriptions: ((event: DragOverEvent) => void)[] = [];
 type OverlayDropAnimation = 'around' | 'away' | 'into';
 
 export type DndPluginStoreValue = {
-  active: DragOverEvent['active'] | null;
-  over: DragOverEvent['over'] | null;
   overlayDropAnimation: OverlayDropAnimation;
 };
 
 const store = createStore<DndPluginStoreValue>({
-  active: null,
-  over: null,
-  overlayDropAnimation: 'around',
+  overlayDropAnimation: 'away',
 });
 
 const handleDragOver = (event: DragOverEvent) => {
-  store.over = event.over ?? null;
   dragOverSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -56,7 +57,6 @@ export const useDragOver = (callback: (event: DragOverEvent) => void, dependenci
 const dragStartSubscriptions: ((event: DragStartEvent) => void)[] = [];
 
 const handleDragStart = (event: DragStartEvent) => {
-  store.active = event.active;
   dragStartSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -73,8 +73,7 @@ export const useDragStart = (callback: (event: DragStartEvent) => void, dependen
 const dragEndSubscriptions: ((event: DragEndEvent) => void)[] = [];
 
 const handleDragEnd = (event: DragEndEvent) => {
-  store.active = null;
-  store.over = null;
+  store.overlayDropAnimation = 'away';
   dragEndSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -91,8 +90,6 @@ export const useDragEnd = (callback: (event: DragEndEvent) => void, dependencies
 const dragCancelSubscriptions: ((event: DragCancelEvent) => void)[] = [];
 
 const handleDragCancel = (event: DragCancelEvent) => {
-  store.active = null;
-  store.over = null;
   dragCancelSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -169,7 +166,7 @@ export const useDnd = () => useContext(DndPluginContext);
 const DndOverlay = observer(() => {
   const dnd = useDnd();
   const [activeDatum, setActiveDatum] = useState<unknown | null>(null);
-  useDragStart(({ active: { data } }) => setActiveDatum(data.current?.entity), []);
+  useDragStart(({ active: { data } }) => setActiveDatum(data.current?.dragoverlay), []);
   return (
     <DragOverlay adjustScale={false} dropAnimation={dropAnimations[dnd.overlayDropAnimation]}>
       <Surface role='dragoverlay' data={activeDatum} limit={1} />
@@ -185,18 +182,39 @@ export const DndPlugin = (): PluginDefinition<DndPluginProvides> => ({
     components: {
       default: DndOverlay,
     },
-    context: ({ children }) => (
-      <DndPluginContext.Provider value={store}>
-        <DndContext
-          onDragOver={handleDragOver}
-          onDragStart={handleDragStart}
-          onDragCancel={handleDragCancel}
-          onDragEnd={handleDragEnd}
-        >
-          {children}
-        </DndContext>
-      </DndPluginContext.Provider>
-    ),
+    context: ({ children }) => {
+      const sensors = useSensors(
+        useSensor(MouseSensor, {
+          // Require the mouse to move by 10 pixels before activating
+          activationConstraint: {
+            distance: 10,
+          },
+        }),
+        useSensor(TouchSensor, {
+          // Press delay of 200ms, with tolerance of 5px of movement
+          activationConstraint: {
+            delay: 200,
+            tolerance: 5,
+          },
+        }),
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+        }),
+      );
+      return (
+        <DndPluginContext.Provider value={store}>
+          <DndContext
+            onDragOver={handleDragOver}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
+          >
+            {children}
+          </DndContext>
+        </DndPluginContext.Provider>
+      );
+    },
     dnd: store,
   },
 });
