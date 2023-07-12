@@ -12,7 +12,7 @@ import { fromHost, ClientServices, Config, Client, ClientServicesProvider, Publi
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { Monitor, MonitorOptions, Plugin, ProxyServer, ProxyServerOptions } from './plugins';
+import { Monitor, MonitorOptions, Plugin, ProxyServer } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 export type AgentOptions = {
@@ -25,10 +25,9 @@ export type AgentOptions = {
  * The remote agent exposes Client services via multiple transports.
  */
 export class Agent {
-  private _endpoints: Plugin[] = [];
-  private _plugins: Plugin[] = []; // TODO(burdon): Merge with endpoints?
   private _client?: Client;
   private _clientServices?: ClientServicesProvider;
+  private _plugins: Plugin[] = [];
 
   // prettier-ignore
   constructor(
@@ -41,6 +40,9 @@ export class Agent {
 
   // TODO(burdon): Lock file (per profile). E.g., isRunning is false if running manually.
   //  https://www.npmjs.com/package/lockfile
+
+  // TODO(burdon): Initialize/destroy.
+  async initialize() {}
 
   async start() {
     await this.stop();
@@ -58,71 +60,60 @@ export class Agent {
     // Global hook for debuggers.
     ((globalThis as any).__DXOS__ ??= {}).host = (this._clientServices as any)._host;
 
-    // Create socket servers.
+    // TODO(burdon): Plugin dependencies.
     let socketUrl: string | undefined;
-    this._endpoints = (
-      await Promise.all(
-        this._options.listen.map(async (address) => {
-          let server: Plugin | null = null;
-          const { protocol, path } = parseAddress(address);
-          switch (protocol) {
-            //
-            // Unix socket (accessed via CLI).
-            //
-            case 'unix': {
-              socketUrl = address;
-              mkdirSync(dirname(path), { recursive: true });
-              rmSync(path, { force: true });
-              const httpServer = http.createServer();
-              httpServer.listen(path);
-              server = createServer(this._clientServices!, { server: httpServer });
-              await server.open();
-              break;
-            }
 
-            //
-            // Web socket (accessed via devtools).
-            // TODO(burdon): Insecure.
-            //
-            case 'ws': {
-              const { port } = new URL(address);
-              server = createServer(this._clientServices!, { port: parseInt(port) });
-              await server.open();
-              break;
-            }
+    // TODO(burdon): Replace with config.
+    for await (const address of this._options.listen) {
+      let plugin: Plugin | null = null;
+      const { protocol, path } = parseAddress(address);
+      switch (protocol) {
+        //
+        // Unix socket (accessed via CLI).
+        //
+        case 'unix': {
+          socketUrl = address;
+          mkdirSync(dirname(path), { recursive: true });
+          rmSync(path, { force: true });
+          const httpServer = http.createServer();
+          httpServer.listen(path);
+          plugin = createServer(this._clientServices!, { server: httpServer });
+          break;
+        }
 
-            //
-            // HTTP server (accessed via REST API).
-            // TODO(burdon): Insecure.
-            //
-            case 'http': {
-              const { port } = new URL(address);
-              server = createProxy(this._client!, { port: parseInt(port) });
-              await server.open();
-              break;
-            }
+        //
+        // Web socket (accessed via devtools).
+        // TODO(burdon): Insecure.
+        //
+        case 'ws': {
+          const { port } = new URL(address);
+          plugin = createServer(this._clientServices!, { port: parseInt(port) });
+          break;
+        }
 
-            default: {
-              log.error(`Invalid address: ${address}`);
-            }
-          }
+        //
+        // HTTP server (accessed via REST API).
+        // TODO(burdon): Insecure.
+        //
+        case 'http': {
+          const { port } = new URL(address);
+          plugin = new ProxyServer(this._client!, { port: parseInt(port) });
+          break;
+        }
 
-          if (server) {
-            log('listening', { address });
-            return server;
-          }
-        }),
-      )
-    ).filter(Boolean) as Plugin[];
+        default: {
+          log.error(`Invalid address: ${address}`);
+        }
+      }
+
+      if (plugin) {
+        this._plugins.push(plugin);
+      }
+    }
 
     // Epoch monitor.
     if (this._options.monitor) {
       this._plugins.push(new Monitor(this._client!, this._clientServices!, this._options.monitor!));
-    }
-
-    // Start plugins.
-    for (const plugin of this._plugins) {
-      await plugin.open();
     }
 
     // OpenFaaS connector.
@@ -131,22 +122,22 @@ export class Agent {
     if (faasConfig) {
       const { FaasConnector } = await import('./plugins/faas/connector');
       const connector = new FaasConnector(this._clientServices!, faasConfig, { clientUrl: socketUrl });
-      await connector.open();
-      this._endpoints.push(connector);
-      log('connector open', { gateway: faasConfig.gateway });
+      this._plugins.push(connector);
+    }
+
+    // Open plugins.
+    for (const plugin of this._plugins) {
+      await plugin.open();
+      log('open', { plugin });
     }
 
     log('running...');
   }
 
   async stop() {
-    // Stop plugins.
+    // Close plugins.
     await Promise.all(this._plugins.map((plugin) => plugin.close()));
-    this._plugins = [];
-
-    // Close service endpoints.
-    await Promise.all(this._endpoints.map((server) => server.close()));
-    this._endpoints = [];
+    this._plugins.length = 0;
 
     // Close client and services.
     await this._client?.destroy();
@@ -177,8 +168,4 @@ const createServer = (services: ClientServicesProvider, options: WebSocket.Serve
       };
     },
   });
-};
-
-const createProxy = (client: Client, options: ProxyServerOptions) => {
-  return new ProxyServer(client, options);
 };
