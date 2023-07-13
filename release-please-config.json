@@ -88,6 +88,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-treeview/package.json",
           "jsonpath": "$.version"
         },

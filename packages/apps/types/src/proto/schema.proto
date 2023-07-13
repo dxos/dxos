@@ -73,3 +73,21 @@ message Drawing {
   // TODO(burdon): YJS document (map).
   dxos.schema.Text content = 2;
 }
+
+message Thread {
+  option (object) = true;
+
+  message Message {
+    string timestamp = 1;
+    string identity_key = 2;
+    string text = 3;
+  }
+
+  message Block {
+    option (object) = true;
+
+    repeated Message messages = 1;
+  }
+
+  repeated Block blocks = 2;
+}
