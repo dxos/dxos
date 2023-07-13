@@ -16,7 +16,7 @@ import React, {
 import { Client, type ClientServices, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { registerSignalFactory } from '@dxos/echo-signals';
+import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
