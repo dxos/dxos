@@ -80,6 +80,7 @@ export default class Start extends BaseCommand<typeof Start> {
     // NOTE: This is currently called by the agent's forever daemon.
     this.log('Agent started... (ctrl-c to exit)');
     process.on('SIGINT', async () => {
+      void this._ctx.dispose();
       await agent.stop();
       process.exit(0);
     });
@@ -107,11 +108,6 @@ export default class Start extends BaseCommand<typeof Start> {
     });
   }
 
-  override async finally(): Promise<void> {
-    await super.finally();
-    void this._ctx.dispose();
-  }
-
   private _sendTelemetry() {
     scheduleTaskInterval(
       this._ctx,
@@ -120,6 +116,7 @@ export default class Start extends BaseCommand<typeof Start> {
           installationId: this._telemetryContext?.installationId,
           name: 'cli.command.run.agent',
           properties: {
+            profile: this.flags.profile,
             ...this._telemetryContext,
             duration: Date.now() - this._startTime.getTime(),
           },
