@@ -91,6 +91,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Config file.',
+      helpValue: 'path',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
         return join(DX_CONFIG, `profile/${profile}.yml`);

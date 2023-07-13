@@ -23,10 +23,12 @@ export default class Start extends BaseCommand<typeof Start> {
     }),
     'web-socket': Flags.integer({
       description: 'Expose web socket port.',
+      helpValue: 'port',
       aliases: ['ws'],
     }),
     echo: Flags.integer({
       description: 'Expose ECHO REST API.',
+      helpValue: 'port',
     }),
     monitor: Flags.boolean({
       description: 'Run epoch monitoring.',
