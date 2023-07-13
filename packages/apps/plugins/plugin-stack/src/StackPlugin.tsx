@@ -60,7 +60,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             if (!subscriptions.has(stack.id)) {
               subscriptions.set(
                 stack.id,
-                stack[subscribe](() => emit(stackToGraphNode(stack, parent, stackIndices[index]))),
+                stack[subscribe](() => {
+                  if (stack.__deleted) {
+                    subscriptions.delete(stack.id);
+                    return;
+                  }
+
+                  emit(stackToGraphNode(stack, parent, stackIndices[index]));
+                }),
               );
             }
           });

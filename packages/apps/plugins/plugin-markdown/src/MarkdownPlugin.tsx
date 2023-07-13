@@ -96,7 +96,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             if (!subscriptions.has(document.id)) {
               subscriptions.set(
                 document.id,
-                document[subscribe](() => emit(documentToGraphNode(document, parent, documentIndices[index]))),
+                document[subscribe](() => {
+                  if (document.__deleted) {
+                    subscriptions.delete(document.id);
+                    return;
+                  }
+
+                  emit(documentToGraphNode(document, parent, documentIndices[index]));
+                }),
               );
             }
           });
