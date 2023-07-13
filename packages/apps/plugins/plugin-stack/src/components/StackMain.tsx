@@ -120,10 +120,14 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
 };
 
 // todo(thure): `observer` causes infinite rerenders if used here.
-const StackMainImpl = ({ sections }: { sections: StackSections }) => {
+const StackMainImpl = ({
+  sections,
+  onAdd,
+}: {
+  sections: StackSections;
+  onAdd: (start: number, nextSectionObject: GenericStackObject) => void;
+}) => {
   const [_, setIter] = useState([]);
-  const { t } = useTranslation('dxos:stack');
-  const splitView = useSplitView();
   const dnd = useDnd();
   const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
 
@@ -140,6 +144,8 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
+
+  const [displaySections, setDisplaySections] = useState(sections.filter((section) => section?.object?.id));
 
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
@@ -166,16 +172,6 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sectionIds],
   );
 
-  const handleAdd = useCallback(
-    (start: number, nextSectionObject: GenericStackObject) => {
-      const section: StackSectionModel = {
-        object: nextSectionObject,
-      };
-      sections.splice(start, 0, section);
-    },
-    [sections],
-  );
-
   const handleRemove = useCallback(
     (start: number) => {
       sections.splice(start, 1);
@@ -194,10 +190,11 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           if (activeSectionId !== overSectionId) {
             const activeIndex = sections.findIndex((section) => section.object.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
+            setDisplaySections(sections.filter((section) => section?.object?.id));
           }
         } else if (activeAddableObject) {
           dnd.overlayDropAnimation = 'into';
-          handleAdd(nextIndex, activeAddableObject);
+          onAdd(nextIndex, activeAddableObject);
         }
       }
       setActiveId(null);
@@ -207,20 +204,16 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sections, overIsMember],
   );
 
-  const visibleSections = useMemo(() => {
-    return Array.from(sections).filter((section) => !!section?.object?.id);
-  }, [sections]);
-
   return (
     <>
       <List variant='ordered' itemSizes='many' classNames='pli-2'>
         <SortableContext
-          items={visibleSections
+          items={displaySections
             .map(({ object: { id } }) => id)
             .concat(activeAddableObject && overIsMember ? [activeAddableObject.id] : [])}
           strategy={verticalListSortingStrategy}
         >
-          {visibleSections.map((section, start) => {
+          {displaySections.map((section, start) => {
             return (
               <StackSection
                 key={section.object.id}
@@ -235,78 +228,6 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           )}
         </SortableContext>
       </List>
-      <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
-        <h2 className='text-sm font-normal flex items-center gap-1'>
-          <Plus className={getSize(4)} />
-          <span>{t('add section label')}</span>
-        </h2>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>
-                <span>{t('add new section label')}</span>
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={() => {
-                      const nextSection = create();
-                      handleAdd(sections.length, nextSection);
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>
-                <span>{t('add existing section label')}</span>
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              {stackSectionChoosers.map(({ id, testId, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={() => {
-                      splitView.dialogContent = {
-                        id,
-                        chooser: 'many',
-                        subject: 'dxos:stack/chooser',
-                        omit: new Set(
-                          sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
-                        ),
-                        onDone: (items: GenericStackObject[]) =>
-                          sections.splice(sections.length, 0, ...items.map((item) => ({ object: item }))),
-                      };
-                      splitView.dialogOpen = true;
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </ButtonGroup>
-      </div>
     </>
   );
 };
@@ -314,6 +235,16 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
 export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
   const stack = data[data.length - 1] as StackModel & StackProperties;
   const { t } = useTranslation('dxos:stack');
+  const splitView = useSplitView();
+  const handleAdd = useCallback(
+    (start: number, nextSectionObject: GenericStackObject) => {
+      const section: StackSectionModel = {
+        object: nextSectionObject,
+      };
+      stack.sections.splice(start, 0, section);
+    },
+    [stack.sections],
+  );
   return (
     <Main.Content classNames='min-bs-[100vh]'>
       <div role='none' className='mli-auto max-is-[60rem]'>
@@ -328,7 +259,79 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
           />
         </Input.Root>
         <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 mbe-2 opacity-50')} />
-        <StackMainImpl sections={stack.sections} />
+        <StackMainImpl sections={stack.sections} onAdd={handleAdd} />
+        <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
+          <h2 className='text-sm font-normal flex items-center gap-1'>
+            <Plus className={getSize(4)} />
+            <span>{t('add section label')}</span>
+          </h2>
+          <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <Button variant='ghost'>
+                  <span>{t('add new section label')}</span>
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Arrow />
+                {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={() => {
+                        const nextSection = create();
+                        handleAdd(stack.sections.length, nextSection);
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...label)}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <Button variant='ghost'>
+                  <span>{t('add existing section label')}</span>
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Arrow />
+                {stackSectionChoosers.map(({ id, testId, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={() => {
+                        splitView.dialogContent = {
+                          id,
+                          chooser: 'many',
+                          subject: 'dxos:stack/chooser',
+                          omit: new Set(
+                            stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
+                          ),
+                          onDone: (items: GenericStackObject[]) =>
+                            stack.sections.splice(stack.sections.length, 0, ...items.map((item) => ({ object: item }))),
+                        };
+                        splitView.dialogOpen = true;
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...label)}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </ButtonGroup>
+        </div>
       </div>
     </Main.Content>
   );
