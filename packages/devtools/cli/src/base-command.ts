@@ -60,7 +60,7 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 export abstract class BaseCommand<T extends typeof Command = any> extends Command {
   private _clientConfig?: Config;
   private _client?: Client;
-  private _startTime: Date;
+  protected _startTime: Date;
   private _failing = false;
   private readonly _stdin?: string;
 
@@ -162,11 +162,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   private async _initTelemetry() {
     this._telemetryContext = await getTelemetryContext(DX_DATA);
     const { mode, installationId, group, environment, release } = this._telemetryContext;
-    if (group === 'dxos') {
-      log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
-    }
 
-    await showTelemetryBanner(DX_DATA);
+    {
+      if (group === 'dxos') {
+        log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
+      }
+
+      await showTelemetryBanner(DX_DATA);
+    }
 
     if (SENTRY_DESTINATION && mode !== 'disabled') {
       Sentry.init({

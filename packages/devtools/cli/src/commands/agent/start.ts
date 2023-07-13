@@ -6,12 +6,16 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { AgentOptions, Agent } from '@dxos/agent';
+import { scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
+import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
 import { safeParseInt } from '../../util';
 
 export default class Start extends BaseCommand<typeof Start> {
+  private readonly _ctx = new Context();
   static override enableJsonFlag = true;
   static override description = 'Start agent daemon.';
 
@@ -80,6 +84,8 @@ export default class Start extends BaseCommand<typeof Start> {
       process.exit(0);
     });
 
+    this._sendTelemetry();
+
     if (this.flags['web-socket']) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
     }
@@ -99,5 +105,27 @@ export default class Start extends BaseCommand<typeof Start> {
         await daemon.stop(this.flags.profile);
       }
     });
+  }
+
+  override async finally(): Promise<void> {
+    await super.finally();
+    void this._ctx.dispose();
+  }
+
+  private _sendTelemetry() {
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        Telemetry.event({
+          installationId: this._telemetryContext?.installationId,
+          name: 'cli.command.run.agent',
+          properties: {
+            ...this._telemetryContext,
+            duration: Date.now() - this._startTime.getTime(),
+          },
+        });
+      },
+      1000 * 60,
+    );
   }
 }
