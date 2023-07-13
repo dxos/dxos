@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -17,6 +18,7 @@ export const DX_ENVIRONMENT = telemetryrc.DX_ENVIRONMENT ?? undefined;
 export const DX_RELEASE = telemetryrc.DX_RELEASE ?? undefined;
 export const SENTRY_DESTINATION = telemetryrc.SENTRY_DESTINATION ?? undefined;
 export const TELEMETRY_API_KEY = telemetryrc.TELEMETRY_API_KEY ?? undefined;
+export const DX_DISABLE_TELEMETRY = telemetryrc.DX_DISABLE_TELEMETRY ?? undefined;
 export const IPDATA_API_KEY = telemetryrc.IPDATA_API_KEY ?? undefined;
 
 export type TelemetryContext = {
@@ -60,6 +62,20 @@ export const disableTelemetry = async (configDir: string) => {
     installationId,
     name: 'cli.telemetry.disable',
   });
+  await writeFile(path, '', 'utf-8');
+};
+
+export const showTelemetryBanner = async (configDir: string) => {
+  if (!TELEMETRY_API_KEY) {
+    // no-op
+  }
+  const path = join(configDir, '.banner-printed');
+  if (await exists(path)) {
+    return;
+  }
+  console.log(
+    chalk`{bold {magenta DXOS collects anonymous telemetry data to improve the CLI. To disable it add DX_DISABLE_TELEMETRY=true to your environment.}}`,
+  );
   await writeFile(path, '', 'utf-8');
 };
 
