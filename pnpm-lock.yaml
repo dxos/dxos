@@ -5265,6 +5265,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -5298,6 +5299,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
