@@ -132,7 +132,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
                 actualConnections++;
                 log.info('test connection succeded', { agentIdx, swarmIdx });
               } catch (error) {
-                log.info('test connection failed', { agentIdx, swarmIdx });
+                log.info('test connection failed', { agentIdx, swarmIdx, error });
               }
             }
           }),
