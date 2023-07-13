@@ -91,14 +91,14 @@ export class ForeverDaemon implements Daemon {
         const services = fromAgent({ profile });
         await services.open();
 
-        const stream = services.services.SystemService!.queryStatus();
         const trigger = new Trigger();
-
+        const stream = services.services.SystemService!.queryStatus();
         stream.subscribe(({ status }) => {
           assert(status === SystemStatus.ACTIVE);
           trigger.wake();
         });
         await trigger.wait();
+
         stream.close();
         await services.close();
       }
@@ -106,8 +106,7 @@ export class ForeverDaemon implements Daemon {
     }
 
     const proc = await this._getProcess(profile);
-    log.info('started', { profile: proc.profile, pid: proc.pid });
-
+    log('started', { profile: proc.profile, pid: proc.pid });
     return proc;
   }
 
