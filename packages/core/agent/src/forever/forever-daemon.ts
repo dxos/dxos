@@ -1,12 +1,14 @@
 //
 // Copyright 2023 DXOS.org
 //
-
 import forever, { ForeverProcess } from 'forever';
+import GrowingFile from 'growing-file';
+import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { getUnixSocket } from '@dxos/client';
+import { Trigger, waitForCondition } from '@dxos/async';
+import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
 import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
@@ -60,35 +62,58 @@ export class ForeverDaemon implements Daemon {
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
+      const daemonLogFile = path.join(logDir, 'daemon.log');
+      const outFile = path.join(logDir, 'out.log');
+      const errFile = path.join(logDir, 'err.log');
+
+      // Clear err file.
+      fs.unlinkSync(errFile);
+
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'start', '--foreground', `--profile=${profile}`, '--socket'],
         uid: profile,
-        logFile: path.join(logDir, 'daemon.log'), // Forever daemon process.
-        outFile: path.join(logDir, 'out.log'), // Child stdout.
-        errFile: path.join(logDir, 'err.log'), // Child stderr.
+        logFile: daemonLogFile, // Forever daemon process.
+        outFile, // Child stdout.
+        errFile, // Child stderr.
       });
-    }
+      const stream = await printFile(errFile);
 
-    // TODO(burdon): Display to user the error file.
-    const { path: socketFile } = parseAddress(getUnixSocket(profile));
-    await waitFor({
-      condition: async () => fs.existsSync(socketFile),
-      timeout: DAEMON_START_TIMEOUT,
-    });
+      // Wait for socket file to appear.
+      {
+        const { path: socketFile } = parseAddress(getUnixSocket(profile));
+        await waitForCondition(() => fs.existsSync(socketFile), DAEMON_START_TIMEOUT);
+      }
+
+      // Check if agent is running.
+      {
+        const services = fromAgent({ profile });
+        await services.open();
+
+        const stream = services.services.SystemService!.queryStatus();
+        const trigger = new Trigger();
+
+        stream.subscribe(({ status }) => {
+          assert(status === SystemStatus.ACTIVE);
+          trigger.wake();
+        });
+        await trigger.wait();
+        stream.close();
+        await services.close();
+      }
+      stream.destroy();
+    }
 
     const proc = await this._getProcess(profile);
     log.info('started', { profile: proc.profile, pid: proc.pid });
+
     return proc;
   }
 
   async stop(profile: string): Promise<ProcessInfo> {
     if (await this.isRunning(profile)) {
       forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
-      await waitFor({
-        condition: async () => !isLocked(lockFilePath(profile)),
-      });
     }
 
     await waitFor({
@@ -110,3 +135,13 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
+
+const printFile = async (filename: string) => {
+  await waitFor({ condition: async () => fs.existsSync(filename) });
+  const stream = GrowingFile.open(filename);
+  stream.on('data', (data: Buffer) => {
+    log.info(data.toString());
+  });
+
+  return stream;
+};

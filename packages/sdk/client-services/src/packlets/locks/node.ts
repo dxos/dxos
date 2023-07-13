@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import lockfile from 'lockfile';
+import assert from 'node:assert';
+import { FileHandle } from 'node:fs/promises';
 
-import { Trigger } from '@dxos/async';
+import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
 
 import { ResourceLock, ResourceLockOptions } from './resource-lock';
@@ -14,7 +15,7 @@ export class Lock implements ResourceLock {
   private readonly _lockPath: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];
   private readonly _onRelease: ResourceLockOptions['onRelease'];
-  private _releaseTrigger = new Trigger();
+  private _fileHandle?: FileHandle;
 
   constructor({ lockKey: lockPath, onAcquire, onRelease }: ResourceLockOptions) {
     this._lockPath = lockPath;
@@ -29,24 +30,18 @@ export class Lock implements ResourceLock {
 
   async acquire() {
     log('acquiring lock...');
-    if (lockfile.checkSync(this.lockKey)) {
-      throw new Error(`Lock already acquired: ${this._lockPath}`);
-    }
+    this._fileHandle = await LockFile.acquire(this._lockPath);
 
-    lockfile.lockSync(this._lockPath);
     await this._onAcquire?.();
 
     log('acquired lock');
   }
 
   async release() {
-    if (!lockfile.checkSync(this._lockPath)) {
-      throw new Error(`Lock already acquired: ${this._lockPath}`);
-    }
-
     await this._onRelease?.();
-    lockfile.unlockSync(this._lockPath);
+    assert(this._fileHandle, 'Lock is not acquired');
+    await LockFile.release(this._fileHandle);
   }
 }
 
-export const isLocked = (lockPath: string) => lockfile.checkSync(lockPath);
+export const isLocked = (lockPath: string) => LockFile.isLocked(lockPath);
