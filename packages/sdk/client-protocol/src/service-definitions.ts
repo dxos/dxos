@@ -14,6 +14,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { FunctionRegistryService } from '@dxos/protocols/proto/dxos/functions';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
@@ -34,6 +35,8 @@ export type ClientServices = {
   NetworkService: NetworkService;
 
   LoggingService: LoggingService;
+
+  FunctionRegistryService: FunctionRegistryService;
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;
@@ -62,6 +65,9 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DataService: schema.getService('dxos.echo.service.DataService'),
   NetworkService: schema.getService('dxos.client.services.NetworkService'),
   LoggingService: schema.getService('dxos.client.services.LoggingService'),
+
+  // Agent-only.
+  FunctionRegistryService: schema.getService('dxos.functions.FunctionRegistryService'),
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),

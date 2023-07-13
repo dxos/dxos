@@ -9,10 +9,13 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey } from '@dxos/client';
+import { LocalClientServices } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { FunctionsPlugin } from './functions';
 import { Plugin } from './plugins';
+import { Service } from './service';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {
@@ -124,6 +127,10 @@ export class Agent {
       log('open', { plugin });
     }
 
+    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as LocalClientServices).host);
+
+    await functionsPlugin.open();
+
     log('started...');
   }
 
@@ -143,6 +150,7 @@ export class Agent {
     await this._clientServices?.close();
     this._client = undefined;
     this._clientServices = undefined;
+    // await functionsPlugin.close();
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
     log('stopped');

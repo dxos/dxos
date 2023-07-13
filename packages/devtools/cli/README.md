@@ -27,6 +27,7 @@ $ npm install -g @dxos/cli
 $ dx COMMAND
 running command...
 $ dx (--version)
+@dxos/cli/0.1.51 darwin-arm64 node-v18.12.1
 @dxos/cli/0.1.51 darwin-arm64 node-v18.14.2
 $ dx --help [COMMAND]
 USAGE
@@ -38,50 +39,173 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`dx agent list`](#dx-agent-list)
-* [`dx agent restart`](#dx-agent-restart)
-* [`dx agent start`](#dx-agent-start)
-* [`dx agent stop`](#dx-agent-stop)
-* [`dx app create NAME`](#dx-app-create-name)
-* [`dx app list`](#dx-app-list)
-* [`dx app open URL`](#dx-app-open-url)
-* [`dx app publish`](#dx-app-publish)
-* [`dx config`](#dx-config)
-* [`dx debug stats`](#dx-debug-stats)
-* [`dx device`](#dx-device)
-* [`dx device list`](#dx-device-list)
-* [`dx function exec NAME`](#dx-function-exec-name)
-* [`dx function list`](#dx-function-list)
-* [`dx function logs NAME`](#dx-function-logs-name)
-* [`dx halo`](#dx-halo)
-* [`dx halo create DISPLAYNAME`](#dx-halo-create-displayname)
-* [`dx halo credential add [CREDENTIAL]`](#dx-halo-credential-add-credential)
-* [`dx halo credential list`](#dx-halo-credential-list)
-* [`dx halo join`](#dx-halo-join)
-* [`dx halo share`](#dx-halo-share)
-* [`dx help [COMMANDS]`](#dx-help-commands)
-* [`dx kube auth`](#dx-kube-auth)
-* [`dx kube deploy`](#dx-kube-deploy)
-* [`dx plugins`](#dx-plugins)
-* [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin)
-* [`dx plugins:inspect PLUGIN...`](#dx-pluginsinspect-plugin)
-* [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin-1)
-* [`dx plugins:link PLUGIN`](#dx-pluginslink-plugin)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-1)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-2)
-* [`dx plugins update`](#dx-plugins-update)
-* [`dx reset`](#dx-reset)
-* [`dx shell`](#dx-shell)
-* [`dx space`](#dx-space)
-* [`dx space create [NAME]`](#dx-space-create-name)
-* [`dx space epoch [KEY]`](#dx-space-epoch-key)
-* [`dx space invite KEY`](#dx-space-invite-key)
-* [`dx space join`](#dx-space-join)
-* [`dx space list`](#dx-space-list)
-* [`dx space members [KEY]`](#dx-space-members-key)
-* [`dx tunnel list`](#dx-tunnel-list)
-* [`dx tunnel set`](#dx-tunnel-set)
+- [DX CLI](#dx-cli)
+- [Development](#development)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`dx agent list`](#dx-agent-list)
+  - [`dx agent restart`](#dx-agent-restart)
+  - [`dx agent start`](#dx-agent-start)
+  - [`dx agent stop`](#dx-agent-stop)
+  - [`dx agent list`](#dx-agent-list-1)
+  - [`dx agent restart`](#dx-agent-restart-1)
+  - [`dx agent start`](#dx-agent-start-1)
+  - [`dx agent stop`](#dx-agent-stop-1)
+  - [`dx app create NAME`](#dx-app-create-name)
+  - [`dx app list`](#dx-app-list)
+  - [`dx app open URL`](#dx-app-open-url)
+  - [`dx app open URL`](#dx-app-open-url-1)
+  - [`dx app publish`](#dx-app-publish)
+  - [`dx config`](#dx-config)
+  - [`dx debug stats`](#dx-debug-stats)
+  - [`dx device`](#dx-device)
+  - [`dx device list`](#dx-device-list)
+  - [`dx function dev`](#dx-function-dev)
+  - [`dx function exec NAME`](#dx-function-exec-name)
+  - [`dx function list`](#dx-function-list)
+  - [`dx function logs NAME`](#dx-function-logs-name)
+  - [`dx debug stats`](#dx-debug-stats-1)
+  - [`dx device`](#dx-device-1)
+  - [`dx device list`](#dx-device-list-1)
+  - [`dx function exec NAME`](#dx-function-exec-name-1)
+  - [`dx function list`](#dx-function-list-1)
+  - [`dx function logs NAME`](#dx-function-logs-name-1)
+  - [`dx halo`](#dx-halo)
+  - [`dx halo create DISPLAYNAME`](#dx-halo-create-displayname)
+  - [`dx halo create DISPLAYNAME`](#dx-halo-create-displayname-1)
+  - [`dx halo credential add [CREDENTIAL]`](#dx-halo-credential-add-credential)
+  - [`dx halo credential add [CREDENTIAL]`](#dx-halo-credential-add-credential-1)
+  - [`dx halo credential list`](#dx-halo-credential-list)
+  - [`dx halo join`](#dx-halo-join)
+  - [`dx halo share`](#dx-halo-share)
+  - [`dx help [COMMANDS]`](#dx-help-commands)
+  - [`dx halo credential list`](#dx-halo-credential-list-1)
+  - [`dx halo join`](#dx-halo-join-1)
+  - [`dx halo share`](#dx-halo-share-1)
+  - [`dx help [COMMANDS]`](#dx-help-commands-1)
+  - [`dx kube auth`](#dx-kube-auth)
+  - [`dx kube auth`](#dx-kube-auth-1)
+  - [`dx kube deploy`](#dx-kube-deploy)
+  - [`dx plugins`](#dx-plugins)
+  - [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin)
+  - [`dx plugins:inspect PLUGIN...`](#dx-pluginsinspect-plugin)
+  - [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin-1)
+  - [`dx plugins:link PLUGIN`](#dx-pluginslink-plugin)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-1)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-2)
+  - [`dx plugins update`](#dx-plugins-update)
+  - [`dx reset`](#dx-reset)
+  - [`dx shell`](#dx-shell)
+  - [`dx space`](#dx-space)
+  - [`dx space create [NAME]`](#dx-space-create-name)
+  - [`dx space epoch [KEY]`](#dx-space-epoch-key)
+  - [`dx space invite KEY`](#dx-space-invite-key)
+  - [`dx space epoch [KEY]`](#dx-space-epoch-key-1)
+  - [`dx space invite KEY`](#dx-space-invite-key-1)
+  - [`dx space join`](#dx-space-join)
+  - [`dx space list`](#dx-space-list)
+  - [`dx space members [KEY]`](#dx-space-members-key)
+  - [`dx tunnel list`](#dx-tunnel-list)
+  - [`dx tunnel set`](#dx-tunnel-set)
+
+## `dx agent list`
+
+List agents.
+
+```
+USAGE
+  $ dx agent list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List agents.
+```
+
+## `dx agent restart`
+
+Restart agent daemon.
+
+```
+USAGE
+  $ dx agent restart [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Restart agent daemon.
+```
+
+## `dx agent start`
+
+Start agent daemon.
+
+```
+USAGE
+  $ dx agent start [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [-f] [--socket] [--web-socket <value>] [--http <value>] [--epoch <value>]
+
+FLAGS
+  -f, --foreground      Run in foreground
+  -v, --verbose         Verbose output
+  --config=<value>      [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run             Dry run.
+  --epoch=<value>       Manage epochs (set to "auto" or message count).
+  --http=<value>        Expose HTTP proxy.
+  --no-agent            Auto-start agent.
+  --profile=<value>     [default: default] User profile.
+  --socket              Expose socket.
+  --timeout=<value>     [default: 30] Timeout in seconds.
+  --web-socket=<value>  Expose web socket port.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Start agent daemon.
+```
+
+## `dx agent stop`
+
+Stop agent daemon.
+
+```
+USAGE
+  $ dx agent stop [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Stop agent daemon.
+```
 
 ## `dx agent list`
 
@@ -183,20 +307,29 @@ DESCRIPTION
 ## `dx app create NAME`
 
 Manage applications.
+Manage applications.
 
 ```
 USAGE
   $ dx app create NAME [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--tag <value>] [-t hello|bare|tasks] [-i]
+  $ dx app create NAME [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--tag <value>] [-t hello|bare|tasks] [-i]
 
 ARGUMENTS
+  NAME  App name.
   NAME  App name.
 
 FLAGS
   -i, --interactive        Customize app template options via interactive prompt.
+  -i, --interactive        Customize app template options via interactive prompt.
   -t, --template=<option>  [default: hello] Template to use when creating the project.
                            <options: hello|bare|tasks>
   -v, --verbose            Verbose output
+  --config=<value>         [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run                Dry run.
+  --no-agent               Auto-start agent.
+  --profile=<value>        [default: default] User profile.
   --config=<value>         [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run                Dry run.
   --no-agent               Auto-start agent.
@@ -206,8 +339,13 @@ FLAGS
 
 GLOBAL FLAGS
   --json  Format output as json.
+  --timeout=<value>        [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
 
 DESCRIPTION
+  Manage applications.
   Manage applications.
 ```
 
@@ -218,8 +356,15 @@ List apps.
 ```
 USAGE
   $ dx app list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx app list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -232,6 +377,35 @@ GLOBAL FLAGS
 
 DESCRIPTION
   List apps.
+```
+
+## `dx app open URL`
+
+Opens app with provided url and process device invitation.
+
+```
+USAGE
+  $ dx app open URL [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--instances <value>] [--invite]
+
+ARGUMENTS
+  URL  App URL.
+
+FLAGS
+  -v, --verbose        Verbose output
+  --config=<value>     [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run            Dry run.
+  --instances=<value>  [default: 1] Amount of test instances.
+  --invite             If `true` proceed device invitation for all instances.
+  --no-agent           Auto-start agent.
+  --profile=<value>    [default: default] User profile.
+  --timeout=<value>    [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Opens app with provided url and process device invitation.
 ```
 
 ## `dx app open URL`
@@ -271,12 +445,26 @@ Publish apps.
 USAGE
   $ dx app publish [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--configPath <value>] [--accessToken <value>] [--skipExisting] [--version <value>]
+  $ dx app publish [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--configPath <value>] [--accessToken <value>] [--skipExisting] [--version <value>]
 
 FLAGS
   -v, --verbose          Verbose output
   --accessToken=<value>  Access token for publishing.
+  --config=<value>       [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  -v, --verbose          Verbose output
+  --accessToken=<value>  Access token for publishing.
   --config=<value>       [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --configPath=<value>   Path to dx.yml
+  --dry-run              Dry run.
+  --no-agent             Auto-start agent.
+  --profile=<value>      [default: default] User profile.
+  --skipExisting         Do not update content on KUBE if version already exists.
+  --timeout=<value>      [default: 30] Timeout in seconds.
+  --version=<value>      Version of modules to publish.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   --dry-run              Dry run.
   --no-agent             Auto-start agent.
   --profile=<value>      [default: default] User profile.
@@ -298,8 +486,15 @@ Show config file.
 ```
 USAGE
   $ dx config [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx config [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -312,6 +507,178 @@ GLOBAL FLAGS
 
 DESCRIPTION
   Show config file.
+```
+
+## `dx debug stats`
+
+Output debug stats.
+
+```
+USAGE
+  $ dx debug stats [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--humanize] [--truncate]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --humanize         Humanized keys.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+  --truncate         Truncate keys.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Output debug stats.
+```
+
+## `dx device`
+
+Show device info.
+
+```
+USAGE
+  $ dx device [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Show device info.
+```
+
+## `dx device list`
+
+Show device info.
+
+```
+USAGE
+  $ dx device list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Show device info.
+```
+
+## `dx function dev`
+
+Functions dev server.
+
+```
+USAGE
+  $ dx function dev [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Functions dev server.
+```
+
+## `dx function exec NAME`
+
+Invoke function.
+
+```
+USAGE
+  $ dx function exec NAME [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>]
+
+ARGUMENTS
+  NAME  Function name.
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Invoke function.
+```
+
+## `dx function list`
+
+List functions.
+
+```
+USAGE
+  $ dx function list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List functions.
+```
+
+## `dx function logs NAME`
+
+Get function logs.
+
+```
+USAGE
+  $ dx function logs NAME [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>]
+
+ARGUMENTS
+  NAME  Function name.
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Get function logs.
 ```
 
 ## `dx debug stats`
@@ -470,8 +837,15 @@ Show HALO profile.
 ```
 USAGE
   $ dx halo [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx halo [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -487,6 +861,7 @@ DESCRIPTION
 ```
 
 ## `dx halo create DISPLAYNAME`
+## `dx halo create DISPLAYNAME`
 
 Create HALO.
 
@@ -497,8 +872,19 @@ USAGE
 
 ARGUMENTS
   DISPLAYNAME  Display name
+  $ dx halo create DISPLAYNAME [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
+    [--timeout <value>]
+
+ARGUMENTS
+  DISPLAYNAME  Display name
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -514,7 +900,9 @@ DESCRIPTION
 ```
 
 ## `dx halo credential add [CREDENTIAL]`
+## `dx halo credential add [CREDENTIAL]`
 
+Import credential into HALO.
 Import credential into HALO.
 
 ```
@@ -524,8 +912,19 @@ USAGE
 
 ARGUMENTS
   CREDENTIAL  credential
+  $ dx halo credential add [CREDENTIAL] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
+    [--timeout <value>]
+
+ARGUMENTS
+  CREDENTIAL  credential
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -538,8 +937,85 @@ GLOBAL FLAGS
 
 DESCRIPTION
   Import credential into HALO.
+  Import credential into HALO.
 ```
 
+## `dx halo credential list`
+
+List HALO credentials.
+
+```
+USAGE
+  $ dx halo credential list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--type <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+  --type=<value>     Type
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List HALO credentials.
+```
+
+## `dx halo join`
+
+Join HALO (device) invitation.
+
+```
+USAGE
+  $ dx halo join [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--invitation <value>]
+
+FLAGS
+  -v, --verbose         Verbose output
+  --config=<value>      [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run             Dry run.
+  --invitation=<value>  Invitation code
+  --no-agent            Auto-start agent.
+  --profile=<value>     [default: default] User profile.
+  --timeout=<value>     [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Join HALO (device) invitation.
+```
+
+## `dx halo share`
+
+Create HALO (device) invitation.
+
+```
+USAGE
+  $ dx halo share [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--noCode]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --noCode           Flag that specifies if secret auth code is not required
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Create HALO (device) invitation.
+```
+
+## `dx help [COMMANDS]`
 ## `dx halo credential list`
 
 List HALO credentials.
@@ -622,8 +1098,10 @@ Display help for dx.
 ```
 USAGE
   $ dx help [COMMANDS] [-n]
+  $ dx help [COMMANDS] [-n]
 
 ARGUMENTS
+  COMMANDS  Command to show help for.
   COMMANDS  Command to show help for.
 
 FLAGS
@@ -633,6 +1111,30 @@ DESCRIPTION
   Display help for dx.
 ```
 
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.8/src/commands/help.ts)_
+
+## `dx kube auth`
+
+Authenticate with KUBE.
+
+```
+USAGE
+  $ dx kube auth [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+
+FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Authenticate with KUBE.
+```
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.8/src/commands/help.ts)_
 
 ## `dx kube auth`
@@ -666,17 +1168,28 @@ Deploy KUBE.
 USAGE
   $ dx kube deploy --hostname <value> [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
     [--timeout <value>] [--provider <value>] [--accessToken <value>] [--dev]
+  $ dx kube deploy --hostname <value> [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
+    [--timeout <value>] [--provider <value>] [--accessToken <value>] [--dev]
 
 FLAGS
   -v, --verbose          Verbose output
+  -v, --verbose          Verbose output
   --accessToken=<value>  Access token for seeding admin identity
+  --config=<value>       [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
   --config=<value>       [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dev                  Deploy latest version from dev channel
+  --dry-run              Dry run.
   --dry-run              Dry run.
   --hostname=<value>     (required) Hostname
   --no-agent             Auto-start agent.
   --profile=<value>      [default: default] User profile.
+  --no-agent             Auto-start agent.
+  --profile=<value>      [default: default] User profile.
   --provider=<value>     [default: digitalocean] Cloud Provider
+  --timeout=<value>      [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   --timeout=<value>      [default: 30] Timeout in seconds.
 
 GLOBAL FLAGS
@@ -704,6 +1217,7 @@ EXAMPLES
   $ dx plugins
 ```
 
+_See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v2.4.3/src/commands/plugins/index.ts)_
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v2.4.3/src/commands/plugins/index.ts)_
 
 ## `dx plugins:install PLUGIN...`
@@ -758,6 +1272,9 @@ ARGUMENTS
 FLAGS
   -h, --help     Show CLI help.
   -v, --verbose
+
+GLOBAL FLAGS
+  --json  Format output as json.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -922,13 +1439,26 @@ DESCRIPTION
 ## `dx reset`
 
 Reset user data.
+Reset user data.
 
 ```
 USAGE
   $ dx reset [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--force]
+  $ dx reset [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--force]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --force            Force delete.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -942,6 +1472,7 @@ GLOBAL FLAGS
 
 DESCRIPTION
   Reset user data.
+  Reset user data.
 ```
 
 ## `dx shell`
@@ -951,8 +1482,18 @@ Interactive shell.
 ```
 USAGE
   $ dx shell [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx shell [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -974,8 +1515,18 @@ List spaces.
 ```
 USAGE
   $ dx space [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx space [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -998,8 +1549,16 @@ Create space.
 USAGE
   $ dx space create [NAME] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>]
+  $ dx space create [NAME] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -1014,6 +1573,44 @@ DESCRIPTION
   Create space.
 ```
 
+## `dx space epoch [KEY]`
+
+Create new epoch.
+
+```
+USAGE
+  $ dx space epoch [KEY] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml |  | [--csv |
+    --no-truncate]] [--no-header | ]
+
+ARGUMENTS
+  KEY  Space key head in hex.
+
+FLAGS
+  -v, --verbose      Verbose output
+  -x, --extended     show extra columns
+  --columns=<value>  only show provided columns (comma-separated)
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --csv              output is csv format [alias: --output=csv]
+  --dry-run          Dry run.
+  --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-agent         Auto-start agent.
+  --no-header        hide table header from output
+  --no-truncate      do not truncate output to fit screen
+  --output=<option>  output in a more machine friendly format
+                     <options: csv|json|yaml>
+  --profile=<value>  [default: default] User profile.
+  --sort=<value>     property to sort by (prepend '-' for descending)
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Create new epoch.
+```
+
+## `dx space invite KEY`
 ## `dx space epoch [KEY]`
 
 Create new epoch.
@@ -1059,8 +1656,19 @@ Create space invitation.
 USAGE
   $ dx space invite KEY [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>]
+  $ dx space invite KEY [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
+
+GLOBAL FLAGS
+  --json  Format output as json.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -1083,15 +1691,23 @@ Join space invitation
 USAGE
   $ dx space join [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--invitation <value>] [--secret <value>]
+  $ dx space join [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--invitation <value>] [--secret <value>]
 
 FLAGS
+  -v, --verbose         Verbose output
+  --config=<value>      [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run             Dry run.
   -v, --verbose         Verbose output
   --config=<value>      [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run             Dry run.
   --invitation=<value>  Invitation code
   --no-agent            Auto-start agent.
   --profile=<value>     [default: default] User profile.
+  --no-agent            Auto-start agent.
+  --profile=<value>     [default: default] User profile.
   --secret=<value>      Invitation secret
+  --timeout=<value>     [default: 30] Timeout in seconds.
   --timeout=<value>     [default: 30] Timeout in seconds.
 
 GLOBAL FLAGS
@@ -1110,22 +1726,31 @@ USAGE
   $ dx space list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
     <value>] [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml |  | [--csv |
     --no-truncate]] [--no-header | ]
+  $ dx space list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml |  | [--csv |
+    --no-truncate]] [--no-header | ]
 
 FLAGS
   -v, --verbose      Verbose output
+  -v, --verbose      Verbose output
   -x, --extended     show extra columns
   --columns=<value>  only show provided columns (comma-separated)
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --csv              output is csv format [alias: --output=csv]
   --dry-run          Dry run.
+  --dry-run          Dry run.
   --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-agent         Auto-start agent.
   --no-agent         Auto-start agent.
   --no-header        hide table header from output
   --no-truncate      do not truncate output to fit screen
   --output=<option>  output in a more machine friendly format
                      <options: csv|json|yaml>
   --profile=<value>  [default: default] User profile.
+  --profile=<value>  [default: default] User profile.
   --sort=<value>     property to sort by (prepend '-' for descending)
+  --timeout=<value>  [default: 30] Timeout in seconds.
   --timeout=<value>  [default: 30] Timeout in seconds.
 
 GLOBAL FLAGS
@@ -1147,22 +1772,34 @@ USAGE
 
 ARGUMENTS
   KEY  Space key head in hex.
+  $ dx space members [KEY] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
+    <value>] [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml |  | [--csv |
+    --no-truncate]] [--no-header | ]
+
+ARGUMENTS
+  KEY  Space key head in hex.
 
 FLAGS
   -v, --verbose      Verbose output
+  -v, --verbose      Verbose output
   -x, --extended     show extra columns
   --columns=<value>  only show provided columns (comma-separated)
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --csv              output is csv format [alias: --output=csv]
   --dry-run          Dry run.
+  --dry-run          Dry run.
   --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-agent         Auto-start agent.
   --no-agent         Auto-start agent.
   --no-header        hide table header from output
   --no-truncate      do not truncate output to fit screen
   --output=<option>  output in a more machine friendly format
                      <options: csv|json|yaml>
   --profile=<value>  [default: default] User profile.
+  --profile=<value>  [default: default] User profile.
   --sort=<value>     property to sort by (prepend '-' for descending)
+  --timeout=<value>  [default: 30] Timeout in seconds.
   --timeout=<value>  [default: 30] Timeout in seconds.
 
 GLOBAL FLAGS
@@ -1179,8 +1816,15 @@ List tunnels.
 ```
 USAGE
   $ dx tunnel list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
+  $ dx tunnel list [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
 
 FLAGS
+  -v, --verbose      Verbose output
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
+  --dry-run          Dry run.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   -v, --verbose      Verbose output
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --dry-run          Dry run.
@@ -1203,14 +1847,22 @@ Enable or disable tunnel.
 USAGE
   $ dx tunnel set --app <value> [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
     [--timeout <value>] [--enabled] [--disabled]
+  $ dx tunnel set --app <value> [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent]
+    [--timeout <value>] [--enabled] [--disabled]
 
 FLAGS
   -v, --verbose      Verbose output
+  -v, --verbose      Verbose output
   --app=<value>      (required) Application name
+  --config=<value>   [default: /Users/dmaretskyi/.config/dx/profile/default.yml] Config file.
   --config=<value>   [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
   --disabled         Disable tunnel.
   --dry-run          Dry run.
+  --dry-run          Dry run.
   --enabled          Enable tunnel.
+  --no-agent         Auto-start agent.
+  --profile=<value>  [default: default] User profile.
+  --timeout=<value>  [default: 30] Timeout in seconds.
   --no-agent         Auto-start agent.
   --profile=<value>  [default: default] User profile.
   --timeout=<value>  [default: 30] Timeout in seconds.
