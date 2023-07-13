@@ -212,7 +212,6 @@ const StackMainImpl = ({
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
-      console.log('[drag end]', overIsMember, activeAddableObject);
       const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
       if (activeModelIndex >= 0) {
         dnd.overlayDropAnimation = 'into';
@@ -265,7 +264,6 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
     (start: number, nextSectionObject: GenericStackObject) => {
       const nextSectionModel = getSectionModel(nextSectionObject);
       stack.sections.splice(start, 0, nextSectionModel);
-      console.log('[handle add]', getSectionModels(stack.sections));
       return getSectionModels(stack.sections);
     },
     [stack.sections],
