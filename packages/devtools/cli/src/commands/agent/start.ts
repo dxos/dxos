@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { AgentOptions, Agent } from '@dxos/agent';
-import { scheduleTaskInterval } from '@dxos/async';
+import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
@@ -109,20 +109,18 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private _sendTelemetry() {
-    scheduleTaskInterval(
-      this._ctx,
-      async () => {
-        Telemetry.event({
-          installationId: this._telemetryContext?.installationId,
-          name: 'cli.command.run.agent',
-          properties: {
-            profile: this.flags.profile,
-            ...this._telemetryContext,
-            duration: Date.now() - this._startTime.getTime(),
-          },
-        });
-      },
-      1000 * 60,
-    );
+    const sendTelemetry = async () => {
+      Telemetry.event({
+        installationId: this._telemetryContext?.installationId,
+        name: 'cli.command.run.agent',
+        properties: {
+          profile: this.flags.profile,
+          ...this._telemetryContext,
+          duration: Date.now() - this._startTime.getTime(),
+        },
+      });
+    };
+    runInContext(this._ctx, sendTelemetry);
+    scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
   }
 }
