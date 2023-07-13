@@ -8,8 +8,7 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey } from '@dxos/client';
-import { LocalClientServices } from '@dxos/client-services';
+import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey, LocalClientServices } from '@dxos/client';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -134,7 +133,7 @@ export class Agent {
       log('connector open', { gateway: faasConfig.gateway });
     }
 
-    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as LocalClientServices).host);
+    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as LocalClientServices).host!);
 
     await functionsPlugin.open();
 
