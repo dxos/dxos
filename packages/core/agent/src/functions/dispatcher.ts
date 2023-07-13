@@ -9,7 +9,7 @@ export type FunctionInvocation = {
   /**
    * Domain-specific event.
    */
-  event: string
+  event: any
 }
 
 export type FunctionInvocationResult = {

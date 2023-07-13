@@ -7,6 +7,7 @@ import { Server } from "node:http";
 import { log } from "@dxos/log";
 import { IncomingMessage } from "node:http";
 import { ServerResponse } from "node:http";
+import express from 'express';
 
 const FUNCTIONS_PORT = 7001;
 
@@ -15,7 +16,7 @@ export class FunctionsPlugin {
 
   private _devDispatcher = new DevFunctionDispatcher();
 
-  private _server?: Server;
+  private _server?: ReturnType<typeof express>;
 
   constructor(
     private readonly _config: Config,
@@ -27,9 +28,34 @@ export class FunctionsPlugin {
     this._dispatchers.set('dev', this._devDispatcher);
     this._services.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
-    this._server = createServer((req, res) => {
-      this._handleFunctionRequest(req, res);
-    });
+    this._server = express()
+    this._server.use(express.json());
+
+    this._server.post('/:dispatcher/:functionName', (req, res) => {
+      const dispatcher = req.params.dispatcher;
+      const functionName = req.params.functionName;
+      
+      if (!dispatcher || !functionName || !this._dispatchers.has(dispatcher)) {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+  
+      this._dispatchers.get(dispatcher)!.invoke({
+        function: functionName,
+        event: req.body,
+        runtime: dispatcher,
+      }).then(
+        result => {
+          res.statusCode = result.status;
+          res.end(result.response);
+        },
+        error => {
+          res.statusCode = 500;
+          res.end(error.message);
+        }
+      )
+    })
 
     this._server.listen(FUNCTIONS_PORT, () => {
       log.info(`Functions server listening`, { port: FUNCTIONS_PORT });
@@ -38,32 +64,5 @@ export class FunctionsPlugin {
 
   async close() {
     this._services.serviceRegistry.removeService('FunctionRegistryService');
-    this._server?.close();
-  }
-
-  private _handleFunctionRequest(req: IncomingMessage, res: ServerResponse) {
-    const [dispatcher, functionName] = req.url?.split('/').slice(1) ?? [];
-    log.info(`Function request`, { url: req.url, dispatcher, functionName });
-    
-    if (!dispatcher || !functionName || !this._dispatchers.has(dispatcher)) {
-      res.statusCode = 404;
-      res.end();
-      return;
-    }
-
-    this._dispatchers.get(dispatcher)!.invoke({
-      function: functionName,
-      event: '',
-      runtime: dispatcher,
-    }).then(
-      result => {
-        res.statusCode = result.status;
-        res.end(result.response);
-      },
-      error => {
-        res.statusCode = 500;
-        res.end(error.message);
-      }
-    )
   }
 }

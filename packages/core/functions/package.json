@@ -22,9 +22,13 @@
     "@dxos/client": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "express": "4.17.1",
     "portfinder": "^1.0.32"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17"
   }
 }

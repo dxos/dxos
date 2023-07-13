@@ -36,7 +36,7 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
     
     const result = await fetch(`${registration.request.endpoint}/${invocation.function}`, {
       method: 'POST',
-      body: invocation.event,
+      body: JSON.stringify(invocation.event),
       headers: {
         'Content-Type': 'application/json'
       }

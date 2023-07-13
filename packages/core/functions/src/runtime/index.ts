@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { getPortPromise } from 'portfinder'
 import { createServer } from "node:http";
 import { log } from '@dxos/log';
-import { error } from "node:console";
+import express from 'express';
 
 const FUNCTION_EXTENSIONS = ['.js', '.ts'];
 
@@ -19,8 +19,6 @@ export async function runFunctions(options: FunctionsRuntimeParams) {
   const files = await readdir(options.functionsDirectory);
 
   const functionHandlers: Record<string, FunctionHandler> = {};
-
-  log.info('functions directory', { dir: options.functionsDirectory, files });
 
   for (const file of files) {
     if (!FUNCTION_EXTENSIONS.some(ext => extname(file) === ext)) {
@@ -43,13 +41,12 @@ export async function runFunctions(options: FunctionsRuntimeParams) {
   }
 
   const port = await getPortPromise({ startPort: 7000 });
-  const server = createServer((req, res) => {
-    const functionName = req.url?.slice(1);
-    if (!functionName || !functionHandlers[functionName]) {
-      res.statusCode = 404;
-      res.end();
-      return;
-    }
+
+  const app = express();
+  app.use(express.json());
+
+  app.post('/:functionName', async (req, res) => {
+    const functionName = req.params.functionName;
 
     const replyBuilder: Reply = {
       status: (code: number) => {
@@ -68,15 +65,15 @@ export async function runFunctions(options: FunctionsRuntimeParams) {
 
     void (async () => {
       try {
-        await functionHandlers[functionName]({}, context);
+        await functionHandlers[functionName](req.body, context);
       } catch (err: any) {
         res.statusCode = 500;
         res.end(err.message);
       }
     })()
   });
+  app.listen(port);
   
-  server.listen(port);
   const functionNames = Object.keys(functionHandlers);
   const { registrationId } = await options.client.services.services.FunctionRegistryService!.register({
     endpoint: `http://localhost:${port}`,
