@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
 import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
@@ -99,7 +99,7 @@ export class ForeverDaemon implements Daemon {
           assert(status === SystemStatus.ACTIVE);
           trigger.wake();
         });
-        await trigger.wait();
+        await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
 
         stream.close();
         await services.close();

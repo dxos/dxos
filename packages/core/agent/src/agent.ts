@@ -53,7 +53,8 @@ export class Agent {
     return this;
   }
 
-  async start() {
+  // TODO(mykola): Remove functions flag, and use different ports for different profiles.
+  async start({ functions = false }: { functions?: boolean } = {}) {
     log('starting...');
 
     // TODO(burdon): Check if running.
@@ -105,9 +106,11 @@ export class Agent {
 
     // TODO(dmaretskyi): Memory leak. Close FunctionsPlugin.
     // TODO(mykola): Move to this._plugins.
-    const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host);
+    if (functions) {
+      const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host);
 
-    await functionsPlugin.open();
+      await functionsPlugin.open();
+    }
 
     log('started...');
   }
