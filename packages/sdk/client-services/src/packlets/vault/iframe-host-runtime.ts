@@ -11,7 +11,7 @@ import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-ma
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
-import { LocalClientServices } from '../services';
+import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
 
@@ -40,7 +40,7 @@ export class IFrameHostRuntime {
   private _transportFactory!: TransportFactory;
 
   // TODO(dmaretskyi):  Replace with host and figure out how to return services provider here.
-  private _clientServices!: LocalClientServices;
+  private _clientServices!: ClientServicesHost;
   private _clientRpc!: ClientRpcServer;
   private _shellRuntime?: ShellRuntimeImpl;
 
@@ -74,7 +74,7 @@ export class IFrameHostRuntime {
         iceServers: this._config.get('runtime.services.ice'),
       });
       const signals = this._config.get('runtime.services.signaling');
-      this._clientServices = new LocalClientServices({
+      this._clientServices = new ClientServicesHost({
         lockKey: LOCK_KEY,
         config: this._config,
         signalManager: signals
@@ -103,7 +103,7 @@ export class IFrameHostRuntime {
       };
 
       this._clientRpc = new ClientRpcServer({
-        serviceRegistry: this._clientServices.host.serviceRegistry,
+        serviceRegistry: this._clientServices.serviceRegistry,
         port: this._appPort,
         ...middleware,
       });

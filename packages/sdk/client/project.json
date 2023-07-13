@@ -32,7 +32,8 @@
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "eslintConfig": "packages/sdk/client/eslint-config.json"
       },
       "outputs": [
         "{options.outputFile}"
