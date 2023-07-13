@@ -72,7 +72,7 @@ export class ForeverDaemon implements Daemon {
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'start', '--foreground', `--profile=${profile}`, '--socket'],
+        args: ['agent', 'start', '--foreground', `--profile=${profile}`],
         uid: profile,
         logFile: daemonLogFile, // Forever daemon process.
         outFile, // Child stdout.
@@ -116,7 +116,7 @@ export class ForeverDaemon implements Daemon {
     }
 
     await waitFor({
-      condition: async () => !(await this._getProcess(profile)).profile,
+      condition: async () => !(await this.isRunning(profile)),
     });
 
     removeSocketFile(profile);
