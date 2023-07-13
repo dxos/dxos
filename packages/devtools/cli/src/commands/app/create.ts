@@ -7,7 +7,6 @@ import { promises as fs } from 'fs';
 import os from 'os';
 import { cwd } from 'process';
 
-
 import { BaseCommand } from '../../base-command';
 import { exec } from '../../util/exec';
 
@@ -53,7 +52,6 @@ export default class Create extends BaseCommand<typeof Create> {
     const { default: hello } = await import('@dxos/hello-template');
     const { exists } = await import('@dxos/plate');
     const { default: tasks } = await import('@dxos/tasks-template');
-
 
     const { name } = this.args;
     const { template, interactive, verbose } = this.flags;

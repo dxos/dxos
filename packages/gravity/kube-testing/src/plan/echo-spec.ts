@@ -9,8 +9,7 @@ import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { Client, Config, Invitation, Space, Text } from '@dxos/client';
-import { LocalClientServices } from '@dxos/client';
+import { Client, Config, Invitation, Space, Text, LocalClientServices } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';

@@ -11,9 +11,9 @@ import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-ma
 import { RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
+import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
-import { ClientServicesHost } from '../services';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
