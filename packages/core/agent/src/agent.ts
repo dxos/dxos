@@ -97,29 +97,6 @@ export class Agent {
       this._services.push(service);
     }
 
-    //
-    // HTTP server (accessed via REST API).
-    // TODO(burdon): Insecure.
-    //
-    // case 'http': {
-    //   const { port } = new URL(address);
-    //   plugin = new EchoProxyServer(this._client!, { port: parseInt(port) });
-    //   break;
-    // }
-
-    // Epoch monitor.
-    // if (this._options.monitor) {
-    //   this._plugins.push(new EchoMonitor(this._client!, this._clientServices!, this._options.monitor!));
-    // }
-
-    // OpenFaaS connector.
-    // const faasConfig = this._config.values.runtime?.services?.faasd;
-    // if (faasConfig && socketUrl) {
-    //   const { FaasConnector } = await import('./plugins/faas/connector');
-    //   const connector = new FaasConnector(this._clientServices!, faasConfig, { clientUrl: socketUrl });
-    //   this._plugins.push(connector);
-    // }
-
     // Open plugins.
     for (const plugin of this._plugins) {
       await plugin.initialize(this._client!, this._clientServices!);
@@ -127,7 +104,8 @@ export class Agent {
       log('open', { plugin });
     }
 
-    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as LocalClientServices).host);
+    // TODO(mykola): Move to this._plugins.
+    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as unknown as LocalClientServices).host);
 
     await functionsPlugin.open();
 
@@ -150,7 +128,6 @@ export class Agent {
     await this._clientServices?.close();
     this._client = undefined;
     this._clientServices = undefined;
-    // await functionsPlugin.close();
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
     log('stopped');
