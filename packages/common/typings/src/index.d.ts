@@ -4,6 +4,7 @@
 
 import './dxos';
 import './forever';
+import './growing-file'
 import './hypercore';
 import './hypercore-crypto';
 import './hypercore-protocol';
