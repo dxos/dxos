@@ -67,7 +67,9 @@ export class ForeverDaemon implements Daemon {
       const errFile = path.join(logDir, 'err.log');
 
       // Clear err file.
-      fs.unlinkSync(errFile);
+      if (fs.existsSync(errFile)) {
+        fs.unlinkSync(errFile);
+      }
 
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
