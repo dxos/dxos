@@ -114,7 +114,7 @@ export class Agent {
     // TODO(dmaretskyi): Memory leak. Close FunctionsPlugin.
     // TODO(mykola): Move to this._plugins.
     if (functions) {
-      const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host);
+      const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host!);
 
       await functionsPlugin.open();
     }
