@@ -34,27 +34,27 @@ import { stackSectionChoosers, stackSectionCreators } from '../stores';
 
 type StackSectionProps = {
   onRemove?: () => void;
-  section: StackSectionModel;
+  object: StackSectionModel['object'];
 };
 
 export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
   return (
     <List variant='ordered'>
-      <StackSectionImpl section={data} isOverlay />
+      <StackSectionImpl object={data.object} isOverlay />
     </List>
   );
 };
 
 const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
   (
-    { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay, isPreview },
+    { onRemove = () => {}, object, draggableAttributes, draggableListeners, style, rearranging, isOverlay, isPreview },
     forwardedRef,
   ) => {
     const { t } = useTranslation('dxos:stack');
     return (
       <DensityProvider density='fine'>
         <ListItem.Root
-          id={section.object.id}
+          id={object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
             'bg-white dark:bg-neutral-925 grow rounded mbe-2',
@@ -65,9 +65,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           ref={forwardedRef}
           style={style}
         >
-          <ListItem.Heading classNames='sr-only'>
-            {get(section, 'object.title', t('generic section heading'))}
-          </ListItem.Heading>
+          <ListItem.Heading classNames='sr-only'>{get(object, 'title', t('generic section heading'))}</ListItem.Heading>
           <div
             className={mx(
               buttonFine,
@@ -84,7 +82,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             />
           </div>
           <div role='none' className='flex-1'>
-            <Surface role='section' data={section} />
+            <Surface role='section' data={{ object }} />
           </div>
           <Button
             variant='ghost'
@@ -102,8 +100,8 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: props.section.object.id,
-    data: { section: props.section, dragoverlay: props.section },
+    id: props.object.id,
+    data: { section: { object: props.object }, dragoverlay: { object: props.object } },
   });
   return (
     <StackSectionImpl
@@ -118,6 +116,11 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
     />
   );
 };
+
+const getStackObjects = (sections: StackSections) =>
+  Array.from(sections)
+    .filter((section) => section?.object?.id)
+    .map(({ object }) => object);
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({
@@ -145,7 +148,7 @@ const StackMainImpl = ({
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
 
-  const [displaySections, setDisplaySections] = useState(sections.filter((section) => section?.object?.id));
+  const [stackObjects, setStackObjects] = useState(getStackObjects(sections));
 
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
@@ -190,7 +193,7 @@ const StackMainImpl = ({
           if (activeSectionId !== overSectionId) {
             const activeIndex = sections.findIndex((section) => section.object.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
-            setDisplaySections(sections.filter((section) => section?.object?.id));
+            setStackObjects(getStackObjects(sections));
           }
         } else if (activeAddableObject) {
           dnd.overlayDropAnimation = 'into';
@@ -207,25 +210,18 @@ const StackMainImpl = ({
   return (
     <>
       <List variant='ordered' itemSizes='many' classNames='pli-2'>
-        <SortableContext
-          items={displaySections
-            .map(({ object: { id } }) => id)
-            .concat(activeAddableObject && overIsMember ? [activeAddableObject.id] : [])}
-          strategy={verticalListSortingStrategy}
-        >
-          {displaySections.map((section, start) => {
+        <SortableContext items={stackObjects} strategy={verticalListSortingStrategy}>
+          {stackObjects.map((sectionObject, start) => {
             return (
               <StackSection
-                key={section.object.id}
+                key={sectionObject.id}
                 onRemove={() => handleRemove(start)}
-                section={section}
-                rearranging={overIsMember && activeId === section.object.id}
+                object={sectionObject}
+                rearranging={overIsMember && activeId === sectionObject.id}
               />
             );
           })}
-          {activeAddableObject && overIsMember && (
-            <StackSectionImpl section={{ object: activeAddableObject }} isPreview />
-          )}
+          {activeAddableObject && overIsMember && <StackSectionImpl object={activeAddableObject} isPreview />}
         </SortableContext>
       </List>
     </>
