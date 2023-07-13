@@ -34,38 +34,40 @@ import { stackSectionChoosers, stackSectionCreators } from '../stores';
 
 type StackSectionProps = {
   onRemove?: () => void;
-  object: StackSectionModel['object'];
+  section: StackSectionModel;
 };
 
 export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
   return (
     <List variant='ordered'>
-      <StackSectionImpl object={data.object} isOverlay />
+      <StackSectionImpl section={data} isOverlay />
     </List>
   );
 };
 
 const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
   (
-    { onRemove = () => {}, object, draggableAttributes, draggableListeners, style, rearranging, isOverlay, isPreview },
+    { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay },
     forwardedRef,
   ) => {
     const { t } = useTranslation('dxos:stack');
     return (
       <DensityProvider density='fine'>
         <ListItem.Root
-          id={object.id}
+          id={section.object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
             'bg-white dark:bg-neutral-925 grow rounded mbe-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
-            rearranging ? 'opacity-0' : isPreview ? 'opacity-50' : 'opacity-100',
+            rearranging ? 'opacity-0' : section.isPreview ? 'opacity-50' : 'opacity-100',
           ]}
           ref={forwardedRef}
           style={style}
         >
-          <ListItem.Heading classNames='sr-only'>{get(object, 'title', t('generic section heading'))}</ListItem.Heading>
+          <ListItem.Heading classNames='sr-only'>
+            {get(section, 'object.title', t('generic section heading'))}
+          </ListItem.Heading>
           <div
             className={mx(
               buttonFine,
@@ -82,7 +84,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             />
           </div>
           <div role='none' className='flex-1'>
-            <Surface role='section' data={{ object }} />
+            <Surface role='section' data={section} />
           </div>
           <Button
             variant='ghost'
@@ -100,8 +102,8 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: props.object.id,
-    data: { section: { object: props.object }, dragoverlay: { object: props.object } },
+    id: props.section.id,
+    data: { section: props.section, dragoverlay: props.section },
   });
   return (
     <StackSectionImpl
@@ -117,10 +119,16 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
   );
 };
 
-const getStackObjects = (sections: StackSections) =>
+const getSectionModels = (sections: StackSections): StackSectionModel[] =>
   Array.from(sections)
     .filter((section) => section?.object?.id)
-    .map(({ object }) => object);
+    .map(({ object }) => getSectionModel(object));
+
+const getSectionModel = (object: GenericStackObject, isPreview?: boolean): StackSectionModel => ({
+  id: object.id,
+  object,
+  isPreview: !!isPreview,
+});
 
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({
@@ -128,7 +136,7 @@ const StackMainImpl = ({
   onAdd,
 }: {
   sections: StackSections;
-  onAdd: (start: number, nextSectionObject: GenericStackObject) => void;
+  onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
 }) => {
   const [_, setIter] = useState([]);
   const dnd = useDnd();
@@ -148,7 +156,7 @@ const StackMainImpl = ({
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
 
-  const [stackObjects, setStackObjects] = useState(getStackObjects(sections));
+  const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
 
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
@@ -168,22 +176,44 @@ const StackMainImpl = ({
   useDragOver(
     ({ over }: DragOverEvent) => {
       if (!over) {
-        return setOverIsMember(false);
+        setOverIsMember(false);
+      } else {
+        const overId = get(over, 'data.current.section.object.id', null);
+        const overIndex = sections.findIndex((section) => section?.object?.id === overId);
+        setOverIsMember(overIndex >= 0);
+        if (activeAddableObject) {
+          setSectionModels((sectionModels) => {
+            if (overIndex >= 0) {
+              const persistedObjects = getSectionModels(sections);
+              return [
+                ...persistedObjects.slice(0, overIndex),
+                { id: activeAddableObject.id, object: activeAddableObject, isPreview: true },
+                ...persistedObjects.slice(overIndex, persistedObjects.length),
+              ];
+            } else if (overId !== activeAddableObject.id && sectionModels.length !== sections.length) {
+              return getSectionModels(sections);
+            } else {
+              return sectionModels;
+            }
+          });
+        }
       }
-      return setOverIsMember(sectionIds.has(get(over, 'data.current.section.object.id', null)));
     },
-    [sectionIds],
+    [sections, activeAddableObject],
   );
 
   const handleRemove = useCallback(
     (start: number) => {
       sections.splice(start, 1);
+      setSectionModels(getSectionModels(sections));
     },
     [sections],
   );
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
+      console.log('[drag end]', overIsMember, activeAddableObject);
+      const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
       if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
@@ -193,38 +223,37 @@ const StackMainImpl = ({
           if (activeSectionId !== overSectionId) {
             const activeIndex = sections.findIndex((section) => section.object.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
-            setStackObjects(getStackObjects(sections));
+            setSectionModels(getSectionModels(sections));
           }
-        } else if (activeAddableObject) {
-          dnd.overlayDropAnimation = 'into';
-          onAdd(nextIndex, activeAddableObject);
         }
+      } else if (activeModelIndex >= 0) {
+        dnd.overlayDropAnimation = 'into';
+        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
+      } else {
+        setSectionModels(getSectionModels(sections));
       }
       setActiveId(null);
       setActiveAddableObject(null);
       setOverIsMember(false);
     },
-    [sections, overIsMember],
+    [sections, overIsMember, activeAddableObject, sectionModels],
   );
 
   return (
-    <>
-      <List variant='ordered' itemSizes='many' classNames='pli-2'>
-        <SortableContext items={stackObjects} strategy={verticalListSortingStrategy}>
-          {stackObjects.map((sectionObject, start) => {
-            return (
-              <StackSection
-                key={sectionObject.id}
-                onRemove={() => handleRemove(start)}
-                object={sectionObject}
-                rearranging={overIsMember && activeId === sectionObject.id}
-              />
-            );
-          })}
-          {activeAddableObject && overIsMember && <StackSectionImpl object={activeAddableObject} isPreview />}
-        </SortableContext>
-      </List>
-    </>
+    <List variant='ordered' itemSizes='many' classNames='pli-2'>
+      <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
+        {sectionModels.map((sectionModel, start) => {
+          return (
+            <StackSection
+              key={sectionModel.id}
+              onRemove={() => handleRemove(start)}
+              section={sectionModel}
+              rearranging={overIsMember && activeId === sectionModel.id}
+            />
+          );
+        })}
+      </SortableContext>
+    </List>
   );
 };
 
@@ -234,10 +263,10 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
   const splitView = useSplitView();
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
-      const section: StackSectionModel = {
-        object: nextSectionObject,
-      };
-      stack.sections.splice(start, 0, section);
+      const nextSectionModel = getSectionModel(nextSectionObject);
+      stack.sections.splice(start, 0, nextSectionModel);
+      console.log('[handle add]', getSectionModels(stack.sections));
+      return getSectionModels(stack.sections);
     },
     [stack.sections],
   );
@@ -255,7 +284,7 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
           />
         </Input.Root>
         <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 mbe-2 opacity-50')} />
-        <StackMainImpl sections={stack.sections} onAdd={handleAdd} />
+        <StackMainImpl key={stack.id} sections={stack.sections} onAdd={handleAdd} />
         <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
           <h2 className='text-sm font-normal flex items-center gap-1'>
             <Plus className={getSize(4)} />
@@ -314,7 +343,11 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
                             stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
                           ),
                           onDone: (items: GenericStackObject[]) =>
-                            stack.sections.splice(stack.sections.length, 0, ...items.map((item) => ({ object: item }))),
+                            stack.sections.splice(
+                              stack.sections.length,
+                              0,
+                              ...items.map((item) => getSectionModel(item)),
+                            ),
                         };
                         splitView.dialogOpen = true;
                       }}
