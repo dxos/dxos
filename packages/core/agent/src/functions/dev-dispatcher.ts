@@ -1,5 +1,6 @@
 import { FunctionRegistryService, RegisterRequest, RegisterResponse, UnregisterRequest } from "@dxos/protocols/proto/dxos/functions";
 import { FunctionDispatcher, FunctionInvocation, FunctionInvocationResult } from "./dispatcher";
+import { randomUUID } from 'node:crypto';
 
 type Registration = {
   id: string
@@ -10,7 +11,7 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
   private _registrations: Registration[] = [];
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
-    const registrationId = crypto.randomUUID();
+    const registrationId = randomUUID();
     
     this._registrations.push({
       id: registrationId,

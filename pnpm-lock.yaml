@@ -3543,6 +3543,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/errors': workspace:*
+      '@dxos/functions': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -3585,6 +3586,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../../sdk/errors
+      '@dxos/functions': link:../../core/functions
       '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std

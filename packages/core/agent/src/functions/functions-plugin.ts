@@ -42,6 +42,28 @@ export class FunctionsPlugin {
   }
 
   private _handleFunctionRequest(req: IncomingMessage, res: ServerResponse) {
-    log.info(`Function request`, { url: req.url });
+    const [dispatcher, functionName] = req.url?.split('/').slice(1) ?? [];
+    log.info(`Function request`, { url: req.url, dispatcher, functionName });
+    
+    if (!dispatcher || !functionName || !this._dispatchers.has(dispatcher)) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
+    this._dispatchers.get(dispatcher)!.invoke({
+      function: functionName,
+      event: '',
+      runtime: dispatcher,
+    }).then(
+      result => {
+        res.statusCode = result.status;
+        res.end(result.response);
+      },
+      error => {
+        res.statusCode = 500;
+        res.end(error.message);
+      }
+    )
   }
 }
