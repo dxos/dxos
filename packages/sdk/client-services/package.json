@@ -36,6 +36,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
@@ -49,9 +50,7 @@
     "@dxos/teleport-extension-object-sync": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@types/lockfile": "^1.0.2",
-    "lockfile": "^1.0.4"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
