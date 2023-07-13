@@ -214,7 +214,10 @@ const StackMainImpl = ({
     ({ active, over }: DragEndEvent) => {
       console.log('[drag end]', overIsMember, activeAddableObject);
       const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
-      if (overIsMember) {
+      if (activeModelIndex >= 0) {
+        dnd.overlayDropAnimation = 'into';
+        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
+      } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
         const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
@@ -226,9 +229,6 @@ const StackMainImpl = ({
             setSectionModels(getSectionModels(sections));
           }
         }
-      } else if (activeModelIndex >= 0) {
-        dnd.overlayDropAnimation = 'into';
-        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
       } else {
         setSectionModels(getSectionModels(sections));
       }
