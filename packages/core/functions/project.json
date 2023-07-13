@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/common/lock-file/src",
+  "sourceRoot": "packages/core/functions/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/common/lock-file/src/index.ts",
-        "outputPath": "packages/common/lock-file/dist/types",
-        "tsConfig": "packages/common/lock-file/tsconfig.json"
+        "main": "packages/core/functions/src/index.ts",
+        "outputPath": "packages/core/functions/dist/types",
+        "tsConfig": "packages/core/functions/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,13 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/common/lock-file/src/index.ts"
+          "packages/core/functions/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/common/lock-file/dist/lib",
-        "platforms": [
-          "node"
-        ]
+        "outputPath": "packages/core/functions/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/common/lock-file/**/*.ts"
+          "packages/core/functions/src/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -44,17 +41,22 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
-        "coveragePath": "coverage/packages/common/lock-file",
-        "outputPath": "tmp/mocha/packages/common/lock-file",
-        "resultsPath": "test-results/packages/common/lock-file",
+        "coveragePath": "coverage/packages/core/functions",
+        "envVariables": {
+          "SIGNAL_PORT": 12000
+        },
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/functions",
+        "resultsPath": "test-results/packages/core/functions",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setupOptions": {
+          "port": 12000
+        },
         "testPatterns": [
-          "packages/common/lock-file/src/**/*.test.{ts,js}"
+          "packages/core/functions/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/common/lock-file/src/**/*"
+          "packages/core/functions/src/**/*"
         ]
       },
       "outputs": [
