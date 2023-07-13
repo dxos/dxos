@@ -1,0 +1,32 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.functions;
+
+import "google/protobuf/empty.proto";
+
+message Function {
+  string name = 1;
+}
+
+message RegisterRequest {
+  string endpoint = 1;
+
+  repeated Function functions = 2;
+}
+
+message RegisterResponse {
+  string registration_id = 1;
+}
+
+message UnregisterRequest {
+  string registration_id = 1;
+}
+
+service FunctionRegistryService {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc Unregister(UnregisterRequest) returns (google.protobuf.Empty) {}
+}
