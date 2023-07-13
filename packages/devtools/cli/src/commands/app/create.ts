@@ -7,11 +7,6 @@ import { promises as fs } from 'fs';
 import os from 'os';
 import { cwd } from 'process';
 
-import bare, { isDxosMonorepoSync } from '@dxos/bare-template';
-import hello from '@dxos/hello-template';
-import { exists } from '@dxos/plate';
-import tasks from '@dxos/tasks-template';
-
 import { BaseCommand } from '../../base-command';
 import { exec } from '../../util/exec';
 
@@ -53,6 +48,11 @@ export default class Create extends BaseCommand<typeof Create> {
   };
 
   async run(): Promise<any> {
+    const { default: bare, isDxosMonorepoSync } = await import('@dxos/bare-template');
+    const { default: hello } = await import('@dxos/hello-template');
+    const { exists } = await import('@dxos/plate');
+    const { default: tasks } = await import('@dxos/tasks-template');
+
     const { name } = this.args;
     const { template, interactive, verbose } = this.flags;
 
