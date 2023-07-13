@@ -18,9 +18,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*"
+    "@dxos/client": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "portfinder": "^1.0.32"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

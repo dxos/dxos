@@ -2243,9 +2243,15 @@ importers:
 
   packages/core/functions:
     specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      portfinder: ^1.0.32
     dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
+      portfinder: 1.0.32
 
   packages/core/halo/credentials:
     specifiers:
@@ -2718,6 +2724,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/functions': workspace:*
       '@dxos/hello-template': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2778,6 +2785,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
+      '@dxos/functions': link:../../core/functions
       '@dxos/hello-template': link:../../apps/templates/hello-template
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -19987,7 +19995,6 @@ packages:
     resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
     dependencies:
       lodash: 4.17.21
-    dev: true
 
   /async/3.2.4:
     resolution: {integrity: sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==}
@@ -34483,7 +34490,6 @@ packages:
       mkdirp: 0.5.6
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /posix-character-classes/0.1.1:
     resolution: {integrity: sha512-xTgYBc3fuo7Yt7JbiuFxSYGToMoz8fLoE6TC9Wx1P/u+LfeThMOAqmuyECnlBaaJb+u1m9hHiXUEtwW4OzfUJg==}

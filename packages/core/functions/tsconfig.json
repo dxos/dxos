@@ -13,7 +13,13 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/node-std"
+    },
+    {
+      "path": "../../sdk/client"
     }
   ]
 }

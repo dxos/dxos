@@ -16,6 +16,8 @@ import { Monitor, MonitorOptions } from './monitor';
 import { ProxyServer, ProxyServerOptions } from './proxy';
 import { Service } from './service';
 import { lockFilePath, parseAddress } from './util';
+import { FunctionsPlugin } from './functions';
+import { LocalClientServices } from '@dxos/client-services';
 
 export type AgentOptions = {
   profile: string;
@@ -132,6 +134,10 @@ export class Agent {
       log('connector open', { gateway: faasConfig.gateway });
     }
 
+    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as LocalClientServices).host);
+
+    await functionsPlugin.open();
+
     log('running...');
   }
 
@@ -153,6 +159,8 @@ export class Agent {
     // Close service.
     await this._services?.close();
     this._services = undefined;
+
+    // await functionsPlugin.close();
 
     ((globalThis as any).__DXOS__ ??= {}).host = undefined;
   }
