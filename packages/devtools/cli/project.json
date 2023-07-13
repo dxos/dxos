@@ -55,6 +55,9 @@
         {
           "env": "DX_TELEMETRY_API_KEY"
         },
+        {
+          "env": "DX_DISABLE_TELEMETRY"
+        },
         "^production",
         "default"
       ],
