@@ -44,11 +44,11 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/common/lock-file",
-        "outputPath": "tmp/mocha/packages/common/lock-file",
         "ciEnvironments": [
           "nodejs"
         ],
+        "coveragePath": "coverage/packages/common/lock-file",
+        "outputPath": "tmp/mocha/packages/common/lock-file",
         "resultsPath": "test-results/packages/common/lock-file",
         "testPatterns": [
           "packages/common/lock-file/src/**/*.test.{ts,js}"
