@@ -7,13 +7,14 @@ import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
-import { DAEMON_START_TIMEOUT } from '../timeouts';
+import { DAEMON_START_TIMEOUT } from '../defs';
 import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+
 /**
  * Manager of daemon processes started with Forever.
  */
@@ -66,12 +67,14 @@ export class ForeverDaemon implements Daemon {
       const errFile = path.join(logDir, 'err.log');
 
       // Clear err file.
-      fs.unlinkSync(errFile);
+      if (fs.existsSync(errFile)) {
+        fs.unlinkSync(errFile);
+      }
 
       // Run the `dx agent run` CLI command.
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'start', '--foreground', `--profile=${profile}`, '--socket'],
+        args: ['agent', 'start', '--foreground', `--profile=${profile}`],
         uid: profile,
         logFile: daemonLogFile, // Forever daemon process.
         outFile, // Child stdout.
@@ -90,14 +93,14 @@ export class ForeverDaemon implements Daemon {
         const services = fromAgent({ profile });
         await services.open();
 
-        const stream = services.services.SystemService!.queryStatus();
         const trigger = new Trigger();
-
+        const stream = services.services.SystemService!.queryStatus();
         stream.subscribe(({ status }) => {
           assert(status === SystemStatus.ACTIVE);
           trigger.wake();
         });
-        await trigger.wait();
+        await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
+
         stream.close();
         await services.close();
       }
@@ -105,8 +108,7 @@ export class ForeverDaemon implements Daemon {
     }
 
     const proc = await this._getProcess(profile);
-    log.info('started', { profile: proc.profile, pid: proc.pid });
-
+    log('started', { profile: proc.profile, pid: proc.pid });
     return proc;
   }
 
@@ -116,7 +118,7 @@ export class ForeverDaemon implements Daemon {
     }
 
     await waitFor({
-      condition: async () => !(await this._getProcess(profile)).profile,
+      condition: async () => !(await this.isRunning(profile)),
     });
 
     removeSocketFile(profile);

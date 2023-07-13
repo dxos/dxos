@@ -5,45 +5,43 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { AgentOptions, Agent } from '@dxos/agent';
+import { AgentOptions, Agent, EchoProxyServer, EpochMonitor } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
-import { safeParseInt } from '../../util';
 
 export default class Start extends BaseCommand<typeof Start> {
   private readonly _ctx = new Context();
   static override enableJsonFlag = true;
-  static override description = 'Start agent daemon.';
+  static override description = 'Starts the agent.';
 
   static override flags = {
     ...BaseCommand.flags,
     foreground: Flags.boolean({
       char: 'f',
-      description: 'Run in foreground',
+      description: 'Run in foreground.',
       default: false,
-    }),
-    socket: Flags.boolean({
-      description: 'Expose socket.',
-      default: true,
     }),
     'web-socket': Flags.integer({
       description: 'Expose web socket port.',
+      helpValue: 'port',
       aliases: ['ws'],
     }),
-    http: Flags.integer({
-      description: 'Expose HTTP proxy.',
+    echo: Flags.integer({
+      description: 'Expose ECHO REST API.',
+      helpValue: 'port',
     }),
-    epoch: Flags.string({
-      description: 'Manage epochs (set to "auto" or message count).',
+    monitor: Flags.boolean({
+      description: 'Run epoch monitoring.',
     }),
   };
 
   async run(): Promise<any> {
     if (this.flags.foreground) {
+      // NOTE: Called by the agent's forever daemon.
       await this._runInForeground();
     } else {
       await this._runAsDaemon();
@@ -51,33 +49,25 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
-    const listen = [];
-    if (this.flags.socket) {
-      listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
-    }
-    if (this.flags['web-socket']) {
-      listen.push(`ws://localhost:${this.flags['web-socket']}`);
-    }
-    if (this.flags.http) {
-      listen.push(`http://localhost:${this.flags.http}`);
-    }
-
     const options: AgentOptions = {
       profile: this.flags.profile,
-      listen,
+      socket: `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`,
+      webSocket: this.flags['web-socket'],
     };
 
-    // TODO(burdon): Build monitoring into agent start (not just epoch).
-    if (this.flags.epoch && this.flags.epoch !== '0') {
-      options.monitor = {
-        limit: safeParseInt(this.flags.epoch, undefined),
-      };
+    const agent = new Agent(this.clientConfig, options);
+
+    // ECHO API.
+    if (this.flags['echo-proxy']) {
+      agent.addPlugin(new EchoProxyServer({ port: this.flags['echo-proxy'] }));
     }
 
-    const agent = new Agent(this.clientConfig, options);
-    await agent.start();
+    // Epoch monitoring.
+    if (this.flags.monitor) {
+      agent.addPlugin(new EpochMonitor());
+    }
 
-    // NOTE: This is currently called by the agent's forever daemon.
+    await agent.start();
     this.log('Agent started... (ctrl-c to exit)');
     process.on('SIGINT', async () => {
       void this._ctx.dispose();
@@ -95,12 +85,13 @@ export default class Start extends BaseCommand<typeof Start> {
   private async _runAsDaemon() {
     return await this.execWithDaemon(async (daemon) => {
       if (await daemon.isRunning(this.flags.profile)) {
-        this.log(chalk`{red Warning}: '${this.flags.profile}' is already running (Maybe run 'dx reset')`);
+        this.log(chalk`{red Warning}: '${this.flags.profile}' is already running.`);
         return;
       }
+
       try {
         await daemon.start(this.flags.profile);
-        this.log('Agent started');
+        this.log('Agent started.');
       } catch (err) {
         this.log(chalk`{red Failed to start daemon}: ${err}`);
         await daemon.stop(this.flags.profile);

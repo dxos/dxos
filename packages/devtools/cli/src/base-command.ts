@@ -92,6 +92,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Config file.',
+      helpValue: 'path',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
         return join(DX_CONFIG, `profile/${profile}.yml`);
@@ -295,7 +296,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         if (!running) {
           this.log(`Starting agent (${this.flags.profile})`);
           await daemon.start(this.flags.profile);
-          this.log('Started');
         }
       });
     }
@@ -305,14 +305,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Lazily create the client.
    */
   async getClient() {
-    await this.maybeStartDaemon();
     assert(this._clientConfig);
     if (!this._client) {
-      await this.maybeStartDaemon();
       assert(this._clientConfig);
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
+        await this.maybeStartDaemon();
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
 
