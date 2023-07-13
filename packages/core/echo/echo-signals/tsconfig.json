@@ -1,22 +1,20 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
+    "stripInternal": true,
     "types": [
       "@dxos/test",
-      "@dxos/typings",
-      "node"
+      "@dxos/typings"
     ]
   },
+  "exclude": [],
   "include": [
     "src"
   ],
   "references": [
     {
-      "path": "../async"
-    },
-    {
-      "path": "../keys"
+      "path": "../echo-schema"
     }
   ]
 }

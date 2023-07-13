@@ -5,7 +5,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
+import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions } from '@braneframe/plugin-graph';
@@ -21,8 +21,6 @@ import {
   useTranslation,
 } from '@dxos/aurora';
 import { appTx, defaultDisabled, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
-import { ObservableObject, subscribe } from '@dxos/observable-object';
-import { useSubscription } from '@dxos/observable-object/react';
 
 import { useTreeView } from '../TreeViewContext';
 
@@ -82,14 +80,14 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const wrap = spaceExp.test(label);
 
   // TODO(thure): This replaces `observer` since we need to `forwardRef`.
-  const [_, setIter] = useState([]);
-  if (subscribe in node) {
-    useEffect(() => {
-      return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
-    }, [node]);
-  } else {
-    useSubscription(() => setIter([]), [node]);
-  }
+  // const [_, setIter] = useState([]);
+  // if (subscribe in node) {
+  //   useEffect(() => {
+  //     return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
+  //   }, [node]);
+  // } else {
+  //   useSubscription(() => setIter([]), [node]);
+  // }
 
   return (
     <TreeItem.Root

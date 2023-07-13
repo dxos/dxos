@@ -9,12 +9,11 @@ import React from 'react';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
-import { SpaceProxy } from '@dxos/client';
-import { subscribe } from '@dxos/observable-object';
+import { SpaceProxy, subscribe } from '@dxos/client';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
-import { stackSectionChoosers, stackSectionCreators } from './stores';
+import { stackState } from './stores';
 import translations from './translations';
 import { StackPluginProvides, StackProvides } from './types';
 import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
@@ -28,10 +27,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     ready: async (plugins) => {
       return plugins.forEach((plugin) => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-          stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
+          stackState.creators?.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
         }
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackSectionChoosers.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
+          stackState.choosers?.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
         }
       });
     },
@@ -120,8 +119,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       components: {
         StackMain,
       },
-      stackSectionCreators,
-      stackSectionChoosers,
+      stack: stackState,
     },
   };
 };

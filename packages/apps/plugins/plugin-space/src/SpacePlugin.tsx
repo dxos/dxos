@@ -11,7 +11,7 @@ import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@bra
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
-import { createSubscription } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/echo-schema';
 import {
   IFrameClientServicesHost,
   IFrameClientServicesProxy,

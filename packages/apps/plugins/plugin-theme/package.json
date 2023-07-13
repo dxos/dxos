@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/observable-object": "workspace:*",
+    "deepsignal": "^1.3.3",
     "i18next": "^21.10.0"
   },
   "devDependencies": {

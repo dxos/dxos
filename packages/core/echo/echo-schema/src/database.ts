@@ -8,7 +8,6 @@ import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { logObjectAccess } from '@dxos/observable-object';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
@@ -159,13 +158,6 @@ export class EchoDatabase {
   query(filter?: Filter<any>, options?: QueryOptions): Query;
   query(filter: Filter<any>, options?: QueryOptions): Query {
     return new Query(this._objects, this._updateEvent, filter, options);
-  }
-
-  /**
-   * @internal
-   */
-  _logObjectAccess(obj: EchoObject) {
-    logObjectAccess(obj);
   }
 
   private _update(changed: Item[]) {

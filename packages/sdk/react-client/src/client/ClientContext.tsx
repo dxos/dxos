@@ -2,11 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useState, Context, createContext, useContext, useEffect, FunctionComponent } from 'react';
+import React, {
+  ReactNode,
+  useState,
+  Context,
+  createContext,
+  useContext,
+  useEffect,
+  FunctionComponent,
+  useMemo,
+} from 'react';
 
 import { Client, type ClientServices, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
+import { registerSignalFactory } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
@@ -64,6 +74,11 @@ export interface ClientProviderProps {
   fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
   /**
+   * Set to false to stop default signal factory from being registered.
+   */
+  registerSignalFactory?: boolean;
+
+  /**
    * Post initialization hook to enable to caller to do custom initialization.
    *
    * @param Client
@@ -81,8 +96,13 @@ export const ClientProvider = ({
   services: createServices,
   client: clientProvider,
   fallback: Fallback = () => null,
+  registerSignalFactory: register = true,
   onInitialized,
 }: ClientProviderProps) => {
+  useMemo(() => {
+    register && registerSignalFactory();
+  }, []);
+
   const [client, setClient] = useState(clientProvider instanceof Client ? clientProvider : undefined);
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [error, setError] = useState();

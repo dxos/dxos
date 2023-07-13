@@ -24,9 +24,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/observable-object"
-    },
-    {
       "path": "../../common/react-async"
     },
     {

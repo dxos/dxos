@@ -7,8 +7,8 @@ import assert from 'node:assert';
 import { DeferredTask } from '@dxos/async';
 import { Client, PublicKey, Space } from '@dxos/client';
 import { Context } from '@dxos/context';
+import { createSubscription } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { createSubscription } from '@dxos/observable-object';
 import { ComplexMap } from '@dxos/util';
 
 import { FunctionTrigger } from '../function';

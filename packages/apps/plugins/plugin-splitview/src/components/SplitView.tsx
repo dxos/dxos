@@ -7,12 +7,11 @@ import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
 
-export const SplitView = observer(() => {
+export const SplitView = () => {
   const context = useSplitView();
   const { sidebarOpen, dialogOpen, dialogContent } = context;
   const { t } = useTranslation('os');
@@ -61,4 +60,4 @@ export const SplitView = observer(() => {
       </Dialog.Root>
     </Main.Root>
   );
-});
+};

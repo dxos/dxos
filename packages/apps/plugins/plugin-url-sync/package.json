@@ -14,9 +14,7 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "@dxos/observable-object": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/react-surface": "workspace:*",

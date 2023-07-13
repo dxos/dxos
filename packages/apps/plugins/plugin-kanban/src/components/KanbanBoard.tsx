@@ -14,31 +14,25 @@ import {
   useSensor,
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useState } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { createSubscription } from '@dxos/observable-object';
+import { useSubscription } from '@dxos/react-client';
 import { arrayMove } from '@dxos/util';
 
 import { findLocation } from '../props';
 import type { Location, KanbanModel } from '../props';
 import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
-import { useSubscription } from './util';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const kanban = model.root;
-  useSubscription(kanban.columns);
-
+  // TODO(wittjosiah): Remove?
   const [_, setIter] = useState([]);
-  useEffect(() => {
-    const handle = createSubscription(() => setIter([]));
-    handle.update([kanban.columns]);
-    return () => handle.unsubscribe();
-  }, []);
+  useSubscription(() => setIter([]), kanban.columns);
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {

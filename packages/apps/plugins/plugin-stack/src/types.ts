@@ -3,11 +3,11 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
+import { DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { ObservableArray } from '@dxos/observable-object';
 
 type StackSectionAction = {
   id: string;
@@ -31,8 +31,12 @@ export type StackProvides = {
   };
 };
 
-export type StackPluginProvides = GraphProvides &
-  TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
+export type StackState = DeepSignal<{
+  creators?: StackSectionCreator[];
+  choosers?: StackSectionChooser[];
+}>;
+
+export type StackPluginProvides = GraphProvides & TranslationsProvides & { stack: StackState };
 
 export type StackObject = { id: string };
 
@@ -42,7 +46,7 @@ export type StackSectionModel<T extends StackObject = GenericStackObject> = {
   object: T;
 };
 
-export type StackSections<T extends StackObject = GenericStackObject> = ObservableArray<StackSectionModel<T>>;
+export type StackSections<T extends StackObject = GenericStackObject> = DeepSignal<StackSectionModel<T>[]>;
 
 export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;

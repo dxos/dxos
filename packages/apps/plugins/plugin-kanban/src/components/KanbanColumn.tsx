@@ -6,14 +6,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { useSubscription } from '@dxos/react-client';
 
 import { KanbanItemComponent } from './KanbanItem';
-import { useSubscription } from './util';
 
 export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
 
@@ -59,7 +59,9 @@ export const KanbanColumnComponent: FC<{
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
-  useSubscription([column.items]);
+  // TODO(wittjosiah): Remove?
+  const [_, setIter] = useState([]);
+  useSubscription(() => setIter([]), [column.items]);
   const items = itemMapper?.(column.id!, column.items!) ?? column.items!;
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id! });

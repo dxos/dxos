@@ -4,21 +4,29 @@
 
 import assert from 'node:assert';
 
+import { UnsubscribeCallback } from '@dxos/async';
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
-import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
 
+export const subscribe = Symbol.for('dxos.echo-object.subscribe');
+
+type SignalFactory = () => { notifyRead(): void; notifyWrite(): void };
+let createSignal: SignalFactory | undefined;
+export const registerSignalFactory = (factory: SignalFactory) => {
+  createSignal = factory;
+};
+
 /**
  * Base class for all echo objects.
  * Can carry different models.
  */
-export abstract class EchoObject<T extends Model = any> implements ObservableObject {
+export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
@@ -53,6 +61,8 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
   _modelConstructor: ModelConstructor<T>;
 
   private _callbacks = new Set<(value: any) => void>();
+
+  protected readonly _signal = createSignal?.();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
@@ -104,8 +114,6 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
 
   /**
    * @internal
-   * Called before object is bound to database.
-   * `_database` is guaranteed to be set.
    */
   _itemUpdate(): void {
     for (const callback of this._callbacks) {
@@ -183,4 +191,82 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
 export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
   assert(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
+};
+
+export type Selection = any[];
+
+// TODO(dmaretskyi): Convert to class.
+export interface SubscriptionHandle {
+  update: (selection: any) => SubscriptionHandle;
+  subscribed: boolean;
+  unsubscribe: () => void;
+  selected: Set<any>;
+}
+
+export type UpdateInfo = {
+  // TODO(dmaretskyi): Include metadata about the update.
+  updated: any[];
+  added: any[];
+  removed: any[];
+};
+
+/**
+ * Subscribe to database updates.
+ * Calls the callback when any object from the selection changes.
+ * Calls the callback when the selection changes.
+ * Always calls the callback on the first `selection.update` call.
+ */
+// TODO(burdon): Add filter?
+// TODO(burdon): Immediately trigger callback.
+export const createSubscription = (onUpdate: (info: UpdateInfo) => void): SubscriptionHandle => {
+  let subscribed = true;
+  let firstUpdate = true;
+  const subscriptions = new Map<any, UnsubscribeCallback>();
+
+  const handle = {
+    update: (selection: Selection) => {
+      const newSelected = new Set(selection.filter((item): item is EchoObject => item instanceof EchoObject));
+      const removed = [...handle.selected].filter((item) => !newSelected.has(item));
+      const added = [...newSelected].filter((item) => !handle.selected.has(item));
+      handle.selected = newSelected;
+      if (removed.length > 0 || added.length > 0 || firstUpdate) {
+        firstUpdate = false;
+
+        removed.forEach((obj) => {
+          subscriptions.get(obj)?.();
+          subscriptions.delete(obj);
+        });
+
+        added.forEach((obj) => {
+          subscriptions.set(
+            obj,
+            obj[subscribe](() => {
+              onUpdate({
+                added: [],
+                removed: [],
+                updated: [obj],
+              });
+            }),
+          );
+        });
+
+        onUpdate({
+          added,
+          removed,
+          updated: [],
+        });
+      }
+
+      return handle;
+    },
+    subscribed,
+    selected: new Set<any>(),
+    unsubscribe: () => {
+      Array.from(subscriptions.values()).forEach((unsubscribe) => unsubscribe());
+      subscriptions.clear();
+      subscribed = false;
+    },
+  };
+
+  return handle;
 };

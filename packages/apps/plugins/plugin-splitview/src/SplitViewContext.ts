@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DeepSignal } from 'deepsignal';
 import { Context, createContext, useContext } from 'react';
 
-export type SplitViewContextValue = {
+import { raise } from '@dxos/debug';
+
+export type SplitViewContextValue = DeepSignal<{
   sidebarOpen: boolean;
   dialogContent: any;
   dialogOpen: boolean;
-};
+}>;
 
-export const defaultValues: SplitViewContextValue = {
-  sidebarOpen: true,
-  dialogContent: 'never',
-  dialogOpen: false,
-};
+export const SplitViewContext: Context<SplitViewContextValue | null> = createContext<SplitViewContextValue | null>(
+  null,
+);
 
-export const SplitViewContext: Context<SplitViewContextValue> = createContext(defaultValues);
-
-export const useSplitView = () => useContext(SplitViewContext);
+export const useSplitView = (): SplitViewContextValue =>
+  useContext(SplitViewContext) ?? raise(new Error('SplitViewContext not found'));

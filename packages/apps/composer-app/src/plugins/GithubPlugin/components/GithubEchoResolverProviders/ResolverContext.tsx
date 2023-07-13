@@ -8,7 +8,7 @@ import { Document } from '@braneframe/types';
 import { SpaceState } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-async';
-import { Space, useIdentity, useQuery, useSpaces, Text, observer } from '@dxos/react-client';
+import { Space, useIdentity, useQuery, useSpaces, Text } from '@dxos/react-client';
 
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 import { displayName, matchSpace } from './spaceResolvers';
@@ -32,7 +32,7 @@ export const SpaceResolverContext: Context<SpaceResolverProps> = createContext<S
   setSpace: (_space) => {},
 });
 
-export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{}>) => {
+export const SpaceResolverProvider = ({ children }: PropsWithChildren<{}>) => {
   const identity = useIdentity({ login: true });
   const identityHex = identity?.identityKey.toHex();
   const [source, id] = getLocationIdentifier();
@@ -51,7 +51,7 @@ export const SpaceResolverProvider = observer(({ children }: PropsWithChildren<{
       {children}
     </SpaceResolverContext.Provider>
   );
-});
+};
 
 const defaultDocumentResolverContext: DocumentResolverProps = {
   document: null,

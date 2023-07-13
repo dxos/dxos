@@ -24,9 +24,6 @@
       "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../common/util"
     },
     {
@@ -37,6 +34,9 @@
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"

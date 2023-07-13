@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { Presentation } from '@dxos/kai-types';
-import { observer } from '@dxos/react-client';
 
 import { useFrameContext } from '../../hooks';
 import { DeckContainer } from './DeckContainer';
@@ -25,7 +24,7 @@ enum View {
   SPLIT = 3,
 }
 
-export const PresenterFrame = observer(() => {
+export const PresenterFrame = () => {
   const { space, objectId, fullscreen } = useFrameContext();
   const [view, setView] = useState<View>(View.EDITOR);
   const [slide, setSlide] = useState(1); // TODO(burdon): Reset when goes into full screen.
@@ -66,6 +65,6 @@ export const PresenterFrame = observer(() => {
       )}
     </div>
   );
-});
+};
 
 export default PresenterFrame;

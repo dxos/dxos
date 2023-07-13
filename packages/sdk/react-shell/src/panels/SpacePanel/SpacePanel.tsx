@@ -8,7 +8,7 @@ import React, { cloneElement, useCallback, useReducer } from 'react';
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Invitation, InvitationEncoder, Space } from '@dxos/client';
-import { useSpaceInvitations, observer } from '@dxos/react-client';
+import { useSpaceInvitations } from '@dxos/react-client';
 
 import { InvitationList, PanelSeparator, SpaceMemberListContainer } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';
@@ -23,7 +23,7 @@ export type SpacePanelProps = {
 
 export type SpaceView = 'current space';
 
-const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
+const CurrentSpaceView = ({ space, createInvitationUrl, titleId }: SpacePanelProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
   const name = space?.properties.name;
@@ -72,7 +72,7 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
       </div>
     </div>
   );
-});
+};
 
 interface SpacePanelState {
   activeView: SpaceView;

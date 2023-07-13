@@ -4,6 +4,7 @@
 
 import { Plus, ArticleMedium } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
+import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -13,9 +14,7 @@ import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client';
-import { createStore, subscribe } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
+import { SpaceProxy, subscribe } from '@dxos/client';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
@@ -44,21 +43,24 @@ type MarkdownPluginProvides = GraphProvides &
   };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
   const subscriptions = new Map<string, UnsubscribeCallback>();
 
-  const MarkdownMainStandalone = observer(
-    ({ data: [model, properties] }: { data: [ComposerModel, MarkdownProperties]; role?: string }) => {
-      return (
-        <MarkdownMain
-          model={model}
-          properties={properties}
-          layout='standalone'
-          onChange={(text) => store.onChange.forEach((onChange) => onChange(text))}
-        />
-      );
-    },
-  );
+  const MarkdownMainStandalone = ({
+    data: [model, properties],
+  }: {
+    data: [ComposerModel, MarkdownProperties];
+    role?: string;
+  }) => {
+    return (
+      <MarkdownMain
+        model={model}
+        properties={properties}
+        layout='standalone'
+        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+      />
+    );
+  };
 
   return {
     meta: {
@@ -67,7 +69,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
-          store.onChange.push(plugin.provides.markdown.onChange);
+          state.onChange.push(plugin.provides.markdown.onChange);
         }
       });
     },

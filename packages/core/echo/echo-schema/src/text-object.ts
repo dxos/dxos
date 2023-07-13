@@ -39,7 +39,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   get doc(): Doc | undefined {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model?.doc;
   }
 
@@ -48,7 +48,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   get model(): TextModel | undefined {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model;
   }
 
@@ -56,7 +56,7 @@ export class Text extends EchoObject<TextModel> {
    * Returns the text content of the object.
    */
   get text(): string {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model.textContent;
   }
 

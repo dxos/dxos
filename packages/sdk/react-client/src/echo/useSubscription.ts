@@ -1,10 +1,10 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 import { useEffect, useRef } from 'react';
 
-import { Selection, SubscriptionHandle, createSubscription } from '../access-observer';
+import { Selection, SubscriptionHandle, createSubscription } from '@dxos/echo-schema';
 
 /**
  * Create reactive selection.
