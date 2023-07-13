@@ -15,7 +15,6 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { FunctionsPlugin } from './functions';
 import { Plugin } from './plugins';
-import { Service } from './service';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {
@@ -104,8 +103,9 @@ export class Agent {
       log('open', { plugin });
     }
 
+    // TODO(dmaretskyi): Memory leak. Close FunctionsPlugin.
     // TODO(mykola): Move to this._plugins.
-    const functionsPlugin = new FunctionsPlugin(this._config, (this._services! as unknown as LocalClientServices).host);
+    const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host);
 
     await functionsPlugin.open();
 
