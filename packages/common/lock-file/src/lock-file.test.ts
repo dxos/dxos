@@ -33,13 +33,13 @@ describe('LockFile', () => {
     });
 
     // Wait for process to start
-    await sleep(50);
+    await sleep(200);
     await expect(LockFile.acquire(filename)).to.be.rejected;
 
     processHandle.kill();
 
     // Wait for process to be killed
-    await sleep(50);
+    await sleep(200);
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);
