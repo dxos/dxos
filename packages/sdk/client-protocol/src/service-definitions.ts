@@ -14,9 +14,9 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { FunctionRegistryService } from '@dxos/protocols/proto/dxos/functions';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { FunctionRegistryService } from '@dxos/protocols/src/proto/gen/dxos/functions';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 
 //
@@ -71,7 +71,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-
 });
 
 export type IframeServiceBundle = {

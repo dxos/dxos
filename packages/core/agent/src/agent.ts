@@ -9,15 +9,15 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey } from '@dxos/client';
+import { LocalClientServices } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
+import { FunctionsPlugin } from './functions';
 import { Monitor, MonitorOptions } from './monitor';
 import { ProxyServer, ProxyServerOptions } from './proxy';
 import { Service } from './service';
 import { lockFilePath, parseAddress } from './util';
-import { FunctionsPlugin } from './functions';
-import { LocalClientServices } from '@dxos/client-services';
 
 export type AgentOptions = {
   profile: string;

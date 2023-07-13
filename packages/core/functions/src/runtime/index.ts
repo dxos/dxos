@@ -1,31 +1,36 @@
-import { Client } from "@dxos/client";
-import { readdir } from 'node:fs/promises'
-import { FunctionContext, FunctionHandler, Reply } from "../interface";
-import { extname } from "node:path";
-import { join } from "node:path";
-import { getPortPromise } from 'portfinder'
-import { createServer } from "node:http";
-import { log } from '@dxos/log';
+//
+// Copyright 2023 DXOS.org
+//
+
 import express from 'express';
+import { readdir } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+import { getPortPromise } from 'portfinder';
+
+import { Client } from '@dxos/client';
+import { log } from '@dxos/log';
+
+import { FunctionContext, FunctionHandler, Reply } from '../interface';
 
 const FUNCTION_EXTENSIONS = ['.js', '.ts'];
 
 export type FunctionsRuntimeParams = {
   client: Client;
   functionsDirectory: string;
-}
+};
 
-export async function runFunctions(options: FunctionsRuntimeParams) {
+export const runFunctions = async (options: FunctionsRuntimeParams) => {
   const files = await readdir(options.functionsDirectory);
 
   const functionHandlers: Record<string, FunctionHandler> = {};
 
   for (const file of files) {
-    if (!FUNCTION_EXTENSIONS.some(ext => extname(file) === ext)) {
+    if (!FUNCTION_EXTENSIONS.some((ext) => extname(file) === ext)) {
       continue;
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const module = require(join(options.functionsDirectory, file));
       const handler = module.default;
       if (typeof handler !== 'function') {
@@ -56,8 +61,8 @@ export async function runFunctions(options: FunctionsRuntimeParams) {
       succeed: (result: any) => {
         res.end(JSON.stringify(result));
         return replyBuilder;
-      }
-    }
+      },
+    };
     const context: FunctionContext = {
       client: options.client,
       status: replyBuilder.status.bind(replyBuilder),
@@ -70,20 +75,20 @@ export async function runFunctions(options: FunctionsRuntimeParams) {
         res.statusCode = 500;
         res.end(err.message);
       }
-    })()
+    })();
   });
   app.listen(port);
-  
+
   const functionNames = Object.keys(functionHandlers);
   const { registrationId } = await options.client.services.services.FunctionRegistryService!.register({
     endpoint: `http://localhost:${port}`,
-    functions: functionNames.map(name => ({ name }))
-  })
+    functions: functionNames.map((name) => ({ name })),
+  });
 
   process.on('SIGINT', async () => {
     await options.client.services.services.FunctionRegistryService!.unregister({ registrationId });
     process.exit();
-  })
+  });
 
   log.info('functions runtime started', { port, functionNames, registrationId });
-}
+};

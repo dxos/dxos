@@ -1,6 +1,10 @@
-import { FunctionContext } from '@dxos/functions'
+//
+// Copyright 2023 DXOS.org
+//
 
-export default function chess(event: any, context: FunctionContext) {
-  const identity = context.client.halo.identity.get()
+import { FunctionContext } from '@dxos/functions';
+
+export default (event: any, context: FunctionContext) => {
+  const identity = context.client.halo.identity.get();
   return context.status(200).succeed({ event, greeting: `Hello, ${identity?.profile?.displayName}` });
-}
+};
