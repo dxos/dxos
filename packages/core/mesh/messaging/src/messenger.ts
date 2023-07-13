@@ -214,16 +214,18 @@ export class Messenger {
       .decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
-    if (this._receivedMessages.has(reliablePayload.messageId!)) {
-      return;
-    }
 
-    this._receivedMessages.add(reliablePayload.messageId!);
     await this._sendAcknowledgement({
       author,
       recipient,
       messageId: reliablePayload.messageId,
     });
+
+    if (this._receivedMessages.has(reliablePayload.messageId!)) {
+      return;
+    }
+
+    this._receivedMessages.add(reliablePayload.messageId!);
 
     await this._callListeners({
       author,
