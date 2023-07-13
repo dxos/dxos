@@ -27,10 +27,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     ready: async (plugins) => {
       return plugins.forEach((plugin) => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-          stackState.creators?.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
+          stackState.creators = (plugin as Plugin<StackProvides>).provides.stack.creators;
         }
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackState.choosers?.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
+          stackState.choosers = (plugin as Plugin<StackProvides>).provides.stack.choosers;
         }
       });
     },
