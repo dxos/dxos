@@ -33,20 +33,23 @@ import { GenericStackObject, StackModel, StackProperties, StackSectionModel, Sta
 import { stackSectionChoosers, stackSectionCreators } from '../stores';
 
 type StackSectionProps = {
-  onRemove: () => void;
+  onRemove?: () => void;
   section: StackSectionModel;
 };
 
 export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
   return (
     <List variant='ordered'>
-      <StackSectionImpl onRemove={() => {}} section={data} isOverlay />
+      <StackSectionImpl section={data} isOverlay />
     </List>
   );
 };
 
 const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
-  ({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
+  (
+    { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay, isPreview },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation('dxos:stack');
     return (
       <DensityProvider density='fine'>
@@ -57,7 +60,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             'bg-white dark:bg-neutral-925 grow rounded mbe-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
-            rearranging && 'opacity-0',
+            rearranging ? 'opacity-0' : isPreview ? 'opacity-50' : 'opacity-100',
           ]}
           ref={forwardedRef}
           style={style}
@@ -204,28 +207,32 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
     [sections, overIsMember],
   );
 
+  const visibleSections = useMemo(() => {
+    return Array.from(sections).filter((section) => !!section?.object?.id);
+  }, [sections]);
+
   return (
     <>
       <List variant='ordered' itemSizes='many' classNames='pli-2'>
         <SortableContext
-          items={Array.from(sections)
-            // todo(thure): DRY-out this filter, also should this be represented in the UI?
-            .filter((section) => !!section?.object?.id)
-            .map(({ object: { id } }) => id)}
+          items={visibleSections
+            .map(({ object: { id } }) => id)
+            .concat(activeAddableObject && overIsMember ? [activeAddableObject.id] : [])}
           strategy={verticalListSortingStrategy}
         >
-          {sections
-            .filter((section) => !!section?.object?.id)
-            .map((section, start) => {
-              return (
-                <StackSection
-                  key={section.object.id}
-                  onRemove={() => handleRemove(start)}
-                  section={section}
-                  rearranging={overIsMember && activeId === section.object.id}
-                />
-              );
-            })}
+          {visibleSections.map((section, start) => {
+            return (
+              <StackSection
+                key={section.object.id}
+                onRemove={() => handleRemove(start)}
+                section={section}
+                rearranging={overIsMember && activeId === section.object.id}
+              />
+            );
+          })}
+          {activeAddableObject && overIsMember && (
+            <StackSectionImpl section={{ object: activeAddableObject }} isPreview />
+          )}
         </SortableContext>
       </List>
       <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
