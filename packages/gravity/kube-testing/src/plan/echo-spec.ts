@@ -10,7 +10,7 @@ import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config, Invitation, Space, Text } from '@dxos/client';
-import { LocalClientServices } from '@dxos/client-services';
+import { LocalClientServices } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';

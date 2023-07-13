@@ -9,7 +9,6 @@ import path from 'node:path';
 
 import { Trigger, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
-import { isLocked } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';
@@ -30,6 +29,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async isRunning(profile: string): Promise<boolean> {
+    const { isLocked } = await import('@dxos/client-services');
     return (
       isLocked(lockFilePath(profile)) ||
       (await this.list()).some((process) => process.profile === profile && process.running)
