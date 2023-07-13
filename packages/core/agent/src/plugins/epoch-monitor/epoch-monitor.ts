@@ -4,13 +4,13 @@
 
 import assert from 'node:assert';
 
-import { Client, ClientServicesProvider, PublicKey } from '@dxos/client';
+import { PublicKey } from '@dxos/client';
 import { checkCredentialType, SpecificCredential } from '@dxos/credentials';
 import { log } from '@dxos/log';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { Plugin } from '../plugin';
+import { AbstractPlugin } from '../plugin';
 
 type SpaceState = {
   spaceKey: PublicKey;
@@ -21,7 +21,7 @@ type SpaceState = {
 
 const DEFAULT_EPOCH_LIMIT = 10_000;
 
-export type MonitorOptions = {
+export type EpochMonitorOptions = {
   limit?: number;
 };
 
@@ -30,17 +30,13 @@ export type MonitorOptions = {
  * - Triggers new epochs.
  * - Updates address book.
  */
-export class Monitor implements Plugin {
+export class EpochMonitor extends AbstractPlugin {
   private _subscriptions: ZenObservable.Subscription[] = [];
   private _spaceStates = new ComplexMap<PublicKey, SpaceState>(PublicKey.hash);
 
-  // prettier-ignore
-  constructor(
-    // TODO(burdon): Remove Client dependency (client services only).
-    private readonly _client: Client,
-    private readonly _services: ClientServicesProvider,
-    private readonly _options: MonitorOptions
-  ) {}
+  constructor(private readonly _options: EpochMonitorOptions = {}) {
+    super();
+  }
 
   /**
    * Monitor all epochs for which the agent is the leader.
@@ -96,7 +92,7 @@ export class Monitor implements Plugin {
                       if (triggerEpoch) {
                         log('trigger epoch', { space: space.key });
                         state.epochTriggered = totalMessages;
-                        await this._services!.services.SpacesService!.createEpoch({ spaceKey: space.key });
+                        await this._clientServices!.services.SpacesService!.createEpoch({ spaceKey: space.key });
                       }
                     }
                   }),

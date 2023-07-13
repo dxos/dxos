@@ -32,7 +32,5 @@ export default class Exec extends BaseCommand<typeof Exec> {
     const res = await client.dispatch({
       trigger: { id: PublicKey.random().toHex(), function: { name: this.args.name } },
     });
-
-    console.log(':::', res);
   }
 }

@@ -122,7 +122,7 @@ dx reset --force --no-agent
 dx halo create Tester --no-agent
 dx halo --no-agent
 
-dx agent run --socket --web-socket=4567 --http=3000
+dx agent start --ws=5000 --echo=5001 --monitor
 ```
 
 ## Testing
