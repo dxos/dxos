@@ -54,18 +54,6 @@ module.exports = {
       extends: [
         'plugin:@dxos/test'
       ]
-    },
-    {
-      files: '**/*.{ts,tsx}',
-      rules: {
-        "@typescript-eslint/no-restricted-imports": ["error", {
-          "paths": [{
-            "name": "@dxos/client-services",
-            "message": "Importing whole client-services package can be slow. Please mark the import as type-only or use a dynamic import where needed.",
-            "allowTypeImports": true
-          }]
-        }]
-      }
     }
   ]
 };

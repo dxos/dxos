@@ -6,7 +6,8 @@ import assert from 'node:assert';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
-import { ClientServicesHost, LocalClientServices } from '@dxos/client-services';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
@@ -20,6 +21,7 @@ import { Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
+import { LocalClientServices } from '../client/local-client-services';
 import { ClientServicesProxy } from '../proxies';
 
 export const testConfigWithLocalSignal = new Config({
