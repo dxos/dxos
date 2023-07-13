@@ -33,6 +33,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/labs-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-client/package.json",
           "jsonpath": "$.version"
         },
@@ -179,6 +184,11 @@
         {
           "type": "json",
           "path": "packages/common/keys/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/lock-file/package.json",
           "jsonpath": "$.version"
         },
         {

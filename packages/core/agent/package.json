@@ -41,6 +41,7 @@
     "@dxos/websocket-rpc": "workspace:*",
     "express": "4.17.1",
     "forever": "^4.0.3",
+    "growing-file": "^0.1.3",
     "isomorphic-ws": "^4.0.1",
     "ws": "^7.4.4"
   },

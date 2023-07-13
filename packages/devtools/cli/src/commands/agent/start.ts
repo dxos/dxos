@@ -39,53 +39,65 @@ export default class Start extends BaseCommand<typeof Start> {
   };
 
   async run(): Promise<any> {
-    const { flags } = await this.parse(Start);
-
-    if (flags.foreground) {
-      const listen = [];
-      if (this.flags.socket) {
-        listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
-      }
-      if (this.flags['web-socket']) {
-        listen.push(`ws://localhost:${this.flags['web-socket']}`);
-      }
-      if (this.flags.http) {
-        listen.push(`http://localhost:${this.flags.http}`);
-      }
-
-      const options: AgentOptions = {
-        profile: this.flags.profile,
-        listen,
-      };
-
-      // TODO(burdon): Build monitoring into agent start (not just epoch).
-      if (this.flags.epoch && this.flags.epoch !== '0') {
-        options.monitor = {
-          limit: safeParseInt(this.flags.epoch, undefined),
-        };
-      }
-
-      const agent = new Agent(this.clientConfig, options);
-      await agent.start();
-
-      // NOTE: This is currently called by the agent's forever daemon.
-      this.log('Agent started... (ctrl-c to exit)');
-      process.on('SIGINT', async () => {
-        await agent.stop();
-        process.exit(0);
-      });
-
-      if (this.flags['web-socket']) {
-        this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
-      }
+    if (this.flags.foreground) {
+      await this._runInForeground();
     } else {
-      return await this.execWithDaemon(async (daemon) => {
-        if (await daemon.isRunning(flags.profile)) {
-          this.log(chalk`{red Warning}: ${flags.profile} is already running (Maybe run 'dx reset')`);
-        }
+      await this._runAsDaemon();
+    }
+  }
+
+  private async _runInForeground() {
+    const listen = [];
+    if (this.flags.socket) {
+      listen.push(`unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`);
+    }
+    if (this.flags['web-socket']) {
+      listen.push(`ws://localhost:${this.flags['web-socket']}`);
+    }
+    if (this.flags.http) {
+      listen.push(`http://localhost:${this.flags.http}`);
+    }
+
+    const options: AgentOptions = {
+      profile: this.flags.profile,
+      listen,
+    };
+
+    // TODO(burdon): Build monitoring into agent start (not just epoch).
+    if (this.flags.epoch && this.flags.epoch !== '0') {
+      options.monitor = {
+        limit: safeParseInt(this.flags.epoch, undefined),
+      };
+    }
+
+    const agent = new Agent(this.clientConfig, options);
+    await agent.start();
+
+    // NOTE: This is currently called by the agent's forever daemon.
+    this.log('Agent started... (ctrl-c to exit)');
+    process.on('SIGINT', async () => {
+      await agent.stop();
+      process.exit(0);
+    });
+
+    if (this.flags['web-socket']) {
+      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
+    }
+  }
+
+  private async _runAsDaemon() {
+    return await this.execWithDaemon(async (daemon) => {
+      if (await daemon.isRunning(this.flags.profile)) {
+        this.log(chalk`{red Warning}: '${this.flags.profile}' is already running (Maybe run 'dx reset')`);
+        return;
+      }
+      try {
         await daemon.start(this.flags.profile);
         this.log('Agent started');
-      });
-    }
+      } catch (err) {
+        this.log(chalk`{red Failed to start daemon}: ${err}`);
+        await daemon.stop(this.flags.profile);
+      }
+    });
   }
 }

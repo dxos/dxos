@@ -1,8 +1,12 @@
 #!/bin/bash
 
+# Configure endpoints here:
+# https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/dxos.org/dns/records
+
 APPS=(
   ./packages/apps/composer-app
   ./packages/apps/halo-app
+  ./packages/apps/labs-app
   ./packages/apps/tasks-app
   ./packages/apps/todomvc
   ./packages/devtools/devtools

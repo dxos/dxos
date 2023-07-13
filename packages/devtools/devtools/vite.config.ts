@@ -11,8 +11,6 @@ import { VitePluginFonts } from 'vite-plugin-fonts';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
-import { osThemeExtension } from '@dxos/react-shell/theme-extensions';
-
 
 const PACKAGE_VERSION = require('./package.json').version;
 
@@ -43,10 +41,10 @@ export default defineConfig({
   plugins: [
     {
       name: 'package-version',
-      config: () => ({ 
+      config: () => ({
         define: {
           'process.env.PACKAGE_VERSION': `'${PACKAGE_VERSION}'`,
-        } 
+        }
       })
     },
     ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
@@ -57,6 +55,8 @@ export default defineConfig({
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/chess-app/dist/**/*.mjs'),
       ],
+      // TODO(burdon): Adjust font size.
+      extensions: []
     }),
     ReactPlugin(),
     VitePWA({
@@ -103,7 +103,6 @@ export default defineConfig({
           'Montserrat'
         ],
       },
-
       custom: {
         preload: false,
         injectTo: 'head-prepend',
