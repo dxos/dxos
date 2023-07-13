@@ -299,14 +299,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Lazily create the client.
    */
   async getClient() {
-    await this.maybeStartDaemon();
     assert(this._clientConfig);
     if (!this._client) {
-      await this.maybeStartDaemon();
       assert(this._clientConfig);
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
+        await this.maybeStartDaemon();
         this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
       }
 
