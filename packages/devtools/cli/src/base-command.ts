@@ -32,6 +32,7 @@ import {
   SupervisorRpcPeer,
   TelemetryContext,
   TunnelRpcPeer,
+  showTelemetryBanner,
 } from './util';
 
 // TODO(wittjosiah): Factor out.
@@ -164,6 +165,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (group === 'dxos') {
       log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
     }
+
+    await showTelemetryBanner(DX_DATA);
 
     if (SENTRY_DESTINATION && mode !== 'disabled') {
       Sentry.init({
