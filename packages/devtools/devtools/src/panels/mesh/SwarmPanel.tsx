@@ -10,6 +10,7 @@ import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
+import { PanelContainer } from '../../components';
 import { ConnectionInfoView } from '../../components/ConnectionInfoView';
 import { TreeItemText } from '../../components/TreeItemText';
 
@@ -24,10 +25,10 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
       Icon:
         {
           CONNECTED: LinkSimple,
-          CLOSED: LinkBreak
+          CLOSED: LinkBreak,
         }[connection.state] ?? LinkSimpleBreak,
-      value: connection
-    }))
+      value: connection,
+    })),
   }));
 
 const SwarmPanel = () => {
@@ -36,14 +37,14 @@ const SwarmPanel = () => {
   const [selectedItem, setSelectedItem] = useState<ConnectionInfo | undefined>();
 
   return (
-    <div className='flex h-full overflow-hidden'>
-      <div className='flex flex-col w-1/3 overflow-auto border-r'>
+    <PanelContainer className='flex-row'>
+      <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
         <TreeView
           items={getSwarmInfoTree(data ?? [])}
           slots={{
             value: {
-              className: 'overflow-hidden text-gray-400 truncate pl-2'
-            }
+              className: 'overflow-hidden text-gray-400 truncate pl-2',
+            },
           }}
           onSelect={(item: any) => setSelectedItem(item.value)}
           selected={selectedItem?.sessionId.toHex()}
@@ -54,7 +55,7 @@ const SwarmPanel = () => {
           <ConnectionInfoView connectionInfo={selectedItem} />
         </div>
       )}
-    </div>
+    </PanelContainer>
   );
 };
 

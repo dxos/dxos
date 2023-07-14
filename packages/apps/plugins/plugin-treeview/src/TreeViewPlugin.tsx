@@ -11,6 +11,7 @@ import { PluginDefinition, Surface } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
+import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import { TreeViewContextValue, TreeViewProvides } from './types';
 import { resolveNodes } from './util';
 
@@ -60,6 +61,18 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
           }
         }),
         TreeView: TreeViewContainer,
+      },
+      component: (datum, role) => {
+        switch (role) {
+          case 'dragoverlay':
+            if (!!datum && typeof datum === 'object' && 'id' in datum && 'label' in datum && 'index' in datum) {
+              return TreeItemDragOverlay;
+            } else {
+              return null;
+            }
+          default:
+            return null;
+        }
       },
     },
   };

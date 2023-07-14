@@ -21,9 +21,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/feed-store"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -40,15 +37,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/document-model"
-    },
-    {
-      "path": "../../core/echo/messenger-model"
-    },
-    {
-      "path": "../../core/echo/model-factory"
     },
     {
       "path": "../../core/echo/text-model"
@@ -75,13 +63,7 @@
       "path": "../../experimental/mosaic"
     },
     {
-      "path": "../../experimental/plexus"
-    },
-    {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -94,9 +76,6 @@
     },
     {
       "path": "../../ui/aurora"
-    },
-    {
-      "path": "../../ui/aurora-composer"
     },
     {
       "path": "../../ui/aurora-theme"

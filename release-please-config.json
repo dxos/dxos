@@ -33,12 +33,22 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/labs-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-client/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-dnd/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-drawing/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -178,6 +188,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/lock-file/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/log/package.json",
           "jsonpath": "$.version"
         },
@@ -279,6 +294,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/text-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/functions/package.json",
           "jsonpath": "$.version"
         },
         {

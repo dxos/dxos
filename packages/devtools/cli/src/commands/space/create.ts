@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { faker } from '@faker-js/faker';
 import { Args } from '@oclif/core';
 
 import { Client } from '@dxos/client';
@@ -15,6 +14,8 @@ export default class Create extends BaseCommand<typeof Create> {
   static override args = { name: Args.string() };
 
   async run(): Promise<any> {
+    const { faker } = await import('@faker-js/faker');
+
     let { name } = this.args;
     if (!name) {
       // TODO(burdon): Move to v7: https://v6.fakerjs.dev/migration-guide-v5

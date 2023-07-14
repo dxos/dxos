@@ -2,17 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
+import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, getSize } from '@dxos/aurora-theme';
-import { observer } from '@dxos/observable-object/react';
+import { defaultDisabled, defaultFocus, getSize } from '@dxos/aurora-theme';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
+import { useSubscription } from '@dxos/observable-object/react';
 
 import { TreeView } from './TreeView';
 
-export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
+type SortableBranchTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+
+export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
+  node,
+  rearranging,
+}: SortableBranchTreeItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: `treeitem:${node.id}`,
+    data: { dragoverlay: node, treeitem: node },
+  });
+  return (
+    <BranchTreeItem
+      node={node}
+      draggableAttributes={attributes}
+      draggableListeners={listeners}
+      rearranging={rearranging}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      ref={setNodeRef}
+    />
+  );
+};
+
+type BranchTreeItemProps = { node: GraphNode } & SortableProps;
+
+export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
+  HTMLLIElement,
+  BranchTreeItemProps
+>(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
+  // todo(thure): Handle `sortable`
+
   const [primaryAction, ...actions] = node.actions ?? [];
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
@@ -25,11 +58,21 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const [open, setOpen] = useState(true /* todo(thure): Open if document within is selected */);
+  const [open, setOpen] = useState(true /* todo(thure): Open if node within is active */);
 
   useEffect(() => {
-    // todo(thure): Open if child within is selected
+    // todo(thure): Open if child within becomes active
   }, []);
+
+  // TODO(thure): This replaces `observer` since we need to `forwardRef`.
+  const [_, setIter] = useState([]);
+  if (subscribe in node) {
+    useEffect(() => {
+      return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
+    }, [node]);
+  } else {
+    useSubscription(() => setIter([]), [node]);
+  }
 
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
@@ -38,34 +81,37 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames='mbe-1'
+      classNames={['mbe-1 rounded', defaultFocus, rearranging && 'invisible']}
+      {...draggableAttributes}
+      {...draggableListeners}
+      style={style}
+      ref={forwardedRef}
     >
       <div role='none' className='flex mis-1 items-start'>
         <TreeItem.OpenTrigger
           disabled={disabled}
-          classNames={[disabled && defaultDisabled]}
+          classNames={['grow flex', disabled && defaultDisabled]}
           {...(disabled && { 'aria-disabled': true })}
           {...(!sidebarOpen && { tabIndex: -1 })}
         >
           <OpenTriggerIcon
             {...(hasActiveDocument && !open
-              ? { weight: 'fill', className: 'text-primary-500 dark:text-primary-300' }
+              ? { weight: 'fill', className: 'shrink-0 text-primary-500 dark:text-primary-300' }
               : {})}
           />
+          <TreeItem.Heading
+            data-testid='spacePlugin.spaceTreeItemHeading'
+            classNames={[
+              'grow text-start break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+              error && 'text-error-700 dark:text-error-300',
+              !disabled && 'cursor-pointer',
+              disabled && defaultDisabled,
+            ]}
+            {...(disabled && { 'aria-disabled': true })}
+          >
+            {Array.isArray(node.label) ? t(...node.label) : node.label}
+          </TreeItem.Heading>
         </TreeItem.OpenTrigger>
-        <TreeItem.Heading
-          data-testid='spacePlugin.spaceTreeItemHeading'
-          classNames={[
-            'grow break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
-            error && 'text-error-700 dark:text-error-300',
-            !disabled && 'cursor-pointer',
-            disabled && defaultDisabled,
-          ]}
-          {...(disabled && { 'aria-disabled': true })}
-          onClick={() => setOpen(!open)}
-        >
-          {Array.isArray(node.label) ? t(...node.label) : node.label}
-        </TreeItem.Heading>
         {actions.length > 0 && (
           <Tooltip.Root
             open={optionsTooltipOpen}
@@ -112,6 +158,7 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
                     <DropdownMenu.Item
                       key={action.id}
                       onClick={(event) => {
+                        event.stopPropagation();
                         // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
@@ -141,7 +188,15 @@ export const BranchTreeItem = observer(({ node }: { node: GraphNode }) => {
               <Button
                 variant='ghost'
                 classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                onClick={(event) => primaryAction.invoke(t, event)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.stopPropagation();
+                    void primaryAction.invoke(t, event);
+                  }
+                }}
+                onClick={(event) => {
+                  void primaryAction.invoke(t, event);
+                }}
                 {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
                 {...(!sidebarOpen && { tabIndex: -1 })}
               >

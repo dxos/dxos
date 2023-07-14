@@ -11,7 +11,7 @@ import { PublicKeySelector } from './PublicKeySelector';
 
 export default {
   component: PublicKeySelector,
-  actions: { argTypesRegex: '^on.*' }
+  actions: { argTypesRegex: '^on.*' },
 };
 
 export const Normal = (props: any) => {

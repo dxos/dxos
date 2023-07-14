@@ -20,8 +20,7 @@ faker.seed(7);
 // TODO(burdon): Factor out.
 const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRenderer, any> => {
   return (Story) => (
-    // TODO(burdon): Fixed vs absolute?
-    <div className={mx('absolute flex inset-0 overflow-hidden', className)}>
+    <div className={mx('flex fixed inset-0 overflow-hidden', className)}>
       <Story />
     </div>
   );

@@ -19,17 +19,20 @@ export interface ConnectionInfoViewProps {
 
 // TODO(burdon): Convert to table.
 export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
-  <DetailsTable expand object={{
-    state: connectionInfo.state,
-    sessionId: connectionInfo.sessionId.toHex(),
-    remotePeerId: connectionInfo.remotePeerId.toHex(),
-    transport: connectionInfo.transport,
-    protocolExtensions: connectionInfo.protocolExtensions?.join(','),
-    events: <JsonView
-      data={{
-        events: connectionInfo.events
-      }}
-    />
-  }}
+  <DetailsTable
+    object={{
+      state: connectionInfo.state,
+      sessionId: connectionInfo.sessionId.toHex(),
+      remotePeerId: connectionInfo.remotePeerId.toHex(),
+      transport: connectionInfo.transport,
+      protocolExtensions: connectionInfo.protocolExtensions?.join(','),
+      events: (
+        <JsonView
+          data={{
+            events: connectionInfo.events,
+          }}
+        />
+      ),
+    }}
   />
 );

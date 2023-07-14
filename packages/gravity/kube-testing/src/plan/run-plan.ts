@@ -194,7 +194,12 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
 const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) => {
   try {
-    log.addProcessor(createFileProcessor({ path: join(params.outDir, AGENT_LOG_FILE), level: LogLevel.TRACE }));
+    log.addProcessor(
+      createFileProcessor({
+        path: join(params.outDir, AGENT_LOG_FILE),
+        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+      }),
+    );
 
     const env = new AgentEnv<S, C>(params);
     await env.open();

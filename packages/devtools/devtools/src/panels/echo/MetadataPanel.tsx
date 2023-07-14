@@ -4,13 +4,17 @@
 
 import React from 'react';
 
-import { JsonView } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 import { useMetadata } from '../../hooks';
 
 const MetadataPanel = () => {
   const metadata = useMetadata();
 
-  return <JsonView data={metadata} />;
+  return (
+    <PanelContainer>
+      <JsonView data={metadata} />
+    </PanelContainer>
+  );
 };
 
 export default MetadataPanel;
