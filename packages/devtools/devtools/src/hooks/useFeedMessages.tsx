@@ -19,7 +19,7 @@ export const useFeedMessages = ({ feedKey, maxBlocks = 100 }: { feedKey?: Public
   const { blocks } = useStream(
     () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: space?.key, feedKey, maxBlocks }),
     {},
-    [space, feedKey]
+    [space, feedKey],
   );
 
   useEffect(() => {

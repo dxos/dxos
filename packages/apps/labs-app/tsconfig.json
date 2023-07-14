@@ -1,0 +1,111 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/observable-object"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-shell"
+    },
+    {
+      "path": "../../sdk/react-surface"
+    },
+    {
+      "path": "../../sdk/vault"
+    },
+    {
+      "path": "../../ui/aurora"
+    },
+    {
+      "path": "../../ui/aurora-composer"
+    },
+    {
+      "path": "../../ui/aurora-theme"
+    },
+    {
+      "path": "../../ui/react-appkit"
+    },
+    {
+      "path": "../plugins/plugin-client"
+    },
+    {
+      "path": "../plugins/plugin-drawing"
+    },
+    {
+      "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-kanban"
+    },
+    {
+      "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-space"
+    },
+    {
+      "path": "../plugins/plugin-splitview"
+    },
+    {
+      "path": "../plugins/plugin-stack"
+    },
+    {
+      "path": "../plugins/plugin-theme"
+    },
+    {
+      "path": "../plugins/plugin-treeview"
+    },
+    {
+      "path": "../plugins/plugin-url-sync"
+    },
+    {
+      "path": "../types"
+    }
+  ]
+}

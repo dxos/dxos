@@ -11,10 +11,10 @@ import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexSet, humanize, range } from '@dxos/util';
+import { ComplexSet, range } from '@dxos/util';
 
-import { DetailsTable } from '../../components';
-import { SpaceToolbar } from '../../containers';
+import { DetailsTable, PanelContainer, Toolbar } from '../../components';
+import { SpaceSelector } from '../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../hooks';
 
 // TODO(burdon): Show master/detail table with currently selected.
@@ -36,13 +36,12 @@ const SpacesPanel = () => {
     const currentEpochNumber = pipeline?.currentEpoch?.subject.assertion.number;
     const appliedEpochNumber = pipeline?.appliedEpoch?.subject.assertion.number;
 
-    const targetControlMessages = (pipeline?.targetControlTimeframe?.totalMessages() ?? 0)
-    const currentControlMessages = (pipeline?.currentControlTimeframe?.totalMessages() ?? 0)
+    const targetControlMessages = pipeline?.targetControlTimeframe?.totalMessages() ?? 0;
+    const currentControlMessages = pipeline?.currentControlTimeframe?.totalMessages() ?? 0;
 
-    const startDataMessages = (pipeline?.startDataTimeframe?.totalMessages() ?? 0);
-    const targetDataMessages = (pipeline?.targetDataTimeframe?.totalMessages() ?? 0)
-    const currentDataMessages = (pipeline?.currentDataTimeframe?.totalMessages() ?? 0)
-
+    const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
+    const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+    const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
 
     // TODO(burdon): List feeds and nav.
     return {
@@ -52,11 +51,16 @@ const SpacesPanel = () => {
       genesisFeed: metadata?.genesisFeed.truncate(),
       controlFeed: metadata?.controlFeed.truncate(),
       dataFeed: metadata?.dataFeed.truncate(),
-      currentEpoch: currentEpochNumber === appliedEpochNumber ? currentEpochNumber : `${currentEpochNumber} (${appliedEpochNumber})`,
+      currentEpoch:
+        currentEpochNumber === appliedEpochNumber
+          ? currentEpochNumber
+          : `${currentEpochNumber} (${appliedEpochNumber})`,
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
       mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
       controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
-      dataProgress: `${(Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100).toFixed(0)}%`,
+      dataProgress: `${(
+        Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100
+      ).toFixed(0)}%`,
       startupTime:
         space?.internal.data?.metrics.open &&
         space?.internal.data?.metrics.ready &&
@@ -66,13 +70,19 @@ const SpacesPanel = () => {
   }, [metadata, pipelineState, space]);
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <SpaceToolbar />
-      <div className='flex flex-1 flex-col overflow-auto'>
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <SpaceSelector />
+        </Toolbar>
+      }
+      className='overflow-auto'
+    >
+      <div className='flex flex-col flex-1 overflow-auto divide-y space-y-2'>
         {object && <DetailsTable object={object} />}
         <PipelineTable state={pipelineState ?? {}} />
       </div>
-    </div>
+    </PanelContainer>
   );
 };
 
@@ -89,6 +99,7 @@ const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'FeedKey',
     width: 80,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (block) => {
       const feedKey = block.feedKey;
       return `${feedKey.truncate()}`;
@@ -103,7 +114,8 @@ const columns: TableColumn<PipelineTableRow>[] = [
     Header: 'Progress',
     width: 80,
     accessor: (block) => {
-      const percent = ((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0)) * 100;
+      const percent =
+        (((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0))) * 100;
       if (isNaN(percent)) {
         return '';
       }
@@ -186,7 +198,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
     ),
   ];
 
-  return <Table columns={columns} data={data} />;
+  return <Table compact columns={columns} data={data} />;
 };
 
 const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
@@ -251,7 +263,6 @@ const FeedView = ({ feedKey, processed = 0, target = 0 }: FeedViewProps) => {
       <div>{feedKey.truncate()}</div>
       {range(total).map((i) => {
         const color = i <= processed ? 'bg-green-400' : i <= target ? 'bg-orange-400' : 'bg-gray-400';
-
         return <div key={i} className={mx('w-[3px] h-[20px]', color)}></div>;
       })}
     </div>

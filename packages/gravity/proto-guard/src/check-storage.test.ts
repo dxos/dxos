@@ -51,7 +51,7 @@ describe('Tests against old storage', () => {
 
     {
       // Check epoch.
-      const spaceBackend = services.host._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
+      const spaceBackend = services.host!._serviceContext.spaceManager.spaces.get(space.key) ?? failUndefined();
       await spaceBackend.controlPipeline.state.waitUntilTimeframe(spaceBackend.controlPipeline.state.endTimeframe);
       const epoch = spaceBackend.dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
       expect(epoch).to.equal(expectedEpoch);

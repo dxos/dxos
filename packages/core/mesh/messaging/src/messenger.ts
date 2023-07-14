@@ -104,7 +104,7 @@ export class Messenger {
       async () => {
         log('retrying message', { messageId: reliablePayload.messageId });
         await this._encodeAndSend({ author, recipient, reliablePayload }).catch((err) =>
-          log.error('failed to send message', { err }),
+          log('failed to send message', { err }),
         );
       },
       this._retryDelay,
@@ -113,7 +113,7 @@ export class Messenger {
     scheduleTask(
       messageContext,
       () => {
-        log.warn('message not delivered', { messageId: reliablePayload.messageId });
+        log('message not delivered', { messageId: reliablePayload.messageId });
         this._onAckCallbacks.delete(reliablePayload.messageId!);
         timeoutHit(new TimeoutError(MESSAGE_TIMEOUT, 'Message not delivered'));
         void messageContext.dispose();
@@ -214,16 +214,18 @@ export class Messenger {
       .decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
-    if (this._receivedMessages.has(reliablePayload.messageId!)) {
-      return;
-    }
 
-    this._receivedMessages.add(reliablePayload.messageId!);
     await this._sendAcknowledgement({
       author,
       recipient,
       messageId: reliablePayload.messageId,
     });
+
+    if (this._receivedMessages.has(reliablePayload.messageId!)) {
+      return;
+    }
+
+    this._receivedMessages.add(reliablePayload.messageId!);
 
     await this._callListeners({
       author,

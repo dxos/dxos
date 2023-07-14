@@ -29,6 +29,7 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "eslintConfig": "packages/sdk/client/eslint-config.json",
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"

@@ -5,13 +5,13 @@
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
+import { DensityProvider } from '@dxos/aurora';
 import { ClientServices } from '@dxos/client';
 import { appkitTranslations, Fallback, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
 import { Client, ClientContext } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
-import { DensityProvider } from '@dxos/aurora';
 
 const Routes = () => {
   return useRoutes();
@@ -25,13 +25,12 @@ const Telemetry = ({ namespace }: { namespace: string }) => {
 // Entry point that does not have opinion on Client, so it can be reused in extension.
 export const Devtools = ({
   context,
-  namespace = telemetryNamespace
+  namespace = telemetryNamespace,
 }: {
   context?: { client: Client; services?: ClientServices };
   namespace?: string;
 }) => {
   const fallback = <Fallback message='Loading...' />;
-
   if (!context) {
     return fallback;
   }
