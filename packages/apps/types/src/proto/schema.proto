@@ -74,11 +74,14 @@ message Drawing {
   dxos.schema.Text content = 2;
 }
 
+// TODO(burdon): Channel > Thread > Block > Message.
 message Thread {
   option (object) = true;
 
   message Message {
     string timestamp = 1;
+    // TODO(burdon): Import.
+    // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 2;
     string text = 3;
   }
