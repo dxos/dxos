@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
+import { FunctionsPlugin } from '@dxos/agent/src/plugins/functions';
 
 export default class Start extends BaseCommand<typeof Start> {
   private readonly _ctx = new Context();
@@ -65,6 +66,10 @@ export default class Start extends BaseCommand<typeof Start> {
     // Epoch monitoring.
     if (this.flags.monitor) {
       agent.addPlugin(new EpochMonitor());
+    }
+
+    if(this.clientConfig.values.runtime?.agent?.functions) {
+      agent.addPlugin(new FunctionsPlugin(this.clientConfig));
     }
 
     await agent.start();

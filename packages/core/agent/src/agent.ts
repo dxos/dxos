@@ -20,9 +20,10 @@ import {
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
-import { FunctionsPlugin } from './functions';
+import { FunctionsPlugin } from './plugins/functions';
 import { Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
+import { waitForDebugger } from 'node:inspector';
 
 interface Service {
   open(): Promise<void>;
@@ -109,14 +110,6 @@ export class Agent {
       await plugin.initialize(this._client!, this._clientServices!);
       await plugin.open();
       log('open', { plugin });
-    }
-
-    // TODO(dmaretskyi): Memory leak. Close FunctionsPlugin.
-    // TODO(mykola): Move to this._plugins.
-    if (functions) {
-      const functionsPlugin = new FunctionsPlugin(this._config, (this._clientServices! as LocalClientServices).host!);
-
-      await functionsPlugin.open();
     }
 
     log('started...');
