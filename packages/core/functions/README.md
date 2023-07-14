@@ -82,6 +82,15 @@ dx function dev -r ts-node/register
 nodemon -w src -e ts --exec /Users/dmaretskyi/Projects/protocols/packages/devtools/cli/bin/dev function dev -r ts-node/register
 ```
 
+## Invoking functions
+
+
+> NOTE: The port (7001) must match the one in config.
+
+```bash
+curl --data '{ "foo": "bar" }' -H 'Content-Type: application/json' -i -X POST http://localhost:7001/dev/chess
+```
+
 ## Installation
 
 ```bash
