@@ -5,7 +5,9 @@ functions:
 # TODO(dmaretskyi): Extract to separate file (dev only).
 triggers:
   - function: chess
-    # spaceKey: 
     subscription:
-      type: dxos.experimental.chess.Game
+      spaceKey: 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2
+      # type: dxos.experimental.chess.Game
+      props:
+        type: dxos.experimental.test.Test
     
