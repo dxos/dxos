@@ -3,41 +3,32 @@
 //
 
 import express from 'express';
-import { readdir } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { join } from 'node:path';
 import { getPortPromise } from 'portfinder';
 
 import { Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
+import { FunctionsManifest } from '../defintions';
 import { FunctionContext, FunctionHandler, Reply } from '../interface';
-
-const FUNCTION_EXTENSIONS = ['.js', '.ts'];
 
 export type FunctionsRuntimeParams = {
   client: Client;
   functionsDirectory: string;
+  manifest: FunctionsManifest;
 };
 
 export const runFunctions = async (options: FunctionsRuntimeParams) => {
-  const files = await readdir(options.functionsDirectory);
-
   const functionHandlers: Record<string, FunctionHandler> = {};
 
-  for (const file of files) {
-    if (!FUNCTION_EXTENSIONS.some((ext) => extname(file) === ext)) {
-      continue;
-    }
-
+  for (const [functionName, _] of Object.entries(options.manifest.functions)) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const module = require(join(options.functionsDirectory, file));
+      const module = require(join(options.functionsDirectory, functionName));
       const handler = module.default;
       if (typeof handler !== 'function') {
-        throw new Error(`Function ${file} does not export a default function`);
+        throw new Error(`Function ${functionName} does not export a default function`);
       }
-
-      const functionName = file.slice(0, -extname(file).length);
 
       functionHandlers[functionName] = handler;
     } catch (e) {

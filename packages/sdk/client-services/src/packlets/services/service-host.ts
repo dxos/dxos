@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
@@ -178,6 +178,7 @@ export class ClientServicesHost {
     });
   }
 
+  @synchronized
   async open() {
     if (this._open) {
       return;
@@ -251,6 +252,7 @@ export class ClientServicesHost {
     log.trace('dxos.sdk.client-services-host.open', trace.end({ id: traceId }));
   }
 
+  @synchronized
   async close() {
     if (!this._open) {
       return;
