@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.52](https://github.com/dxos/dxos/compare/v0.1.51...v0.1.52) (2023-07-14)
+
+
+### Features
+
+* Agent plugins ([#3641](https://github.com/dxos/dxos/issues/3641)) ([1744ed2](https://github.com/dxos/dxos/commit/1744ed2432ccdac81f68c176ae5d4a8b5d582200))
+* Bench echo replication time & integrate charts ([#3637](https://github.com/dxos/dxos/issues/3637)) ([6111d78](https://github.com/dxos/dxos/commit/6111d78bab01a4d01036920ac919842f06b2489a))
+* **cli:** Add agent uptime telemetry ([#3642](https://github.com/dxos/dxos/issues/3642)) ([0e90c21](https://github.com/dxos/dxos/commit/0e90c212d3de575211b248784571527e43d13b5d))
+* **composer-app:** Open world DnD integration ([#3621](https://github.com/dxos/dxos/issues/3621)) ([86cce18](https://github.com/dxos/dxos/commit/86cce181c126b3885906ca82b9c42496c975f93b))
+* devtools fixes and ux refresh ([#3639](https://github.com/dxos/dxos/issues/3639)) ([37e82de](https://github.com/dxos/dxos/commit/37e82de3b022936224e0707f2023b4d22bde0dc9))
+* **devtools:** Add interactive json tree view ([#3632](https://github.com/dxos/dxos/issues/3632)) ([9428db3](https://github.com/dxos/dxos/commit/9428db32b91076e5c1a4d44e4f28fe78446a7ad5))
+* **devtools:** Add interactive json tree view improve UI/UX ([#3327](https://github.com/dxos/dxos/issues/3327)) ([728c9a2](https://github.com/dxos/dxos/commit/728c9a270f4dc7fd6a82ec826e434920beda6f9b))
+* drawing plugin. ([#3622](https://github.com/dxos/dxos/issues/3622)) ([222c456](https://github.com/dxos/dxos/commit/222c456ab4744f4d855145a6a5d7316983c85d1c))
+* Dynamic imports from client -&gt; client-services ([#3645](https://github.com/dxos/dxos/issues/3645)) ([d3eb45f](https://github.com/dxos/dxos/commit/d3eb45f4f58a9b65182deb14d83eabc6416e9469))
+* Functions dev environment ([#3643](https://github.com/dxos/dxos/issues/3643)) ([e73bc9f](https://github.com/dxos/dxos/commit/e73bc9f725140b059da3bdd10ddacf70ea7c79ce))
+* Labs app package ([#3638](https://github.com/dxos/dxos/issues/3638)) ([9577e70](https://github.com/dxos/dxos/commit/9577e70431f2f4c819555d5ae4458c2db36373ba))
+* Print start errors in CLI daemon; add `lock-file` package ([#3634](https://github.com/dxos/dxos/issues/3634)) ([b9b5b8f](https://github.com/dxos/dxos/commit/b9b5b8f4d0a1f5e9b982b03d529366c7cbf46815))
+
+
+### Bug Fixes
+
+* **plugin-space:** Restore device invitation ([#3648](https://github.com/dxos/dxos/issues/3648)) ([ceaf79b](https://github.com/dxos/dxos/commit/ceaf79bc256eb3c3d35122ad19252b2dbd6d60fa))
+* send ack on repeated messages ([#3644](https://github.com/dxos/dxos/issues/3644)) ([975b35d](https://github.com/dxos/dxos/commit/975b35de962072218cbc31c824a9d91b1667c756))
+
 ## [0.1.51](https://github.com/dxos/dxos/compare/v0.1.50...v0.1.51) (2023-07-11)
 
 
