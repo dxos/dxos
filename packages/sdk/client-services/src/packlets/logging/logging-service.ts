@@ -48,8 +48,6 @@ export class LoggingServiceImpl implements LoggingService {
           ...entry,
           context: jsonify(getContextFromEntry(entry)),
           timestamp: new Date(),
-          // TODO(wittjosiah): Where does code come from?
-          error: entry.error && { code: 'unknown', message: entry.error.message },
           meta: {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta?.file ?? '',
