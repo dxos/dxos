@@ -3,6 +3,7 @@
 //
 
 import { Devices, Intersect, Planet } from '@phosphor-icons/react';
+import { effect } from '@preact/signals-core';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -71,7 +72,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         });
       }
 
-      const nodeHandle = createSubscription(() => {
+      const dispose = effect(() => {
         const space = graphPlugin?.provides.graph.pluginChildren?.[SPACE_PLUGIN]?.find(
           (node) => node.id === treeView.selected[0],
         )?.data;
@@ -82,8 +83,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           client.services.setSpaceProvider(() => space.key);
         }
       });
-      nodeHandle.update([treeView]);
-      subscriptions.add(nodeHandle.unsubscribe);
+      subscriptions.add(dispose);
     },
     unload: async () => {
       onSpaceUpdate = undefined;

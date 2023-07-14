@@ -31,6 +31,7 @@ export type UpdateInfo = {
  */
 // TODO(burdon): Add filter?
 // TODO(burdon): Immediately trigger callback.
+// TODO(wittjosiah): Could signals effect be used instead?
 export const createSubscription = (onUpdate: (info: UpdateInfo) => void): SubscriptionHandle => {
   let subscribed = true;
   let firstUpdate = true;
