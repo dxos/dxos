@@ -3,6 +3,8 @@
 //
 
 import { Flags } from '@oclif/core';
+import { load } from 'js-yaml';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { runFunctions } from '@dxos/functions';
@@ -16,6 +18,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'] }),
+    manifest: Flags.string({ default: 'functions.yml' }),
   };
 
   async run(): Promise<any> {
@@ -27,6 +30,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await runFunctions({
         client,
         functionsDirectory: join(process.cwd(), 'src/functions'),
+        manifest: load(await readFile(join(process.cwd(), this.flags.manifest), 'utf8')) as any,
       });
 
       // Hang forever.
