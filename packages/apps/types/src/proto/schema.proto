@@ -89,5 +89,5 @@ message Thread {
     repeated Message messages = 1;
   }
 
-  repeated Block blocks = 2;
+  repeated Block blocks = 1;
 }

@@ -22,7 +22,7 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => 
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: kanban,
+    root: kanban, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
     createItem: (column) =>
