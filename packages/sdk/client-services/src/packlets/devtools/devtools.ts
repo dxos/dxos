@@ -73,7 +73,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   async getConfig(request: void): Promise<GetConfigResponse> {
-    return { config: JSON.stringify(this.params.config.values) } // 😨
+    return { config: JSON.stringify(this.params.config.values) }; // 😨
   }
 
   async getStorageInfo(): Promise<StorageInfo> {

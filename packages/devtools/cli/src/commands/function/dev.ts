@@ -4,16 +4,15 @@
 
 import { Flags } from '@oclif/core';
 import { load } from 'js-yaml';
+import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Config } from '@dxos/config';
 
-import { InvokeOptions, mountTrigger, runFunctions } from '@dxos/functions';
+import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { InvokeOptions, mountTrigger, runFunctions, FunctionsManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
-import { FunctionsManifest } from '@dxos/functions/src/defintions';
-import { Context } from '@dxos/context';
-import assert from 'node:assert';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
@@ -30,12 +29,14 @@ export default class Dev extends BaseCommand<typeof Dev> {
       require(requirePath);
     }
 
-    const functionsManifest = load(await readFile(join(process.cwd(), this.flags.manifest), 'utf8')) as FunctionsManifest;
+    const functionsManifest = load(
+      await readFile(join(process.cwd(), this.flags.manifest), 'utf8'),
+    ) as FunctionsManifest;
 
     await this.execWithClient(async (client) => {
       // 😨 There must be a better way...
       // TODO(dmaretskyi): Move into system service?
-      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config))
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       assert(config.values.runtime?.agent?.functions?.port, 'functions port not set');
 
       await runFunctions({
@@ -47,13 +48,13 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const invokeOptions: InvokeOptions = {
         runtime: 'dev',
         endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
-      }
-      for(const trigger of functionsManifest.triggers) {
+      };
+      for (const trigger of functionsManifest.triggers) {
         await mountTrigger({
           client,
           trigger,
           invokeOptions,
-          ctx: new Context()
+          ctx: new Context(),
         });
       }
 

@@ -4,3 +4,4 @@
 
 export * from './interface';
 export * from './runtime';
+export * from './defintions';

@@ -1,10 +1,16 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import assert from 'node:assert';
-import { Context } from '@dxos/context';
-import { FunctionTrigger } from '../defintions';
-import { Client } from '@dxos/client';
-import { log } from '@dxos/log';
+
 import { DeferredTask } from '@dxos/async';
+import { Client } from '@dxos/client';
+import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { createSubscription } from '@dxos/observable-object';
+
+import { FunctionTrigger } from '../defintions';
 
 export type InvokeOptions = {
   endpoint: string;
@@ -15,10 +21,10 @@ export type MountTriggerParams = {
   ctx: Context;
   client: Client;
   trigger: FunctionTrigger;
-  invokeOptions: InvokeOptions
-}
+  invokeOptions: InvokeOptions;
+};
 
-export async function mountTrigger({ ctx, client, trigger, invokeOptions }: MountTriggerParams) {
+export const mountTrigger = async ({ ctx, client, trigger, invokeOptions }: MountTriggerParams) => {
   assert(trigger.subscription.spaceKey, 'Missing spaceKey');
 
   const space = client.spaces.get().find((space) => space.key.equals(trigger.subscription.spaceKey));
@@ -38,14 +44,10 @@ export async function mountTrigger({ ctx, client, trigger, invokeOptions }: Moun
     const updatedObjects = Array.from(updatedIds);
     updatedIds.clear();
 
-    await invoke(
-      invokeOptions,
-      trigger.function,
-      {
-        space: trigger.subscription.spaceKey,
-        objects: updatedObjects,
-      }
-    );
+    await invoke(invokeOptions, trigger.function, {
+      space: trigger.subscription.spaceKey,
+      objects: updatedObjects,
+    });
   });
 
   const selection = createSubscription(({ added, updated }) => {
@@ -60,7 +62,7 @@ export async function mountTrigger({ ctx, client, trigger, invokeOptions }: Moun
   });
   ctx.onDispose(() => selection.unsubscribe());
 
-  console.log({ props: trigger.subscription.props })
+  console.log({ props: trigger.subscription.props });
   const query = space.db.query({
     ...trigger.subscription.props,
     '@type': trigger.subscription.type,
@@ -73,10 +75,10 @@ export async function mountTrigger({ ctx, client, trigger, invokeOptions }: Moun
   selection.update(query.objects);
   ctx.onDispose(unsubscribe);
 
-  log('mounted trigger', { trigger: trigger });
-}
+  log('mounted trigger', { trigger });
+};
 
-async function invoke(options: InvokeOptions, functionName: string, data: any) {
+const invoke = async (options: InvokeOptions, functionName: string, data: any) => {
   const { endpoint, runtime } = options;
   assert(endpoint, 'Missing endpoint');
   assert(runtime, 'Missing runtime');
@@ -90,10 +92,10 @@ async function invoke(options: InvokeOptions, functionName: string, data: any) {
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     });
     log.info('invoke result', { functionName, result: await res.text() });
-  } catch(err: any) {
+  } catch (err: any) {
     log.info('invoke error', { functionName, error: err.message });
   }
-}
+};
