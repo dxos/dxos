@@ -32,7 +32,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          highlighter: ['react-syntax-highlighter'],
           vendor: ['react', 'react-router-dom', 'react-dom'],
         },
       },
