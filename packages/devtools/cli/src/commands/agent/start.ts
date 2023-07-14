@@ -5,8 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { AgentOptions, Agent, EchoProxyServer, EpochMonitor } from '@dxos/agent';
-import { FunctionsPlugin } from '@dxos/agent/src/plugins/functions';
+import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
