@@ -8,6 +8,7 @@ import React from 'react';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import { registerSignalFactory } from '@dxos/echo-signals/react';
 
 import { ClientContext, ClientProvider } from '../client';
 
@@ -17,6 +18,7 @@ const services = () => testBuilder.createLocal();
 export type ClientDecoratorOptions = {
   clients?: Client[];
   count?: number;
+  registerSignalFactory?: boolean;
 };
 
 /**
@@ -27,7 +29,9 @@ export type ClientDecoratorOptions = {
  * @returns {DecoratorFunction}
  */
 export const ClientDecorator = (options: ClientDecoratorOptions = {}): DecoratorFunction<ReactRenderer, any> => {
-  const { clients, count = 1 } = options;
+  const { clients, count = 1, registerSignalFactory: register = true } = options;
+  register && registerSignalFactory();
+
   if (clients) {
     return (Story, context) => (
       <div className='flex place-content-evenly'>

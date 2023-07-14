@@ -7,15 +7,12 @@ import React, { useState } from 'react';
 
 import { useId } from '@dxos/aurora';
 import { PublicKey, Text } from '@dxos/client';
-import { registerSignalFactory } from '@dxos/echo-signals';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
 import { ComposerDocument, schema } from '../../testing';
 import { Composer, ComposerProps } from './Composer';
-
-registerSignalFactory();
 
 export default {
   component: Composer,

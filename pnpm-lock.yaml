@@ -5418,7 +5418,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/echo-signals': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
@@ -5468,7 +5467,6 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async

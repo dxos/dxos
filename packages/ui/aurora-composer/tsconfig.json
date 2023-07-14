@@ -36,9 +36,6 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
       "path": "../../core/echo/echo-typegen"
     },
     {
