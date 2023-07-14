@@ -188,6 +188,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/lock-file/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/log/package.json",
           "jsonpath": "$.version"
         },
@@ -289,6 +294,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/text-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/functions/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -10,3 +10,4 @@ export * from './iframe-service-proxy';
 export * from './serializer';
 export * from './socket';
 export * from './utils';
+export * from './local-client-services';

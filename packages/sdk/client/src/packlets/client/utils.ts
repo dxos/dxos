@@ -3,7 +3,7 @@
 //
 
 import { ClientServicesProvider } from '@dxos/client-protocol';
-import { ClientServicesHostParams, LocalClientServices } from '@dxos/client-services';
+import type { ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -13,6 +13,7 @@ import { safariCheck } from '@dxos/util';
 
 import { IFrameClientServicesHost } from './iframe-service-host';
 import { IFrameClientServicesProxy, IFrameClientServicesProxyOptions } from './iframe-service-proxy';
+import { LocalClientServices } from './local-client-services';
 
 /**
  * Create services provider proxy connected via iFrame to host.

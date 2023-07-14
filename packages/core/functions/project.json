@@ -1,0 +1,69 @@
+{
+  "sourceRoot": "packages/core/functions/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/functions/src/index.ts",
+        "outputPath": "packages/core/functions/dist/types",
+        "tsConfig": "packages/core/functions/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/core/functions/src/index.ts"
+        ],
+        "injectGlobals": true,
+        "outputPath": "packages/core/functions/dist/lib"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/core/functions/src/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/core/functions",
+        "environments": [
+          "nodejs"
+        ],
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/functions",
+        "resultsPath": "test-results/packages/core/functions",
+        "testPatterns": [
+          "packages/core/functions/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/functions/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
