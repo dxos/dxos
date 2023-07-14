@@ -114,23 +114,11 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
   );
 };
 
-// todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  // const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
   const dnd = useDnd();
   const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
-
-  // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
-  // if (subscribe in sections) {
-  //   useEffect(() => {
-  //     // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
-  //     return sections[subscribe](() => setIter([])) as () => void;
-  //   }, []);
-  // } else {
-  //   useSubscription(() => setIter([]), [sections]);
-  // }
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);

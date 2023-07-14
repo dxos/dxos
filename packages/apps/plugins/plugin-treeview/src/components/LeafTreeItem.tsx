@@ -79,16 +79,6 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const label = Array.isArray(node.label) ? t(...node.label) : node.label;
   const wrap = spaceExp.test(label);
 
-  // TODO(thure): This replaces `observer` since we need to `forwardRef`.
-  // const [_, setIter] = useState([]);
-  // if (subscribe in node) {
-  //   useEffect(() => {
-  //     return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
-  //   }, [node]);
-  // } else {
-  //   useSubscription(() => setIter([]), [node]);
-  // }
-
   return (
     <TreeItem.Root
       classNames={[

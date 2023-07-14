@@ -46,7 +46,7 @@ export type StackSectionModel<T extends StackObject = GenericStackObject> = {
   object: T;
 };
 
-export type StackSections<T extends StackObject = GenericStackObject> = DeepSignal<StackSectionModel<T>[]>;
+export type StackSections<T extends StackObject = GenericStackObject> = StackSectionModel<T>[];
 
 export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;

@@ -24,7 +24,8 @@ import { PluginContextProvider } from '@dxos/react-surface';
 
 import { GithubPlugin, LocalFilesPlugin } from './plugins';
 
-// TODO(wittjosiah): Remove.
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[TypedObject.name] = TypedObject;
 
 void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defaults()) });

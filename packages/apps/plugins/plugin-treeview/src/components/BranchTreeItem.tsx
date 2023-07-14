@@ -62,16 +62,6 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
     // todo(thure): Open if child within becomes active
   }, []);
 
-  // TODO(thure): This replaces `observer` since we need to `forwardRef`.
-  // const [_, setIter] = useState([]);
-  // if (subscribe in node) {
-  //   useEffect(() => {
-  //     return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
-  //   }, [node]);
-  // } else {
-  //   useSubscription(() => setIter([]), [node]);
-  // }
-
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
   return (
