@@ -4,7 +4,5 @@
 
 import React from 'react';
 
-export const SignalMessages = React.lazy(() => import('./SignalMessagesContainer'));
 export const SignalPanel = React.lazy(() => import('./SignalPanel'));
-export const SignalStatus = React.lazy(() => import('./SignalStatus'));
 export const SwarmPanel = React.lazy(() => import('./SwarmPanel'));

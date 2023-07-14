@@ -10,7 +10,7 @@ import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-import { MasterTable } from '../../components';
+import { MasterDetailTable } from '../../components';
 
 const columns: TableColumn<KeyRecord>[] = [
   {
@@ -19,7 +19,7 @@ const columns: TableColumn<KeyRecord>[] = [
     accessor: (record) => PublicKey.from(record.publicKey).truncate(),
   },
   {
-    Header: 'Humanized Pub Key',
+    Header: 'Pub Key Name',
     accessor: (record) => humanize(record.publicKey),
   },
   {
@@ -35,7 +35,7 @@ const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterTable columns={columns} data={keys} />;
+  return <MasterDetailTable columns={columns} data={keys} />;
 };
 
 export default KeyringPanel;

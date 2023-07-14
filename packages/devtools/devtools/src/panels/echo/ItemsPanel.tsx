@@ -5,25 +5,30 @@
 import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { DocumentModel, TypedObject, TextModel } from '@dxos/client';
+import { DocumentModel, TypedObject, TextModel, PublicKey } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { TreeView, TreeViewItem, Searchbar } from '@dxos/react-appkit';
+import { TableColumn } from '@dxos/mosaic';
+import { TreeViewItem, Searchbar } from '@dxos/react-appkit';
 import { useQuery } from '@dxos/react-client';
 
-import { DetailsTable, JsonView } from '../../components';
-import { SpaceToolbar } from '../../containers';
+import { JsonView, MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-// TODO(burdon): Factor out.
 
 const textFilter = (text?: string) => {
   if (!text) {
     return () => true;
   }
 
+  // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: TreeViewItem) => {
-    const match = item.title?.match(matcher);
-    return match !== null;
+  return (item: TypedObject) => {
+    const model = item.toJSON()['@model'];
+    let match = false;
+    match ||= !!model?.match(matcher);
+    match ||= !!item.__typename?.match(matcher);
+    match ||= !!String(item.title).match(matcher);
+    return match;
   };
 };
 
@@ -55,44 +60,48 @@ const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
   Icon: getObjectIcon(item),
 });
 
+const columns: TableColumn<TypedObject>[] = [
+  {
+    Header: 'Id',
+    width: 60,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (item) => {
+      const id = item.id;
+      return `${PublicKey.from(id).truncate()}`;
+    },
+  },
+  {
+    Header: 'Model',
+    width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (item) => item.toJSON()['@model'],
+  },
+  {
+    Header: 'Type',
+    width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    accessor: (item) => item.__typename ?? '',
+  },
+];
+
 const ItemsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   // TODO(burdon): Filter deleted.
   const items = useQuery(space);
-  const [selectedItem, setSelectedItem] = useState<TypedObject>();
   const [filter, setFilter] = useState('');
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <SpaceToolbar>
-        <div className='w-1/2'>
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <SpaceSelector />
           <Searchbar onSearch={setFilter} />
-        </div>
-      </SpaceToolbar>
-
-      <div className='flex h-full overflow-hidden'>
-        <div className='flex flex-col w-1/3 overflow-auto border-r'>
-          {/* TODO(burdon): Convert to list with new API. */}
-          <TreeView
-            items={items.map(getHierarchicalItem).filter(textFilter(filter))}
-            slots={{
-              value: {
-                className: 'overflow-hidden text-gray-400 truncate pl-2',
-              },
-            }}
-            onSelect={(item: any) => setSelectedItem(item.value)}
-            selected={selectedItem?.id}
-          />
-        </div>
-
-        {selectedItem && (
-          <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
-            <DetailsTable object={getItemDetails(selectedItem)} expand />
-          </div>
-        )}
-      </div>
-    </div>
+        </Toolbar>
+      }
+    >
+      <MasterDetailTable<TypedObject> columns={columns} data={items.filter(textFilter(filter))} />
+    </PanelContainer>
   );
 };
 

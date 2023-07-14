@@ -8,14 +8,15 @@ import { TableColumn } from '@dxos/mosaic';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { useMembers } from '@dxos/react-client';
 
-import { MasterTable } from '../../components';
-import { SpaceToolbar } from '../../containers';
+import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 
 const columns: TableColumn<SpaceMember>[] = [
   {
     Header: 'key',
     width: 120,
+    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (member) => {
       const identityKey = member.identity.identityKey;
       return identityKey.truncate();
@@ -43,13 +44,15 @@ const MembersPanel = () => {
   const members = useMembers(space?.key);
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <SpaceToolbar />
-
-      <div className='flex flex-1'>
-        <MasterTable<SpaceMember> columns={columns} data={members} />
-      </div>
-    </div>
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <SpaceSelector />
+        </Toolbar>
+      }
+    >
+      <MasterDetailTable<SpaceMember> columns={columns} data={members} />
+    </PanelContainer>
   );
 };
 
