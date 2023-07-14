@@ -6,12 +6,12 @@ import express from 'express';
 
 import { Client, ClientServicesProvider, Config, LocalClientServices } from '@dxos/client';
 import { ClientServicesHost } from '@dxos/client-services';
+import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 
+import { Plugin } from '../plugin';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { FunctionDispatcher } from './dispatcher';
-import { Plugin } from '../plugin';
-import { failUndefined } from '@dxos/debug';
 
 export class FunctionsPlugin implements Plugin {
   private _dispatchers: Map<string, FunctionDispatcher> = new Map();
@@ -29,7 +29,7 @@ export class FunctionsPlugin implements Plugin {
   }
 
   async open() {
-    if(!this._config.values.runtime?.agent?.functions) {
+    if (!this._config.values.runtime?.agent?.functions) {
       return;
     }
 
@@ -70,7 +70,7 @@ export class FunctionsPlugin implements Plugin {
 
     const port = this._config.values.runtime?.agent?.functions?.port ?? 7000;
     this._server.listen(port, () => {
-      log.info('Functions server listening', { port: port });
+      log.info('Functions server listening', { port });
     });
   }
 

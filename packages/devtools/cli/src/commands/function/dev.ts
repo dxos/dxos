@@ -3,13 +3,13 @@
 //
 
 import { Flags } from '@oclif/core';
+import { load } from 'js-yaml';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { load } from 'js-yaml'
 
 import { runFunctions } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
-import { readFile } from 'node:fs/promises';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
@@ -18,7 +18,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'] }),
-    manifest: Flags.string({ default: 'functions.yml' })
+    manifest: Flags.string({ default: 'functions.yml' }),
   };
 
   async run(): Promise<any> {
@@ -34,7 +34,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       // Hang forever.
-      await new Promise(() => { });
+      await new Promise(() => {});
     });
   }
 }

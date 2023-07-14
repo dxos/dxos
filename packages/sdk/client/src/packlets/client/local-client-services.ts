@@ -31,7 +31,7 @@ export class LocalClientServices implements ClientServicesProvider {
 
   @synchronized
   async open(): Promise<void> {
-    if(this._isOpen) {
+    if (this._isOpen) {
       return;
     }
     this._isOpen = true;

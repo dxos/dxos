@@ -1,15 +1,19 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export type FunctionsManifest = {
   functions: Record<string, FunctionConfig>;
-}
+};
 
 export type FunctionConfig = {
   description?: string;
-}
+};
 
 export type FunctionTriggers = {
-  function: string
-  triggers: FunctionTrigger[]
-}
+  function: string;
+  triggers: FunctionTrigger[];
+};
 
 export type FunctionTrigger = {
   type: string;
@@ -17,6 +21,5 @@ export type FunctionTrigger = {
   subscription: {
     props?: Record<string, any>;
     nested?: string[];
-  }
-}
-
+  };
+};

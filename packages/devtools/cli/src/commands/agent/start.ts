@@ -6,13 +6,13 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { AgentOptions, Agent, EchoProxyServer, EpochMonitor } from '@dxos/agent';
+import { FunctionsPlugin } from '@dxos/agent/src/plugins/functions';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
-import { FunctionsPlugin } from '@dxos/agent/src/plugins/functions';
 
 export default class Start extends BaseCommand<typeof Start> {
   private readonly _ctx = new Context();
@@ -68,7 +68,7 @@ export default class Start extends BaseCommand<typeof Start> {
       agent.addPlugin(new EpochMonitor());
     }
 
-    if(this.clientConfig.values.runtime?.agent?.functions) {
+    if (this.clientConfig.values.runtime?.agent?.functions) {
       agent.addPlugin(new FunctionsPlugin(this.clientConfig));
     }
 

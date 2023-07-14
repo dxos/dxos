@@ -3,20 +3,19 @@
 //
 
 import express from 'express';
-import { readdir } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { join } from 'node:path';
 import { getPortPromise } from 'portfinder';
 
 import { Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { FunctionContext, FunctionHandler, Reply } from '../interface';
 import { FunctionsManifest } from '../defintions';
+import { FunctionContext, FunctionHandler, Reply } from '../interface';
 
 export type FunctionsRuntimeParams = {
   client: Client;
   functionsDirectory: string;
-  manifest: FunctionsManifest
+  manifest: FunctionsManifest;
 };
 
 export const runFunctions = async (options: FunctionsRuntimeParams) => {
