@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { AgentOptions, Agent, EchoProxyServer, EpochMonitor } from '@dxos/agent';
+import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -65,6 +65,10 @@ export default class Start extends BaseCommand<typeof Start> {
     // Epoch monitoring.
     if (this.flags.monitor) {
       agent.addPlugin(new EpochMonitor());
+    }
+
+    if (this.clientConfig.values.runtime?.agent?.functions) {
+      agent.addPlugin(new FunctionsPlugin(this.clientConfig));
     }
 
     await agent.start();

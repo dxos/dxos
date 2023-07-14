@@ -1,0 +1,11 @@
+functions:
+  chess:
+    description: Play chess with AI.
+
+# TODO(dmaretskyi): Extract to separate file (dev only).
+triggers:
+  - function: chess
+    # spaceKey: 
+    subscription:
+      type: dxos.experimental.chess.Game
+    
