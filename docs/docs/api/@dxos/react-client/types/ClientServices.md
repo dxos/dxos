@@ -1,5 +1,5 @@
 # Type `ClientServices`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:8]()</sub>
 
 
 
@@ -16,6 +16,10 @@ Type: <code>DevicesService</code>
 
 ### [DevtoolsHost]()
 Type: <code>DevtoolsHost</code>
+
+
+### [FunctionRegistryService]()
+Type: <code>FunctionRegistryService</code>
 
 
 ### [IdentityService]()
