@@ -9,7 +9,7 @@ import React from 'react';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
-import { SpaceProxy, subscribe } from '@dxos/client';
+import { Query, SpaceProxy, subscribe } from '@dxos/client';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
@@ -19,7 +19,9 @@ import { StackPluginProvides, StackProvides } from './types';
 import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
+  const queries = new Map<string, Query<Stack>>();
   const subscriptions = new Map<string, UnsubscribeCallback>();
+
   return {
     meta: {
       id: STACK_PLUGIN,
@@ -46,8 +48,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
 
           const space = parent.data;
-          const query = space.db.query(Stack.filter());
-          const stackIndices = getIndices(query.objects.length);
+          let query = queries.get(parent.id);
+          if (!query) {
+            query = space.db.query(Stack.filter());
+            queries.set(parent.id, query);
+          }
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -55,6 +60,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             );
           }
 
+          const stackIndices = getIndices(query.objects.length);
           query.objects.forEach((stack, index) => {
             if (!subscriptions.has(stack.id)) {
               subscriptions.set(

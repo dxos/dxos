@@ -14,7 +14,7 @@ import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy, subscribe } from '@dxos/client';
+import { Query, SpaceProxy, subscribe } from '@dxos/client';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
@@ -44,6 +44,7 @@ type MarkdownPluginProvides = GraphProvides &
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const queries = new Map<string, Query<Document>>();
   const subscriptions = new Map<string, UnsubscribeCallback>();
 
   const MarkdownMainStandalone = ({
@@ -76,6 +77,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
+      queries.clear();
     },
     provides: {
       graph: {
@@ -85,8 +87,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }
 
           const space = parent.data;
-          const query = space.db.query(Document.filter());
-          const documentIndices = getIndices(query.objects.length);
+          let query = queries.get(parent.id);
+          if (!query) {
+            query = space.db.query(Document.filter());
+            queries.set(parent.id, query);
+          }
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -94,6 +99,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             );
           }
 
+          const documentIndices = getIndices(query.objects.length);
           query.objects.forEach((document, index) => {
             if (!subscriptions.has(document.id)) {
               subscriptions.set(
