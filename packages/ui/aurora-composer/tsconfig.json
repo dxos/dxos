@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
     "outDir": "dist/types",
     "types": [
       "node"
@@ -33,6 +34,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/echo/echo-typegen"

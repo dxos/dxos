@@ -7,18 +7,21 @@ import React, { useState } from 'react';
 
 import { useId } from '@dxos/aurora';
 import { PublicKey, Text } from '@dxos/client';
+import { registerSignalFactory } from '@dxos/echo-signals';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
-import { ClientSpaceDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
+import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
 import { ComposerDocument, schema } from '../../testing';
 import { Composer, ComposerProps } from './Composer';
+
+registerSignalFactory();
 
 export default {
   component: Composer,
 };
 
-const render = ({ spaceKey, ...args }: Pick<ComposerProps, 'slots'> & { spaceKey: PublicKey }) => {
+const Story = ({ spaceKey, ...args }: Pick<ComposerProps, 'slots'> & { spaceKey: PublicKey }) => {
   const [generate, setGenerate] = useState(false);
   const generateId = useId('generate');
 
@@ -43,22 +46,31 @@ const render = ({ spaceKey, ...args }: Pick<ComposerProps, 'slots'> & { spaceKey
   );
 };
 
+const { spaceKey: markdownSpaceKey, clients: markdownClients } = await setupPeersInSpace({
+  count: 2,
+  schema,
+  onCreateSpace: async (space) => {
+    const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
+    await space?.db.add(document);
+  },
+});
+
 export const Markdown = {
-  render,
-  decorators: [
-    ClientSpaceDecorator({
-      schema,
-      count: 2,
-      onCreateSpace: async (space) => {
-        const document = new ComposerDocument({ content: new Text('Hello, Storybook!') });
-        await space?.db.add(document);
-      },
-    }),
-  ],
+  render: (args: { id: number }) => <Story {...args} spaceKey={markdownSpaceKey} />,
+  decorators: [ClientDecorator({ clients: markdownClients })],
 };
 
+const { spaceKey: richSpaceKey, clients: richClients } = await setupPeersInSpace({
+  count: 2,
+  schema,
+  onCreateSpace: async (space) => {
+    const document = new ComposerDocument({ content: new Text('Hello, Storybook!', TextKind.RICH) });
+    await space?.db.add(document);
+  },
+});
+
 export const Rich = {
-  render,
+  render: (args: { id: number }) => <Story {...args} spaceKey={richSpaceKey} />,
   args: {
     slots: {
       editor: {
@@ -66,14 +78,5 @@ export const Rich = {
       },
     },
   },
-  decorators: [
-    ClientSpaceDecorator({
-      schema,
-      count: 2,
-      onCreateSpace: async (space) => {
-        const document = new ComposerDocument({ content: new Text('Hello, Storybook!', TextKind.RICH) });
-        await space?.db.add(document);
-      },
-    }),
-  ],
+  decorators: [ClientDecorator({ clients: richClients })],
 };

@@ -74,5 +74,6 @@ export class Text extends EchoObject<TextModel> {
 
   override _itemUpdate(): void {
     this._model.initialize();
+    this._signal?.notifyWrite();
   }
 }

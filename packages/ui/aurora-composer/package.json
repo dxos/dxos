@@ -29,6 +29,7 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
