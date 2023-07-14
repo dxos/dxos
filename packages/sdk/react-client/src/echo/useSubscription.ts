@@ -10,6 +10,7 @@ import { Selection, SubscriptionHandle, createSubscription } from '@dxos/echo-sc
  * Create reactive selection.
  * Calls the callback when the selection changes and during the first render.
  */
+// TODO(wittjosiah): Is this still needed with signals reactivity? If not, remove or update jsdoc with usage info.
 export const useSubscription = (cb: () => void, selection: Selection) => {
   // Make sure that the callback is always the one from the latest render.
   // Without this, we would always call the callback from the initial render,
