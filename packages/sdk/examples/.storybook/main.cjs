@@ -36,9 +36,7 @@ module.exports = {
       },
       plugins: [
         // https://github.com/preactjs/signals/issues/269
-        ReactPlugin({
-          jsxRuntime: 'classic',
-        }),
+        ReactPlugin({ jsxRuntime: 'classic' }),
         ThemePlugin({
           root: __dirname,
           content: [

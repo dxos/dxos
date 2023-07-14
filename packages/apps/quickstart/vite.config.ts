@@ -44,7 +44,7 @@ export default defineConfig({
 
   plugins: [
     ConfigPlugin(),
-    react(),
+    react({ jsxRuntime: 'classic' }),
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
