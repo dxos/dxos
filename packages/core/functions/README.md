@@ -2,99 +2,83 @@
 
 Functions SDK.
 
+## Installation
+
+```bash
+pnpm i @dxos/functions
+```
 
 ## Writing functions
 
-- Create a manifest file at package root:
+Create a manifest file at package root:
+
+TODO(burdon): Create example for hello world function and warn about recursion.
 
 ```yaml
-# <my package>/functions.yml
-
+# functions.yml
 functions:
-  chess: # function name - must match the function executable filename
+  chess:
     description: Play chess with AI.
 
-
-# trigger conditions (not implemented yet)
 triggers:
   - function: chess
-    # spaceKey: f1ed03
     subscription:
       type: dxos.experimental.chess.Game
-    
-
 ```
 
-- Write function implementation at `src/functions/<name>.ts`:
+> NOTE: The function name must match the filename (e.g., `src/functions/<name>.ts`).
+
+Example:
 
 ```ts
-// <my package>/src/functions/chess.ts
-
 import { FunctionContext } from '@dxos/functions';
 
 export default (event: any, context: FunctionContext) => {
   const identity = context.client.halo.identity.get();
-  return context.status(200).succeed({ event, greeting: `Hello, ${identity?.profile?.displayName}` });
+  return context
+    .status(200)
+    .succeed({ 
+      message: `Hello ${identity?.profile?.displayName}` 
+    });
 };
-
 ```
 
 ## Running functions with dev agent
 
-1. Configure agent to run functions dev server:
-
-```bash
-code ~/.config/dx/profile/default.yml # or specify another profile
-```
-
-Expose functions port:
+Configure the agent to run functions on a given port:
 
 ```yaml
-
-...
-
+# ~/.config/dx/profile/default.yml
 runtime:
   agent:
     functions:
       port: 7001
-
-...
-
 ```
 
-2. Load dev functions:
+Start functions in dev mode (from the related package):
 
 ```bash
-# Run in your functions package:
 dx function dev -r ts-node/register
 ```
 
-`-r ts-node/register` configures the runtime support TypesScript natively.
+> NOTE: `-r ts-node/register` configures native TypesScript support.
 
-### Live reload on change
-
-- Install nodemon: `npm i -g nodemon`
-- Wrap dev runtime in nodemon:
-
-> NOTE: Nodemon does not support bash aliases, a binary in `$PATH` or a full path to one is required:
+Install `nodemon` to support live reloading:
 
 ```bash
-nodemon -w src -e ts --exec /Users/dmaretskyi/Projects/protocols/packages/devtools/cli/bin/dev function dev -r ts-node/register
+npm i -g nodemon
+export DXOS_ROOT=$(git rev-parse --show-toplevel)
+
+nodemon -w ./src -e ts --exec $DXOS_ROOT/packages/devtools/cli/bin/dev function dev -r ts-node/register
 ```
 
 ## Invoking functions
 
-
 > NOTE: The port (7001) must match the one in config.
 
 ```bash
-curl --data '{ "foo": "bar" }' -H 'Content-Type: application/json' -i -X POST http://localhost:7001/dev/chess
-```
-
-## Installation
-
-```bash
-pnpm i @dxos/echo-db
+curl -i -X POST -H 'Content-Type: application/json' \
+  http://localhost:7001/dev/chess --data '{ "message": "Hello World!" }' 
 ```
 
 ## DXOS Resources

@@ -2,6 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Client } from '@dxos/client';
+
+export interface Response {
+  status(code: number): Response;
+  succeed(data: any): Response;
+}
+
+export interface FunctionContext {
+  client: Client;
+  status(code: number): Response;
+}
+
+export interface FunctionHandler {
+  (event: any, context: FunctionContext): Promise<Response>;
+}
+
 export type FunctionsManifest = {
   functions: Record<string, FunctionConfig>;
 };

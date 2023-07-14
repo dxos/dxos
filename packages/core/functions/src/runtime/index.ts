@@ -9,8 +9,7 @@ import { getPortPromise } from 'portfinder';
 import { Client } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { FunctionsManifest } from '../defintions';
-import { FunctionContext, FunctionHandler, Reply } from '../interface';
+import { FunctionsManifest, FunctionContext, FunctionHandler, Response } from '../function';
 
 export type FunctionsRuntimeParams = {
   client: Client;
@@ -44,7 +43,7 @@ export const runFunctions = async (options: FunctionsRuntimeParams) => {
   app.post('/:functionName', async (req, res) => {
     const functionName = req.params.functionName;
 
-    const replyBuilder: Reply = {
+    const replyBuilder: Response = {
       status: (code: number) => {
         res.statusCode = code;
         return replyBuilder;
