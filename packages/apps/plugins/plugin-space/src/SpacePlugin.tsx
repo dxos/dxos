@@ -4,6 +4,7 @@
 
 import {
   ArrowLineLeft,
+  Devices,
   Download,
   EyeSlash,
   Intersect,
@@ -299,7 +300,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           if (!clientPlugin) {
             return [];
           }
-          const indices = getIndices(2);
+          const indices = getIndices(3);
 
           // TODO(wittjosiah): Disable if no identity.
           return [
@@ -324,9 +325,19 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               },
             },
             {
+              id: 'invite-device',
+              index: indices[2],
+              testId: 'spacePlugin.inviteDevice',
+              label: ['invite device label', { ns: 'os' }],
+              icon: Devices,
+              invoke: async () => {
+                await clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
+              },
+            },
+            {
               // TODO(wittjosiah): Move to SplitViewPlugin.
               id: 'close-sidebar',
-              index: indices[2],
+              index: indices[3],
               label: ['close sidebar label', { ns: 'os' }],
               icon: ArrowLineLeft,
               invoke: async () => {
