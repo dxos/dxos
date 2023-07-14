@@ -1,5 +1,5 @@
 # Type `ShellServiceBundle`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:43]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:45]()</sub>
 
 
 

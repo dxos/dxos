@@ -1,5 +1,5 @@
 # Type `WorkerServiceBundle`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:35]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:37]()</sub>
 
 
 
