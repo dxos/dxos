@@ -14,7 +14,7 @@ import { humanize } from '@dxos/util';
 import { ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 
-// TODO(burdon): Resolve username (and avatar) from identityKey.
+// TODO(burdon): Resolve username (and avatar) from identityKey/members.
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-red-500', 'bg-orange-500', 'bg-purple-500'];
 const getBlockProperties = (identityKey: PublicKey) => ({
   displayName: humanize(identityKey),
