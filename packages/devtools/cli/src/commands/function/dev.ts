@@ -3,6 +3,7 @@
 //
 
 import { Flags } from '@oclif/core';
+import chalk from 'chalk';
 import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -43,7 +44,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       if (this.flags.verbose) {
-        this.log('Functions:', server.functions);
+        this.log(chalk`{green Functions: ${JSON.stringify(server.functions)}}`);
       }
 
       // Wait until exit (via SIGINT).
