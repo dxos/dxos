@@ -43,7 +43,7 @@ export const Select = (props: SelectProps) => {
   return (
     <SelectPrimitive.Root {...rest}>
       <SelectPrimitive.Trigger className={className} asChild aria-label={label}>
-        <Button>
+        <Button classNames='whitespace-nowrap'>
           <SelectPrimitive.Value placeholder={placeholder} />
           <SelectPrimitive.Icon className='ml-2'>
             <CaretDown />
