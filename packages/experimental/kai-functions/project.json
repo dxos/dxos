@@ -1,0 +1,8 @@
+{
+  "sourceRoot": "packages/experimental/kai-functions/src",
+  "projectType": "library",
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

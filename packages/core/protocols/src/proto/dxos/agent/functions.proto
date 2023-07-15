@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.functions;
+package dxos.agent.functions;
 
 import "google/protobuf/empty.proto";
 
@@ -14,7 +14,6 @@ message Function {
 
 message RegisterRequest {
   string endpoint = 1;
-
   repeated Function functions = 2;
 }
 
