@@ -7,20 +7,27 @@ import React, { FC } from 'react';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { PublicKey, SpaceProxy } from '@dxos/client';
+// import { useIdentity } from '@dxos/react-client';
 
 import { ThreadChannel } from './ThreadChannel';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
-  const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
+  // const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
 
   // TODO(burdon): Model.
   const handleAddMessage = (text: string) => {
     thread.blocks.push(
       new ThreadType.Block({
-        // TODO(burdon): Key type in proto.
-        messages: [{ identityKey: identity!.identityKey.toHex(), text }],
+        messages: [
+          {
+            // TODO(burdon): Key type in proto.
+            identityKey: PublicKey.random().toHex(),
+            // identityKey: identity!.identityKey.toHex(),
+            timestamp: new Date().toISOString(),
+            text,
+          },
+        ],
       }),
     );
 

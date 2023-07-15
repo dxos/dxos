@@ -15,10 +15,10 @@ import { ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 
 // TODO(burdon): Resolve username (and avatar) from identityKey/members.
-const colors = ['bg-blue-500', 'bg-green-500', 'bg-red-500', 'bg-orange-500', 'bg-purple-500'];
+const colors = ['text-blue-500', 'text-green-500', 'text-red-500', 'text-orange-500', 'text-purple-500'];
 const getBlockProperties = (identityKey: PublicKey) => ({
   displayName: humanize(identityKey),
-  classes: ['text-white', colors[Number('0x' + identityKey) % colors.length]].join(' '),
+  classes: [colors[Number('0x' + identityKey) % colors.length]].join(' '),
 });
 
 // TODO(burdon): Make observer generic?
@@ -41,7 +41,7 @@ export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string
       <div
         className={mx(
           'flex flex-col w-full min-w-[300px] md:max-w-[480px] h-full overflow-hidden m-4 p-2',
-          'bg-zinc-50 dark:bg-neutral-800',
+          'bg-zinc-50 dark:text-neutral-800',
         )}
       >
         <div className='flex px-6 pb-4'>

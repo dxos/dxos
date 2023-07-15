@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
+import { UserCircle, X } from '@phosphor-icons/react';
+import format from 'date-fns/format';
 import React, { FC, useState } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 
 export type BlockProperties = {
@@ -25,27 +26,39 @@ export const ThreadBlock: FC<{
     return null;
   }
 
-  const { classes, displayName } = getBlockProperties(PublicKey.from(block.messages[0].identityKey));
+  const message = block.messages[0]!;
+  const { classes, displayName } = getBlockProperties(PublicKey.from(message.identityKey!));
+  const date = message.timestamp ? new Date(message.timestamp) : undefined;
 
   // TODO(burdon): Reply button.
   return (
     <div key={block.id} className='flex flex-col rounded shadow bg-white dark:bg-neutral-900'>
-      {block.messages[0].identityKey && (
-        <div className={mx('text-sm px-2 py-0.5 space-x-1 rounded-tl rounded-tr truncate', classes)}>
-          <span className='font-mono'>12:45</span>
-          <span className='truncate'>{displayName}</span>
+      <div className='flex divide-x'>
+        <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
+          <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
         </div>
-      )}
-
-      <div className='divide-y'>
-        {block.messages.map((message, i) => (
-          <div key={i} className='flex p-2'>
-            <div className='grow'>{message.text}</div>
-            <button>
-              <X />
-            </button>
+        <div className='flex flex-col grow'>
+          <div className='flex text-sm px-2 py-0.5 space-x-1 rounded-tl rounded-tr truncate'>
+            <span className={mx('flex grow whitespace-nowrap truncate', classes)}>{displayName}</span>
+            {date && (
+              <>
+                <span className='font-mono'>{format(date, 'HH:mm')}</span>
+                <span className='font-mono'>{format(date, 'aaa')}</span>
+              </>
+            )}
           </div>
-        ))}
+
+          <div className='divide-y'>
+            {block.messages.map((message, i) => (
+              <div key={i} className='flex p-2 group'>
+                <div className='grow overflow-hidden break-all'>{message.text}</div>
+                <button className='invisible group-hover:visible ml-2'>
+                  <X />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {false && (

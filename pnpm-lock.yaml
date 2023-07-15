@@ -1086,6 +1086,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      date-fns: ^2.29.3
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1099,6 +1100,7 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
+      date-fns: 2.29.3
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client

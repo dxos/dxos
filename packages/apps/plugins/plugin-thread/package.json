@@ -23,6 +23,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
