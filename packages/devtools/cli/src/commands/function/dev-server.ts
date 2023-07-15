@@ -42,10 +42,6 @@ export default class Dev extends BaseCommand<typeof Dev> {
     ) as FunctionsManifest;
 
     await this.execWithClient(async (client) => {
-      // TODO(dmaretskyi): Move into system service?
-      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
-      assert(config.values.runtime?.agent?.functions?.port, 'Port not set.');
-
       const server = new DevServer(client, {
         directory: join(process.cwd(), 'src/functions'),
         manifest: functionsManifest,
@@ -54,13 +50,12 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.initialize();
       await server.start();
 
-      const triggers = new TriggerManager(client, functionsManifest.triggers, {
-        runtime: 'dev',
-        endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
-      });
-
-      // TODO(burdon): Document DevServer vs. FunctionPlugin endpoints).
-      console.log(server.endpoint, config.values.runtime?.agent?.functions?.port);
+      // TODO(dmaretskyi): Move into system service?
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      assert(config.values.runtime?.agent?.functions?.port, 'Port not set.');
+      const endpoint = `http://localhost:${config.values.runtime?.agent?.functions?.port}`;
+      const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
+      await triggers.start();
 
       this.log(`Running: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
@@ -70,7 +65,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       if (this.flags.verbose) {
-        this.log(chalk`{green Functions:\n${server.functions.map((name) => `- ${name}`).join('\n')}}`);
+        this.log(chalk`{green Plugin: ${endpoint}\n${server.functions.map((name) => `- ${name}`).join('\n')}}`);
       }
 
       // Wait until exit (via SIGINT).

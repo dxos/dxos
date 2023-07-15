@@ -112,7 +112,7 @@ export class TriggerManager {
     assert(runtime, 'Missing runtime');
 
     try {
-      log.info('invoke', { function: functionName });
+      log('invoke', { function: functionName });
       const url = `${endpoint}/${runtime}/${functionName}`;
       const res = await fetch(url, {
         method: 'POST',
@@ -122,9 +122,9 @@ export class TriggerManager {
         },
       });
 
-      log.info('result', { function: functionName, result: await res.json() });
+      log('result', { function: functionName, result: await res.json() });
     } catch (err: any) {
-      log.info('error', { function: functionName, error: err.message });
+      log('error', { function: functionName, error: err.message });
     }
   }
 }
