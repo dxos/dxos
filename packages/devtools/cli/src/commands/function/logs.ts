@@ -6,9 +6,13 @@ import { Args } from '@oclif/core';
 
 import { BaseCommand } from '../../base-command';
 
+/**
+ * @deprecated
+ */
 export default class Logs extends BaseCommand<typeof Logs> {
   static override enableJsonFlag = true;
   static override description = 'Get function logs.';
+  static override state = 'deprecated';
 
   static override args = {
     name: Args.string({ required: true, description: 'Function name.' }),

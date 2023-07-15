@@ -14,7 +14,6 @@ functions:
   chess: # function name - must match the function executable filename
     description: Play chess with AI.
 
-
 # trigger conditions (not implemented yet)
 triggers:
   - function: chess

@@ -4,37 +4,31 @@
 
 import express from 'express';
 
-import { Client, ClientServicesProvider, Config, LocalClientServices } from '@dxos/client';
-import { ClientServicesHost } from '@dxos/client-services';
-import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { Plugin } from '../plugin';
+import { AbstractPlugin } from '../plugin';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { FunctionDispatcher } from './dispatcher';
 
-export class FunctionsPlugin implements Plugin {
-  private _dispatchers: Map<string, FunctionDispatcher> = new Map();
+const DEFAULT_PORT = 7000;
 
-  private _services!: ClientServicesHost;
+export type FunctionsPluginOptions = {
+  port?: number;
+};
 
-  private _devDispatcher = new DevFunctionDispatcher();
+export class FunctionsPlugin extends AbstractPlugin {
+  private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
+  private readonly _devDispatcher = new DevFunctionDispatcher();
 
   private _server?: ReturnType<typeof express>;
 
-  constructor(private readonly _config: Config) {}
-
-  async initialize(client: Client, clientServices: ClientServicesProvider): Promise<void> {
-    this._services = (clientServices as LocalClientServices).host ?? failUndefined();
+  constructor(private readonly _options: FunctionsPluginOptions) {
+    super();
   }
 
   async open() {
-    if (!this._config.values.runtime?.agent?.functions) {
-      return;
-    }
-
     this._dispatchers.set('dev', this._devDispatcher);
-    this._services.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
+    this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
     this._server = express();
     this._server.use(express.json());
@@ -68,13 +62,13 @@ export class FunctionsPlugin implements Plugin {
         );
     });
 
-    const port = this._config.values.runtime?.agent?.functions?.port ?? 7000;
+    const port = this._options.port ?? DEFAULT_PORT;
     this._server.listen(port, () => {
-      log.info('Functions server listening', { port });
+      log.info('functions server listening', { port });
     });
   }
 
   async close() {
-    this._services.serviceRegistry.removeService('FunctionRegistryService');
+    this.host.serviceRegistry.removeService('FunctionRegistryService');
   }
 }

@@ -1,0 +1,12 @@
+functions:
+  hello:
+    description: Test function.
+
+  chess:
+    description: Chess bot.
+
+# TODO(dmaretskyi): Extract to separate file (dev only)?
+triggers:
+  - function: chess
+    subscription:
+      type: dxos.experimental.chess.Game

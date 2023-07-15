@@ -28,11 +28,11 @@ import {
   TELEMETRY_API_KEY,
   disableTelemetry,
   getTelemetryContext,
+  showTelemetryBanner,
   PublisherRpcPeer,
   SupervisorRpcPeer,
   TelemetryContext,
   TunnelRpcPeer,
-  showTelemetryBanner,
 } from './util';
 
 // TODO(wittjosiah): Factor out.
@@ -58,17 +58,6 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
  * Ref: https://github.com/salesforcecli/sf-plugins-core/blob/main/src/sfCommand.ts
  */
 export abstract class BaseCommand<T extends typeof Command = any> extends Command {
-  private _clientConfig?: Config;
-  private _client?: Client;
-  protected _startTime: Date;
-  private _failing = false;
-  private readonly _stdin?: string;
-
-  protected flags!: Flags<T>;
-  protected args!: Args<T>;
-
-  protected _telemetryContext?: TelemetryContext;
-
   public static override enableJsonFlag = true;
 
   static override flags = {
@@ -114,6 +103,17 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }),
   };
 
+  private readonly _stdin?: string;
+  private _clientConfig?: Config;
+  private _client?: Client;
+  private _startTime: Date;
+  private _failing = false;
+
+  protected _telemetryContext?: TelemetryContext;
+
+  protected flags!: Flags<T>;
+  protected args!: Args<T>;
+
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
 
@@ -133,6 +133,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   get stdin() {
     return this._stdin;
+  }
+
+  get duration() {
+    return Date.now() - this._startTime.getTime();
   }
 
   done() {

@@ -2432,16 +2432,24 @@ importers:
 
   packages/core/functions:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/util': workspace:*
       '@types/express': ^4.17.17
       express: 4.17.1
       portfinder: ^1.0.32
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/context': link:../../common/context
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
+      '@dxos/observable-object': link:../../common/observable-object
+      '@dxos/util': link:../../common/util
       express: 4.17.1
       portfinder: 1.0.32
     devDependencies:
@@ -3601,7 +3609,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/errors': workspace:*
-      '@dxos/functions': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -3644,7 +3651,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../../sdk/errors
-      '@dxos/functions': link:../../core/functions
       '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
