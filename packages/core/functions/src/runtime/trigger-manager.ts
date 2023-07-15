@@ -93,7 +93,7 @@ export class TriggerManager {
 
       ctx.onDispose(unsubscribe);
 
-      log('mounted trigger', { trigger });
+      log('mounted', { trigger });
     }
   }
 
