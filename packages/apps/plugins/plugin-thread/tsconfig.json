@@ -57,6 +57,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {

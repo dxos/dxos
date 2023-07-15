@@ -31,8 +31,9 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className='flex flex-col shadow p-2 bg-white dark:bg-neutral-900'>
+    <div className='flex flex-col w-full shadow p-2 bg-white dark:bg-neutral-900'>
       <div>
+        {/* TODO(burdon): Multi-line textarea. */}
         <Input.Root>
           <Input.Label srOnly>{t('block input label')}</Input.Label>
           <Input.TextInput

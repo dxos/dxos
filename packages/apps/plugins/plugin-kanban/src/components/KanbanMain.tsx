@@ -14,11 +14,8 @@ import type { KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => {
+export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [space, kanban] }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
-
-  const space = data[0];
-  const kanban = data[data.length - 1] as KanbanType;
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {

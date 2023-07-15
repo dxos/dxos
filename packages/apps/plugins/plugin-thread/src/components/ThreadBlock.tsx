@@ -48,17 +48,18 @@ export const ThreadBlock: FC<{
         ))}
       </div>
 
-      {/* TODO(burdon): Multi-line textarea. ESC key. */}
-      <Input.Root>
-        <Input.Label srOnly>{t('block input label')}</Input.Label>
-        <Input.TextInput
-          variant='subdued'
-          classNames='flex-1 is-auto pis-2'
-          placeholder='Enter message.'
-          value={text}
-          onChange={({ target: { value } }) => setText(value)}
-        />
-      </Input.Root>
+      {false && (
+        <Input.Root>
+          <Input.Label srOnly>{t('block input label')}</Input.Label>
+          <Input.TextInput
+            variant='subdued'
+            classNames='flex-1 is-auto pis-2'
+            placeholder='Enter message.'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+          />
+        </Input.Root>
+      )}
     </div>
   );
 };

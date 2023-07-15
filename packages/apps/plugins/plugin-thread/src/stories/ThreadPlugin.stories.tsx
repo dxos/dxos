@@ -8,6 +8,7 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
+import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { mx } from '@dxos/aurora-theme';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
@@ -44,7 +45,7 @@ const ThreadPluginStoryPlugin = () => ({
 });
 
 const ThreadSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]} />
+  <PluginContextProvider plugins={[ClientPlugin(), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]} />
 );
 
 export default {
@@ -52,6 +53,6 @@ export default {
 };
 
 export const Default = {
-  decorators: [FullscreenDecorator('bg-zinc-200')],
+  decorators: [FullscreenDecorator('bg-zinc-200 dark:bg-zinc-800')],
   args: {},
 };

@@ -92,5 +92,6 @@ message Thread {
     repeated Message messages = 1;
   }
 
-  repeated Block blocks = 1;
+  string name = 1;
+  repeated Block blocks = 2;
 }

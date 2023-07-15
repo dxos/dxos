@@ -3,5 +3,6 @@
 //
 
 export * from './ThreadBlock';
+export * from './ThreadChannel';
 export * from './ThreadMain';
 export * from './ThreadInput';
