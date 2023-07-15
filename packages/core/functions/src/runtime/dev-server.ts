@@ -55,12 +55,12 @@ export class DevServer {
         const module = require(join(this._options.directory, name));
         const handler = module.default;
         if (typeof handler !== 'function') {
-          throw new Error(`Must export default function: ${name}`);
+          throw new Error(`Handler must export default function: ${name}`);
         }
 
         this._functionHandlers[name] = handler;
       } catch (err) {
-        log.error('parsing function (check functions.yml config)', err);
+        log.error('parsing function (check functions.yml manifest)', err);
       }
     }
   }

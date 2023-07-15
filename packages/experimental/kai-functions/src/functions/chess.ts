@@ -16,7 +16,7 @@ export default (event: HandlerProps, context: FunctionContext) => {
   for (const objectId of event.objects) {
     const game = space.db.getObjectById(objectId);
     if (game) {
-      console.log('game', game.fen); // TODO(burdon): Rename fen (isn't FEN).
+      console.log('game', game.fen);
     }
   }
 
@@ -27,6 +27,7 @@ export default (event: HandlerProps, context: FunctionContext) => {
     const { Chess } = await import('chess.js');
     console.log(Chess);
     const chess = new Chess();
+    // TODO(burdon): Rename pgn (isn't FEN).
     chess.loadPgn(game.fen);
     if (chess.turn() === this._player) {
       const moves = chess.moves();
