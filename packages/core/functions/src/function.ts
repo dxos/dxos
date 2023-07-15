@@ -6,7 +6,7 @@ import { Client } from '@dxos/client';
 
 export interface Response {
   status(code: number): Response;
-  succeed(data: any): Response;
+  succeed(data?: object): Response;
 }
 
 export interface FunctionContext {

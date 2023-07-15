@@ -10,8 +10,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { Context } from '@dxos/context';
-import { DevServer, InvokeOptions, mountTrigger, FunctionsManifest } from '@dxos/functions';
+import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -52,23 +51,15 @@ export default class Dev extends BaseCommand<typeof Dev> {
         manifest: functionsManifest,
       });
 
-      const invokeOptions: InvokeOptions = {
-        runtime: 'dev',
-        endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
-      };
-
-      // TODO(burdon): Start/stop.
-      for (const trigger of functionsManifest.triggers) {
-        await mountTrigger({
-          ctx: new Context(),
-          client,
-          trigger,
-          invokeOptions, // TODO(burdon): Rename.
-        });
-      }
-
       await server.initialize();
       await server.start();
+
+      const triggers = new TriggerManager(client, functionsManifest.triggers, {
+        runtime: 'dev',
+        endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
+      });
+      // TODO(burdon): Stop.
+      await triggers.start();
 
       this.log(`Running: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {

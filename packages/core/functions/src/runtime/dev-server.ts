@@ -77,7 +77,7 @@ export class DevServer {
           res.statusCode = code;
           return builder;
         },
-        succeed: (result: any) => {
+        succeed: (result = {}) => {
           res.end(JSON.stringify(result));
           return builder;
         },

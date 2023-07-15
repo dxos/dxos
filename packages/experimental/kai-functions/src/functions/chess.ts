@@ -3,10 +3,28 @@
 //
 
 import { FunctionContext } from '@dxos/functions';
+import { PublicKey } from '@dxos/keys';
 
-export default (event: any, context: FunctionContext) => {
-  const identity = context.client.halo.identity.get();
-  // TODO(burdon): Random move.
-  console.log('handler', event, identity?.profile?.displayName);
-  return context.status(200).succeed({ event, greeting: `Hello, ${identity?.profile?.displayName}` });
+type HandlerProps = {
+  space: string;
+  objects: string[];
+};
+
+export default (event: HandlerProps, context: FunctionContext) => {
+  // TODO(burdon): client.spaces.get() is a more natural API.
+  const space = context.client.getSpace(PublicKey.from(event.space));
+  for (const objectId of event.objects) {
+    const game = space.db.getObjectById(objectId);
+    if (game) {
+      // TODO(burdon): Random move.
+      console.log('game', game);
+    }
+  }
+
+  // setTimeout(async () => {
+  //   const { Chess } = await import('chess.js');
+  //   console.log(Chess);
+  // });
+
+  return context.status(200).succeed({});
 };

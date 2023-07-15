@@ -9,5 +9,4 @@ functions:
 triggers:
   - function: chess
     subscription:
-      spaceKey: "044daceef7d7e1e689287ad08b633f6faf2be837e20bac31678fbac943a63b915706a3c950fbc90df70ea3d49a8a90f300dec83582c49a4d48eb023b8a8b756e82"
       type: dxos.experimental.chess.Game
