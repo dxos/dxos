@@ -140,6 +140,14 @@ message Runtime {
     optional google.protobuf.Struct env = 101;
   }
 
+  message Agent {
+    message Functions {
+      int32 port = 1;
+    }
+
+    optional Functions functions = 1;
+  }
+
   // CLI configuration
   message CLI {
     message AppServe {
@@ -368,6 +376,7 @@ message Runtime {
 
   optional Client client = 1;
   optional App app = 2;
+  optional Agent agent = 9;
   optional CLI cli = 3;
   optional Props props = 4;
   optional Services services = 5;

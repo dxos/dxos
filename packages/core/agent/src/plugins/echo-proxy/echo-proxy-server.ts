@@ -4,27 +4,27 @@
 
 import express from 'express';
 import http from 'http';
+import assert from 'node:assert';
 
-import { Client, Expando, PublicKey } from '@dxos/client';
+import { Expando, PublicKey } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { Service } from '../service';
+import { AbstractPlugin } from '../plugin';
 
 export type ProxyServerOptions = {
   port: number;
 };
 
 // TODO(burdon): Generalize dxRPC protobuf services API (e.g., /service/rpc-method).
-export class ProxyServer implements Service {
+export class EchoProxyServer extends AbstractPlugin {
   private _server?: http.Server;
 
-  // prettier-ignore
-  constructor(
-    private readonly _client: Client,
-    private readonly _options: ProxyServerOptions
-  ) {}
+  constructor(private readonly _options: ProxyServerOptions) {
+    super();
+  }
 
   async open() {
+    assert(this._client);
     log('starting proxy...', { ports: this._options.port });
     await this._client.initialize();
 
@@ -33,7 +33,7 @@ export class ProxyServer implements Service {
 
     app.get('/spaces', async (req, res) => {
       log('/spaces');
-      const spaces = this._client.spaces.get();
+      const spaces = this._client!.spaces.get();
       const result = {
         spaces: spaces.map((space) => ({ key: space.key.toHex() })),
       };
@@ -49,7 +49,7 @@ export class ProxyServer implements Service {
       };
 
       if (spaceKey) {
-        const space = this._client.getSpace(PublicKey.from(spaceKey));
+        const space = this._client!.getSpace(PublicKey.from(spaceKey));
         if (space) {
           const { objects } = space.db.query();
           Object.assign(result, {
@@ -70,7 +70,7 @@ export class ProxyServer implements Service {
       };
 
       if (spaceKey) {
-        const space = this._client.getSpace(PublicKey.from(spaceKey));
+        const space = this._client!.getSpace(PublicKey.from(spaceKey));
         if (space) {
           const objects = req.body;
           Object.assign(result, {
