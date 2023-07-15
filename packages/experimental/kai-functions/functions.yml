@@ -5,12 +5,9 @@ functions:
   chess:
     description: Chess bot.
 
-# TODO(dmaretskyi): Extract to separate file (dev only).
+# TODO(dmaretskyi): Extract to separate file (dev only)?
 triggers:
   - function: chess
-    # spaceKey:
     subscription:
-      spaceKey: 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2
-      # type: dxos.experimental.chess.Game
-      props:
-        type: dxos.experimental.test.Test
+      spaceKey: "044daceef7d7e1e689287ad08b633f6faf2be837e20bac31678fbac943a63b915706a3c950fbc90df70ea3d49a8a90f300dec83582c49a4d48eb023b8a8b756e82"
+      type: dxos.experimental.chess.Game

@@ -118,7 +118,7 @@ export default class Start extends BaseCommand<typeof Start> {
         properties: {
           profile: this.flags.profile,
           ...this._telemetryContext,
-          duration: Date.now() - this._startTime.getTime(),
+          duration: this.duration,
         },
       });
     };
