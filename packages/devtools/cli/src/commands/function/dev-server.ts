@@ -58,11 +58,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
         runtime: 'dev',
         endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
       });
-      // TODO(burdon): Stop.
-      await triggers.start();
 
       this.log(`Running: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
+        await triggers.start();
         await server.stop();
         process.exit();
       });
