@@ -59,7 +59,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
         endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
       });
 
-      console.log(server.port, config.values.runtime?.agent?.functions?.port);
+      // TODO(burdon): Document DevServer vs. FunctionPlugin endpoints).
+      console.log(server.endpoint, config.values.runtime?.agent?.functions?.port);
 
       this.log(`Running: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {

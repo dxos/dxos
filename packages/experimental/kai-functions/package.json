@@ -2,18 +2,11 @@
   "name": "@dxos/kai-functions",
   "version": "0.1.52",
   "private": true,
-  "description": "Experimental bots.",
+  "description": "Experimental functions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "types": "dist/types/src/index.d.ts",
-  "files": [
-    "testing.d.ts",
-    "testing.js",
-    "dist"
-  ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
