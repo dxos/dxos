@@ -2,34 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Args } from '@oclif/core';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Client, InvitationEncoder } from '@dxos/client';
-import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace, hostInvitation } from '../../util';
+import { hostInvitation } from '../../util';
 
 export default class Invite extends BaseCommand<typeof Invite> {
-  static override description = 'Create space invitation.';
-  static override args = { key: Args.string({ required: true }) };
+  static override description = 'Create device invitation.';
 
   async run(): Promise<any> {
-    let { key } = this.args;
-
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.spaces.get();
-      if (!key) {
-        key = await selectSpace(spaces);
-      }
-
-      const space = spaces.find((space) => space.key.toHex().startsWith(key));
-      if (!space) {
-        throw new Error(`Invalid key: ${truncateKey(key)}`);
-      }
-
-      const observable = space.createInvitation();
+      const observable = client.halo.createInvitation();
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {

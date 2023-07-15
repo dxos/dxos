@@ -3,7 +3,7 @@
         {
             "language": "typescript",
             "source": [
-                "import { Client, fromAgent, } from '@dxos/client'\n\n// Create client from default profile.\n// NOTE: Start daemon:\n// DX_PROFILE=test dx daemon run --listen=unix:///tmp/dx/run/agent/test.sock --listen=ws://localhost:4567\nconst client = new Client({ services: fromAgent({ profile: 'test' })})\nawait client.initialize()\n\n// Create identity.\nif (!client.halo.identity.get()) {\n  await client.halo.createIdentity();\n}\n\n// Verify HALO.\nconsole.log('identity =', client.halo.identity.get().identityKey.toHex())\n\n// List spaces.\nconsole.log('spaces =', client.spaces.get().map(space => space.key.toHex()))"
+                "import { Client, fromAgent, } from '@dxos/client'\n\n// Create client from default profile.\n// NOTE: Start daemon:\n// DX_PROFILE=test dx daemon run --listen=unix:///tmp/dx/run/agent/test.sock --listen=ws://localhost:4567\nconst client = new Client({ services: fromAgent()})\nawait client.initialize()\n\n// Create identity.\nif (!client.halo.identity.get()) {\n  await client.halo.createIdentity();\n}\n\n// Verify HALO.\nconsole.log('identity =', client.halo.identity.get().identityKey.toHex())\n\n// List spaces.\nconsole.log('spaces =', client.spaces.get().map(space => space.key.toHex()))"
             ],
             "outputs": [
                 {
@@ -11,9 +11,9 @@
                         {
                             "mime": "application/vnd.code.notebook.stdout",
                             "value": [
-                                "identity = 04d62f26eac40ecfcd065497acb0084b536f0700cdeb12d10da48ae2e5bf234dca967f0caef276d891d9cf39afd415fe1dd66d88e72a643eba3918f943f272fa1e",
+                                "identity = 041d763e6bc5f9da4b11940935a6b09322b5ec87897a99822c67a5a54fe6a67f24fd50b09278e3e0b8a9fb51a861fab336b82844b84a6a42574ad901382a0c90b9",
                                 "spaces = [",
-                                "  '04a809faaefdf57faf298727b82b036fa7734c0b53b4b5f33e9b5cf96204971433cb3be3212f30af8a8bf7ceb8469bd24fe1007027d818350613126d519472e54c'",
+                                "  '044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2'",
                                 "]",
                                 ""
                             ]
@@ -27,7 +27,19 @@
             "source": [
                 "export {}; declare var client: import('@dxos/client').Client\n\n// Create space.\nconst space = await client.createSpace({ name: 'Testing' })\nconsole.log('space =', space.key.toHex());"
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "space = 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
         },
         {
             "language": "typescript",
@@ -83,7 +95,37 @@
             "source": [
                 "export {}; declare var client: import('@dxos/client').Client;\nimport { Expando } from '@dxos/client';\n\nconst space = client.spaces.get()[0]\nconsole.log('space =', space.key.toHex());\n\n// Create/update object.\nspace.db.add(new Expando({ type: 'dxos.experimental.test.Test', message: 'Hello World!' }))\n\n// Create/update chess game.\n// TODO(burdon): Implement way to create TypedObject like this.\n// space.db.add(new Expando({ type: 'dxos.experimental.chess.Game', fen: '1. f3 Nh6 2. Nh3 g6 3. Ng5' }))\n// const game = space.db.getObjectById('b31fc6a20789fc1c650d7e6f3451488b241a42c85288e284b03596fbc3ff7f26');\n// game.fen = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\nawait space.db.flush()\n"
             ],
-            "outputs": []
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "space = 044773e693daedffc5e2ab3fd854e40a30e9d4bddf4d05c51f9b7271dd308f2c192b8133d1e4f1104be0468cc26ce628faf047cdc86069d0dd54284a193abdd5e2",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "export {}; declare var client: import('@dxos/client').Client;\n\nconst space = client.spaces.get()[0]\n// Create/update object.\n\nconst [obj] = space.db.query({ type: 'dxos.experimental.test.Test' }).objects\n\n// Create/update chess game.\n// TODO(burdon): Implement way to create TypedObject like this.\n// space.db.add(new Expando({ type: 'dxos.experimental.chess.Game', fen: '1. f3 Nh6 2. Nh3 g6 3. Ng5' }))\n// const game = space.db.getObjectById('b31fc6a20789fc1c650d7e6f3451488b241a42c85288e284b03596fbc3ff7f26');\n// game.fen = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\nobj.count ??= 0\nobj.count++"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "text/plain",
+                            "value": [
+                                "\u001b[33m9\u001b[39m"
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }
