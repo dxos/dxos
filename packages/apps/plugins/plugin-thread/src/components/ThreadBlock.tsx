@@ -15,7 +15,7 @@ export type BlockProperties = {
   classes: string;
 };
 
-export const Block: FC<{
+export const ThreadBlock: FC<{
   block: ThreadType.Block;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
 }> = ({ block, getBlockProperties }) => {

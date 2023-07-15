@@ -18,6 +18,7 @@
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
+    "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@braneframe/plugin-url-sync": "workspace:*",
     "@braneframe/types": "workspace:*",
