@@ -15,7 +15,6 @@ export default (event: HandlerProps, context: FunctionContext) => {
   const space = context.client.getSpace(PublicKey.from(event.space));
 
   // TODO(burdon): Async.
-  // TODO(burdon): Only trigger if has player credential.
   // TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine
   setTimeout(async () => {
     const { Chess } = await import('chess.js');
@@ -26,6 +25,7 @@ export default (event: HandlerProps, context: FunctionContext) => {
         const chess = new Chess();
         // TODO(burdon): Rename pgn (isn't FEN).
         chess.loadPgn(game.fen);
+        // TODO(burdon): Only trigger if has player credential.
         if (chess.turn() === 'b') {
           const moves = chess.moves();
           if (moves.length) {
