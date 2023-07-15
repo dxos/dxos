@@ -68,14 +68,22 @@ const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({
   const [text, setText] = useState('');
 
   const handleMessage = () => {
-    if (onMessage(text) !== false) {
+    const value = text.trim();
+    if (value.length && onMessage(value) !== false) {
       setText('');
     }
   };
 
   const handleKeyDown = async (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleMessage();
+    switch (event.key) {
+      case 'Escape': {
+        setText('');
+        break;
+      }
+      case 'Enter': {
+        handleMessage();
+        break;
+      }
     }
   };
 
@@ -86,6 +94,7 @@ const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({
           <Input.Label srOnly>{t('block input label')}</Input.Label>
           <Input.TextInput
             autoFocus
+            autoComplete='off'
             variant='subdued'
             classNames='flex-1 is-auto pis-2'
             placeholder='Enter message.'
