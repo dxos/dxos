@@ -24,7 +24,7 @@ export type MountTriggerParams = {
   invokeOptions: InvokeOptions;
 };
 
-// TODO(burdon): Function?
+// TODO(burdon): Class?
 export const mountTrigger = async ({ ctx, client, trigger, invokeOptions }: MountTriggerParams) => {
   assert(trigger.subscription.spaceKey, 'Missing spaceKey');
 

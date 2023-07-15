@@ -50,6 +50,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
       };
 
+      // TODO(burdon): Start/stop.
       for (const trigger of functionsManifest.triggers) {
         await mountTrigger({
           ctx: new Context(),
