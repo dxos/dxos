@@ -42,12 +42,12 @@
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/functions",
-        "forceExit": true,
-        "outputPath": "tmp/mocha/packages/core/functions",
-        "resultsPath": "test-results/packages/core/functions",
         "environments": [
           "nodejs"
         ],
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/functions",
+        "resultsPath": "test-results/packages/core/functions",
         "testPatterns": [
           "packages/core/functions/src/**/*.test.{ts,js}"
         ],
