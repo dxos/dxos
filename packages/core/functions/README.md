@@ -77,8 +77,8 @@ nodemon -w ./src -e ts --exec $DXOS_ROOT/packages/devtools/cli/bin/dev function 
 > NOTE: The port (7001) must match the one in config.
 
 ```bash
-curl -i -X POST -H 'Content-Type: application/json' \
-  http://localhost:7001/dev/chess --data '{ "message": "Hello World!" }' 
+curl -X POST -H 'Content-Type: application/json' -w '\n' \
+  http://localhost:7001/dev/hello --data '{ "message": "Hello World!" }' 
 ```
 
 ## DXOS Resources

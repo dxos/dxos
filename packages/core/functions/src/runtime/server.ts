@@ -41,6 +41,10 @@ export class FunctionServer {
     return this._port ? `http://localhost:${this._port}` : undefined;
   }
 
+  get functions() {
+    return Object.keys(this._functionHandlers);
+  }
+
   async initialize() {
     for (const [name, _] of Object.entries(this._options.manifest.functions)) {
       try {
@@ -53,7 +57,7 @@ export class FunctionServer {
 
         this._functionHandlers[name] = handler;
       } catch (err) {
-        log.error('parsing function', err);
+        log.error('parsing function (check functions.yml config)', err);
       }
     }
   }
@@ -96,7 +100,7 @@ export class FunctionServer {
 
     const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
       endpoint: this.endpoint!,
-      functions: Object.keys(this._functionHandlers).map((name) => ({ name })),
+      functions: this.functions.map((name) => ({ name })),
     });
     this._registrationId = registrationId;
   }

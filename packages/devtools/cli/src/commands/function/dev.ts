@@ -42,6 +42,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
         process.exit();
       });
 
+      if (this.flags.verbose) {
+        this.log('Functions:', server.functions);
+      }
+
       // Wait until exit (via SIGINT).
       await new Promise(() => {});
     });
