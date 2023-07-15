@@ -5,10 +5,13 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { load } from 'js-yaml';
+import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { FunctionServer } from '@dxos/functions';
+import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { DevServer, InvokeOptions, mountTrigger, FunctionsManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -28,11 +31,33 @@ export default class Dev extends BaseCommand<typeof Dev> {
       require(requirePath);
     }
 
+    const functionsManifest = load(
+      await readFile(join(process.cwd(), this.flags.manifest), 'utf8'),
+    ) as FunctionsManifest;
+
     await this.execWithClient(async (client) => {
-      const server = new FunctionServer(client, {
+      // TODO(dmaretskyi): Move into system service?
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      assert(config.values.runtime?.agent?.functions?.port, 'Port not set.');
+
+      const server = new DevServer(client, {
         directory: join(process.cwd(), 'src/functions'),
-        manifest: load(await readFile(join(process.cwd(), this.flags.manifest), 'utf8')) as any,
+        manifest: functionsManifest,
       });
+
+      const invokeOptions: InvokeOptions = {
+        runtime: 'dev',
+        endpoint: `http://localhost:${config.values.runtime?.agent?.functions?.port}`,
+      };
+
+      for (const trigger of functionsManifest.triggers) {
+        await mountTrigger({
+          ctx: new Context(),
+          client,
+          trigger,
+          invokeOptions, // TODO(burdon): Rename.
+        });
+      }
 
       await server.initialize();
       await server.start();

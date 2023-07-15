@@ -2381,16 +2381,20 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/observable-object': workspace:*
       '@types/express': ^4.17.17
       express: 4.17.1
       portfinder: ^1.0.32
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/context': link:../../common/context
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
+      '@dxos/observable-object': link:../../common/observable-object
       express: 4.17.1
       portfinder: 1.0.32
     devDependencies:

@@ -21,8 +21,10 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
     "express": "4.17.1",
     "portfinder": "^1.0.32"
   },

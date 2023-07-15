@@ -20,22 +20,21 @@ export interface FunctionHandler {
 
 export type FunctionsManifest = {
   functions: Record<string, FunctionConfig>;
+  triggers: FunctionTrigger[];
 };
 
 export type FunctionConfig = {
   description?: string;
 };
 
-export type FunctionTriggers = {
+export type FunctionTrigger = {
   function: string;
-  triggers: FunctionTrigger[];
+  subscription: TriggerSubscription;
 };
 
-export type FunctionTrigger = {
+export type TriggerSubscription = {
   type: string;
   spaceKey: string;
-  subscription: {
-    props?: Record<string, any>;
-    nested?: string[];
-  };
+  props?: Record<string, any>;
+  nested?: string[];
 };

@@ -15,12 +15,15 @@ import { FunctionContext, FunctionHandler, FunctionsManifest, Response } from '.
 
 const DEFAULT_PORT = 7000;
 
-export type FunctionServerOptions = {
+export type DevServerOptions = {
   directory: string;
   manifest: FunctionsManifest;
 };
 
-export class FunctionServer {
+/**
+ * Functions dev server provides a local HTTP server for testing functions.
+ */
+export class DevServer {
   private readonly _functionHandlers: Record<string, FunctionHandler> = {};
 
   private _server?: http.Server;
@@ -30,7 +33,7 @@ export class FunctionServer {
   // prettier-ignore
   constructor(
     private readonly _client: Client,
-    private readonly _options: FunctionServerOptions
+    private readonly _options: DevServerOptions
   ) {}
 
   get port() {
