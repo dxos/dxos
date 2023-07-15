@@ -18,8 +18,9 @@ export type BlockProperties = {
 
 export const ThreadBlock: FC<{
   block: ThreadType.Block;
+  onDeleteMessage?: (blockId: string, idx: number) => void;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-}> = ({ block, getBlockProperties }) => {
+}> = ({ block, onDeleteMessage, getBlockProperties }) => {
   const { t } = useTranslation('dxos.org/plugin/thread');
   const [text, setText] = useState('');
   if (!block.messages.length || !block.messages[0].identityKey) {
@@ -52,9 +53,11 @@ export const ThreadBlock: FC<{
             {block.messages.map((message, i) => (
               <div key={i} className='flex p-2 group'>
                 <div className='grow overflow-hidden break-all'>{message.text}</div>
-                <button className='invisible group-hover:visible ml-2'>
-                  <X />
-                </button>
+                {onDeleteMessage && (
+                  <button className='invisible group-hover:visible ml-2' onClick={() => onDeleteMessage(block.id, i)}>
+                    <X />
+                  </button>
+                )}
               </div>
             ))}
           </div>
