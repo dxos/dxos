@@ -44,7 +44,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       if (this.flags.verbose) {
-        this.log(chalk`{green Functions: ${JSON.stringify(server.functions)}}`);
+        this.log(chalk`{green Functions:\n${server.functions.map((name) => `- ${name}`).join('\n')}}`);
       }
 
       // Wait until exit (via SIGINT).

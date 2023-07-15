@@ -9,6 +9,9 @@ import { PublicKey } from '@dxos/keys';
 
 import { BaseCommand } from '../../base-command';
 
+/**
+ * @deprecated
+ */
 export default class Exec extends BaseCommand<typeof Exec> {
   static override enableJsonFlag = true;
   static override description = 'Invoke function.';

@@ -33,6 +33,9 @@ export const printFunctions = (functions: any[], flags = {}) => {
   );
 };
 
+/**
+ * @deprecated
+ */
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List functions.';

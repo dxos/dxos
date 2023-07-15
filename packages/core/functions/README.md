@@ -10,25 +10,17 @@ pnpm i @dxos/functions
 
 ## Writing functions
 
-Create a manifest file at package root:
-
-TODO(burdon): Create example for hello world function and warn about recursion.
+Create a manifest file at the package root:
 
 ```yaml
-# functions.yml
 functions:
-  chess:
-    description: Play chess with AI.
-
-triggers:
-  - function: chess
-    subscription:
-      type: dxos.experimental.chess.Game
+  hello:
+    description: Test function.
 ```
 
-> NOTE: The function name must match the filename (e.g., `src/functions/<name>.ts`).
+> NOTE: The function name must match the filename (e.g., `src/functions/hello.ts`).
 
-Example:
+Create an example function:
 
 ```ts
 import { FunctionContext } from '@dxos/functions';
