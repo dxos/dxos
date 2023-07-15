@@ -2,16 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { Input, Main, useTranslation } from '@dxos/aurora';
+import { Button, Input, Main, useTranslation } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey, SpaceProxy } from '@dxos/client';
+import { observer } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
-export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data }) => {
+import { Block } from './Block';
+
+// TODO(burdon): Make observer generic.
+export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = observer(({ data }) => {
   const thread = data[1];
 
   // TODO(burdon): Resolve username (and avatar) from identityKey.
@@ -21,67 +24,84 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data }) => 
     classes: ['text-white', colors[Number('0x' + identityKey) % colors.length]].join(' '),
   });
 
+  // TODO(burdon): Model.
+  const handleAddMessage = (text: string) => {
+    // TODO(burdon): Not updated. observer()?
+    thread.blocks.push(
+      new ThreadType.Block({
+        messages: [{ text }],
+      }),
+    );
+
+    return true;
+  };
+
   // TODO(burdon): Different width form factors.
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
-      <div className='flex flex-col space-y-4 w-[300px] m-2'>
-        {thread.blocks.map((block) => (
-          <Block key={block.id} block={block} getBlockProperties={getBlockProperties} />
-        ))}
+    <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden items-center pb-8'>
+      <div
+        className={mx(
+          'flex flex-col w-full min-w-[300px] md:max-w-[480px] h-full overflow-hidden',
+          'p-4 m-2 bg-zinc-50 dark:bg-neutral-800',
+        )}
+      >
+        <div className='flex grow overflow-hidden'>
+          {/* TODO(burdon): Scroll panel. */}
+          <div className='flex flex-col-reverse overflow-auto py-4 px-4'>
+            {thread.blocks
+              .map((block) => (
+                <div key={block.id} className='my-2'>
+                  <Block block={block} getBlockProperties={getBlockProperties} />
+                </div>
+              ))
+              .reverse()}
+          </div>
+        </div>
+        <ThreadInput onMessage={handleAddMessage} />
       </div>
     </Main.Content>
   );
-};
+});
 
-export type BlockProperties = {
-  displayName: string;
-  classes: string;
-};
-
-export const Block: FC<{
-  block: ThreadType.Block;
-  getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-}> = ({ block, getBlockProperties }) => {
+const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
   const { t } = useTranslation('dxos.org/plugin/thread');
   const [text, setText] = useState('');
-  if (!block.messages.length || !block.messages[0].identityKey) {
-    return null;
-  }
 
-  const { classes, displayName } = getBlockProperties(PublicKey.from(block.messages[0].identityKey));
+  const handleMessage = () => {
+    if (onMessage(text) !== false) {
+      setText('');
+    }
+  };
 
-  // TODO(burdon): Reply button.
+  const handleKeyDown = async (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleMessage();
+    }
+  };
+
   return (
-    <div key={block.id} className='flex flex-col rounded shadow'>
-      {block.messages[0].identityKey && (
-        <div className={mx('text-sm px-2 py-0.5 space-x-1 rounded-tl rounded-tr truncate', classes)}>
-          <span className='font-mono'>12:45</span>
-          <span className='truncate'>{displayName}</span>
-        </div>
-      )}
-
-      <div className='divide-y'>
-        {block.messages.map((message, i) => (
-          <div key={i} className='flex p-2'>
-            <div className='grow'>{message.text}</div>
-            <button>
-              <X />
-            </button>
-          </div>
-        ))}
+    <div className='flex flex-col shadow p-2 bg-white dark:bg-neutral-900'>
+      <div>
+        <Input.Root>
+          <Input.Label srOnly>{t('block input label')}</Input.Label>
+          <Input.TextInput
+            autoFocus
+            variant='subdued'
+            classNames='flex-1 is-auto pis-2'
+            placeholder='Enter message.'
+            value={text}
+            onChange={({ target: { value } }) => setText(value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
       </div>
-
-      {/* TODO(burdon): Multi-line textarea. ESC key. */}
-      <Input.Root>
-        <Input.Label srOnly>{t('block input label')}</Input.Label>
-        <Input.TextInput
-          variant='subdued'
-          classNames='flex-1 is-auto pis-2'
-          placeholder='Enter message.'
-          value={text}
-          onChange={({ target: { value } }) => setText(value)}
-        />
-      </Input.Root>
+      <div className='flex flex-row-reverse'>
+        <div>
+          <Button density='fine' variant='outline' onClick={handleMessage}>
+            Submit
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

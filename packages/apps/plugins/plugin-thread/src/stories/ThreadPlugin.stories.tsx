@@ -52,6 +52,6 @@ export default {
 };
 
 export const Default = {
-  decorators: [FullscreenDecorator()],
+  decorators: [FullscreenDecorator('bg-zinc-200')],
   args: {},
 };
