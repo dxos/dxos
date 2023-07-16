@@ -22,7 +22,7 @@ export const ThreadBlock: FC<{
   onDeleteMessage?: (blockId: string, idx: number) => void;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
 }> = ({ block, onDeleteMessage, getBlockProperties }) => {
-  useSubscription(block.messages);
+  useSubscription(block.messages); // TODO(burdon): Not updated.
   if (!block.messages.length || !block.identityKey) {
     return null;
   }

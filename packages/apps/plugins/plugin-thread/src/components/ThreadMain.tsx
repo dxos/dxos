@@ -12,13 +12,11 @@ import { PublicKey, SpaceProxy } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 
 import { ThreadChannel } from './ThreadChannel';
-import { useSubscription } from './util';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
-  // const identityKey = PublicKey.random().toHex();
   const identityKey = identity!.identityKey.toHex();
-  useSubscription(thread.blocks);
+  // const identityKey = PublicKey.random().toHex();
 
   // TODO(burdon): Change to model.
   const handleAddMessage = (text: string) => {
