@@ -12,11 +12,13 @@ import { PublicKey, SpaceProxy } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 
 import { ThreadChannel } from './ThreadChannel';
+import { useSubscription } from './util';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
   // const identityKey = PublicKey.random().toHex();
   const identityKey = identity!.identityKey.toHex();
+  useSubscription(thread.blocks);
 
   // TODO(burdon): Change to model.
   const handleAddMessage = (text: string) => {
@@ -26,17 +28,14 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, t
     };
 
     // Update current block if same user and time > 3m.
-    const period = 3 * 60;
+    const period = 1 * 60; // TODO(burdon): Config.
     const block = thread.blocks[thread.blocks.length - 1];
-    if (block?.messages?.length) {
-      const message = block.messages[0];
+    if (block?.identityKey && PublicKey.equals(block.identityKey, identityKey)) {
+      const previous = block.messages[block.messages.length - 1];
       if (
-        block.identityKey &&
-        PublicKey.equals(block.identityKey, identityKey) &&
-        message.timestamp &&
-        differenceInSeconds(new Date(), new Date(message.timestamp)) < period
+        previous.timestamp &&
+        differenceInSeconds(new Date(message.timestamp), new Date(previous.timestamp)) < period
       ) {
-        // TODO(burdon): Not updated (even with observer).
         block.messages.push(message);
         return true;
       }

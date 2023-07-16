@@ -4,12 +4,13 @@
 
 import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
+
+import { useSubscription } from './util';
 
 export type BlockProperties = {
   displayName: string;
@@ -21,8 +22,7 @@ export const ThreadBlock: FC<{
   onDeleteMessage?: (blockId: string, idx: number) => void;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
 }> = ({ block, onDeleteMessage, getBlockProperties }) => {
-  const { t } = useTranslation('dxos.org/plugin/thread');
-  const [text, setText] = useState('');
+  useSubscription(block.messages);
   if (!block.messages.length || !block.identityKey) {
     return null;
   }

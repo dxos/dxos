@@ -12,6 +12,6 @@ triggers:
     subscription:
       type: dxos.experimental.chess.Game
 
-  - function: chess
+  - function: chatgpt
     subscription:
       type: braneframe.Thread
