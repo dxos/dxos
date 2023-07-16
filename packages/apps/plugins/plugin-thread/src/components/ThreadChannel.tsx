@@ -28,23 +28,23 @@ const getBlockProperties = (identityKey: PublicKey) => ({
   classes: [colors[Number('0x' + identityKey) % colors.length]].join(' '),
 });
 
-type DailyBlock = {
-  date?: Date;
-  blocks: ThreadType.Block[];
-};
+// type DailyBlock = {
+//   date?: Date;
+//   blocks: ThreadType.Block[];
+// };
 
 // TODO(burdon): Review data structure.
 // TODO(burdon): Split into daily buckets (by locale). Reduce.
-const blockReducer = (dailyBlocks: DailyBlock[], block: ThreadType.Block) => {
-  // if (dailyBlocks.length === 0) {
-  //   dailyBlocks.push({
-  //     date: block.messages[0].timestamp,
-  //     blocks: [block],
-  //   });
-  // }
+// const blockReducer = (dailyBlocks: DailyBlock[], block: ThreadType.Block) => {
+// if (dailyBlocks.length === 0) {
+//   dailyBlocks.push({
+//     date: block.messages[0].timestamp,
+//     blocks: [block],
+//   });
+// }
 
-  return dailyBlocks;
-};
+// return dailyBlocks;
+// };
 
 // TODO(burdon): Make observer generic?
 export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string) => boolean | undefined }> = observer(
