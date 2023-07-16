@@ -4065,6 +4065,73 @@ importers:
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
 
+  packages/experimental/kai-functions:
+    specifiers:
+      '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/functions': workspace:*
+      '@dxos/kai-types': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@faker-js/faker': ^7.3.0
+      '@types/faker': ^5.5.9
+      '@types/html-to-text': ^9.0.0
+      '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.startcase': ^4.4.7
+      '@types/split2': ^3.2.1
+      assert: ^2.0.0
+      chess.js: 1.0.0-alpha.0
+      cross-fetch: ^3.1.5
+      csv-parse: ^5.3.6
+      date-fns: ^2.29.3
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.startcase: ^4.4.0
+      node-fetch: ^2.6.0
+    dependencies:
+      '@braneframe/types': link:../../apps/types
+      '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/errors': link:../../sdk/errors
+      '@dxos/functions': link:../../core/functions
+      '@dxos/kai-types': link:../kai-types
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@faker-js/faker': 7.6.0
+      assert: 2.0.0
+      chess.js: 1.0.0-alpha.0
+      cross-fetch: 3.1.5
+      csv-parse: 5.3.6
+      date-fns: 2.29.3
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.startcase: 4.4.0
+      node-fetch: 2.6.7
+    devDependencies:
+      '@types/faker': 5.5.9
+      '@types/html-to-text': 9.0.0
+      '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.startcase': 4.4.7
+      '@types/split2': 3.2.1
+
   packages/experimental/kai-sandbox:
     specifiers:
       '@dxos/async': workspace:*

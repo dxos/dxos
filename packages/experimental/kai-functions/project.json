@@ -1,7 +1,7 @@
 {
   "sourceRoot": "packages/experimental/kai-functions/src",
   "projectType": "library",
-    "targets": {
+  "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {

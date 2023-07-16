@@ -8,6 +8,9 @@
     ],
     "outDir": "dist/types"
   },
+  "exclude": [
+    "functions"
+  ],
   "include": [
     "src"
   ],
@@ -22,6 +25,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -29,6 +35,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../core/protocols"
