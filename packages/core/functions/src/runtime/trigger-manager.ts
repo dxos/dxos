@@ -59,6 +59,9 @@ export class TriggerManager {
         return;
       }
 
+      // TODO(burdon): Factor out subscription.
+
+      let count = 0;
       const updatedIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
         const updatedObjects = Array.from(updatedIds);
@@ -78,7 +81,9 @@ export class TriggerManager {
           updatedIds.add(object.id);
         }
 
-        task.schedule();
+        if (count++) {
+          task.schedule();
+        }
       });
 
       ctx.onDispose(() => selection.unsubscribe());
@@ -87,6 +92,9 @@ export class TriggerManager {
       const unsubscribe = query.subscribe(({ objects }) => {
         selection.update(objects);
       });
+
+      // Trigger first update, but don't schedule task.
+      selection.update(query.objects);
 
       ctx.onDispose(unsubscribe);
 
