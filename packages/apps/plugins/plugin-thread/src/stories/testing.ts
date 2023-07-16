@@ -13,10 +13,10 @@ export const createThread = () => {
   return new ThreadType({
     blocks: [
       new ThreadType.Block({
+        identityKey: PublicKey.random().toHex(),
         messages: [
           {
-            identityKey: PublicKey.random().toHex(),
-            timestamp: sub(now, { minutes: 92 }).toISOString(),
+            timestamp: sub(now, { days: 1, minutes: 115 }).toISOString(),
             text: 'Hello!',
           },
           {
@@ -28,19 +28,19 @@ export const createThread = () => {
         ],
       }),
       new ThreadType.Block({
+        identityKey: PublicKey.random().toHex(),
         messages: [
           {
-            identityKey: PublicKey.random().toHex(),
-            timestamp: sub(now, { minutes: 40 }).toISOString(),
+            timestamp: sub(now, { minutes: 42 }).toISOString(),
             text: "OK I'll work on that",
           },
         ],
       }),
       new ThreadType.Block({
+        identityKey: PublicKey.random().toHex(),
         messages: [
           {
-            identityKey: PublicKey.random().toHex(),
-            timestamp: sub(now, { minutes: 10 }).toISOString(),
+            timestamp: sub(now, { minutes: 8 }).toISOString(),
             text: "OK I'll work on that",
           },
           {

@@ -80,16 +80,18 @@ message Thread {
 
   message Message {
     string timestamp = 1;
-    // TODO(burdon): Import.
-    // dxos.keys.PublicKey identity_key = 2;
-    string identity_key = 2;
-    string text = 3;
+    string text = 2;
   }
 
+  // TODO(burdon): Meta (e.g., source).
   message Block {
     option (object) = true;
 
-    repeated Message messages = 1;
+    // TODO(burdon): Import.
+    // TODO(burdon): Can this be inferred?
+    // dxos.keys.PublicKey identity_key = 2;
+    string identity_key = 1;
+    repeated Message messages = 2;
   }
 
   string name = 1;

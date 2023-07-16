@@ -15,30 +15,25 @@ import { ThreadChannel } from './ThreadChannel';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
   // const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
+  const identityKey = PublicKey.random().toHex();
 
-  // TODO(burdon): Model.
+  // TODO(burdon): Change to model.
   const handleAddMessage = (text: string) => {
     const message = {
-      // TODO(burdon): Key type in proto.
-      identityKey: PublicKey.random().toHex(),
-      // identityKey: identity!.identityKey.toHex(),
       timestamp: new Date().toISOString(),
       text,
     };
 
-    // TODO(burdon): New block if different user or time > 3m.
+    // Update current block if same user and time > 3m.
+    const period = 3 * 60;
     const block = thread.blocks[thread.blocks.length - 1];
     if (block?.messages?.length) {
-      const { identityKey, timestamp } = block.messages[0];
-      // TODO(burdon): Testing hack.
-      if (Math.random() < 0.3) {
-        message.identityKey = identityKey!;
-      }
+      const message = block.messages[0];
       if (
-        identityKey &&
-        PublicKey.equals(identityKey, message.identityKey) &&
-        timestamp &&
-        differenceInSeconds(new Date(), new Date(timestamp)) < 3 * 60
+        block.identityKey &&
+        PublicKey.equals(block.identityKey, identityKey) &&
+        message.timestamp &&
+        differenceInSeconds(new Date(), new Date(message.timestamp)) < period
       ) {
         // TODO(burdon): Not updated (even with observer).
         block.messages.push(message);
@@ -48,6 +43,7 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, t
 
     thread.blocks.push(
       new ThreadType.Block({
+        identityKey,
         messages: [message],
       }),
     );

@@ -15,11 +15,36 @@ import { ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 
 // TODO(burdon): Resolve username (and avatar) from identityKey/members.
-const colors = ['text-blue-500', 'text-green-500', 'text-red-500', 'text-orange-500', 'text-purple-500'];
+const colors = [
+  'text-blue-300',
+  'text-green-300',
+  'text-teal-300',
+  'text-red-300',
+  'text-orange-300',
+  'text-purple-300',
+];
 const getBlockProperties = (identityKey: PublicKey) => ({
   displayName: humanize(identityKey),
   classes: [colors[Number('0x' + identityKey) % colors.length]].join(' '),
 });
+
+type DailyBlock = {
+  date?: Date;
+  blocks: ThreadType.Block[];
+};
+
+// TODO(burdon): Review data structure.
+// TODO(burdon): Split into daily buckets (by locale). Reduce.
+const blockReducer = (dailyBlocks: DailyBlock[], block: ThreadType.Block) => {
+  // if (dailyBlocks.length === 0) {
+  //   dailyBlocks.push({
+  //     date: block.messages[0].timestamp,
+  //     blocks: [block],
+  //   });
+  // }
+
+  return dailyBlocks;
+};
 
 // TODO(burdon): Make observer generic?
 export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string) => boolean | undefined }> = observer(
@@ -40,7 +65,7 @@ export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string
     return (
       <div
         className={mx(
-          'flex flex-col w-full min-w-[300px] md:max-w-[480px] h-full overflow-hidden m-4 p-2',
+          'flex flex-col h-full w-full min-w-[300px] md:max-w-[480px] overflow-hidden m-4 p-2',
           'bg-zinc-50 dark:text-neutral-800',
         )}
       >
@@ -60,11 +85,12 @@ export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string
         </div>
         <div className='flex flex-grow overflow-hidden'>
           {/* TODO(burdon): Scroll panel. */}
+          {/* TODO(burdon): Break into days. */}
           <div className='flex flex-col-reverse grow overflow-auto px-6 pt-4'>
             <div ref={bottomRef} />
             {thread.blocks
               .map((block) => (
-                <div key={block.id} className='my-2'>
+                <div key={block.id} className='my-1 __divide-y __border-b'>
                   <ThreadBlock block={block} getBlockProperties={getBlockProperties} />
                 </div>
               ))
