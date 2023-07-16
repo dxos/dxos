@@ -55,14 +55,6 @@ dx function dev -r ts-node/register
 
 > NOTE: `-r ts-node/register` configures native TypesScript support.
 
-TODO(burdon): Specify additional options to import dependencies:
-
-```bash
-export NODE_PATH=$(git rev-parse --show-toplevel)/packages/experimental/kai-bots/node_modules
-
-dx function dev -r ts-node/register -r chess.js
-```
-
 Install `nodemon` to support live reloading:
 
 ```bash
