@@ -59,13 +59,13 @@ export class TriggerManager {
         return;
       }
 
-      // TODO(burdon): Factor out subscription.
+      // TODO(burdon): Factor out subscription/result delta.
 
       let count = 0;
-      const updatedIds = new Set<string>();
+      const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        const updatedObjects = Array.from(updatedIds);
-        updatedIds.clear();
+        const updatedObjects = Array.from(objectIds);
+        objectIds.clear();
 
         await this.invokeFunction(this._invokeOptions, trigger.function, {
           space: space.key,
@@ -73,14 +73,22 @@ export class TriggerManager {
         });
       });
 
+      // TODO(burdon): Removed?
       const selection = createSubscription(({ added, updated }) => {
         for (const object of added) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
         for (const object of updated) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
 
+        log.info('updated', {
+          space: space.key,
+          objects: objectIds.size,
+          added: added.length,
+          updated: updated.length,
+          count,
+        });
         if (count++) {
           task.schedule();
         }
@@ -94,11 +102,11 @@ export class TriggerManager {
       });
 
       // Trigger first update, but don't schedule task.
-      selection.update(query.objects);
+      // selection.update(query.objects);
 
       ctx.onDispose(unsubscribe);
 
-      log('mounted', { trigger });
+      log.info('mounted', { space: space.key, trigger });
     }
   }
 
