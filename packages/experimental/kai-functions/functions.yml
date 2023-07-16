@@ -14,4 +14,4 @@ triggers:
 
   - function: chatgpt
     subscription:
-      type: braneframe.Thread
+      type: braneframe.Thread.Block

@@ -88,9 +88,6 @@ export class TriggerManager {
         selection.update(objects);
       });
 
-      // TODO(burdon): Subscribe method option to trigger automatically (throughout codebase).
-      selection.update(query.objects);
-
       ctx.onDispose(unsubscribe);
 
       log('mounted', { trigger });

@@ -87,8 +87,8 @@ message Thread {
   message Block {
     option (object) = true;
 
-    // TODO(burdon): Import.
-    // TODO(burdon): Can this be inferred?
+    // TODO(burdon): Can the be inferred from the mutation/pipeline?
+    // TODO(burdon): Import key.
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     repeated Message messages = 2;
