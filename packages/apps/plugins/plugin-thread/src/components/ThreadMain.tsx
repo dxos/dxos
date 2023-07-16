@@ -9,13 +9,14 @@ import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey, SpaceProxy } from '@dxos/client';
-// import { useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { ThreadChannel } from './ThreadChannel';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
-  // const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
-  const identityKey = PublicKey.random().toHex();
+  const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
+  // const identityKey = PublicKey.random().toHex();
+  const identityKey = identity!.identityKey.toHex();
 
   // TODO(burdon): Change to model.
   const handleAddMessage = (text: string) => {
