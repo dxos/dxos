@@ -7,6 +7,7 @@ import stableStringify from 'json-stable-stringify';
 import { PublicKey } from '@dxos/keys';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { arrayToBuffer } from '@dxos/util';
 
 /**
  * @returns The input message to be signed for a given credential.
@@ -52,7 +53,11 @@ export const canonicalStringify = (obj: any) =>
         if (Buffer.isBuffer(value)) {
           return value.toString('hex');
         }
-        if (value instanceof Uint8Array || (value.data && value.type === 'Buffer')) {
+
+        if (value instanceof Uint8Array) {
+          return arrayToBuffer(value).toString('hex');
+        }
+        if (value.data && value.type === 'Buffer') {
           return Buffer.from(value).toString('hex');
         }
         if (original instanceof Timeframe) {
