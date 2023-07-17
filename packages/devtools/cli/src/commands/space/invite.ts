@@ -11,7 +11,6 @@ import { truncateKey } from '@dxos/debug';
 import { BaseCommand } from '../../base-command';
 import { selectSpace, hostInvitation } from '../../util';
 
-// TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
   static override args = { key: Args.string({ required: true }) };
@@ -43,7 +42,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
         },
       });
 
-      ux.action.start('Waiting for peer to connect');
+      ux.action.start('Waiting for peer to connect...');
       await invitationSuccess;
       ux.action.stop();
     });

@@ -123,3 +123,12 @@ dxos-tmp
 template
 build
 .secrets
+
+# Custom git hooks
+.husky/post-applypatch
+.husky/post-checkout
+.husky/post-commit
+.husky/post-merge
+.husky/post-rewrite
+.husky/pre-auto-gc
+.husky/reference-transaction

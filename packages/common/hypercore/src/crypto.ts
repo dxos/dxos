@@ -9,12 +9,13 @@ import { callbackify } from 'node:util';
 import { Codec, EncodingOptions } from '@dxos/codec-protobuf';
 import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { arrayToBuffer } from '@dxos/util';
 
 /**
  * Create encoding (e.g., from protobuf codec).
  */
 export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions): AbstractValueEncoding<T> => ({
-  encode: (obj: T) => Buffer.from(codec.encode(obj, opts)),
+  encode: (obj: T) => arrayToBuffer(codec.encode(obj, opts)),
   decode: (buffer: Buffer) => codec.decode(buffer, opts),
 });
 
@@ -34,7 +35,7 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
           return;
         }
 
-        cb(null, Buffer.from(result));
+        cb(null, arrayToBuffer(result));
       });
     },
 

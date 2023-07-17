@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { AgentOptions, Agent, EchoProxyServer, EpochMonitor } from '@dxos/agent';
+import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -58,13 +58,24 @@ export default class Start extends BaseCommand<typeof Start> {
     const agent = new Agent(this.clientConfig, options);
 
     // ECHO API.
+    // TODO(burdon): Config.
     if (this.flags['echo-proxy']) {
       agent.addPlugin(new EchoProxyServer({ port: this.flags['echo-proxy'] }));
     }
 
     // Epoch monitoring.
+    // TODO(burdon): Config.
     if (this.flags.monitor) {
       agent.addPlugin(new EpochMonitor());
+    }
+
+    // Functions.
+    if (this.clientConfig.values.runtime?.agent?.functions) {
+      agent.addPlugin(
+        new FunctionsPlugin({
+          port: this.clientConfig.values.runtime?.agent?.functions?.port,
+        }),
+      );
     }
 
     await agent.start();
@@ -107,7 +118,7 @@ export default class Start extends BaseCommand<typeof Start> {
         properties: {
           profile: this.flags.profile,
           ...this._telemetryContext,
-          duration: Date.now() - this._startTime.getTime(),
+          duration: this.duration,
         },
       });
     };

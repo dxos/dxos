@@ -4,27 +4,31 @@
 
 import express from 'express';
 
-import { Config } from '@dxos/client';
-import { ClientServicesHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 
+import { AbstractPlugin } from '../plugin';
 import { DevFunctionDispatcher } from './dev-dispatcher';
 import { FunctionDispatcher } from './dispatcher';
 
-const FUNCTIONS_PORT = 7001;
+const DEFAULT_PORT = 7000;
 
-export class FunctionsPlugin {
-  private _dispatchers: Map<string, FunctionDispatcher> = new Map();
+export type FunctionsPluginOptions = {
+  port?: number;
+};
 
-  private _devDispatcher = new DevFunctionDispatcher();
+export class FunctionsPlugin extends AbstractPlugin {
+  private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
+  private readonly _devDispatcher = new DevFunctionDispatcher();
 
   private _server?: ReturnType<typeof express>;
 
-  constructor(private readonly _config: Config, private readonly _services: ClientServicesHost) {}
+  constructor(private readonly _options: FunctionsPluginOptions) {
+    super();
+  }
 
   async open() {
     this._dispatchers.set('dev', this._devDispatcher);
-    this._services.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
+    this.host.serviceRegistry.addService('FunctionRegistryService', this._devDispatcher);
 
     this._server = express();
     this._server.use(express.json());
@@ -58,12 +62,13 @@ export class FunctionsPlugin {
         );
     });
 
-    this._server.listen(FUNCTIONS_PORT, () => {
-      log.info('Functions server listening', { port: FUNCTIONS_PORT });
+    const port = this._options.port ?? DEFAULT_PORT;
+    this._server.listen(port, () => {
+      log.info('functions server listening', { port });
     });
   }
 
   async close() {
-    this._services.serviceRegistry.removeService('FunctionRegistryService');
+    this.host.serviceRegistry.removeService('FunctionRegistryService');
   }
 }

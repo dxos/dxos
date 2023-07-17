@@ -5,10 +5,12 @@
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 
-import { Event } from '@dxos/async';
+import { DeferredTask, Event, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
+import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Framer } from './framer';
@@ -28,6 +30,8 @@ export type CreateChannelOpts = {
    */
   contentType?: string;
 };
+
+const DEBOUNCE_STATS_INTERVAL = 1000;
 
 /**
  * Channel based multiplexer.
@@ -51,6 +55,26 @@ export class Muxer {
   private _destroying = false;
 
   public close = new Event<Error | undefined>();
+
+  public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
+
+  private readonly _ctx = new Context();
+  private readonly _emitStats = new DeferredTask(this._ctx, async () => {
+    if (this._destroyed || this._destroying) {
+      return;
+    }
+
+    this.statsUpdated.emit(
+      Array.from(this._channelsByTag.values()).map((channel) => ({
+        id: channel.id,
+        tag: channel.tag,
+        bytesSent: channel.stats.bytesSent,
+        bytesReceived: channel.stats.bytesReceived,
+      })),
+    );
+
+    await sleep(DEBOUNCE_STATS_INTERVAL);
+  });
 
   constructor() {
     this._framer.port.subscribe((msg) => {
@@ -81,6 +105,8 @@ export class Muxer {
     });
 
     channel.push = (data) => {
+      channel.stats.bytesReceived += data.length;
+      this._emitStats.schedule();
       stream.push(data);
     };
     channel.destroy = (err) => {
@@ -118,6 +144,8 @@ export class Muxer {
     let callback: ((data: Uint8Array) => void) | undefined;
 
     channel.push = (data) => {
+      channel.stats.bytesReceived += data.length;
+      this._emitStats.schedule();
       if (callback) {
         callback(data);
       } else {
@@ -188,6 +216,8 @@ export class Muxer {
     // Make it easy for GC.
     this._channelsByLocalId.clear();
     this._channelsByTag.clear();
+
+    void this._ctx.dispose();
   }
 
   private _handleCommand(cmd: Command) {
@@ -244,6 +274,10 @@ export class Muxer {
         buffer: [],
         push: null,
         destroy: null,
+        stats: {
+          bytesSent: 0,
+          bytesReceived: 0,
+        },
       };
       this._channelsByTag.set(channel.tag, channel);
       this._channelsByLocalId.set(channel.id, channel);
@@ -252,6 +286,8 @@ export class Muxer {
   }
 
   private _sendData(channel: Channel, data: Uint8Array) {
+    channel.stats.bytesSent += data.length;
+    this._emitStats.schedule();
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
       channel.buffer.push(data);
@@ -293,6 +329,11 @@ type Channel = {
   push: null | ((data: Uint8Array) => void);
 
   destroy: null | ((err?: Error) => void);
+
+  stats: {
+    bytesSent: number;
+    bytesReceived: number;
+  };
 };
 
 type CreateChannelInternalParams = {

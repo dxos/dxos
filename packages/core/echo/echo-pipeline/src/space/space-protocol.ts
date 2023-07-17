@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { discoveryKey, sha256 } from '@dxos/crypto';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -14,6 +15,7 @@ import {
   WireProtocolParams,
   WireProtocolProvider,
 } from '@dxos/network-manager';
+import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
 import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
@@ -202,6 +204,10 @@ export class SpaceProtocolSession implements WireProtocol {
   @logInfo
   get authStatus() {
     return this._authStatus;
+  }
+
+  get stats(): Event<ConnectionInfo.StreamStats[]> {
+    return this._teleport.stats;
   }
 
   // TODO(dmaretskyi): Allow to pass in extra extensions.

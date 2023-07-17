@@ -1641,13 +1641,13 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/typings': link:../typings
+      '@dxos/util': link:../util
       readable-stream: 3.6.0
       sodium-native: 3.4.1
       sodium-universal: 3.1.0
       streamx: 2.12.5
     devDependencies:
       '@dxos/log': link:../log
-      '@dxos/util': link:../util
       '@faker-js/faker': 7.6.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -2379,16 +2379,24 @@ importers:
 
   packages/core/functions:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
+      '@dxos/observable-object': workspace:*
+      '@dxos/util': workspace:*
       '@types/express': ^4.17.17
       express: 4.17.1
       portfinder: ^1.0.32
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/context': link:../../common/context
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
+      '@dxos/observable-object': link:../../common/observable-object
+      '@dxos/util': link:../../common/util
       express: 4.17.1
       portfinder: 1.0.32
     devDependencies:
@@ -3548,7 +3556,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/errors': workspace:*
-      '@dxos/functions': workspace:*
       '@dxos/kai-types': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
@@ -3591,7 +3598,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/errors': link:../../sdk/errors
-      '@dxos/functions': link:../../core/functions
       '@dxos/kai-types': link:../kai-types
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
@@ -18226,7 +18232,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -40580,7 +40586,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.20.4
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
