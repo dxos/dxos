@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TLStore } from '@tldraw/tlschema';
-
 import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Testing as TestingType } from '@braneframe/types';
@@ -13,7 +11,6 @@ export type TestingPluginProvides = SpaceProvides & TranslationsProvides;
 
 export interface TestingModel {
   object: TestingType;
-  store: TLStore;
 }
 
 export const isTesting = (datum: unknown): datum is TestingType => {
