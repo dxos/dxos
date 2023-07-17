@@ -14,11 +14,12 @@ export type TestingMainOptions = {
 
 export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, object] }) => {
   console.log(space.db);
+  const handleGenerate = () => {};
 
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
       <div className='p-2'>
-        <Button>Generate Data</Button>
+        <Button onClick={handleGenerate}>Generate Data</Button>
       </div>
     </Main.Content>
   );
