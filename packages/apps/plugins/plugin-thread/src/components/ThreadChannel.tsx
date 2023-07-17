@@ -46,7 +46,7 @@ const getBlockProperties = (identityKey: PublicKey) => ({
 // return dailyBlocks;
 // };
 
-// TODO(burdon): Make observer generic?
+// TODO(burdon): Different width form factors.
 export const ThreadChannel: FC<{ thread: ThreadType; onAddMessage: (text: string) => boolean | undefined }> = observer(
   ({ thread, onAddMessage }) => {
     const { t } = useTranslation('dxos.org/plugin/thread');
