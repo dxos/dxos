@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 
 import { Testing as TestingType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
+import { Button, Main } from '@dxos/aurora';
 import { SpaceProxy } from '@dxos/client';
 
 export type TestingMainOptions = {
@@ -13,9 +13,13 @@ export type TestingMainOptions = {
 };
 
 export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, object] }) => {
+  console.log(space.db);
+
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
-      <div className='h-screen'>TESTING</div>
+      <div className='p-2'>
+        <Button>Generate Data</Button>
+      </div>
     </Main.Content>
   );
 };
