@@ -11,7 +11,7 @@ import { getSize } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client';
 
 import { TestingContext } from '../props';
-import { Generator } from './Generator';
+import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
