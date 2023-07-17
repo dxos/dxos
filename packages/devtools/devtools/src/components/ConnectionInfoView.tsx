@@ -3,6 +3,7 @@
 //
 
 import { Upload } from '@phosphor-icons/react';
+import bytes from 'bytes';
 import React from 'react';
 
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -13,7 +14,7 @@ import { JsonView } from './JsonView';
 import { TreeItemText } from './TreeItemText';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo: ConnectionInfo;
+  connectionInfo?: ConnectionInfo;
   /**
    * @deprecated
    */
@@ -21,43 +22,51 @@ export interface ConnectionInfoViewProps {
 }
 
 // TODO(burdon): Convert to table.
-export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
-  <DetailsTable
-    object={{
-      state: connectionInfo.state,
-      sessionId: connectionInfo.sessionId.toHex(),
-      remotePeerId: connectionInfo.remotePeerId.toHex(),
-      transport: connectionInfo.transport,
-      protocolExtensions: connectionInfo.protocolExtensions?.join(','),
-      events: (
-        <JsonView
-          data={{
-            events: connectionInfo.events,
-          }}
-        />
-      ),
-      streams: (
-        <TreeView
-          items={
-            connectionInfo.streams?.map((streamStat) => ({
-              id: streamStat.id.toString(),
-              Icon: Upload,
-              Element: (
-                <TreeItemText
-                  primary={`| Up: ${streamStat.bytesSent} | Down: ${streamStat.bytesReceived} |`}
-                  secondary={streamStat.tag}
-                />
-              ),
-            })) ?? []
-          }
-          expanded={connectionInfo.streams?.map((streamStat) => streamStat.id.toString())}
-          slots={{
-            value: {
-              className: 'overflow-hidden text-gray-400 truncate pl-2',
-            },
-          }}
-        />
-      ),
-    }}
-  />
-);
+export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => {
+  if (!connectionInfo) {
+    return null;
+  }
+
+  return (
+    <DetailsTable
+      object={{
+        state: connectionInfo.state,
+        sessionId: connectionInfo.sessionId.toHex(),
+        remotePeerId: connectionInfo.remotePeerId.toHex(),
+        transport: connectionInfo.transport,
+        protocolExtensions: connectionInfo.protocolExtensions?.join(','),
+        events: (
+          <JsonView
+            data={{
+              events: connectionInfo.events,
+            }}
+          />
+        ),
+        streams: (
+          <TreeView
+            items={
+              connectionInfo.streams?.map((streamStat) => ({
+                id: streamStat.id.toString(),
+                Icon: Upload,
+                Element: (
+                  <TreeItemText
+                    primary={`| Up: ${bytes.format(streamStat.bytesSent)} | Down: ${bytes.format(
+                      streamStat.bytesReceived,
+                    )} |`}
+                    secondary={streamStat.tag}
+                  />
+                ),
+              })) ?? []
+            }
+            expanded={connectionInfo.streams?.map((streamStat) => streamStat.id.toString())}
+            slots={{
+              value: {
+                className: 'overflow-hidden text-gray-400 truncate pl-2',
+              },
+            }}
+          />
+        ),
+      }}
+    />
+  );
+};

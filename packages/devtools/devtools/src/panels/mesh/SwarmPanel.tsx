@@ -5,7 +5,7 @@
 import { LinkBreak, LinkSimple, LinkSimpleBreak, ShareNetwork } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
@@ -34,7 +34,7 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
 const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
   const { data } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
-  const [selectedItem, setSelectedItem] = useState<ConnectionInfo | undefined>();
+  const [selectedItem, setSelectedItem] = useState<string | undefined>();
 
   return (
     <PanelContainer className='flex-row'>
@@ -46,13 +46,17 @@ const SwarmPanel = () => {
               className: 'overflow-hidden text-gray-400 truncate pl-2',
             },
           }}
-          onSelect={(item: any) => setSelectedItem(item.value)}
-          selected={selectedItem?.sessionId.toHex()}
+          onSelect={(item: any) => setSelectedItem(item.id)}
+          selected={selectedItem}
         />
       </div>
       {selectedItem && (
         <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
-          <ConnectionInfoView connectionInfo={selectedItem} />
+          <ConnectionInfoView
+            connectionInfo={data
+              ?.flatMap((swarm) => swarm.connections)
+              .find((connection) => connection?.sessionId.toHex() === selectedItem)}
+          />
         </div>
       )}
     </PanelContainer>
