@@ -14,6 +14,7 @@ export type SpaceProvides = {
       label: string | [string, { ns: string }];
       icon: FC<IconProps>;
       // TODO(wittjosiah): Type?
+      // TODO(burdon): Optional callback to create and initialize object.
       Type: any;
     }[];
   };
