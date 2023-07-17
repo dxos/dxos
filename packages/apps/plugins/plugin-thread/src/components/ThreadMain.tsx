@@ -19,7 +19,7 @@ import { ThreadChannel } from './ThreadChannel';
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
-  const identityKey = identity!.identityKey.toHex();
+  const identityKey = identity!.identityKey;
   // const identityKey = PublicKey.random().toHex();
 
   // TODO(burdon): Change to model.
@@ -45,7 +45,7 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, t
 
     thread.blocks.push(
       new ThreadType.Block({
-        identityKey,
+        identityKey: identityKey.toHex(),
         messages: [message],
       }),
     );
@@ -61,7 +61,7 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, t
         'absolute left-0 right-0', // TODO(burdon): Check.
       )}
     >
-      <ThreadChannel thread={thread} onAddMessage={handleAddMessage} />
+      <ThreadChannel identityKey={identityKey} thread={thread} onAddMessage={handleAddMessage} />
     </Main.Content>
   );
 };

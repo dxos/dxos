@@ -18,10 +18,11 @@ export type BlockProperties = {
 };
 
 export const ThreadBlock: FC<{
+  identityKey: PublicKey;
   block: ThreadType.Block;
-  onDeleteMessage?: (blockId: string, idx: number) => void;
   getBlockProperties: (identityKey: PublicKey) => BlockProperties;
-}> = ({ block, onDeleteMessage, getBlockProperties }) => {
+  onDeleteMessage?: (blockId: string, idx: number) => void;
+}> = ({ identityKey, block, getBlockProperties, onDeleteMessage }) => {
   useSubscription(block.messages); // TODO(burdon): Not updated.
   if (!block.messages.length || !block.identityKey) {
     return null;
@@ -33,7 +34,14 @@ export const ThreadBlock: FC<{
 
   // TODO(burdon): Reply button.
   return (
-    <div key={block.id} className='flex flex-col rounded shadow bg-white dark:bg-neutral-900'>
+    <div
+      key={block.id}
+      className={mx(
+        'flex flex-col',
+        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) &&
+          'rounded shadow bg-white dark:bg-neutral-900',
+      )}
+    >
       <div className='flex __divide-x'>
         <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
           <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
