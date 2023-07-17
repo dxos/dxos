@@ -85,5 +85,7 @@ export class UpdateScheduler {
         },
       );
     });
+
+    this._scheduled = true;
   }
 }
