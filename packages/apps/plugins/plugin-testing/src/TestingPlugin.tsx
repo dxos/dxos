@@ -3,12 +3,13 @@
 //
 
 import { Hammer } from '@phosphor-icons/react';
+import React, { useState } from 'react';
 
 import { Testing as TestingType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TestingMain } from './components';
-import { isTesting, TestingPluginProvides } from './props';
+import { isTesting, TestingContext, TestingPluginProvides } from './props';
 import translations from './translations';
 
 export const TestingPlugin = (): PluginDefinition<TestingPluginProvides> => ({
@@ -17,6 +18,26 @@ export const TestingPlugin = (): PluginDefinition<TestingPluginProvides> => ({
   },
   provides: {
     translations,
+    context: ({ children }) => {
+      const [running, setRunning] = useState<NodeJS.Timeout>();
+      return (
+        <TestingContext.Provider
+          value={{
+            running: !!running,
+            start: (cb: () => void, interval: number) => {
+              clearInterval(running);
+              setRunning(setInterval(cb, interval));
+            },
+            stop: () => {
+              clearInterval(running);
+              setRunning(undefined);
+            },
+          }}
+        >
+          {children}
+        </TestingContext.Provider>
+      );
+    },
     space: {
       types: [
         {

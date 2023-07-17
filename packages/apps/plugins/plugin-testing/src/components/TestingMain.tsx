@@ -2,62 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Faker } from '@faker-js/faker';
 import { Play, Stop } from '@phosphor-icons/react';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useContext, useMemo } from 'react';
 
-import { Document, Testing as TestingType } from '@braneframe/types';
+import { Testing as TestingType } from '@braneframe/types';
 import { Button, DensityProvider, Main } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { SpaceProxy, Text } from '@dxos/client';
-import { range } from '@dxos/util';
+import { SpaceProxy } from '@dxos/client';
+
+import { TestingContext } from '../props';
+import { Generator } from './Generator';
 
 export type TestingMainOptions = {
   readonly: boolean;
 };
 
-export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, object] }) => {
-  const fakerRef = useRef<Faker>();
+export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, _] }) => {
   const objects = space.db?.query().objects;
   const data = {
     objects: objects?.length,
   };
 
-  const [running, setRunning] = useState<NodeJS.Timeout | undefined>();
+  const generator = useMemo(() => {
+    const generator = new Generator(space);
+    void generator.initialize();
+    return generator;
+  }, [space]);
+
+  const { running, start, stop } = useContext(TestingContext);
   const handleToggleRunning = () => {
-    setRunning((running) => {
-      if (running) {
-        clearTimeout(running);
-        return undefined;
-      } else {
-        return setInterval(() => {
-          console.log('tick');
-        }, 500);
-      }
-    });
-  };
-
-  useEffect(() => {
-    setTimeout(async () => {
-      const { faker } = await import('@faker-js/faker');
-      fakerRef.current = faker;
-    });
-  });
-
-  const handleGenerate = () => {
-    // TODO(burdon): Create or update.
-    const type = Document.type.name;
-    switch (type) {
-      case Document.type.name: {
-        // TODO(burdon): Factor out generators.
-        const title = fakerRef.current!.lorem.sentence();
-        const content = range(fakerRef.current!.datatype.number({ min: 3, max: 8 }))
-          .map(() => fakerRef.current!.lorem.sentences(fakerRef.current!.datatype.number({ min: 2, max: 16 })))
-          .join('\n\n');
-
-        space.db.add(new Document({ title, content: new Text(content) }));
-        break;
-      }
+    if (running) {
+      stop();
+    } else {
+      start(() => generator.updateObject(), 500);
     }
   };
 
@@ -68,7 +45,8 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
           <Button onClick={handleToggleRunning}>
             {running ? <Stop className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
-          <Button onClick={handleGenerate}>Create object</Button>
+          <Button onClick={() => generator.createObject()}>Create object</Button>
+          <Button onClick={() => generator.updateObject()}>Update object</Button>
         </DensityProvider>
       </div>
       <div className='p-2'>
