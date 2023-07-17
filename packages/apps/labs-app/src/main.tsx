@@ -16,6 +16,7 @@ import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
+import { TestingPlugin } from '@braneframe/plugin-testing';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
@@ -28,6 +29,8 @@ void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults
 // TODO(burdon): Move GH plugins out of composer.
 // TODO(burdon): Rename aurora-composer => aurora-editor.
 // TODO(burdon): Remove plugin deps on composer (e.g., translations).
+
+console.log('!!', TestingPlugin);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -46,6 +49,7 @@ createRoot(document.getElementById('root')!).render(
         // LocalFilesPlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
+        TestingPlugin(),
       ]}
     />
   </StrictMode>,

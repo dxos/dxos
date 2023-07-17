@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Hammer } from '@phosphor-icons/react';
 
 import { Testing as TestingType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -21,9 +21,9 @@ export const TestingPlugin = (): PluginDefinition<TestingPluginProvides> => ({
       types: [
         {
           id: 'create-Testing',
-          testId: 'TestingPlugin.createStack',
-          label: ['create Testing label', { ns: 'dxos.org/plugin/Testing' }],
-          icon: Plus,
+          testId: 'TestingPlugin.createTesting',
+          label: ['create testing label', { ns: 'dxos.org/plugin/testing' }],
+          icon: Hammer,
           Type: TestingType,
         },
       ],

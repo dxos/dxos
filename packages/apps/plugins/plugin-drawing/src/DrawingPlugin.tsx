@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { FrameCorners } from '@phosphor-icons/react';
 
 import { Drawing as DrawingType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -23,7 +23,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => ({
           id: 'create-drawing',
           testId: 'drawingPlugin.createStack',
           label: ['create drawing label', { ns: 'dxos.org/plugin/drawing' }],
-          icon: Plus,
+          icon: FrameCorners,
           Type: DrawingType,
         },
       ],
