@@ -22,3 +22,4 @@ export * from './until';
 export * from './task-scheduling';
 export * from './test-stream';
 export * from './track-leaks';
+export * from './update-scheduler';

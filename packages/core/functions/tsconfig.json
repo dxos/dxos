@@ -13,10 +13,22 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/observable-object"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../sdk/client"
