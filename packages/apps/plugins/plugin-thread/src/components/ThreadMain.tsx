@@ -14,8 +14,10 @@ import { useIdentity } from '@dxos/react-client';
 import { ThreadChannel } from './ThreadChannel';
 
 // TODO(burdon): Goals.
-// - Navigate via single column which may be visible in the sidebar of another content block (e.g., document).
-// - Lightweight threads for document comments.
+// - Usable within a single column which may be visible in the sidebar of another content block (e.g., document).
+// - Create and navigate between threads.
+// - Lightweight threads for document comments, inline AI, etc.
+//    (Similar reusable components everywhere; same data structure).
 
 export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
