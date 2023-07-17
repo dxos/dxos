@@ -13,9 +13,7 @@ import { SpaceProxy } from '@dxos/client';
 import { TestingContext } from '../props';
 import { Generator } from './Generator';
 
-export type TestingMainOptions = {
-  readonly: boolean;
-};
+export const DEFAULT_PERIOD = 500;
 
 export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, _] }) => {
   const objects = space.db?.query().objects;
@@ -34,7 +32,7 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
     if (running) {
       stop();
     } else {
-      start(() => generator.updateObject(), 500);
+      start(() => generator.updateObject(), DEFAULT_PERIOD);
     }
   };
 

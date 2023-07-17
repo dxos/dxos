@@ -25,7 +25,7 @@ export class Generator {
       case Document.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
-        const content = range(this._faker!.datatype.number({ min: 3, max: 8 }))
+        const content = range(this._faker!.datatype.number({ min: 2, max: 8 }))
           .map(() => this._faker!.lorem.sentences(this._faker!.datatype.number({ min: 2, max: 16 })))
           .join('\n\n');
 
