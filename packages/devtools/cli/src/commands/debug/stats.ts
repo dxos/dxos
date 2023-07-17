@@ -4,7 +4,8 @@
 
 import { Flags } from '@oclif/core';
 
-import { Client, diagnostics } from '@dxos/client';
+import { Client, PublicKey, diagnostics } from '@dxos/client';
+import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { BaseCommand } from '../../base-command';
 
@@ -26,7 +27,13 @@ export default class Stats extends BaseCommand<typeof Stats> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      return diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate });
+      const data = await diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate });
+      data.feeds = data.feeds.map((feed: SubscribeToFeedsResponse.Feed) => ({
+        ...feed,
+        downloaded: PublicKey.from(feed.downloaded).toString(),
+      }));
+
+      return data;
     });
   }
 }
