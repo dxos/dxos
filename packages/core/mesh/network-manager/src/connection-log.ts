@@ -9,6 +9,7 @@ import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/s
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
+import { WireProtocol } from './wire-protocol';
 
 export enum EventType {
   CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',
@@ -64,6 +65,11 @@ export class ConnectionLog {
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
         });
+        this.update.emit();
+      });
+
+      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> }).stats.on((stats) => {
+        connectionInfo.streams = stats;
         this.update.emit();
       });
 
