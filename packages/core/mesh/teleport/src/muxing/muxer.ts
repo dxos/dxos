@@ -9,6 +9,7 @@ import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
+import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Framer } from './framer';
@@ -52,6 +53,8 @@ export class Muxer {
 
   public close = new Event<Error | undefined>();
 
+  public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
+
   constructor() {
     this._framer.port.subscribe((msg) => {
       this._handleCommand(codec.decode(msg));
@@ -81,6 +84,8 @@ export class Muxer {
     });
 
     channel.push = (data) => {
+      channel.stats.bytesReceived += data.length;
+      this._emitStats();
       stream.push(data);
     };
     channel.destroy = (err) => {
@@ -118,6 +123,8 @@ export class Muxer {
     let callback: ((data: Uint8Array) => void) | undefined;
 
     channel.push = (data) => {
+      channel.stats.bytesReceived += data.length;
+      this._emitStats();
       if (callback) {
         callback(data);
       } else {
@@ -244,6 +251,10 @@ export class Muxer {
         buffer: [],
         push: null,
         destroy: null,
+        stats: {
+          bytesSent: 0,
+          bytesReceived: 0,
+        },
       };
       this._channelsByTag.set(channel.tag, channel);
       this._channelsByLocalId.set(channel.id, channel);
@@ -252,6 +263,8 @@ export class Muxer {
   }
 
   private _sendData(channel: Channel, data: Uint8Array) {
+    channel.stats.bytesSent += data.length;
+    this._emitStats();
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
       channel.buffer.push(data);
@@ -264,6 +277,21 @@ export class Muxer {
       });
     }
   }
+
+  private readonly _emitStats = () => {
+    if (this._destroyed || this._destroying) {
+      return;
+    }
+
+    this.statsUpdated.emit(
+      Array.from(this._channelsByTag.values()).map((channel) => ({
+        id: channel.id,
+        tag: channel.tag,
+        bytesSent: channel.stats.bytesSent,
+        bytesReceived: channel.stats.bytesReceived,
+      })),
+    );
+  };
 }
 
 type Channel = {
@@ -293,6 +321,11 @@ type Channel = {
   push: null | ((data: Uint8Array) => void);
 
   destroy: null | ((err?: Error) => void);
+
+  stats: {
+    bytesSent: number;
+    bytesReceived: number;
+  };
 };
 
 type CreateChannelInternalParams = {
