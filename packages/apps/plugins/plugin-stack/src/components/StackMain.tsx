@@ -24,7 +24,7 @@ import {
   ButtonGroup,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { subscribe } from '@dxos/observable-object';
+import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
@@ -130,8 +130,7 @@ const getSectionModel = (object: GenericStackObject, isPreview?: boolean): Stack
   isPreview: !!isPreview,
 });
 
-// todo(thure): `observer` causes infinite rerenders if used here.
-const StackMainImpl = ({
+const StackSectionsImpl = ({
   sections,
   id: stackId,
   onAdd,
@@ -140,26 +139,24 @@ const StackMainImpl = ({
   id: string;
   onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
 }) => {
-  const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const dnd = useDnd();
-  const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
+  const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
+  const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
 
   // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
   if (subscribe in sections) {
     useEffect(() => {
       // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
-      return sections[subscribe](() => setIter([])) as () => void;
+      return sections[subscribe](() => setSectionModels(getSectionModels(sections))) as () => void;
     }, []);
   } else {
-    useSubscription(() => setIter([]), [sections]);
+    useSubscription(() => setSectionModels(getSectionModels(sections)), [sections]);
   }
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
-
-  const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
 
   const { setNodeRef } = useDroppable({ id: stackId, data: { stack: { id: stackId } } });
 
@@ -272,8 +269,7 @@ const StackMainImpl = ({
   );
 };
 
-export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
-  const stack = data[data.length - 1] as StackModel & StackProperties;
+const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
   const handleAdd = useCallback(
@@ -284,6 +280,7 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
     },
     [stack.sections],
   );
+
   return (
     <Main.Content classNames='min-bs-[100vh]'>
       <div role='none' className='mli-auto max-is-[60rem]'>
@@ -293,12 +290,12 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-4 pointer-fine:pis-12 lg:pis-4 pointer-fine:lg:pis-4 plb-3.5 pointer-fine:plb-2.5'
             placeholder={t('stack title placeholder')}
-            defaultValue={stack.title ?? ''}
+            value={stack.title ?? ''}
             onChange={({ target: { value } }) => (stack.title = value)}
           />
         </Input.Root>
         <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
-        <StackMainImpl
+        <StackSectionsImpl
           key={`${stack.id}--${stack.sections.length}`}
           sections={stack.sections}
           id={stack.id}
@@ -383,4 +380,17 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
       </div>
     </Main.Content>
   );
+};
+
+export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
+  const stack = data[data.length - 1] as StackModel & StackProperties;
+  const [_, setIter] = useState([]);
+  if (subscribe in stack) {
+    useEffect(() => {
+      return (stack as ObservableObject)[subscribe](() => setIter([])) as () => void;
+    }, []);
+  } else {
+    useSubscription(() => setIter([]), [stack]);
+  }
+  return <StackMainImpl stack={stack} />;
 };
