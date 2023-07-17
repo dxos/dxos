@@ -39,6 +39,7 @@ export const TestingPlugin = (): PluginDefinition<TestingPluginProvides> => ({
       );
     },
     space: {
+      // TODO(burdon): Extend graph to allow creation of node without creating echo object.
       types: [
         {
           // TODO(burdon): Callback to set default title, initial properties.
