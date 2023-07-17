@@ -68,7 +68,7 @@ export class ConnectionLog {
         this.update.emit();
       });
 
-      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> }).stats.on((stats) => {
+      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> })?.stats?.on((stats) => {
         connectionInfo.streams = stats;
         this.update.emit();
       });
