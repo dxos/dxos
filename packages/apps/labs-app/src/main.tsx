@@ -30,8 +30,6 @@ void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults
 // TODO(burdon): Rename aurora-composer => aurora-editor.
 // TODO(burdon): Remove plugin deps on composer (e.g., translations).
 
-console.log('!!', TestingPlugin);
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PluginContextProvider

@@ -19,8 +19,10 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/observable-object": "workspace:*",
+    "@dxos/": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@faker-js/faker": "^7.3.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
