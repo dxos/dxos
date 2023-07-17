@@ -83,6 +83,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-theme/package.json",
           "jsonpath": "$.version"
         },
