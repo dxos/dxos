@@ -26,7 +26,7 @@ export class UpdateScheduler {
   private _promise: Promise<any> | null = null;
   private _scheduled = false;
 
-  private _lastUpdateTime = 0;
+  private _lastUpdateTime = -TIME_PERIOD;
 
   constructor(
     private readonly _ctx: Context,
