@@ -298,7 +298,12 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
           />
         </Input.Root>
         <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
-        <StackMainImpl key={stack.id} sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+        <StackMainImpl
+          key={`${stack.id}--${stack.sections.length}`}
+          sections={stack.sections}
+          id={stack.id}
+          onAdd={handleAdd}
+        />
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <h2 className='text-sm font-normal flex items-center gap-1'>
             <Plus className={getSize(4)} />
