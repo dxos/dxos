@@ -23,9 +23,18 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
     objects: objects?.length,
   };
 
-  const [running, setRunning] = useState(false);
+  const [running, setRunning] = useState<NodeJS.Timeout | undefined>();
   const handleToggleRunning = () => {
-    setRunning((running) => !running);
+    setRunning((running) => {
+      if (running) {
+        clearTimeout(running);
+        return undefined;
+      } else {
+        return setInterval(() => {
+          console.log('tick');
+        }, 500);
+      }
+    });
   };
 
   useEffect(() => {
