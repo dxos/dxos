@@ -1,12 +1,17 @@
-import { Context } from "@dxos/context";
-import { scheduleTask } from "./task-scheduling";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Context } from '@dxos/context';
+
+import { scheduleTask } from './task-scheduling';
 
 export type UpdateSchedulerOptions = {
   /**
    * Maximum frequency of updates. If not specified, updates will be scheduled on every change.
    */
   maxFrequency?: number;
-}
+};
 
 /**
  * Time period for update counting.
@@ -26,7 +31,7 @@ export class UpdateScheduler {
   constructor(
     private readonly _ctx: Context,
     private readonly _callback: () => Promise<void>,
-    private readonly _params: UpdateSchedulerOptions = {}
+    private readonly _params: UpdateSchedulerOptions = {},
   ) {
     _ctx.onDispose(async () => {
       await this._promise; // Context waits for callback to finish.
@@ -50,13 +55,13 @@ export class UpdateScheduler {
         if (delay > 0) {
           await new Promise<void>((resolve) => {
             const clearContext = this._ctx.onDispose(() => {
-              clearTimeout(timeoutId)
-              resolve()
+              clearTimeout(timeoutId);
+              resolve();
             });
             const timeoutId = setTimeout(() => {
               clearContext();
               resolve();
-            }, delay)
+            }, delay);
           });
         }
       }
@@ -77,7 +82,7 @@ export class UpdateScheduler {
         (error) => {
           this._promise = null;
           this._ctx.raise(error);
-        }
+        },
       );
     });
   }

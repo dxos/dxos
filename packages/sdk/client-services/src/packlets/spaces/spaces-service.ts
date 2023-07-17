@@ -34,7 +34,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
-  ) { }
+  ) {}
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
@@ -52,12 +52,16 @@ export class SpacesServiceImpl implements SpacesService {
 
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
-      const scheduler = new UpdateScheduler(ctx, async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
-        log('update', { spaces });
-        next({ spaces });
-      }, { maxFrequency: 2 });
+      const scheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          const dataSpaceManager = await this._getDataSpaceManager();
+          const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
+          log('update', { spaces });
+          next({ spaces });
+        },
+        { maxFrequency: 2 },
+      );
 
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -77,9 +81,7 @@ export class SpacesServiceImpl implements SpacesService {
             // Pipeline progress.
             space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
             if (space.dataPipeline.pipelineState) {
-              subscriptions.add(
-                space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()),
-              );
+              subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             }
           }
         };
@@ -174,7 +176,7 @@ export class SpacesServiceImpl implements SpacesService {
         },
         presence:
           this._identityManager.identity?.identityKey.equals(member.key) ||
-            space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
