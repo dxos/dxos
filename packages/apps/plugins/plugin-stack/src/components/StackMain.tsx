@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
@@ -57,7 +57,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           id={section.object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
-            'bg-white dark:bg-neutral-925 grow rounded mbe-2',
+            'bg-white dark:bg-neutral-925 grow rounded mlb-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
             rearranging ? 'opacity-0' : section.isPreview ? 'opacity-50' : 'opacity-100',
@@ -133,12 +133,15 @@ const getSectionModel = (object: GenericStackObject, isPreview?: boolean): Stack
 // todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({
   sections,
+  id: stackId,
   onAdd,
 }: {
   sections: StackSections;
+  id: string;
   onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
 }) => {
   const [_, setIter] = useState([]);
+  const { t } = useTranslation('dxos:stack');
   const dnd = useDnd();
   const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
 
@@ -157,6 +160,8 @@ const StackMainImpl = ({
   const [overIsMember, setOverIsMember] = useState(false);
 
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
+
+  const { setNodeRef } = useDroppable({ id: stackId, data: { stack: { id: stackId } } });
 
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
@@ -178,8 +183,12 @@ const StackMainImpl = ({
       if (!over) {
         setOverIsMember(false);
       } else {
-        const overId = get(over, 'data.current.section.object.id', null);
-        const overIndex = sections.findIndex((section) => section?.object?.id === overId);
+        const overSectionId = get(over, 'data.current.section.object.id', null);
+        const overStackId = get(over, 'data.current.stack.id', null);
+        const overIndex =
+          overStackId && !overSectionId
+            ? sections.length
+            : sections.findIndex((section) => section?.object?.id === overSectionId);
         setOverIsMember(overIndex >= 0);
         if (activeAddableObject) {
           setSectionModels((sectionModels) => {
@@ -190,7 +199,7 @@ const StackMainImpl = ({
                 { id: activeAddableObject.id, object: activeAddableObject, isPreview: true },
                 ...persistedObjects.slice(overIndex, persistedObjects.length),
               ];
-            } else if (overId !== activeAddableObject.id && sectionModels.length !== sections.length) {
+            } else if (overSectionId !== activeAddableObject.id && sectionModels.length !== sections.length) {
               return getSectionModels(sections);
             } else {
               return sectionModels;
@@ -252,6 +261,13 @@ const StackMainImpl = ({
           );
         })}
       </SortableContext>
+      <div role='none' className='plb-1' ref={setNodeRef}>
+        {sectionModels.length < 1 && (
+          <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
+            {t('empty stack message')}
+          </p>
+        )}
+      </div>
     </List>
   );
 };
@@ -281,9 +297,9 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
             onChange={({ target: { value } }) => (stack.title = value)}
           />
         </Input.Root>
-        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 mbe-2 opacity-50')} />
-        <StackMainImpl key={stack.id} sections={stack.sections} onAdd={handleAdd} />
-        <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
+        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
+        <StackMainImpl key={stack.id} sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+        <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <h2 className='text-sm font-normal flex items-center gap-1'>
             <Plus className={getSize(4)} />
             <span>{t('add section label')}</span>
