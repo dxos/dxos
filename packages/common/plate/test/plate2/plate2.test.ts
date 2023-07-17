@@ -28,7 +28,7 @@ describe('plate 2 templates', () => {
     const [file] = result.files;
     expect(file).to.exist;
     expect(file.path).to.eq('simple.md');
-    expect(file.content).to.eq('the name was zanzibar');
+    expect(file.content).to.eq('the name was zanzibar\n');
   });
 
   it('simple template', async () => {
@@ -45,17 +45,16 @@ describe('plate 2 templates', () => {
     expect(files).to.exist;
     expect(files).to.be.an('array').of.length(3, 'has three result files');
 
-
     const [first, second, third] = files;
     expect(first.path).to.exist.and.match(/atextfile\.md$/);
     expect(first.content).to.eq('');
     expect(first.copyOf).to.match(/atextfile\.md$/);
 
     expect(second.path).to.exist.and.match(/one\.md$/);
-    expect(second.content).to.eq(`name: ${name}`);
+    expect(second.content).to.eq(`name: ${name}\n`);
 
     expect(third.path).to.exist.and.match(/two\.md$/);
-    expect(third.content).to.eq(`name: ${name}, slots.prop = default prop`);
+    expect(third.content).to.eq(`name: ${name}, slots.prop = default prop\n`);
   });
 
   it('inherited template', async () => {
@@ -79,9 +78,9 @@ describe('plate 2 templates', () => {
     expect(atextfile.copyOf).to.match(/atextfile\.md$/);
 
     expect(one.path).to.exist.and.match(/one\.md$/);
-    expect(one.content).to.eq(`name: prefixed ${name}`);
+    expect(one.content).to.eq(`name: prefixed ${name}\n`);
 
     expect(two.path).to.exist.and.match(/two\.md$/);
-    expect(two.content).to.eq(`name: prefixed ${name}, slots.prop = prefixed default prop`);
+    expect(two.content).to.eq(`name: prefixed ${name}, slots.prop = prefixed default prop\n`);
   });
 });
