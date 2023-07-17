@@ -7,6 +7,7 @@ import { Callback, RandomAccessStorage } from 'random-access-storage';
 
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
+import { arrayToBuffer } from '@dxos/util';
 
 /**
  * Storage interface implementation for RAM.
@@ -34,7 +35,7 @@ export class MemoryStorage extends AbstractStorage {
         if (err) {
           return cb(err);
         } else {
-          return cb(err, Buffer.from(data!));
+          return cb(err, arrayToBuffer(data!));
         }
       });
 

@@ -14,6 +14,7 @@ import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/pro
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { Transport, TransportFactory, TransportOptions } from './transport';
+import { arrayToBuffer } from '@dxos/util';
 
 export type WebRTCTransportProxyParams = {
   initiator: boolean;
@@ -92,7 +93,7 @@ export class WebRTCTransportProxy implements Transport {
 
   private _handleData(dataEvent: BridgeEvent.DataEvent) {
     // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
-    this._params.stream.write(Buffer.from(dataEvent.payload));
+    this._params.stream.write(arrayToBuffer(dataEvent.payload));
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {

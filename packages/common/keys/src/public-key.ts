@@ -32,7 +32,7 @@ export class PublicKey implements Equatable {
     if (source instanceof PublicKey) {
       return source;
     } else if (source instanceof Buffer) {
-      return new PublicKey(new Uint8Array(source));
+      return new PublicKey(new Uint8Array(source.buffer, source.byteOffset, source.byteLength));
     } else if (source instanceof Uint8Array) {
       return new PublicKey(source);
     } else if (source instanceof ArrayBuffer) {
@@ -71,8 +71,9 @@ export class PublicKey implements Equatable {
       hex = hex.slice(2);
     }
 
+    const buf = Buffer.from(hex, 'hex')
     // TODO(burdon): Test if key.
-    return new PublicKey(new Uint8Array(Buffer.from(hex, 'hex')));
+    return new PublicKey(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   }
 
   /**
@@ -136,7 +137,7 @@ export class PublicKey implements Equatable {
     if (key instanceof PublicKey) {
       key = key.asBuffer();
     } else if (key instanceof Uint8Array) {
-      key = Buffer.from(key);
+      key = Buffer.from(key.buffer, key.byteOffset, key.byteLength);
     }
 
     assert(key instanceof Buffer, 'Invalid type');
@@ -174,7 +175,7 @@ export class PublicKey implements Equatable {
   }
 
   asBuffer(): Buffer {
-    return Buffer.from(this._value);
+    return Buffer.from(this._value.buffer, this._value.byteOffset, this._value.byteLength);
   }
 
   asUint8Array(): Uint8Array {

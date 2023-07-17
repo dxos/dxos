@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 /**
  * Manages keys.
@@ -114,7 +114,7 @@ export class Keyring implements Signer {
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
-    await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
+    await file.write(0, arrayToBuffer(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
     await file.close();
     this.keysUpdate.emit();
   }

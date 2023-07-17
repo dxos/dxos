@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { arrayToBuffer } from '@dxos/util';
 import type { Codec } from './codec';
 
 /**
@@ -9,6 +10,6 @@ import type { Codec } from './codec';
  * This function patches the encode method to convert result into a Buffer.
  */
 export const patchBufferCodec = (codec: Codec<any>) => ({
-  encode: (x: any) => Buffer.from(codec.encode(x)),
+  encode: (x: any) => arrayToBuffer(codec.encode(x)),
   decode: codec.decode.bind(codec),
 });
