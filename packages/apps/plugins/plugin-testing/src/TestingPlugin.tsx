@@ -20,6 +20,7 @@ export const TestingPlugin = (): PluginDefinition<TestingPluginProvides> => ({
     space: {
       types: [
         {
+          // TODO(burdon): Callback to set default title, initial properties.
           id: 'create-Testing',
           testId: 'TestingPlugin.createTesting',
           label: ['create testing label', { ns: 'dxos.org/plugin/testing' }],
