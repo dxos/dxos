@@ -2,47 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, IconProps, Plus, Trash } from '@phosphor-icons/react';
-import get from 'lodash.get';
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
-import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';
-import { Space, SpaceProxy } from '@dxos/client/echo';
+import { IntentPluginProvides } from '@braneframe/plugin-intent';
+import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
 import { stackState } from './stores';
 import translations from './translations';
-import { StackPluginProvides, StackProvides } from './types';
-import { STACK_PLUGIN, isStack } from './util';
+import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
+import { isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode<Space>, object: StackType, index: string): GraphNode => ({
-    id: object.id,
-    index: get(object, 'meta.index', index),
-    label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
-    icon: (props: IconProps) => <Article {...props} />,
-    data: object,
-    parent,
-    pluginActions: {
-      [STACK_PLUGIN]: [
-        {
-          id: 'delete',
-          index: 'a1',
-          label: ['delete stack label', { ns: STACK_PLUGIN }],
-          icon: (props: IconProps) => <Trash {...props} />,
-          invoke: async () => {
-            parent.data?.db.remove(object);
-          },
-        },
-      ],
-    },
-  });
-
-  const adapter = new GraphNodeAdapter(StackType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter(StackType.filter(), stackToGraphNode);
 
   return {
     meta: {
@@ -71,13 +48,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           const space = parent.data;
           return adapter.createNodes(space, parent, emit);
         },
-        actions: (parent, _, plugins) => {
+        actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
-          const space = parent.data;
           return [
             {
               id: 'create-stack',
@@ -85,12 +60,16 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               testId: 'stackPlugin.createStack',
               label: ['create stack label', { ns: STACK_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              invoke: async () => {
-                const object = space.db.add(new StackType());
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
-                }
-              },
+              intent: [
+                {
+                  plugin: STACK_PLUGIN,
+                  action: StackAction.CREATE,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.SELECT,
+                },
+              ],
             },
           ];
         },
@@ -116,6 +95,23 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       components: {
         StackMain,
+      },
+      intent: {
+        resolver: (intent, plugins) => {
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos:intent');
+
+          switch (intent.action) {
+            case StackAction.CREATE: {
+              return intentPlugin!.provides.intent.sendIntent({
+                action: SpaceAction.ADD_OBJECT,
+                data: {
+                  spaceKey: intent.data.spaceKey,
+                  object: new StackType(),
+                },
+              });
+            }
+          }
+        },
       },
       stack: stackState,
     },

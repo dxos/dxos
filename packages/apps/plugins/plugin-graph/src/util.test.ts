@@ -74,7 +74,7 @@ const testPlugin = (id: number, depth = 1): [Plugin<GraphProvides>, Map<string, 
               id: `${parent.id}-action${id}`,
               index: 'a1',
               label: `${parent.id}-action${id}`,
-              invoke: () => {},
+              intent: { action: 'test' },
             },
           ];
         },
@@ -87,20 +87,20 @@ const testPlugin = (id: number, depth = 1): [Plugin<GraphProvides>, Map<string, 
 
 describe('buildGraph', () => {
   test('returns root node', () => {
-    const graph = buildGraph(ROOT, []);
+    const graph = buildGraph({ from: ROOT });
     expect(graph).to.equal(ROOT);
   });
 
   test('root node unmodified without plugins', () => {
     const original = JSON.parse(JSON.stringify(jsonify(ROOT)));
-    const graph = buildGraph(ROOT, []);
+    const graph = buildGraph({ from: ROOT });
     expect(graph).not.to.equal(original);
     expect(graph).to.deep.equal(original);
   });
 
   test('plugin can add children to root node', () => {
     const [testPlugin1, nodes1] = testPlugin(1);
-    const graph = buildGraph(ROOT, [testPlugin1]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginChildren![testPlugin1.meta.id]).not.to.be.undefined;
     expect(graph.pluginChildren![testPlugin1.meta.id]).to.deep.equal(nodes1.get(ROOT.id));
@@ -108,7 +108,7 @@ describe('buildGraph', () => {
 
   test('plugin can add actions to root node', () => {
     const [testPlugin1] = testPlugin(1);
-    const graph = buildGraph(ROOT, [testPlugin1]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginActions![testPlugin1.meta.id].length).to.equal(1);
   });
@@ -116,7 +116,7 @@ describe('buildGraph', () => {
   test('multiple plugins can add children to root node', () => {
     const [testPlugin1, nodes1] = testPlugin(1);
     const [testPlugin2, nodes2] = testPlugin(2);
-    const graph = buildGraph(ROOT, [testPlugin1, testPlugin2]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1, testPlugin2] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginChildren![testPlugin1.meta.id]).not.to.be.undefined;
     expect(graph.pluginChildren![testPlugin2.meta.id]).not.to.be.undefined;
@@ -127,7 +127,7 @@ describe('buildGraph', () => {
   test('multiple plugins can add actions to root node', () => {
     const [testPlugin1] = testPlugin(1);
     const [testPlugin2] = testPlugin(2);
-    const graph = buildGraph(ROOT, [testPlugin1, testPlugin2]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1, testPlugin2] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginActions![testPlugin1.meta.id].length).to.equal(1);
     expect(graph.pluginActions![testPlugin2.meta.id].length).to.equal(1);
@@ -136,7 +136,7 @@ describe('buildGraph', () => {
   test('plugin can add children to child node', () => {
     const [testPlugin1, nodes1] = testPlugin(1, 2);
     const [testPlugin2, nodes2] = testPlugin(2);
-    const graph = buildGraph(ROOT, [testPlugin1, testPlugin2]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1, testPlugin2] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginChildren![testPlugin1.meta.id]).to.deep.equal(nodes1.get(ROOT.id));
     expect(graph.pluginChildren![testPlugin2.meta.id]).to.deep.equal(nodes2.get(ROOT.id));
@@ -150,7 +150,7 @@ describe('buildGraph', () => {
   test('plugin can add actions to child node', () => {
     const [testPlugin1] = testPlugin(1, 2);
     const [testPlugin2] = testPlugin(2);
-    const graph = buildGraph(ROOT, [testPlugin1, testPlugin2]);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1, testPlugin2] });
     expect(graph).to.equal(ROOT);
     expect(graph.pluginActions![testPlugin1.meta.id].length).to.equal(1);
     expect(graph.pluginActions![testPlugin2.meta.id].length).to.equal(1);
@@ -168,7 +168,7 @@ describe('buildGraph', () => {
       nodesRecieved.wake(nodes);
     };
 
-    const graph = buildGraph(ROOT, [testPlugin1, testPlugin2], onUpdate);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1, testPlugin2], onUpdate });
 
     const plugin1Node = graph.pluginChildren![testPlugin1.meta.id][0];
     const plugin2Node = graph.pluginChildren![testPlugin2.meta.id][0];

@@ -7,8 +7,17 @@ import { DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
+import { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
+export const STACK_PLUGIN = 'dxos:stack';
+
+export enum StackAction {
+  CREATE = `${STACK_PLUGIN}:create`,
+}
+
+// TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
+//   Also distinct from graph actions though, output should be inserted into current view rather than navigated to.
 type StackSectionAction = {
   id: string;
   testId: string;
@@ -16,10 +25,12 @@ type StackSectionAction = {
   icon: FC<IconProps>;
 };
 
+// TODO(wittjosiah): Use intents for creation.
 export type StackSectionCreator<T extends StackSectionModel['object'] = GenericStackObject> = StackSectionAction & {
   create: () => T;
 };
 
+// TODO(wittjosiah): Make filter serializable.
 export type StackSectionChooser = StackSectionAction & {
   filter: (datum: unknown) => boolean;
 };
@@ -36,7 +47,7 @@ export type StackState = DeepSignal<{
   choosers?: StackSectionChooser[];
 }>;
 
-export type StackPluginProvides = GraphProvides & TranslationsProvides & { stack: StackState };
+export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };
 
 export type StackObject = { id: string };
 

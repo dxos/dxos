@@ -2,18 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Plus, Trash } from '@phosphor-icons/react';
+import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
-import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document as DocumentType } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps, TextKind } from '@dxos/aurora-composer';
-import { Space, SpaceProxy } from '@dxos/client/echo';
+import { GraphProvides } from '@braneframe/plugin-graph';
+import { IntentPluginProvides, IntentProvides } from '@braneframe/plugin-intent';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { Document } from '@braneframe/types';
+import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
+import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
@@ -24,17 +25,19 @@ import {
   SpaceMarkdownChooser,
 } from './components';
 import translations from './translations';
-import { MarkdownProperties } from './types';
+import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownProperties } from './types';
 import {
-  MARKDOWN_PLUGIN,
+  documentToGraphNode,
   isMarkdown,
   isMarkdownContent,
   isMarkdownPlaceholder,
   isMarkdownProperties,
   markdownPlugins,
 } from './util';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
 
 type MarkdownPluginProvides = GraphProvides &
+  IntentProvides &
   TranslationsProvides & {
     // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
     stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
@@ -43,29 +46,7 @@ type MarkdownPluginProvides = GraphProvides &
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
 
-  const objectToGraphNode = (parent: GraphNode<Space>, object: DocumentType, index: string): GraphNode => ({
-    id: object.id,
-    index: get(object, 'meta.index', index),
-    label: object.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-    icon: (props) => (object.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
-    data: object,
-    parent,
-    pluginActions: {
-      [MARKDOWN_PLUGIN]: [
-        {
-          id: 'delete',
-          index: 'a1',
-          label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
-          icon: (props) => <Trash {...props} />,
-          invoke: async () => {
-            parent.data?.db.remove(object);
-          },
-        },
-      ],
-    },
-  });
-
-  const adapter = new GraphNodeAdapter(DocumentType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const MarkdownMainStandalone = ({
     data: [model, properties],
@@ -107,13 +88,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           const space = parent.data;
           return adapter.createNodes(space, parent, emit);
         },
-        actions: (parent, _, plugins) => {
+        actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
-          const space = parent.data;
           return [
             {
               id: 'create-doc',
@@ -122,12 +101,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
               disposition: 'toolbar',
-              invoke: async () => {
-                const object = space.db.add(new DocumentType());
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
-                }
-              },
+              intent: [
+                {
+                  plugin: MARKDOWN_PLUGIN,
+                  action: MarkdownAction.CREATE,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.SELECT,
+                },
+              ],
             },
           ];
         },
@@ -180,6 +163,23 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
 
         return null;
+      },
+      intent: {
+        resolver: (intent, plugins) => {
+          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos:intent');
+
+          switch (intent.action) {
+            case MarkdownAction.CREATE: {
+              return intentPlugin!.provides.intent.sendIntent({
+                action: SpaceAction.ADD_OBJECT,
+                data: {
+                  spaceKey: intent.data.spaceKey,
+                  object: new Document(),
+                },
+              });
+            }
+          }
+        },
       },
     },
   };

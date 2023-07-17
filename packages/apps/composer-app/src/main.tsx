@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
@@ -34,6 +35,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PluginContextProvider
       plugins={[
+        IntentPlugin(),
         ThemePlugin(),
         DndPlugin(),
         ClientPlugin(),

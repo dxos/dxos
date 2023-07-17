@@ -21,25 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../../../ui/aurora"
-    },
-    {
-      "path": "../../../ui/aurora-theme"
-    },
-    {
-      "path": "../plugin-intent"
     }
   ]
 }

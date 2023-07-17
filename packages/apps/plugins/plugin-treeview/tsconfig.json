@@ -42,6 +42,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-intent"
+    },
+    {
       "path": "../plugin-splitview"
     }
   ]
