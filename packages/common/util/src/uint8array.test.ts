@@ -1,6 +1,12 @@
-import { test, describe } from '@dxos/test';
-import { arrayToBuffer, bufferToArray } from './uint8array';
+//
+// Copyright 2023 DXOS.org
+//
+
 import { expect } from 'chai';
+
+import { test, describe } from '@dxos/test';
+
+import { arrayToBuffer, bufferToArray } from './uint8array';
 
 describe('uint8array', () => {
   test('arrayToBuffer', () => {
@@ -12,7 +18,7 @@ describe('uint8array', () => {
     // Buffer shares memory with Uint8Array.
     buffer[0] = 0;
     expect(data[1]).to.eq(0);
-  })
+  });
 
   test('bufferToArray', () => {
     const data = Buffer.from([1, 2, 3, 4]);
@@ -23,5 +29,5 @@ describe('uint8array', () => {
     // Uint8Array shares memory with Buffer.
     array[0] = 0;
     expect(data[1]).to.eq(0);
-  })
+  });
 });

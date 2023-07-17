@@ -71,7 +71,7 @@ export class PublicKey implements Equatable {
       hex = hex.slice(2);
     }
 
-    const buf = Buffer.from(hex, 'hex')
+    const buf = Buffer.from(hex, 'hex');
     // TODO(burdon): Test if key.
     return new PublicKey(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   }

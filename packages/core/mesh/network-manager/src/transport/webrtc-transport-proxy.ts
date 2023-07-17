@@ -12,9 +12,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { arrayToBuffer } from '@dxos/util';
 
 import { Transport, TransportFactory, TransportOptions } from './transport';
-import { arrayToBuffer } from '@dxos/util';
 
 export type WebRTCTransportProxyParams = {
   initiator: boolean;

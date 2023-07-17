@@ -22,7 +22,7 @@ export const arraysEqual = (a: Uint8Array, b: Uint8Array): boolean => {
  */
 export const arrayToBuffer = (array: Uint8Array): Buffer => {
   return Buffer.from(array.buffer, array.byteOffset, array.byteLength);
-}
+};
 
 /**
  * Non-copying conversion of Buffer to Uint8Array.
@@ -30,4 +30,4 @@ export const arrayToBuffer = (array: Uint8Array): Buffer => {
  */
 export const bufferToArray = (buffer: Buffer): Uint8Array => {
   return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-}
+};

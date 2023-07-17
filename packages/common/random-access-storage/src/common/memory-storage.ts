@@ -5,9 +5,10 @@
 import ram from 'random-access-memory';
 import { Callback, RandomAccessStorage } from 'random-access-storage';
 
+import { arrayToBuffer } from '@dxos/util';
+
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
-import { arrayToBuffer } from '@dxos/util';
 
 /**
  * Storage interface implementation for RAM.

@@ -11,7 +11,6 @@ import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
-import { arrayToBuffer } from '@dxos/util';
 
 /**
  * Web file systems.

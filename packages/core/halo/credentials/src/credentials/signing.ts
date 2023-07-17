@@ -53,11 +53,11 @@ export const canonicalStringify = (obj: any) =>
         if (Buffer.isBuffer(value)) {
           return value.toString('hex');
         }
-        
+
         if (value instanceof Uint8Array) {
           return arrayToBuffer(value).toString('hex');
         }
-        if(value.data && value.type === 'Buffer') {
+        if (value.data && value.type === 'Buffer') {
           return Buffer.from(value).toString('hex');
         }
         if (original instanceof Timeframe) {

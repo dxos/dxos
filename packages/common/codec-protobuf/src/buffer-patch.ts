@@ -3,6 +3,7 @@
 //
 
 import { arrayToBuffer } from '@dxos/util';
+
 import type { Codec } from './codec';
 
 /**
