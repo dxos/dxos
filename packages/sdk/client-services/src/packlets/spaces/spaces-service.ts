@@ -28,8 +28,6 @@ import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
 
-const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
-
 export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
@@ -77,14 +75,10 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate
-              .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
-              .on(ctx, () => scheduler.trigger());
+            space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
             if (space.dataPipeline.pipelineState) {
               subscriptions.add(
-                space.dataPipeline.pipelineState.timeframeUpdate
-                  .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
-                  .on(ctx, () => scheduler.trigger()),
+                space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()),
               );
             }
           }
