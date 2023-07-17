@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import React, { ReactNode } from 'react';
 
 export type TreeItemTextProps = {

@@ -5,12 +5,13 @@
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 
-import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask } from '@dxos/async';
+import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
+import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -88,6 +89,10 @@ export class Teleport {
 
   get stream(): Duplex {
     return this._muxer.stream;
+  }
+
+  get stats(): Event<ConnectionInfo.StreamStats[]> {
+    return this._muxer.statsUpdated;
   }
 
   /**
