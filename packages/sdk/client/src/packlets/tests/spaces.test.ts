@@ -17,7 +17,7 @@ import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceProxy } from '../proxies';
-import { TestBuilder, testSpace } from '../testing';
+import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -126,7 +126,7 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1 as SpaceProxy, guest: client2 }),
     );
-    const space2 = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
+    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 
     const hello = new Trigger();
     {
@@ -151,7 +151,7 @@ describe('Spaces', () => {
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
   });
 
-  test('Peer do not load mutations before epoch', async () => {
+  test('peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
     const services1 = testBuilder.createLocal();
@@ -187,8 +187,7 @@ describe('Spaces', () => {
 
     await Promise.all(performInvitation({ host: space1, guest: client2 }));
 
-    const space2 = client2.getSpace(space1.key)!;
-    await space2.waitUntilReady();
+    await waitForSpace(client2, space1.key, { ready: true });
     const dataSpace2 = services2.host!._serviceContext.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!._serviceContext.feedStore.getFeed(feedKey!)!;
 
