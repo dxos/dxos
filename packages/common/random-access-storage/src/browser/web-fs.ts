@@ -208,7 +208,8 @@ export class WebFile extends EventEmitter implements File {
     if (offset + size > file.size) {
       throw new Error('Read out of bounds');
     }
-    return Buffer.from(new Uint8Array(await file.slice(offset, offset + size).arrayBuffer()));
+    // does not copy the buffer
+    return Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
   }
 
   @synchronized
@@ -221,7 +222,8 @@ export class WebFile extends EventEmitter implements File {
     const file = await fileHandle.getFile();
     let leftoverSize = 0;
     if (offset + size < file.size) {
-      const leftover = Buffer.from(new Uint8Array(await file.slice(offset + size, file.size).arrayBuffer()));
+      // does not copy the buffer
+      const leftover = Buffer.from(await file.slice(offset + size, file.size).arrayBuffer());
       leftoverSize = leftover.length;
       await writable.write({ type: 'write', data: leftover, position: offset });
     }
