@@ -44,7 +44,6 @@
     "@dxos/hello-template": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/observable-object": "workspace:*",
     "@dxos/plate": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",

@@ -18,10 +18,9 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { deepSignal } from 'deepsignal/react';
 import React, { createContext, DependencyList, useContext, useEffect, useState } from 'react';
 
-import { createStore } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
 import { PluginDefinition, Surface } from '@dxos/react-surface';
 
 export type DndPluginProvides = {
@@ -36,7 +35,8 @@ export type DndPluginStoreValue = {
   overlayDropAnimation: OverlayDropAnimation;
 };
 
-const store = createStore<DndPluginStoreValue>({
+// TODO(wittjosiah): Move out of top-level.
+const state = deepSignal<DndPluginStoreValue>({
   overlayDropAnimation: 'away',
 });
 
@@ -73,7 +73,7 @@ export const useDragStart = (callback: (event: DragStartEvent) => void, dependen
 const dragEndSubscriptions: ((event: DragEndEvent) => void)[] = [];
 
 const handleDragEnd = (event: DragEndEvent) => {
-  store.overlayDropAnimation = 'away';
+  state.overlayDropAnimation = 'away';
   dragEndSubscriptions.forEach((subscription) => subscription.call(this, event));
 };
 
@@ -159,11 +159,11 @@ const dropAnimations: Record<OverlayDropAnimation, DropAnimation> = {
   },
 };
 
-export const DndPluginContext = createContext<DndPluginStoreValue>(store);
+export const DndPluginContext = createContext<DndPluginStoreValue>({ overlayDropAnimation: 'away' });
 
 export const useDnd = () => useContext(DndPluginContext);
 
-const DndOverlay = observer(() => {
+const DndOverlay = () => {
   const dnd = useDnd();
   const [activeDatum, setActiveDatum] = useState<unknown | null>(null);
   useDragStart(({ active: { data } }) => setActiveDatum(data.current?.dragoverlay), []);
@@ -172,49 +172,51 @@ const DndOverlay = observer(() => {
       <Surface role='dragoverlay' data={activeDatum} limit={1} />
     </DragOverlay>
   );
-});
+};
 
-export const DndPlugin = (): PluginDefinition<DndPluginProvides> => ({
-  meta: {
-    id: 'dxos:dnd',
-  },
-  provides: {
-    components: {
-      default: DndOverlay,
+export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
+  return {
+    meta: {
+      id: 'dxos:dnd',
     },
-    context: ({ children }) => {
-      const sensors = useSensors(
-        useSensor(MouseSensor, {
-          // Require the mouse to move by 10 pixels before activating
-          activationConstraint: {
-            distance: 10,
-          },
-        }),
-        useSensor(TouchSensor, {
-          // Press delay of 200ms, with tolerance of 5px of movement
-          activationConstraint: {
-            delay: 200,
-            tolerance: 5,
-          },
-        }),
-        useSensor(KeyboardSensor, {
-          coordinateGetter: sortableKeyboardCoordinates,
-        }),
-      );
-      return (
-        <DndPluginContext.Provider value={store}>
-          <DndContext
-            onDragOver={handleDragOver}
-            onDragStart={handleDragStart}
-            onDragCancel={handleDragCancel}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-          >
-            {children}
-          </DndContext>
-        </DndPluginContext.Provider>
-      );
+    provides: {
+      components: {
+        default: DndOverlay,
+      },
+      context: ({ children }) => {
+        const sensors = useSensors(
+          useSensor(MouseSensor, {
+            // Require the mouse to move by 10 pixels before activating
+            activationConstraint: {
+              distance: 10,
+            },
+          }),
+          useSensor(TouchSensor, {
+            // Press delay of 200ms, with tolerance of 5px of movement
+            activationConstraint: {
+              delay: 200,
+              tolerance: 5,
+            },
+          }),
+          useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+          }),
+        );
+        return (
+          <DndPluginContext.Provider value={state}>
+            <DndContext
+              onDragOver={handleDragOver}
+              onDragStart={handleDragStart}
+              onDragCancel={handleDragCancel}
+              onDragEnd={handleDragEnd}
+              sensors={sensors}
+            >
+              {children}
+            </DndContext>
+          </DndPluginContext.Provider>
+        );
+      },
+      dnd: state,
     },
-    dnd: store,
-  },
-});
+  };
+};

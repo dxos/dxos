@@ -7,6 +7,13 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist"
+  ],
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -19,6 +26,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/kai-types": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",

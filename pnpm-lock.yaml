@@ -1,6 +1,12 @@
 lockfileVersion: 5.4
 
 patchedDependencies:
+  '@nx/js@16.2.2':
+    hash: i2ldkmumwrscazxcjfqe5jgnci
+    path: patches/@nx__js@16.2.2.patch
+  '@nx/vite@16.2.2':
+    hash: 5e2uwsujtpvooi6im6bcugahxq
+    path: patches/@nx__vite@16.2.2.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
@@ -10,12 +16,6 @@ patchedDependencies:
   uuid@8.3.2:
     hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
-  '@nx/js@16.2.2':
-    hash: i2ldkmumwrscazxcjfqe5jgnci
-    path: patches/@nx__js@16.2.2.patch
-  '@nx/vite@16.2.2':
-    hash: 5e2uwsujtpvooi6im6bcugahxq
-    path: patches/@nx__vite@16.2.2.patch
 
 importers:
 
@@ -358,7 +358,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -369,6 +368,7 @@ importers:
       '@dxos/vault': workspace:*
       '@octokit/openapi-types': ^16.0.0
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@remix-run/router': ^1.0.2
       '@sentry/react': ^7.41.0
       '@sentry/vite-plugin': ^0.7.2
@@ -380,6 +380,7 @@ importers:
       '@types/showdown': ^2.0.0
       '@types/turndown': ^5.0.1
       '@vitejs/plugin-react': ^3.0.1
+      deepsignal: ^1.3.3
       dompurify: ^3.0.3
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
@@ -413,7 +414,6 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -422,8 +422,10 @@ importers:
       '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@sentry/react': 7.42.0_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
@@ -564,7 +566,9 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
+      '@braneframe/plugin-testing': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-thread': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/plugin-url-sync': workspace:*
       '@braneframe/types': workspace:*
@@ -577,7 +581,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -620,7 +623,9 @@ importers:
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
+      '@braneframe/plugin-testing': link:../plugins/plugin-testing
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
+      '@braneframe/plugin-thread': link:../plugins/plugin-thread
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
       '@braneframe/plugin-url-sync': link:../plugins/plugin-url-sync
       '@braneframe/types': link:../types
@@ -632,7 +637,6 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -672,6 +676,7 @@ importers:
   packages/apps/plugins/plugin-client:
     specifiers:
       '@dxos/config': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
@@ -681,6 +686,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-signals': link:../../../core/echo/echo-signals
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -698,11 +704,11 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
+      deepsignal: ^1.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^5.0.4
@@ -710,7 +716,7 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/observable-object': link:../../../common/observable-object
+      deepsignal: 1.3.4_react@18.2.0
     devDependencies:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
@@ -778,22 +784,35 @@ importers:
 
   packages/apps/plugins/plugin-graph:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-surface': workspace:*
+      '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.set: ^4.3.2
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/util': link:../../../common/util
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.set: 4.3.2
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.set': 4.3.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -817,7 +836,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -839,7 +857,6 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
@@ -868,25 +885,31 @@ importers:
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@braneframe/types': link:../../types
+      '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/client': link:../../../sdk/client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -916,13 +939,14 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -936,11 +960,12 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@preact/signals-core': 1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
@@ -963,19 +988,23 @@ importers:
 
   packages/apps/plugins/plugin-splitview:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/debug': link:../../../common/debug
+      deepsignal: 1.3.4_react@18.2.0
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -989,19 +1018,77 @@ importers:
   packages/apps/plugins/plugin-stack:
     specifiers:
       '@braneframe/plugin-dnd': workspace:*
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dnd-kit/core': ^6.0.5
       '@dnd-kit/sortable': ^7.0.1
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/util': link:../../../common/util
+      '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-dnd': link:../plugin-dnd
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-testing:
+    specifiers:
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
@@ -1011,14 +1098,15 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
+      '@faker-js/faker': 7.6.0
       lodash.get: 4.4.2
     devDependencies:
-      '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
@@ -1039,21 +1127,78 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       i18next: ^21.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
+      deepsignal: 1.3.4_react@18.2.0
       i18next: 21.10.0
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
       '@dxos/react-surface': link:../../../sdk/react-surface
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-thread:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-composer': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      date-fns: ^2.29.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
+      date-fns: 2.29.3
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@faker-js/faker': 7.6.0
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -1070,14 +1215,16 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1086,9 +1233,11 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/debug': link:../../../common/debug
       '@dxos/react-client': link:../../../sdk/react-client
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
@@ -1108,13 +1257,10 @@ importers:
   packages/apps/plugins/plugin-url-sync:
     specifiers:
       '@braneframe/plugin-treeview': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
       vite: ^4.3.9
-    dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
     devDependencies:
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1746,30 +1892,6 @@ importers:
       readable-stream: 3.6.0
       util: 0.12.5
 
-  packages/common/observable-object:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/keys': workspace:*
-      '@testing-library/dom': ^8.17.1
-      '@testing-library/react': ^13.4.0
-      '@testing-library/user-event': ^14.4.3
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      react: '*'
-      react-dom: ^18.2.0
-    dependencies:
-      '@dxos/async': link:../async
-      '@dxos/keys': link:../keys
-    optionalDependencies:
-      react: 18.2.0
-    devDependencies:
-      '@testing-library/dom': 8.19.0
-      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
-      '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react-dom: 18.2.0_react@18.2.0
-
   packages/common/plate:
     specifiers:
       '@swc/core': 1.3.21
@@ -2022,10 +2144,10 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
@@ -2055,10 +2177,10 @@ importers:
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../halo/credentials
       '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/protocols': link:../protocols
       '@dxos/rpc': link:../mesh/rpc
       '@dxos/sentry': link:../../common/sentry
@@ -2245,7 +2367,6 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -2262,13 +2383,29 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/protocols': link:../../protocols
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       protobufjs: 7.2.2
     devDependencies:
       wait-for-expect: 3.0.2
+
+  packages/core/echo/echo-signals:
+    specifiers:
+      '@dxos/echo-schema': workspace:*
+      '@preact/signals': ^1.1.5
+      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
+      preact: ^10.11.0
+      react: ^18.2.0
+    dependencies:
+      '@dxos/echo-schema': link:../echo-schema
+      '@preact/signals': 1.1.5_preact@10.11.2
+      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4_react@18.2.0
+    devDependencies:
+      preact: 10.11.2
+      react: 18.2.0
 
   packages/core/echo/echo-typegen:
     specifiers:
@@ -2382,9 +2519,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/util': workspace:*
       '@types/express': ^4.17.17
       express: 4.17.1
@@ -2393,9 +2530,9 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
+      '@dxos/echo-schema': link:../echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/util': link:../../common/util
       express: 4.17.1
       portfinder: 1.0.32
@@ -2877,7 +3014,6 @@ importers:
       '@dxos/hello-template': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2938,7 +3074,6 @@ importers:
       '@dxos/hello-template': link:../../apps/templates/hello-template
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -4003,6 +4138,73 @@ importers:
       vite-plugin-mkcert: 1.13.4_vite@4.3.9
       vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
       workbox-window: 6.5.4
+
+  packages/experimental/kai-functions:
+    specifiers:
+      '@braneframe/types': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/chess-app': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/functions': workspace:*
+      '@dxos/kai-types': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@faker-js/faker': ^7.3.0
+      '@types/faker': ^5.5.9
+      '@types/html-to-text': ^9.0.0
+      '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.startcase': ^4.4.7
+      '@types/split2': ^3.2.1
+      assert: ^2.0.0
+      chess.js: 1.0.0-alpha.0
+      cross-fetch: ^3.1.5
+      csv-parse: ^5.3.6
+      date-fns: ^2.29.3
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.startcase: ^4.4.0
+      node-fetch: ^2.6.0
+    dependencies:
+      '@braneframe/types': link:../../apps/types
+      '@dxos/async': link:../../common/async
+      '@dxos/chess-app': link:../chess-app
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/errors': link:../../sdk/errors
+      '@dxos/functions': link:../../core/functions
+      '@dxos/kai-types': link:../kai-types
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@faker-js/faker': 7.6.0
+      assert: 2.0.0
+      chess.js: 1.0.0-alpha.0
+      cross-fetch: 3.1.5
+      csv-parse: 5.3.6
+      date-fns: 2.29.3
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.startcase: 4.4.0
+      node-fetch: 2.6.7
+    devDependencies:
+      '@types/faker': 5.5.9
+      '@types/html-to-text': 9.0.0
+      '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.startcase': 4.4.7
+      '@types/split2': 3.2.1
 
   packages/experimental/kai-sandbox:
     specifiers:
@@ -5088,11 +5290,11 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
@@ -5122,11 +5324,11 @@ importers:
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -5242,6 +5444,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -5275,6 +5478,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -11571,6 +11775,7 @@ packages:
     dependencies:
       '@nx/cypress': 16.2.2_aj3e4b2uevlutp4stfdq6hnkpm
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -11594,6 +11799,7 @@ packages:
     dependencies:
       '@nx/eslint-plugin': 16.2.2_pmsz72sz2aveouyjxoswp7hyuq
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - '@typescript-eslint/parser'
@@ -11610,6 +11816,7 @@ packages:
     dependencies:
       '@nx/jest': 16.2.2_yokcrs7kusw6mp7a4rtmqubwja
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - '@types/node'
@@ -11626,6 +11833,7 @@ packages:
     dependencies:
       '@nx/js': 16.2.2_i2ldkmumwrscazxcjfqe5jgnci_pn3vosnc7xvuy6wwctdzcrxpiu
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11639,6 +11847,7 @@ packages:
     dependencies:
       '@nx/linter': 16.2.2_aj3e4b2uevlutp4stfdq6hnkpm
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11662,6 +11871,7 @@ packages:
     dependencies:
       '@nx/storybook': 16.2.2_aj3e4b2uevlutp4stfdq6hnkpm
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -11688,6 +11898,7 @@ packages:
     dependencies:
       '@nx/vite': 16.2.2_5e2uwsujtpvooi6im6bcugahxq_t2uybv5cq7sobxwfjipmgkevae
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11703,6 +11914,7 @@ packages:
     dependencies:
       '@nx/web': 16.2.2_pn3vosnc7xvuy6wwctdzcrxpiu
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11738,6 +11950,7 @@ packages:
       dotenv: 10.0.0
       semver: 7.3.4
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11780,6 +11993,7 @@ packages:
       confusing-browser-globals: 1.0.11
       semver: 7.3.4
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11807,6 +12021,7 @@ packages:
       resolve.exports: 1.1.0
       tslib: 2.5.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - '@types/node'
@@ -11834,7 +12049,7 @@ packages:
       '@phenomnomnominal/tsquery': 5.0.1_typescript@5.0.4
       babel-plugin-const-enum: 1.2.0_@babel+core@7.21.3
       babel-plugin-macros: 2.8.0
-      babel-plugin-transform-typescript-metadata: 0.3.2
+      babel-plugin-transform-typescript-metadata: 0.3.2_@babel+core@7.21.3
       chalk: 4.1.2
       fast-glob: 3.2.7
       fs-extra: 11.1.0
@@ -11844,6 +12059,7 @@ packages:
       source-map-support: 0.5.19
       tslib: 2.5.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11869,6 +12085,7 @@ packages:
       tmp: 0.2.1
       tslib: 2.5.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -11972,6 +12189,7 @@ packages:
       enquirer: 2.3.6
       semver: 7.3.4
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - cypress
@@ -11998,6 +12216,7 @@ packages:
       vite: 4.3.9_@types+node@18.11.9
       vitest: 0.31.2_orebkcr2aitqltuktwc7vs66n4
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -12019,6 +12238,7 @@ packages:
       ignore: 5.2.0
       tslib: 2.5.0
     transitivePeerDependencies:
+      - '@babel/traverse'
       - '@swc-node/register'
       - '@swc/core'
       - debug
@@ -12653,6 +12873,37 @@ packages:
 
   /@popperjs/core/2.11.6:
     resolution: {integrity: sha512-50/17A98tWUfQ176raKiOGXuYpLyyVMkxxG6oylzL3BPOlA6ADGdK7EYunSa4I064xerltq9TGXs8HmOk5E+vw==}
+    dev: false
+
+  /@preact/signals-core/1.3.1:
+    resolution: {integrity: sha512-DL+3kDssZ3UOMz9HufwSYE/gK0+TnT1jzegfF5rstgyPrnyfjz4BHAoxmzQA6Mkp4UlKe8qjsgl3v5a/obzNig==}
+    dev: false
+
+  /@preact/signals-react/1.3.4_react@18.2.0:
+    resolution: {integrity: sha512-+MIGr7ZXpRwGhk9VrK4sT5SGQSzzNCgNHuPRJ1so4rwj/DY0Ks1//2ie0sMyPhWjO7NDA91Mp4ph1Nzo3hDHhA==}
+    peerDependencies:
+      react: ^16.14.0 || 17.x || 18.x
+    dependencies:
+      '@preact/signals-core': 1.3.1
+      react: 18.2.0
+      use-sync-external-store: 1.2.0_react@18.2.0
+    dev: false
+
+  /@preact/signals/1.1.5:
+    resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
+    peerDependencies:
+      preact: 10.x
+    dependencies:
+      '@preact/signals-core': 1.3.1
+    dev: false
+
+  /@preact/signals/1.1.5_preact@10.11.2:
+    resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
+    peerDependencies:
+      preact: 10.x
+    dependencies:
+      '@preact/signals-core': 1.3.1
+      preact: 10.11.2
     dev: false
 
   /@protobufjs/aspromise/1.1.2:
@@ -14237,7 +14488,7 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.2_rollup@3.20.4:
+  /@rollup/plugin-replace/5.0.2_rollup@3.23.0:
     resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14246,9 +14497,9 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.20.4
+      '@rollup/pluginutils': 5.0.2_rollup@3.23.0
       magic-string: 0.27.0
-      rollup: 3.20.4
+      rollup: 3.23.0
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.79.1:
@@ -14285,7 +14536,7 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /@rollup/pluginutils/5.0.2_rollup@3.20.4:
+  /@rollup/pluginutils/5.0.2_rollup@3.23.0:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -14297,7 +14548,7 @@ packages:
       '@types/estree': 1.0.0
       estree-walker: 2.0.2
       picomatch: 2.3.1
-      rollup: 3.20.4
+      rollup: 3.23.0
     dev: true
 
   /@rushstack/debug-certificate-manager/1.1.83:
@@ -17433,7 +17684,7 @@ packages:
   /@types/lodash.set/4.3.7:
     resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
     dependencies:
-      '@types/lodash': 4.14.186
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.sortby/4.7.7:
@@ -18232,7 +18483,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.20.12
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -20082,7 +20333,7 @@ packages:
   /axios/1.3.4_debug@4.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -20302,9 +20553,16 @@ packages:
   /babel-plugin-syntax-jsx/6.18.0:
     resolution: {integrity: sha512-qrPaCSo9c8RHNRHIotaufGbuOBN8rtdC4QrrFFc43vyWCCz7Kl7GL1PGaXtMGQZUXrkCjNEgxDfmAuAabr/rlw==}
 
-  /babel-plugin-transform-typescript-metadata/0.3.2:
+  /babel-plugin-transform-typescript-metadata/0.3.2_@babel+core@7.21.3:
     resolution: {integrity: sha512-mWEvCQTgXQf48yDqgN7CH50waTyYBeP2Lpqx4nNWab9sxEpdXVeKgfj1qYI2/TgUPQtNFZ85i3PemRtnXVYYJg==}
+    peerDependencies:
+      '@babel/core': ^7
+      '@babel/traverse': ^7
+    peerDependenciesMeta:
+      '@babel/traverse':
+        optional: true
     dependencies:
+      '@babel/core': 7.21.3
       '@babel/helper-plugin-utils': 7.20.2
     dev: true
 
@@ -22111,7 +22369,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -23367,6 +23625,16 @@ packages:
   /deepmerge/4.3.1:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
+
+  /deepsignal/1.3.4_react@18.2.0:
+    resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
+    dependencies:
+      '@preact/signals': 1.1.5
+      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4_react@18.2.0
+    transitivePeerDependencies:
+      - react
+    dev: false
 
   /default-browser-id/3.0.0:
     resolution: {integrity: sha512-OZ1y3y0SqSICtE8DE4S8YOE9UZOJ8wO16fKWVP5J1Qz42kV9jcnMVFrEE/noXb/ss3Q4pZIH79kxofzyNNtUNA==}
@@ -27711,13 +27979,8 @@ packages:
       postcss: 8.4.21
     dev: false
 
-  /idb/7.1.0:
-    resolution: {integrity: sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==}
-    dev: true
-
   /idb/7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
-    dev: false
 
   /identity-obj-proxy/3.0.0:
     resolution: {integrity: sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA==}
@@ -34636,7 +34899,6 @@ packages:
 
   /preact/10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
-    dev: false
 
   /preferred-pm/3.0.3:
     resolution: {integrity: sha512-+wZgbxNES/KlJs9q40F/1sfOd/j7f1O9JaHcW5Dsn3aUUOZg3L2bjpVUcKV2jvtElYfoTuQiNeMfQJ4kwUAhCQ==}
@@ -40581,12 +40843,12 @@ packages:
       vite: ^3.1.0 || ^4.0.0
       workbox-window: ^6.5.4
     dependencies:
-      '@rollup/plugin-replace': 5.0.2_rollup@3.20.4
+      '@rollup/plugin-replace': 5.0.2_rollup@3.23.0
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
-      rollup: 3.20.4
-      vite: 4.3.9_@types+node@18.11.9
+      rollup: 3.23.0
+      vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -42087,7 +42349,7 @@ packages:
   /workbox-background-sync/6.5.4:
     resolution: {integrity: sha512-0r4INQZMyPky/lj4Ou98qxcThrETucOde+7mRGJl13MPJugQNKeZQOdIJe/1AchOP23cTqHcN/YVpD6r8E6I8g==}
     dependencies:
-      idb: 7.1.0
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 
@@ -42156,7 +42418,7 @@ packages:
   /workbox-expiration/6.5.4:
     resolution: {integrity: sha512-jUP5qPOpH1nXtjGGh1fRBa1wJL2QlIb5mGpct3NzepjGG2uFFBn4iiEBiI9GUmfAFR2ApuRhDydjcRmYXddiEQ==}
     dependencies:
-      idb: 7.1.0
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 

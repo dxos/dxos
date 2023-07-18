@@ -8,17 +8,24 @@ import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, MutationOf, MutationWriteReceipt, StateMachine, StateOf } from '@dxos/model-factory';
-import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 
 import { EchoDatabase } from './database';
 import { base, db } from './defs';
 
+export const subscribe = Symbol.for('dxos.echo-object.subscribe');
+
+type SignalFactory = () => { notifyRead(): void; notifyWrite(): void };
+let createSignal: SignalFactory | undefined;
+export const registerSignalFactory = (factory: SignalFactory) => {
+  createSignal = factory;
+};
+
 /**
  * Base class for all echo objects.
  * Can carry different models.
  */
-export abstract class EchoObject<T extends Model = any> implements ObservableObject {
+export abstract class EchoObject<T extends Model = any> {
   /**
    * @internal
    */
@@ -53,6 +60,8 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
   _modelConstructor: ModelConstructor<T>;
 
   private _callbacks = new Set<(value: any) => void>();
+
+  protected readonly _signal = createSignal?.();
 
   protected constructor(modelConstructor: ModelConstructor<T>) {
     this._modelConstructor = modelConstructor;
@@ -104,8 +113,6 @@ export abstract class EchoObject<T extends Model = any> implements ObservableObj
 
   /**
    * @internal
-   * Called before object is bound to database.
-   * `_database` is guaranteed to be set.
    */
   _itemUpdate(): void {
     for (const callback of this._callbacks) {

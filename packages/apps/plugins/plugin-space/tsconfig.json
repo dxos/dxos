@@ -30,7 +30,7 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/text-model"

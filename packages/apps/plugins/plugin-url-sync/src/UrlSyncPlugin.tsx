@@ -5,7 +5,6 @@
 import { useEffect } from 'react';
 
 import { selectedToUri, uriToSelected, useTreeView } from '@braneframe/plugin-treeview';
-import { observer } from '@dxos/observable-object/react';
 import { PluginDefinition } from '@dxos/react-surface';
 
 export const UrlSyncPlugin = (): PluginDefinition => ({
@@ -14,7 +13,7 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
   },
   provides: {
     components: {
-      default: observer(() => {
+      default: () => {
         const treeView = useTreeView();
 
         // Update selection based on browser navigation.
@@ -47,7 +46,7 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
         }, [treeView.selected]);
 
         return null;
-      }),
+      },
     },
   },
 });

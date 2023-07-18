@@ -71,6 +71,7 @@ export const JsonView: FC<{
   );
 };
 
+// TODO(burdon): Factor out.
 const replacer = (key: any, value: any) => {
   if (typeof value === 'object') {
     if (value instanceof Uint8Array) {

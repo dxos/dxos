@@ -66,7 +66,10 @@ export default defineTemplate<typeof config>(({ input, defaultOutputFile }) => {
     plugins: [
       VaultPlugin(),
       ConfigPlugin(),
-      ${react ? `${reactPlugin()}(),` : ''}
+      ${react
+        // https://github.com/preactjs/signals/issues/269
+        ?`${reactPlugin()}({ jsxRuntime: 'classic' }),`
+        : ''}
       ${
         dxosUi
           ? `${ThemePlugin()}({

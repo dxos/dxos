@@ -4,12 +4,11 @@
 
 import { TLStore } from '@tldraw/tlschema';
 
-import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
-export type DrawingPluginProvides = SpaceProvides & TranslationsProvides;
+export type DrawingPluginProvides = TranslationsProvides;
 
 export interface DrawingModel {
   object: DrawingType;

@@ -5,7 +5,7 @@
 import get from 'lodash.get';
 import React, { useState } from 'react';
 
-import { useGraphContext } from '@braneframe/plugin-graph';
+import { useGraph } from '@braneframe/plugin-graph';
 import { useTreeView } from '@braneframe/plugin-treeview';
 import { Button, Dialog, Input, useTranslation } from '@dxos/aurora';
 
@@ -19,12 +19,14 @@ export const SpaceMarkdownChooser = ({
   const { t } = useTranslation('dxos:markdown');
   // todo(thure): This assumes the best & only way to get the active space is to find it in the graph using treeView, which probably won’t scale well.
   const treeView = useTreeView();
-  const graph = useGraphContext();
+  const graph = useGraph();
   const [plugin] = treeView.selected[0]?.split('/') ?? [];
   const nodes =
-    graph.roots[plugin]
-      .find(({ id }) => id === treeView.selected[0])
-      ?.children?.filter((node) => {
+    Object.values(
+      (graph.pluginChildren ?? {})[plugin].find(({ id }) => id === treeView.selected[0])?.pluginChildren ?? {},
+    )
+      .flat()
+      ?.filter((node) => {
         return isMarkdown(get(node, 'data.content')) && !omit.has(get(node, 'data.id', 'never'));
       }) ?? [];
 

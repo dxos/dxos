@@ -7,7 +7,7 @@ import { useOutletContext } from 'react-router-dom';
 
 import type { Space } from '@dxos/client';
 import { Loading } from '@dxos/react-appkit';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client';
 
 import { TaskList as TaskListComponent } from '../components/TaskList';
 import { Task, TaskList } from '../proto';
@@ -16,7 +16,7 @@ import { Task, TaskList } from '../proto';
  * Lay out a single task list per space.
  * @returns JSX
  */
-export const SpacePage = observer(() => {
+export const SpacePage = () => {
   const { space } = useOutletContext<{ space: Space }>();
   const [taskList] = useQuery(space, TaskList.filter());
   if (!taskList) {
@@ -45,4 +45,4 @@ export const SpacePage = observer(() => {
       }}
     />
   );
-});
+};

@@ -6,12 +6,12 @@ import React, { FC } from 'react';
 
 import { DocumentStack, Presentation } from '@dxos/kai-types';
 import { Stack } from '@dxos/mosaic';
-import { observer, useConfig } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 
 import { CustomActionMenu } from '../Stack';
 import { sectionActions, StackSection } from './sections';
 
-export const DeckEditor: FC<{ presentation: Presentation }> = observer(({ presentation }) => {
+export const DeckEditor: FC<{ presentation: Presentation }> = ({ presentation }) => {
   const config = useConfig();
   const handleMoveSection = (id: string, from: number, to: number) => {
     const sections = presentation.stack.sections;
@@ -41,4 +41,4 @@ export const DeckEditor: FC<{ presentation: Presentation }> = observer(({ presen
       </div>
     </div>
   );
-});
+};

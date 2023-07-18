@@ -18,6 +18,11 @@ message Meta {
   repeated ForeignKey keys = 1;
 }
 
+// TODO(burdon): Temporary class used to anchor testing plugin.
+message Testing {
+  option (object) = true;
+}
+
 message Document {
   option (object) = true;
 
@@ -72,4 +77,28 @@ message Drawing {
   string title = 1;
   // TODO(burdon): YJS document (map).
   dxos.schema.Text content = 2;
+}
+
+// TODO(burdon): Channel > Thread > Block > Message.
+message Thread {
+  option (object) = true;
+
+  message Message {
+    string timestamp = 1;
+    string text = 2;
+  }
+
+  // TODO(burdon): Meta (e.g., source).
+  message Block {
+    option (object) = true;
+
+    // TODO(burdon): Can the be inferred from the mutation/pipeline?
+    // TODO(burdon): Import key.
+    // dxos.keys.PublicKey identity_key = 2;
+    string identity_key = 1;
+    repeated Message messages = 2;
+  }
+
+  string name = 1;
+  repeated Block blocks = 2;
 }

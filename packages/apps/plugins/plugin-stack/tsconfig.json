@@ -21,10 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-surface"
@@ -42,6 +42,9 @@
       "path": "../plugin-dnd"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }

@@ -21,10 +21,13 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/async"
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-surface"

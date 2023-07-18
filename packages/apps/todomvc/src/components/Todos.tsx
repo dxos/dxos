@@ -5,7 +5,7 @@
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { Space, useQuery, observer } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client';
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';
@@ -13,7 +13,7 @@ import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 
-export const Todos = observer(() => {
+export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editing, setEditing] = useState<string>();
   const { space } = useOutletContext<{ space: Space | undefined }>();
@@ -115,4 +115,4 @@ export const Todos = observer(() => {
       )}
     </div>
   );
-});
+};

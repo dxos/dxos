@@ -5,7 +5,7 @@
 import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { useGraphContext } from '@braneframe/plugin-graph';
+import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Avatar,
@@ -23,13 +23,13 @@ import {
   DropdownMenu,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { observer, useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { TREE_VIEW_PLUGIN } from '../TreeViewPlugin';
 import { TreeView } from './TreeView';
 
-export const TreeViewContainer = observer(() => {
-  const graph = useGraphContext();
+export const TreeViewContainer = () => {
+  const graph = useGraph();
 
   const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
@@ -42,10 +42,9 @@ export const TreeViewContainer = observer(() => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const [primary, secondary, ...actions] = Object.values(graph.actions).reduce(
-    (acc, actions) => [...acc, ...actions],
-    [],
-  );
+  const branches = Object.entries(graph.pluginChildren ?? {}).filter(([, items]) => (items as []).length > 0);
+
+  const [primary, secondary, ...actions] = getActions(graph as GraphNode);
   const hoistedActions = [primary, secondary].filter(Boolean);
 
   return (
@@ -55,10 +54,10 @@ export const TreeViewContainer = observer(() => {
           <div role='none' className='flex flex-col bs-full'>
             <div role='separator' className='order-1 bs-px mli-2.5 bg-neutral-500/20' />
             <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain'>
-              {Object.entries(graph.roots).map(([key, items]) => (
+              {branches.map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='pl-2'>{t('plugin name', { ns: key })}</TreeItem.Heading>
-                  <TreeView key={key} items={items} parent={key} />
+                  <TreeView items={items as GraphNode[]} parent={graph.id} />
                 </TreeItem.Root>
               ))}
             </Tree.Root>
@@ -190,4 +189,4 @@ export const TreeViewContainer = observer(() => {
       </DensityProvider>
     </ElevationProvider>
   );
-});
+};
