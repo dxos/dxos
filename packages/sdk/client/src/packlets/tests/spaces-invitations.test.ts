@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { SpaceProxy } from '../proxies';
-import { TestBuilder, testSpace } from '../testing';
+import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
@@ -42,7 +42,7 @@ describe('Spaces/invitations', () => {
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
     {
-      const space = await client2.getSpace(guestInvitation!.spaceKey!)!.waitUntilReady();
+      const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
       await testSpace(space.internal.db);
     }
   });

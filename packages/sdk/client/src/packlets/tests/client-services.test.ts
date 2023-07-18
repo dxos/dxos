@@ -165,8 +165,8 @@ describe('Client services', () => {
     }
     log.info('initialized');
 
-    afterTest(async () => { await client1.destroy(); await server1.close(); await  peer1.close()]);
-    afterTest(async () => { await client2.destroy(); await server2.close(); await  peer2.close()]);
+    afterTest(async () => { await client1.destroy(); await server1.close(); await peer1.close() });
+    afterTest(async () => { await client2.destroy(); await server2.close(); await peer2.close() });
 
     const hostSpace = await client1.createSpace();
     log.info('createSpace', { key: hostSpace.key });
