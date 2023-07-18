@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement, Dispatch } from 'react';
+import { cloneElement } from 'react';
 
 import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
+
+import { JoinSend, JoinState } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -20,6 +22,14 @@ export interface JoinPanelProps {
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
 }
+
+export type JoinPanelImplProps = Pick<
+  JoinPanelProps,
+  'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
+> & {
+  state: JoinState;
+  send: JoinSend;
+};
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
@@ -59,8 +69,6 @@ export interface AdditionMethodAction {
 
 export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction | InvitationAction;
 
-export type JoinSend = Dispatch<JoinAction>;
-
 export type InvitationView =
   | 'invitation input'
   | 'invitation rescuer'
@@ -75,7 +83,7 @@ export type JoinView =
   | 'space invitation acceptor'
   | 'halo invitation acceptor';
 
-export interface JoinState {
+export interface JoinStateContext {
   activeView: JoinView;
   unredeemedSpaceInvitationCode?: string;
   spaceInvitation?: AuthenticatingInvitationObservable;
