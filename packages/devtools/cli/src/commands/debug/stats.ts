@@ -36,7 +36,7 @@ export default class Stats extends BaseCommand<typeof Stats> {
       try {
         const data = await asyncTimeout(
           diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
-          2_000,
+          5_000,
         );
         data.feeds = data.feeds.map((feed: SubscribeToFeedsResponse.Feed) => ({
           ...feed,
