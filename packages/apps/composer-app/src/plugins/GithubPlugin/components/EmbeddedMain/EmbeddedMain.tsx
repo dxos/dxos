@@ -28,7 +28,7 @@ import {
   useJdenticonHref,
 } from '@dxos/aurora';
 import { useTextModel } from '@dxos/aurora-composer';
-import { defaultDescription, getSize, mx, osTx } from '@dxos/aurora-theme';
+import { descriptionText, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
@@ -218,11 +218,11 @@ const EmbeddedLayoutImpl = () => {
                 <DropdownMenu.Content {...overlayAttrs}>
                   <DropdownMenu.Item onClick={handleSaveAndCloseEmbed} classNames='block'>
                     <p>{t('save and close label')}</p>
-                    <p className={defaultDescription}>{t('save and close description')}</p>
+                    <p className={descriptionText}>{t('save and close description')}</p>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item onClick={handleCloseEmbed} classNames='block'>
                     <p>{t('close label', { ns: 'appkit' })}</p>
-                    <p className={defaultDescription}>{t('close embed description')}</p>
+                    <p className={descriptionText}>{t('close embed description')}</p>
                   </DropdownMenu.Item>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>

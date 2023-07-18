@@ -9,7 +9,7 @@ import {
   defaultCoarse,
   defaultDisabled,
   defaultFine,
-  defaultPlaceholder,
+  placeholderText,
   defaultFocus,
   defaultHover,
   osFocus,
@@ -18,7 +18,7 @@ import {
   fineBlockSize,
   coarseBlockSize,
   staticFocus,
-  defaultDescription,
+  descriptionText,
   valenceColorText,
   contentElevation,
   getSize,
@@ -65,20 +65,20 @@ export const inputValence = (valence?: MessageValence) => {
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full bg-transparent text-current',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
-  defaultPlaceholder,
+  placeholderText,
   subduedFocus,
   props.disabled && defaultDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full text-neutral-900 dark:text-white',
-  defaultPlaceholder,
+  placeholderText,
   props.density === 'fine' ? defaultFine : defaultCoarse,
   props.disabled && defaultDisabled,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  defaultPlaceholder,
+  placeholderText,
   'text-base rounded bg-white/50 text-neutral-900 dark:bg-neutral-700/50 dark:text-white',
   inputValence(props.validationValence),
   props.disabled && defaultDisabled,
@@ -143,13 +143,13 @@ export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc
   mx('block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(defaultDescription, props.srOnly && 'sr-only', ...etc);
+  mx(descriptionText, props.srOnly && 'sr-only', ...etc);
 
 export const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('leading-none mlb-1', props.srOnly && 'sr-only', ...etc);
 
 export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(defaultDescription, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+  mx(descriptionText, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputAppInput,
