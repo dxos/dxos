@@ -96,6 +96,9 @@
       "path": "../plugins/plugin-stack"
     },
     {
+      "path": "../plugins/plugin-testing"
+    },
+    {
       "path": "../plugins/plugin-theme"
     },
     {

@@ -16,6 +16,7 @@ import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
+import { TestingPlugin } from '@braneframe/plugin-testing';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -48,6 +49,7 @@ createRoot(document.getElementById('root')!).render(
         DrawingPlugin(),
         KanbanPlugin(),
         ThreadPlugin(),
+        TestingPlugin(),
       ]}
     />
   </StrictMode>,

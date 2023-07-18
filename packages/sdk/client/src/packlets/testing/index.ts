@@ -5,3 +5,4 @@
 export { performInvitation } from '@dxos/client-services/testing';
 
 export * from './test-builder';
+export * from './utils';

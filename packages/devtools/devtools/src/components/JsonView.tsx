@@ -8,6 +8,7 @@ import { JSONTree } from 'react-json-tree';
 
 import { mx } from '@dxos/aurora-theme';
 import { schema } from '@dxos/protocols';
+import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Light/dark mode.
 // https://github.com/gaearon/base16-js/tree/master/src
@@ -70,10 +71,11 @@ export const JsonView: FC<{
   );
 };
 
+// TODO(burdon): Factor out.
 const replacer = (key: any, value: any) => {
   if (typeof value === 'object') {
     if (value instanceof Uint8Array) {
-      return Buffer.from(value).toString('hex');
+      return arrayToBuffer(value).toString('hex');
     }
 
     if (value?.type === 'Buffer') {

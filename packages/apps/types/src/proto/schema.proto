@@ -18,6 +18,11 @@ message Meta {
   repeated ForeignKey keys = 1;
 }
 
+// TODO(burdon): Temporary class used to anchor testing plugin.
+message Testing {
+  option (object) = true;
+}
+
 message Document {
   option (object) = true;
 
