@@ -37,6 +37,8 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
         return;
       }
 
+      await space.waitUntilReady();
+
       await space.internal.createEpoch();
     });
   }
