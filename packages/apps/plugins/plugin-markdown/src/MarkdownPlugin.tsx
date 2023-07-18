@@ -3,16 +3,20 @@
 //
 
 import { Plus, ArticleMedium } from '@phosphor-icons/react';
+import { getIndices } from '@tldraw/indices';
 import get from 'lodash.get';
 import React from 'react';
 
-import { SpaceProvides } from '@braneframe/plugin-space';
+import { GraphProvides } from '@braneframe/plugin-graph';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
+import { UnsubscribeCallback } from '@dxos/async';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { createStore } from '@dxos/observable-object';
+import { SpaceProxy } from '@dxos/client';
+import { createStore, subscribe } from '@dxos/observable-object';
 import { observer } from '@dxos/observable-object/react';
-import { PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
   MarkdownMain,
@@ -23,9 +27,17 @@ import {
 } from './components';
 import translations from './translations';
 import { MarkdownProperties } from './types';
-import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import {
+  MARKDOWN_PLUGIN,
+  documentToGraphNode,
+  isMarkdown,
+  isMarkdownContent,
+  isMarkdownPlaceholder,
+  isMarkdownProperties,
+  markdownPlugins,
+} from './util';
 
-type MarkdownPluginProvides = SpaceProvides &
+type MarkdownPluginProvides = GraphProvides &
   TranslationsProvides & {
     // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
     stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
@@ -33,6 +45,7 @@ type MarkdownPluginProvides = SpaceProvides &
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const subscriptions = new Map<string, UnsubscribeCallback>();
 
   const MarkdownMainStandalone = observer(
     ({ data: [model, properties] }: { data: [ComposerModel, MarkdownProperties]; role?: string }) => {
@@ -49,7 +62,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   return {
     meta: {
-      id: 'dxos:markdown',
+      id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
@@ -58,24 +71,76 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
       });
     },
+    unload: async () => {
+      subscriptions.forEach((unsubscribe) => unsubscribe());
+      subscriptions.clear();
+    },
     provides: {
-      space: {
-        types: [
-          {
-            id: 'create-doc',
-            testId: 'spacePlugin.createDocument',
-            label: ['create document label', { ns: 'composer' }],
-            icon: Plus,
-            Type: Document,
-          },
-        ],
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const space = parent.data;
+          const query = space.db.query(Document.filter());
+          const documentIndices = getIndices(query.objects.length);
+          if (!subscriptions.has(parent.id)) {
+            subscriptions.set(
+              parent.id,
+              query.subscribe(() => emit()),
+            );
+          }
+
+          query.objects.forEach((document, index) => {
+            if (!subscriptions.has(document.id)) {
+              subscriptions.set(
+                document.id,
+                document[subscribe](() => {
+                  if (document.__deleted) {
+                    subscriptions.delete(document.id);
+                    return;
+                  }
+
+                  emit(documentToGraphNode(document, parent, documentIndices[index]));
+                }),
+              );
+            }
+          });
+
+          return query.objects.map((document, index) => documentToGraphNode(document, parent, documentIndices[index]));
+        },
+        actions: (parent, _, plugins) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const space = parent.data;
+          return [
+            {
+              id: 'create-doc',
+              index: 'a1',
+              testId: 'spacePlugin.createDocument',
+              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              disposition: 'toolbar',
+              invoke: async () => {
+                const object = space.db.add(new Document());
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
+                }
+              },
+            },
+          ];
+        },
       },
       stack: {
         creators: [
           {
             id: 'create-section-space-doc',
             testId: 'markdownPlugin.createSectionSpaceDocument',
-            label: ['create section space document label', { ns: 'dxos:markdown' }],
+            label: ['create section space document label', { ns: MARKDOWN_PLUGIN }],
             icon: ArticleMedium,
             create: () => new Document(),
           },
@@ -84,7 +149,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           {
             id: 'choose-section-space-doc',
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
-            label: ['choose section space document label', { ns: 'dxos:markdown' }],
+            label: ['choose section space document label', { ns: MARKDOWN_PLUGIN }],
             icon: ArticleMedium,
             filter: isMarkdownContent,
           },

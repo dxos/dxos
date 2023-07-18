@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
@@ -16,7 +15,7 @@ import { isTypedObject } from '@dxos/client';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-export type KanbanPluginProvides = SpaceProvides & TranslationsProvides;
+export type KanbanPluginProvides = TranslationsProvides;
 
 // TODO(burdon): Undo?
 // TODO(burdon): Typescript types (replace proto with annotations?)

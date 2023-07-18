@@ -59,11 +59,9 @@ test.describe('Basic test', () => {
 
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      const authCode = await host.shell.getAuthCode();
       await guest.joinSpace();
-      const [authCode] = await Promise.all([
-        host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode),
-      ]);
+      await guest.shell.acceptSpaceInvitation(invitationCode);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
       await host.page.getByRole('link').last().click();

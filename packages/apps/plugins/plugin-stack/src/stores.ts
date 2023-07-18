@@ -4,7 +4,7 @@
 
 import { createStore } from '@dxos/observable-object';
 
-import { StackSectionChooser, StackSectionCreator } from './props';
+import { StackSectionChooser, StackSectionCreator } from './types';
 
 export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
 export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);

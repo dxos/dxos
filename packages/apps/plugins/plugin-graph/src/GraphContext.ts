@@ -3,10 +3,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DeepSignal } from 'deepsignal';
 import { Context, createContext, useContext } from 'react';
 
-import { GraphContextValue } from './types';
+import { raise } from '@dxos/debug';
 
-export const GraphContext: Context<GraphContextValue> = createContext<GraphContextValue>({ roots: {}, actions: {} });
+import { GraphNode } from './types';
 
-export const useGraphContext = () => useContext(GraphContext);
+export const GraphContext: Context<DeepSignal<GraphNode> | null> = createContext<DeepSignal<GraphNode> | null>(null);
+
+export const useGraph = (): DeepSignal<GraphNode> =>
+  useContext(GraphContext) ?? raise(new Error('GraphContext not found'));
