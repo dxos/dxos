@@ -10,6 +10,7 @@
   "author": "DXOS.org",
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-drawing": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",
@@ -17,7 +18,6 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/plugin-testing": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",

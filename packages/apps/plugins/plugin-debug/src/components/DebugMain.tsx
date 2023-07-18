@@ -5,19 +5,19 @@
 import { Play, HandPalm } from '@phosphor-icons/react';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Testing as TestingType } from '@braneframe/types';
+import { Debug as DebugType } from '@braneframe/types';
 import { Button, DensityProvider, Main } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { diagnostics, SpaceProxy } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
-import { TestingContext } from '../props';
+import { DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [space, _] }) => {
+export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space, _] }) => {
   const client = useClient();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
@@ -35,7 +35,7 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
     return generator;
   }, [space]);
 
-  const { running, start, stop } = useContext(TestingContext);
+  const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
       stop();

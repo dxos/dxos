@@ -19,7 +19,7 @@ message Meta {
 }
 
 // TODO(burdon): Temporary class used to anchor testing plugin.
-message Testing {
+message Debug {
   option (object) = true;
 }
 

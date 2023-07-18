@@ -75,6 +75,9 @@
       "path": "../plugins/plugin-client"
     },
     {
+      "path": "../plugins/plugin-debug"
+    },
+    {
       "path": "../plugins/plugin-drawing"
     },
     {
@@ -94,9 +97,6 @@
     },
     {
       "path": "../plugins/plugin-stack"
-    },
-    {
-      "path": "../plugins/plugin-testing"
     },
     {
       "path": "../plugins/plugin-theme"
