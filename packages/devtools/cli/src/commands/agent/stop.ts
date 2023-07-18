@@ -21,7 +21,7 @@ export default class Stop extends BaseCommand<typeof Stop> {
         const processes = await daemon.list();
         await Promise.all(
           processes.map(async ({ profile }) => {
-            await daemon.stop(profile!);
+            await daemon.stop(profile!, { force: true });
             this.log(`Agent stopped: ${profile}`);
           }),
         );

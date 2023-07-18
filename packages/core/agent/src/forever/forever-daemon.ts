@@ -112,9 +112,22 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string): Promise<ProcessInfo> {
-    if (await this.isRunning(profile)) {
-      forever.kill((await this._getProcess(profile)).pid!, true, 'SIGINT');
+  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo> {
+    if (!(await this.isRunning(profile))) {
+      return {};
+    }
+
+    const proc = await this._getProcess(profile);
+
+    if (force) {
+      // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
+      (await this.list()).forEach((process) => {
+        if (process.profile === profile) {
+          forever.stop(process.profile!);
+        }
+      });
+    } else {
+      forever.kill(proc.pid!, true, 'SIGINT');
     }
 
     await waitFor({
@@ -122,7 +135,6 @@ export class ForeverDaemon implements Daemon {
     });
 
     removeSocketFile(profile);
-    const proc = await this._getProcess(profile);
     log.info('stopped', { profile });
     return proc;
   }
