@@ -73,7 +73,8 @@ export class Text extends EchoObject<TextModel> {
   }
 
   override _itemUpdate(): void {
-    super._itemUpdate();
+    // TODO(wittjosiah): This stops yjs updates from working.
+    // super._itemUpdate();
     this._model.initialize();
     this._signal?.notifyWrite();
   }
