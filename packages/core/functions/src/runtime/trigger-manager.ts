@@ -59,10 +59,13 @@ export class TriggerManager {
         return;
       }
 
-      const updatedIds = new Set<string>();
+      // TODO(burdon): Factor out subscription/result delta.
+
+      let count = 0;
+      const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        const updatedObjects = Array.from(updatedIds);
-        updatedIds.clear();
+        const updatedObjects = Array.from(objectIds);
+        objectIds.clear();
 
         await this.invokeFunction(this._invokeOptions, trigger.function, {
           space: space.key,
@@ -70,15 +73,25 @@ export class TriggerManager {
         });
       });
 
+      // TODO(burdon): Removed?
       const selection = createSubscription(({ added, updated }) => {
         for (const object of added) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
         for (const object of updated) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
 
-        task.schedule();
+        log.info('updated', {
+          space: space.key,
+          objects: objectIds.size,
+          added: added.length,
+          updated: updated.length,
+          count,
+        });
+        if (count++) {
+          task.schedule();
+        }
       });
 
       ctx.onDispose(() => selection.unsubscribe());
@@ -88,12 +101,12 @@ export class TriggerManager {
         selection.update(objects);
       });
 
-      // TODO(burdon): Subscribe method option to trigger automatically (throughout codebase).
-      selection.update(query.objects);
+      // Trigger first update, but don't schedule task.
+      // selection.update(query.objects);
 
       ctx.onDispose(unsubscribe);
 
-      log('mounted', { trigger });
+      log.info('mounted', { space: space.key, trigger });
     }
   }
 
@@ -128,10 +141,3 @@ export class TriggerManager {
     }
   }
 }
-
-export type MountTriggerParams = {
-  ctx: Context;
-  client: Client;
-  trigger: FunctionTrigger;
-  invokeOptions: InvokeOptions;
-};

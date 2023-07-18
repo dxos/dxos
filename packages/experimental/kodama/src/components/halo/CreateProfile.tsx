@@ -8,9 +8,8 @@ import React, { FC, useState } from 'react';
 import { generateSeedPhrase, Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-import { TextInput } from '..';
 import { copyToClipboard } from '../../util';
-import { Panel } from '../util';
+import { TextInput, Panel } from '../util';
 
 export const CreateProfile: FC<{
   onCreate: (identity: Identity) => void;
