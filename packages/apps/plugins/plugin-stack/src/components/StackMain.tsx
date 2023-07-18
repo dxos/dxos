@@ -7,7 +7,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
@@ -148,6 +148,8 @@ const StackSectionsImpl = ({
 
   const { setNodeRef } = useDroppable({ id: stackId, data: { stack: { id: stackId } } });
 
+  useEffect(() => setSectionModels(getSectionModels(sections)), [sections, stackId]);
+
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
       const nextActiveId = get(data.current, 'section.object.id', null);
@@ -283,12 +285,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
           />
         </Input.Root>
         <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
-        <StackSectionsImpl
-          key={`${stack.id}--${stack.sections.length}`}
-          sections={stack.sections}
-          id={stack.id}
-          onAdd={handleAdd}
-        />
+        <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <h2 className='text-sm font-normal flex items-center gap-1'>
             <Plus className={getSize(4)} />
@@ -372,13 +369,5 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
 
 export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
   const stack = data[data.length - 1] as StackModel & StackProperties;
-  const [_, setIter] = useState([]);
-  if (subscribe in stack) {
-    useEffect(() => {
-      return (stack as ObservableObject)[subscribe](() => setIter([])) as () => void;
-    }, []);
-  } else {
-    useSubscription(() => setIter([]), [stack]);
-  }
   return <StackMainImpl stack={stack} />;
 };
