@@ -35,7 +35,7 @@ export default (event: any, context: FunctionContext) => {
 };
 ```
 
-## Running functions with dev agent
+## Running functions with the dev server:
 
 Configure the agent to run functions on a given port:
 

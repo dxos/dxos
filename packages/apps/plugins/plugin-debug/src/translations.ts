@@ -7,7 +7,9 @@ export default [
     'en-US': {
       'dxos.org/plugin/debug': {
         'plugin name': 'Debug',
-        'create testing label': 'Create debug panel',
+        'create debug label': 'Create debug panel',
+        'mutation count': 'Number of mutations',
+        'mutation period': 'Mutation period',
       },
     },
   },

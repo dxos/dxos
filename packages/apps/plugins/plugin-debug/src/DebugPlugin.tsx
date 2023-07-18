@@ -45,7 +45,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => ({
           // TODO(burdon): Callback to set default title, initial properties.
           id: 'create-Debug',
           testId: 'DebugPlugin.createDebug',
-          label: ['create testing label', { ns: 'dxos.org/plugin/debug' }],
+          label: ['create debug label', { ns: 'dxos.org/plugin/debug' }],
           icon: Hammer,
           Type: DebugType,
         },
