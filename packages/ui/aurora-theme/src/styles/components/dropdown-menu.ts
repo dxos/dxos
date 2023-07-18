@@ -5,7 +5,7 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { arrow, dataDisabled, defaultDescription, minorSurfaceElevation, subduedFocus } from '../fragments';
+import { arrow, dataDisabled, descriptionText, minorSurfaceElevation, subduedFocus } from '../fragments';
 
 export type DropdownMenuStyleProps = {};
 
@@ -31,7 +31,7 @@ export const dropdownMenuSeparator: ComponentFunction<DropdownMenuStyleProps> = 
   mx('mlb-1 mli-2 bs-px bg-neutral-200 dark:bg-neutral-700', ...etc);
 
 export const dropdownMenuGroupLabel: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) =>
-  mx(defaultDescription, 'select-none pli-2 plb-2', ...etc);
+  mx(descriptionText, 'select-none pli-2 plb-2', ...etc);
 
 export const dropdownMenuArrow: ComponentFunction<DropdownMenuStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
 

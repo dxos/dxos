@@ -5,7 +5,7 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { defaultDescription, defaultFocus } from '../fragments';
+import { descriptionText, defaultFocus } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;
@@ -40,7 +40,7 @@ export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...et
   mx('shrink-0 text-md font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx(defaultDescription, 'shrink-0', srOnly && 'sr-only', ...etc);
+  mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport: toastViewport,

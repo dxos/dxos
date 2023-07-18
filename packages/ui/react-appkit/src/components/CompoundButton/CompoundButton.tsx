@@ -5,7 +5,7 @@
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { useId, useThemeContext, ButtonProps } from '@dxos/aurora';
-import { defaultDescription, primaryDescription, mx } from '@dxos/aurora-theme';
+import { descriptionText, descriptionTextPrimary, mx } from '@dxos/aurora-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -67,7 +67,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mbe-1',
-              variant === 'primary' ? primaryDescription : defaultDescription,
+              variant === 'primary' ? descriptionTextPrimary : descriptionText,
               isOs ? 'font-system-normal' : 'font-normal',
               slots.description?.className,
             )}

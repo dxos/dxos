@@ -2,54 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentProps } from 'react';
+import React from 'react';
 
-import { mx } from '@dxos/aurora-theme';
+import { Popover, Avatar, useJdenticonHref } from '@dxos/aurora';
+import { defaultActive, defaultFocus, defaultHover } from '@dxos/aurora-theme';
 import { Identity } from '@dxos/client';
-import { Avatar } from '@dxos/react-appkit';
 
-import { PanelPopover } from '../../layouts';
 import { IdentityPanel } from '../../panels';
 
-export interface IdentityPopoverProps extends Partial<ComponentProps<typeof PanelPopover>> {
+export type IdentityPopoverProps = {
   identity: Identity;
   onClickManageProfile?: () => void;
-}
+};
 
-export const IdentityPopover = ({
-  identity,
-  openTrigger,
-  slots,
-  triggerIsInToolbar = true,
-  onClickManageProfile,
-  ...popoverProps
-}: IdentityPopoverProps) => {
+export const IdentityPopover = ({ identity, onClickManageProfile }: IdentityPopoverProps) => {
+  const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 10);
   return (
-    <PanelPopover
-      {...popoverProps}
-      openTrigger={
-        openTrigger ?? (
-          <Avatar
-            size={10}
-            variant='circle'
-            fallbackValue={identity.identityKey.toHex()}
-            label={identity.profile?.displayName ?? ''}
-          />
-        )
-      }
-      slots={{
-        ...slots,
-        trigger: {
-          ...slots?.trigger,
-          className: mx(
-            'flex justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full',
-            slots?.trigger?.className,
-          ),
-        },
-      }}
-      triggerIsInToolbar={triggerIsInToolbar}
-    >
-      <IdentityPanel {...{ identity, onClickManageProfile }} />
-    </PanelPopover>
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <Avatar.Root size={10} variant='circle'>
+          <Avatar.Frame classNames={['shadow-md cursor-pointer rounded-md', defaultHover, defaultFocus, defaultActive]}>
+            <Avatar.Fallback href={fallbackHref} />
+          </Avatar.Frame>
+          <Avatar.Label>{identity.profile?.displayName ?? ''}</Avatar.Label>
+        </Avatar.Root>
+      </Popover.Trigger>
+      <Popover.Content>
+        <IdentityPanel {...{ identity, onClickManageProfile }} />
+      </Popover.Content>
+    </Popover.Root>
   );
 };
