@@ -143,11 +143,9 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
       case 'dxos.halo.credentials.Epoch': {
         // TODO(burdon): Epoch number is not monotonic.
         const { number, timeframe } = credential.subject.assertion;
-        if (number > 0) {
-          epochs.push({ number, timeframe });
-          if (timeframe.equals(currentEpoch.subject.assertion.timeframe)) {
-            done.wake();
-          }
+        epochs.push({ number, timeframe });
+        if (currentEpoch.id && credential.id?.equals(currentEpoch.id)) {
+          done.wake();
         }
         break;
       }
