@@ -19,6 +19,6 @@ export const PanelContainer: FC<{ toolbar?: ReactNode; children: ReactNode; clas
   );
 };
 
-export const Toolbar: FC<{ children: ReactNode }> = ({ children }) => (
+export const Toolbar: FC<{ children?: ReactNode }> = ({ children }) => (
   <div className='flex space-x-2 p-2'>{children}</div>
 );
