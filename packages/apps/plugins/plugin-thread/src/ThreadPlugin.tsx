@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+// import { Plus } from '@phosphor-icons/react';
 
-import { Thread as ThreadType } from '@braneframe/types';
+// import { Thread as ThreadType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain } from './components';
@@ -18,17 +18,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => ({
   },
   provides: {
     translations,
-    space: {
-      types: [
-        {
-          id: 'create-thread',
-          testId: 'threadPlugin.createStack',
-          label: ['create thread label', { ns: 'dxos.org/plugin/thread' }],
-          icon: Plus,
-          Type: ThreadType,
-        },
-      ],
-    },
+    // TODO(wittjosiah): Migrate to graph plugin.
+    // space: {
+    //   types: [
+    //     {
+    //       id: 'create-thread',
+    //       testId: 'threadPlugin.createStack',
+    //       label: ['create thread label', { ns: 'dxos.org/plugin/thread' }],
+    //       icon: Plus,
+    //       Type: ThreadType,
+    //     },
+    //   ],
+    // },
     component: (datum, role) => {
       switch (role) {
         case 'main':
