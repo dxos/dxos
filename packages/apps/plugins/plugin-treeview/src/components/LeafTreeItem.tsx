@@ -8,7 +8,7 @@ import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, getActions } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -20,7 +20,7 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
+import { appTx, defaultDisabled, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
 import { ObservableObject, subscribe } from '@dxos/observable-object';
 import { useSubscription } from '@dxos/observable-object/react';
 
@@ -67,7 +67,12 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 
   const active = node.id === treeView.selected.at(-1);
   const modified = node.attributes?.modified ?? false;
+  const disabled = node.attributes?.disabled ?? false;
+  const error = node.attributes?.error ?? false;
   const Icon = node.icon ?? Placeholder;
+  const allActions = getActions(node);
+  const [primaryAction, ...actions] = allActions;
+  const menuActions = disabled ? actions : allActions;
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -106,7 +111,11 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           'tree-item__heading--link',
           { variant: 'ghost', density },
           'grow min-is-0 text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
+          error && 'text-error-700 dark:text-error-300',
+          !disabled && 'cursor-pointer',
+          disabled && defaultDisabled,
         )}
+        {...(disabled && { 'aria-disabled': true })}
       >
         <button
           role='link'
@@ -132,7 +141,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           </p>
         </button>
       </TreeItem.Heading>
-      {!isOverlay && (
+      {menuActions.length > 0 && !isOverlay && (
         <Tooltip.Root
           open={optionsTooltipOpen}
           onOpenChange={(nextOpen) => {
@@ -174,11 +183,10 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content classNames='z-[31]'>
-                {node.actions?.map((action) => (
+                {menuActions.map((action) => (
                   <DropdownMenu.Item
                     key={action.id}
                     onClick={(event) => {
-                      event.stopPropagation();
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
                       void action.invoke(t, event);
@@ -195,12 +203,41 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           </DropdownMenu.Root>
         </Tooltip.Root>
       )}
-      <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
-        <Circle
-          weight='fill'
-          className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}
-        />
-      </ListItem.Endcap>
+      {disabled && primaryAction ? (
+        <Tooltip.Root>
+          <Tooltip.Portal>
+            <Tooltip.Content side='bottom' classNames='z-[31]'>
+              {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+              <Tooltip.Arrow />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+          <Tooltip.Trigger asChild>
+            <Button
+              variant='ghost'
+              classNames='shrink-0 pli-2 pointer-fine:pli-1'
+              onClick={(event) => primaryAction.invoke(t, event)}
+              {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
+              {...(!sidebarOpen && { tabIndex: -1 })}
+            >
+              <span className='sr-only'>
+                {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
+              </span>
+              {primaryAction.icon ? (
+                <primaryAction.icon className={getSize(4)} />
+              ) : (
+                <Placeholder className={getSize(4)} />
+              )}
+            </Button>
+          </Tooltip.Trigger>
+        </Tooltip.Root>
+      ) : (
+        <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
+          <Circle
+            weight='fill'
+            className={mx(getSize(3), 'text-primary-500 dark:text-primary-300', !active && 'invisible')}
+          />
+        </ListItem.Endcap>
+      )}
     </TreeItem.Root>
   );
 });

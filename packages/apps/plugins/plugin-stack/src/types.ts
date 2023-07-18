@@ -5,9 +5,9 @@
 import type { IconProps } from '@phosphor-icons/react';
 import type { FC } from 'react';
 
-import type { SpaceProvides } from '@braneframe/plugin-space';
+import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { subscribe, ObservableArray } from '@dxos/observable-object';
+import { ObservableArray } from '@dxos/observable-object';
 
 type StackSectionAction = {
   id: string;
@@ -31,7 +31,7 @@ export type StackProvides = {
   };
 };
 
-export type StackPluginProvides = SpaceProvides &
+export type StackPluginProvides = GraphProvides &
   TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
 
 export type StackObject = { id: string };
@@ -52,15 +52,3 @@ export type StackModel<T extends StackObject = GenericStackObject> = {
 export type StackProperties = {
   title?: string;
 };
-
-export const isStack = <T extends StackObject = GenericStackObject>(datum: unknown): datum is StackModel<T> =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      typeof (datum as { [key: string]: any }).sections === 'object' &&
-      typeof (datum as { [key: string]: any }).sections?.length === 'number'
-    : false;
-
-// TODO(burdon): Unused?
-export const isStackProperties = (datum: unknown): datum is StackProperties =>
-  datum && typeof datum === 'object' ? subscribe in datum : false;

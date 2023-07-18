@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
-export type ThreadPluginProvides = SpaceProvides & TranslationsProvides;
+export type ThreadPluginProvides = TranslationsProvides;
 
 export interface ThreadModel {
   root: ThreadType;

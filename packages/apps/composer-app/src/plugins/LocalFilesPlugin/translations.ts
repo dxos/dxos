@@ -7,7 +7,7 @@ export default [
     'en-US': {
       'dxos:local': {
         'plugin name': 'Local Files',
-        'missing file permissions': 'Permission require to view the currently selected file',
+        'missing file permissions': 'Permission required to view the currently selected file',
         'open file label': 'Open file',
         'open directory label': 'Open directory',
         're-open file label': 'Re-open file',

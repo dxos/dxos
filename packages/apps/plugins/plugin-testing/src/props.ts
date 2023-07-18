@@ -4,7 +4,6 @@
 
 import { Context, createContext } from 'react';
 
-import { SpaceProvides } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Testing as TestingType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
@@ -21,7 +20,7 @@ export const TestingContext: Context<TestingContextType> = createContext<Testing
   stop: () => {},
 });
 
-export type TestingPluginProvides = SpaceProvides & TranslationsProvides;
+export type TestingPluginProvides = TranslationsProvides;
 
 export interface TestingModel {
   object: TestingType;
