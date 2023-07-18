@@ -43,7 +43,9 @@ export type StackObject = { id: string };
 export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
+  id: string;
   object: T;
+  isPreview?: boolean;
 };
 
 export type StackSections<T extends StackObject = GenericStackObject> = StackSectionModel<T>[];
