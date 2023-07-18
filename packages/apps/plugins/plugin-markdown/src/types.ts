@@ -7,7 +7,7 @@ import { MarkdownComposerProps } from '@dxos/aurora-composer';
 export const MARKDOWN_PLUGIN = 'dxos:markdown';
 
 export enum MarkdownAction {
-  CREATE = `${MARKDOWN_PLUGIN}:create`,
+  CREATE = `${MARKDOWN_PLUGIN}/create`,
 }
 
 export type MarkdownProperties = {

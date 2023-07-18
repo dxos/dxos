@@ -45,8 +45,8 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
           if (Array.isArray(action.intent)) {
             let result: any = null;
             for (const intent of action.intent) {
-              console.log({ data: result, ...intent });
-              result = await sendIntent({ data: result, ...intent });
+              const data = intent.data ? { ...result, ...intent.data } : result;
+              result = await sendIntent({ ...intent, data });
             }
             return result;
           } else {

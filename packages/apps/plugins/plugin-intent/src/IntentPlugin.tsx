@@ -41,7 +41,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
 export type IntentPluginProvides = {
   intent: {
-    sendIntent: (intent: Intent) => void;
+    sendIntent: (intent: Intent) => any;
   };
 };
 
@@ -52,7 +52,7 @@ export type Intent = {
 };
 
 export type IntentContextValue = {
-  sendIntent: (intent: Intent) => void;
+  sendIntent: (intent: Intent) => any;
 };
 
 const IntentContext = createContext<IntentContextValue>({ sendIntent: () => {} });

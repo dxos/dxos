@@ -7,15 +7,15 @@ import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
-import { Document as DocumentType } from '@braneframe/types';
 import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentPluginProvides, IntentProvides } from '@braneframe/plugin-intent';
+import { IntentProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Document } from '@braneframe/types';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Document as DocumentType } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
 import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition, findPlugin } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import {
   MarkdownMain,
@@ -34,12 +34,12 @@ import {
   isMarkdownProperties,
   markdownPlugins,
 } from './util';
-import { TreeViewAction } from '@braneframe/plugin-treeview';
 
 type MarkdownPluginProvides = GraphProvides &
   IntentProvides &
   TranslationsProvides & {
     // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
+    // TODO(wittjosiah): Factor out to graph plugin?
     stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
   };
 
@@ -105,6 +105,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 {
                   plugin: MARKDOWN_PLUGIN,
                   action: MarkdownAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
@@ -122,7 +125,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             testId: 'markdownPlugin.createSectionSpaceDocument',
             label: ['create section space document label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
-            create: () => new Document(),
+            intent: {
+              plugin: MARKDOWN_PLUGIN,
+              action: MarkdownAction.CREATE,
+            },
           },
         ],
         choosers: [
@@ -166,17 +172,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       intent: {
         resolver: (intent, plugins) => {
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos:intent');
-
           switch (intent.action) {
             case MarkdownAction.CREATE: {
-              return intentPlugin!.provides.intent.sendIntent({
-                action: SpaceAction.ADD_OBJECT,
-                data: {
-                  spaceKey: intent.data.spaceKey,
-                  object: new Document(),
-                },
-              });
+              return { object: new DocumentType() };
             }
           }
         },

@@ -5,12 +5,11 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Stack as StackType } from '@braneframe/types';
-import { IntentPluginProvides } from '@braneframe/plugin-intent';
-import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Stack as StackType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
 import { stackState } from './stores';
@@ -64,6 +63,9 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                 {
                   plugin: STACK_PLUGIN,
                   action: StackAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
@@ -97,18 +99,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         StackMain,
       },
       intent: {
-        resolver: (intent, plugins) => {
-          const intentPlugin = findPlugin<IntentPluginProvides>(plugins, 'dxos:intent');
-
+        resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return intentPlugin!.provides.intent.sendIntent({
-                action: SpaceAction.ADD_OBJECT,
-                data: {
-                  spaceKey: intent.data.spaceKey,
-                  object: new StackType(),
-                },
-              });
+              return { object: new StackType() };
             }
           }
         },

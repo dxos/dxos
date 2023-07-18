@@ -10,6 +10,7 @@ import get from 'lodash.get';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
+import { useIntent } from '@braneframe/plugin-intent';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -261,6 +262,7 @@ const StackSectionsImpl = ({
 
 const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation('dxos:stack');
+  const { sendIntent } = useIntent();
   const splitView = useSplitView();
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -300,15 +302,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
                 <DropdownMenu.Arrow />
-                {stackState.creators?.map(({ id, testId, create, icon, label }) => {
+                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item
                       key={id}
                       id={id}
                       data-testid={testId}
-                      onClick={() => {
-                        const nextSection = create();
+                      onClick={async () => {
+                        const { object: nextSection } = await sendIntent(intent);
                         handleAdd(stack.sections.length, nextSection);
                       }}
                     >
