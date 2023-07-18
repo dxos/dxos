@@ -55,8 +55,11 @@ const CurrentSpaceView = observer(({ space, createInvitationUrl, titleId }: Spac
         />
         <Button
           classNames='is-full flex gap-2 mbs-2'
-          onClick={() => {
-            const invitation = space?.createInvitation();
+          onClick={(e) => {
+            const testing = e.altKey && e.shiftKey;
+            const invitation = space?.createInvitation(
+              testing ? { type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE } : undefined,
+            );
             // TODO(wittjosiah): Don't depend on NODE_ENV.
             if (process.env.NODE_ENV !== 'production') {
               invitation.subscribe(onInvitationEvent);
