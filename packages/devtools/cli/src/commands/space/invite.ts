@@ -29,6 +29,8 @@ export default class Invite extends BaseCommand<typeof Invite> {
         throw new Error(`Invalid key: ${truncateKey(key)}`);
       }
 
+      await space.waitUntilReady();
+
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({
         observable,

@@ -96,7 +96,13 @@
       "path": "../plugins/plugin-stack"
     },
     {
+      "path": "../plugins/plugin-testing"
+    },
+    {
       "path": "../plugins/plugin-theme"
+    },
+    {
+      "path": "../plugins/plugin-thread"
     },
     {
       "path": "../plugins/plugin-treeview"

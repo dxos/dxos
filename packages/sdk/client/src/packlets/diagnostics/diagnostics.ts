@@ -58,15 +58,10 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
         data.spaces = await Promise.all(
           msg.spaces!.map(async (info) => {
             const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
-            const stats: SpaceStats = {
-              type,
-              info,
-            };
-
+            const stats: SpaceStats = { type, info };
             if (type === 'echo') {
               const space = client.getSpace(info.key);
               assert(space);
-
               await space.waitUntilReady();
               const result = space?.db.query();
               Object.assign(stats, {
@@ -143,11 +138,9 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
       case 'dxos.halo.credentials.Epoch': {
         // TODO(burdon): Epoch number is not monotonic.
         const { number, timeframe } = credential.subject.assertion;
-        if (number > 0) {
-          epochs.push({ number, timeframe });
-          if (timeframe.equals(currentEpoch.subject.assertion.timeframe)) {
-            done.wake();
-          }
+        epochs.push({ number, timeframe });
+        if (currentEpoch.id && credential.id?.equals(currentEpoch.id)) {
+          done.wake();
         }
         break;
       }

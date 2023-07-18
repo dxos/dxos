@@ -24,6 +24,7 @@ export default class Create extends BaseCommand<typeof Create> {
 
     return await this.execWithClient(async (client: Client) => {
       const space = await client.createSpace();
+      await space.waitUntilReady();
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),

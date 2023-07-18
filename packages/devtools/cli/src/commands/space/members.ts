@@ -37,6 +37,8 @@ export default class Members extends BaseCommand<typeof Members> {
         return;
       }
 
+      await space.waitUntilReady();
+
       const members = space.members.get();
       if (!this.flags.json) {
         printMembers(members, this.flags);
