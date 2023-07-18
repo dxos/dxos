@@ -10,6 +10,7 @@ import { Button, DensityProvider, Main } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { diagnostics, SpaceProxy } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
+import { arrayToBuffer } from '@dxos/util';
 
 import { TestingContext } from '../props';
 import { Generator } from '../testing';
@@ -38,6 +39,7 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
   const handleToggleRunning = () => {
     if (running) {
       stop();
+      void handleRefresh();
     } else {
       start(() => generator.updateObject(), DEFAULT_PERIOD);
     }
@@ -45,11 +47,12 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
 
   const handleCreateEpoch = async () => {
     await space.internal.createEpoch();
+    await handleRefresh();
   };
 
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
-      <div className='flex p-2 space-x-2'>
+      <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
@@ -61,9 +64,28 @@ export const TestingMain: FC<{ data: [SpaceProxy, TestingType] }> = ({ data: [sp
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>
       </div>
-      <div className='p-2'>
-        <pre>{JSON.stringify(data, undefined, 2)}</pre>
+      <div className='flex grow overflow-auto p-2'>
+        <pre>{JSON.stringify(data, replacer, 2)}</pre>
       </div>
     </Main.Content>
   );
+};
+
+// TODO(burdon): Refactor from devtools.
+const replacer = (key: any, value: any) => {
+  if (typeof value === 'object') {
+    if (value instanceof Uint8Array) {
+      return arrayToBuffer(value).toString('hex');
+    }
+
+    if (value?.type === 'Buffer') {
+      return Buffer.from(value.data).toString('hex');
+    }
+
+    if (key === 'downloaded') {
+      return undefined;
+    }
+  }
+
+  return value;
 };

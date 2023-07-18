@@ -58,15 +58,10 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
         data.spaces = await Promise.all(
           msg.spaces!.map(async (info) => {
             const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
-            const stats: SpaceStats = {
-              type,
-              info,
-            };
-
+            const stats: SpaceStats = { type, info };
             if (type === 'echo') {
               const space = client.getSpace(info.key);
               assert(space);
-
               await space.waitUntilReady();
               const result = space?.db.query();
               Object.assign(stats, {
