@@ -11,7 +11,7 @@ import { Client, Expando, PublicKey } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { selectSpace } from '../../util';
 
-export default class PropagateData extends BaseCommand<typeof PropagateData> {
+export default class EchoTestData extends BaseCommand<typeof EchoTestData> {
   static override description = 'Pollutes selected space with test data.';
   static override flags = {
     ...BaseCommand.flags,
