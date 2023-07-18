@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useGraphContext } from '@braneframe/plugin-graph';
+import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import { createStore } from '@dxos/observable-object';
 import { observer } from '@dxos/react-client';
 import { PluginDefinition, Surface } from '@dxos/react-surface';
@@ -32,9 +32,12 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
       components: {
         default: observer(() => {
           const treeView = useTreeView();
-          const graph = useGraphContext();
+          const graph = useGraph();
           const [plugin] = treeView.selected[0]?.split('/') ?? [];
-          const nodes = resolveNodes(graph.roots[plugin] ?? [], treeView.selected);
+          const nodes = resolveNodes(
+            Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[],
+            treeView.selected,
+          );
 
           if (treeView.selected.length === 0) {
             return (

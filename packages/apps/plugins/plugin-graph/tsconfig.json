@@ -21,6 +21,18 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/observable-object"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../sdk/react-surface"
     },
     {

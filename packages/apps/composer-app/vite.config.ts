@@ -55,7 +55,10 @@ export default defineConfig({
       ],
       extensions: [osThemeExtension],
     }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({
+      jsxRuntime: 'classic',
+    }),
     VitePWA({
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,

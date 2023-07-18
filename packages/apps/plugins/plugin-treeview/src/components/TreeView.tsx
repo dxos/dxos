@@ -76,7 +76,7 @@ const TreeViewSortableImpl = observer(({ parent, items }: { parent: GraphNode; i
   return (
     <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) =>
-        item.children ? (
+        item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length ? (
           <SortableBranchTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
         ) : (
           <SortableLeafTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
@@ -99,7 +99,11 @@ export const TreeView = observer((props: TreeViewProps) => {
           visibleItems
             .sort(sortByIndex)
             .map((item) =>
-              item.children ? <BranchTreeItem key={item.id} node={item} /> : <LeafTreeItem key={item.id} node={item} />,
+              item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length > 0 ? (
+                <BranchTreeItem key={item.id} node={item} />
+              ) : (
+                <LeafTreeItem key={item.id} node={item} />
+              ),
             )
         )
       ) : (

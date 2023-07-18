@@ -8,7 +8,7 @@ import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, getActions } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { defaultDisabled, defaultFocus, getSize } from '@dxos/aurora-theme';
 import { ObservableObject, subscribe } from '@dxos/observable-object';
@@ -46,7 +46,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
 >(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
-  const [primaryAction, ...actions] = node.actions ?? [];
+  const [primaryAction, ...actions] = getActions(node);
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
   const hasActiveDocument = false;
@@ -214,7 +214,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={node.children} parent={node} />
+        <TreeView items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]} parent={node} />
       </TreeItem.Body>
     </TreeItem.Root>
   );

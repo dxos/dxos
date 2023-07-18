@@ -4,6 +4,7 @@
 
 import type { IconProps } from '@phosphor-icons/react';
 import type { getIndices } from '@tldraw/indices';
+import type { DeepSignal } from 'deepsignal';
 import type { UIEvent, FC } from 'react';
 
 import type { TFunction } from '@dxos/aurora';
@@ -21,10 +22,13 @@ export type GraphNode<TDatum = any> = {
   icon?: FC;
   data?: TDatum; // nit about naming this
   parent?: GraphNode;
-  children?: GraphNode[];
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
-  actions?: GraphNodeAction[];
   attributes?: { [key: string]: any };
+  pluginChildren?: { [key: string]: GraphNode[] };
+  pluginActions?: { [key: string]: GraphNodeAction[] };
+  // TODO(wittjosiah): https://github.com/luisherranz/deepsignal/issues/32
+  // readonly children?: GraphNode[];
+  // readonly actions?: GraphNodeAction[];
 };
 
 export type GraphNodeAction = {
@@ -34,6 +38,7 @@ export type GraphNodeAction = {
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
   label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
+  disposition?: 'menu' | 'toolbar';
   invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
 };
 
@@ -44,11 +49,11 @@ export type GraphContextValue = {
 
 export type GraphProvides = {
   graph: {
-    nodes?: (plugins: Plugin[]) => GraphNode[];
-    actions?: (plugins: Plugin[]) => GraphNodeAction[];
+    nodes?: (parent: GraphNode, emit: (node?: GraphNode) => void, plugins: Plugin[]) => GraphNode[];
+    actions?: (parent: GraphNode, emit: () => void, plugins: Plugin[]) => GraphNodeAction[];
   };
 };
 
 export type GraphPluginProvides = {
-  graph: GraphContextValue;
+  graph: DeepSignal<GraphNode>;
 };
