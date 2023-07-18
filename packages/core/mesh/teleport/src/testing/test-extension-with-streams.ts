@@ -3,9 +3,11 @@
 //
 
 import assert from 'node:assert';
+import { randomBytes } from 'node:crypto';
 import { Duplex } from 'node:stream';
 
 import { Trigger, synchronized } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
@@ -41,10 +43,22 @@ export class TestExtensionWithStreams implements TeleportExtension {
       contentType: 'application/x-test-stream',
     });
 
+    networkStream.on('data', (data) => {
+      log('test stream data', { streamTag, length: data.length });
+    });
+
+    networkStream.on('end', () => {
+      log('test stream end', { streamTag });
+    });
+
+    networkStream.on('close', () => {
+      log('test stream close', { streamTag });
+    });
+
     const interval = setInterval(() => {
-      const data = Buffer.alloc(1024);
-      networkStream.write(data);
-    }, 500);
+      log('test stream write', { streamTag })
+      networkStream.push(randomBytes(1024));
+    }, 10);
 
     this._streams.set(streamTag, { networkStream, interval });
   }
@@ -91,7 +105,8 @@ export class TestExtensionWithStreams implements TeleportExtension {
     log('onClose', { err });
     await this.callbacks.onClose?.();
     this.closed.wake();
-    for (const stream of this._streams.values()) {
+    for (const [streamTag, stream] of Object.entries(this._streams)) {
+      log('closing stream', { streamTag: streamTag })
       clearInterval(stream.interval);
       stream.networkStream.destroy();
     }
@@ -100,7 +115,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
   async addNewStream() {
     await this.open.wait({ timeout: 1500 });
-    const streamTag = `stream-${this._streams.size}`;
+    const streamTag = `stream-${PublicKey.random().toHex()}`;
     const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({ data: streamTag });
     assert(data === streamTag);
 

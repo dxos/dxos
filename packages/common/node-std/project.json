@@ -42,6 +42,7 @@
         ],
         "entryPoints": [
           "packages/common/node-std/src/assert.js",
+          "packages/common/node-std/src/crypto.js",
           "packages/common/node-std/src/events.js",
           "packages/common/node-std/src/fs.js",
           "packages/common/node-std/src/globals.js",

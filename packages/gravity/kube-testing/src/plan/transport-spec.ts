@@ -129,6 +129,32 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       await env.syncBarrier(`swarms are ready on ${testCounter}`);
       await sleep(10_000);
 
+      log.info('starting streams', { agentIdx });
+
+      // TODO(egorgripasov): Multiply by iterration number.
+      const desiredStreems = (numOfAgents - 1) * spec.swarmsPerAgent;
+      let actualStreams = 0;
+
+      await Promise.all(
+        Object.keys(env.params.agents)
+          .filter((agentId) => agentId !== env.params.agentId)
+          .map(async (agentId) => {
+            for await (const [swarmIdx, swarm] of swarms.entries()) {
+              log.info('testing connection', { agentIdx, swarmIdx });
+              try {
+                await swarm.protocol.startStream(PublicKey.from(agentId));
+                actualStreams++;
+                log.info('test stream started', { agentIdx, swarmIdx });
+              } catch (error) {
+                log.info('test stream failed', { agentIdx, swarmIdx, error });
+              }
+            }
+          }),
+      );
+
+      log.info('streams started', { testCounter, agentIdx, desiredStreems, actualStreams });
+      await env.syncBarrier(`streams are started at ${testCounter}`);
+
       log.info('start testing connections', { agentIdx, testCounter });
 
       const desiredConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
