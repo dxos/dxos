@@ -13,6 +13,7 @@ export default [
         'add existing section label': 'Existing',
         'stack title placeholder': 'Untitled stack',
         'add existing section dialog title': 'Choose an item to add',
+        'empty stack message': 'Drag supported items here or add items using the actions below to start.',
       },
     },
   },
