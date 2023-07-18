@@ -57,8 +57,7 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/aurora-composer/.storybook",
-        "uiFramework": "@storybook/react"
+        "configDir": "packages/ui/aurora-composer/.storybook"
       }
     },
     "storybook:html": {
@@ -77,8 +76,7 @@
         "production"
       ],
       "options": {
-        "configDir": "packages/ui/aurora-composer/.storybook/html",
-        "uiFramework": "@storybook/html"
+        "configDir": "packages/ui/aurora-composer/.storybook/html"
       }
     }
   },

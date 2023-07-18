@@ -9,18 +9,19 @@ import React from 'react';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
-import { SpaceProxy } from '@dxos/client';
-import { subscribe } from '@dxos/observable-object';
+import { Query, SpaceProxy, subscribe } from '@dxos/client';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
-import { stackSectionChoosers, stackSectionCreators } from './stores';
+import { stackState } from './stores';
 import translations from './translations';
 import { StackPluginProvides, StackProvides } from './types';
 import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
+  const queries = new Map<string, Query<Stack>>();
   const subscriptions = new Map<string, UnsubscribeCallback>();
+
   return {
     meta: {
       id: STACK_PLUGIN,
@@ -28,10 +29,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     ready: async (plugins) => {
       return plugins.forEach((plugin) => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-          stackSectionCreators.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.creators!);
+          stackState.creators = (plugin as Plugin<StackProvides>).provides.stack.creators;
         }
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackSectionChoosers.splice(0, 0, ...(plugin as Plugin<StackProvides>).provides!.stack!.choosers!);
+          stackState.choosers = (plugin as Plugin<StackProvides>).provides.stack.choosers;
         }
       });
     },
@@ -47,8 +48,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
 
           const space = parent.data;
-          const query = space.db.query(Stack.filter());
-          const stackIndices = getIndices(query.objects.length);
+          let query = queries.get(parent.id);
+          if (!query) {
+            query = space.db.query(Stack.filter());
+            queries.set(parent.id, query);
+          }
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -56,6 +60,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             );
           }
 
+          const stackIndices = getIndices(query.objects.length);
           query.objects.forEach((stack, index) => {
             if (!subscriptions.has(stack.id)) {
               subscriptions.set(
@@ -120,8 +125,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       components: {
         StackMain,
       },
-      stackSectionCreators,
-      stackSectionChoosers,
+      stack: stackState,
     },
   };
 };

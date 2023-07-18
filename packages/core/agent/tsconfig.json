@@ -34,9 +34,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/observable-object"
-    },
-    {
       "path": "../../common/sentry"
     },
     {
@@ -56,6 +53,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../echo/echo-schema"
     },
     {
       "path": "../halo/credentials"

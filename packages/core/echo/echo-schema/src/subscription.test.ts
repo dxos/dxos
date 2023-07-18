@@ -2,17 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect'; // TODO(burdon): Can't use chai with wait-for-expect?
+import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createSubscription } from './access-observer';
-import { createStore } from './observable-object';
+import { createSubscription } from './subscription';
+import { createDatabase } from './testing';
+import { Expando } from './typed-object';
 
-describe('access observer', () => {
+describe('create subscription', () => {
   test('updates are propagated', async () => {
-    const task = createStore<{ title: string }>();
+    const { db } = await createDatabase();
+    const task = new Expando();
+    db.add(task);
 
     let counter = 0;
     const selection = createSubscription(() => {
@@ -21,14 +24,16 @@ describe('access observer', () => {
     selection.update([task]);
 
     task.title = 'Test title';
-    expect(counter).toEqual(2);
+    expect(counter).to.equal(2);
 
     task.title = 'Test title revision';
-    expect(counter).toEqual(3);
+    expect(counter).to.equal(3);
   });
 
   test('updates are synchronous', async () => {
-    const task = createStore<{ title: string }>();
+    const { db } = await createDatabase();
+    const task = new Expando();
+    db.add(task);
 
     const actions: string[] = [];
     const selection = createSubscription(() => {
@@ -36,18 +41,20 @@ describe('access observer', () => {
     });
     selection.update([task]);
     // Initial update caused by changed selection.
-    expect(actions).toEqual(['update']);
+    expect(actions).to.deep.equal(['update']);
 
     actions.push('before');
     task.title = 'Test title';
     actions.push('after');
 
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
-    expect(actions).toEqual(['update', 'before', 'update', 'after']);
+    expect(actions).to.deep.equal(['update', 'before', 'update', 'after']);
   });
 
   test('latest value is available in subscription', async () => {
-    const task = createStore<{ title: string }>();
+    const { db } = await createDatabase();
+    const task = new Expando();
+    db.add(task);
 
     let counter = 0;
     const title = new Trigger<string>();
@@ -60,7 +67,7 @@ describe('access observer', () => {
     selection.update([task]);
 
     task.title = 'Test title';
-    expect(await title.wait()).toEqual('Test title');
+    expect(await title.wait()).to.equal('Test title');
   });
 
   test('accepts arbitrary selection', async () => {

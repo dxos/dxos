@@ -10,7 +10,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client';
 
 import { useFrameContext } from '../../hooks';
 
@@ -61,7 +61,7 @@ const Play: FC<{
   pieces: number;
   onClose: () => void;
   onSetPieces: (pieces: number) => void;
-}> = observer(({ game, pieces, onClose, onSetPieces }) => {
+}> = ({ game, pieces, onClose, onSetPieces }) => {
   const [orientation, setOrientation] = useState<Color>('w');
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
@@ -121,7 +121,7 @@ const Play: FC<{
       </div>
     </div>
   );
-});
+};
 
 /**
  * Grid

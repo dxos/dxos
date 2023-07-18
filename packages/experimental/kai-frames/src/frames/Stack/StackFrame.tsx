@@ -7,13 +7,13 @@ import React from 'react';
 import { DocumentStack } from '@dxos/kai-types';
 import { Stack, StackRow } from '@dxos/mosaic';
 import { Input } from '@dxos/react-appkit';
-import { observer, useConfig } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 
 import { useFrameContext } from '../../hooks';
 import { CustomActionMenu } from './CustomActionMenu';
 import { sectionActions, StackSection } from './sections';
 
-export const StackFrame = observer(() => {
+export const StackFrame = () => {
   const config = useConfig();
   const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
@@ -72,6 +72,6 @@ export const StackFrame = observer(() => {
       </div>
     </div>
   );
-});
+};
 
 export default StackFrame;

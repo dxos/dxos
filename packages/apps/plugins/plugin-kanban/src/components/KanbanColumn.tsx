@@ -59,6 +59,7 @@ export const KanbanColumnComponent: FC<{
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
 
+  // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
   const items = itemMapper?.(column.id!, column.items!) ?? column.items!;
 

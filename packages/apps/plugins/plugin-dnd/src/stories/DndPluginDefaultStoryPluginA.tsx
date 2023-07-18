@@ -6,6 +6,7 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { useContext, useState } from 'react';
 
+import { PluginDefinition } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '../DndPlugin';
@@ -57,13 +58,13 @@ const DefaultDndPluginStoryPluginA = () => {
   );
 };
 
-export const DndPluginDefaultStoryPluginA = () => {
+export const DndPluginDefaultStoryPluginA = (): PluginDefinition => {
   return {
     meta: {
       id: 'dxos:dndPluginDefaultStoryPluginA',
     },
     provides: {
-      component: (datum: unknown, role?: string) => {
+      component: (datum, role) => {
         switch (role) {
           case 'dndpluginstory':
             return DefaultDndPluginStoryPluginA;

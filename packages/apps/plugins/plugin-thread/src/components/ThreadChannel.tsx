@@ -8,7 +8,6 @@ import { Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
-import { observer } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 import { ThreadBlock } from './ThreadBlock';
@@ -51,7 +50,7 @@ export const ThreadChannel: FC<{
   identityKey: PublicKey;
   thread: ThreadType;
   onAddMessage: (text: string) => boolean | undefined;
-}> = observer(({ identityKey, thread, onAddMessage }) => {
+}> = ({ identityKey, thread, onAddMessage }) => {
   const { t } = useTranslation('dxos.org/plugin/thread');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -105,4 +104,4 @@ export const ThreadChannel: FC<{
       </div>
     </div>
   );
-});
+};

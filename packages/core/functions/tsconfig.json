@@ -25,13 +25,13 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/observable-object"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../echo/echo-schema"
     }
   ]
 }

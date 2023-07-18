@@ -8,8 +8,7 @@ import React from 'react';
 
 import type { GraphNode } from '@braneframe/plugin-graph';
 import { Stack } from '@braneframe/types';
-import { Space } from '@dxos/client';
-import { subscribe } from '@dxos/observable-object';
+import { EchoObject, Space } from '@dxos/client';
 
 import { GenericStackObject, StackModel, StackObject, StackProperties } from './types';
 
@@ -23,8 +22,7 @@ export const isStack = <T extends StackObject = GenericStackObject>(datum: unkno
       typeof (datum as { [key: string]: any }).sections?.length === 'number'
     : false;
 
-export const isStackProperties = (datum: unknown): datum is StackProperties =>
-  datum && typeof datum === 'object' ? subscribe in datum : false;
+export const isStackProperties = (datum: unknown): datum is StackProperties => datum instanceof EchoObject;
 
 export const stackToGraphNode = (obj: Stack, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: obj.id,

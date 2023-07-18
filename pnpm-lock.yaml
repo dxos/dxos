@@ -358,7 +358,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -415,7 +414,6 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -583,7 +581,6 @@ importers:
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -640,7 +637,6 @@ importers:
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
@@ -680,6 +676,7 @@ importers:
   packages/apps/plugins/plugin-client:
     specifiers:
       '@dxos/config': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
@@ -689,6 +686,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-signals': link:../../../core/echo/echo-signals
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -706,11 +704,11 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
+      deepsignal: ^1.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^5.0.4
@@ -718,7 +716,7 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/observable-object': link:../../../common/observable-object
+      deepsignal: 1.3.4_react@18.2.0
     devDependencies:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
@@ -790,11 +788,9 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
@@ -807,9 +803,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/util': link:../../../common/util
-      '@preact/signals-core': 1.3.1
       deepsignal: 1.3.4_react@18.2.0
       lodash.set: 4.3.2
     devDependencies:
@@ -842,7 +836,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -864,7 +857,6 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
@@ -898,7 +890,6 @@ importers:
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -906,6 +897,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -915,9 +907,9 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/client': link:../../../sdk/client
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/text-model': link:../../../core/echo/text-model
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -947,13 +939,14 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -967,11 +960,12 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@preact/signals-core': 1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
@@ -997,16 +991,18 @@ importers:
       '@braneframe/plugin-graph': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/debug': link:../../../common/debug
+      deepsignal: 1.3.4_react@18.2.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@dxos/aurora': link:../../../ui/aurora
@@ -1035,7 +1031,6 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -1043,6 +1038,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1052,9 +1048,9 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/client': link:../../../sdk/client
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/util': link:../../../common/util
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
@@ -1088,7 +1084,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -1106,7 +1101,6 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
@@ -1133,16 +1127,16 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       i18next: ^21.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
+      deepsignal: 1.3.4_react@18.2.0
       i18next: 21.10.0
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
@@ -1168,7 +1162,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -1188,7 +1181,6 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
@@ -1223,7 +1215,7 @@ importers:
       '@dnd-kit/utilities': ^3.2.0
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/observable-object': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -1241,7 +1233,7 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/observable-object': link:../../../common/observable-object
+      '@dxos/debug': link:../../../common/debug
       '@dxos/react-client': link:../../../sdk/react-client
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
@@ -1265,13 +1257,10 @@ importers:
   packages/apps/plugins/plugin-url-sync:
     specifiers:
       '@braneframe/plugin-treeview': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       react: ^18.2.0
       vite: ^4.3.9
-    dependencies:
-      '@dxos/observable-object': link:../../../common/observable-object
     devDependencies:
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -1903,30 +1892,6 @@ importers:
       readable-stream: 3.6.0
       util: 0.12.5
 
-  packages/common/observable-object:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/keys': workspace:*
-      '@testing-library/dom': ^8.17.1
-      '@testing-library/react': ^13.4.0
-      '@testing-library/user-event': ^14.4.3
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      react: '*'
-      react-dom: ^18.2.0
-    dependencies:
-      '@dxos/async': link:../async
-      '@dxos/keys': link:../keys
-    optionalDependencies:
-      react: 18.2.0
-    devDependencies:
-      '@testing-library/dom': 8.19.0
-      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
-      '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react-dom: 18.2.0_react@18.2.0
-
   packages/common/plate:
     specifiers:
       '@swc/core': 1.3.21
@@ -2179,10 +2144,10 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
@@ -2212,10 +2177,10 @@ importers:
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../halo/credentials
       '@dxos/debug': link:../../common/debug
+      '@dxos/echo-schema': link:../echo/echo-schema
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/protocols': link:../protocols
       '@dxos/rpc': link:../mesh/rpc
       '@dxos/sentry': link:../../common/sentry
@@ -2402,7 +2367,6 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
@@ -2419,13 +2383,29 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/model-factory': link:../model-factory
       '@dxos/node-std': link:../../../common/node-std
-      '@dxos/observable-object': link:../../../common/observable-object
       '@dxos/protocols': link:../../protocols
       '@dxos/text-model': link:../text-model
       '@dxos/util': link:../../../common/util
       protobufjs: 7.2.2
     devDependencies:
       wait-for-expect: 3.0.2
+
+  packages/core/echo/echo-signals:
+    specifiers:
+      '@dxos/echo-schema': workspace:*
+      '@preact/signals': ^1.1.5
+      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
+      preact: ^10.11.0
+      react: ^18.2.0
+    dependencies:
+      '@dxos/echo-schema': link:../echo-schema
+      '@preact/signals': 1.1.5_preact@10.11.2
+      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4_react@18.2.0
+    devDependencies:
+      preact: 10.11.2
+      react: 18.2.0
 
   packages/core/echo/echo-typegen:
     specifiers:
@@ -2539,9 +2519,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/echo-schema': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/util': workspace:*
       '@types/express': ^4.17.17
       express: 4.17.1
@@ -2550,9 +2530,9 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
+      '@dxos/echo-schema': link:../echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/util': link:../../common/util
       express: 4.17.1
       portfinder: 1.0.32
@@ -3034,7 +3014,6 @@ importers:
       '@dxos/hello-template': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -3095,7 +3074,6 @@ importers:
       '@dxos/hello-template': link:../../apps/templates/hello-template
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -5312,11 +5290,11 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/observable-object': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
@@ -5346,11 +5324,11 @@ importers:
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
+      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/observable-object': link:../../common/observable-object
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -5466,6 +5444,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/echo-signals': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
@@ -5499,6 +5478,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
@@ -12915,6 +12895,15 @@ packages:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.3.1
+    dev: false
+
+  /@preact/signals/1.1.5_preact@10.11.2:
+    resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
+    peerDependencies:
+      preact: 10.x
+    dependencies:
+      '@preact/signals-core': 1.3.1
+      preact: 10.11.2
     dev: false
 
   /@protobufjs/aspromise/1.1.2:
@@ -23639,8 +23628,6 @@ packages:
 
   /deepsignal/1.3.4_react@18.2.0:
     resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
-    peerDependencies:
-      preact: 10.x
     dependencies:
       '@preact/signals': 1.1.5
       '@preact/signals-core': 1.3.1
@@ -34912,7 +34899,6 @@ packages:
 
   /preact/10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
-    dev: false
 
   /preferred-pm/3.0.3:
     resolution: {integrity: sha512-+wZgbxNES/KlJs9q40F/1sfOd/j7f1O9JaHcW5Dsn3aUUOZg3L2bjpVUcKV2jvtElYfoTuQiNeMfQJ4kwUAhCQ==}

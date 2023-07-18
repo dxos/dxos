@@ -149,6 +149,14 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   /**
    * @internal
    */
+  override _itemUpdate(): void {
+    super._itemUpdate();
+    this._signal?.notifyWrite();
+  }
+
+  /**
+   * @internal
+   */
   private _convert(visitors: ConvertVisitors = {}) {
     const visitorsWithDefaults = { ...DEFAULT_VISITORS, ...visitors };
     const convert = (value: any): any => {
@@ -210,7 +218,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * @internal
    */
   private _get(key: string): any {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
 
     let type;
     const value = this._model.get(key);
@@ -250,8 +258,6 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * @internal
    */
   private _set(key: string, value: any) {
-    this._database?._logObjectAccess(this);
-
     this._inBatch(() => {
       if (value instanceof EchoObject) {
         this._linkObject(value);
