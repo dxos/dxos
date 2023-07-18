@@ -1,0 +1,77 @@
+{
+  "sourceRoot": "packages/apps/plugins/plugin-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/plugins/plugin-testing/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-testing/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-testing/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "compile": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-testing/src/index.ts"
+        ],
+        "outputPath": "packages/apps/plugins/plugin-testing/dist/lib",
+        "platforms": [
+          "browser"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/apps/plugins/plugin-testing/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "configDir": "packages/apps/plugins/plugin-testing/.storybook"
+      }
+    },
+    "test": {
+      "executor": "@dxos/test:run",
+      "options": {
+        "coveragePath": "coverage/packages/apps/plugins/plugin-testing",
+        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-testing",
+        "resultsPath": "test-results/packages/apps/plugins/plugin-testing",
+        "testPatterns": [
+          "packages/apps/plugins/plugin-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/plugins/plugin-testing/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

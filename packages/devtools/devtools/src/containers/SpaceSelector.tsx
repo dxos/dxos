@@ -40,20 +40,20 @@ export const SpaceSelector = () => {
     }
   }, []);
 
+  // TODO(burdon): Font size is too small.
   return (
     <Select
-      defaultValue={space?.key?.toHex()}
       placeholder='Select space'
       value={space?.key.toHex()}
       onValueChange={(id) => handleSelect(PublicKey.fromHex(id))}
     >
       {spaces.map((space) => (
-        <Select.Item value={space.key.toHex()} key={space.key.toHex()}>
+        <Select.Item key={space.key.toHex()} value={space.key.toHex()}>
           <div className='flex items-center gap-2'>
             <div className='pr-1'>
               <Planet />
             </div>
-            <span className='text-lg font-mono text-neutral-250'>{space.key.truncate()}</span>
+            <span className='font-mono text-neutral-250'>{space.key.truncate()}</span>
             <span className='whitespace-nowrap'>{space.properties.name ?? humanize(space.key)}</span>
           </div>
         </Select.Item>

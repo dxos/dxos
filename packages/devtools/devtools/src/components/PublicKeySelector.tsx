@@ -21,8 +21,8 @@ export const PublicKeySelector = (props: PublicKeySelectorProps) => {
   const { placeholder, keys, defaultValue, Icon, onChange, getLabel = humanize } = props;
   return (
     <Select
-      defaultValue={defaultValue?.toHex()}
       placeholder={placeholder}
+      value={defaultValue?.toHex()}
       onValueChange={(id) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
@@ -35,7 +35,7 @@ export const PublicKeySelector = (props: PublicKeySelectorProps) => {
                 <Icon />
               </div>
             )}
-            <span className='text-lg font-mono text-neutral-250'>{key.truncate()}</span>
+            <span className='font-mono text-neutral-250'>{key.truncate()}</span>
             {getLabel(key)}
           </div>
         </Select.Item>
