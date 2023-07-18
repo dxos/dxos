@@ -190,6 +190,7 @@ export const useTheme = (): Theme => {
   // TODO(dmaretskyi): useObserver hook? (memo with reactive subscription -- observer(...) in a hook form)
   // const theme = useObserver(() => getTheme(space?.properties.theme))
   const [theme, setTheme] = useState(() => getTheme(space?.properties.theme));
+  // TODO(wittjosiah): Remove?
   useSubscription(() => {
     setTheme(getTheme(space?.properties.theme));
   }, [space?.properties]);

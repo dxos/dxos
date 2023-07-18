@@ -7,11 +7,11 @@ import React from 'react';
 import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
 import { Input } from '@dxos/react-appkit';
-import { observer, useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { useFrameContext } from '../../hooks';
 
-export const DocumentFrame = observer(() => {
+export const DocumentFrame = () => {
   const { space, objectId } = useFrameContext();
   const identity = useIdentity();
   const document = objectId ? space!.db.getObjectById<Document>(objectId) : undefined;
@@ -67,6 +67,6 @@ export const DocumentFrame = observer(() => {
       </div>
     </div>
   );
-});
+};
 
 export default DocumentFrame;

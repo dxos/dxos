@@ -3,11 +3,11 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
+import { DeepSignal } from 'deepsignal';
 import type { FC } from 'react';
 
-import type { SpaceProvides } from '@braneframe/plugin-space';
+import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { subscribe, ObservableArray } from '@dxos/observable-object';
 
 type StackSectionAction = {
   id: string;
@@ -31,18 +31,24 @@ export type StackProvides = {
   };
 };
 
-export type StackPluginProvides = SpaceProvides &
-  TranslationsProvides & { stackSectionCreators: StackSectionCreator[]; stackSectionChoosers: StackSectionChooser[] };
+export type StackState = DeepSignal<{
+  creators?: StackSectionCreator[];
+  choosers?: StackSectionChooser[];
+}>;
+
+export type StackPluginProvides = GraphProvides & TranslationsProvides & { stack: StackState };
 
 export type StackObject = { id: string };
 
 export type GenericStackObject = StackObject & { [key: string]: any };
 
 export type StackSectionModel<T extends StackObject = GenericStackObject> = {
+  id: string;
   object: T;
+  isPreview?: boolean;
 };
 
-export type StackSections<T extends StackObject = GenericStackObject> = ObservableArray<StackSectionModel<T>>;
+export type StackSections<T extends StackObject = GenericStackObject> = StackSectionModel<T>[];
 
 export type StackModel<T extends StackObject = GenericStackObject> = {
   id: string;
@@ -52,15 +58,3 @@ export type StackModel<T extends StackObject = GenericStackObject> = {
 export type StackProperties = {
   title?: string;
 };
-
-export const isStack = <T extends StackObject = GenericStackObject>(datum: unknown): datum is StackModel<T> =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      typeof (datum as { [key: string]: any }).sections === 'object' &&
-      typeof (datum as { [key: string]: any }).sections?.length === 'number'
-    : false;
-
-// TODO(burdon): Unused?
-export const isStackProperties = (datum: unknown): datum is StackProperties =>
-  datum && typeof datum === 'object' ? subscribe in datum : false;

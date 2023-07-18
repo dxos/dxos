@@ -21,7 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/debug"
     },
     {
       "path": "../../../sdk/react-surface"
@@ -31,6 +31,9 @@
     },
     {
       "path": "../../../ui/aurora-theme"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }

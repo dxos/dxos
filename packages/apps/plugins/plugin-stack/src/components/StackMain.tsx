@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
@@ -24,29 +24,30 @@ import {
   ButtonGroup,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { subscribe } from '@dxos/observable-object';
-import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../props';
-import { stackSectionChoosers, stackSectionCreators } from '../stores';
+import { stackState } from '../stores';
+import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
 
 type StackSectionProps = {
-  onRemove: () => void;
+  onRemove?: () => void;
   section: StackSectionModel;
 };
 
 export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
   return (
     <List variant='ordered'>
-      <StackSectionImpl onRemove={() => {}} section={data} isOverlay />
+      <StackSectionImpl section={data} isOverlay />
     </List>
   );
 };
 
 const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
-  ({ onRemove, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay }, forwardedRef) => {
+  (
+    { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation('dxos:stack');
     return (
       <DensityProvider density='fine'>
@@ -54,10 +55,10 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           id={section.object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
-            'bg-white dark:bg-neutral-925 grow rounded mbe-2',
+            'bg-white dark:bg-neutral-925 grow rounded mlb-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
-            rearranging && 'opacity-0',
+            rearranging ? 'opacity-0' : section.isPreview ? 'opacity-50' : 'opacity-100',
           ]}
           ref={forwardedRef}
           style={style}
@@ -99,7 +100,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
 
 const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: props.section.object.id,
+    id: props.section.id,
     data: { section: props.section, dragoverlay: props.section },
   });
   return (
@@ -116,27 +117,38 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
   );
 };
 
-// todo(thure): `observer` causes infinite rerenders if used here.
-const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [_, setIter] = useState([]);
-  const { t } = useTranslation('dxos:stack');
-  const splitView = useSplitView();
-  const dnd = useDnd();
-  const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
+const getSectionModels = (sections: StackSections): StackSectionModel[] =>
+  Array.from(sections)
+    .filter((section) => section?.object?.id)
+    .map(({ object }) => getSectionModel(object));
 
-  // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
-  if (subscribe in sections) {
-    useEffect(() => {
-      // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
-      return sections[subscribe](() => setIter([])) as () => void;
-    }, []);
-  } else {
-    useSubscription(() => setIter([]), [sections]);
-  }
+const getSectionModel = (object: GenericStackObject, isPreview?: boolean): StackSectionModel => ({
+  id: object.id,
+  object,
+  isPreview: !!isPreview,
+});
+
+const StackSectionsImpl = ({
+  sections,
+  id: stackId,
+  onAdd,
+}: {
+  sections: StackSections;
+  id: string;
+  onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
+}) => {
+  const { t } = useTranslation('dxos:stack');
+  const dnd = useDnd();
+  const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
+  const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
   const [overIsMember, setOverIsMember] = useState(false);
+
+  const { setNodeRef } = useDroppable({ id: stackId, data: { stack: { id: stackId } } });
+
+  useEffect(() => setSectionModels(getSectionModels(sections)), [sections, stackId]);
 
   useDragStart(
     ({ active: { data } }: DragStartEvent) => {
@@ -146,7 +158,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
         setActiveAddableObject(null);
       } else {
         const chooserDatum = get(data.current, 'treeitem.data', null);
-        const validChooser = chooserDatum && stackSectionChoosers.find((chooser) => chooser?.filter(chooserDatum));
+        const validChooser = chooserDatum && stackState.choosers?.find((chooser) => chooser?.filter(chooserDatum));
         setActiveAddableObject(validChooser && !sectionIds.has(get(chooserDatum, 'id')) ? chooserDatum : null);
       }
     },
@@ -156,33 +168,51 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
   useDragOver(
     ({ over }: DragOverEvent) => {
       if (!over) {
-        return setOverIsMember(false);
+        setOverIsMember(false);
+      } else {
+        const overSectionId = get(over, 'data.current.section.object.id', null);
+        const overStackId = get(over, 'data.current.stack.id', null);
+        const overIndex =
+          overStackId && !overSectionId
+            ? sections.length
+            : sections.findIndex((section) => section?.object?.id === overSectionId);
+        setOverIsMember(overIndex >= 0);
+        if (activeAddableObject) {
+          setSectionModels((sectionModels) => {
+            if (overIndex >= 0) {
+              const persistedObjects = getSectionModels(sections);
+              return [
+                ...persistedObjects.slice(0, overIndex),
+                { id: activeAddableObject.id, object: activeAddableObject, isPreview: true },
+                ...persistedObjects.slice(overIndex, persistedObjects.length),
+              ];
+            } else if (overSectionId !== activeAddableObject.id && sectionModels.length !== sections.length) {
+              return getSectionModels(sections);
+            } else {
+              return sectionModels;
+            }
+          });
+        }
       }
-      return setOverIsMember(sectionIds.has(get(over, 'data.current.section.object.id', null)));
     },
-    [sectionIds],
-  );
-
-  const handleAdd = useCallback(
-    (start: number, nextSectionObject: GenericStackObject) => {
-      const section: StackSectionModel = {
-        object: nextSectionObject,
-      };
-      sections.splice(start, 0, section);
-    },
-    [sections],
+    [sections, activeAddableObject],
   );
 
   const handleRemove = useCallback(
     (start: number) => {
       sections.splice(start, 1);
+      setSectionModels(getSectionModels(sections));
     },
     [sections],
   );
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
-      if (overIsMember) {
+      const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
+      if (activeModelIndex >= 0) {
+        dnd.overlayDropAnimation = 'into';
+        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
+      } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
         const nextIndex = sections.findIndex((section) => section.object.id === over?.id);
@@ -191,122 +221,56 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
           if (activeSectionId !== overSectionId) {
             const activeIndex = sections.findIndex((section) => section.object.id === active.id);
             arrayMove(sections, activeIndex, nextIndex);
+            setSectionModels(getSectionModels(sections));
           }
-        } else if (activeAddableObject) {
-          dnd.overlayDropAnimation = 'into';
-          handleAdd(nextIndex, activeAddableObject);
         }
+      } else {
+        setSectionModels(getSectionModels(sections));
       }
       setActiveId(null);
       setActiveAddableObject(null);
       setOverIsMember(false);
     },
-    [sections, overIsMember],
+    [sections, overIsMember, activeAddableObject, sectionModels],
   );
 
   return (
-    <>
-      <List variant='ordered' itemSizes='many' classNames='pli-2'>
-        <SortableContext
-          items={Array.from(sections)
-            // todo(thure): DRY-out this filter, also should this be represented in the UI?
-            .filter((section) => !!section?.object?.id)
-            .map(({ object: { id } }) => id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {sections
-            .filter((section) => !!section?.object?.id)
-            .map((section, start) => {
-              return (
-                <StackSection
-                  key={section.object.id}
-                  onRemove={() => handleRemove(start)}
-                  section={section}
-                  rearranging={overIsMember && activeId === section.object.id}
-                />
-              );
-            })}
-        </SortableContext>
-      </List>
-      <div role='none' className='flex gap-4 justify-center items-center pbs-2 pbe-4'>
-        <h2 className='text-sm font-normal flex items-center gap-1'>
-          <Plus className={getSize(4)} />
-          <span>{t('add section label')}</span>
-        </h2>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>
-                <span>{t('add new section label')}</span>
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={() => {
-                      const nextSection = create();
-                      handleAdd(sections.length, nextSection);
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost'>
-                <span>{t('add existing section label')}</span>
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              {stackSectionChoosers.map(({ id, testId, icon, label }) => {
-                const Icon = icon ?? Placeholder;
-                return (
-                  <DropdownMenu.Item
-                    key={id}
-                    id={id}
-                    data-testid={testId}
-                    onClick={() => {
-                      splitView.dialogContent = {
-                        id,
-                        chooser: 'many',
-                        subject: 'dxos:stack/chooser',
-                        omit: new Set(
-                          sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
-                        ),
-                        onDone: (items: GenericStackObject[]) =>
-                          sections.splice(sections.length, 0, ...items.map((item) => ({ object: item }))),
-                      };
-                      splitView.dialogOpen = true;
-                    }}
-                  >
-                    <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </ButtonGroup>
+    <List variant='ordered' itemSizes='many' classNames='pli-2'>
+      <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
+        {sectionModels.map((sectionModel, start) => {
+          return (
+            <StackSection
+              key={sectionModel.id}
+              onRemove={() => handleRemove(start)}
+              section={sectionModel}
+              rearranging={overIsMember && activeId === sectionModel.id}
+            />
+          );
+        })}
+      </SortableContext>
+      <div role='none' className='plb-1' ref={setNodeRef}>
+        {sectionModels.length < 1 && (
+          <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
+            {t('empty stack message')}
+          </p>
+        )}
       </div>
-    </>
+    </List>
   );
 };
 
-export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
-  const stack = data[data.length - 1] as StackModel & StackProperties;
+const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation('dxos:stack');
+  const splitView = useSplitView();
+  const handleAdd = useCallback(
+    (start: number, nextSectionObject: GenericStackObject) => {
+      const nextSectionModel = getSectionModel(nextSectionObject);
+      stack.sections.splice(start, 0, nextSectionModel);
+      return getSectionModels(stack.sections);
+    },
+    [stack.sections],
+  );
+
   return (
     <Main.Content classNames='min-bs-[100vh]'>
       <div role='none' className='mli-auto max-is-[60rem]'>
@@ -316,13 +280,94 @@ export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperti
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-4 pointer-fine:pis-12 lg:pis-4 pointer-fine:lg:pis-4 plb-3.5 pointer-fine:plb-2.5'
             placeholder={t('stack title placeholder')}
-            defaultValue={stack.title ?? ''}
+            value={stack.title ?? ''}
             onChange={({ target: { value } }) => (stack.title = value)}
           />
         </Input.Root>
-        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 mbe-2 opacity-50')} />
-        <StackMainImpl sections={stack.sections} />
+        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
+        <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+        <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
+          <h2 className='text-sm font-normal flex items-center gap-1'>
+            <Plus className={getSize(4)} />
+            <span>{t('add section label')}</span>
+          </h2>
+          <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <Button variant='ghost'>
+                  <span>{t('add new section label')}</span>
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Arrow />
+                {stackState.creators?.map(({ id, testId, create, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={() => {
+                        const nextSection = create();
+                        handleAdd(stack.sections.length, nextSection);
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <Button variant='ghost'>
+                  <span>{t('add existing section label')}</span>
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Arrow />
+                {stackState.choosers?.map(({ id, testId, icon, label }) => {
+                  const Icon = icon ?? Placeholder;
+                  return (
+                    <DropdownMenu.Item
+                      key={id}
+                      id={id}
+                      data-testid={testId}
+                      onClick={() => {
+                        splitView.dialogContent = {
+                          id,
+                          chooser: 'many',
+                          subject: 'dxos:stack/chooser',
+                          omit: new Set(
+                            stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
+                          ),
+                          onDone: (items: GenericStackObject[]) =>
+                            stack.sections.splice(
+                              stack.sections.length,
+                              0,
+                              ...items.map((item) => getSectionModel(item)),
+                            ),
+                        };
+                        splitView.dialogOpen = true;
+                      }}
+                    >
+                      <Icon className={getSize(4)} />
+                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </ButtonGroup>
+        </div>
       </div>
     </Main.Content>
   );
+};
+
+export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
+  const stack = data[data.length - 1] as StackModel & StackProperties;
+  return <StackMainImpl stack={stack} />;
 };

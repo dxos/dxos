@@ -14,6 +14,7 @@ import {
   ShellRuntimeImpl,
 } from '@dxos/client-services';
 import { Config, Defaults, Dynamics, Local } from '@dxos/config';
+import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { ThemeProvider } from '@dxos/react-appkit';
 import { ClientContext } from '@dxos/react-client';
@@ -24,6 +25,7 @@ import { safariCheck } from '@dxos/util';
 const cssStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
+  registerSignalFactory();
   const { createElement } = await import('react');
   const { createRoot } = await import('react-dom/client');
 

@@ -213,11 +213,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/observable-object/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -284,6 +279,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-signals/package.json",
           "jsonpath": "$.version"
         },
         {

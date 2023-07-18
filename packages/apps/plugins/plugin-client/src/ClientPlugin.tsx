@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Config, Defaults, Envs, Local } from '@dxos/config';
+import { registerSignalFactory } from '@dxos/echo-signals/react';
 import {
   Client,
   ClientContext,
@@ -20,6 +21,7 @@ import { ClientPluginProvides } from './types';
 export const ClientPlugin = (
   options: ClientOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
+  registerSignalFactory();
   const client = new Client(options);
 
   return {

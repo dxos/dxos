@@ -40,7 +40,8 @@ export default defineConfig({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY'],
     }),
 
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
 
     ThemePlugin({
       root: __dirname,

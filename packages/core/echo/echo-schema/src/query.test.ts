@@ -4,8 +4,9 @@
 
 import { expect } from 'chai';
 
+import { sleep } from '@dxos/async';
 import { ShowDeletedOption } from '@dxos/echo-db';
-import { beforeAll, describe, test } from '@dxos/test';
+import { beforeAll, beforeEach, describe, test } from '@dxos/test';
 
 import { EchoDatabase } from './database';
 import { createDatabase } from './testing';
@@ -118,5 +119,63 @@ describe('Queries', () => {
       const { objects } = db.query(undefined, { deleted: ShowDeletedOption.SHOW_DELETED_ONLY });
       expect(objects).to.have.length(3);
     }
+  });
+});
+
+// TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
+describe.skip('Query updates', () => {
+  let db: EchoDatabase;
+  let objects: TypedObject[];
+
+  beforeEach(async () => {
+    ({ db } = await createDatabase());
+
+    objects = [
+      new TypedObject({ idx: 0, title: 'Task 0', label: 'red' }),
+      new TypedObject({ idx: 1, title: 'Task 1', label: 'red' }),
+      new TypedObject({ idx: 2, title: 'Task 2', label: 'red' }),
+    ];
+
+    for (const object of objects) {
+      db.add(object);
+    }
+
+    await db.flush();
+  });
+
+  test('fires only once when new objects are added', async () => {
+    const query = db.query({ label: 'red' });
+    expect(query.objects).to.have.length(3);
+    let count = 0;
+    query.subscribe(() => {
+      count++;
+      expect(query.objects).to.have.length(4);
+    });
+    db.add(new TypedObject({ idx: 3, title: 'Task 3', label: 'red' }));
+    await sleep(10);
+    expect(count).to.equal(1);
+  });
+
+  test('fires only once when objects are removed', async () => {
+    const query = db.query({ label: 'red' });
+    expect(query.objects).to.have.length(3);
+    let count = 0;
+    query.subscribe(() => {
+      count++;
+      expect(query.objects).to.have.length(2);
+    });
+    db.remove(objects[0]);
+    await sleep(10);
+    expect(count).to.equal(1);
+  });
+
+  test('does not fire on object updates', async () => {
+    const query = db.query({ label: 'red' });
+    expect(query.objects).to.have.length(3);
+    query.subscribe(() => {
+      throw new Error('Should not be called.');
+    });
+    objects[0].title = 'Task 0a';
+    await sleep(10);
   });
 });

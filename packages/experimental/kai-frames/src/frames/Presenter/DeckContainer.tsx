@@ -39,10 +39,12 @@ export const DeckContainer: FC<{ presentation: Presentation } & Pick<DeckProps, 
   useEffect(handleUpdate, []);
 
   // Get update if stack sections updated.
+  // TODO(wittjosiah): Remove?
   useSubscription(handleUpdate, [presentation.stack]);
 
   // Get update if any text content changed.
   // TODO(burdon): This seems unnecessary?
+  // TODO(wittjosiah): Remove?
   useSubscription(handleUpdate, [presentation.stack.sections.map((section) => section.object.content)]);
 
   return <Deck slides={content} fullscreen={fullscreen} onToggleFullscreen={handleToggleFullscreen} {...rest} />;

@@ -15,9 +15,11 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/observable-object": "workspace:*"
+    "@dxos/debug": "workspace:*",
+    "deepsignal": "^1.3.3"
   },
   "devDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
@@ -29,6 +31,7 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",

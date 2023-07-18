@@ -61,6 +61,13 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // We don't use Preact within the monorepo.
+    case 'deepsignal': {
+      delete packageJson.peerDependencies['preact'];
+      delete packageJson.dependencies['@preact/signals'];
+      break;
+    }
+
     case 'esbuild-plugin-raw': {
       packageJson.peerDependencies['esbuild'] = '^0.16.0'
       break;

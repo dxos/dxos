@@ -9,7 +9,6 @@ import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { DocumentStack } from '@dxos/kai-types';
 import { ScrollContainer } from '@dxos/mosaic';
-import { observer } from '@dxos/react-client';
 
 import { useFrameContext } from '../../hooks';
 
@@ -56,7 +55,7 @@ export const SidecarStack: FC<SidecarStackProps> = ({ sections = [] }) => {
   );
 };
 
-export const Sidecar = observer(() => {
+export const Sidecar = () => {
   const { space, objectId } = useFrameContext();
   const stack = objectId ? space!.db.getObjectById<DocumentStack>(objectId) : undefined;
   if (!space || !stack) {
@@ -70,6 +69,6 @@ export const Sidecar = observer(() => {
       </div>
     </div>
   );
-});
+};
 
 export default Sidecar;

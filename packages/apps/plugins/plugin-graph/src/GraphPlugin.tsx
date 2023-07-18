@@ -2,36 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DeepSignal, deepSignal } from 'deepsignal/react';
+import set from 'lodash.set';
 import React from 'react';
 
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { GraphContextValue, GraphPluginProvides } from './types';
-import { graphPlugins } from './util';
+import { GraphNode, GraphPluginProvides } from './types';
+import { ROOT, buildGraph } from './util';
 
-export const GraphPlugin = (
-  graph: GraphContextValue = {
-    roots: {},
-    actions: {},
-  },
-): PluginDefinition<GraphPluginProvides> => {
+export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
+  const graph: DeepSignal<GraphNode> = deepSignal({
+    id: 'root',
+    index: 'a1',
+    label: 'Root',
+    description: 'Root node',
+    pluginChildren: {},
+    pluginActions: {},
+    // get children(): GraphNode[] {
+    //   return [];
+    // },
+    // get actions(): GraphNodeAction[] {
+    //   return [];
+    // },
+  });
+
   return {
     meta: {
       id: 'dxos:graph',
     },
     ready: async (plugins) => {
-      for (const plugin of graphPlugins(plugins)) {
-        const nodes = plugin.provides.graph.nodes?.(plugins);
-        if (nodes) {
-          graph.roots[plugin.meta.id] = nodes;
-        }
-
-        const actions = plugin.provides.graph.actions?.(plugins);
-        if (actions) {
-          graph.actions[plugin.meta.id] = actions;
-        }
-      }
+      const result = buildGraph(ROOT, plugins, (path, nodes) => set(graph, path, nodes));
+      graph.pluginChildren = deepSignal(result.pluginChildren ?? {});
+      graph.pluginActions = deepSignal(result.pluginActions ?? {});
     },
     provides: {
       graph,
