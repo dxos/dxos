@@ -16,7 +16,7 @@ export interface Daemon {
   disconnect: () => Promise<void>;
 
   start: (profile: string) => Promise<ProcessInfo>;
-  stop: (profile: string) => Promise<ProcessInfo>;
+  stop: (profile: string, params?: { force?: boolean }) => Promise<ProcessInfo>;
   restart: (profile: string) => Promise<ProcessInfo>;
 
   isRunning: (profile: string) => Promise<boolean>;
