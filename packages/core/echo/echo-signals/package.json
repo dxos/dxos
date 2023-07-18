@@ -1,0 +1,57 @@
+{
+  "name": "@dxos/echo-signals",
+  "version": "0.1.51",
+  "description": "ECHO object reactivity integration with Preact Signals",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./core": {
+      "browser": "./dist/lib/browser/core.mjs",
+      "import": "./dist/lib/browser/core.mjs",
+      "require": "./dist/lib/node/core.cjs",
+      "node": "./dist/lib/node/core.cjs"
+    },
+    "./react": {
+      "browser": "./dist/lib/browser/react.mjs",
+      "import": "./dist/lib/browser/react.mjs",
+      "require": "./dist/lib/node/react.cjs",
+      "node": "./dist/lib/node/react.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "core": [
+        "dist/types/src/core.d.ts"
+      ],
+      "react": [
+        "dist/types/src/react.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo-schema": "workspace:*",
+    "@preact/signals": "^1.1.5",
+    "@preact/signals-core": "^1.3.1",
+    "@preact/signals-react": "^1.3.3"
+  },
+  "devDependencies": {
+    "preact": "^10.11.0",
+    "react": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

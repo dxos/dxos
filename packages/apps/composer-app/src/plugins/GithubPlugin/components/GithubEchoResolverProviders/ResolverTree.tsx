@@ -5,13 +5,13 @@
 import React, { useCallback, useContext } from 'react';
 
 import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
-import { observer, useClient, useSpaces, Space } from '@dxos/react-client';
+import { useClient, useSpaces, Space } from '@dxos/react-client';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';
 import { bindSpace, unbindSpace } from './spaceResolvers';
 
-export const ResolverTree = observer(() => {
+export const ResolverTree = () => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
   const treeLabel = useId('treeLabel');
@@ -81,4 +81,4 @@ export const ResolverTree = observer(() => {
       </Button>
     </>
   );
-});
+};

@@ -12,7 +12,6 @@ import {
   EditableListProps,
   useEditableListKeyboardInteractions,
 } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
 
 export type TaskListProps = {
   id: string;
@@ -23,7 +22,7 @@ export type TaskListProps = {
 };
 
 // TODO(burdon): Make generic and remove observer.
-export const TaskList = observer(({ id, tasks, onCreateItem, onDeleteItem, onMoveItem }: TaskListProps) => {
+export const TaskList = ({ id, tasks, onCreateItem, onDeleteItem, onMoveItem }: TaskListProps) => {
   const [title, setTitle] = useState('');
   const { hostAttrs, itemAttrs, onListItemInputKeyDown } = useEditableListKeyboardInteractions(id);
   const itemSlots = { input: { input: { ...itemAttrs, onKeyDown: onListItemInputKeyDown } } };
@@ -66,7 +65,7 @@ export const TaskList = observer(({ id, tasks, onCreateItem, onDeleteItem, onMov
       ))}
     </EditableList>
   );
-});
+};
 
 export type TaskItemProps = {
   slots?: EditableListItemSlots;
@@ -75,7 +74,7 @@ export type TaskItemProps = {
 };
 
 // TODO(burdon): Make generic and remove observer.
-export const TaskItem = observer(({ slots, task, onDelete }: TaskItemProps) => {
+export const TaskItem = ({ slots, task, onDelete }: TaskItemProps) => {
   return (
     <EditableListItem
       id={task.id}
@@ -95,4 +94,4 @@ export const TaskItem = observer(({ slots, task, onDelete }: TaskItemProps) => {
       {...(onDelete && { onClickDelete: () => onDelete(task) })}
     />
   );
-});
+};

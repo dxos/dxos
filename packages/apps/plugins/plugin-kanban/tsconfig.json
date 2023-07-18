@@ -24,9 +24,6 @@
       "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../common/util"
     },
     {

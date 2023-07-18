@@ -55,7 +55,8 @@ export default defineConfig({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {

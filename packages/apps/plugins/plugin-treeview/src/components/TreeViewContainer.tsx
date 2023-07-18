@@ -23,12 +23,12 @@ import {
   DropdownMenu,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { observer, useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { TREE_VIEW_PLUGIN } from '../TreeViewPlugin';
 import { TreeView } from './TreeView';
 
-export const TreeViewContainer = observer(() => {
+export const TreeViewContainer = () => {
   const graph = useGraph();
 
   const identity = useIdentity({ login: true });
@@ -189,4 +189,4 @@ export const TreeViewContainer = observer(() => {
       </DensityProvider>
     </ElevationProvider>
   );
-});
+};

@@ -21,7 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/debug"
     },
     {
       "path": "../../../sdk/react-surface"

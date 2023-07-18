@@ -9,9 +9,8 @@ import { Document } from '@braneframe/types';
 import { useTranslation, TreeItem } from '@dxos/aurora';
 import { TextKind } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/react-client';
 
-export const DocumentTreeItem = observer(({ document }: { document: Document }) => {
+export const DocumentTreeItem = ({ document }: { document: Document }) => {
   const { t } = useTranslation('composer');
   const Icon = document.content.kind === TextKind.PLAIN ? ArticleMedium : Article;
   return (
@@ -22,4 +21,4 @@ export const DocumentTreeItem = observer(({ document }: { document: Document }) 
       </TreeItem.Heading>
     </TreeItem.Root>
   );
-});
+};

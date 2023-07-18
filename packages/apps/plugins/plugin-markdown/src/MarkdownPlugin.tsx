@@ -4,6 +4,7 @@
 
 import { Plus, ArticleMedium } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
+import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -13,9 +14,7 @@ import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client';
-import { createStore, subscribe } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
+import { Query, SpaceProxy, subscribe } from '@dxos/client';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
@@ -44,21 +43,25 @@ type MarkdownPluginProvides = GraphProvides &
   };
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const queries = new Map<string, Query<Document>>();
   const subscriptions = new Map<string, UnsubscribeCallback>();
 
-  const MarkdownMainStandalone = observer(
-    ({ data: [model, properties] }: { data: [ComposerModel, MarkdownProperties]; role?: string }) => {
-      return (
-        <MarkdownMain
-          model={model}
-          properties={properties}
-          layout='standalone'
-          onChange={(text) => store.onChange.forEach((onChange) => onChange(text))}
-        />
-      );
-    },
-  );
+  const MarkdownMainStandalone = ({
+    data: [model, properties],
+  }: {
+    data: [ComposerModel, MarkdownProperties];
+    role?: string;
+  }) => {
+    return (
+      <MarkdownMain
+        model={model}
+        properties={properties}
+        layout='standalone'
+        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+      />
+    );
+  };
 
   return {
     meta: {
@@ -67,13 +70,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
-          store.onChange.push(plugin.provides.markdown.onChange);
+          state.onChange.push(plugin.provides.markdown.onChange);
         }
       });
     },
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
+      queries.clear();
     },
     provides: {
       graph: {
@@ -83,8 +87,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }
 
           const space = parent.data;
-          const query = space.db.query(Document.filter());
-          const documentIndices = getIndices(query.objects.length);
+          let query = queries.get(parent.id);
+          if (!query) {
+            query = space.db.query(Document.filter());
+            queries.set(parent.id, query);
+          }
           if (!subscriptions.has(parent.id)) {
             subscriptions.set(
               parent.id,
@@ -92,6 +99,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             );
           }
 
+          const documentIndices = getIndices(query.objects.length);
           query.objects.forEach((document, index) => {
             if (!subscriptions.has(document.id)) {
               subscriptions.set(
@@ -141,7 +149,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             id: 'create-section-space-doc',
             testId: 'markdownPlugin.createSectionSpaceDocument',
             label: ['create section space document label', { ns: MARKDOWN_PLUGIN }],
-            icon: ArticleMedium,
+            icon: (props: any) => <ArticleMedium {...props} />,
             create: () => new Document(),
           },
         ],
@@ -150,7 +158,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             id: 'choose-section-space-doc',
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
             label: ['choose section space document label', { ns: MARKDOWN_PLUGIN }],
-            icon: ArticleMedium,
+            icon: (props: any) => <ArticleMedium {...props} />,
             filter: isMarkdownContent,
           },
         ],

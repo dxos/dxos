@@ -32,7 +32,8 @@ export default defineConfig({
   },
   plugins: [
     ConfigPlugin({ env: ['DX_VAULT'] }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({

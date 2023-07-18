@@ -27,9 +27,6 @@
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../common/util"
     },
     {

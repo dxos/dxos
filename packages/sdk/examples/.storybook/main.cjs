@@ -2,6 +2,7 @@
 const { resolve } = require('path');
 const { mergeConfig } = require('vite');
 const turbosnap = require('vite-plugin-turbosnap');
+const ReactPlugin = require('@vitejs/plugin-react');
 
 const { ThemePlugin } = require('@dxos/aurora-theme/plugin');
 
@@ -18,13 +19,24 @@ module.exports = {
       strictMode: false
     },
   },
-  viteFinal: async (config) =>
-    mergeConfig(config, {
+  viteFinal: async (config) => {
+    // https://github.com/storybookjs/builder-vite/issues/286
+    config.plugins = [
+      ...config.plugins.filter((plugin) => {
+        return !(
+          Array.isArray(plugin) && plugin[0].name === "vite:react-babel"
+        );
+      }),
+    ];
+
+    return mergeConfig(config, {
       build: {
         // NOTE: Browsers which support top-level await.
         target: ['es2022', 'edge89', 'firefox89', 'chrome89', 'safari15']
       },
       plugins: [
+        // https://github.com/preactjs/signals/issues/269
+        ReactPlugin({ jsxRuntime: 'classic' }),
         ThemePlugin({
           root: __dirname,
           content: [
@@ -34,5 +46,6 @@ module.exports = {
         }),
         turbosnap({ rootDir: config.root }),
       ],
-    }),
+    });
+  },
 };

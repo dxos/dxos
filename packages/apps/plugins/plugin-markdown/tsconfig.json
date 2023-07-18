@@ -24,9 +24,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../core/echo/text-model"
     },
     {
