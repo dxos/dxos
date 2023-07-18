@@ -13,4 +13,5 @@ export type SortableProps = Partial<{
   style: ListItemRootProps['style'];
   rearranging: boolean;
   isOverlay: boolean;
+  isPreview: boolean;
 }>;
