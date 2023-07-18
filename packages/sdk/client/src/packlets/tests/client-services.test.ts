@@ -62,7 +62,10 @@ describe('Client services', () => {
         const [client1a, server1a] = testBuilder.createClientServer(peer1);
         void server1a.open();
         await client1a.initialize();
-        afterTest(async () => { await client1a.destroy(); await server1a.close() });
+        afterTest(async () => {
+          await client1a.destroy();
+          await server1a.close();
+        });
         expect(client1a.initialized).to.be.true;
 
         await client1a.halo.createIdentity();
@@ -71,7 +74,10 @@ describe('Client services', () => {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
         void server1b.open();
         await client1b.initialize();
-        afterTest(async () => { await client1b.destroy(); await server1b.close() });
+        afterTest(async () => {
+          await client1b.destroy();
+          await server1b.close();
+        });
         expect(client1b.initialized).to.be.true;
 
         // TODO(burdon): Test profile is available.
@@ -87,7 +93,10 @@ describe('Client services', () => {
         const [client2a, server2a] = testBuilder.createClientServer(peer2);
         void server2a.open();
         await client2a.initialize();
-        afterTest(async () => { await client2a.destroy(); await server2a.close() });
+        afterTest(async () => {
+          await client2a.destroy();
+          await server2a.close();
+        });
         expect(client2a.initialized).to.be.true;
 
         await client2a.halo.createIdentity();
@@ -165,8 +174,16 @@ describe('Client services', () => {
     }
     log('initialized');
 
-    afterTest(async () => { await client1.destroy(); await server1.close(); await peer1.close() });
-    afterTest(async () => { await client2.destroy(); await server2.close(); await peer2.close() });
+    afterTest(async () => {
+      await client1.destroy();
+      await server1.close();
+      await peer1.close();
+    });
+    afterTest(async () => {
+      await client2.destroy();
+      await server2.close();
+      await peer2.close();
+    });
 
     const hostSpace = await client1.createSpace();
     log('createSpace', { key: hostSpace.key });

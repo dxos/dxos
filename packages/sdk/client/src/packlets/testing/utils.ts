@@ -1,14 +1,23 @@
-import { PublicKey } from "@dxos/keys"
-import { Client } from "../client"
-import { Space } from "@dxos/client-protocol"
-import { Trigger } from "@dxos/async";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Trigger } from '@dxos/async';
+import { Space } from '@dxos/client-protocol';
+import { PublicKey } from '@dxos/keys';
+
+import { Client } from '../client';
 
 type Options = {
   timeout?: number;
   ready?: boolean;
-}
+};
 
-export const waitForSpace = async (client: Client, spaceKey: PublicKey, { timeout = 500, ready }: Options = {}): Promise<Space> => {
+export const waitForSpace = async (
+  client: Client,
+  spaceKey: PublicKey,
+  { timeout = 500, ready }: Options = {},
+): Promise<Space> => {
   let space = client.getSpace(spaceKey);
 
   if (!space) {
@@ -27,4 +36,4 @@ export const waitForSpace = async (client: Client, spaceKey: PublicKey, { timeou
   }
 
   return space;
-}
+};
