@@ -68,7 +68,8 @@ export default defineConfig({
       extensions: [osThemeExtension, kaiThemeExtension],
     }),
 
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
 
     // To reset, unregister service worker using devtools.
     VitePWA({

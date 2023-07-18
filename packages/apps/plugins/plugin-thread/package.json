@@ -19,7 +19,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/observable-object": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",

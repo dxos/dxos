@@ -7,7 +7,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
 import { useSplitView } from '@braneframe/plugin-splitview';
@@ -24,12 +24,10 @@ import {
   ButtonGroup,
 } from '@dxos/aurora';
 import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { subscribe } from '@dxos/observable-object';
-import { useSubscription } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
-import { stackSectionChoosers, stackSectionCreators } from '../stores';
+import { stackState } from '../stores';
 import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
 
 type StackSectionProps = {
@@ -116,23 +114,11 @@ const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?
   );
 };
 
-// todo(thure): `observer` causes infinite rerenders if used here.
 const StackMainImpl = ({ sections }: { sections: StackSections }) => {
-  const [_, setIter] = useState([]);
   const { t } = useTranslation('dxos:stack');
   const splitView = useSplitView();
   const dnd = useDnd();
   const sectionIds = useMemo(() => new Set(Array.from(sections).map(({ object: { id } }) => id)), [sections]);
-
-  // todo(thure): Is there a hook that is compatible with both `ObservedArray`s and `TypedObject`s?
-  if (subscribe in sections) {
-    useEffect(() => {
-      // todo(thure): TypeScript seems to get the wrong return value from `ObservableArray.subscribe`
-      return sections[subscribe](() => setIter([])) as () => void;
-    }, []);
-  } else {
-    useSubscription(() => setIter([]), [sections]);
-  }
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAddableObject, setActiveAddableObject] = useState<GenericStackObject | null>(null);
@@ -146,7 +132,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
         setActiveAddableObject(null);
       } else {
         const chooserDatum = get(data.current, 'treeitem.data', null);
-        const validChooser = chooserDatum && stackSectionChoosers.find((chooser) => chooser?.filter(chooserDatum));
+        const validChooser = chooserDatum && stackState.choosers?.find((chooser) => chooser?.filter(chooserDatum));
         setActiveAddableObject(validChooser && !sectionIds.has(get(chooserDatum, 'id')) ? chooserDatum : null);
       }
     },
@@ -242,7 +228,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
-              {stackSectionCreators.map(({ id, testId, create, icon, label }) => {
+              {stackState.creators?.map(({ id, testId, create, icon, label }) => {
                 const Icon = icon ?? Placeholder;
                 return (
                   <DropdownMenu.Item
@@ -255,7 +241,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
                     }}
                   >
                     <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
+                    <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
                   </DropdownMenu.Item>
                 );
               })}
@@ -270,7 +256,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Arrow />
-              {stackSectionChoosers.map(({ id, testId, icon, label }) => {
+              {stackState.choosers?.map(({ id, testId, icon, label }) => {
                 const Icon = icon ?? Placeholder;
                 return (
                   <DropdownMenu.Item
@@ -292,7 +278,7 @@ const StackMainImpl = ({ sections }: { sections: StackSections }) => {
                     }}
                   >
                     <Icon className={getSize(4)} />
-                    <span>{typeof label === 'string' ? label : t(...label)}</span>
+                    <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
                   </DropdownMenu.Item>
                 );
               })}

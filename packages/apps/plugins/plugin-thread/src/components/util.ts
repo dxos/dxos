@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { createSubscription } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out.
 export const useSubscription = (data: any) => {

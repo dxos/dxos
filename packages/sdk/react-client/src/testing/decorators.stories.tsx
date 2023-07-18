@@ -6,7 +6,6 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { observer } from '@dxos/observable-object/react';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';
@@ -43,7 +42,7 @@ export const WithClient = {
   decorators: [ClientDecorator({ count: 2 })],
 };
 
-const ClientSpace = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
+const ClientSpace = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const space = useSpace(spaceKey);
 
   if (!space) {
@@ -57,7 +56,7 @@ const ClientSpace = observer(({ spaceKey }: { spaceKey: PublicKey }) => {
       </label>
     </div>
   );
-});
+};
 
 const { spaceKey, clients } = await setupPeersInSpace({ count: 2 });
 

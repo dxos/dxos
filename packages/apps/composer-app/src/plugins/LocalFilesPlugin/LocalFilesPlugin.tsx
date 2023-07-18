@@ -12,7 +12,7 @@ import { GraphNode, GraphNodeAction, isGraphNode } from '@braneframe/plugin-grap
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
-import { createSubscription } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/echo-schema';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';

@@ -8,11 +8,10 @@ import React, { FC } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
-import { observer } from '@dxos/react-client';
 
 import { icons, themes } from '../../hooks';
 
-export const SpaceSettings: FC<{ space: Space }> = observer(({ space }) => {
+export const SpaceSettings: FC<{ space: Space }> = ({ space }) => {
   return (
     <div>
       <SpaceThemes
@@ -29,7 +28,7 @@ export const SpaceSettings: FC<{ space: Space }> = observer(({ space }) => {
       />
     </div>
   );
-});
+};
 
 export const SpaceThemes: FC<{ selected: string; onSelect: (selected: string) => void }> = ({ selected, onSelect }) => {
   return (

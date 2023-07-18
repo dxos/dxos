@@ -9,8 +9,7 @@ import React from 'react';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { Space } from '@dxos/client';
-import { subscribe } from '@dxos/observable-object';
+import { EchoObject, Space } from '@dxos/client';
 import { Plugin } from '@dxos/react-surface';
 
 import { MarkdownProperties, MarkdownProvides } from './types';
@@ -37,8 +36,10 @@ export const isMarkdownPlaceholder = (datum: unknown): datum is ComposerModel =>
     : false;
 
 export const isMarkdownProperties = (datum: unknown): datum is MarkdownProperties =>
-  datum && typeof datum === 'object'
-    ? subscribe in datum || ('title' in datum && typeof datum.title === 'string')
+  datum instanceof EchoObject
+    ? true
+    : datum && typeof datum === 'object'
+    ? 'title' in datum && typeof datum.title === 'string'
     : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;

@@ -65,9 +65,6 @@
           "env": "CONFIG_DYNAMIC"
         },
         {
-          "env": "NODE_ENV"
-        },
-        {
           "env": "DX_ENVIRONMENT"
         },
         {
@@ -81,6 +78,12 @@
         },
         {
           "env": "DX_VAULT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "REMOTE_SOURCE"
         },
         {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"

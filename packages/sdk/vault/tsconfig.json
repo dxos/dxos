@@ -28,6 +28,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
     },
     {

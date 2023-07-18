@@ -11,7 +11,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { observer, useClient, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { useClient, useNetworkStatus, useSpaces } from '@dxos/react-client';
 
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
@@ -40,8 +40,7 @@ export type SidebarProps = {
 };
 
 // TODO(burdon): Convert into Frame.
-// TODO(burdon): Remove observer?
-export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
+export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
@@ -311,7 +310,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
       </DensityProvider>
     </Main.Sidebar>
   );
-});
+};
 
 Sidebar.displayName = SIDEBAR_NAME;
 

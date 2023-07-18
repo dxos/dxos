@@ -69,6 +69,7 @@ export const NoteFrame = () => {
 
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
+  // TODO(wittjosiah): Remove?
   useSubscription(() => {
     // TODO(burdon): Board is stale (undefined -- even though set below).
     if (board) {
