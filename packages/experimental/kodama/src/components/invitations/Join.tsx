@@ -9,8 +9,8 @@ import { InvitationEncoder, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useSpace } from '@dxos/react-client';
 
-import { ActionStatus, SpaceInfo, StatusState, TextInput } from '..';
-import { Panel } from '../util';
+import { SpaceInfo } from '../echo';
+import { ActionStatus, StatusState, TextInput, Panel } from '../util';
 
 export const Join: FC<{
   onJoin?: (spaceKey: PublicKey) => void;

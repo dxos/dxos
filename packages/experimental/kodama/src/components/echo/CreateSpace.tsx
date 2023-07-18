@@ -7,8 +7,7 @@ import React, { FC, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
-import { TextInput } from '..';
-import { Panel } from '../util';
+import { TextInput, Panel } from '../util';
 
 export const CreateSpace: FC<{
   onCreate: (spaceKey: PublicKey) => void;
