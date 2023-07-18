@@ -9,7 +9,7 @@ import { Timeframe } from '@dxos/timeframe';
 export const substitutions = {
   'dxos.keys.PublicKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
-    decode: (value: any) => PublicKey.from(new Uint8Array(value.data)),
+    decode: (value: any) => PublicKey.from(value.data),
   },
 
   // TODO(dmaretskyi): Shouldn't be substituted to PublicKey.
@@ -27,7 +27,7 @@ export const substitutions = {
       new Timeframe(
         (vector.frames ?? [])
           .filter((frame: any) => frame.feedKey != null && frame.seq != null)
-          .map((frame: any) => [PublicKey.from(new Uint8Array(frame.feedKey)), frame.seq]),
+          .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq]),
       ),
   },
 };

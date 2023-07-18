@@ -19,7 +19,7 @@ export const SplitView = observer(() => {
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      <Main.Sidebar swipeToDismiss>
+      <Main.Sidebar>
         <Surface name='sidebar' />
       </Main.Sidebar>
       <div

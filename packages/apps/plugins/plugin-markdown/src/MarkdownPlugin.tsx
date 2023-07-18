@@ -23,7 +23,7 @@ import {
 } from './components';
 import translations from './translations';
 import { MarkdownProperties } from './types';
-import { isMarkdown, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
 
 type MarkdownPluginProvides = SpaceProvides &
   TranslationsProvides & {
@@ -86,6 +86,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
             label: ['choose section space document label', { ns: 'dxos:markdown' }],
             icon: ArticleMedium,
+            filter: isMarkdownContent,
           },
         ],
       },
@@ -108,6 +109,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return MarkdownSection;
             }
             break;
+          // TODO(burdon): Can this be decoupled from this plugin?
           case 'dialog':
             if (get(datum, 'subject') === 'dxos:stack/chooser' && get(datum, 'id') === 'choose-section-space-doc') {
               return SpaceMarkdownChooser;

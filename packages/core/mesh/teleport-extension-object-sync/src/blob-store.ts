@@ -12,7 +12,7 @@ import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { Directory } from '@dxos/random-access-storage';
-import { BitField } from '@dxos/util';
+import { BitField, arrayToBuffer } from '@dxos/util';
 
 export type GetOptions = {
   offset?: number;
@@ -111,7 +111,7 @@ export class BlobStore {
       updated: new Date(),
     };
 
-    await this._getDataFile(id).write(0, Buffer.from(data));
+    await this._getDataFile(id).write(0, arrayToBuffer(data));
     await this._writeMeta(id, meta);
     return meta;
   }
@@ -141,7 +141,7 @@ export class BlobStore {
     assert(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
     // Write chunk.
-    await this._getDataFile(chunk.id).write(chunk.chunkOffset, Buffer.from(chunk.payload));
+    await this._getDataFile(chunk.id).write(chunk.chunkOffset, arrayToBuffer(chunk.payload));
 
     // Update bitfield.
     BitField.set(meta.bitfield, Math.floor(chunk.chunkOffset / meta.chunkSize), true);
@@ -158,7 +158,7 @@ export class BlobStore {
   }
 
   private async _writeMeta(id: Uint8Array, meta: BlobMeta): Promise<void> {
-    const encoded = Buffer.from(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta));
+    const encoded = arrayToBuffer(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta));
     const data = Buffer.alloc(encoded.length + 4);
     data.writeUInt32LE(encoded.length, 0);
     encoded.copy(data, 4);
@@ -179,10 +179,10 @@ export class BlobStore {
   }
 
   private _getMetaFile(id: Uint8Array) {
-    return this._directory.getOrCreateFile(path.join(Buffer.from(id).toString('hex'), 'meta'));
+    return this._directory.getOrCreateFile(path.join(arrayToBuffer(id).toString('hex'), 'meta'));
   }
 
   private _getDataFile(id: Uint8Array) {
-    return this._directory.getOrCreateFile(path.join(Buffer.from(id).toString('hex'), 'data'));
+    return this._directory.getOrCreateFile(path.join(arrayToBuffer(id).toString('hex'), 'data'));
   }
 }

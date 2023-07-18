@@ -4,14 +4,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, ButtonGroup } from '@dxos/aurora';
+import { Button } from '@dxos/aurora';
 import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { Input } from '@dxos/react-appkit';
 import { useClientServices, useStream } from '@dxos/react-client';
 
-import { MasterTable } from '../../components';
+import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
 
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
@@ -21,18 +21,18 @@ const columns: TableColumn<LogEntry>[] = [
   {
     Header: 'Level',
     width: 30,
-    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0]
+    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
   },
   {
     Header: 'File',
     width: 80,
-    accessor: entry => `${entry.meta?.file}:${entry.meta?.line}`
+    accessor: (entry) => `${entry.meta?.file}:${entry.meta?.line}`,
   },
   {
     Header: 'Message',
     width: 200,
-    accessor: 'message'
-  }
+    accessor: 'message',
+  },
 ];
 
 // TODO(wittjosiah): Virtualization.
@@ -92,24 +92,27 @@ const LoggingPanel = () => {
   };
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <div className='p-2 border-b'>
-        <div className='flex items-end gap-2 w-[600px]'>
-          <Input label='Filters' ref={inputRef} slots={{ root: { className: 'grow' } }} />
-          <ButtonGroup>
-            <Button onClick={handleQueryLogs}>Set Filters</Button>
-            <Button onClick={() => setLogs([])}>Clear Logs</Button>
-          </ButtonGroup>
-        </div>
-      </div>
-      <div className='flex flex-1 overflow-hidden'>
-        <MasterTable<LogEntry>
-          columns={columns}
-          data={logs}
-          slots={{ body: { className: 'max-h-screen', ref: logsRef } }}
-        />
-      </div>
-    </div>
+    <PanelContainer
+      toolbar={
+        <Toolbar>
+          <Input
+            ref={inputRef}
+            slots={{ root: { className: 'w-full ' } }}
+            label='Filter'
+            labelVisuallyHidden
+            placeholder='Filter (e.g., "info", "client:debug")'
+          />
+          <Button onClick={handleQueryLogs}>Refresh</Button>
+          <Button onClick={() => setLogs([])}>Clear</Button>
+        </Toolbar>
+      }
+    >
+      <MasterDetailTable<LogEntry>
+        columns={columns}
+        data={logs}
+        slots={{ body: { className: 'max-h-screen', ref: logsRef } }}
+      />
+    </PanelContainer>
   );
 };
 

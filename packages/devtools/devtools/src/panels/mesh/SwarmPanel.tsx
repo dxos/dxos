@@ -5,11 +5,12 @@
 import { LinkBreak, LinkSimple, LinkSimpleBreak, ShareNetwork } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useDevtools, useStream } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
+import { PanelContainer } from '../../components';
 import { ConnectionInfoView } from '../../components/ConnectionInfoView';
 import { TreeItemText } from '../../components/TreeItemText';
 
@@ -24,37 +25,41 @@ const getSwarmInfoTree = (swarms: SwarmInfo[]): TreeViewItem[] =>
       Icon:
         {
           CONNECTED: LinkSimple,
-          CLOSED: LinkBreak
+          CLOSED: LinkBreak,
         }[connection.state] ?? LinkSimpleBreak,
-      value: connection
-    }))
+      value: connection,
+    })),
   }));
 
 const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
   const { data } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
-  const [selectedItem, setSelectedItem] = useState<ConnectionInfo | undefined>();
+  const [selectedItem, setSelectedItem] = useState<string | undefined>();
 
   return (
-    <div className='flex h-full overflow-hidden'>
-      <div className='flex flex-col w-1/3 overflow-auto border-r'>
+    <PanelContainer className='flex-row'>
+      <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
         <TreeView
           items={getSwarmInfoTree(data ?? [])}
           slots={{
             value: {
-              className: 'overflow-hidden text-gray-400 truncate pl-2'
-            }
+              className: 'overflow-hidden text-gray-400 truncate pl-2',
+            },
           }}
-          onSelect={(item: any) => setSelectedItem(item.value)}
-          selected={selectedItem?.sessionId.toHex()}
+          onSelect={(item: any) => setSelectedItem(item.id)}
+          selected={selectedItem}
         />
       </div>
       {selectedItem && (
         <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
-          <ConnectionInfoView connectionInfo={selectedItem} />
+          <ConnectionInfoView
+            connectionInfo={data
+              ?.flatMap((swarm) => swarm.connections)
+              .find((connection) => connection?.sessionId.toHex() === selectedItem)}
+          />
         </div>
       )}
-    </div>
+    </PanelContainer>
   );
 };
 

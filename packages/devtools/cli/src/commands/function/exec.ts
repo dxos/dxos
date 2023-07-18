@@ -9,9 +9,13 @@ import { PublicKey } from '@dxos/keys';
 
 import { BaseCommand } from '../../base-command';
 
+/**
+ * @deprecated
+ */
 export default class Exec extends BaseCommand<typeof Exec> {
   static override enableJsonFlag = true;
   static override description = 'Invoke function.';
+  static override state = 'deprecated';
 
   static override args = {
     name: Args.string({ required: true, description: 'Function name.' }),
@@ -32,7 +36,6 @@ export default class Exec extends BaseCommand<typeof Exec> {
     const res = await client.dispatch({
       trigger: { id: PublicKey.random().toHex(), function: { name: this.args.name } },
     });
-
-    console.log(':::', res);
+    console.log(res);
   }
 }

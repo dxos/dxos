@@ -12,7 +12,12 @@ export default class Device extends BaseCommand<typeof Device> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const device = client.halo.device!;
+      const device = client.halo.device;
+      if (!device) {
+        this.log('No device found.');
+        return;
+      }
+
       this.logToStderr('Device key:', device.deviceKey.toHex());
       return device;
     });

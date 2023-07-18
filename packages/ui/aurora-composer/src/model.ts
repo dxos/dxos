@@ -44,6 +44,7 @@ export type UseTextModelOptions = {
 };
 
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
+// TODO(burdon): Decouple space (make Composer less dependent on entire stack)?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): ComposerModel | undefined => {
   const prevDocRef = useRef<Doc | undefined>(text?.doc);
   const [, setState] = useState([]);

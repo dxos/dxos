@@ -7,10 +7,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Button, Input, useTranslation } from '@dxos/aurora';
+import type { Kanban as KanbanType } from '@braneframe/types';
+import { Button, useTranslation } from '@dxos/aurora';
+import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
-
-import type { KanbanColumn, KanbanItem } from '../props';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
@@ -23,8 +23,8 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanItemComponent: FC<{
-  column?: KanbanColumn;
-  item: KanbanItem;
+  column?: KanbanType.Column;
+  item: KanbanType.Item;
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
@@ -34,6 +34,7 @@ export const KanbanItemComponent: FC<{
     data: { type: 'item', column },
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
+  const model = useTextModel({ text: item.title });
 
   return (
     <div
@@ -42,24 +43,16 @@ export const KanbanItemComponent: FC<{
       className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
       <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'opacity-10')}>
+        {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow'>
-          <Input.Root>
-            <Input.Label srOnly>{t('item content label')}</Input.Label>
-            {/* TODO(burdon): Pluggable content; e.g., use text document. */}
-            {/* TODO(burdon): Remove border when focused; Auto-expand height */}
-            <Input.TextArea
-              rows={3}
-              variant='subdued'
-              defaultValue={item.content}
-              onChange={({ target: { value } }) => (item.content = value)}
-              // TODO(burdon): Consistent vertical padding with input.
-              classNames='px-1 border-none resize-none'
-            />
-          </Input.Root>
-
+          <MarkdownComposer
+            // TODO(burdon): Placeholder ignored.
+            slots={{ root: { className: 'p-1' }, editor: { placeholder: t('item title placeholder') } }}
+            model={model}
+          />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

@@ -82,11 +82,11 @@ export class SignalServerRunner {
     });
 
     server.stdout.on('data', (data) => {
-      log.info(`TestServer stdout: ${data}`);
+      log(`TestServer stdout: ${data}`);
     });
 
     server.stderr.on('data', (data) => {
-      log.warn(`TestServer stderr: ${data}`);
+      log(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
@@ -135,9 +135,13 @@ export class SignalServerRunner {
     }
     log.info(`sending SIGINT to process group ${pid}`);
     // kill process group so that all child processes can be killed, e.g. https://github.com/golang/go/issues/40467
-    const delivered = process.kill(-pid, 'SIGINT');
-    if (!delivered) {
-      log.warn('kill signal was not delivered to child process');
+    try {
+      const delivered = process.kill(-pid, 'SIGINT');
+      if (!delivered) {
+        log.warn('kill signal was not delivered to child process');
+      }
+    } catch (err: any) {
+      log.warn('kill error', { err });
     }
   }
 

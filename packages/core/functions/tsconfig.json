@@ -1,0 +1,37 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings"
+    ]
+  },
+  "exclude": [],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/observable-object"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/client"
+    }
+  ]
+}

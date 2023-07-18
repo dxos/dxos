@@ -168,9 +168,9 @@ describe('Spaces', () => {
     const space1 = await client1.createSpace();
     await space1.waitUntilReady();
 
-    const dataSpace1 = services1.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const dataSpace1 = services1.host!._serviceContext.dataSpaceManager?.spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = services1.host._serviceContext.feedStore.getFeed(feedKey!)!;
+    const feed1 = services1.host!._serviceContext.feedStore.getFeed(feedKey!)!;
 
     const amount = 10;
     {
@@ -189,8 +189,8 @@ describe('Spaces', () => {
 
     const space2 = client2.getSpace(space1.key)!;
     await space2.waitUntilReady();
-    const dataSpace2 = services2.host._serviceContext.dataSpaceManager?.spaces.get(space1.key);
-    const feed2 = services2.host._serviceContext.feedStore.getFeed(feedKey!)!;
+    const dataSpace2 = services2.host!._serviceContext.dataSpaceManager?.spaces.get(space1.key);
+    const feed2 = services2.host!._serviceContext.feedStore.getFeed(feedKey!)!;
 
     // Check that second peer does not have mutations before epoch.
     for (const i of range(feed1.length)) {

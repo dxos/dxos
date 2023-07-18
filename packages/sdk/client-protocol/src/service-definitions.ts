@@ -3,6 +3,7 @@
 //
 
 import { schema } from '@dxos/protocols';
+import { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import {
   DevicesService,
   IdentityService,
@@ -24,6 +25,8 @@ import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 
 export type ClientServices = {
   SystemService: SystemService;
+  NetworkService: NetworkService;
+  LoggingService: LoggingService;
 
   IdentityService: IdentityService;
   InvitationsService: InvitationsService;
@@ -31,9 +34,7 @@ export type ClientServices = {
   SpacesService: SpacesService;
   DataService: DataService;
 
-  NetworkService: NetworkService;
-
-  LoggingService: LoggingService;
+  FunctionRegistryService: FunctionRegistryService;
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;
@@ -55,13 +56,17 @@ export interface ClientServicesProvider {
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.services.SystemService'),
+  NetworkService: schema.getService('dxos.client.services.NetworkService'),
+  LoggingService: schema.getService('dxos.client.services.LoggingService'),
+
   IdentityService: schema.getService('dxos.client.services.IdentityService'),
   InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
-  NetworkService: schema.getService('dxos.client.services.NetworkService'),
-  LoggingService: schema.getService('dxos.client.services.LoggingService'),
+
+  // Agent-only.
+  FunctionRegistryService: schema.getService('dxos.agent.functions.FunctionRegistryService'),
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),

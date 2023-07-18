@@ -10,8 +10,6 @@ import { InputProps as AppkitInputProps } from './InputProps';
 
 export type InputProps = AppkitInputProps;
 
-// TODO(burdon): Support input ref for programmatic focus.
-// TODO(burdon): Allow placement of Icon at end of input (e.g., search, open/close button).
 /**
  * @deprecated use Input subcomponents from @dxos/aurora
  */

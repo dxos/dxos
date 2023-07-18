@@ -19,8 +19,8 @@ describe('WebSocketSignalManager', () => {
   });
 
   afterAll(() => {
-    broker1.stop();
-    broker2.stop();
+    void broker1.stop();
+    void broker2.stop();
   });
 
   const expectPeerAvailable = (client: WebsocketSignalManager, expectedTopic: PublicKey, peer: PublicKey) =>

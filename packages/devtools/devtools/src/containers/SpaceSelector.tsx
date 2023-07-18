@@ -4,7 +4,7 @@
 
 import { Planet } from '@phosphor-icons/react';
 import * as localForage from 'localforage';
-import React, { FC, ReactNode } from 'react';
+import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Select } from '@dxos/react-appkit';
@@ -29,7 +29,7 @@ export const SpaceSelector = () => {
     }));
 
     if (spaceKey) {
-      localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+      void localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
     }
   };
 
@@ -53,22 +53,11 @@ export const SpaceSelector = () => {
             <div className='pr-1'>
               <Planet />
             </div>
-            <span className='text-neutral-250'>{space.key.truncate()}</span>
-            <span>{space.properties.name ?? humanize(space.key)}</span>
+            <span className='text-lg font-mono text-neutral-250'>{space.key.truncate()}</span>
+            <span className='whitespace-nowrap'>{space.properties.name ?? humanize(space.key)}</span>
           </div>
         </Select.Item>
       ))}
     </Select>
-  );
-};
-
-export const SpaceToolbar: FC<{ children?: ReactNode }> = ({ children }) => {
-  return (
-    <div className='flex w-full border-b'>
-      <div className='flex-shrink w-[400px] p-2'>
-        <SpaceSelector />
-      </div>
-      <div className='flex-1 p-2 mr-2 flex-row'>{children}</div>
-    </div>
   );
 };

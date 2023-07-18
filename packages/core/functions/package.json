@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/functions",
+  "version": "0.1.52",
+  "description": "Functions SDK and runtime.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node/index.cjs",
+      "default": "./dist/lib/node/index.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/observable-object": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "express": "4.17.1",
+    "portfinder": "^1.0.32"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

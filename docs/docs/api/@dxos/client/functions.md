@@ -22,7 +22,7 @@ Arguments:
 
 `clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
-### [diagnostics(client, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/diagnostics.ts#L40)
+### [diagnostics(client, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/diagnostics/diagnostics.ts#L44)
 
 
 
@@ -47,7 +47,7 @@ Arguments:
 
 `options`: <code>[fromAgentOptions](/api/@dxos/client/types/fromAgentOptions)</code>
 
-### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L46)
+### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L47)
 
 
 
@@ -62,7 +62,7 @@ Arguments:
 
 `params`: <code>ClientServicesHostParams</code>
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L20)
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L21)
 
 
 
