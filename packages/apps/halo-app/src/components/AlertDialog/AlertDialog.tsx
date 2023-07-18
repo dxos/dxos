@@ -6,7 +6,7 @@ import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
-import { defaultDescription, defaultFocus, mx } from '@dxos/aurora-theme';
+import { descriptionText, defaultFocus, mx } from '@dxos/aurora-theme';
 import { Input, InputProps } from '@dxos/react-appkit';
 
 export interface AlertDialogSlots {
@@ -108,7 +108,7 @@ export const AlertDialog = ({
           {description && (
             <AlertDialogPrimitive.Description
               {...slots.description}
-              className={mx('my-2', defaultDescription, slots.description?.className)}
+              className={mx('my-2', descriptionText, slots.description?.className)}
             >
               {description}
             </AlertDialogPrimitive.Description>

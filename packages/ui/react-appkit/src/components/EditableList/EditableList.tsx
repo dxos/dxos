@@ -24,7 +24,7 @@ import {
   LIST_NAME,
   useDensityContext,
 } from '@dxos/aurora';
-import { mx, getSize, defaultDescription } from '@dxos/aurora-theme';
+import { mx, getSize, descriptionText } from '@dxos/aurora-theme';
 
 import { Input, InputProps } from '../Input';
 import { Tooltip } from '../Tooltip';
@@ -184,7 +184,7 @@ export const EditableList = ({
               content={
                 <>
                   <span className='mie-2'>{t('add list item label')}</span>
-                  <span className={defaultDescription}>⏎</span>
+                  <span className={descriptionText}>⏎</span>
                 </>
               }
               side='left'
