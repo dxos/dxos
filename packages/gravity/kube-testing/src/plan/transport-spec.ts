@@ -95,19 +95,33 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
           log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
           await sleep(spec.desiredSwarmTimeout);
-          log.info('number of connections within duration', { agentIdx, swarmIdx, swarmTopic: swarm.topic, connections: swarm.protocol.connections.size, numOfAgents });
+          log.info('number of connections within duration', {
+            agentIdx,
+            swarmIdx,
+            swarmTopic: swarm.topic,
+            connections: swarm.protocol.connections.size,
+            numOfAgents,
+          });
 
           // Wait till all peers are connected (with timeout).
           const waitTillConnected = async () => {
             await cancelWithContext(
               context,
-              swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === Object.keys(agents).length - 1)
+              swarm.protocol.connected.waitForCondition(
+                () => swarm.protocol.connections.size === Object.keys(agents).length - 1,
+              ),
             );
             log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
           };
 
           asyncTimeout(waitTillConnected(), spec.fullSwarmTimeout).catch((error) => {
-            log.info('all peers not connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic, connections: swarm.protocol.connections.size, numOfAgents });
+            log.info('all peers not connected', {
+              agentIdx,
+              swarmIdx,
+              swarmTopic: swarm.topic,
+              connections: swarm.protocol.connections.size,
+              numOfAgents,
+            });
           });
         }),
       );
@@ -152,17 +166,22 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           const waitTillDisconnected = async () => {
             await cancelWithContext(
               context,
-              swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0)
+              swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
             );
             log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
           };
 
           asyncTimeout(waitTillDisconnected(), spec.fullSwarmTimeout).catch((error) => {
-            log.info('all peers not disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic, connections: swarm.protocol.connections.size });
+            log.info('all peers not disconnected', {
+              agentIdx,
+              swarmIdx,
+              swarmTopic: swarm.topic,
+              connections: swarm.protocol.connections.size,
+            });
           });
-        })
+        }),
       );
-    }
+    };
 
     scheduleTaskInterval(
       ctx,

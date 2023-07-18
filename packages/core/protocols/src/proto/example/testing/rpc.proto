@@ -28,6 +28,10 @@ service TestStreamService {
   rpc TestCall (TestRpcRequest) returns (stream TestRpcResponse);
 }
 
+service TestServiceWithStreams {
+  rpc RequestTestStream (TestRpcRequest) returns (TestRpcResponse);
+}
+
 message PingRequest {
   int32 nonce = 1;
 }
