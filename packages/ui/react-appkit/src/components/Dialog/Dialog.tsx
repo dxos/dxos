@@ -15,7 +15,7 @@ import {
   DialogRootProps,
   DialogTitleProps,
 } from '@dxos/aurora';
-import { defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
+import { focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
 
 import { TooltipRoot, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -89,8 +89,8 @@ export const Dialog = ({
               <NaturalDialog.Close
                 className={mx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
-                  defaultFocus,
-                  defaultHover,
+                  focusRing,
+                  hoverColors,
                   slots.close?.className,
                 )}
               >

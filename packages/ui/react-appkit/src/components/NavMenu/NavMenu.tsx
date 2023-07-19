@@ -7,9 +7,9 @@ import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'reac
 
 import { Tooltip, TooltipContentProps } from '@dxos/aurora';
 import {
-  defaultFocus,
-  defaultHover,
-  defaultInlineSeparator,
+  focusRing,
+  hoverColors,
+  inlineSeparator,
   mx,
   defaultAppButtonColors,
   primaryAppButtonColors,
@@ -68,8 +68,8 @@ const NavMenuInvokerItem = forwardRef(
           className={mx(
             'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
             active ? primaryAppButtonColors : defaultAppButtonColors,
-            defaultFocus,
-            defaultHover,
+            focusRing,
+            hoverColors,
           )}
         >
           {children}
@@ -100,8 +100,8 @@ const NavMenuLinkItem = forwardRef(
           'px-3 py-2 text-sm rounded-md transition-color',
           active ? primaryAppButtonColors : defaultAppButtonColors,
           active ? 'font-medium' : 'font-normal',
-          defaultFocus,
-          defaultHover,
+          focusRing,
+          hoverColors,
           triggerLinkProps.className,
         )}
       >
@@ -125,8 +125,8 @@ const NavMenuTooltipLinkItem = forwardRef(
               'px-3 py-2 text-sm rounded-md transition-color',
               active ? primaryAppButtonColors : defaultAppButtonColors,
               active ? 'font-medium' : 'font-normal',
-              defaultFocus,
-              defaultHover,
+              focusRing,
+              hoverColors,
               triggerLinkProps.className,
             )}
           >
@@ -141,7 +141,7 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className={mx(defaultInlineSeparator, 'bs-5')} />;
+  return <span role='none' className={mx(inlineSeparator, 'bs-5')} />;
 };
 
 const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;

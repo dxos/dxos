@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Popover, Avatar, useJdenticonHref } from '@dxos/aurora';
-import { defaultActive, defaultFocus, defaultHover } from '@dxos/aurora-theme';
+import { openOutline, focusRing, hoverColors } from '@dxos/aurora-theme';
 import { Identity } from '@dxos/client';
 
 import { IdentityPanel } from '../../panels';
@@ -21,7 +21,7 @@ export const IdentityPopover = ({ identity, onClickManageProfile }: IdentityPopo
     <Popover.Root>
       <Popover.Trigger asChild>
         <Avatar.Root size={10} variant='circle'>
-          <Avatar.Frame classNames={['shadow-md cursor-pointer rounded-md', defaultHover, defaultFocus, defaultActive]}>
+          <Avatar.Frame classNames={['shadow-md cursor-pointer rounded-md', hoverColors, focusRing, openOutline]}>
             <Avatar.Fallback href={fallbackHref} />
           </Avatar.Frame>
           <Avatar.Label>{identity.profile?.displayName ?? ''}</Avatar.Label>
