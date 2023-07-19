@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '@dxos/aurora';
-import { defaultFocus, defaultHover, defaultActive } from '@dxos/aurora-theme';
+import { focusRing, hoverColors, openOutline } from '@dxos/aurora-theme';
 
 import { Avatar } from '../Avatar';
 import { Popover } from './Popover';
@@ -29,7 +29,7 @@ export const AvatarTrigger = {
         slots={{
           root: {
             tabIndex: 0,
-            classNames: ['shadow-md cursor-pointer rounded-md', defaultHover, defaultFocus, defaultActive],
+            classNames: ['shadow-md cursor-pointer rounded-md', hoverColors, focusRing, openOutline],
           },
         }}
         label={<span className='sr-only'>Open popover</span>}
