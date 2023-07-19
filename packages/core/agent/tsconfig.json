@@ -16,16 +16,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -34,34 +28,19 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
-      "path": "../../common/timeframe"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol"
-    },
-    {
       "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../echo/echo-schema"
     },
     {
       "path": "../halo/credentials"
-    },
-    {
-      "path": "../mesh/rpc"
     },
     {
       "path": "../mesh/websocket-rpc"
