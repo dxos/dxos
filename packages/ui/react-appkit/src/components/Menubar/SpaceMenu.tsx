@@ -6,7 +6,7 @@ import { Gear, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultInlineSeparator, getSize, mx, appTx } from '@dxos/aurora-theme';
+import { inlineSeparator, getSize, mx, appTx } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client';
 import { useMembers } from '@dxos/react-client';
 
@@ -27,7 +27,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
         <>
           <UsersThree className={getSize(4)} />
           <span className='leading-none'>{members.length}</span>
-          <span role='none' className={mx(defaultInlineSeparator, 'bs-3')} />
+          <span role='none' className={mx(inlineSeparator, 'bs-3')} />
           <UserPlus className={getSize(4)} />
         </>
       }

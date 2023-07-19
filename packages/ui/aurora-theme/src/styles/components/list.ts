@@ -5,7 +5,7 @@
 import { ComponentFunction, Density, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { defaultFocus, densityBlockSize, getSize, osFocus } from '../fragments';
+import { focusRing, densityBlockSize, getSize, osFocusRing } from '../fragments';
 
 export type ListStyleProps = Partial<{
   density: Density;
@@ -27,9 +27,9 @@ export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props
   mx(getSize(5), 'mbs-2.5', ...etc);
 
 export const listItemAppOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), defaultFocus, ...etc);
+  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), focusRing, ...etc);
 export const listItemOsOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), osFocus, ...etc);
+  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), osFocusRing, ...etc);
 export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => mx(getSize(3.5), ...etc);
 
 export const listTheme: Theme<ListStyleProps> = {

@@ -5,7 +5,7 @@ import { Root as AccordionRoot } from '@radix-ui/react-accordion';
 import React from 'react';
 
 import { DensityProvider, useTranslation } from '@dxos/aurora';
-import { defaultDescription, mx } from '@dxos/aurora-theme';
+import { descriptionText, mx } from '@dxos/aurora-theme';
 import type { CancellableInvitationObservable } from '@dxos/client';
 
 import { ClipboardProvider } from '../Clipboard';
@@ -29,6 +29,6 @@ export const InvitationList = ({ invitations, ...invitationProps }: InvitationLi
       </DensityProvider>
     </AccordionRoot>
   ) : (
-    <p className={mx(defaultDescription, 'text-center p-2')}>{t('empty invitations message')}</p>
+    <p className={mx(descriptionText, 'text-center p-2')}>{t('empty invitations message')}</p>
   );
 };

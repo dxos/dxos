@@ -2,22 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
+import { IconProps, Kanban, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client';
-import { PluginDefinition } from '@dxos/react-surface';
+import { UnsubscribeCallback } from '@dxos/async';
+import { Query, SpaceProxy } from '@dxos/client';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
 import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
 import translations from './translations';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
+  const queries = new Map<string, { query: Query<KanbanType>; unsubscribe: UnsubscribeCallback }>();
+
   return {
     meta: {
       // TODO(burdon): Make id consistent with other plugins.
       id: KANBAN_PLUGIN,
+    },
+    unload: async () => {
+      queries.forEach(({ unsubscribe }) => unsubscribe());
+      queries.clear();
     },
     provides: {
       translations,
@@ -27,10 +36,10 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             return [];
           }
 
-          const kanbanToGraphNode = (object: KanbanType) => ({
+          const kanbanToGraphNode = (object: KanbanType): GraphNode => ({
             id: object.id,
             index: 'a1',
-            label: 'New Kanban', // TODO(burdon): Translation.
+            label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
             data: object,
             parent,
@@ -40,7 +49,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   id: 'delete', // TODO(burdon): Namespace.
                   index: 'a1',
                   label: ['delete stack label', { ns: KANBAN_PLUGIN }],
-                  icon: Trash,
+                  icon: (props: IconProps) => <Kanban {...props} />,
                   invoke: async () => {
                     parent.data?.db.remove(object);
                   },
@@ -49,17 +58,20 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             },
           });
 
-          // TODO(burdon): Subscription? Clean-up via context?
           const space = parent.data;
+          let { query, unsubscribe } = queries.get(parent.id) ?? {};
+
+          // TODO(burdon): Subscription? Clean-up via context?
           const query = space.db.query(KanbanType.filter());
           return query.objects.map((stack) => kanbanToGraphNode(stack));
         },
-        actions: (parent) => {
+        actions: (parent, _, plugins) => {
           // TODO(burdon): ???
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
           const space = parent.data;
           return [
             {
@@ -71,10 +83,9 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               invoke: async () => {
                 const object = space.db.add(new KanbanType());
                 console.log(object);
-                // if (treeViewPlugin) {
-                // TODO(burdon): ???
-                // treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
-                // }
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
+                }
               },
             },
           ];

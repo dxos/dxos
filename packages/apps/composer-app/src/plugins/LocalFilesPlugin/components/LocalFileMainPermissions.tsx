@@ -6,7 +6,7 @@ import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultDescription, mx } from '@dxos/aurora-theme';
+import { descriptionText, mx } from '@dxos/aurora-theme';
 
 import { LocalEntity } from '../types';
 import { LOCAL_FILES_PLUGIN } from '../util';
@@ -19,7 +19,7 @@ export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalEntity
       <p
         role='alert'
         className={mx(
-          defaultDescription,
+          descriptionText,
           'border border-dashed border-neutral-400/50 rounded-xl flex flex-col space-items-evenly justify-center p-8 font-system-normal text-lg',
         )}
       >

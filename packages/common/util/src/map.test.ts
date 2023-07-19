@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { LazyMap } from '../src/map';
+import { LazyMap } from './map';
 
 describe('map', () => {
   test('set', () => {

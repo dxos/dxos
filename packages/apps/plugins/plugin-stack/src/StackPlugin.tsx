@@ -36,7 +36,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
-    // TODO(burdon): Open/close? (vs. ready/unload).
+    // TODO(burdon): Open/close? (vs. ready/unload, initialize/destroy?)
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
