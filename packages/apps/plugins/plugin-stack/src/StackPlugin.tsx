@@ -36,12 +36,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
+    // TODO(burdon): Open/close? (vs. ready/unload).
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
     },
     provides: {
       graph: {
+        // TODO(burdon): Rename update (since not "event").
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
@@ -66,6 +68,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               subscriptions.set(
                 stack.id,
                 stack[subscribe](() => {
+                  // TODO(burdon): Remove from graph if deleted?
                   if (stack.__deleted) {
                     subscriptions.delete(stack.id);
                     return;

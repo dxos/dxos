@@ -38,7 +38,7 @@ export class Generator {
   updateObject(type = Document.type.name) {
     switch (type) {
       case Document.type.name: {
-        const { objects } = this._space.db.query((object) => object.__typename === type);
+        const { objects } = this._space.db.query(Document.filter());
         if (objects.length) {
           // TODO(burdon): Standardize faker deps.
           const object = this._faker!.helpers.arrayElement(objects);
