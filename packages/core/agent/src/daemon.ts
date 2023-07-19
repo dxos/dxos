@@ -6,6 +6,7 @@ export type ProcessInfo = {
   profile?: string;
   pid?: number;
   running?: boolean;
+  started?: number;
 };
 
 /**

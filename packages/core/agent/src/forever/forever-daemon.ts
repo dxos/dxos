@@ -50,11 +50,14 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map(({ uid, foreverPid, running }: ForeverProcess) => ({
-      profile: uid,
-      pid: foreverPid,
-      running,
-    }));
+    return result.map(({ uid, foreverPid, running, ctime }: ForeverProcess) => {
+      return {
+        profile: uid,
+        pid: foreverPid,
+        running,
+        started: ctime,
+      };
+    });
   }
 
   async start(profile: string): Promise<ProcessInfo> {

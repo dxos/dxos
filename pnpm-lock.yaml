@@ -2156,13 +2156,12 @@ importers:
       '@dxos/websocket-rpc': workspace:*
       '@types/debug': ^4.1.7
       '@types/express': ^4.17.17
-      '@types/forever-monitor': ^1.7.6
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/node': ^18.11.9
       '@types/node-fetch': ^2.5.10
+      date-fns: ^2.29.3
       express: 4.17.1
       forever: ^4.0.3
-      forever-monitor: ^3.0.3
       growing-file: ^0.1.3
       isomorphic-ws: ^4.0.1
       nodemon: ^2.0.22
@@ -2189,16 +2188,15 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
+      date-fns: 2.29.3
       express: 4.17.1
       forever: 4.0.3
-      forever-monitor: 3.0.3
       growing-file: 0.1.3
       isomorphic-ws: 4.0.1_ws@7.5.9
       ws: 7.5.9
     devDependencies:
       '@types/debug': 4.1.7
       '@types/express': 4.17.17
-      '@types/forever-monitor': 1.7.6
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
@@ -3026,7 +3024,6 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
-      '@faker-js/faker': ^7.3.0
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
       '@oclif/plugin-plugins': ^2.4.3
@@ -3034,7 +3031,6 @@ importers:
       '@octokit/core': ^4.0.4
       '@types/cli-progress': ^3.11.0
       '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
       '@types/fs-extra': ^9.0.4
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -3087,7 +3083,6 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
-      '@faker-js/faker': 7.6.0
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 2.4.3_d2gyhxeuxd6tnmgqdyixls47tq
@@ -3116,7 +3111,6 @@ importers:
       '@oclif/test': 2.3.11_d2gyhxeuxd6tnmgqdyixls47tq
       '@types/cli-progress': 3.11.0
       '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
@@ -17378,12 +17372,6 @@ packages:
 
   /@types/find-cache-dir/3.2.1:
     resolution: {integrity: sha512-frsJrz2t/CeGifcu/6uRo4b+SzAwT4NYCVPu1GN8IB9XTzrpPkGuV0tmh9mN+/L0PklAlsC3u5Fxt0ju00LXIw==}
-    dev: true
-
-  /@types/forever-monitor/1.7.6:
-    resolution: {integrity: sha512-QrEuaA2FwV/EKII3ZFy12LtZ1qyjwXYmTd9u4jTZBeF3CaVsjLlk1vmlLdfSL3TXdSdFt8BsGyLcsRQ9QP6e5Q==}
-    dependencies:
-      '@types/node': 18.11.9
     dev: true
 
   /@types/fs-ext/2.0.0:

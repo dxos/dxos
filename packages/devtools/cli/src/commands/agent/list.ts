@@ -3,6 +3,7 @@
 //
 
 import { ux } from '@oclif/core';
+import { formatDistance } from 'date-fns';
 
 import { BaseCommand } from '../../base-command';
 
@@ -16,8 +17,9 @@ export const printAgents = (daemons: any[], flags = {}) => {
       pid: {
         header: 'process',
       },
-      running: {
-        header: 'running',
+      uptime: {
+        header: 'uptime',
+        get: (row) => formatDistance(new Date(), new Date(row.started)),
       },
     },
     {
@@ -33,6 +35,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const result = await daemon.list();
+      console.log(result);
       printAgents(result);
       return result;
     });
