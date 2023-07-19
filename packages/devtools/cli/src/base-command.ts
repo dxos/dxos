@@ -273,8 +273,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
     super.error(err, options as any);
-    Sentry.captureException(err);
     this._failing = true;
+  }
+
+  override async catch(err: Error) {
+    // TODO(burdon): Only if production.
+    // Sentry.captureException(err);
+    throw err;
   }
 
   /**
@@ -282,7 +287,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async finally() {
     const endTime = new Date();
-
     Telemetry.event({
       installationId: this._telemetryContext?.installationId,
       name: 'cli.command.run',
