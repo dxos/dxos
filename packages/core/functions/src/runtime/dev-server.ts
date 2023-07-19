@@ -71,6 +71,7 @@ export class DevServer {
 
     app.post('/:functionName', async (req, res) => {
       const functionName = req.params.functionName;
+      log('invoke', { function: functionName, data: req.body });
 
       const builder: Response = {
         status: (code: number) => {
