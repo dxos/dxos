@@ -43,8 +43,8 @@ describe('space/space-protocol', () => {
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
-      expect(presence1.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer2.identityKey);
-      expect(presence2.getPeersOnline().map(({ identityKey }) => identityKey)).toContainEqual(peer1.identityKey);
+      expect(presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey))).toBeTruthy();
+      expect(presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey))).toBeTruthy();
     });
   });
 

@@ -9,7 +9,7 @@ import {
   RegisterRequest,
   RegisterResponse,
   UnregisterRequest,
-} from '@dxos/protocols/proto/dxos/functions';
+} from '@dxos/protocols/proto/dxos/agent/functions';
 
 import { FunctionDispatcher, FunctionInvocation, FunctionInvocationResult } from './dispatcher';
 
@@ -23,7 +23,6 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     const registrationId = randomUUID();
-
     this._registrations.push({
       id: registrationId,
       request,

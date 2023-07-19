@@ -55,6 +55,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
       assert(invitation.spaceKey);
       const space = client.getSpace(invitation.spaceKey)!;
+      await space.waitUntilReady();
       const members = space.members.get();
       if (!json) {
         printMembers(members);

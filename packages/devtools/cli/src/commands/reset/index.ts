@@ -17,6 +17,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
     ...BaseCommand.flags,
     force: Flags.boolean({
       description: 'Force delete.',
+      default: false,
     }),
   };
 
@@ -28,16 +29,16 @@ export default class Reset extends BaseCommand<typeof Reset> {
       path.join(DX_DATA, profile),
       path.join(DX_STATE, profile),
       path.join(DX_RUNTIME, profile),
-      path.join(DX_RUNTIME, profile),
       this.clientConfig?.get('runtime.client.storage.path'),
     ].filter(Boolean) as string[];
 
-    const dry =
+    const dryRun =
       this.flags['dry-run'] ||
       !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
-    if (!dry) {
+
+    if (!dryRun) {
       // TODO(burdon): Problem if running manually.
-      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile));
+      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile, { force: this.flags.force }));
 
       this.warn('Deleting files...');
       paths.forEach((path) => {
@@ -45,6 +46,8 @@ export default class Reset extends BaseCommand<typeof Reset> {
       });
 
       await this.maybeStartDaemon();
+    } else {
+      this.log('Files', paths);
     }
 
     return paths;

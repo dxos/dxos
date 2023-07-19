@@ -17,9 +17,7 @@ export type DrawingMainOptions = {
   readonly: boolean;
 };
 
-export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) => {
-  // const space = data[0];
-  const drawing = data[data.length - 1] as DrawingType;
+export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data: [_, drawing] }) => {
   const { store } = useDrawingModel(drawing);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {}, [editor]);

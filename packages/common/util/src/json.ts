@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 import { PublicKey } from '@dxos/keys';
 
 import { humanize } from './human-hash';
+import { arrayToBuffer } from './uint8array';
 
 const MAX_DEPTH = 5;
 
@@ -52,7 +53,7 @@ export const jsonify = (value: any, depth = 0, visitedObjects = new WeakSet<any>
 
     try {
       if (value instanceof Uint8Array) {
-        return Buffer.from(value).toString('hex');
+        return arrayToBuffer(value).toString('hex');
       } else if (Array.isArray(value)) {
         return value.map((x) => jsonify(x, depth + 1, visitedObjects));
       } else if (typeof value.toJSON === 'function') {

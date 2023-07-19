@@ -8,6 +8,9 @@ import { StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 
+/**
+ * @deprecated
+ */
 export class SnapshotStore {
   // prettier-ignore
   constructor(

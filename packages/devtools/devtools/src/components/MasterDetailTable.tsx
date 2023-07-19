@@ -36,7 +36,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact 
         />
       </div>
 
-      <div className='flex w-1/2 overflow-hidden'>{selected && <JsonView data={selected} />}</div>
+      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>
     </div>
   );
 };

@@ -36,7 +36,6 @@ class TextModelStateMachine implements StateMachine<TextModelState, TextMutation
     if (update && clientId !== this._text.doc.clientID) {
       // Passing empty buffer make the process hang: https://github.com/yjs/yjs/issues/498
       assert(update.length > 0, 'update buffer is empty');
-
       applyUpdate(this._text.doc, update, { docClientId: clientId });
     }
   }
@@ -75,7 +74,6 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     writeStream?: MutationWriter<TextMutation>
   ) {
     super(meta, itemId, getState, writeStream);
-
     this.initialize();
   }
 

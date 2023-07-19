@@ -13,6 +13,7 @@ import { STORAGE_VERSION, schema } from '@dxos/protocols';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
+import { arrayToBuffer } from '@dxos/util';
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -100,7 +101,7 @@ export class MetadataStore {
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {
-      const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
+      const encoded = arrayToBuffer(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
       const checksum = CRC32.buf(encoded);
 
       const result = Buffer.alloc(8 + encoded.length);

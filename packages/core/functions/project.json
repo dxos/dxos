@@ -42,16 +42,12 @@
       "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/core/functions",
-        "envVariables": {
-          "SIGNAL_PORT": 12000
-        },
+        "environments": [
+          "nodejs"
+        ],
         "forceExit": true,
         "outputPath": "tmp/mocha/packages/core/functions",
         "resultsPath": "test-results/packages/core/functions",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "setupOptions": {
-          "port": 12000
-        },
         "testPatterns": [
           "packages/core/functions/src/**/*.test.{ts,js}"
         ],
