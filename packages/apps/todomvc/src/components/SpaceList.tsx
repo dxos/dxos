@@ -6,14 +6,8 @@ import cx from 'classnames';
 import React, { useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import {
-  IFrameClientServicesHost,
-  IFrameClientServicesProxy,
-  ShellLayout,
-  Space,
-  useClient,
-  useSpaces,
-} from '@dxos/react-client';
+import { IFrameClientServicesHost, IFrameClientServicesProxy, ShellLayout, useClient } from '@dxos/react-client';
+import { Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { TodoList } from '../proto';

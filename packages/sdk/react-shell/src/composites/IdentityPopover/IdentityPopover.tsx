@@ -5,8 +5,8 @@
 import React, { ComponentProps } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
+import { Identity } from '@dxos/react-client/halo';
 
 import { PanelPopover } from '../../layouts';
 import { IdentityPanel } from '../../panels';

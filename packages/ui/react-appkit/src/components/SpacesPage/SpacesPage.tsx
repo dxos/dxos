@@ -8,8 +8,9 @@ import { generatePath, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Invitation, Space } from '@dxos/client';
-import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { Space, useSpaces } from '@dxos/react-client/echo';
+import { Invitation, InvitationResult } from '@dxos/react-client/invitations';
 import { MaybePromise } from '@dxos/util';
 
 import { HeadingWithActions } from '../HeadingWithActions';

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';

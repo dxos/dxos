@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/react-client';
 
 /**
  * Validate string keys from url params as space keys.

@@ -4,8 +4,8 @@
 
 import { cloneElement, Dispatch } from 'react';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
-import { InvitationResult } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
+import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 

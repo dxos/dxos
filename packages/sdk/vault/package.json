@@ -39,6 +39,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",

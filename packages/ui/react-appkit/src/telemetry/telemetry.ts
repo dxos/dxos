@@ -5,8 +5,8 @@
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
-import type { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
+import type { Client, Config } from '@dxos/react-client';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';

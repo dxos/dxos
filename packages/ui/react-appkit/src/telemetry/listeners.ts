@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/react-client';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './telemetry';

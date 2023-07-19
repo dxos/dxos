@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ThemeContext, useThemeContext } from '@dxos/aurora';
 import { mx, osTx } from '@dxos/aurora-theme';
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 import { defaultSurface } from '../../styles';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';

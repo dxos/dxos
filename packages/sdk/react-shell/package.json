@@ -25,16 +25,12 @@
     "theme-extensions.js"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -49,13 +45,10 @@
     "xstate": "^4.37.0"
   },
   "devDependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "@phosphor-icons/react": "^2.0.5",
-    "@types/debug": "^4.1.7",
     "@types/lodash.toarray": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

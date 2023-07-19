@@ -5195,20 +5195,15 @@ importers:
 
   packages/sdk/config:
     specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/debug': workspace:*
       '@dxos/errors': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       boolean: ^3.0.1
-      debug: ^4.3.3
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
@@ -5216,22 +5211,17 @@ importers:
       pkg-up: ^3.1.0
       webpack: ^5.75.0
     dependencies:
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/debug': link:../../common/debug
       '@dxos/errors': link:../errors
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/util': link:../../common/util
       boolean: 3.2.0
-      debug: 4.3.4
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       pkg-up: 3.1.0
     devDependencies:
-      '@types/debug': 4.1.7
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.get': 4.4.7
@@ -5285,57 +5275,35 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-schema': workspace:*
       '@dxos/echo-signals': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/messaging': workspace:*
       '@dxos/node-std': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.6.0
       '@testing-library/dom': ^8.17.1
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^14.4.3
-      '@types/debug': ^4.1.7
-      '@types/level-js': ~4.0.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@types/use-subscription': ^1.0.0
-      assert: ^2.0.0
-      level-js: ^5.0.2
       react: ^18.2.0
       react-dom: ^18.2.0
-      use-subscription: ^1.8.0
       yjs: ^13.5.44
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-signals': link:../../core/echo/echo-signals
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/node-std': link:../../common/node-std
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      use-subscription: 1.8.0_react@18.2.0
     optionalDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/text-model': link:../../core/echo/text-model
@@ -5346,12 +5314,8 @@ importers:
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
-      '@types/debug': 4.1.7
-      '@types/level-js': 4.0.2
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      '@types/use-subscription': 1.0.0
-      level-js: 5.0.2
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
@@ -5361,13 +5325,8 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -5377,7 +5336,6 @@ importers:
       '@radix-ui/react-accordion': ^1.1.1
       '@radix-ui/react-radio-group': ^1.1.2
       '@react-hook/async': ^3.1.1
-      '@types/debug': ^4.1.7
       '@types/lodash.toarray': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -5392,16 +5350,12 @@ importers:
       vite: ^4.3.9
       xstate: ^4.37.0
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/aurora-types': link:../../ui/aurora-types
-      '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
-      '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
       '@dxos/util': link:../../common/util
@@ -5415,11 +5369,9 @@ importers:
       url-join: 5.0.0
       xstate: 4.37.1
     devDependencies:
-      '@dxos/async': link:../../common/async
       '@dxos/react-async': link:../../common/react-async
       '@faker-js/faker': 7.6.0
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/debug': 4.1.7
       '@types/lodash.toarray': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -5442,6 +5394,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
@@ -5476,6 +5429,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/client': link:../client
+      '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
       '@dxos/echo-signals': link:../../core/echo/echo-signals
@@ -5818,14 +5772,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
@@ -5858,13 +5807,8 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/sentry': link:../../common/sentry
       '@dxos/telemetry': link:../../common/telemetry

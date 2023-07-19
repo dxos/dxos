@@ -5,7 +5,8 @@ import React, { useEffect } from 'react';
 
 import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import { useClient, useIdentity } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelProps } from './JoinPanelProps';

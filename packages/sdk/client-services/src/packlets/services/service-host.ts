@@ -5,8 +5,9 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
+import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,6 +17,7 @@ import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
+import { TextModel } from '@dxos/text-model';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -29,6 +31,11 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
+
+// TODO(burdon): Factor out to spaces.
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
+};
 
 export type ClientServicesHostParams = {
   /**

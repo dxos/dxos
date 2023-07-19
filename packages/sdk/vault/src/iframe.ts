@@ -5,14 +5,10 @@
 import { StrictMode } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, ClientServicesProvider, ClientServicesProxy, DEFAULT_INTERNAL_CHANNEL } from '@dxos/client';
-import {
-  ClientServicesHost,
-  IFrameHostRuntime,
-  IFrameProxyRuntime,
-  ShellRuntime,
-  ShellRuntimeImpl,
-} from '@dxos/client-services';
+import { Client } from '@dxos/client';
+import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
+import { ClientServicesHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntimeImpl } from '@dxos/client-services';
+import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
 import { Config, Defaults, Dynamics, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';

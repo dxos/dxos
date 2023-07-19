@@ -27,9 +27,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -37,9 +34,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../ui/aurora"
@@ -55,18 +49,6 @@
     },
     {
       "path": "../../ui/react-appkit"
-    },
-    {
-      "path": "../client"
-    },
-    {
-      "path": "../client-services"
-    },
-    {
-      "path": "../client-services"
-    },
-    {
-      "path": "../config"
     },
     {
       "path": "../react-client"

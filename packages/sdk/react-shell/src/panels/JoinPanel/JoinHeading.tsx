@@ -7,7 +7,7 @@ import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 import { Button, useId, useTranslation } from '@dxos/aurora';
 import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
 import { Heading } from '@dxos/react-appkit';
-import { useSpace } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { InvitationEmoji } from '../../components';
 import { defaultSurface } from '../../styles';
