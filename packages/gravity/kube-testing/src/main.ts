@@ -71,8 +71,8 @@ const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
-      agents: 2,
-      swarmsPerAgent: 2,
+      agents: 4,
+      swarmsPerAgent: 5,
       duration: 120_000,
       desiredSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,

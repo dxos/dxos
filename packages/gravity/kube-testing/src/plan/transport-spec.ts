@@ -133,29 +133,36 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       await env.syncBarrier(`swarms are ready on ${testCounter}`);
       await sleep(10_000);
 
+      const forEachSwarm = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
+        await Promise.all(
+          Object.keys(env.params.agents)
+            .filter((agentId) => agentId !== env.params.agentId)
+            .map(async (agentId) => {
+              for await (const [swarmIdx, swarm] of swarms.entries()) {
+                await callback(swarmIdx, swarm, agentId);
+              }
+            }
+          ),
+        );
+      }
+
       log.info('starting streams', { agentIdx });
 
       // TODO(egorgripasov): Multiply by iterration number.
       const desiredStreems = (numOfAgents - 1) * spec.swarmsPerAgent;
       let actualStreams = 0;
 
-      await Promise.all(
-        Object.keys(env.params.agents)
-          .filter((agentId) => agentId !== env.params.agentId)
-          .map(async (agentId) => {
-            for await (const [swarmIdx, swarm] of swarms.entries()) {
-              log.info('starting stream', { agentIdx, swarmIdx });
-              try {
-                const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-                await swarm.protocol.startStream(PublicKey.from(agentId), streamTag, spec.streamLoadInterval, spec.streamLoadChunkSize);
-                actualStreams++;
-                log.info('test stream started', { agentIdx, swarmIdx });
-              } catch (error) {
-                log.info('test stream failed', { agentIdx, swarmIdx, error });
-              }
-            }
-          }),
-      );
+      await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        log.info('starting stream', { agentIdx, swarmIdx });
+        try {
+          const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
+          await swarm.protocol.startStream(PublicKey.from(agentId), streamTag, spec.streamLoadInterval, spec.streamLoadChunkSize);
+          actualStreams++;
+          log.info('test stream started', { agentIdx, swarmIdx });
+        } catch (error) {
+          log.info('test stream failed', { agentIdx, swarmIdx, error });
+        }
+      });
 
       log.info('streams started', { testCounter, agentIdx, desiredStreems, actualStreams });
       await env.syncBarrier(`streams are started at ${testCounter}`);
@@ -168,44 +175,33 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       let actualConnections = 0;
 
       // Test connections.
-      await Promise.all(
-        Object.keys(env.params.agents)
-          .filter((agentId) => agentId !== env.params.agentId)
-          .map(async (agentId) => {
-            for await (const [swarmIdx, swarm] of swarms.entries()) {
-              log.info('testing connection', { agentIdx, swarmIdx });
-              try {
-                await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
-                actualConnections++;
-                log.info('test connection succeded', { agentIdx, swarmIdx });
-              } catch (error) {
-                log.info('test connection failed', { agentIdx, swarmIdx, error });
-              }
-            }
-          }),
-      );
+      await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        log.info('testing connection', { agentIdx, swarmIdx });
+        try {
+          await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+          actualConnections++;
+          log.info('test connection succeded', { agentIdx, swarmIdx });
+        } catch (error) {
+          log.info('test connection failed', { agentIdx, swarmIdx, error });
+        }
+      });
 
       log.info('test connections done', { testCounter, agentIdx, desiredConnections, actualConnections });
       await env.syncBarrier(`connections are tested on ${testCounter}`);
 
       log.info('closing streams', { agentIdx });
-      await Promise.all(
-        Object.keys(env.params.agents)
-          .filter((agentId) => agentId !== env.params.agentId)
-          .map(async (agentId) => {
-            for await (const [swarmIdx, swarm] of swarms.entries()) {
-              log.info('closing stream', { agentIdx, swarmIdx });
-              try {
-                const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-                const stats = await swarm.protocol.closeStream(PublicKey.from(agentId), streamTag);
 
-                log.info('test stream closed', { agentIdx, swarmIdx, ...stats });
-              } catch (error) {
-                log.info('test stream closing failed', { agentIdx, swarmIdx, error });
-              }
-            }
-          }),
-      );
+      await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        log.info('closing stream', { agentIdx, swarmIdx });
+        try {
+          const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
+          const stats = await swarm.protocol.closeStream(PublicKey.from(agentId), streamTag);
+
+          log.info('test stream closed', { agentIdx, swarmIdx, ...stats });
+        } catch (error) {
+          log.info('test stream closing failed', { agentIdx, swarmIdx, error });
+        }
+      });
 
       log.info('streams closed', { testCounter, agentIdx, desiredStreems, actualStreams });
       await env.syncBarrier(`streams are closed at ${testCounter}`);
