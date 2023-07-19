@@ -12,14 +12,14 @@ import { v4 as uuid, validate as validateUuid } from 'uuid';
 import { captureException } from '@dxos/sentry';
 import { init, event } from '@dxos/telemetry';
 
-import telemetryrc from './telemetryrc.json';
+import config from './telemetryrc.json';
 
 // API keys.
-export const DX_ENVIRONMENT = telemetryrc.DX_ENVIRONMENT ?? undefined;
-export const DX_RELEASE = telemetryrc.DX_RELEASE ?? undefined;
-export const SENTRY_DESTINATION = telemetryrc.SENTRY_DESTINATION ?? undefined;
-export const TELEMETRY_API_KEY = telemetryrc.TELEMETRY_API_KEY ?? undefined;
-export const IPDATA_API_KEY = telemetryrc.IPDATA_API_KEY ?? undefined;
+export const DX_ENVIRONMENT = config.DX_ENVIRONMENT ?? undefined;
+export const DX_RELEASE = config.DX_RELEASE ?? undefined;
+export const SENTRY_DESTINATION = config.SENTRY_DESTINATION ?? undefined;
+export const TELEMETRY_API_KEY = config.TELEMETRY_API_KEY ?? undefined;
+export const IPDATA_API_KEY = config.IPDATA_API_KEY ?? undefined;
 
 // Environment variables.
 export const DX_DISABLE_TELEMETRY = process.env.DX_DISABLE_TELEMETRY ?? undefined;

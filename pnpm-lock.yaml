@@ -3004,6 +3004,7 @@ importers:
       '@dxos/websocket-rpc': workspace:*
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
+      '@oclif/plugin-not-found': ^2.3.32
       '@oclif/plugin-plugins': ^2.4.3
       '@oclif/test': ^2.3.11
       '@octokit/core': ^4.0.4
@@ -3063,6 +3064,7 @@ importers:
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/plugin-not-found': 2.3.32_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 2.4.3_d2gyhxeuxd6tnmgqdyixls47tq
       '@octokit/core': 4.1.0
       chalk: 4.1.2
@@ -11608,7 +11610,7 @@ packages:
       read-package-json-fast: 2.0.3
       readdir-scoped-modules: 1.1.0
       rimraf: 3.0.2
-      semver: 7.3.8
+      semver: 7.5.4
       ssri: 8.0.1
       treeverse: 1.0.4
       walk-up-path: 1.0.0
@@ -11621,7 +11623,7 @@ packages:
     resolution: {integrity: sha512-8KG5RD0GVP4ydEzRn/I4BNDuxDtqVbOdm8675T49OIG/NGhaK0pjPX7ZcDlvKYbA+ulvVK3ztfcF4uBdOxuJbQ==}
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.3.8
+      semver: 7.5.4
     dev: false
 
   /@npmcli/fs/2.1.2:
@@ -11629,7 +11631,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.3.8
+      semver: 7.5.4
     dev: false
 
   /@npmcli/git/2.1.0:
@@ -11641,7 +11643,7 @@ packages:
       npm-pick-manifest: 6.1.1
       promise-inflight: 1.0.1
       promise-retry: 2.0.1
-      semver: 7.3.8
+      semver: 7.5.4
       which: 2.0.2
     transitivePeerDependencies:
       - bluebird
@@ -11673,7 +11675,7 @@ packages:
       cacache: 15.3.0
       json-parse-even-better-errors: 2.3.1
       pacote: 12.0.3
-      semver: 7.3.8
+      semver: 7.5.4
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -12230,6 +12232,17 @@ packages:
       tslib: 2.5.0
     dev: false
 
+  /@oclif/color/1.0.9:
+    resolution: {integrity: sha512-ntc/fZwuf4NRfYbXVoUNFyMB9IxVx/ls/WbSLKbkD9UpsmwY1I3J4DJKKRFRpenmTuxGQW8Lyzm7X3vhzHpDQA==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      ansi-styles: 4.3.0
+      chalk: 4.1.2
+      strip-ansi: 6.0.1
+      supports-color: 8.1.1
+      tslib: 2.5.0
+    dev: false
+
   /@oclif/core/2.6.5_d2gyhxeuxd6tnmgqdyixls47tq:
     resolution: {integrity: sha512-fk2dVH3eJ3skL+gOrxowy4dlqTMH/0iBffubLncSEOTb3pXuDQspzNmP60aq5Y82XxKN0iOj/5ZqxtiMHpH1Sg==}
     engines: {node: '>=14.0.0'}
@@ -12269,6 +12282,47 @@ packages:
       - '@types/node'
       - typescript
 
+  /@oclif/core/2.9.4_d2gyhxeuxd6tnmgqdyixls47tq:
+    resolution: {integrity: sha512-eFRRpV+tJ6nMkhay2M9IppjSF3atRrgj6Qo83qUslaFSAW3NAl4mIhx1mKmTwQx5rgSrar03xICtSAWJ6gZtag==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@types/cli-progress': 3.11.0
+      ansi-escapes: 4.3.2
+      ansi-styles: 4.3.0
+      cardinal: 2.1.1
+      chalk: 4.1.2
+      clean-stack: 3.0.1
+      cli-progress: 3.12.0
+      debug: 4.3.4_supports-color@8.1.1
+      ejs: 3.1.8
+      fs-extra: 9.1.0
+      get-package-type: 0.1.0
+      globby: 11.1.0
+      hyperlinker: 1.0.0
+      indent-string: 4.0.0
+      is-wsl: 2.2.0
+      js-yaml: 3.14.1
+      natural-orderby: 2.0.3
+      object-treeify: 1.1.33
+      password-prompt: 1.1.2
+      semver: 7.5.4
+      slice-ansi: 4.0.0
+      string-width: 4.2.3
+      strip-ansi: 6.0.1
+      supports-color: 8.1.1
+      supports-hyperlinks: 2.3.0
+      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
+      tslib: 2.5.0
+      widest-line: 3.1.0
+      wordwrap: 1.0.0
+      wrap-ansi: 7.0.0
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - typescript
+    dev: false
+
   /@oclif/plugin-help/5.2.8_d2gyhxeuxd6tnmgqdyixls47tq:
     resolution: {integrity: sha512-Fl1DD6Hm7USG/BYqcUmc/hMXK6Bnd3HvkZsRG+qi0dbYaNtY9zJ58C5b3lgPn69bXJlyi1eWX4S8djSUWD8VYg==}
     engines: {node: '>=12.0.0'}
@@ -12281,14 +12335,13 @@ packages:
       - typescript
     dev: false
 
-  /@oclif/plugin-not-found/2.3.22_d2gyhxeuxd6tnmgqdyixls47tq:
-    resolution: {integrity: sha512-dZ202qQZwZFXKKGSxpKh063eGzjS1sw2CX9S/x8rhMALeU3p0GAJtLSLQx6AFXdlJTPpqw2b/KDn8OLlIMHhJA==}
+  /@oclif/plugin-not-found/2.3.32_d2gyhxeuxd6tnmgqdyixls47tq:
+    resolution: {integrity: sha512-tVFHfR9XRUWrcxBugHjFr7HUmbLheDX05IaFr7fMF2hcvcqDs3DBjy42WKEoXSaBVTcST6KKhoSy2UVX8pk9Fg==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/color': 1.0.4
-      '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/color': 1.0.9
+      '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
       fast-levenshtein: 3.0.0
-      lodash: 4.17.21
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -12323,13 +12376,13 @@ packages:
     resolution: {integrity: sha512-uuSaAssSHzUUlI/tbdlkXudz8/CQXbkMwT7Onx0wvDxEeYNJHoOICXFW1ew3mKFOe3DdW90QGMBrDLFSb63Pqw==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
       chalk: 4.1.2
       debug: 4.3.4
       fs-extra: 9.1.0
       http-call: 5.3.0
       lodash: 4.17.21
-      semver: 7.3.8
+      semver: 7.5.4
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -33058,7 +33111,7 @@ packages:
       nopt: 5.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.3.8
+      semver: 7.5.4
       tar: 6.1.11
       which: 2.0.2
     transitivePeerDependencies:
@@ -33257,7 +33310,7 @@ packages:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.11.0
-      semver: 7.3.8
+      semver: 7.5.4
       validate-npm-package-license: 3.0.4
     dev: false
 
@@ -33328,7 +33381,7 @@ packages:
     resolution: {integrity: sha512-09OmyDkNLYwqKPOnbI8exiOZU2GVVmQp7tgez2BPi5OZC8M82elDAps7sxC4l//uSUtotWqoEIDwjRvWH4qz8w==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.4
     dev: false
 
   /npm-normalize-package-bin/1.0.1:
@@ -33345,7 +33398,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       hosted-git-info: 4.1.0
-      semver: 7.3.8
+      semver: 7.5.4
       validate-npm-package-name: 3.0.0
     dev: false
 
@@ -33366,7 +33419,7 @@ packages:
       npm-install-checks: 4.0.0
       npm-normalize-package-bin: 1.0.1
       npm-package-arg: 8.1.5
-      semver: 7.3.8
+      semver: 7.5.4
     dev: false
 
   /npm-registry-fetch/12.0.2:
@@ -33699,7 +33752,7 @@ packages:
     dependencies:
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
-      '@oclif/plugin-not-found': 2.3.22_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/plugin-not-found': 2.3.32_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-warn-if-update-available': 2.0.32_d2gyhxeuxd6tnmgqdyixls47tq
       aws-sdk: 2.1233.0
       concurrently: 7.6.0
@@ -37363,6 +37416,14 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+
+  /semver/7.5.4:
+    resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dependencies:
+      lru-cache: 6.0.0
+    dev: false
 
   /send/0.17.1:
     resolution: {integrity: sha512-BsVKsiGcQMFwT8UxypobUKyv7irCNRHk1T0G680vk88yf6LBByGcZJOTJCrTP2xVN6yI+XjPJcNuE3V4fT9sAg==}
@@ -42874,7 +42935,7 @@ packages:
       pacote: 12.0.3
       preferred-pm: 3.0.3
       pretty-bytes: 5.6.0
-      semver: 7.3.8
+      semver: 7.5.4
       slash: 3.0.0
       strip-ansi: 6.0.1
       text-table: 0.2.0
@@ -42903,7 +42964,7 @@ packages:
       minimist: 1.2.8
       read-pkg-up: 7.0.1
       run-async: 2.4.1
-      semver: 7.3.8
+      semver: 7.5.4
       shelljs: 0.8.5
       sort-keys: 4.2.0
       text-table: 0.2.0
