@@ -19,7 +19,6 @@
   "dependencies": {
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "crypto-js": "^3.1.9-1",
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {

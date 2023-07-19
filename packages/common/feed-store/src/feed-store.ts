@@ -70,7 +70,7 @@ export class FeedStore<T extends {}> {
       }
     }
 
-    const core = this._factory.createFeed(feedKey, { writable, sparse });
+    const core = await this._factory.createFeed(feedKey, { writable, sparse });
     feed = new FeedWrapper<T>(core, feedKey);
     this._feeds.set(feed.key, feed);
 

@@ -1636,12 +1636,10 @@ importers:
       '@dxos/node-std': workspace:*
       '@types/crypto-js': ~4.0.2
       '@types/node': ^18.11.9
-      crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
     dependencies:
       '@dxos/keys': link:../keys
       '@dxos/node-std': link:../node-std
-      crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
       '@types/crypto-js': 4.0.2
@@ -21086,10 +21084,6 @@ packages:
       randombytes: 2.1.0
       randomfill: 1.0.4
 
-  /crypto-js/3.3.0:
-    resolution: {integrity: sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==}
-    dev: false
-
   /crypto-js/4.1.1:
     resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
     dev: true
@@ -38871,7 +38865,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.23.0
-      vite: 4.3.9_@types+node@18.11.9
+      vite: 4.3.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
