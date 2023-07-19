@@ -168,6 +168,12 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['vite'] = '^4.3.0'
       break;
     }
+
+    // Ensure zen-push is using the same version of zen-observable.
+    case 'zen-push': {
+      packageJson.dependencies['zen-observable'] = '^0.10.0'
+      break;
+    }
   }
 
   return packageJson

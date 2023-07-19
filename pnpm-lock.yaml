@@ -41030,14 +41030,10 @@ packages:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
     dev: false
 
-  /zen-observable/0.9.0:
-    resolution: {integrity: sha512-xBrvSw1htnb2VEYpgjG7etqztHSZ4KyKzJgFh/rucI7QzkbxD0rVNmIni6lia6KhWs7RBbBBLZksGKrCSaDAMQ==}
-    dev: false
-
   /zen-push/0.3.1:
     resolution: {integrity: sha512-6XNTSVz8Z/5+8BzOQFQr+HOr/j7K+ZJfc4tdCCmuiq8y2Ph+aODqagZnXKbKIFZrQ3nSIcdek9gAuEe+p3zJUg==}
     dependencies:
-      zen-observable: 0.9.0
+      zen-observable: 0.10.0
     dev: false
 
   /zip-dir/2.0.0:
