@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 import forever, { ForeverProcess } from 'forever';
-import GrowingFile from 'growing-file';
 import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -80,31 +79,35 @@ export class ForeverDaemon implements Daemon {
         outFile, // Child stdout.
         errFile, // Child stderr.
       });
-      const stream = await printFile(errFile);
 
-      // Wait for socket file to appear.
-      {
-        const { path: socketFile } = parseAddress(getUnixSocket(profile));
-        await waitForCondition(() => fs.existsSync(socketFile), DAEMON_START_TIMEOUT);
+      try {
+        // Wait for socket file to appear.
+        {
+          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT);
+          await waitForCondition(() => fs.existsSync(parseAddress(getUnixSocket(profile)).path), DAEMON_START_TIMEOUT);
+        }
+
+        // Check if agent is initialized.
+        {
+          const services = fromAgent({ profile });
+          await services.open();
+
+          const trigger = new Trigger();
+          const stream = services.services.SystemService!.queryStatus();
+          stream.subscribe(({ status }) => {
+            assert(status === SystemStatus.ACTIVE);
+            trigger.wake();
+          });
+          await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
+
+          stream.close();
+          await services.close();
+        }
+      } catch (err) {
+        const errOutput = fs.readFileSync(errFile, 'utf-8');
+        console.log(errOutput);
+        throw err;
       }
-
-      // Check if agent is running.
-      {
-        const services = fromAgent({ profile });
-        await services.open();
-
-        const trigger = new Trigger();
-        const stream = services.services.SystemService!.queryStatus();
-        stream.subscribe(({ status }) => {
-          assert(status === SystemStatus.ACTIVE);
-          trigger.wake();
-        });
-        await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
-
-        stream.close();
-        await services.close();
-      }
-      stream.destroy();
     }
 
     const proc = await this._getProcess(profile);
@@ -148,13 +151,3 @@ export class ForeverDaemon implements Daemon {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
-
-const printFile = async (filename: string) => {
-  await waitFor({ condition: async () => fs.existsSync(filename) });
-  const stream = GrowingFile.open(filename);
-  stream.on('data', (data: Buffer) => {
-    log.info(data.toString());
-  });
-
-  return stream;
-};
