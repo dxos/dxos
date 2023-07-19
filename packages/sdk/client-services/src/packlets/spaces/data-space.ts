@@ -144,6 +144,7 @@ export class DataSpace {
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
     this._state = SpaceState.CONTROL_ONLY;
+    this.stateUpdate.emit();
     this.metrics.open = new Date();
   }
 
@@ -339,6 +340,7 @@ export class DataSpace {
       throw new SystemError('Invalid operation');
     }
 
+    // de-register from data service
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
     await this._close();
     this._state = SpaceState.INACTIVE;

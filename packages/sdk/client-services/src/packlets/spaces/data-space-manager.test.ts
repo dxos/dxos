@@ -227,4 +227,10 @@ describe('DataSpaceManager', () => {
       }
     });
   });
+
+  describe('activation', () => {
+    test('can activate and deactivate a space', () => {
+      
+    })
+  })
 });
