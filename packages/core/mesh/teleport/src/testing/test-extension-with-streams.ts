@@ -45,13 +45,17 @@ export class TestExtensionWithStreams implements TeleportExtension {
       networkStream,
       bytesSent: 0,
       bytesReceived: 0,
+      sendErrors: 0,
+      receiveErrors: 0,
     };
 
     streamEntry.timer = setInterval(() => {
       const chunk = randomBytes(chunkSize);
       networkStream.write(chunk, 'binary', (err) => {
         if (!err) {
-          streamEntry.bytesSent! += chunk.length;
+          streamEntry.bytesSent += chunk.length;
+        } else {
+          streamEntry.sendErrors += 1;
         }
       });
     }, interval);
@@ -59,7 +63,11 @@ export class TestExtensionWithStreams implements TeleportExtension {
     this._streams.set(streamTag, streamEntry);
 
     networkStream.on('data', (data) => {
-      streamEntry.bytesReceived! += data.length;
+      streamEntry.bytesReceived += data.length;
+    });
+
+    networkStream.on('error', (err) => {
+      streamEntry.receiveErrors += 1;
     });
   }
 
@@ -70,7 +78,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     clearInterval(stream.timer);
 
-    const { bytesSent, bytesReceived } = stream;
+    const { bytesSent, bytesReceived, sendErrors, receiveErrors } = stream;
 
     stream.networkStream.destroy();
     this._streams.delete(streamTag);
@@ -78,6 +86,8 @@ export class TestExtensionWithStreams implements TeleportExtension {
     return {
       bytesSent,
       bytesReceived,
+      sendErrors,
+      receiveErrors,
     };
   }
 
@@ -110,12 +120,14 @@ export class TestExtensionWithStreams implements TeleportExtension {
           },
           closeTestStream: async (request) => {
             const streamTag = request.data;
-            const stats = this._closeStream(streamTag);
+            const { bytesSent, bytesReceived, sendErrors, receiveErrors } = this._closeStream(streamTag);
 
             return {
               data: streamTag,
-              bytesSent: stats.bytesSent,
-              bytesReceived: stats.bytesReceived,
+              bytesSent,
+              bytesReceived,
+              sendErrors,
+              receiveErrors,
             };
           },
         },
@@ -155,7 +167,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
   async closeStream(streamTag: string): Promise<TestStreamStats> {
     await this.open.wait({ timeout: 1500 });
-    const { data, bytesSent, bytesReceived } = await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
+    const { data, bytesSent, bytesReceived, sendErrors, receiveErrors } = await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
       data: streamTag,
     });
 
@@ -170,6 +182,8 @@ export class TestExtensionWithStreams implements TeleportExtension {
         remotePeer: {
           bytesSent,
           bytesReceived,
+          sendErrors,
+          receiveErrors,
         },
       },
     };
@@ -186,6 +200,8 @@ export class TestExtensionWithStreams implements TeleportExtension {
 type Stats = {
   bytesSent: number;
   bytesReceived: number;
+  sendErrors: number;
+  receiveErrors: number;
 };
 
 export type TestStreamStats = {
@@ -200,5 +216,7 @@ type TestStream = {
   networkStream: Duplex;
   bytesSent: number;
   bytesReceived: number;
+  sendErrors: number;
+  receiveErrors: number;
   timer?: NodeJS.Timer;
 };

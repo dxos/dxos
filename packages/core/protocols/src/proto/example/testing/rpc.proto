@@ -29,6 +29,8 @@ message TestStreamRpcResponse {
   string data = 1;
   uint32 bytesSent = 2;
   uint32 bytesReceived = 3;
+  uint32 sendErrors = 4;
+  uint32 receiveErrors = 5;
 }
 
 service TestService {
