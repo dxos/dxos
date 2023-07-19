@@ -33,6 +33,7 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const kanban = model.root;
   useSubscription(kanban.columns);
 
+  // TODO(burdon): Remove since now uses ECHO.
   const [_, setIter] = useState([]);
   useEffect(() => {
     const handle = createSubscription(() => setIter([]));

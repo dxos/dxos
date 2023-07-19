@@ -127,7 +127,7 @@ dx agent start --ws=5000 --echo=5001 --monitor
 
 ## Testing
 
-To test the Client proxy endpoint use `curl`:
+To test the ECHO REST API endpoint use `curl`:
 
 ```bash
 # Query spaces.

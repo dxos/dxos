@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { Kanban } from '@phosphor-icons/react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -24,7 +24,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
           id: 'create-kanban',
           testId: 'kanbanPlugin.createStack',
           label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
-          icon: Plus,
+          icon: Kanban,
           Type: KanbanType,
         },
       ],

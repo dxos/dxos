@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { EventSubscriptions, scheduleTask } from '@dxos/async';
+import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { raise, todo } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
@@ -28,8 +28,6 @@ import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
 
-const TIMEFRAME_UPDATE_DEBOUNCE_TIME = 500;
-
 export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
@@ -45,7 +43,7 @@ export class SpacesServiceImpl implements SpacesService {
 
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
-    return this._transformSpace(space);
+    return this._serializeSpace(space);
   }
 
   async updateSpace(request: UpdateSpaceRequest) {
@@ -54,12 +52,16 @@ export class SpacesServiceImpl implements SpacesService {
 
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
-      const onUpdate = async () => {
-        const dataSpaceManager = await this._getDataSpaceManager();
-        const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._transformSpace(space));
-        log('update', { spaces });
-        next({ spaces });
-      };
+      const scheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          const dataSpaceManager = await this._getDataSpaceManager();
+          const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
+          log('update', { spaces });
+          next({ spaces });
+        },
+        { maxFrequency: 2 },
+      );
 
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -72,31 +74,25 @@ export class SpacesServiceImpl implements SpacesService {
           subscriptions.clear();
 
           for (const space of dataSpaceManager.spaces.values()) {
-            subscriptions.add(space.stateUpdate.on(ctx, onUpdate));
-            subscriptions.add(space.presence.updated.on(ctx, onUpdate));
-            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, onUpdate));
+            subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.trigger()));
+            subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
+            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
-            space.inner.controlPipeline.state.timeframeUpdate
-              .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
-              .on(ctx, onUpdate);
+            space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger());
             if (space.dataPipeline.pipelineState) {
-              subscriptions.add(
-                space.dataPipeline.pipelineState.timeframeUpdate
-                  .debounce(TIMEFRAME_UPDATE_DEBOUNCE_TIME)
-                  .on(ctx, onUpdate),
-              );
+              subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
             }
           }
         };
 
         dataSpaceManager.updated.on(ctx, () => {
           subscribeSpaces();
-          void onUpdate();
+          scheduler.trigger();
         });
         subscribeSpaces();
 
-        void onUpdate();
+        scheduler.trigger();
       });
 
       if (!this._identityManager.identity) {
@@ -151,7 +147,7 @@ export class SpacesServiceImpl implements SpacesService {
     await space.createEpoch();
   }
 
-  private _transformSpace(space: DataSpace): Space {
+  private _serializeSpace(space: DataSpace): Space {
     return {
       spaceKey: space.key,
       state: space.state,
