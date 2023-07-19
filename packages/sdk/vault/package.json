@@ -64,7 +64,6 @@
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
-    "@types/debug": "^4.1.7",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",

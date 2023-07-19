@@ -2,13 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
-
-const log = debug('dxos:codec-protobuf:stream');
 
 type Callbacks<T> = {
   ctx: Context;

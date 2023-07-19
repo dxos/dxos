@@ -17,15 +17,14 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "compress-json": "^2.1.2",
-    "debug": "^4.3.3",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^7.2.2"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
     "@types/lodash.merge": "^4.6.6"
   },
   "publishConfig": {

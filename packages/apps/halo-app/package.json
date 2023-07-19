@@ -35,7 +35,6 @@
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@react-hook/async": "^3.1.1",
     "@sentry/react": "^7.41.0",
-    "debug": "^4.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
@@ -44,7 +43,6 @@
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
-    "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

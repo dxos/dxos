@@ -47,12 +47,10 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "crc-32": "^1.2.2",
-    "debug": "^4.3.3"
+    "crc-32": "^1.2.2"
   },
   "devDependencies": {
     "@dxos/text-model": "workspace:*",
-    "@types/debug": "^4.1.7",
     "fast-check": "~3.3.0",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",

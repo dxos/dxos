@@ -28,7 +28,6 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9"
   },
   "publishConfig": {

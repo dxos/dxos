@@ -2,15 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { TimeframeClock } from './timeframe-clock';
-
-const log = debug('dxos:echo-db:message-selector');
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.

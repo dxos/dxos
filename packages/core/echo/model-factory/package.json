@@ -39,11 +39,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "debug": "^4.3.3"
-  },
-  "devDependencies": {
-    "@types/debug": "^4.1.7"
+    "@dxos/util": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

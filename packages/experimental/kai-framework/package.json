@@ -90,7 +90,6 @@
     "@storybook/theming": "^7.0.6",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.21",
-    "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/react-syntax-highlighter": "^15.5.5",

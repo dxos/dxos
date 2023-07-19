@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.3.0",
-    "@types/faker": "^5.5.9",
     "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",

@@ -31,7 +31,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
-    "debug": "^4.3.3",
     "randombytes": "^2.1.0",
     "varint": "6.0.0"
   },

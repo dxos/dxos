@@ -42,7 +42,6 @@
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@types/faker": "^5.5.9",
     "@types/html-to-text": "^9.0.0",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",

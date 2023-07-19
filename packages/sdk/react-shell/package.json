@@ -38,7 +38,6 @@
     "@radix-ui/react-radio-group": "^1.1.2",
     "@react-hook/async": "^3.1.1",
     "@xstate/react": "^3.2.1",
-    "debug": "^4.3.3",
     "lodash.toarray": "^4.4.0",
     "qrcode.react": "^3.1.0",
     "url-join": "^5.0.0",

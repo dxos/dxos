@@ -22,11 +22,9 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "debug": "^4.3.3"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
     "earljs": "~0.1.10",
     "typescript": "^5.0.4"
   },
