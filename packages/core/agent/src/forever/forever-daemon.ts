@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import forever, { ForeverProcess } from 'forever';
 import GrowingFile from 'growing-file';
 import assert from 'node:assert';
@@ -62,7 +63,7 @@ export class ForeverDaemon implements Daemon {
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
-      const daemonLogFile = path.join(logDir, 'daemon.log');
+      const logFile = path.join(logDir, 'daemon.log');
       const outFile = path.join(logDir, 'out.log');
       const errFile = path.join(logDir, 'err.log');
 
@@ -72,15 +73,25 @@ export class ForeverDaemon implements Daemon {
       }
 
       // Run the `dx agent run` CLI command.
+      // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'start', '--foreground', `--profile=${profile}`],
         uid: profile,
-        logFile: daemonLogFile, // Forever daemon process.
+        max: 1,
+        logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.
       });
-      const stream = await printFile(errFile);
+
+      const stream = await watchFile(
+        errFile,
+        (data) => {
+          log.warn(data);
+        },
+        // TODO(burdon): Hack to filter known warnings.
+        ["Warning: Accessing non-existent property 'padLevels' of module exports inside circular dependency"],
+      );
 
       // Wait for socket file to appear.
       {
@@ -104,6 +115,7 @@ export class ForeverDaemon implements Daemon {
         stream.close();
         await services.close();
       }
+
       stream.destroy();
     }
 
@@ -149,11 +161,14 @@ export class ForeverDaemon implements Daemon {
   }
 }
 
-const printFile = async (filename: string) => {
+const watchFile = async (filename: string, cb: (message: string) => void, ignore: string[]) => {
   await waitFor({ condition: async () => fs.existsSync(filename) });
   const stream = GrowingFile.open(filename);
   stream.on('data', (data: Buffer) => {
-    log.info(data.toString());
+    const message = data.toString();
+    if (!ignore.some((pattern) => message.includes(pattern))) {
+      cb(message);
+    }
   });
 
   return stream;

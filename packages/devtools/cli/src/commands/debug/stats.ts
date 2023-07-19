@@ -49,6 +49,7 @@ export default class Stats extends BaseCommand<typeof Stats> {
           hash: rev.long(),
           commit: rev.date().toISOString(),
         },
+        config: this.clientConfig.values,
         diagnostics: data,
       };
     });
