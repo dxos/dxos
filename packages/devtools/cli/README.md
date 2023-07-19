@@ -2,18 +2,25 @@
 
 DXOS command line interface.
 
+<!-- toc -->
+* [DX CLI](#dx-cli)
+* [Development](#development)
+* [Usage](#usage)
+* [Table of contents](#table-of-contents)
+<!-- tocstop -->
+
+
 # Development
 
-Run the build script from the root directory.
+To build the CLI:
 
 ```bash
 nx run cli:build --watch=true
 ```
 
-Run the CLI in the local directory.
+Run the CLI from the local directory:
 
 ```bash
-export DX_CONFIG=./config/config.yml
 ./bin/run config --json
 ```
 
@@ -21,9 +28,16 @@ Or source the following script to set the `dx` alias from any directory in the r
 
 ```bash
 . $(git rev-parse --show-toplevel)/packages/devtools/cli/scripts/dev.sh
+
+dx config --json
 ```
 
-# Reporting errors
+## Resetting the CLI
+
+```bash
+```
+
+## Reporting errors
 
 Run the following command to create a gist of the debug stats.
 
@@ -47,7 +61,7 @@ USAGE
 ```
 <!-- usagestop -->
 
-# Commands
+## Commands
 
 <!-- commands -->
 * [`dx agent list`](#dx-agent-list)
@@ -59,10 +73,8 @@ USAGE
 * [`dx app open URL`](#dx-app-open-url)
 * [`dx app publish`](#dx-app-publish)
 * [`dx config`](#dx-config)
-* [`dx debug echo-test-data [KEY]`](#dx-debug-echo-test-data-key)
 * [`dx debug stats`](#dx-debug-stats)
 * [`dx device`](#dx-device)
-* [`dx device invite`](#dx-device-invite)
 * [`dx device list`](#dx-device-list)
 * [`dx function dev`](#dx-function-dev)
 * [`dx function dev-server`](#dx-function-dev-server)
@@ -332,35 +344,6 @@ DESCRIPTION
   Show config file.
 ```
 
-## `dx debug echo-test-data [KEY]`
-
-Pollutes selected space with test data.
-
-```
-USAGE
-  $ dx debug echo-test-data [KEY] [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout
-    <value>] [--mutations <value>] [--epochEach <value>]
-
-ARGUMENTS
-  KEY  Space key head in hex.
-
-FLAGS
-  -v, --verbose        Verbose output
-  --config=path        [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
-  --dry-run            Dry run.
-  --epochEach=<value>  [default: 100] Epoch each N mutations.
-  --mutations=<value>  [default: 10000] Number of mutations.
-  --no-agent           Auto-start agent.
-  --profile=<value>    [default: default] User profile.
-  --timeout=<value>    [default: 30] Timeout in seconds.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Pollutes selected space with test data.
-```
-
 ## `dx debug stats`
 
 Output debug stats.
@@ -408,29 +391,6 @@ GLOBAL FLAGS
 
 DESCRIPTION
   Show device info.
-```
-
-## `dx device invite`
-
-Create device invitation.
-
-```
-USAGE
-  $ dx device invite [--json] [--dry-run] [-v] [--config <value> --profile <value>] [--no-agent] [--timeout <value>]
-
-FLAGS
-  -v, --verbose      Verbose output
-  --config=path      [default: /Users/burdon/.config/dx/profile/default.yml] Config file.
-  --dry-run          Dry run.
-  --no-agent         Auto-start agent.
-  --profile=<value>  [default: default] User profile.
-  --timeout=<value>  [default: 30] Timeout in seconds.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Create device invitation.
 ```
 
 ## `dx device list`

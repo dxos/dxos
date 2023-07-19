@@ -20,7 +20,6 @@ triggers:
     # spaceKey: f1ed03
     subscription:
       type: dxos.experimental.chess.Game
-    
 
 ```
 
@@ -35,7 +34,6 @@ export default (event: any, context: FunctionContext) => {
   const identity = context.client.halo.identity.get();
   return context.status(200).succeed({ event, greeting: `Hello, ${identity?.profile?.displayName}` });
 };
-
 ```
 
 ## Running functions with dev agent
@@ -49,16 +47,10 @@ code ~/.config/dx/profile/default.yml # or specify another profile
 Expose functions port:
 
 ```yaml
-
-...
-
 runtime:
   agent:
     functions:
       port: 7001
-
-...
-
 ```
 
 2. Load dev functions:
