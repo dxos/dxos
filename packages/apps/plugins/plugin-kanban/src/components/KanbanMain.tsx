@@ -14,15 +14,12 @@ import type { KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => {
+export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [space, kanban] }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
-
-  const space = data[0];
-  const kanban = data[data.length - 1] as KanbanType;
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: kanban,
+    root: kanban, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
     createItem: (column) =>
@@ -44,7 +41,8 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data }) => 
           <Input.TextInput
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
-            defaultValue={model.root.title}
+            autoComplete='off'
+            value={model.root.title}
             onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>

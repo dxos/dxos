@@ -3,8 +3,12 @@
 //
 
 import { Flags } from '@oclif/core';
+import chalk from 'chalk';
 
-import { Client, diagnostics } from '@dxos/client';
+import { asyncTimeout } from '@dxos/async';
+import { Client, PublicKey, diagnostics } from '@dxos/client';
+import { log } from '@dxos/log';
+import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { BaseCommand } from '../../base-command';
 
@@ -22,11 +26,30 @@ export default class Stats extends BaseCommand<typeof Stats> {
     truncate: Flags.boolean({
       description: 'Truncate keys.',
     }),
+    verbose: Flags.boolean({
+      description: 'Verbose output.',
+    }),
   };
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      return diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate });
+      try {
+        const data = await asyncTimeout(
+          diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
+          5_000,
+        );
+        data.feeds = data.feeds.map((feed: SubscribeToFeedsResponse.Feed) => ({
+          ...feed,
+          downloaded: PublicKey.from(feed.downloaded).toString(),
+        }));
+
+        return data;
+      } catch (err) {
+        this.log(chalk`{red Error}: Command failed`);
+        if (this.flags.verbose) {
+          log.catch(err);
+        }
+      }
     });
   }
 }

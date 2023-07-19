@@ -259,6 +259,7 @@ export class DataPipeline {
       const propertiesItem = this.itemManager.items.find(
         (item) =>
           item.modelMeta?.type === 'dxos:model/document' &&
+          // TODO(burdon): Document?
           (getStateMachineFromItem(item)?.snapshot() as ObjectSnapshot).type === 'dxos.sdk.client.Properties',
       );
       if (propertiesItem) {

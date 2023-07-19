@@ -17,12 +17,20 @@ message SwarmInfo {
 }
 
 message ConnectionInfo {
+  message StreamStats {
+    uint32 id = 1;
+    string tag = 2;
+    uint32 bytesSent = 3;
+    uint32 bytesReceived = 4;
+  }
+
   string state = 1;
   dxos.keys.PublicKey session_id = 2;
   dxos.keys.PublicKey remote_peer_id = 3;
   optional string transport = 4;
   repeated string protocol_extensions = 5;
   repeated ConnectionEvent events = 6;
+  repeated StreamStats streams = 7;
 }
 
 message ConnectionEvent {
