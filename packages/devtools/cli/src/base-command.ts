@@ -277,8 +277,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   override async catch(err: Error) {
-    // TODO(burdon): Only if production.
-    // Sentry.captureException(err);
+    // Will only submit if API key.
+    Sentry.captureException(err);
     throw err;
   }
 
