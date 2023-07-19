@@ -7,7 +7,8 @@ import expect from 'expect';
 
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory, TestBuilder } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
+import { TestBuilder } from '@dxos/model-factory/testing';
 import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';

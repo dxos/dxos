@@ -8,7 +8,7 @@ import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { FeedWriter } from '@dxos/feed-store';
+import type { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
