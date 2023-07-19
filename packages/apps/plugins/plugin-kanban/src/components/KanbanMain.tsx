@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
-import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
+import { blockSeparator, mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
 
@@ -47,7 +47,7 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
           />
         </Input.Root>
       </div>
-      <div role='separator' className={mx(defaultBlockSeparator, 'mli-3 mbe-2 opacity-50')} />
+      <div role='separator' className={mx(blockSeparator, 'mli-3 mbe-2 opacity-50')} />
       <div className='flex grow overflow-hidden'>
         <KanbanBoard model={model} />
       </div>

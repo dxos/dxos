@@ -4,8 +4,6 @@
 
 import { ComponentFragment, Elevation } from '@dxos/aurora-types';
 
-export const minorSurfaceElevation = 'shadow';
-
 export const contentElevation: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
   elevation === 'group' ? 'shadow-sm' : elevation === 'chrome' ? 'shadow-none' : 'shadow',
 ];
