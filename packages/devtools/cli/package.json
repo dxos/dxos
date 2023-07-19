@@ -101,10 +101,14 @@
     "bin": "dx",
     "dirname": "dx",
     "commands": "./dist/src/commands",
+    "hooks": {
+      "command_not_found": "./src/hooks/command-not-found"
+    },
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
+    "helpClass": "./src/help",
     "topicSeparator": " ",
     "topics": {
       "config": {

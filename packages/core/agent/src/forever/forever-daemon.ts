@@ -110,8 +110,8 @@ export class ForeverDaemon implements Daemon {
           await services.close();
         }
       } catch (err) {
-        const errOutput = fs.readFileSync(errFile, 'utf-8');
-        console.log(errOutput);
+        const errContent = fs.readFileSync(errFile, 'utf-8');
+        log.error(errContent);
         throw err;
       }
     }
