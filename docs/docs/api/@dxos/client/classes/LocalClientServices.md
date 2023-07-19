@@ -1,12 +1,12 @@
 # Class `LocalClientServices`
-<sub>Declared in [packages/sdk/client/src/packlets/client/local-client-services.ts:12](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L12)</sub>
+<sub>Declared in [packages/sdk/client/src/packlets/client/local-client-services.ts:13](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L13)</sub>
 
 
 Starts a local instance of the service host.
 
 
 ## Constructors
-### [constructor(_params)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L15)
+### [constructor(_params)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L18)
 
 
 
@@ -18,18 +18,18 @@ Arguments:
 
 
 ## Properties
-### [descriptors](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L17)
+### [descriptors](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L20)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
-### [host](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L25)
+### [host](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L28)
 Type: <code>undefined | ClientServicesHost</code>
 
-### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L21)
+### [services](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L24)
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L35)
+### [close()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L45)
 
 
 
@@ -37,7 +37,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L29)
+### [open()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/client/local-client-services.ts#L33)
 
 
 
