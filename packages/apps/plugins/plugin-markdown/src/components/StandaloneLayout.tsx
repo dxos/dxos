@@ -7,7 +7,7 @@ import React, { PropsWithChildren, RefObject } from 'react';
 
 import { Button, DropdownMenu, ThemeContext, Main, Input, useThemeContext, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { defaultBlockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
+import { blockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { MarkdownProperties } from '../types';
@@ -59,7 +59,7 @@ export const StandaloneLayout = ({
             </ThemeContext.Provider>
           )}
         </div>
-        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
+        <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
         {children}
       </div>
       {/* <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}> */}

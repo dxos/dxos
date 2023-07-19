@@ -23,7 +23,7 @@ import {
   DropdownMenu,
   ButtonGroup,
 } from '@dxos/aurora';
-import { buttonFine, defaultBlockSeparator, defaultFocus, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { fineButtonDimensions, blockSeparator, focusRing, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
@@ -68,8 +68,8 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           </ListItem.Heading>
           <div
             className={mx(
-              buttonFine,
-              defaultFocus,
+              fineButtonDimensions,
+              focusRing,
               'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
               isOverlay && 'text-primary-600 dark:text-primary-300',
             )}
@@ -284,7 +284,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
             onChange={({ target: { value } }) => (stack.title = value)}
           />
         </Input.Root>
-        <div role='separator' className={mx(defaultBlockSeparator, 'mli-4 opacity-50')} />
+        <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <h2 className='text-sm font-normal flex items-center gap-1'>

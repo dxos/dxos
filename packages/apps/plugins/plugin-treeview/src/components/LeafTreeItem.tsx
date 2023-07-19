@@ -20,7 +20,7 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, defaultDisabled, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
+import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
 
@@ -81,11 +81,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 
   return (
     <TreeItem.Root
-      classNames={[
-        'pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded',
-        defaultFocus,
-        rearranging && 'invisible',
-      ]}
+      classNames={['pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded', focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -101,7 +97,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           'grow min-is-0 text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
           error && 'text-error-700 dark:text-error-300',
           !disabled && 'cursor-pointer',
-          disabled && defaultDisabled,
+          disabled && staticDisabled,
         )}
         {...(disabled && { 'aria-disabled': true })}
       >

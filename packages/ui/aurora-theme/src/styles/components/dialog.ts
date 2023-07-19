@@ -5,8 +5,7 @@
 import { ComponentFunction, Elevation, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { descriptionText, defaultFocus, surfaceElevation } from '../fragments';
-import { groupSurface } from '../fragments/surface';
+import { descriptionText, focusRing, surfaceElevation, groupSurface } from '../fragments';
 
 export type DialogStyleProps = {
   srOnly?: boolean;
@@ -29,7 +28,7 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     'is-[95vw] md:is-full max-is-md rounded-xl p-4',
     surfaceElevation({ elevation }),
     groupSurface,
-    defaultFocus,
+    focusRing,
     ...etc,
   );
 
@@ -39,7 +38,7 @@ export const dialogOsContent: ComponentFunction<DialogStyleProps> = (props, ...e
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx(
     'rounded shrink-0 text-xl font-system-medium text-neutral-900 dark:text-neutral-100',
-    defaultFocus,
+    focusRing,
     srOnly && 'sr-only',
     ...etc,
   );
