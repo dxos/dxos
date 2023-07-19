@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import forever, { ForeverProcess } from 'forever';
 import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
@@ -48,11 +49,14 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map(({ uid, foreverPid, running }: ForeverProcess) => ({
-      profile: uid,
-      pid: foreverPid,
-      running,
-    }));
+    return result.map(({ uid, foreverPid, running, ctime }: ForeverProcess) => {
+      return {
+        profile: uid,
+        pid: foreverPid,
+        running,
+        started: ctime,
+      };
+    });
   }
 
   async start(profile: string): Promise<ProcessInfo> {
@@ -61,7 +65,7 @@ export class ForeverDaemon implements Daemon {
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
-      const daemonLogFile = path.join(logDir, 'daemon.log');
+      const logFile = path.join(logDir, 'daemon.log');
       const outFile = path.join(logDir, 'out.log');
       const errFile = path.join(logDir, 'err.log');
 
@@ -71,11 +75,13 @@ export class ForeverDaemon implements Daemon {
       }
 
       // Run the `dx agent run` CLI command.
+      // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
         args: ['agent', 'start', '--foreground', `--profile=${profile}`],
         uid: profile,
-        logFile: daemonLogFile, // Forever daemon process.
+        max: 1,
+        logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.
       });
