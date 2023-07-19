@@ -39,7 +39,7 @@ export interface Space {
   /**
    * Current state of the space.
    * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
+   * Presence is available in `SpaceState.CONTROL_ONLY` state.
    */
   get state(): MulticastObservable<SpaceState>;
 

@@ -62,7 +62,7 @@ Type: <code>MulticastObservable&lt;[SpaceState](/api/@dxos/react-client/enums#Sp
 
 Current state of the space.
 The database is ready to be used in  `SpaceState.READY`  state.
-Presence is available in  `SpaceState.INACTIVE`  state.
+Presence is available in  `SpaceState.CONTROL_ONLY`  state.
 
 
 ## Methods

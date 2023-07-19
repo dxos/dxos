@@ -15,6 +15,7 @@ import {
   QuerySpacesResponse,
   Space,
   SpaceMember,
+  SpaceState,
   SpacesService,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
@@ -27,6 +28,7 @@ import { Provider, humanize } from '@dxos/util';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
+import { ApiError } from '@dxos/errors';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -46,8 +48,23 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace(request: UpdateSpaceRequest) {
-    todo();
+  async updateSpace({ spaceKey, state }: UpdateSpaceRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+
+   if(state) {
+    switch(state) {
+      case SpaceState.ACTIVE:
+        
+      break;
+
+      case SpaceState.INACTIVE:
+
+      break;
+      default:
+        throw new ApiError(`Invalid space state`);
+    }
+   } 
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {

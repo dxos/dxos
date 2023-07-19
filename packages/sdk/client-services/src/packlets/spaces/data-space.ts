@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { CredentialConsumer } from '@dxos/credentials';
@@ -39,6 +39,7 @@ export type DataSpaceCallbacks = {
 };
 
 export type DataSpaceParams = {
+  initialState: SpaceState;
   inner: Space;
   metadataStore: MetadataStore;
   gossip: Gossip;
@@ -96,6 +97,8 @@ export class DataSpace {
 
     this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
     this._cache = params.cache;
+
+    this._state = params.initialState;
   }
 
   get key() {
@@ -131,15 +134,25 @@ export class DataSpace {
     return this._cache;
   }
 
+  @synchronized
   async open() {
+    await this._open();
+  }
+
+  private async _open() {
     await this.notarizationPlugin.open();
     await this._notarizationPluginConsumer.open();
     await this._inner.open();
-    this._state = SpaceState.INACTIVE;
+    this._state = SpaceState.CONTROL_ONLY;
     this.metrics.open = new Date();
   }
 
+  @synchronized
   async close() {
+    await this._close();
+  }
+
+  private async _close() {
     this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
 
@@ -185,7 +198,7 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
-    if (this._state !== SpaceState.INACTIVE) {
+    if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
     this._state = SpaceState.INITIALIZING;
@@ -308,5 +321,27 @@ export class DataSpace {
         await feed.clear(0, indexBeforeEpoch + 1);
       }
     }
+  }
+
+  @synchronized
+  async activate() {
+    if (this._state !== SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+    
+    await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
+    await this._open();
+  }
+
+  @synchronized
+  async deactivate() {
+    if (this._state === SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+
+    await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
+    await this._close();
+    this._state = SpaceState.INACTIVE;
+    this.stateUpdate.emit();
   }
 }
