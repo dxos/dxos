@@ -45,7 +45,7 @@ export type DiagnosticOptions = {
 };
 
 // TODO(burdon): Move method to Monitor class.
-export const diagnostics = async (client: Client, options: DiagnosticOptions) => {
+export const diagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<ClientStats>> => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<ClientStats> = {};
 
