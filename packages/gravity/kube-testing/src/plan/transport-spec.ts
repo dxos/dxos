@@ -18,9 +18,13 @@ export type TransportTestSpec = {
   swarmsPerAgent: number;
   duration: number;
 
+  streamLoadInterval: number;
+  streamLoadChunkSize: number;
+
   desiredSwarmTimeout: number;
   fullSwarmTimeout: number;
   iterationDelay: number;
+  streamsDelay: number;
   repeatInterval: number;
 
   signalArguments: string[];
@@ -143,7 +147,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
               log.info('starting stream', { agentIdx, swarmIdx });
               try {
                 const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-                await swarm.protocol.startStream(PublicKey.from(agentId), streamTag);
+                await swarm.protocol.startStream(PublicKey.from(agentId), streamTag, spec.streamLoadInterval, spec.streamLoadChunkSize);
                 actualStreams++;
                 log.info('test stream started', { agentIdx, swarmIdx });
               } catch (error) {
@@ -155,6 +159,8 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       log.info('streams started', { testCounter, agentIdx, desiredStreems, actualStreams });
       await env.syncBarrier(`streams are started at ${testCounter}`);
+
+      await sleep(spec.streamsDelay)
 
       log.info('start testing connections', { agentIdx, testCounter });
 

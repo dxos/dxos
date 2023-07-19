@@ -49,8 +49,11 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     streamEntry.timer = setInterval(() => {
       const chunk = randomBytes(chunkSize);
-      streamEntry.bytesSent! += chunk.length;
-      networkStream.push(chunk);
+      networkStream.write(chunk, 'binary', (err) => {
+        if (!err) {
+          streamEntry.bytesSent! += chunk.length;
+        }
+      });
     }, interval);
 
     this._streams.set(streamTag, streamEntry);
@@ -97,9 +100,9 @@ export class TestExtensionWithStreams implements TeleportExtension {
       handlers: {
         TestServiceWithStreams: {
           requestTestStream: async (request) => {
-            const streamTag = request.data;
+            const { data: streamTag, streamLoadInterval, streamLoadChunkSize } = request;
 
-            this._loadStream(streamTag);
+            this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
 
             return {
               data: streamTag,
@@ -138,15 +141,15 @@ export class TestExtensionWithStreams implements TeleportExtension {
     await this._rpc?.close();
   }
 
-  async addNewStream(streamTag?: string): Promise<string> {
+  async addNewStream(streamLoadInterval: number, streamLoadChunkSize: number, streamTag?: string): Promise<string> {
     await this.open.wait({ timeout: 1500 });
     if (!streamTag) {
       streamTag = `stream-${randomBytes(4).toString('hex')}`;
     }
-    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({ data: streamTag });
+    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({ data: streamTag, streamLoadInterval, streamLoadChunkSize });
     assert(data === streamTag);
 
-    this._loadStream(streamTag);
+    this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
     return streamTag;
   }
 

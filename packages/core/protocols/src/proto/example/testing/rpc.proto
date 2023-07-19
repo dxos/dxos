@@ -19,6 +19,12 @@ message TestRpcResponse {
   string data = 1;
 }
 
+message TestStreamRpcRequest {
+  string data = 1;
+  uint32 streamLoadInterval = 2;
+  uint32 streamLoadChunkSize = 3;
+}
+
 message TestStreamRpcResponse {
   string data = 1;
   uint32 bytesSent = 2;
@@ -35,7 +41,7 @@ service TestStreamService {
 }
 
 service TestServiceWithStreams {
-  rpc RequestTestStream (TestRpcRequest) returns (TestRpcResponse);
+  rpc RequestTestStream (TestStreamRpcRequest) returns (TestRpcResponse);
   rpc CloseTestStream (TestRpcRequest) returns (TestStreamRpcResponse);
 }
 
