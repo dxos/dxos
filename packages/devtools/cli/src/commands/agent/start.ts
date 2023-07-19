@@ -4,8 +4,9 @@
 
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
+import { rmSync } from 'node:fs';
 
-import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin } from '@dxos/agent';
+import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -49,9 +50,16 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
+    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    {
+      // Clear out old socket file.
+      const { path } = parseAddress(socket);
+      rmSync(path, { force: true });
+    }
+
     const options: AgentOptions = {
       profile: this.flags.profile,
-      socket: `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`,
+      socket,
       webSocket: this.flags['web-socket'],
     };
 

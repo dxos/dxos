@@ -273,12 +273,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
     super.error(err, options as any);
-    this._failing = true;
   }
 
-  override async catch(err: Error) {
-    // Will only submit if API key.
-    Sentry.captureException(err);
+  override async catch(err: Error, options?: any) {
+    // Will only submit if API key exists (i.e., prod).
+    super.error(err, options as any);
+    this._failing = true;
     throw err;
   }
 
