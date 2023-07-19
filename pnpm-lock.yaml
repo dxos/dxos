@@ -3004,7 +3004,6 @@ importers:
       '@dxos/websocket-rpc': workspace:*
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
-      '@oclif/plugin-not-found': ^2.3.32
       '@oclif/plugin-plugins': ^2.4.3
       '@oclif/test': ^2.3.11
       '@octokit/core': ^4.0.4
@@ -3064,7 +3063,6 @@ importers:
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
-      '@oclif/plugin-not-found': 2.3.32_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 2.4.3_d2gyhxeuxd6tnmgqdyixls47tq
       '@octokit/core': 4.1.0
       chalk: 4.1.2
