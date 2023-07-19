@@ -44,6 +44,8 @@ export default class Stats extends BaseCommand<typeof Stats> {
           downloaded: PublicKey.from(feed.downloaded).toString(),
         }));
 
+        throw new Error('xxx');
+
         return {
           timestamp: new Date().toISOString(),
           cli: {
@@ -55,7 +57,7 @@ export default class Stats extends BaseCommand<typeof Stats> {
           diagnostics: data,
         };
       } catch (err) {
-        this.log(chalk`{red Error}: Command failed`);
+        this.log(chalk`{red Error}: ${String(err)}`);
         if (this.flags.verbose) {
           log.catch(err);
         }
