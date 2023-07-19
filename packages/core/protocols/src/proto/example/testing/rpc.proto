@@ -19,6 +19,12 @@ message TestRpcResponse {
   string data = 1;
 }
 
+message TestStreamRpcResponse {
+  string data = 1;
+  uint32 bytesSent = 2;
+  uint32 bytesReceived = 3;
+}
+
 service TestService {
   rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
   rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
@@ -30,6 +36,7 @@ service TestStreamService {
 
 service TestServiceWithStreams {
   rpc RequestTestStream (TestRpcRequest) returns (TestRpcResponse);
+  rpc CloseTestStream (TestRpcRequest) returns (TestStreamRpcResponse);
 }
 
 message PingRequest {

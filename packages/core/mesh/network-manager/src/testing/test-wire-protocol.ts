@@ -5,7 +5,7 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestExtension, TestExtensionWithStreams } from '@dxos/teleport';
+import { TestExtension, TestExtensionWithStreams, type TestStreamStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { createTeleportProtocolFactory } from '../wire-protocol';
@@ -58,11 +58,19 @@ export class TestWireProtocol {
     await connection.test(message);
   }
 
-  async startStream(peerId: PublicKey) {
+  async startStream(peerId: PublicKey, streamTag: string): Promise<string> {
     if (!this.streamConnections.has(peerId)) {
       throw new Error('Connection does not exist.');
     }
     const connection = this.streamConnections.get(peerId)!;
-    await connection.addNewStream();
+    return connection.addNewStream(streamTag);
+  }
+
+  async closeStream(peerId: PublicKey, streamTag: string): Promise<TestStreamStats> {
+    if (!this.streamConnections.has(peerId)) {
+      throw new Error('Connection does not exist.');
+    }
+    const connection = this.streamConnections.get(peerId)!;
+    return connection.closeStream(streamTag);
   }
 }

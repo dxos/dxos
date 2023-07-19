@@ -140,9 +140,10 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           .filter((agentId) => agentId !== env.params.agentId)
           .map(async (agentId) => {
             for await (const [swarmIdx, swarm] of swarms.entries()) {
-              log.info('testing connection', { agentIdx, swarmIdx });
+              log.info('starting stream', { agentIdx, swarmIdx });
               try {
-                await swarm.protocol.startStream(PublicKey.from(agentId));
+                const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
+                await swarm.protocol.startStream(PublicKey.from(agentId), streamTag);
                 actualStreams++;
                 log.info('test stream started', { agentIdx, swarmIdx });
               } catch (error) {
@@ -180,6 +181,28 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       log.info('test connections done', { testCounter, agentIdx, desiredConnections, actualConnections });
       await env.syncBarrier(`connections are tested on ${testCounter}`);
+
+      log.info('closing streams', { agentIdx });
+      await Promise.all(
+        Object.keys(env.params.agents)
+          .filter((agentId) => agentId !== env.params.agentId)
+          .map(async (agentId) => {
+            for await (const [swarmIdx, swarm] of swarms.entries()) {
+              log.info('closing stream', { agentIdx, swarmIdx });
+              try {
+                const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
+                const stats = await swarm.protocol.closeStream(PublicKey.from(agentId), streamTag);
+
+                log.info('test stream closed', { agentIdx, swarmIdx, ...stats });
+              } catch (error) {
+                log.info('test stream closing failed', { agentIdx, swarmIdx, error });
+              }
+            }
+          }),
+      );
+
+      log.info('streams closed', { testCounter, agentIdx, desiredStreems, actualStreams });
+      await env.syncBarrier(`streams are closed at ${testCounter}`);
 
       log.info('closing swarms');
       await Promise.all(

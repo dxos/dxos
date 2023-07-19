@@ -6,8 +6,7 @@ import assert from 'node:assert';
 import { randomBytes } from 'node:crypto';
 import { Duplex } from 'node:stream';
 
-import { Trigger, synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
+import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
@@ -35,33 +34,50 @@ export class TestExtensionWithStreams implements TeleportExtension {
     return this.extensionContext?.remotePeerId;
   }
 
-  @synchronized
-  private _loadStream(streamTag: string) {
+  private _loadStream(streamTag: string, interval: number = 5, chunkSize: number = 2048) {
     assert(!this._streams.has(streamTag), `Stream ${streamTag} already exists.`);
 
     const networkStream = this.extensionContext!.createStream(streamTag, {
       contentType: 'application/x-test-stream',
     });
 
+    const streamEntry: TestStream = {
+      networkStream,
+      bytesSent: 0,
+      bytesReceived: 0,
+    }
+
+    streamEntry.timer = setInterval(() => {
+      const chunk = randomBytes(chunkSize);
+      streamEntry.bytesSent! += chunk.length;
+      networkStream.push(chunk);
+    }, interval);
+
+    this._streams.set(streamTag, streamEntry);
+
     networkStream.on('data', (data) => {
-      log('test stream data', { streamTag, length: data.length });
+      streamEntry.bytesReceived! += data.length;
     });
-
-    networkStream.on('end', () => {
-      log('test stream end', { streamTag });
-    });
-
-    networkStream.on('close', () => {
-      log('test stream close', { streamTag });
-    });
-
-    const interval = setInterval(() => {
-      log('test stream write', { streamTag })
-      networkStream.push(randomBytes(1024));
-    }, 10);
-
-    this._streams.set(streamTag, { networkStream, interval });
   }
+
+  private _closeStream(streamTag: string): Stats {
+    assert(this._streams.has(streamTag), `Stream ${streamTag} does not exist.`);
+
+    const stream = this._streams.get(streamTag)!;
+
+    clearInterval(stream.timer);
+
+    const { bytesSent, bytesReceived } = stream;
+
+    stream.networkStream.destroy();
+    this._streams.delete(streamTag);
+
+    return {
+      bytesSent,
+      bytesReceived,
+    };
+  }
+
 
   async onOpen(context: ExtensionContext) {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
@@ -90,6 +106,16 @@ export class TestExtensionWithStreams implements TeleportExtension {
               data: streamTag,
             };
           },
+          closeTestStream: async (request) => {
+            const streamTag = request.data;
+            const stats = this._closeStream(streamTag);
+
+            return {
+              data: streamTag,
+              bytesSent: stats.bytesSent,
+              bytesReceived: stats.bytesReceived,
+            }
+          }
         },
       },
       timeout: 2000,
@@ -113,13 +139,36 @@ export class TestExtensionWithStreams implements TeleportExtension {
     await this._rpc?.close();
   }
 
-  async addNewStream() {
+  async addNewStream(streamTag?: string): Promise<string> {
     await this.open.wait({ timeout: 1500 });
-    const streamTag = `stream-${PublicKey.random().toHex()}`;
+    if (!streamTag) {
+      streamTag = `stream-${randomBytes(4).toString('hex')}`;
+    }
     const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({ data: streamTag });
     assert(data === streamTag);
 
     this._loadStream(streamTag);
+    return streamTag;
+  }
+
+  async closeStream(streamTag: string): Promise<TestStreamStats> {
+    await this.open.wait({ timeout: 1500 });
+    const { data, bytesSent, bytesReceived } = await this._rpc.rpc.TestServiceWithStreams.closeTestStream({ data: streamTag });
+
+    assert(data === streamTag);
+
+    const localPeer = this._closeStream(streamTag)
+
+    return {
+      streamTag,
+      stats: {
+        localPeer,
+        remotePeer: {
+          bytesSent,
+          bytesReceived,
+        }
+      }
+    }
   }
 
   /**
@@ -130,7 +179,22 @@ export class TestExtensionWithStreams implements TeleportExtension {
   }
 }
 
+type Stats = {
+  bytesSent: number;
+  bytesReceived: number;
+};
+
+export type TestStreamStats = {
+  streamTag: string;
+  stats: {
+    localPeer: Stats;
+    remotePeer: Stats;
+  }
+};
+
 type TestStream = {
   networkStream: Duplex;
-  interval: NodeJS.Timer;
+  bytesSent: number;
+  bytesReceived: number;
+  timer?: NodeJS.Timer;
 };
