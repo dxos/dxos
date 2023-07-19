@@ -64,6 +64,7 @@
     "do-wrapper": "^4.5.1",
     "fs-extra": "^8.1.0",
     "get-folder-size": "^2.0.1",
+    "git-rev-sync": "^3.0.2",
     "inquirer": "^8.2.0",
     "ipfs-http-client": "~56.0.1",
     "isomorphic-ws": "^4.0.1",

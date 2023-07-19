@@ -4,6 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
+import rev from 'git-rev-sync';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey, diagnostics } from '@dxos/client';
@@ -43,7 +44,16 @@ export default class Stats extends BaseCommand<typeof Stats> {
           downloaded: PublicKey.from(feed.downloaded).toString(),
         }));
 
-        return data;
+        return {
+          timestamp: new Date().toISOString(),
+          cli: {
+            version: this.config.version,
+            branch: rev.branch(),
+            hash: rev.long(),
+            commit: rev.date().toISOString(),
+          },
+          diagnostics: data,
+        };
       } catch (err) {
         this.log(chalk`{red Error}: Command failed`);
         if (this.flags.verbose) {
