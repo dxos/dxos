@@ -24,6 +24,19 @@ lockfileWarning();
 
 function readPackage(packageJson, context) {
   switch (packageJson.name) {
+    // Align on single version of buffer polyfill.
+    case '@sammacbeth/random-access-idb-mutable-file':
+    case 'abstract-leveldown':
+    case 'bl':
+    case 'crc':
+    case 'level-codec':
+    case 'level-js':
+    case 'random-access-idb-mutable-file':
+    case 'unbzip2-stream': {
+      packageJson.dependencies['buffer'] = '^6.0.3'
+      break;
+    }
+
     // Package has an unneccessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0'
