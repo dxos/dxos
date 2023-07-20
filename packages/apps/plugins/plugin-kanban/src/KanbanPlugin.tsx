@@ -6,30 +6,45 @@ import { IconProps, Kanban, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy, subscribe } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
-import { defaultMap } from '@dxos/util';
 
 import { KanbanMain } from './components';
 import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
 import translations from './translations';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const queries = new Map<string, Query<KanbanType>>();
-  const subscriptions = new Map<string, UnsubscribeCallback>();
+  const objectToGraphNode = (parent: GraphNode, object: KanbanType): GraphNode => ({
+    id: object.id,
+    index: 'a1', // TODO(burdon): Index.
+    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+    icon: (props: IconProps) => <Kanban {...props} />,
+    data: object,
+    parent,
+    pluginActions: {
+      [KANBAN_PLUGIN]: [
+        {
+          id: 'delete', // TODO(burdon): Namespace.
+          index: 'a1',
+          label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
+          icon: (props: IconProps) => <Kanban {...props} />,
+          invoke: async () => parent.data?.db.remove(object),
+        },
+      ],
+    },
+  });
+
+  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
 
   return {
     meta: {
-      // TODO(burdon): Make id consistent with other plugins.
       id: KANBAN_PLUGIN,
     },
     unload: async () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      subscriptions.clear();
-      queries.clear();
+      adapter.clear();
     },
     provides: {
       translations,
@@ -40,53 +55,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           }
 
           const space = parent.data;
-
-          // TODO(burdon): Factor out.
-          const kanbanToGraphNode = (object: KanbanType): GraphNode => ({
-            id: object.id,
-            index: 'a1', // TODO(burdon): Index.
-            label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
-            icon: (props: IconProps) => <Kanban {...props} />,
-            data: object,
-            parent,
-            pluginActions: {
-              [KANBAN_PLUGIN]: [
-                {
-                  id: 'delete', // TODO(burdon): Namespace.
-                  index: 'a1',
-                  label: ['delete stack label', { ns: KANBAN_PLUGIN }],
-                  icon: (props: IconProps) => <Kanban {...props} />,
-                  invoke: async () => parent.data?.db.remove(object),
-                },
-              ],
-            },
-          });
-
-          // Subscribe to query.
-          // TODO(burdon): Factor out.
-          const query = defaultMap(queries, parent.id, () => {
-            const query = space.db.query(KanbanType.filter());
-            subscriptions.set(
-              parent.id,
-              query.subscribe(() => emit()),
-            );
-            return query;
-          });
-
-          // Subscribe to all objects.
-          return query.objects.map((object) => {
-            defaultMap(subscriptions, object.id, () =>
-              object[subscribe](() => {
-                if (object.__deleted) {
-                  subscriptions.delete(object.id);
-                } else {
-                  emit(kanbanToGraphNode(object));
-                }
-              }),
-            );
-
-            return kanbanToGraphNode(object);
-          });
+          return adapter.createNodes(space, parent, emit);
         },
         actions: (parent, _, plugins) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -97,7 +66,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           const space = parent.data;
           return [
             {
-              id: 'create-kanban', // TODO(burdon): Namespace?
+              id: `${KANBAN_PLUGIN}/create-kanban`, // TODO(burdon): Namespace?
               index: 'a1', // TODO(burdon): ???
               testId: 'kanbanPlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create kanban label', { ns: KANBAN_PLUGIN }],

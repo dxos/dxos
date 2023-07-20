@@ -57,6 +57,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -67,6 +70,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }

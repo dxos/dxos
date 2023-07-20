@@ -99,6 +99,6 @@ message Thread {
     repeated Message messages = 2;
   }
 
-  string name = 1;
+  string title = 1;
   repeated Block blocks = 2;
 }

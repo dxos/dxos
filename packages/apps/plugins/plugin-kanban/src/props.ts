@@ -4,7 +4,7 @@
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import type { Kanban as KanbanType } from '@braneframe/types';
+import { Kanban as KanbanType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
 /**
@@ -16,6 +16,7 @@ import { isTypedObject } from '@dxos/client';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
+// TODO(burdon): Make id consistent with other plugins.
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
 export type KanbanPluginProvides = GraphProvides & TranslationsProvides;

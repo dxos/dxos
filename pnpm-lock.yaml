@@ -784,9 +784,11 @@ importers:
 
   packages/apps/plugins/plugin-drawing:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -809,6 +811,8 @@ importers:
       vite: ^4.3.9
       yjs: ^13.5.44
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
@@ -819,9 +823,9 @@ importers:
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44
     devDependencies:
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -904,6 +908,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -916,9 +922,7 @@ importers:
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
     devDependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
@@ -996,12 +1000,14 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
@@ -1017,11 +1023,13 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
       '@preact/signals-core': 1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
@@ -1157,10 +1165,12 @@ importers:
   packages/apps/plugins/plugin-thread:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -1183,6 +1193,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
@@ -1195,9 +1207,9 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme

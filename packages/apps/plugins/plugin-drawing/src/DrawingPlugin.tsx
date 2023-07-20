@@ -2,47 +2,100 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { FrameCorners } from '@phosphor-icons/react';
+import { FrameCorners, IconProps, Plus } from '@phosphor-icons/react';
+import React from 'react';
 
-// import { Drawing as DrawingType } from '@braneframe/types';
-import { PluginDefinition } from '@dxos/react-surface';
+import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
+import { Drawing as DrawingType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DrawingMain } from './components';
-import { isDrawing, DrawingPluginProvides } from './props';
+import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides } from './props';
 import translations from './translations';
 
-export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => ({
-  meta: {
-    id: 'dxos.org/plugin/drawing',
-  },
-  provides: {
-    translations,
-    // todo(thure): Turn into graph things
-    // space: {
-    //   types: [
-    //     {
-    //       id: 'create-drawing',
-    //       testId: 'drawingPlugin.createStack',
-    //       label: ['create drawing label', { ns: 'dxos.org/plugin/drawing' }],
-    //       icon: FrameCorners,
-    //       Type: DrawingType,
-    //     },
-    //   ],
-    // },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isDrawing(datum[datum.length - 1])) {
-            return DrawingMain;
-          } else {
-            return null;
+export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
+  const objectToGraphNode = (parent: GraphNode, object: DrawingType): GraphNode => ({
+    id: object.id,
+    index: 'a1', // TODO(burdon): Index.
+    label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],
+    icon: (props: IconProps) => <FrameCorners {...props} />,
+    data: object,
+    parent,
+    pluginActions: {
+      [DRAWING_PLUGIN]: [
+        {
+          id: 'delete', // TODO(burdon): Namespace.
+          index: 'a1',
+          label: ['delete drawing label', { ns: DRAWING_PLUGIN }],
+          icon: (props: IconProps) => <FrameCorners {...props} />,
+          invoke: async () => parent.data?.db.remove(object),
+        },
+      ],
+    },
+  });
+
+  const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
+
+  return {
+    meta: {
+      id: DRAWING_PLUGIN,
+    },
+    unload: async () => {
+      adapter.clear();
+    },
+    provides: {
+      translations,
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
-          return null;
-      }
+
+          const space = parent.data;
+          return adapter.createNodes(space, parent, emit);
+        },
+        actions: (parent, _, plugins) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const space = parent.data;
+          return [
+            {
+              id: `${DRAWING_PLUGIN}/create-drawing`, // TODO(burdon): Namespace?
+              index: 'a1', // TODO(burdon): ???
+              testId: 'drawingPlugin.createDrawing', // TODO(burdon): Namespace?
+              label: ['create drawing label', { ns: DRAWING_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              invoke: async () => {
+                const object = space.db.add(new DrawingType());
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
+                }
+              },
+            },
+          ];
+        },
+      },
+      component: (datum, role) => {
+        switch (role) {
+          case 'main':
+            if (Array.isArray(datum) && isDrawing(datum[datum.length - 1])) {
+              return DrawingMain;
+            } else {
+              return null;
+            }
+          default:
+            return null;
+        }
+      },
+      components: {
+        DrawingMain,
+      },
     },
-    components: {
-      DrawingMain,
-    },
-  },
-});
+  };
+};

@@ -6,7 +6,7 @@ import { Context, createContext } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import type { Debug as DebugType } from '@braneframe/types';
+import { Debug as DebugType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
 export type DebugContextType = {

@@ -2,73 +2,82 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { Hammer } from '@phosphor-icons/react';
+import { Hammer, IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { SpaceProxy } from '@dxos/client';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain } from './components';
-import { isDebug, DebugContext, DebugPluginProvides } from './props';
+import { DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
-export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => ({
-  meta: {
-    id: 'dxos.org/plugin/debug',
-  },
-  provides: {
-    translations,
-    context: ({ children }) => {
-      const [running, setRunning] = useState<NodeJS.Timeout>();
-      return (
-        <DebugContext.Provider
-          value={{
-            running: !!running,
-            start: (cb: () => void, interval: number) => {
-              clearInterval(running);
-              setRunning(setInterval(cb, interval));
-            },
-            stop: () => {
-              clearInterval(running);
-              setRunning(undefined);
-            },
-          }}
-        >
-          {children}
-        </DebugContext.Provider>
-      );
+export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
+  const nodeIds = new Set<string>();
+
+  return {
+    meta: {
+      id: 'dxos.org/plugin/debug',
     },
-    graph: {
-      nodes: (parent, emit) => {},
-      actions: (parent, _, plugins) => {},
-    },
-    // TODO(wittjosiah): Migrate to graph plugin.
-    // space: {
-    //   // TODO(burdon): Extend graph to allow creation of node without creating echo object.
-    //   types: [
-    //     {
-    //       // TODO(burdon): Callback to set default title, initial properties.
-    //       id: 'create-Debug',
-    //       testId: 'DebugPlugin.createDebug',
-    //       label: ['create debug label', { ns: 'dxos.org/plugin/debug' }],
-    //       icon: Hammer,
-    //       Type: DebugType,
-    //     },
-    //   ],
-    // },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isDebug(datum[datum.length - 1])) {
-            return DebugMain;
-          } else {
-            return null;
+    provides: {
+      translations,
+      context: ({ children }) => {
+        const [running, setRunning] = useState<NodeJS.Timeout>();
+        return (
+          <DebugContext.Provider
+            value={{
+              running: !!running,
+              start: (cb: () => void, interval: number) => {
+                clearInterval(running);
+                setRunning(setInterval(cb, interval));
+              },
+              stop: () => {
+                clearInterval(running);
+                setRunning(undefined);
+              },
+            }}
+          >
+            {children}
+          </DebugContext.Provider>
+        );
+      },
+      graph: {
+        nodes: (parent) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
-          return null;
-      }
+
+          const nodeId = 'debug';
+          nodeIds.add(nodeId);
+
+          return [
+            {
+              id: nodeId,
+              index: 'a1',
+              label: 'Debug',
+              icon: (props: IconProps) => <Hammer {...props} />,
+              data: { id: nodeId },
+              parent,
+            },
+          ];
+        },
+      },
+      component: (datum, role) => {
+        const [_, data] = datum as any;
+        switch (role) {
+          case 'main':
+            if (nodeIds.has(data.id)) {
+              return DebugMain;
+            } else {
+              return null;
+            }
+          default:
+            return null;
+        }
+      },
+      components: {
+        DebugMain,
+      },
     },
-    components: {
-      DebugMain,
-    },
-  },
-});
+  };
+};
