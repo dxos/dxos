@@ -1,49 +1,61 @@
+use std::collections::HashMap;
+
 use swc_core::{
     common::{sync::Lrc, SourceMapper, Spanned, DUMMY_SP},
     ecma::{
         ast::{
             ArrayLit, ArrowExpr, BindingIdent, CallExpr, Callee, Expr, ExprOrSpread, Id, Ident,
             ImportDecl, ImportSpecifier, KeyValueProp, Lit, MemberProp, ModuleExportName, Number,
-            ObjectLit, Param, Pat, Program, Prop, PropName, PropOrSpread, Str, ThisExpr,
+            ObjectLit, Param, Pat, Program, Prop, PropName, PropOrSpread, Str, ThisExpr, UnaryExpr,
+            UnaryOp,
         },
         atoms::JsWord,
         transforms::testing::{test, Tester},
         visit::{as_folder, Fold, FoldWith, VisitMut, VisitMutWith},
     },
-    plugin::{metadata::TransformPluginProgramMetadata, plugin_transform}, 
+    plugin::{metadata::TransformPluginProgramMetadata, plugin_transform},
 };
 
 pub struct TransformVisitor {
+    pub config: Config,
     pub metadata: TransformPluginProgramMetadata,
     // pub source_map: Lrc<dyn SourceMapper>,
-    pub log_ids: Vec<Id>,
+    pub to_transform: HashMap<Id, TransformedSymbol>,
 }
 
-const LOG_FUNCTION_NAME: &str = "log";
-const LOG_PACKAGE_NAME: &str = "@dxos/log";
+pub struct Config {
+    symbols: Vec<TransformedSymbol>,
+}
+
+#[derive(Clone, Debug)]
+pub struct TransformedSymbol {
+    pub function: String,
+    pub package: String,
+    pub param_index: usize,
+    pub include_args: bool,
+    pub include_call_site: bool,
+}
 
 impl TransformVisitor {
-    fn is_log_ident(&self, ident: &Ident) -> bool {
-        self.log_ids.contains(&ident.to_id())
+    fn get_config_for_id(&self, ident: &Ident) -> Option<&TransformedSymbol> {
+        self.to_transform.get(&ident.to_id())
     }
 
-    fn is_log_callee(&self, callee: &Callee) -> bool {
-        let id_log: JsWord = LOG_FUNCTION_NAME.into();
-
+    fn get_config_for_call(&self, callee: &Callee) -> Option<&TransformedSymbol> {
         match callee {
             Callee::Expr(expr) => match &**expr {
-                Expr::Ident(ident) => self.is_log_ident(ident),
+                Expr::Ident(ident) => self.get_config_for_id(ident),
                 Expr::Member(member) => match (&*member.obj, &member.prop) {
-                    (Expr::Ident(obj), MemberProp::Ident(_prop)) => self.is_log_ident(obj),
-                    _ => false,
+                    (Expr::Ident(obj), MemberProp::Ident(_prop)) => self.get_config_for_id(obj),
+                    _ => None,
                 },
-                _ => false,
+                _ => None,
             },
-            _ => false,
+            _ => None,
         }
     }
 
-    fn create_log_meta(&self, n: &CallExpr) -> ExprOrSpread {
+    fn create_meta(&self, config: &TransformedSymbol, n: &CallExpr) -> ExprOrSpread {
         let filename = self.metadata.source_map.span_to_filename(n.span);
         let span_lines = self.metadata.source_map.span_to_lines(n.span);
         let line = match span_lines {
@@ -51,58 +63,67 @@ impl TransformVisitor {
             Err(_) => 0,
         };
 
-        let arg_snippets = n.args.iter().map(|a| {
-            self.metadata.source_map.span_to_snippet(a.span()).unwrap_or("".into())
-        });
+        let mut props = vec![];
+
+        props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+            key: PropName::Ident(Ident::new("file".into(), DUMMY_SP)),
+            value: Box::new(Expr::Lit(Lit::Str(Str {
+                span: DUMMY_SP,
+                value: format!("{filename}").into(),
+                raw: None,
+            }))),
+        }))));
+        props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+            key: PropName::Ident(Ident::new("line".into(), DUMMY_SP)),
+            value: Box::new(Expr::Lit(Lit::Num(Number {
+                span: DUMMY_SP,
+                value: line as f64,
+                raw: None,
+            }))),
+        }))));
+        props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+            key: PropName::Ident(Ident::new("scope".into(), DUMMY_SP)),
+            value: Box::new(Expr::This(ThisExpr { span: DUMMY_SP })),
+        }))));
+        if config.include_call_site {
+            props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                key: PropName::Ident(Ident::new("callSite".into(), DUMMY_SP)),
+                value: Box::new(Expr::Arrow(create_call_site_arrow())),
+            }))));
+        }
+        if config.include_args {
+            let arg_snippets = n.args.iter().map(|a| {
+                self.metadata
+                    .source_map
+                    .span_to_snippet(a.span())
+                    .unwrap_or("".into())
+            });
+
+            props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                key: PropName::Ident(Ident::new("args".into(), DUMMY_SP)),
+                value: Box::new(Expr::Array(ArrayLit {
+                    span: DUMMY_SP,
+                    elems: arg_snippets
+                        .map(|snippet| {
+                            Some(ExprOrSpread {
+                                spread: None,
+                                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                                    span: DUMMY_SP,
+                                    value: snippet.into(),
+                                    raw: None,
+                                }))),
+                            })
+                        })
+                        .collect(),
+                })),
+            }))));
+        }
 
         ExprOrSpread {
             spread: None,
             expr: Box::new(Expr::Object(ObjectLit {
                 span: DUMMY_SP,
-                props: vec![
-                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("file".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Lit(Lit::Str(Str {
-                            span: DUMMY_SP,
-                            value: format!("{filename}").into(),
-                            raw: None,
-                        }))),
-                    }))),
-                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("line".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Lit(Lit::Num(Number {
-                            span: DUMMY_SP,
-                            value: line as f64,
-                            raw: None,
-                        }))),
-                    }))),
-                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("scope".into(), DUMMY_SP)),
-                        value: Box::new(Expr::This(ThisExpr { span: DUMMY_SP })),
-                    }))),
-                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("callSite".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Arrow(create_call_site_arrow())),
-                    }))),
-                    PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("args".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Array(ArrayLit {
-                            span: DUMMY_SP,
-                            elems: arg_snippets
-                                .map(|snippet| {
-                                    Some(ExprOrSpread {
-                                        spread: None,
-                                        expr: Box::new(Expr::Lit(Lit::Str(Str {
-                                            span: DUMMY_SP,
-                                            value: snippet.into(),
-                                            raw: None,
-                                        }))),
-                                    })
-                                })
-                                .collect(),
-                        })),
-                    }))),
-                ],
+                props,
             })),
         }
     }
@@ -115,10 +136,15 @@ impl VisitMut for TransformVisitor {
 
     // Visit every import to mark proper `log` identifiers.
     fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
-        let log_package_name: JsWord = LOG_PACKAGE_NAME.into();
-        let log_function_name: JsWord = LOG_FUNCTION_NAME.into();
+        let package_name = format!("{}", &n.src.value);
+        let symbols_from_package: Vec<_> = self
+            .config
+            .symbols
+            .iter()
+            .filter(|s| s.package == package_name)
+            .collect();
 
-        if n.src.value == log_package_name {
+        if symbols_from_package.len() > 0 {
             for specifier in &mut n.specifiers {
                 match specifier {
                     ImportSpecifier::Named(named) => {
@@ -131,8 +157,14 @@ impl VisitMut for TransformVisitor {
                             &named.local
                         };
 
-                        if imported_name.sym == log_function_name {
-                            self.log_ids.push(named.local.to_id());
+                        let imported_symbol = format!("{}", &imported_name.sym);
+                        let transformed_symbol = symbols_from_package
+                            .iter()
+                            .find(|s| s.function == imported_symbol);
+
+                        if let Some(transformed_symbol) = transformed_symbol {
+                            self.to_transform
+                                .insert(named.local.to_id(), (**transformed_symbol).clone());
                         }
                     }
                     _ => {}
@@ -144,24 +176,29 @@ impl VisitMut for TransformVisitor {
     fn visit_mut_call_expr(&mut self, n: &mut CallExpr) {
         n.visit_mut_children_with(self);
 
-        if !self.is_log_callee(&n.callee) {
-            return;
-        }
+        let transform_config = match self.get_config_for_call(&n.callee) {
+            Some(transform_config) => transform_config,
+            None => return,
+        };
 
-        if n.args.len() <= 1 {
-            // Push `context` argument.
+        while n.args.len() < transform_config.param_index {
             n.args.push(ExprOrSpread {
                 spread: None,
-                expr: Box::new(Expr::Object(ObjectLit {
+                expr: Box::new(Expr::Unary(UnaryExpr {
+                    op: UnaryOp::Void,
                     span: DUMMY_SP,
-                    props: vec![],
+                    arg: Box::new(Expr::Lit(Lit::Num(Number {
+                        span: DUMMY_SP,
+                        value: 0.0,
+                        raw: None,
+                    }))),
                 })),
             });
         }
 
-        if n.args.len() <= 2 {
+        if n.args.len() <= transform_config.param_index {
             // Push `meta` argument.
-            n.args.push(self.create_log_meta(n));
+            n.args.push(self.create_meta(transform_config, n));
         }
     }
 }
@@ -216,10 +253,30 @@ fn create_call_site_arrow() -> ArrowExpr {
 /// Refer swc_plugin_macro to see how does it work internally.
 #[plugin_transform]
 pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
+    let config = Config {
+        symbols: vec![
+            TransformedSymbol {
+                function: "log".into(),
+                package: "@dxos/log".into(),
+                param_index: 2,
+                include_args: false,
+                include_call_site: true,
+            },
+            TransformedSymbol {
+                function: "invariant".into(),
+                package: "@dxos/log".into(),
+                param_index: 2,
+                include_args: true,
+                include_call_site: false,
+            },
+        ],
+    };
+
     program.fold_with(&mut as_folder(TransformVisitor {
+        config,
         metadata,
         // source_map: Lrc::new(metadata.source_map),
-        log_ids: vec![],
+        to_transform: HashMap::new(),
     }))
 }
 

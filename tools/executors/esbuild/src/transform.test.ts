@@ -1,4 +1,3 @@
-import { test } from '@dxos/test';
 import { transform } from '@swc/core';
 
 const wasmModule = require.resolve('@dxos/swc-log-plugin');
@@ -21,7 +20,8 @@ const runTransform = async (source: string) => {
   });
 }
 
-test('transform one', async () => {
+// @ts-ignore-next-line
+it('transform one', async () => {
   const source = `
     import { log } from '@dxos/log';
 
