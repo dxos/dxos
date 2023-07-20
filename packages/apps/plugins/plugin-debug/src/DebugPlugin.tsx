@@ -63,10 +63,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         },
       },
       component: (datum, role) => {
-        const [_, data] = datum as any;
         switch (role) {
           case 'main':
-            if (nodeIds.has(data.id)) {
+            if (Array.isArray(datum) && nodeIds.has(datum[datum.length - 1].id)) {
               return DebugMain;
             } else {
               return null;
