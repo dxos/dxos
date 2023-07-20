@@ -2,14 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { exec } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import path from 'node:path';
+import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
+import pkgUp from 'pkg-up';
 
-import { exec } from './exec';
+import { asyncTimeout } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
+
+export const BIN_PATH = join(dirname(pkgUp.sync({ cwd: __dirname }) ?? failUndefined()), 'bin', 'run');
 
 export const runCommand = async (command: string, cwd: string) => {
-  const bin = path.join(__dirname, '../../bin/run');
   mkdirSync(cwd, { recursive: true });
-
-  return await exec(`${bin} ${command}`, { cwd, shell: false });
+  const { stdout, stderr } = await asyncTimeout(promisify(exec)(`${BIN_PATH} ${command}`, { cwd: __dirname }), 10_000);
+  if (stderr) {
+    throw new Error(stderr);
+  }
+  return stdout;
 };
