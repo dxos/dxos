@@ -36,10 +36,6 @@ export default class Stats extends BaseCommand<typeof Stats> {
         diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
         5_000,
       );
-      data.feeds = data.feeds.map((feed: SubscribeToFeedsResponse.Feed) => ({
-        ...feed,
-        downloaded: PublicKey.from(feed.downloaded).toString(),
-      }));
 
       return {
         timestamp: new Date().toISOString(),
@@ -49,7 +45,15 @@ export default class Stats extends BaseCommand<typeof Stats> {
           hash: rev.long(),
           commit: rev.date().toISOString(),
         },
-        diagnostics: data,
+        diagnostics: {
+          ...data,
+
+          // Convert to string.
+          feeds: data.feeds?.map((feed: SubscribeToFeedsResponse.Feed) => ({
+            ...feed,
+            downloaded: PublicKey.from(feed.downloaded).toString(),
+          })),
+        },
       };
     });
   }
