@@ -12,11 +12,15 @@ import { KeyPair } from '@dxos/keys';
 
 /**
  * Generate bip39 seed phrase (aka mnemonic).
+ *
+ * @deprecated
  */
 export const generateSeedPhrase = (): string => generateMnemonic();
 
 /**
  * Generate key pair from seed phrase.
+ *
+ * @deprecated
  */
 // TODO(dmaretskyi): Use web-crypto.
 export const keyPairFromSeedPhrase = (seedPhrase: string): KeyPair => {
