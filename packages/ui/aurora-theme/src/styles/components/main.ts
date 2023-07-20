@@ -5,7 +5,7 @@
 import { ComponentFunction } from '@dxos/aurora-types/src';
 
 import { mx } from '../../util';
-import { baseSurface } from '../fragments';
+import { baseSurface, inlineSeparator } from '../fragments';
 
 export type MainStyleProps = Partial<{
   isLg: boolean;
@@ -17,6 +17,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOp
     'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
     sidebarOpen ? 'inline-start-0' : '-inline-start-[100vw] sm:-inline-start-[270px]',
+    inlineSeparator,
     baseSurface,
     ...etc,
   );

@@ -11,7 +11,7 @@ export type TooltipStyleProps = {};
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
   mx(
-    'inline-flex items-center rounded-md plb-1 pli-2',
+    'inline-flex items-center rounded-md plb-2 pli-3',
     chromeSurface,
     surfaceElevation({ elevation: 'group' }),
     chromeText,
