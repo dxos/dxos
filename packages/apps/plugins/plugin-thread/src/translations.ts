@@ -7,8 +7,8 @@ export default [
     'en-US': {
       // TODO(burdon): Make id consistent with other plugins.
       'dxos.org/plugin/thread': {
-        'plugin name': 'Kanban',
-        'thread name placeholder': 'Enter thread name',
+        'plugin name': 'Thread',
+        'thread title placeholder': 'New thread',
         'thread title label': 'Title',
         'column title label': 'Column title',
         'column title placeholder': 'New Column',

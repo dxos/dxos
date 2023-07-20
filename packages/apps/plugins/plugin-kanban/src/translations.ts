@@ -9,7 +9,7 @@ export default [
       'dxos.org/plugin/kanban': {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
-        'kanban title placeholder': 'New Kanban',
+        'kanban title placeholder': 'New kanban',
         'column title label': 'Column title',
         'column title placeholder': 'New Column',
         'item title label': 'Item title',
