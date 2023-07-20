@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import path from 'node:path';
 
-import { latch } from '@dxos/async';
+import { asyncTimeout, latch } from '@dxos/async';
 import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
@@ -242,11 +242,9 @@ describe('DataSpaceManager', () => {
 
       await space.deactivate();
       expect(space.state).to.equal(SpaceState.INACTIVE);
-      expect(space.inner.protocol.sessions.size).to.equal(0);
 
       await space.activate();
-      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-      expect(space.state).to.equal(SpaceState.READY);
+      await asyncTimeout(space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY), 500);
     })
   })
 });

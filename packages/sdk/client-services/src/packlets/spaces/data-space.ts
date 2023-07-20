@@ -330,6 +330,7 @@ export class DataSpace {
     
     await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
     await this._open();
+    this.initializeDataPipelineAsync();
   }
 
   @synchronized
