@@ -78,7 +78,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       return peer.createSwarm(swarmTopic);
     });
 
-    // const delayedSwarm = peer.createSwarm(PublicKey.from('delayed'));
+    const delayedSwarm = peer.createSwarm(PublicKey.from('delayed'));
 
     log.info('swarms created', { agentIdx });
 
@@ -155,7 +155,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     /**
      * Iterate over all swarms and all agents.
      */
-    const forEachSwarm = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
+    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
@@ -204,7 +204,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         const desiredStreems = (numOfAgents - 1) * spec.swarmsPerAgent;
         let actualStreams = 0;
 
-        await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           log.info('starting stream', { agentIdx, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
@@ -229,7 +229,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         const desiredConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
         let actualConnections = 0;
 
-        await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           log.info('testing connection', { agentIdx, swarmIdx });
           try {
             await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
@@ -245,17 +245,28 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       }
 
       // Test delayed swarm.
-      // {
-      //   log.info('testing delayed swarm', { agentIdx, testCounter });
-      //   await joinSwarm(swarmTopicIds.length, delayedSwarm);
+      {
+        log.info('testing delayed swarm', { agentIdx, testCounter });
+        await joinSwarm(context, swarmTopicIds.length, delayedSwarm);
 
-      // }
+        await Promise.all(
+          Object.keys(env.params.agents)
+            .filter((agentId) => agentId !== env.params.agentId)
+            .map(async (agentId) => {
+              await delayedSwarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+            })
+        );
+
+        await leaveSwarm(context, swarmTopicIds.length, delayedSwarm);
+
+        await env.syncBarrier(`delayed swarm is tested on ${testCounter}`);
+      }
 
       // Close streams.
       {
         log.info('closing streams', { agentIdx });
 
-        await forEachSwarm(async (swarmIdx, swarm, agentId) => {
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           log.info('closing stream', { agentIdx, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
