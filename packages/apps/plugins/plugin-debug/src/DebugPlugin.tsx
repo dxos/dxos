@@ -5,7 +5,6 @@
 // import { Hammer } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-// import { Debug as DebugType } from '@braneframe/types';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain } from './components';
@@ -37,6 +36,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => ({
           {children}
         </DebugContext.Provider>
       );
+    },
+    graph: {
+      nodes: (parent, emit) => {},
+      actions: (parent, _, plugins) => {},
     },
     // TODO(wittjosiah): Migrate to graph plugin.
     // space: {

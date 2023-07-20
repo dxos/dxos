@@ -698,6 +698,7 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -731,6 +732,7 @@ importers:
       '@faker-js/faker': 7.6.0
       lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview

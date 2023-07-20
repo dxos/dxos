@@ -4,8 +4,9 @@
 
 import { Context, createContext } from 'react';
 
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Debug as DebugType } from '@braneframe/types';
+import type { GraphProvides } from '@braneframe/plugin-graph';
+import type { TranslationsProvides } from '@braneframe/plugin-theme';
+import type { Debug as DebugType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
 export type DebugContextType = {
@@ -20,7 +21,7 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
   stop: () => {},
 });
 
-export type DebugPluginProvides = TranslationsProvides;
+export type DebugPluginProvides = GraphProvides & TranslationsProvides;
 
 export interface DebugModel {
   object: DebugType;

@@ -25,6 +25,7 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",

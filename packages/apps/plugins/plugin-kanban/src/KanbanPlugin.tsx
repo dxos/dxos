@@ -39,9 +39,12 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             return [];
           }
 
+          const space = parent.data;
+
+          // TODO(burdon): Factor out.
           const kanbanToGraphNode = (object: KanbanType): GraphNode => ({
             id: object.id,
-            index: 'a1',
+            index: 'a1', // TODO(burdon): Index.
             label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
             data: object,
@@ -53,15 +56,14 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                   index: 'a1',
                   label: ['delete stack label', { ns: KANBAN_PLUGIN }],
                   icon: (props: IconProps) => <Kanban {...props} />,
-                  invoke: async () => {
-                    parent.data?.db.remove(object);
-                  },
+                  invoke: async () => parent.data?.db.remove(object),
                 },
               ],
             },
           });
 
-          const space = parent.data;
+          // Subscribe to query.
+          // TODO(burdon): Factor out.
           const query = defaultMap(queries, parent.id, () => {
             const query = space.db.query(KanbanType.filter());
             subscriptions.set(
@@ -71,6 +73,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             return query;
           });
 
+          // Subscribe to all objects.
           return query.objects.map((object) => {
             defaultMap(subscriptions, object.id, () =>
               object[subscribe](() => {
@@ -81,11 +84,11 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                 }
               }),
             );
+
             return kanbanToGraphNode(object);
           });
         },
         actions: (parent, _, plugins) => {
-          // TODO(burdon): ???
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
@@ -101,7 +104,6 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               icon: (props) => <Plus {...props} />,
               invoke: async () => {
                 const object = space.db.add(new KanbanType());
-                console.log(object);
                 if (treeViewPlugin) {
                   treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
                 }
