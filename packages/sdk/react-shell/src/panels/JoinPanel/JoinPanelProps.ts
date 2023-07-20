@@ -7,7 +7,7 @@ import { cloneElement } from 'react';
 import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 
-import { JoinSend, JoinState } from './joinMachine';
+import { ViewStateProps } from './view-states/ViewState';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -25,11 +25,12 @@ export interface JoinPanelProps {
 
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,
-  'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
-> & {
-  state: JoinState;
-  send: JoinSend;
-};
+  'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
+> &
+  Pick<ViewStateProps, 'send'> & {
+    activeView: string;
+    failed: 'Halo' | 'Space' | null;
+  };
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';

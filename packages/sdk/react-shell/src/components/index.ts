@@ -8,3 +8,4 @@ export * from './InvitationEmoji';
 export * from './InvitationList';
 export * from './PanelSeparator';
 export * from './SpaceList';
+export * from './Viewport';

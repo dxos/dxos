@@ -4,6 +4,7 @@
 
 import { CheckCircle, HourglassSimple, X } from '@phosphor-icons/react';
 import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
 import { useTranslation, useId } from '@dxos/aurora';
 import { getSize, strongShimmer, mx } from '@dxos/aurora-theme';
@@ -13,12 +14,11 @@ import { useInvitationStatus } from '@dxos/react-client';
 
 import { defaultSurface, resolvedBgColor, activeBgColor, inactiveBgColor } from '../../../styles';
 import { invitationStatusValue } from '../../../util';
-import { JoinSend, JoinState } from '../joinMachine';
+import { JoinEvent } from '../joinMachine';
 
 export interface ViewStateProps extends ComponentProps<'div'> {
-  active: boolean;
-  joinSend: JoinSend;
-  joinState?: JoinState;
+  send: (event: SingleOrArray<Event<JoinEvent>>) => void;
+  active?: boolean;
 }
 
 const stripe = mx('rounded-full grow', getSize(3));
@@ -137,15 +137,10 @@ const _ViewStateInvitationStatus = ({ activeInvitation }: { activeInvitation: Au
   );
 };
 
-export const ViewState = ({ active, children, className, joinSend, joinState, ...props }: ViewStateProps) => {
+export const ViewState = ({ children, className, send: _send, ...props }: ViewStateProps) => {
   // note (thure): reserve `order-1` and `order-3` for outgoing steps in different directions
   return (
-    <div
-      role='none'
-      {...props}
-      {...(!active && { 'aria-hidden': true })}
-      className={mx('is-[50%] flex flex-col', active ? 'order-2' : 'order-4', className)}
-    >
+    <div role='none' {...props} className={mx('is-[50%] flex flex-col', className)}>
       <div role='region' className={mx(defaultSurface, 'rounded-be-md grow shrink-0 flex flex-col gap-1 p-4 pbs-1')}>
         {children}
       </div>
