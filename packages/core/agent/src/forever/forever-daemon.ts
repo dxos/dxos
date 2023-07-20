@@ -59,7 +59,7 @@ export class ForeverDaemon implements Daemon {
     });
   }
 
-  async start(profile: string): Promise<ProcessInfo> {
+  async start(profile: string, params?: { config?: string }): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
@@ -78,7 +78,13 @@ export class ForeverDaemon implements Daemon {
       // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'start', '--foreground', `--profile=${profile}`],
+        args: [
+          'agent',
+          'start',
+          '--foreground',
+          `--profile=${profile}`,
+          params?.config ? `--config=${params.config}` : '',
+        ],
         uid: profile,
         max: 1,
         logFile, // Forever daemon process.
