@@ -38,7 +38,7 @@ export class Generator {
   updateObject(type = Document.type.name) {
     switch (type) {
       case Document.type.name: {
-        const { objects } = this._space.db.query((object) => object.__typename === type);
+        const { objects } = this._space.db.query(Document.filter());
         if (objects.length) {
           // TODO(burdon): Standardize faker deps.
           const object = this._faker!.helpers.arrayElement(objects);
@@ -46,7 +46,7 @@ export class Generator {
           // TODO(burdon): Insert, update, or delete.
           const idx = text.lastIndexOf(' ', this._faker!.datatype.number({ min: 0, max: text.length }));
           if (idx !== -1) {
-            object.content.model.insert(' ' + this._faker!.lorem.word(), idx);
+            object.content.model?.insert(' ' + this._faker!.lorem.word(), idx);
           }
         }
 

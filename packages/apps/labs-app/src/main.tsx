@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 // import { LocalFilesPlugin, GithubPlugin } from '@braneframe/composer-app';
 import { ClientPlugin } from '@braneframe/plugin-client';
+import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -16,7 +17,6 @@ import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
-import { TestingPlugin } from '@braneframe/plugin-testing';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
         DrawingPlugin(),
         KanbanPlugin(),
         ThreadPlugin(),
-        TestingPlugin(),
+        DebugPlugin(),
       ]}
     />
   </StrictMode>,

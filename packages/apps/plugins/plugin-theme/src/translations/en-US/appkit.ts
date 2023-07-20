@@ -65,7 +65,7 @@ export const appkit = {
   'success status label': 'Successfully accepted invitation',
   'back to spaces label': 'Back to spaces',
   'list title label': 'List title',
-  'list title placeholder': 'Untitled list',
+  'list title placeholder': 'New list',
   'list description label': 'List description',
   'list description placeholder': 'Add an optional description',
   'list item title label': 'List item title',
