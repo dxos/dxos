@@ -434,6 +434,7 @@ type TypedObjectConstructor = {
    * Create a new document.
    * @param initialProps Initial properties.
    * @param _schemaType Schema type for generated types.
+   * @param opts
    */
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,

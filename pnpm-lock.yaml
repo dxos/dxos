@@ -559,6 +559,7 @@ importers:
   packages/apps/labs-app:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-debug': workspace:*
       '@braneframe/plugin-drawing': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-kanban': workspace:*
@@ -566,7 +567,6 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
-      '@braneframe/plugin-testing': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-thread': workspace:*
       '@braneframe/plugin-treeview': workspace:*
@@ -616,6 +616,7 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-debug': link:../plugins/plugin-debug
       '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
@@ -623,7 +624,6 @@ importers:
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
-      '@braneframe/plugin-testing': link:../plugins/plugin-testing
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-thread': link:../plugins/plugin-thread
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
@@ -696,6 +696,59 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
+  packages/apps/plugins/plugin-debug:
+    specifiers:
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
+      '@faker-js/faker': 7.6.0
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
   packages/apps/plugins/plugin-dnd:
     specifiers:
       '@braneframe/plugin-theme': workspace:*
@@ -731,9 +784,11 @@ importers:
 
   packages/apps/plugins/plugin-drawing:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -756,6 +811,8 @@ importers:
       vite: ^4.3.9
       yjs: ^13.5.44
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
@@ -766,9 +823,9 @@ importers:
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44
     devDependencies:
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -821,10 +878,12 @@ importers:
 
   packages/apps/plugins/plugin-kanban:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dnd-kit/core': ^6.0.5
       '@dnd-kit/modifiers': ^6.0.0
@@ -849,6 +908,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -862,9 +923,9 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -939,12 +1000,14 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
@@ -960,11 +1023,13 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
       '@preact/signals-core': 1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
@@ -1072,57 +1137,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
-  packages/apps/plugins/plugin-testing:
-    specifiers:
-      '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-space': workspace:*
-      '@braneframe/plugin-splitview': workspace:*
-      '@braneframe/plugin-theme': workspace:*
-      '@braneframe/types': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@dxos/text-model': workspace:*
-      '@dxos/util': workspace:*
-      '@faker-js/faker': ^7.3.0
-      '@phosphor-icons/react': ^2.0.5
-      '@types/lodash.get': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      lodash.get: ^4.4.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/text-model': link:../../../core/echo/text-model
-      '@dxos/util': link:../../../common/util
-      '@faker-js/faker': 7.6.0
-      lodash.get: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-splitview': link:../plugin-splitview
-      '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/types': link:../../types
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/lodash.get': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
-
   packages/apps/plugins/plugin-theme:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -1151,10 +1165,12 @@ importers:
   packages/apps/plugins/plugin-thread:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -1177,6 +1193,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
@@ -1189,9 +1207,9 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -11614,7 +11632,7 @@ packages:
       read-package-json-fast: 2.0.3
       readdir-scoped-modules: 1.1.0
       rimraf: 3.0.2
-      semver: 7.5.4
+      semver: 7.3.8
       ssri: 8.0.1
       treeverse: 1.0.4
       walk-up-path: 1.0.0
@@ -11627,7 +11645,7 @@ packages:
     resolution: {integrity: sha512-8KG5RD0GVP4ydEzRn/I4BNDuxDtqVbOdm8675T49OIG/NGhaK0pjPX7ZcDlvKYbA+ulvVK3ztfcF4uBdOxuJbQ==}
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.5.4
+      semver: 7.3.8
     dev: false
 
   /@npmcli/fs/2.1.2:
@@ -11635,7 +11653,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.5.4
+      semver: 7.3.8
     dev: false
 
   /@npmcli/git/2.1.0:
@@ -11647,7 +11665,7 @@ packages:
       npm-pick-manifest: 6.1.1
       promise-inflight: 1.0.1
       promise-retry: 2.0.1
-      semver: 7.5.4
+      semver: 7.3.8
       which: 2.0.2
     transitivePeerDependencies:
       - bluebird
@@ -11679,7 +11697,7 @@ packages:
       cacache: 15.3.0
       json-parse-even-better-errors: 2.3.1
       pacote: 12.0.3
-      semver: 7.5.4
+      semver: 7.3.8
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -12236,17 +12254,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@oclif/color/1.0.9:
-    resolution: {integrity: sha512-ntc/fZwuf4NRfYbXVoUNFyMB9IxVx/ls/WbSLKbkD9UpsmwY1I3J4DJKKRFRpenmTuxGQW8Lyzm7X3vhzHpDQA==}
-    engines: {node: '>=12.0.0'}
-    dependencies:
-      ansi-styles: 4.3.0
-      chalk: 4.1.2
-      strip-ansi: 6.0.1
-      supports-color: 8.1.1
-      tslib: 2.5.0
-    dev: false
-
   /@oclif/core/2.6.5_d2gyhxeuxd6tnmgqdyixls47tq:
     resolution: {integrity: sha512-fk2dVH3eJ3skL+gOrxowy4dlqTMH/0iBffubLncSEOTb3pXuDQspzNmP60aq5Y82XxKN0iOj/5ZqxtiMHpH1Sg==}
     engines: {node: '>=14.0.0'}
@@ -12286,47 +12293,6 @@ packages:
       - '@types/node'
       - typescript
 
-  /@oclif/core/2.9.4_d2gyhxeuxd6tnmgqdyixls47tq:
-    resolution: {integrity: sha512-eFRRpV+tJ6nMkhay2M9IppjSF3atRrgj6Qo83qUslaFSAW3NAl4mIhx1mKmTwQx5rgSrar03xICtSAWJ6gZtag==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      '@types/cli-progress': 3.11.0
-      ansi-escapes: 4.3.2
-      ansi-styles: 4.3.0
-      cardinal: 2.1.1
-      chalk: 4.1.2
-      clean-stack: 3.0.1
-      cli-progress: 3.12.0
-      debug: 4.3.4_supports-color@8.1.1
-      ejs: 3.1.8
-      fs-extra: 9.1.0
-      get-package-type: 0.1.0
-      globby: 11.1.0
-      hyperlinker: 1.0.0
-      indent-string: 4.0.0
-      is-wsl: 2.2.0
-      js-yaml: 3.14.1
-      natural-orderby: 2.0.3
-      object-treeify: 1.1.33
-      password-prompt: 1.1.2
-      semver: 7.5.4
-      slice-ansi: 4.0.0
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      supports-color: 8.1.1
-      supports-hyperlinks: 2.3.0
-      ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
-      tslib: 2.5.0
-      widest-line: 3.1.0
-      wordwrap: 1.0.0
-      wrap-ansi: 7.0.0
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - typescript
-    dev: false
-
   /@oclif/plugin-help/5.2.8_d2gyhxeuxd6tnmgqdyixls47tq:
     resolution: {integrity: sha512-Fl1DD6Hm7USG/BYqcUmc/hMXK6Bnd3HvkZsRG+qi0dbYaNtY9zJ58C5b3lgPn69bXJlyi1eWX4S8djSUWD8VYg==}
     engines: {node: '>=12.0.0'}
@@ -12339,13 +12305,14 @@ packages:
       - typescript
     dev: false
 
-  /@oclif/plugin-not-found/2.3.32_d2gyhxeuxd6tnmgqdyixls47tq:
-    resolution: {integrity: sha512-tVFHfR9XRUWrcxBugHjFr7HUmbLheDX05IaFr7fMF2hcvcqDs3DBjy42WKEoXSaBVTcST6KKhoSy2UVX8pk9Fg==}
+  /@oclif/plugin-not-found/2.3.22_d2gyhxeuxd6tnmgqdyixls47tq:
+    resolution: {integrity: sha512-dZ202qQZwZFXKKGSxpKh063eGzjS1sw2CX9S/x8rhMALeU3p0GAJtLSLQx6AFXdlJTPpqw2b/KDn8OLlIMHhJA==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/color': 1.0.9
-      '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/color': 1.0.4
+      '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       fast-levenshtein: 3.0.0
+      lodash: 4.17.21
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -12380,13 +12347,13 @@ packages:
     resolution: {integrity: sha512-uuSaAssSHzUUlI/tbdlkXudz8/CQXbkMwT7Onx0wvDxEeYNJHoOICXFW1ew3mKFOe3DdW90QGMBrDLFSb63Pqw==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       chalk: 4.1.2
       debug: 4.3.4
       fs-extra: 9.1.0
       http-call: 5.3.0
       lodash: 4.17.21
-      semver: 7.5.4
+      semver: 7.3.8
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -17971,7 +17938,7 @@ packages:
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
-      csstype: 3.1.1
+      csstype: 3.1.2
 
   /@types/reactcss/1.2.6:
     resolution: {integrity: sha512-qaIzpCuXNWomGR1Xq8SCFTtF4v8V27Y6f+b9+bzHiv087MylI/nTCqqdChNeWS7tslgROmYB7yeiruWX7WnqNg==}
@@ -20338,7 +20305,7 @@ packages:
   /axios/1.3.4_debug@4.3.4:
     resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
-      follow-redirects: 1.15.2_debug@4.3.4
+      follow-redirects: 1.15.2
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -22877,6 +22844,7 @@ packages:
 
   /csstype/3.1.1:
     resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+    dev: false
 
   /csstype/3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
@@ -33115,7 +33083,7 @@ packages:
       nopt: 5.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.5.4
+      semver: 7.3.8
       tar: 6.1.11
       which: 2.0.2
     transitivePeerDependencies:
@@ -33314,7 +33282,7 @@ packages:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.11.0
-      semver: 7.5.4
+      semver: 7.3.8
       validate-npm-package-license: 3.0.4
     dev: false
 
@@ -33385,7 +33353,7 @@ packages:
     resolution: {integrity: sha512-09OmyDkNLYwqKPOnbI8exiOZU2GVVmQp7tgez2BPi5OZC8M82elDAps7sxC4l//uSUtotWqoEIDwjRvWH4qz8w==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.5.4
+      semver: 7.3.8
     dev: false
 
   /npm-normalize-package-bin/1.0.1:
@@ -33402,7 +33370,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       hosted-git-info: 4.1.0
-      semver: 7.5.4
+      semver: 7.3.8
       validate-npm-package-name: 3.0.0
     dev: false
 
@@ -33423,7 +33391,7 @@ packages:
       npm-install-checks: 4.0.0
       npm-normalize-package-bin: 1.0.1
       npm-package-arg: 8.1.5
-      semver: 7.5.4
+      semver: 7.3.8
     dev: false
 
   /npm-registry-fetch/12.0.2:
@@ -33756,7 +33724,7 @@ packages:
     dependencies:
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
-      '@oclif/plugin-not-found': 2.3.32_d2gyhxeuxd6tnmgqdyixls47tq
+      '@oclif/plugin-not-found': 2.3.22_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-warn-if-update-available': 2.0.32_d2gyhxeuxd6tnmgqdyixls47tq
       aws-sdk: 2.1233.0
       concurrently: 7.6.0
@@ -37420,14 +37388,6 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
-
-  /semver/7.5.4:
-    resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
-    engines: {node: '>=10'}
-    hasBin: true
-    dependencies:
-      lru-cache: 6.0.0
-    dev: false
 
   /send/0.17.1:
     resolution: {integrity: sha512-BsVKsiGcQMFwT8UxypobUKyv7irCNRHk1T0G680vk88yf6LBByGcZJOTJCrTP2xVN6yI+XjPJcNuE3V4fT9sAg==}
@@ -42939,7 +42899,7 @@ packages:
       pacote: 12.0.3
       preferred-pm: 3.0.3
       pretty-bytes: 5.6.0
-      semver: 7.5.4
+      semver: 7.3.8
       slash: 3.0.0
       strip-ansi: 6.0.1
       text-table: 0.2.0
@@ -42968,7 +42928,7 @@ packages:
       minimist: 1.2.8
       read-pkg-up: 7.0.1
       run-async: 2.4.1
-      semver: 7.5.4
+      semver: 7.3.8
       shelljs: 0.8.5
       sort-keys: 4.2.0
       text-table: 0.2.0
