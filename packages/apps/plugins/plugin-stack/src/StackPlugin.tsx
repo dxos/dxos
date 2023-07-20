@@ -68,7 +68,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               subscriptions.set(
                 stack.id,
                 stack[subscribe](() => {
-                  // TODO(burdon): Remove from graph if deleted?
                   if (stack.__deleted) {
                     subscriptions.delete(stack.id);
                     return;

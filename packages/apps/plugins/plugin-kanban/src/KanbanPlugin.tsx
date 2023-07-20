@@ -9,15 +9,17 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy } from '@dxos/client';
+import { Query, SpaceProxy, subscribe } from '@dxos/client';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { defaultMap } from '@dxos/util';
 
 import { KanbanMain } from './components';
 import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
 import translations from './translations';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const queries = new Map<string, { query: Query<KanbanType>; unsubscribe: UnsubscribeCallback }>();
+  const queries = new Map<string, Query<KanbanType>>();
+  const subscriptions = new Map<string, UnsubscribeCallback>();
 
   return {
     meta: {
@@ -25,7 +27,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       id: KANBAN_PLUGIN,
     },
     unload: async () => {
-      queries.forEach(({ unsubscribe }) => unsubscribe());
+      subscriptions.forEach((unsubscribe) => unsubscribe());
+      subscriptions.clear();
       queries.clear();
     },
     provides: {
@@ -59,11 +62,27 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           });
 
           const space = parent.data;
-          let { query, unsubscribe } = queries.get(parent.id) ?? {};
+          const query = defaultMap(queries, parent.id, () => {
+            const query = space.db.query(KanbanType.filter());
+            subscriptions.set(
+              parent.id,
+              query.subscribe(() => emit()),
+            );
+            return query;
+          });
 
-          // TODO(burdon): Subscription? Clean-up via context?
-          const query = space.db.query(KanbanType.filter());
-          return query.objects.map((stack) => kanbanToGraphNode(stack));
+          return query.objects.map((object) => {
+            defaultMap(subscriptions, object.id, () =>
+              object[subscribe](() => {
+                if (object.__deleted) {
+                  subscriptions.delete(object.id);
+                } else {
+                  emit(kanbanToGraphNode(object));
+                }
+              }),
+            );
+            return kanbanToGraphNode(object);
+          });
         },
         actions: (parent, _, plugins) => {
           // TODO(burdon): ???
