@@ -15,24 +15,38 @@ describe.only('agent', () => {
   test('join two agent profiles', async () => {
     const haloName = 'TEST_NAME';
 
-    log.info('Starting first test profile agent.');
-    await runCommand('reset --profile=test-profile-1 --force', __dirname);
-    log.info('Creating halo identity.');
-    await runCommand(`halo create ${haloName} --profile=test-profile-1`, __dirname);
+    const firstProfile = 'test-profile-1';
+    const secondProfile = 'test-profile-2';
 
-    log.info('Starting second test profile agent.');
-    await runCommand('reset --profile=test-profile-2 --force', __dirname);
+    {
+      log.info('Starting first test profile agent.');
+      await runCommand(`reset --profile=${firstProfile} --force`, __dirname);
+      log.info('Creating halo identity.');
+      await runCommand(`halo create ${haloName} --profile=${firstProfile}`, __dirname);
+    }
 
-    log.info('Inviting second profile to join first profile halo.');
-    await performHaloCLIInvitation('test-profile-1', 'test-profile-2');
-    log.info('Invitation successful.');
+    {
+      log.info('Starting second test profile agent.');
+      await runCommand(`reset --profile=${secondProfile} --force`, __dirname);
+    }
 
-    // TODO(mykola): Remove fancy colorful output from the CLI.
-    const firstIdentity = await runCommand('halo --profile=test-profile-1 --json', __dirname);
-    const secondIdentity = await runCommand('halo --profile=test-profile-2 --json', __dirname);
-    expect(secondIdentity).to.equal(firstIdentity);
-    await runCommand('agent stop --profile=test-profile-1', __dirname);
-    await runCommand('agent stop --profile=test-profile-2', __dirname);
+    {
+      log.info('Inviting second profile to join first profile halo.');
+      await performHaloCLIInvitation(firstProfile, secondProfile);
+      log.info('Invitation successful.');
+    }
+
+    {
+      // TODO(mykola): Remove fancy colorful output from the CLI.
+      const firstIdentity = await runCommand(`halo --profile=${firstProfile} --json`, __dirname);
+      const secondIdentity = await runCommand(`halo --profile=${secondProfile} --json`, __dirname);
+      expect(secondIdentity).to.equal(firstIdentity);
+    }
+
+    {
+      await runCommand(`agent stop --profile=${firstProfile}`, __dirname);
+      await runCommand(`agent stop --profile=${secondProfile}`, __dirname);
+    }
   }).timeout(60_000);
 });
 
