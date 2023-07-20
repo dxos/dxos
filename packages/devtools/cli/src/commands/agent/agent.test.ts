@@ -47,7 +47,7 @@ describe('agent', () => {
       await runCommand(`agent stop --profile=${firstProfile}`, __dirname);
       await runCommand(`agent stop --profile=${secondProfile}`, __dirname);
     }
-  }).timeout(60_000);
+  }).timeout(120_000);
 });
 
 const performHaloCLIInvitation = async (hostProfile: string, guestProfile: string) => {

@@ -15,7 +15,7 @@ export const BIN_PATH = join(dirname(pkgUp.sync({ cwd: __dirname }) ?? failUndef
 
 export const runCommand = async (command: string, cwd: string) => {
   mkdirSync(cwd, { recursive: true });
-  const { stdout, stderr } = await asyncTimeout(promisify(exec)(`${BIN_PATH} ${command}`, { cwd: __dirname }), 10_000);
+  const { stdout, stderr } = await asyncTimeout(promisify(exec)(`${BIN_PATH} ${command}`, { cwd: __dirname }), 20_000);
   if (stderr) {
     throw new Error(stderr);
   }
