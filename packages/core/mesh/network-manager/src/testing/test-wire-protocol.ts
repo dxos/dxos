@@ -58,7 +58,12 @@ export class TestWireProtocol {
     await connection.test(message);
   }
 
-  async startStream(peerId: PublicKey, streamTag: string, streamLoadInterval: number, streamLoadChunkSize: number): Promise<string> {
+  async startStream(
+    peerId: PublicKey,
+    streamTag: string,
+    streamLoadInterval: number,
+    streamLoadChunkSize: number,
+  ): Promise<string> {
     if (!this.streamConnections.has(peerId)) {
       throw new Error('Connection does not exist.');
     }

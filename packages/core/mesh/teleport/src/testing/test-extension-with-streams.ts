@@ -158,7 +158,11 @@ export class TestExtensionWithStreams implements TeleportExtension {
     if (!streamTag) {
       streamTag = `stream-${randomBytes(4).toString('hex')}`;
     }
-    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({ data: streamTag, streamLoadInterval, streamLoadChunkSize });
+    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({
+      data: streamTag,
+      streamLoadInterval,
+      streamLoadChunkSize,
+    });
     assert(data === streamTag);
 
     this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
@@ -167,9 +171,10 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
   async closeStream(streamTag: string): Promise<TestStreamStats> {
     await this.open.wait({ timeout: 1500 });
-    const { data, bytesSent, bytesReceived, sendErrors, receiveErrors } = await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
-      data: streamTag,
-    });
+    const { data, bytesSent, bytesReceived, sendErrors, receiveErrors } =
+      await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
+        data: streamTag,
+      });
 
     assert(data === streamTag);
 

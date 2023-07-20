@@ -155,7 +155,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     /**
      * Iterate over all swarms and all agents.
      */
-    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
+    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: any, agentId: string) => Promise<void>) => {
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
@@ -163,10 +163,9 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             for await (const [swarmIdx, swarm] of swarms.entries()) {
               await callback(swarmIdx, swarm, agentId);
             }
-          }
-        ),
+          }),
       );
-    }
+    };
 
     const ctx = new Context();
     let testCounter = 0;
@@ -208,7 +207,12 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           log.info('starting stream', { agentIdx, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-            await swarm.protocol.startStream(PublicKey.from(agentId), streamTag, spec.streamLoadInterval, spec.streamLoadChunkSize);
+            await swarm.protocol.startStream(
+              PublicKey.from(agentId),
+              streamTag,
+              spec.streamLoadInterval,
+              spec.streamLoadChunkSize,
+            );
             actualStreams++;
             log.info('test stream started', { agentIdx, swarmIdx });
           } catch (error) {
@@ -254,7 +258,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             .filter((agentId) => agentId !== env.params.agentId)
             .map(async (agentId) => {
               await delayedSwarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
-            })
+            }),
         );
 
         await leaveSwarm(context, swarmTopicIds.length, delayedSwarm);
