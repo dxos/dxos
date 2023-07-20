@@ -66,7 +66,7 @@ impl TransformVisitor {
         let mut props = vec![];
 
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("file".into(), DUMMY_SP)),
+            key: PropName::Ident(Ident::new("F".into(), DUMMY_SP)),
             value: Box::new(Expr::Lit(Lit::Str(Str {
                 span: DUMMY_SP,
                 value: format!("{filename}").into(),
@@ -74,7 +74,7 @@ impl TransformVisitor {
             }))),
         }))));
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("line".into(), DUMMY_SP)),
+            key: PropName::Ident(Ident::new("L".into(), DUMMY_SP)),
             value: Box::new(Expr::Lit(Lit::Num(Number {
                 span: DUMMY_SP,
                 value: line as f64,
@@ -82,12 +82,12 @@ impl TransformVisitor {
             }))),
         }))));
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("scope".into(), DUMMY_SP)),
+            key: PropName::Ident(Ident::new("S".into(), DUMMY_SP)),
             value: Box::new(Expr::This(ThisExpr { span: DUMMY_SP })),
         }))));
         if config.include_call_site {
             props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                key: PropName::Ident(Ident::new("callSite".into(), DUMMY_SP)),
+                key: PropName::Ident(Ident::new("C".into(), DUMMY_SP)),
                 value: Box::new(Expr::Arrow(create_call_site_arrow())),
             }))));
         }
@@ -100,7 +100,7 @@ impl TransformVisitor {
             });
 
             props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                key: PropName::Ident(Ident::new("args".into(), DUMMY_SP)),
+                key: PropName::Ident(Ident::new("A".into(), DUMMY_SP)),
                 value: Box::new(Expr::Array(ArrayLit {
                     span: DUMMY_SP,
                     elems: arg_snippets

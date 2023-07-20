@@ -38,14 +38,14 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
   if (filters === undefined) {
     return true;
   } else {
-    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? ''));
+    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? ''));
   }
 };
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
   let context;
   if (entry.meta) {
-    const scopeInfo = gatherLogInfoFromScope(entry.meta.scope);
+    const scopeInfo = gatherLogInfoFromScope(entry.meta.S);
     if (Object.keys(scopeInfo).length > 0) {
       context = Object.assign(context ?? {}, scopeInfo);
     }
