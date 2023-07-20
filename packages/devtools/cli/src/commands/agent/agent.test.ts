@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import yaml from 'js-yaml';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
