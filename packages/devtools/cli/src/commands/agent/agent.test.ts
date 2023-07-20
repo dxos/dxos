@@ -76,14 +76,14 @@ describe('agent', () => {
 
     {
       log.info('Starting first test profile agent.');
-      await runCommand(`reset --profile=${host} --force --config=${HOST_CONFIG_PATH}`, __dirname);
+      await runCommand(`agent start --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
       log.info('Creating halo identity.');
       await runCommand(`halo create ${haloName} --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
     }
 
     {
       log.info('Starting second test profile agent.');
-      await runCommand(`reset --profile=${guest} --force --config=${GUEST_CONFIG_PATH}`, __dirname);
+      await runCommand(`agent start --profile=${guest} --config=${GUEST_CONFIG_PATH}`, __dirname);
     }
 
     {
