@@ -2,29 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { StrictMode } from 'react';
-
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { DEFAULT_INTERNAL_CHANNEL } from '@dxos/client-protocol';
-import { ClientServicesHost, IFrameHostRuntime, IFrameProxyRuntime, ShellRuntimeImpl } from '@dxos/client-services';
+import type { IFrameHostRuntime, IFrameProxyRuntime } from '@dxos/client-services';
 import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos/client/services';
-import { Config, Defaults, Dynamics, Local } from '@dxos/config';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { ThemeProvider } from '@dxos/react-appkit';
-import { ClientContext } from '@dxos/react-client';
-import { osTranslations, Shell } from '@dxos/react-shell';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
 
 const cssStyle = 'color:#C026D3;font-weight:bold';
 
 const startShell = async (config: Config, runtime: ShellRuntime, services: ClientServicesProvider, origin: string) => {
-  registerSignalFactory();
-  const { createElement } = await import('react');
+  const { createElement, StrictMode } = await import('react');
   const { createRoot } = await import('react-dom/client');
+  const { registerSignalFactory } = await import('@dxos/echo-signals/react');
+  const { ThemeProvider } = await import('@dxos/react-appkit');
+  const { ClientContext } = await import('@dxos/react-client');
+  const { osTranslations, Shell } = await import('@dxos/react-shell');
 
+  registerSignalFactory();
   const root = createRoot(document.getElementById('root')!);
   const client = new Client({ config, services });
   await client.initialize();
@@ -83,6 +80,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     }
 
     if (shellClientProxy) {
+      const { ShellRuntimeImpl } = await import('@dxos/client-services');
       const shellRuntime = new ShellRuntimeImpl(createIFramePort({ channel: 'dxos:shell' }));
       await shellRuntime.open();
       await startShell(config, shellRuntime, shellClientProxy, origin);
@@ -117,6 +115,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       [messageChannel.port1],
     );
 
+    const { IFrameHostRuntime } = await import('@dxos/client-services');
     const iframeRuntime: IFrameHostRuntime = new IFrameHostRuntime({
       config,
       origin,
@@ -165,6 +164,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       void shellClientProxy.open();
     }
 
+    const { IFrameProxyRuntime } = await import('@dxos/client-services');
     const iframeRuntime: IFrameProxyRuntime = new IFrameProxyRuntime({
       config,
       systemPort: createWorkerPort({ port: systemPort }),
@@ -188,6 +188,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
 const forceClientReset = async () => {
   const config = new Config(Defaults());
 
+  const { ClientServicesHost } = await import('@dxos/client-services');
   const services = new ClientServicesHost({ config });
   await services.reset();
 
