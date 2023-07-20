@@ -9,9 +9,11 @@ import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credent
 import { AsyncCallback, Callback, ComplexSet } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { CredentialConsumer, CredentialProcessor } from '../processor/credential-processor';
+import { CredentialProcessor } from '../processor/credential-processor';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { runInContextAsync } from '@dxos/async';
+import { Context } from '@dxos/context';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
@@ -20,7 +22,9 @@ export interface SpaceState {
   readonly genesisCredential: Credential | undefined;
   readonly creator: MemberInfo | undefined;
 
-  registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T>;
+  addCredentialProcessor(processor: CredentialProcessor): Promise<void>
+  removeCredentialProcessor(processor: CredentialProcessor): Promise<void>
+
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
 
@@ -67,26 +71,35 @@ export class SpaceStateMachine implements SpaceState {
     return this._genesisCredential;
   }
 
-  public registerProcessor<T extends CredentialProcessor>(handler: T): CredentialConsumer<T> {
-    const processor = new CredentialConsumer(
-      handler,
+  async addCredentialProcessor(processor: CredentialProcessor) {
+    if (this._credentialProcessors.find((p) => p.processor === processor)) {
+      throw new Error('Credential processor already added.');
+    }
+
+    const consumer = new CredentialConsumer(
+      processor,
       async () => {
         for (const credential of this._credentials) {
-          await processor._process(credential);
+          await consumer._process(credential);
         }
 
         // NOTE: It is important to set this flag after immediately after processing existing credentials.
         // Otherwise, we might miss some credentials.
         // Having an `await` statement between the end of the loop and setting the flag would cause a race condition.
-        processor._isReadyForLiveCredentials = true;
+        consumer._isReadyForLiveCredentials = true;
       },
       async () => {
-        this._credentialProcessors = this._credentialProcessors.filter((p) => p !== processor);
+        this._credentialProcessors = this._credentialProcessors.filter((p) => p !== consumer);
       },
     );
+    this._credentialProcessors.push(consumer);
 
-    this._credentialProcessors.push(processor);
-    return processor;
+    await consumer.open();
+  }
+
+  async removeCredentialProcessor(processor: CredentialProcessor) {
+    const consumer = this._credentialProcessors.find((p) => p.processor === processor);
+    await consumer?.close();
   }
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
@@ -185,5 +198,47 @@ export class SpaceStateMachine implements SpaceState {
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
     return role === SpaceMember.Role.MEMBER || role === SpaceMember.Role.ADMIN;
+  }
+}
+
+// TODO(dmaretskyi): Simplify.
+class CredentialConsumer<T extends CredentialProcessor> {
+  private _ctx = new Context();
+
+  /**
+   * @internal
+   * Processor is ready to process live credentials.
+   * NOTE: Setting this flag before all existing credentials are processed will cause them to be processed out of order.
+   * Set externally.
+   */
+  _isReadyForLiveCredentials = false;
+
+  constructor(
+    public readonly processor: T,
+    private readonly _onOpen: () => Promise<void>,
+    private readonly _onClose: () => Promise<void>,
+  ) { }
+
+  /**
+   * @internal
+   */
+  async _process(credential: Credential) {
+    await runInContextAsync(this._ctx, async () => {
+      await this.processor.processCredential(credential);
+    });
+  }
+
+  async open() {
+    if (this._ctx.disposed) {
+      throw new Error('CredentialProcessor is disposed');
+    }
+
+    await this._onOpen();
+  }
+
+  async close() {
+    await this._ctx.dispose();
+
+    await this._onClose();
   }
 }

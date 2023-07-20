@@ -5,7 +5,6 @@
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
-import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
 import { CancelledError, SystemError } from '@dxos/errors';
@@ -61,7 +60,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _notarizationPlugin  = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache;
 
@@ -95,7 +94,6 @@ export class DataSpace {
       authTimeout: AUTH_TIMEOUT,
     });
 
-    this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
     this._cache = params.cache;
 
     this._state = params.initialState;
@@ -127,7 +125,7 @@ export class DataSpace {
   }
 
   get notarizationPlugin() {
-    return this._notarizationPluginConsumer.processor;
+    return this._notarizationPlugin;
   }
 
   get cache() {
@@ -140,8 +138,8 @@ export class DataSpace {
   }
 
   private async _open() {
-    await this.notarizationPlugin.open();
-    await this._notarizationPluginConsumer.open();
+    await this._notarizationPlugin.open();
+    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open();
     this._state = SpaceState.CONTROL_ONLY;
     this.stateUpdate.emit();
@@ -160,8 +158,8 @@ export class DataSpace {
     await this.authVerifier.close();
 
     await this._inner.close();
-    await this._notarizationPluginConsumer.close();
-    await this.notarizationPlugin.close();
+    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
+    await this._notarizationPlugin.close();
 
     await this._presence.destroy();
   }

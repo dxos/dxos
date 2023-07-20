@@ -29,6 +29,7 @@ import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
 import { ApiError } from '@dxos/errors';
+import { CredentialProcessor } from '@dxos/credentials';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -36,7 +37,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
-  ) {}
+  ) { }
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
@@ -52,19 +53,19 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
-   if(state) {
-    switch(state) {
-      case SpaceState.ACTIVE:
-        
-      break;
+    if (state) {
+      switch (state) {
+        case SpaceState.ACTIVE:
 
-      case SpaceState.INACTIVE:
+          break;
 
-      break;
-      default:
-        throw new ApiError(`Invalid space state`);
+        case SpaceState.INACTIVE:
+
+          break;
+        default:
+          throw new ApiError(`Invalid space state`);
+      }
     }
-   } 
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -141,13 +142,13 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream(({ ctx, next }) => {
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
-      const processor = space.spaceState.registerProcessor({
-        process: async (credential) => {
+      const processor: CredentialProcessor = {
+        processCredential: async (credential) => {
           next(credential);
         },
-      });
-      ctx.onDispose(() => processor.close());
-      scheduleTask(ctx, () => processor.open());
+      };
+      ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
+      scheduleTask(ctx, () => space.spaceState.addCredentialProcessor(processor));
     });
   }
 
@@ -193,7 +194,7 @@ export class SpacesServiceImpl implements SpacesService {
         },
         presence:
           this._identityManager.identity?.identityKey.equals(member.key) ||
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+            space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),

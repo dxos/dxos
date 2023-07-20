@@ -65,7 +65,7 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
-export class DataPipeline {
+export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
   private _pipeline?: Pipeline;
   private _targetTimeframe?: Timeframe;
@@ -112,20 +112,16 @@ export class DataPipeline {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
-  createCredentialProcessor(): CredentialProcessor {
-    return {
-      process: async (credential) => {
-        if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
-          return;
-        }
+  async processCredential(credential: Credential) {
+    if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
+      return;
+    }
 
-        this.currentEpoch = credential;
-        if (this._isOpen) {
-          // process epoch
-          await this._processEpochInSeparateTask(credential);
-        }
-      },
-    };
+    this.currentEpoch = credential;
+    if (this._isOpen) {
+      // process epoch
+      await this._processEpochInSeparateTask(credential);
+    }
   }
 
   @synchronized
