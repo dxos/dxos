@@ -18,7 +18,7 @@ const wasmModule = require.resolve('@dxos/swc-log-plugin');
 export class LogTransformer {
   private readonly _cache = new Map<string, Promise<string>>();
 
-  constructor(private readonly _options: { isVerbose: boolean }) {}
+  constructor(private readonly _options: { isVerbose: boolean }) { }
 
   private async _transform(filename: string): Promise<string> {
     const source = await readFile(filename, 'utf8');
@@ -34,7 +34,25 @@ export class LogTransformer {
           decorators: true,
         },
         experimental: {
-          plugins: [[wasmModule, {}]],
+          plugins: [[wasmModule, {
+            filename,
+            symbols: [
+              {
+                function: "log",
+                package: "@dxos/log",
+                param_index: 2,
+                include_args: false,
+                include_call_site: true,
+              },
+              {
+                function: "invariant",
+                package: "@dxos/log",
+                param_index: 2,
+                include_args: true,
+                include_call_site: false,
+              }
+            ],
+          }]],
         },
         target: 'es2022',
       },

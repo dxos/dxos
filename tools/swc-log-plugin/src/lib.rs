@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use serde::Deserialize;
 use swc_core::{
     common::{sync::Lrc, SourceMapper, Spanned, DUMMY_SP},
     ecma::{
@@ -24,11 +25,13 @@ pub struct TransformVisitor {
     pub filename_id: Option<Ident>,
 }
 
+#[derive(Clone, Debug, Deserialize)]
 pub struct Config {
+    filename: Option<String>,
     symbols: Vec<TransformedSymbol>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct TransformedSymbol {
     pub function: String,
     pub package: String,
@@ -134,6 +137,12 @@ impl VisitMut for TransformVisitor {
 
     fn visit_mut_program(&mut self, n: &mut Program) {
         let filename_id = Ident::new("__dxlog_file".into(), DUMMY_SP);
+
+        let filename = match &self.config.filename {
+            Some(filename) => filename.clone(),
+            None => format!("{}", self.metadata.source_map.span_to_filename(n.span())),
+        };
+
         let filename_decl_stmt = Stmt::Decl(swc_core::ecma::ast::Decl::Var(Box::new(VarDecl {
             span: DUMMY_SP,
             kind: swc_core::ecma::ast::VarDeclKind::Var,
@@ -146,8 +155,7 @@ impl VisitMut for TransformVisitor {
                 }),
                 init: Some(Box::new(Expr::Lit(Lit::Str(Str {
                     span: DUMMY_SP,
-                    value: format!("{}", self.metadata.source_map.span_to_filename(n.span()))
-                        .into(),
+                    value: filename.into(),
                     raw: None,
                 })))),
                 definite: false,
@@ -286,24 +294,25 @@ fn create_call_site_arrow() -> ArrowExpr {
 /// Refer swc_plugin_macro to see how does it work internally.
 #[plugin_transform]
 pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
-    let config = Config {
-        symbols: vec![
-            TransformedSymbol {
-                function: "log".into(),
-                package: "@dxos/log".into(),
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-            },
-            TransformedSymbol {
-                function: "invariant".into(),
-                package: "@dxos/log".into(),
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-            },
-        ],
-    };
+    // let config = Config {
+    //     symbols: vec![
+    //         TransformedSymbol {
+    //             function: "log".into(),
+    //             package: "@dxos/log".into(),
+    //             param_index: 2,
+    //             include_args: false,
+    //             include_call_site: true,
+    //         },
+    //         TransformedSymbol {
+    //             function: "invariant".into(),
+    //             package: "@dxos/log".into(),
+    //             param_index: 2,
+    //             include_args: true,
+    //             include_call_site: false,
+    //         },
+    //     ],
+    // };
+    let config: Config = serde_json::from_str(&metadata.get_transform_plugin_config().expect("no config provided")).expect("failed to deserialize config");
 
     program.fold_with(&mut as_folder(TransformVisitor {
         config,
