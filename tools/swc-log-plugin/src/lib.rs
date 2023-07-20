@@ -5,9 +5,9 @@ use swc_core::{
     ecma::{
         ast::{
             ArrayLit, ArrowExpr, BindingIdent, CallExpr, Callee, Expr, ExprOrSpread, Id, Ident,
-            ImportDecl, ImportSpecifier, KeyValueProp, Lit, MemberProp, ModuleExportName, Number,
-            ObjectLit, Param, Pat, Program, Prop, PropName, PropOrSpread, Str, ThisExpr, UnaryExpr,
-            UnaryOp,
+            ImportDecl, ImportSpecifier, KeyValueProp, Lit, MemberProp, ModuleExportName,
+            ModuleItem, Number, ObjectLit, Param, Pat, Program, Prop, PropName, PropOrSpread, Stmt,
+            Str, ThisExpr, UnaryExpr, UnaryOp, VarDecl, VarDeclarator,
         },
         atoms::JsWord,
         transforms::testing::{test, Tester},
@@ -21,6 +21,7 @@ pub struct TransformVisitor {
     pub metadata: TransformPluginProgramMetadata,
     // pub source_map: Lrc<dyn SourceMapper>,
     pub to_transform: HashMap<Id, TransformedSymbol>,
+    pub filename_id: Option<Ident>,
 }
 
 pub struct Config {
@@ -56,7 +57,6 @@ impl TransformVisitor {
     }
 
     fn create_meta(&self, config: &TransformedSymbol, n: &CallExpr) -> ExprOrSpread {
-        let filename = self.metadata.source_map.span_to_filename(n.span);
         let span_lines = self.metadata.source_map.span_to_lines(n.span);
         let line = match span_lines {
             Ok(span_lines) => span_lines.lines[0].line_index + 1,
@@ -65,14 +65,12 @@ impl TransformVisitor {
 
         let mut props = vec![];
 
-        props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-            key: PropName::Ident(Ident::new("F".into(), DUMMY_SP)),
-            value: Box::new(Expr::Lit(Lit::Str(Str {
-                span: DUMMY_SP,
-                value: format!("{filename}").into(),
-                raw: None,
-            }))),
-        }))));
+        if let Some(filename_id) = &self.filename_id {
+            props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                key: PropName::Ident(Ident::new("F".into(), DUMMY_SP)),
+                value: Box::new(Expr::Ident(filename_id.clone())),
+            }))));
+        }
         props.push(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
             key: PropName::Ident(Ident::new("L".into(), DUMMY_SP)),
             value: Box::new(Expr::Lit(Lit::Num(Number {
@@ -133,6 +131,41 @@ impl VisitMut for TransformVisitor {
     // Implement necessary visit_mut_* methods for actual custom transform.
     // A comprehensive list of possible visitor methods can be found here:
     // https://rustdoc.swc.rs/swc_ecma_visit/trait.VisitMut.html
+
+    fn visit_mut_program(&mut self, n: &mut Program) {
+        let filename_id = Ident::new("__dxlog_file".into(), DUMMY_SP);
+        let filename_decl_stmt = Stmt::Decl(swc_core::ecma::ast::Decl::Var(Box::new(VarDecl {
+            span: DUMMY_SP,
+            kind: swc_core::ecma::ast::VarDeclKind::Var,
+            declare: false,
+            decls: vec![VarDeclarator {
+                span: DUMMY_SP,
+                name: Pat::Ident(BindingIdent {
+                    id: filename_id.clone(),
+                    type_ann: None,
+                }),
+                init: Some(Box::new(Expr::Lit(Lit::Str(Str {
+                    span: DUMMY_SP,
+                    value: format!("{}", self.metadata.source_map.span_to_filename(n.span()))
+                        .into(),
+                    raw: None,
+                })))),
+                definite: false,
+            }],
+        })));
+        self.filename_id = Some(filename_id.clone());
+
+        match n {
+            Program::Module(m) => {
+                m.body.insert(0, ModuleItem::Stmt(filename_decl_stmt));
+            }
+            Program::Script(s) => {
+                s.body.insert(0, filename_decl_stmt);
+            }
+        }
+
+        n.visit_mut_children_with(self);
+    }
 
     // Visit every import to mark proper `log` identifiers.
     fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
@@ -277,6 +310,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         metadata,
         // source_map: Lrc::new(metadata.source_map),
         to_transform: HashMap::new(),
+        filename_id: None,
     }))
 }
 
