@@ -5,6 +5,7 @@
 import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
 import React from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -27,7 +28,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             return [];
           }
 
-          const kanbanToGraphNode = (object: KanbanType) => ({
+          const kanbanToGraphNode = (object: KanbanType): GraphNode => ({
             id: object.id,
             index: 'a1',
             label: 'New Kanban', // TODO(burdon): Translation.
