@@ -16,7 +16,11 @@ export interface Daemon {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 
-  start: (profile: string) => Promise<ProcessInfo>;
+  /**
+   * Start agent.
+   * @param params.config Path to config file.
+   */
+  start: (profile: string, params?: { config?: string }) => Promise<ProcessInfo>;
   stop: (profile: string, params?: { force?: boolean }) => Promise<ProcessInfo>;
   restart: (profile: string) => Promise<ProcessInfo>;
 

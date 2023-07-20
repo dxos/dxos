@@ -90,7 +90,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           <TreeItem.Heading
             data-testid='spacePlugin.spaceTreeItemHeading'
             classNames={[
-              'grow text-start break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+              'grow min-is-0 truncate text-start pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
               error && 'text-error-700 dark:text-error-300',
               !disabled && 'cursor-pointer',
               disabled && staticDisabled,
