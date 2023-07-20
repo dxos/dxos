@@ -19,7 +19,7 @@ import translations from './translations';
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
   const objectToGraphNode = (parent: GraphNode, object: DrawingType): GraphNode => ({
     id: object.id,
-    index: 'a1', // TODO(burdon): Index.
+    index: 'a1',
     label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],
     icon: (props: IconProps) => <CompassTool {...props} />,
     data: object,
@@ -27,7 +27,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
     pluginActions: {
       [DRAWING_PLUGIN]: [
         {
-          id: 'delete', // TODO(burdon): Namespace.
+          id: 'delete',
           index: 'a1',
           label: ['delete drawing label', { ns: DRAWING_PLUGIN }],
           icon: (props: IconProps) => <Trash {...props} />,
@@ -66,9 +66,9 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           const space = parent.data;
           return [
             {
-              id: `${DRAWING_PLUGIN}/create-drawing`, // TODO(burdon): Namespace?
-              index: 'a1', // TODO(burdon): ???
-              testId: 'drawingPlugin.createDrawing', // TODO(burdon): Namespace?
+              id: `${DRAWING_PLUGIN}/create-drawing`,
+              index: 'a1',
+              testId: 'drawingPlugin.createDrawing',
               label: ['create drawing label', { ns: DRAWING_PLUGIN }],
               icon: (props) => <Plus {...props} />,
               invoke: async () => {
