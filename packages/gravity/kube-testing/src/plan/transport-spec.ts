@@ -82,6 +82,92 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     log.info('swarms created', { agentIdx });
 
+    /**
+     * Join swarm and wait till all peers are connected.
+     */
+    const joinSwarm = async (context: Context, swarmIdx: number, swarm: any) => {
+      log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+      await cancelWithContext(context, swarm.join());
+
+      log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+      await sleep(spec.desiredSwarmTimeout);
+      log.info('number of connections within duration', {
+        agentIdx,
+        swarmIdx,
+        swarmTopic: swarm.topic,
+        connections: swarm.protocol.connections.size,
+        numOfAgents,
+      });
+
+      /**
+       * Wait till all peers are connected (with timeout).
+       */
+      const waitTillConnected = async () => {
+        await cancelWithContext(
+          context,
+          swarm.protocol.connected.waitForCondition(
+            () => swarm.protocol.connections.size === Object.keys(agents).length - 1,
+          ),
+        );
+        log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+      };
+
+      asyncTimeout(waitTillConnected(), spec.fullSwarmTimeout).catch((error) => {
+        log.info('all peers not connected', {
+          agentIdx,
+          swarmIdx,
+          swarmTopic: swarm.topic,
+          connections: swarm.protocol.connections.size,
+          numOfAgents,
+        });
+      });
+    };
+
+    /**
+     * Leave swarm and wait till all peers are disconnected.
+     */
+    const leaveSwarm = async (context: Context, swarmIdx: number, swarm: any) => {
+      log.info('closing swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+      await cancelWithContext(context, swarm.leave());
+      log.info('swarm closed', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+
+      /**
+       * Wait till all peers are disconnected (with timeout).
+       */
+      const waitTillDisconnected = async () => {
+        await cancelWithContext(
+          context,
+          swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
+        );
+        log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+      };
+
+      asyncTimeout(waitTillDisconnected(), spec.fullSwarmTimeout).catch((error) => {
+        log.info('all peers not disconnected', {
+          agentIdx,
+          swarmIdx,
+          swarmTopic: swarm.topic,
+          connections: swarm.protocol.connections.size,
+        });
+      });
+    };
+
+    /**
+     * Iterate over all swarms and all agents.
+     */
+    const forEachSwarm = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
+      await Promise.all(
+        Object.keys(env.params.agents)
+          .filter((agentId) => agentId !== env.params.agentId)
+          .map(async (agentId) => {
+            for await (const [swarmIdx, swarm] of swarms.entries()) {
+              await callback(swarmIdx, swarm, agentId);
+            }
+          }
+        ),
+      );
+    }
+
     const ctx = new Context();
     let testCounter = 0;
 
@@ -94,92 +180,6 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       log.info('testRun iteration', { iterationId: testCounter });
 
-      /**
-       * Join swarm and wait till all peers are connected.
-       */
-      const joinSwarm = async (swarmIdx: number, swarm: any) => {
-        log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        await cancelWithContext(context, swarm.join());
-
-        log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        await sleep(spec.desiredSwarmTimeout);
-        log.info('number of connections within duration', {
-          agentIdx,
-          swarmIdx,
-          swarmTopic: swarm.topic,
-          connections: swarm.protocol.connections.size,
-          numOfAgents,
-        });
-
-        /**
-         * Wait till all peers are connected (with timeout).
-         */
-        const waitTillConnected = async () => {
-          await cancelWithContext(
-            context,
-            swarm.protocol.connected.waitForCondition(
-              () => swarm.protocol.connections.size === Object.keys(agents).length - 1,
-            ),
-          );
-          log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        };
-
-        asyncTimeout(waitTillConnected(), spec.fullSwarmTimeout).catch((error) => {
-          log.info('all peers not connected', {
-            agentIdx,
-            swarmIdx,
-            swarmTopic: swarm.topic,
-            connections: swarm.protocol.connections.size,
-            numOfAgents,
-          });
-        });
-      };
-
-      /**
-       * Leave swarm and wait till all peers are disconnected.
-       */
-      const leaveSwarm = async (swarmIdx: number, swarm: any) => {
-        log.info('closing swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        await cancelWithContext(context, swarm.leave());
-        log.info('swarm closed', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-
-        /**
-         * Wait till all peers are disconnected (with timeout).
-         */
-        const waitTillDisconnected = async () => {
-          await cancelWithContext(
-            context,
-            swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
-          );
-          log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-        };
-
-        asyncTimeout(waitTillDisconnected(), spec.fullSwarmTimeout).catch((error) => {
-          log.info('all peers not disconnected', {
-            agentIdx,
-            swarmIdx,
-            swarmTopic: swarm.topic,
-            connections: swarm.protocol.connections.size,
-          });
-        });
-      };
-
-      /**
-       * Iterate over all swarms and all agents.
-       */
-      const forEachSwarm = async (callback: (swarmIdx: number, swarm: any, agentId: string, ) => Promise<void>) => {
-        await Promise.all(
-          Object.keys(env.params.agents)
-            .filter((agentId) => agentId !== env.params.agentId)
-            .map(async (agentId) => {
-              for await (const [swarmIdx, swarm] of swarms.entries()) {
-                await callback(swarmIdx, swarm, agentId);
-              }
-            }
-          ),
-        );
-      }
-
       // Join all swarms.
       // How many connections established within the desired duration.
       {
@@ -187,7 +187,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
-            await joinSwarm(swarmIdx, swarm);
+            await joinSwarm(context, swarmIdx, swarm);
           }),
         );
 
@@ -244,6 +244,13 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         await env.syncBarrier(`connections are tested on ${testCounter}`);
       }
 
+      // Test delayed swarm.
+      // {
+      //   log.info('testing delayed swarm', { agentIdx, testCounter });
+      //   await joinSwarm(swarmTopicIds.length, delayedSwarm);
+
+      // }
+
       // Close streams.
       {
         log.info('closing streams', { agentIdx });
@@ -270,7 +277,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
-            await leaveSwarm(swarmIdx, swarm);
+            await leaveSwarm(context, swarmIdx, swarm);
           }),
         );
       }
