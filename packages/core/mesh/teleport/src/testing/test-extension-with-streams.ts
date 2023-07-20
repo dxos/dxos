@@ -47,6 +47,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       bytesReceived: 0,
       sendErrors: 0,
       receiveErrors: 0,
+      startTimestamp: Date.now(),
     };
 
     streamEntry.timer = setInterval(() => {
@@ -78,7 +79,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     clearInterval(stream.timer);
 
-    const { bytesSent, bytesReceived, sendErrors, receiveErrors } = stream;
+    const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
     stream.networkStream.destroy();
     this._streams.delete(streamTag);
@@ -88,6 +89,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       bytesReceived,
       sendErrors,
       receiveErrors,
+      runningTime: Date.now() - (startTimestamp ?? 0),
     };
   }
 
@@ -120,7 +122,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           },
           closeTestStream: async (request) => {
             const streamTag = request.data;
-            const { bytesSent, bytesReceived, sendErrors, receiveErrors } = this._closeStream(streamTag);
+            const { bytesSent, bytesReceived, sendErrors, receiveErrors, runningTime } = this._closeStream(streamTag);
 
             return {
               data: streamTag,
@@ -128,6 +130,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
               bytesReceived,
               sendErrors,
               receiveErrors,
+              runningTime,
             };
           },
         },
@@ -171,7 +174,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
   async closeStream(streamTag: string): Promise<TestStreamStats> {
     await this.open.wait({ timeout: 1500 });
-    const { data, bytesSent, bytesReceived, sendErrors, receiveErrors } =
+    const { data, bytesSent, bytesReceived, sendErrors, receiveErrors, runningTime } =
       await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
         data: streamTag,
       });
@@ -189,6 +192,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           bytesReceived,
           sendErrors,
           receiveErrors,
+          runningTime,
         },
       },
     };
@@ -207,6 +211,7 @@ type Stats = {
   bytesReceived: number;
   sendErrors: number;
   receiveErrors: number;
+  runningTime: number;
 };
 
 export type TestStreamStats = {
@@ -224,4 +229,5 @@ type TestStream = {
   sendErrors: number;
   receiveErrors: number;
   timer?: NodeJS.Timer;
+  startTimestamp?: number;
 };

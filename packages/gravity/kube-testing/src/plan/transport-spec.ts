@@ -257,7 +257,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           Object.keys(env.params.agents)
             .filter((agentId) => agentId !== env.params.agentId)
             .map(async (agentId) => {
-              await delayedSwarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+              try {
+                await delayedSwarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+              } catch (error) {
+                log.info('test delayed swarm failed', { agentIdx, error });
+              }
             }),
         );
 

@@ -31,6 +31,7 @@ message TestStreamRpcResponse {
   uint32 bytesReceived = 3;
   uint32 sendErrors = 4;
   uint32 receiveErrors = 5;
+  uint32 runningTime = 6;
 }
 
 service TestService {
