@@ -101,6 +101,8 @@ export const ClientProvider = ({
   onInitialized,
 }: ClientProviderProps) => {
   useMemo(() => {
+    // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
+    //   Unfortunately, aysnc import seemed to break signals React instrumentation.
     register && registerSignalFactory();
   }, []);
 

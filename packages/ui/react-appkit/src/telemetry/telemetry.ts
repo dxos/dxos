@@ -7,6 +7,7 @@ import * as localForage from 'localforage';
 
 import { log } from '@dxos/log';
 import type { Client, Config } from '@dxos/react-client';
+// TODO(wittjosiah): Consider loading these dynamically to allow sentry to be split out.
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
