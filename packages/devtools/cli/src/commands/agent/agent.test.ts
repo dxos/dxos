@@ -11,7 +11,7 @@ import { describe, test } from '@dxos/test';
 
 import { BIN_PATH, runCommand } from '../../util';
 
-describe.only('agent', () => {
+describe('agent', () => {
   test('join two agent profiles', async () => {
     const haloName = 'TEST_NAME';
 
