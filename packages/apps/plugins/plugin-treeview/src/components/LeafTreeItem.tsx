@@ -24,8 +24,6 @@ import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-them
 
 import { useTreeView } from '../TreeViewContext';
 
-const spaceExp = /\s/g;
-
 type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
@@ -76,9 +74,6 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const label = Array.isArray(node.label) ? t(...node.label) : node.label;
-  const wrap = spaceExp.test(label);
-
   return (
     <TreeItem.Root
       classNames={['pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded', focusRing, rearranging && 'invisible']}
@@ -120,7 +115,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           className='text-start flex gap-2 justify-start'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-          <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1', wrap ? 'break-words' : 'truncate')}>
+          <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1 truncate')}>
             {Array.isArray(node.label) ? t(...node.label) : node.label}
           </p>
         </button>
