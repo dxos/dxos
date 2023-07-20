@@ -18,7 +18,7 @@ export abstract class Bot {
   protected _space?: Space;
 
   constructor(private readonly _id: string) {
-    assert(this._id);
+    invariant(this._id);
   }
 
   [inspect.custom]() {
@@ -46,8 +46,8 @@ export abstract class Bot {
   }
 
   async init(config: Config, space: Space) {
-    assert(config);
-    assert(space);
+    invariant(config);
+    invariant(space);
     this._config = config;
     this._space = space;
 

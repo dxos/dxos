@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
@@ -90,7 +90,7 @@ export class IdentityManager {
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
-    assert(!this._identity, 'Identity already exists.');
+    invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
     const controlFeedKey = await this._keyring.createKey();
@@ -110,8 +110,8 @@ export class IdentityManager {
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
-      assert(identityRecord.haloSpace.genesisFeedKey, 'Genesis feed key is required.');
-      assert(identityRecord.haloSpace.dataFeedKey, 'Data feed key is required.');
+      invariant(identityRecord.haloSpace.genesisFeedKey, 'Genesis feed key is required.');
+      invariant(identityRecord.haloSpace.dataFeedKey, 'Data feed key is required.');
       const credentials = [
         // Space genesis.
         ...(await generator.createSpaceGenesis(identityRecord.haloSpace.key, identityRecord.haloSpace.genesisFeedKey)),
@@ -161,7 +161,7 @@ export class IdentityManager {
    */
   async acceptIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
-    assert(!this._identity, 'Identity already exists.');
+    invariant(!this._identity, 'Identity already exists.');
 
     const identityRecord: IdentityRecord = {
       identityKey: params.identityKey,
@@ -191,15 +191,15 @@ export class IdentityManager {
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {
-    assert(!this._identity);
+    invariant(!this._identity);
     log('constructing identity', { identityRecord });
 
     // Must be created before the space so the feeds are writable.
-    assert(identityRecord.haloSpace.controlFeedKey);
+    invariant(identityRecord.haloSpace.controlFeedKey);
     const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.controlFeedKey, {
       writable: true,
     });
-    assert(identityRecord.haloSpace.dataFeedKey);
+    invariant(identityRecord.haloSpace.dataFeedKey);
     const dataFeed = await this._feedStore.openFeed(identityRecord.haloSpace.dataFeedKey, {
       writable: true,
       sparse: true,

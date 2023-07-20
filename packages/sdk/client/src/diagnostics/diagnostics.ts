@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
@@ -61,7 +61,7 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
             const stats: SpaceStats = { type, info };
             if (type === 'echo') {
               const space = client.getSpace(info.key);
-              assert(space);
+              invariant(space);
               await space.waitUntilReady();
               const result = space?.db.query();
               Object.assign(stats, {

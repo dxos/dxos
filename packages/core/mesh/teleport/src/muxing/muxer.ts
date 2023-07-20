@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { Duplex } from 'node:stream';
 
 import { DeferredTask, Event, sleep } from '@dxos/async';
@@ -93,7 +93,7 @@ export class Muxer {
       tag,
       contentType: opts.contentType,
     });
-    assert(!channel.push, `Channel already open: ${tag}`);
+    invariant(!channel.push, `Channel already open: ${tag}`);
 
     const stream = new Duplex({
       write: (data, encoding, callback) => {
@@ -137,7 +137,7 @@ export class Muxer {
       tag,
       contentType: opts.contentType,
     });
-    assert(!channel.push, `Channel already open: ${tag}`);
+    invariant(!channel.push, `Channel already open: ${tag}`);
 
     // We need to buffer incoming data until the port is subscribed to.
     let inboundBuffer: Uint8Array[] = [];
@@ -161,7 +161,7 @@ export class Muxer {
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
       subscribe: (cb: (data: Uint8Array) => void) => {
-        assert(!callback, 'Only one subscriber is allowed');
+        invariant(!callback, 'Only one subscriber is allowed');
         callback = cb;
         for (const data of inboundBuffer) {
           cb(data);

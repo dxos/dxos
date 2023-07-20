@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -58,14 +58,14 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   }
 
   async start() {
-    assert(this._open);
+    invariant(this._open);
     if (!this._running) {
       this._running = true;
     }
   }
 
   async stop() {
-    assert(this._open);
+    invariant(this._open);
     if (this._running) {
       this._running = false;
       this._stopTrigger.wake();

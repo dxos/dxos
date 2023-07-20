@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
 import { log } from '@dxos/log';
@@ -23,7 +23,7 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlock
       const {
         data: { timeframe },
       } = messages[i];
-      assert(timeframe);
+      invariant(timeframe);
 
       if (!timeframeClock.hasGaps(timeframe)) {
         return i;

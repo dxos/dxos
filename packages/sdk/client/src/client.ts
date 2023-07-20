@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -236,7 +236,7 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
-    assert(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
 
     const trigger = new Trigger<Error | undefined>();
     this._statusStream = this._services.services.SystemService.queryStatus();
@@ -300,7 +300,7 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    assert(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
   }
 
@@ -313,7 +313,7 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
-    assert(this._services.services.SystemService, 'SystemService is not available.');
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
     await this._services.services?.SystemService.reset();
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.

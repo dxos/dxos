@@ -94,7 +94,7 @@ export class MailBot extends Bot {
     const findCurrent = (id: string) => currentMessages.find((message) => message.source.guid === id);
 
     // TODO(burdon): Deleted messages (e.g., if no longer exists in time range); updated properties.
-    assert(this._processor);
+    invariant(this._processor);
     const messages = await this._processor.requestMessages();
     log.info('messages', { current: currentMessages.length, messages: messages.length });
 

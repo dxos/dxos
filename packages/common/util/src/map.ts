@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 /**
  * Map with lazily created values.
@@ -14,7 +14,7 @@ export class LazyMap<K, V> extends Map<K, V> {
   }
 
   getOrInit(key: K): V {
-    assert(key);
+    invariant(key);
 
     if (this.has(key)) {
       return this.get(key)!;

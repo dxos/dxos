@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
@@ -82,7 +82,7 @@ export const performInvitation = ({
                   if (hooks?.guest?.onConnecting?.(guestObservable)) {
                     break;
                   }
-                  assert(hostInvitation.swarmKey!.equals(guestInvitation.swarmKey!));
+                  invariant(hostInvitation.swarmKey!.equals(guestInvitation.swarmKey!));
                   break;
                 }
 

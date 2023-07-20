@@ -3,7 +3,7 @@
 //
 
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { createKeyPair } from '@dxos/crypto';
 import { KeyPair } from '@dxos/keys';
@@ -24,7 +24,7 @@ export const generateSeedPhrase = (): string => generateMnemonic();
  */
 // TODO(dmaretskyi): Use web-crypto.
 export const keyPairFromSeedPhrase = (seedPhrase: string): KeyPair => {
-  assert(seedPhrase);
+  invariant(seedPhrase);
   const seed = mnemonicToSeedSync(seedPhrase);
   return createKeyPair(seed);
 };

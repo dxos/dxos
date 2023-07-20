@@ -6,7 +6,7 @@ import corsPlugin from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import fastify from 'fastify';
 import defaultsDeep from 'lodash.defaultsdeep';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { join } from 'node:path';
 import pkgDir from 'pkg-dir';
 
@@ -25,7 +25,7 @@ export const startVault = async ({ config: configOptions = {} }: StartVaultOptio
   await server.register(corsPlugin);
 
   const packageDir = await pkgDir(__dirname);
-  assert(packageDir, 'Could not find @dxos/vault package.json');
+  invariant(packageDir, 'Could not find @dxos/vault package.json');
   const root = join(packageDir, './dist/bundle');
   await server.register(staticPlugin, { root });
 

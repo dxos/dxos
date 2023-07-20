@@ -22,7 +22,8 @@
     "@dxos/util": "workspace:*",
     "compress-json": "^2.1.2",
     "lodash.merge": "^4.6.2",
-    "protobufjs": "^7.2.2"
+    "protobufjs": "^7.2.2",
+    "tiny-invariant": "^1.3.1"
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.6"

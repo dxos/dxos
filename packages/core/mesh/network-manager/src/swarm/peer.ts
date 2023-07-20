@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -121,7 +121,7 @@ export class Peer {
     if (await this._callbacks.onOffer(remoteId)) {
       if (!this.connection) {
         // Connection might have been already established.
-        assert(message.sessionId);
+        invariant(message.sessionId);
         const connection = this._createConnection(false, message.sessionId);
         try {
           connection.openConnection();
@@ -141,8 +141,8 @@ export class Peer {
    * Initiate a connection to the remote peer.
    */
   async initiateConnection() {
-    assert(!this.initiating, 'Initiation in progress.');
-    assert(!this.connection, 'Already connected.');
+    invariant(!this.initiating, 'Initiation in progress.');
+    invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
     const connection = this._createConnection(true, sessionId);
@@ -190,7 +190,7 @@ export class Peer {
       initiator,
       sessionId,
     });
-    assert(!this.connection, 'Already connected.');
+    invariant(!this.connection, 'Already connected.');
 
     const connection = new Connection(
       this.topic,
@@ -219,7 +219,7 @@ export class Peer {
 
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
-          assert(this.connection === connection, 'Connection mismatch (race condition).');
+          invariant(this.connection === connection, 'Connection mismatch (race condition).');
 
           if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
             // If we're closing the connection, and it has been connected for a while, reset the backoff.

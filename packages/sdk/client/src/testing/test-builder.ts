@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { ClientServices } from '@dxos/client-protocol';
@@ -123,7 +123,7 @@ export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = cr
 
   await result.batch.getReceipt();
   // TODO(dmaretskiy): await result.waitToBeProcessed()
-  assert(create._itemManager.entities.has(result.objectsUpdated[0].id));
+  invariant(create._itemManager.entities.has(result.objectsUpdated[0].id));
 
   await asyncTimeout(
     check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
@@ -146,7 +146,7 @@ export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
  */
 export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKey?: PublicKey): Promise<PublicKey> => {
   const rootSpace = spaceKey ? initialPeer.getSpace(spaceKey) : await initialPeer.createSpace();
-  assert(rootSpace, 'Space not found.');
+  invariant(rootSpace, 'Space not found.');
 
   await Promise.all(
     peers.map(async (peer) => {

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
@@ -157,10 +157,10 @@ export class ClientServicesHost {
    * Can only be called once.
    */
   initialize({ config, ...options }: InitializeOptions) {
-    assert(!this._open, 'service host is open');
+    invariant(!this._open, 'service host is open');
 
     if (config) {
-      assert(!this._config, 'config already set');
+      invariant(!this._config, 'config already set');
 
       this._config = config;
       if (!this._storage) {
@@ -177,7 +177,7 @@ export class ClientServicesHost {
     } = options;
     this._signalManager = signalManager;
 
-    assert(!this._networkManager, 'network manager already set');
+    invariant(!this._networkManager, 'network manager already set');
     this._networkManager = new NetworkManager({
       log: connectionLog,
       transportFactory,
@@ -194,10 +194,10 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
 
-    assert(this._config, 'config not set');
-    assert(this._storage, 'storage not set');
-    assert(this._signalManager, 'signal manager not set');
-    assert(this._networkManager, 'network manager not set');
+    invariant(this._config, 'config not set');
+    invariant(this._storage, 'storage not set');
+    invariant(this._signalManager, 'signal manager not set');
+    invariant(this._networkManager, 'network manager not set');
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });

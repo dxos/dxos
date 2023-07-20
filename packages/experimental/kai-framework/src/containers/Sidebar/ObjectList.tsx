@@ -48,7 +48,7 @@ export const ObjectList = <T extends TypedObject>({ frameDef, showDeleted, onAct
   }
 
   const handleCreate = async () => {
-    assert(frameDef.onCreate);
+    invariant(frameDef.onCreate);
     const object = await frameDef.onCreate(space);
     onAction?.({ type: ObjectActionType.SELECT, object });
     return object.id;

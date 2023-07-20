@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-protocol';
@@ -45,7 +45,7 @@ export class MeshProxy {
   }
 
   async updateConfig(swarm: ConnectionState) {
-    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
+    invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     return this._serviceProvider.services.NetworkService.updateConfig({ swarm });
   }
 
@@ -56,7 +56,7 @@ export class MeshProxy {
     log.trace('dxos.sdk.mesh-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
-    assert(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
+    invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
     const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus();
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatusUpdated.emit(networkStatus);

@@ -27,8 +27,8 @@ const parseJson = (content: string) => {
 
 export class ContactStackResolver implements Resolver<DocumentStack> {
   constructor(private readonly _id: string, private readonly _chatModel: ChatModel) {
-    assert(this._id);
-    assert(this._chatModel);
+    invariant(this._id);
+    invariant(this._chatModel);
   }
 
   async update(space: Space, stack: DocumentStack) {

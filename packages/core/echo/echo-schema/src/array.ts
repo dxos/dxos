@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { inspect, CustomInspectFunction } from 'node:util';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
@@ -74,10 +74,10 @@ export class EchoArray<T> implements Array<T> {
       if (!array) {
         return 0;
       }
-      assert(array instanceof OrderedArray);
+      invariant(array instanceof OrderedArray);
       return array.array.length;
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       return this._uninitialized.length;
     }
   }
@@ -139,7 +139,7 @@ export class EchoArray<T> implements Array<T> {
 
       return deletedItems;
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       // TODO(burdon): Check param types.
       return this._uninitialized.splice(start as number, deleteCount as number, ...(items as any[]));
     }
@@ -255,7 +255,7 @@ export class EchoArray<T> implements Array<T> {
       if (!array) {
         return [][Symbol.iterator]();
       }
-      assert(array instanceof OrderedArray);
+      invariant(array instanceof OrderedArray);
 
       return array
         .toArray()
@@ -263,7 +263,7 @@ export class EchoArray<T> implements Array<T> {
         .filter(Boolean)
         .values();
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       return this._uninitialized[Symbol.iterator]();
     }
   }
@@ -299,7 +299,7 @@ export class EchoArray<T> implements Array<T> {
         )
         .commit();
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       this._uninitialized.push(...items);
     }
 
@@ -346,7 +346,7 @@ export class EchoArray<T> implements Array<T> {
       Object.freeze(value);
       return encodeRecords(value, this._object!);
     } else {
-      assert(
+      invariant(
         value === null ||
           value === undefined ||
           typeof value === 'boolean' ||
@@ -373,7 +373,7 @@ export class EchoArray<T> implements Array<T> {
     if (this._getBackingModel()) {
       return this._getModel(index);
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       return this._uninitialized[index];
     }
   }
@@ -382,7 +382,7 @@ export class EchoArray<T> implements Array<T> {
     if (this._getBackingModel()) {
       this._setModel(index, value);
     } else {
-      assert(this._uninitialized);
+      invariant(this._uninitialized);
       this._uninitialized[index] = value;
     }
   }
@@ -390,7 +390,7 @@ export class EchoArray<T> implements Array<T> {
   private _getModel(index: number): T | undefined {
     const model = this._getBackingModel()!;
     const array = model.get(this._property!);
-    assert(array instanceof OrderedArray);
+    invariant(array instanceof OrderedArray);
 
     return this._decode(array.get(index)) as T | undefined;
   }

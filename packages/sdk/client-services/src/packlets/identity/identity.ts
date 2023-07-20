@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
@@ -137,7 +137,7 @@ export class Identity {
    * Requires identity to be ready.
    */
   getIdentityCredentialSigner(): CredentialSigner {
-    assert(this._deviceStateMachine.processor.deviceCredentialChain, 'Device credential chain is not ready.');
+    invariant(this._deviceStateMachine.processor.deviceCredentialChain, 'Device credential chain is not ready.');
     return createCredentialSignerWithChain(
       this._signer,
       this._deviceStateMachine.processor.deviceCredentialChain,

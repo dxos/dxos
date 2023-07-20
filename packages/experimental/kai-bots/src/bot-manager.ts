@@ -21,7 +21,7 @@ export class BotManager {
 
   async create(config: Config, botId: string, space: Space): Promise<Bot> {
     const constructor = this._botMap.get(botId);
-    assert(constructor);
+    invariant(constructor);
 
     const bot = constructor();
     await bot.init(config, space);

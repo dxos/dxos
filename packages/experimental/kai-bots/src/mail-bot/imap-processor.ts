@@ -25,8 +25,8 @@ export class ImapProcessor {
   private _connection?: ImapSimple;
 
   constructor(private readonly _id: string, private readonly _config: ImapConfig) {
-    assert(this._id);
-    assert(this._config);
+    invariant(this._id);
+    invariant(this._config);
   }
 
   // https://www.npmjs.com/package/imap-simple

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { appServiceBundle, AppServiceBundle, ShellRuntime, shellServiceBundle } from '@dxos/client-protocol';
@@ -42,7 +42,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   }
 
   async setAppContext(context: AppContextRequest) {
-    assert(this._appRpc, 'runtime not open');
+    invariant(this._appRpc, 'runtime not open');
 
     await this._appRpc.rpc.AppService.setContext(context);
   }

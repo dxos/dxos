@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
 
 import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
@@ -91,8 +91,8 @@ export class EchoProxy implements Echo {
       },
     });
 
-    assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    assert(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
+    invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
+    invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
     }));
@@ -171,7 +171,7 @@ export class EchoProxy implements Echo {
    * Creates a new space.
    */
   async createSpace(meta?: PropertiesProps): Promise<Space> {
-    assert(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
+    invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace();
@@ -196,7 +196,7 @@ export class EchoProxy implements Echo {
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
     return todo();
-    // assert(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
+    // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
     // const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
 
     // const proxy = new Trigger<SpaceProxy>();

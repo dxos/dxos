@@ -81,7 +81,7 @@ const Test = () => {
       }
 
       case 'delete': {
-        assert(section);
+        invariant(section);
         setSections((sections) => {
           const idx = sections.findIndex(({ id }) => id === section.id);
           if (idx !== -1) {

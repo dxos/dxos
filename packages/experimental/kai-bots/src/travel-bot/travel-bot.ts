@@ -65,8 +65,8 @@ export class TravelBot extends Bot {
         currencyCode: 'USD',
         originDestinations: destinations.map((destination, i) => {
           const previous = trip.destinations[i];
-          assert(previous.address?.cityCode);
-          assert(destination.address?.cityCode);
+          invariant(previous.address?.cityCode);
+          invariant(destination.address?.cityCode);
 
           return {
             id: String(i + 1),

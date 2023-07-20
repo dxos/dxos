@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { failUndefined } from '@dxos/debug';
 import { log, logInfo } from '@dxos/log';
@@ -57,7 +57,7 @@ export class ItemManager {
    */
   // TODO(burdon): Parent not used.
   private _addItem(item: Item<any>, parent?: Item<any> | null) {
-    assert(!this._entities.has(item.id));
+    invariant(!this._entities.has(item.id));
     this._entities.set(item.id, item);
     log('New Item:', String(item));
   }
@@ -66,8 +66,8 @@ export class ItemManager {
    * Constructs an item with the appropriate model.
    */
   constructItem({ itemId, modelType }: ItemConstructionOptions): Item<any> {
-    assert(itemId);
-    assert(modelType);
+    invariant(itemId);
+    invariant(modelType);
     if (this.entities.has(itemId)) {
       return this.entities.get(itemId)!;
     }
@@ -90,7 +90,7 @@ export class ItemManager {
    */
   processMutation(itemId: ItemID, mutation: EchoObject.Mutation) {
     const item = this._entities.get(itemId);
-    assert(item);
+    invariant(item);
 
     item.processMessage(mutation);
   }
@@ -114,7 +114,7 @@ export class ItemManager {
    */
   deconstructItem(itemId: ItemID) {
     const item = this._entities.get(itemId);
-    assert(item);
+    invariant(item);
 
     this._entities.delete(itemId);
   }
@@ -125,10 +125,10 @@ export class ItemManager {
    */
   initializeModel(itemId: ItemID) {
     const item = this._entities.get(itemId);
-    assert(item);
+    invariant(item);
 
     const model = this._modelFactory.getModel(item.modelType);
-    assert(model, 'Model not registered');
+    invariant(model, 'Model not registered');
 
     item.initialize(model.constructor);
   }

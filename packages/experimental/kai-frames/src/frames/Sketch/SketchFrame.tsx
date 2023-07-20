@@ -114,7 +114,7 @@ export const SketchFrame = () => {
       return;
     }
 
-    assert(sketch);
+    invariant(sketch);
     sketch.paths.push(convertToProtoPath(updated));
     active.current = false;
 

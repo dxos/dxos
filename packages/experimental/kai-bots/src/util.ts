@@ -11,7 +11,7 @@ import * as process from 'node:process';
 import { Config } from '@dxos/config';
 
 export const loadJson = (filename: string) => {
-  assert(filename, 'Invalid path');
+  invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
 };
 

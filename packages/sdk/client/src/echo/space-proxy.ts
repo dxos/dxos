@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 import isEqualWith from 'lodash.isequalwith';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';
@@ -78,13 +78,13 @@ export class SpaceProxy implements Space {
     private _data: SpaceData,
     databaseRouter: DatabaseRouter
   ) {
-    assert(this._clientServices.services.InvitationsService, 'InvitationsService not available');
+    invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
     this._invitationsProxy = new InvitationsProxy(this._clientServices.services.InvitationsService, () => ({
       kind: Invitation.Kind.SPACE,
       spaceKey: this.key
     }));
 
-    assert(this._clientServices.services.DataService, 'DataService not available');
+    invariant(this._clientServices.services.DataService, 'DataService not available');
     this._itemManager = new ItemManager(this._modelFactory);
     this._dbBackend = new DatabaseProxy(this._clientServices.services.DataService, this._itemManager, this.key);
     this._db = new EchoDatabase(this._itemManager, this._dbBackend, databaseRouter);
@@ -130,7 +130,7 @@ export class SpaceProxy implements Space {
     if (this._currentState !== SpaceState.READY) {
       return this._cachedProperties;
     } else {
-      assert(this._properties, 'Properties not initialized.');
+      invariant(this._properties, 'Properties not initialized.');
       return this._properties;
     }
   }
@@ -257,7 +257,7 @@ export class SpaceProxy implements Space {
       }
     }
 
-    assert(this._properties);
+    invariant(this._properties);
     this._initialized = true;
     this._initializing = false;
     this._initializationComplete.wake();
@@ -306,7 +306,7 @@ export class SpaceProxy implements Space {
    * Post a message to the space.
    */
   async postMessage(channel: string, message: any) {
-    assert(this._clientServices.services.SpacesService, 'SpacesService not available');
+    invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     await this._clientServices.services.SpacesService.postMessage({
       spaceKey: this.key,
       channel,
@@ -318,7 +318,7 @@ export class SpaceProxy implements Space {
    * Listen for messages posted to the space.
    */
   listen(channel: string, callback: (message: GossipMessage) => void) {
-    assert(this._clientServices.services.SpacesService, 'SpacesService not available');
+    invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages({ spaceKey: this.key, channel });
     stream.subscribe(callback);
     return () => stream.close();
@@ -342,7 +342,7 @@ export class SpaceProxy implements Space {
 
   async _setOpen(open: boolean) {
     return todo();
-    // assert(this._clientServices.services.SpaceService, 'SpaceService not available');
+    // invariant(this._clientServices.services.SpaceService, 'SpaceService not available');
 
     // await this._clientServices.services.SpaceService.setSpaceState({
     //   spaceKey: this.key,

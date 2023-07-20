@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, Observable, PushStream } from '@dxos/async';
 import {
@@ -146,7 +146,7 @@ export class InvitationsProxy implements Invitations {
       subscriber: createObservable(this._invitationsService.createInvitation(invitation)),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
-        assert(invitationId, 'Invitation missing identifier');
+        invariant(invitationId, 'Invitation missing identifier');
         await this._invitationsService.cancelInvitation({ invitationId });
       },
     });
@@ -156,7 +156,7 @@ export class InvitationsProxy implements Invitations {
   }
 
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
-    assert(invitation && invitation.swarmKey);
+    invariant(invitation && invitation.swarmKey);
     this._invitations.add(invitation.invitationId);
 
     const existing = this._accepted.get().find((accepted) => accepted.get().invitationId === invitation.invitationId);
@@ -169,12 +169,12 @@ export class InvitationsProxy implements Invitations {
       subscriber: createObservable(this._invitationsService.acceptInvitation({ ...invitation })),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;
-        assert(invitationId, 'Invitation missing identifier');
+        invariant(invitationId, 'Invitation missing identifier');
         await this._invitationsService.cancelInvitation({ invitationId });
       },
       onAuthenticate: async (authCode: string) => {
         const invitationId = observable.get().invitationId;
-        assert(invitationId, 'Invitation missing identifier');
+        invariant(invitationId, 'Invitation missing identifier');
         await this._invitationsService.authenticate({ invitationId, authCode });
       },
     });

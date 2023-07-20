@@ -3,7 +3,7 @@
 //
 
 import fetch from 'isomorphic-fetch';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import urljoin from 'url-join';
 
 import { PublicKey } from '@dxos/keys';
@@ -38,7 +38,7 @@ export class Spy {
   }
 
   humanize(key: PublicKey) {
-    assert(key);
+    invariant(key);
     return humanize(key);
   }
 
@@ -59,7 +59,7 @@ export class Spy {
     }
 
     // TODO(burdon): Check not bound to other key.
-    assert(!bindings.has(object), 'Already bound.');
+    invariant(!bindings.has(object), 'Already bound.');
     bindings.add(object);
     object.__spy = ++this._count;
     console.log(`### Bind(${this.info}) ###`, object.__spy, label);
@@ -70,7 +70,7 @@ export class Spy {
    * Log the message with the given key or bound object.
    */
   async log(key: any, data: any, tmp?: string) {
-    assert(key);
+    invariant(key);
     if (this._enabled) {
       let keyValue: string;
       if (typeof key === 'string') {
@@ -82,7 +82,7 @@ export class Spy {
           return bindings.has(key);
         });
 
-        assert(value, `### Object not bound (${this.info}) ### ${key.__spy}:${tmp}`);
+        invariant(value, `### Object not bound (${this.info}) ### ${key.__spy}:${tmp}`);
         keyValue = value[0];
       }
 

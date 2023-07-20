@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
 
 import {
@@ -79,7 +79,7 @@ export class HaloProxy implements Halo {
   }
 
   get invitations() {
-    assert(this._invitationProxy, 'HaloProxy not opened');
+    invariant(this._invitationProxy, 'HaloProxy not opened');
     return this._invitationProxy.created;
   }
 
@@ -98,13 +98,13 @@ export class HaloProxy implements Halo {
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
-    assert(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
+    invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
       kind: Invitation.Kind.DEVICE,
     }));
     await this._invitationProxy.open();
 
-    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
@@ -116,7 +116,7 @@ export class HaloProxy implements Halo {
       this._identityChanged.emit(data.identity ?? null);
     });
 
-    assert(this._serviceProvider.services.DevicesService, 'DevicesService not available');
+    invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
     devicesStream.subscribe((data) => {
       if (data.devices) {
@@ -165,14 +165,14 @@ export class HaloProxy implements Halo {
    * Then initializes profile with given display name.
    */
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
-    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
-    assert(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
     this._identityChanged.emit(identity);
     return identity;

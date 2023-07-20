@@ -31,7 +31,7 @@ export const Video: FC<{ space: Space }> = ({ space }) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
   const [_, render] = useState({});
-  assert(identity);
+  invariant(identity);
 
   const iceServers: RTCIceServer[] = (config.values.runtime?.services?.ice as RTCIceServer[]) ?? [];
   // TODO(mykola): Merge initiatorPeerRefs and listenerPeerRefs into one map to use N webRTC connections instead of 2N.

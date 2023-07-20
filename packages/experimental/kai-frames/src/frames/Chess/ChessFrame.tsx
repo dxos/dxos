@@ -75,7 +75,7 @@ const Play: FC<{
   };
 
   const handleUpdate = (move: ChessMove) => {
-    assert(model);
+    invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
       game!.fen = model.chess.pgn();

@@ -101,13 +101,13 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
       }
 
       case ObjectActionType.DELETE: {
-        assert(object);
+        invariant(object);
         space?.db.remove(object);
         break;
       }
 
       case ObjectActionType.RESTORE: {
-        assert(object);
+        invariant(object);
         space?.db.add(object);
         break;
       }
@@ -117,7 +117,7 @@ export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out intention handlers?
   const handleSpaceAction = (intent: Intent<SpaceListAction>) => {
     const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
-    assert(space);
+    invariant(space);
 
     switch (intent.action) {
       case IntentAction.SPACE_SELECT: {
