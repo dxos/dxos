@@ -27,7 +27,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
   static override flags = {
     ...BaseCommand.flags,
-    require: Flags.string({ multiple: true, aliases: ['r'] }),
+    require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
     manifest: Flags.string({ default: 'functions.yml' }),
   };
 
