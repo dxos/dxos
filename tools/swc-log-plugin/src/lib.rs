@@ -1,16 +1,16 @@
 use swc_core::{
-    common::{sync::Lrc, SourceMapper, DUMMY_SP},
+    common::{sync::Lrc, SourceMapper, Spanned, DUMMY_SP},
     ecma::{
         ast::{
-            ArrowExpr, BindingIdent, CallExpr, Callee, Expr, ExprOrSpread, Id, Ident, ImportDecl,
-            ImportSpecifier, KeyValueProp, Lit, MemberProp, ModuleExportName, Number, ObjectLit,
-            Param, Pat, Program, Prop, PropName, PropOrSpread, Str, ThisExpr,
+            ArrayLit, ArrowExpr, BindingIdent, CallExpr, Callee, Expr, ExprOrSpread, Id, Ident,
+            ImportDecl, ImportSpecifier, KeyValueProp, Lit, MemberProp, ModuleExportName, Number,
+            ObjectLit, Param, Pat, Program, Prop, PropName, PropOrSpread, Str, ThisExpr,
         },
         atoms::JsWord,
         transforms::testing::{test, Tester},
         visit::{as_folder, Fold, FoldWith, VisitMut, VisitMutWith},
     },
-    plugin::{plugin_transform, metadata::TransformPluginProgramMetadata},
+    plugin::{metadata::TransformPluginProgramMetadata, plugin_transform}, 
 };
 
 pub struct TransformVisitor {
@@ -45,12 +45,15 @@ impl TransformVisitor {
 
     fn create_log_meta(&self, n: &CallExpr) -> ExprOrSpread {
         let filename = self.metadata.source_map.span_to_filename(n.span);
-        let line = self.metadata.source_map.span_to_lines(n.span).unwrap().lines[0].line_index + 1;
-        let snippet = self.metadata.source_map.span_to_snippet(n.span).unwrap();
+        let span_lines = self.metadata.source_map.span_to_lines(n.span);
+        let line = match span_lines {
+            Ok(span_lines) => span_lines.lines[0].line_index + 1,
+            Err(_) => 0,
+        };
 
-        // let filename = "input.js";
-        // let line = 3;
-        // let snippet = "test";
+        let arg_snippets = n.args.iter().map(|a| {
+            self.metadata.source_map.span_to_snippet(a.span()).unwrap_or("".into())
+        });
 
         ExprOrSpread {
             spread: None,
@@ -82,12 +85,22 @@ impl TransformVisitor {
                         value: Box::new(Expr::Arrow(create_call_site_arrow())),
                     }))),
                     PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new("snippet".into(), DUMMY_SP)),
-                        value: Box::new(Expr::Lit(Lit::Str(Str {
+                        key: PropName::Ident(Ident::new("args".into(), DUMMY_SP)),
+                        value: Box::new(Expr::Array(ArrayLit {
                             span: DUMMY_SP,
-                            value: format!("{snippet}").into(),
-                            raw: None,
-                        }))),
+                            elems: arg_snippets
+                                .map(|snippet| {
+                                    Some(ExprOrSpread {
+                                        spread: None,
+                                        expr: Box::new(Expr::Lit(Lit::Str(Str {
+                                            span: DUMMY_SP,
+                                            value: snippet.into(),
+                                            raw: None,
+                                        }))),
+                                    })
+                                })
+                                .collect(),
+                        })),
                     }))),
                 ],
             })),
