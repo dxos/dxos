@@ -11,7 +11,6 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
 import { TestItemBuilder } from './testing';
-import { log } from '@dxos/log';
 
 chai.use(chaiAsPromised);
 
@@ -40,8 +39,6 @@ describe('FeedStore', () => {
 
       expect(feedStore.size).to.eq(feedKeys.length);
     }
-
-    log.info('123')
 
     {
       await feedStore.close();
