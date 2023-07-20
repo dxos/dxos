@@ -27,7 +27,7 @@ import { isNode } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { Monitor } from '../diagnostics';
+import { ClientStats, DiagnosticOptions, diagnostics, Monitor } from '../diagnostics';
 import { PropertiesProps } from '../proto';
 import { EchoProxy, HaloProxy, MeshProxy } from '../proxies';
 import { SpaceSerializer } from './serializer';
@@ -212,6 +212,13 @@ export class Client {
    */
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
     return this._echo.acceptInvitation(invitation);
+  }
+
+  /**
+   * Get client diagnostics data.
+   */
+  diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<ClientStats>> {
+    return diagnostics(this, opts);
   }
 
   /**
