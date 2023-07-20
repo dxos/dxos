@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, IconProps, Plus } from '@phosphor-icons/react';
+import { Chat, IconProps, Plus, Trash } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -30,7 +30,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           id: 'delete', // TODO(burdon): Namespace.
           index: 'a1',
           label: ['delete thread label', { ns: THREAD_PLUGIN }],
-          icon: (props: IconProps) => <Plus {...props} />,
+          icon: (props: IconProps) => <Trash {...props} />,
           invoke: async () => parent.data?.db.remove(object),
         },
       ],

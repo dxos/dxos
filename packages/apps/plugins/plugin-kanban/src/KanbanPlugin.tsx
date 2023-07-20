@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconProps, Kanban, Plus } from '@phosphor-icons/react';
+import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -30,7 +30,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           id: 'delete', // TODO(burdon): Namespace.
           index: 'a1',
           label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
-          icon: (props: IconProps) => <Kanban {...props} />,
+          icon: (props: IconProps) => <Trash {...props} />,
           invoke: async () => parent.data?.db.remove(object),
         },
       ],

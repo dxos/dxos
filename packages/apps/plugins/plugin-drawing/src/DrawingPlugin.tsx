@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FrameCorners, IconProps, Plus } from '@phosphor-icons/react';
+import { CompassTool, IconProps, Plus, Trash } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
@@ -21,7 +21,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
     id: object.id,
     index: 'a1', // TODO(burdon): Index.
     label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],
-    icon: (props: IconProps) => <FrameCorners {...props} />,
+    icon: (props: IconProps) => <CompassTool {...props} />,
     data: object,
     parent,
     pluginActions: {
@@ -30,7 +30,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           id: 'delete', // TODO(burdon): Namespace.
           index: 'a1',
           label: ['delete drawing label', { ns: DRAWING_PLUGIN }],
-          icon: (props: IconProps) => <FrameCorners {...props} />,
+          icon: (props: IconProps) => <Trash {...props} />,
           invoke: async () => parent.data?.db.remove(object),
         },
       ],
