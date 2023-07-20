@@ -304,7 +304,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
           this.log(`Starting agent (${this.flags.profile})`);
-          await daemon.start(this.flags.profile);
+          await daemon.start(this.flags.profile, { config: this.flags.config });
         }
       });
     }
@@ -316,7 +316,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     assert(this._clientConfig);
     if (!this._client) {
-      assert(this._clientConfig);
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
