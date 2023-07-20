@@ -16,6 +16,7 @@ export default [
         'item title placeholder': 'New Item',
         'add column label': 'Add column',
         'add item label': 'Add item',
+        'delete thread label': 'Delete thread',
         'delete column label': 'Delete column',
         'delete item label': 'Delete item',
         'create thread label': 'Create thread',
