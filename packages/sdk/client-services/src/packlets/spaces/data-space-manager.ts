@@ -123,6 +123,7 @@ export class DataSpaceManager {
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
+      state: SpaceState.ACTIVE,
     };
 
     log('creating space...', { spaceKey });

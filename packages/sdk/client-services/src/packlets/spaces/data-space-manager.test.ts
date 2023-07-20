@@ -7,7 +7,7 @@ import path from 'node:path';
 
 import { latch } from '@dxos/async';
 import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
+import { AuthStatus } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -17,8 +17,8 @@ import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
-import { DataSpaceManager } from './data-space-manager';
+import { TestBuilder, syncItemsLocal } from '../testing';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -229,8 +229,24 @@ describe('DataSpaceManager', () => {
   });
 
   describe('activation', () => {
-    test('can activate and deactivate a space', () => {
-      
+    test('can activate and deactivate a space', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      expect(space.state).to.equal(SpaceState.READY);
+
+      await space.deactivate();
+      expect(space.state).to.equal(SpaceState.INACTIVE);
+      expect(space.inner.protocol.sessions.size).to.equal(0);
+
+      await space.activate();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      expect(space.state).to.equal(SpaceState.READY);
     })
   })
 });
