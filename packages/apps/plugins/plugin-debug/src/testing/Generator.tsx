@@ -46,7 +46,7 @@ export class Generator {
           // TODO(burdon): Insert, update, or delete.
           const idx = text.lastIndexOf(' ', this._faker!.datatype.number({ min: 0, max: text.length }));
           if (idx !== -1) {
-            object.content.model.insert(' ' + this._faker!.lorem.word(), idx);
+            object.content.model?.insert(' ' + this._faker!.lorem.word(), idx);
           }
         }
 
