@@ -36,9 +36,6 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           dxos: ['@dxos/react-client'],
-          echo: ['@dxos/react-client/echo', '@dxos/echo-schema'],
-          halo: ['@dxos/react-client/halo'],
-          ui: ['@dxos/react-appkit']
         },
       },
     }

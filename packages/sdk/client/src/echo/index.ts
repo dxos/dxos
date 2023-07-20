@@ -3,6 +3,7 @@
 //
 
 export type { Echo, Space } from '@dxos/client-protocol';
+// TODO(burdon): Export form `@dxos/echo-db`.
 export { type ItemID, DocumentModel } from '@dxos/document-model';
 export {
   TYPE_SCHEMA,

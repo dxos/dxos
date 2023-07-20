@@ -2,7 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from '@dxos/client/halo';
+// NOTE: Export * fails here.
+export {
+  type Contact,
+  type Device,
+  DeviceKind,
+  type Identity,
+  // generateSeedPhrase,
+  type Halo,
+  HaloProxy,
+} from '@dxos/client/halo';
 
 export * from './useContacts';
 export * from './useDevices';
