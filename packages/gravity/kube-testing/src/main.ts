@@ -81,7 +81,7 @@ const runTransport = () =>
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
       streamLoadInterval: 5,
-      streamLoadChunkSize: 2048,
+      streamLoadChunkSize: 11264,
     },
     options: {
       staggerAgents: 1000,
