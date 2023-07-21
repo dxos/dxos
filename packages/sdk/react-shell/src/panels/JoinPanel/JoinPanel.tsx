@@ -42,7 +42,7 @@ export const JoinPanelImpl = ({
   return (
     <DensityProvider density='fine'>
       <JoinHeading {...{ titleId, onExit, exitActionParent, preventExit }} />
-      <Viewport.Root>
+      <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='addition method selector'>
             <AdditionMethodSelector send={send} active={activeView === 'addition method selector'} />
@@ -301,6 +301,8 @@ export const JoinPanel = ({
     }),
     [joinState],
   );
+
+  console.log('[active view]', activeView);
 
   return (
     <JoinPanelImpl
