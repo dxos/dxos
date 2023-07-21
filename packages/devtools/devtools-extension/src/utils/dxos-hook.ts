@@ -2,14 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import browser from 'webextension-polyfill';
+
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // TODO(burdon): ?
 const checkForDXOS = () =>
   new Promise<boolean>((resolve, reject) => {
-    // TODO(wittjosiah): Switch to using webextension-polyfill once types are improved.
-    chrome.devtools.inspectedWindow.eval('!!(window.__DXOS__);', async (result, exception) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    void browser.devtools.inspectedWindow.eval('!!(window.__DXOS__);', async (result, exception) => {
       if (exception) {
         reject(exception);
       }
