@@ -6,8 +6,7 @@ import { Clipboard } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, Message, useTranslation, DropdownMenu } from '@dxos/aurora';
-import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
-import { Config } from '@dxos/config';
+import { Config, DEFAULT_CLIENT_ORIGIN } from '@dxos/react-client';
 import { getAsyncValue, Provider } from '@dxos/util';
 
 import { Dialog, DialogProps } from '../Dialog';

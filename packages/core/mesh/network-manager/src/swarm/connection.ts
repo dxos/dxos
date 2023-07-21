@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
@@ -111,7 +111,7 @@ export class Connection {
    */
   // TODO(burdon): Make async?
   openConnection() {
-    assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
+    invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
 
     this._changeState(ConnectionState.CONNECTING);
@@ -127,7 +127,7 @@ export class Connection {
       this.close().catch((err) => this.errors.raise(err));
     });
 
-    assert(!this._transport);
+    invariant(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
@@ -227,14 +227,14 @@ export class Connection {
    * Receive a signal from the remote peer.
    */
   async signal(msg: SignalMessage) {
-    assert(msg.sessionId);
+    invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
       return;
     }
-    assert(msg.data.signal || msg.data.signalBatch);
-    assert(msg.author?.equals(this.remoteId));
-    assert(msg.recipient?.equals(this.ownId));
+    invariant(msg.data.signal || msg.data.signalBatch);
+    invariant(msg.author?.equals(this.remoteId));
+    invariant(msg.recipient?.equals(this.ownId));
 
     const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
     for (const signal of signals) {
@@ -246,7 +246,7 @@ export class Connection {
         log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
         this._incomingSignalBuffer.push(signal);
       } else {
-        assert(this._transport, 'Connection not ready to accept signals.');
+        invariant(this._transport, 'Connection not ready to accept signals.');
         log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
         await this._transport.signal(signal);
       }
@@ -255,7 +255,7 @@ export class Connection {
 
   private _changeState(state: ConnectionState): void {
     log('stateChanged', { from: this._state, too: state, peerId: this.ownId });
-    assert(state !== this._state, 'Already in this state.');
+    invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
   }

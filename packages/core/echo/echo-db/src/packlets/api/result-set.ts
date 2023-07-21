@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, ReadOnlyEvent } from '@dxos/async';
 
@@ -23,8 +23,8 @@ export class ResultSet<T> {
   readonly update: ReadOnlyEvent<T[]> = this._resultsUpdate;
 
   constructor(itemUpdate: ReadOnlyEvent, getter: () => T[]) {
-    assert(itemUpdate);
-    assert(getter);
+    invariant(itemUpdate);
+    invariant(getter);
     this._itemUpdate = itemUpdate;
     this._getter = getter;
     this._results = this._getter();
@@ -43,7 +43,7 @@ export class ResultSet<T> {
 
   get first(): T {
     const value = this._results;
-    assert(value.length);
+    invariant(value.length);
     return value[0];
   }
 

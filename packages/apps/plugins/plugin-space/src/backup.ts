@@ -6,8 +6,8 @@ import JSZip from 'jszip';
 
 // TODO(wittjosiah): Factor Document functionality out to markdown plugin.
 import { Document } from '@braneframe/types';
-import { Space } from '@dxos/client';
 import { log } from '@dxos/log';
+import { Space } from '@dxos/react-client/echo';
 import { YText } from '@dxos/text-model';
 
 export type ComposerDocumentBackup = {

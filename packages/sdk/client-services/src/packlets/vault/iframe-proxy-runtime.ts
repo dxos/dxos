@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { iframeServiceBundle, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
+import { iframeServiceBundle, ShellRuntime, workerServiceBundle, WorkerServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { RemoteServiceConnectionError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -12,7 +12,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
-import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
+import { ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type IFrameProxyRuntimeParams = {

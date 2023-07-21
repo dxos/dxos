@@ -6,8 +6,8 @@ import { Presentation as PresentationIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { Space, Text } from '@dxos/client';
 import { DocumentStack, Presentation } from '@dxos/kai-types';
+import { Space, Text } from '@dxos/react-client/echo';
 
 import { FrameRuntime } from '../../registry';
 import { slides } from './slides';

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
@@ -50,15 +50,15 @@ export class DataServiceImpl implements DataService {
   constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
 
   subscribe(request: SubscribeRequest): Stream<EchoEvent> {
-    assert(request.spaceKey);
+    invariant(request.spaceKey);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.subscribe();
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
-    assert(request.spaceKey);
-    assert(request.batch);
+    invariant(request.spaceKey);
+    invariant(request.batch);
     const host =
       this._subscriptions.getDataService(request.spaceKey) ?? raise(new Error(`space not found: ${request.spaceKey}`));
     return host.write(request);

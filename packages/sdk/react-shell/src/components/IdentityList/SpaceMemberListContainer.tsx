@@ -3,8 +3,8 @@
 //
 import React, { useMemo } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { SpaceMember, useClient, useMembers } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
+import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { SpaceMemberList } from './SpaceMemberList';
 

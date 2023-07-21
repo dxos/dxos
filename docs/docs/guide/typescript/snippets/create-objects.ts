@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Expando } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Expando } from '@dxos/client/echo';
 
 const client = new Client();
 

@@ -14,7 +14,7 @@ import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { Query, SpaceProxy, subscribe } from '@dxos/client';
+import { Query, SpaceProxy, subscribe } from '@dxos/client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {

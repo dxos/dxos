@@ -9,7 +9,7 @@ import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';

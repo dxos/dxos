@@ -6,7 +6,8 @@ import { Flags } from '@oclif/core';
 import rev from 'git-rev-sync';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client, PublicKey, diagnostics } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { diagnostics } from '@dxos/client/diagnostics';
 import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { BaseCommand } from '../../base-command';

@@ -4,13 +4,13 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ClientProvider } from '@dxos/react-client';
 import {
-  ClientProvider,
   Space,
   useQuery,
   useSpace,
   useSpaces
-} from '@dxos/react-client';
+} from '@dxos/react-client/echo';
 
 export const App = () => {
   // Usually space IDs are in the URL like in params.spaceKey.

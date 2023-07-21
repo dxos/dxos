@@ -31,9 +31,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -68,9 +65,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

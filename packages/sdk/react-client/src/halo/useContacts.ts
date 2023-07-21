@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-import { Contact } from '@dxos/protocols/proto/dxos/client/services';
+import type { Contact } from '@dxos/client/halo';
 
 import { useClient } from '../client';
 

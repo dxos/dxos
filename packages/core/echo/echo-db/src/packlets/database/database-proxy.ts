@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -67,7 +67,7 @@ export class DatabaseProxy {
   }
 
   async open(modelFactory: ModelFactory): Promise<void> {
-    assert(!this._opening);
+    invariant(!this._opening);
     this._opening = true;
 
     this._itemManager._debugLabel = 'proxy';
@@ -82,7 +82,7 @@ export class DatabaseProxy {
 
     const loaded = new Trigger();
 
-    assert(!this._entities);
+    invariant(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
@@ -101,8 +101,8 @@ export class DatabaseProxy {
         if (msg.clientTag) {
           const batch = this._pendingBatches.get(msg.clientTag);
           if (batch) {
-            assert(msg.feedKey !== undefined);
-            assert(msg.seq !== undefined);
+            invariant(msg.feedKey !== undefined);
+            invariant(msg.seq !== undefined);
             batch.receipt = {
               feedKey: msg.feedKey,
               seq: msg.seq,
@@ -137,12 +137,12 @@ export class DatabaseProxy {
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
     for (const object of batch.objects ?? []) {
-      assert(object.objectId);
+      invariant(object.objectId);
 
       let entity: Item<any> | undefined;
       if (object.genesis && !this._itemManager.entities.has(object.objectId)) {
         log('construct', { object });
-        assert(object.genesis.modelType);
+        invariant(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           modelType: object.genesis.modelType,
@@ -169,12 +169,12 @@ export class DatabaseProxy {
   }
 
   private _processOptimistic(objectMutation: EchoObject): Item<any> | undefined {
-    assert(objectMutation.objectId);
+    invariant(objectMutation.objectId);
 
     let entity: Item<any> | undefined;
     if (objectMutation.genesis && !this._itemManager.entities.has(objectMutation.objectId)) {
       log('construct optimistic', { object: objectMutation });
-      assert(objectMutation.genesis.modelType);
+      invariant(objectMutation.genesis.modelType);
       entity = this._itemManager.constructItem({
         itemId: objectMutation.objectId,
         modelType: objectMutation.genesis.modelType,
@@ -220,13 +220,13 @@ export class DatabaseProxy {
 
   commitBatch() {
     const batch = this._currentBatch;
-    assert(batch);
+    invariant(batch);
     this._currentBatch = undefined;
 
-    assert(!batch.committing);
-    assert(!batch.processTrigger);
-    assert(batch.clientTag);
-    assert(!this._pendingBatches.has(batch.clientTag));
+    invariant(!batch.committing);
+    invariant(!batch.processTrigger);
+    invariant(batch.clientTag);
+    invariant(!this._pendingBatches.has(batch.clientTag));
 
     batch.processTrigger = new Trigger();
     batch.receiptTrigger = new Trigger();
@@ -252,7 +252,7 @@ export class DatabaseProxy {
   // TODO(dmaretskyi): Revert batch.
 
   mutate(batchInput: EchoObjectBatch): MutateResult {
-    assert(this._itemManager, 'Not open');
+    invariant(this._itemManager, 'Not open');
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }

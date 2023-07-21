@@ -5,7 +5,7 @@
 import { GraphProvides } from '@braneframe/plugin-graph';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client';
+import { isTypedObject } from '@dxos/react-client/echo';
 
 export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
 

@@ -46,6 +46,9 @@
       "path": "../client"
     },
     {
+      "path": "../client-protocol"
+    },
+    {
       "path": "../client-services"
     },
     {

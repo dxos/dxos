@@ -4,12 +4,9 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Task } from './schema';
 

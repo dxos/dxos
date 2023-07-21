@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import {
@@ -74,7 +74,7 @@ export class InvitationsHandler {
     const authCode =
       options?.authCode ??
       (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
-    assert(protocol);
+    invariant(protocol);
 
     const invitation: Invitation = {
       invitationId,
@@ -117,7 +117,7 @@ export class InvitationsHandler {
         admit: async (admissionRequest) => {
           try {
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
-            assert(deviceKey);
+            invariant(deviceKey);
             const admissionResponse = await protocol.admit(admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
@@ -208,7 +208,7 @@ export class InvitationsHandler {
 
   acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitationObservable {
     const { timeout = INVITATION_TIMEOUT } = invitation;
-    assert(protocol);
+    invariant(protocol);
 
     const authenticated = new Trigger<string>();
 
@@ -219,7 +219,7 @@ export class InvitationsHandler {
     let currentState: Invitation.State;
     const stream = new PushStream<Invitation>();
     const setState = (newData: Partial<Invitation>) => {
-      assert(newData.state !== undefined);
+      invariant(newData.state !== undefined);
       currentState = newData.state;
       stream.next({ ...invitation, ...newData });
     };
@@ -354,7 +354,7 @@ export class InvitationsHandler {
     };
 
     scheduleTask(ctx, async () => {
-      assert(invitation.swarmKey);
+      invariant(invitation.swarmKey);
       const topic = invitation.swarmKey;
       const swarmConnection = await this._networkManager.joinSwarm({
         topic,

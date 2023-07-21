@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -151,10 +151,10 @@ export class NetworkManager {
     protocolProvider: protocol,
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
-    assert(PublicKey.isPublicKey(topic));
-    assert(PublicKey.isPublicKey(peerId));
-    assert(topology);
-    assert(typeof protocol === 'function');
+    invariant(PublicKey.isPublicKey(topic));
+    invariant(PublicKey.isPublicKey(peerId));
+    invariant(topology);
+    invariant(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }

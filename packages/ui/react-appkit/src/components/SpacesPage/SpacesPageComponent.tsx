@@ -8,8 +8,9 @@ import { useSearchParams } from 'react-router-dom';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
-import { InvitationResult, useClient, useSpaces } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { Space, useSpaces } from '@dxos/react-client/echo';
+import { InvitationResult } from '@dxos/react-client/invitations';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 import { JoinDialog } from '../Join';

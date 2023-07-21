@@ -39,7 +39,6 @@
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {
-    "@types/faker": "^5.5.9",
     "@types/node": "^18.11.9",
     "@types/seedrandom": "^3.0.5",
     "chart.js": "^3.9.1",

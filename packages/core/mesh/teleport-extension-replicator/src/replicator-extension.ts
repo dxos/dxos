@@ -3,8 +3,8 @@
 //
 
 import type { ProtocolStream } from 'hypercore-protocol';
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -106,12 +106,12 @@ export class ReplicatorExtension implements TeleportExtension {
         ReplicatorService: {
           updateFeeds: async ({ feeds }) => {
             log('received feed info', { feeds });
-            assert(this._extensionContext!.initiator === true, 'Invalid call');
+            invariant(this._extensionContext!.initiator === true, 'Invalid call');
             this._updateTask.schedule();
           },
           startReplication: async ({ info }) => {
             log('starting replication...', { info });
-            assert(this._extensionContext!.initiator === false, 'Invalid call');
+            invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
             const streamTag = await this._acceptReplication(info);
             return {
@@ -121,7 +121,7 @@ export class ReplicatorExtension implements TeleportExtension {
           stopReplication: async ({ info }) => {
             log('stopping replication...', { info });
             // TODO(dmaretskyi): Make sure any peer can stop replication.
-            assert(this._extensionContext!.initiator === false, 'Invalid call');
+            invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
             await this._stopReplication(info.feedKey);
           },
@@ -178,8 +178,8 @@ export class ReplicatorExtension implements TeleportExtension {
    */
   private async _initiateReplication(feedInfo: FeedInfo) {
     log('initiating replication', { feedInfo });
-    assert(this._extensionContext!.initiator === true, 'Invalid call');
-    assert(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
+    invariant(this._extensionContext!.initiator === true, 'Invalid call');
+    invariant(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
     const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo });
     if (!streamTag) {
       return;
@@ -194,7 +194,7 @@ export class ReplicatorExtension implements TeleportExtension {
    */
   @synchronized
   private async _acceptReplication(feedInfo: FeedInfo): Promise<string | undefined> {
-    assert(this._extensionContext!.initiator === false, 'Invalid call');
+    invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
     if (!this._feeds.has(feedInfo.feedKey) || this._streams.has(feedInfo.feedKey)) {
       return undefined; // We don't have the feed or we are already replicating it.
@@ -207,7 +207,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
   private _replicateFeed(info: FeedInfo, streamTag: string) {
     log('replicate', { info, streamTag });
-    assert(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
+    invariant(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
 
     const feed = this._feeds.get(info.feedKey) ?? failUndefined();
     const networkStream = this._extensionContext!.createStream(streamTag, {

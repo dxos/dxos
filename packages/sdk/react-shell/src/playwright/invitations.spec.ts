@@ -6,7 +6,8 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 
 import { sleep } from '@dxos/async';
-import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/react-client/invitations';
+import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { InvitationsManager } from './invitations-manager';
 

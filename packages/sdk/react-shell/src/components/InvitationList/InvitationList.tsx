@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DensityProvider, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
-import type { CancellableInvitationObservable } from '@dxos/client';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { ClipboardProvider } from '../Clipboard';
 import { InvitationListItem, InvitationListItemProps } from './InvitationListItem';

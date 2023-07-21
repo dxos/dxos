@@ -4,8 +4,8 @@
 
 import React, { Context, createContext, Dispatch, FC, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { PublicKey, Space } from '@dxos/client';
-import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { Space } from '@dxos/client/echo';
+import { PublicKey } from '@dxos/react-client';
 
 export type DevtoolsContextType = {
   space?: Space;

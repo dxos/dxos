@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { useMembers, useSpace } from '@dxos/react-client';
+import { useMembers, useSpace } from '@dxos/react-client/echo';
 
 import { Table } from '../util';
 
