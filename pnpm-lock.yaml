@@ -5,7 +5,7 @@ patchedDependencies:
     hash: kco6wocfncyehzbvd6faof7n2y
     path: patches/@nx__js@16.5.4.patch
   '@nx/vite@16.5.4':
-    hash: avthtppue3hznh4vdzwdbbhfgi
+    hash: xxzhsuqrsbs6wyvhvm37cpe46m
     path: patches/@nx__vite@16.5.4.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
@@ -155,7 +155,7 @@ importers:
       '@nx/js': 16.5.4_kco6wocfncyehzbvd6faof7n2y_wwoznc3f3jvr64jgc5izlzuw6i
       '@nx/linter': 16.5.4_3fdumei5bep4ktlhhdvhoazpvq
       '@nx/storybook': 16.5.4_3fdumei5bep4ktlhhdvhoazpvq
-      '@nx/vite': 16.5.4_avthtppue3hznh4vdzwdbbhfgi_bwzfkymkaghcbwldrwqhl7adie
+      '@nx/vite': 16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_bwzfkymkaghcbwldrwqhl7adie
       '@nx/web': 16.5.4_wwoznc3f3jvr64jgc5izlzuw6i
       '@nx/workspace': 16.5.4_h4pdoyo3l3nua2jmzaw5vfqqmq
       '@playwright/test': 1.32.2
@@ -10220,7 +10220,7 @@ packages:
   /@nrwl/vite/16.5.4_bwzfkymkaghcbwldrwqhl7adie:
     resolution: {integrity: sha512-nkJorrkn9IbgyjUM0gKU58TPtmIDXbAK+o1BCg76/xgDhvU7rwwf8d98GOX5r+SUZkOW3+yvbsYUr5rSXukcfA==}
     dependencies:
-      '@nx/vite': 16.5.4_avthtppue3hznh4vdzwdbbhfgi_bwzfkymkaghcbwldrwqhl7adie
+      '@nx/vite': 16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_bwzfkymkaghcbwldrwqhl7adie
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -10546,7 +10546,7 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/vite/16.5.4_avthtppue3hznh4vdzwdbbhfgi_bwzfkymkaghcbwldrwqhl7adie:
+  /@nx/vite/16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_bwzfkymkaghcbwldrwqhl7adie:
     resolution: {integrity: sha512-T5S+cqQuyU6Dmx8eBo5qyabsLkzB1ih97W3ffC5Qs6mHpaztgU2N0yeS9B9lTnW2IMiXOba3OpsseX9Oc5B3fA==}
     peerDependencies:
       vite: ^4.3.4

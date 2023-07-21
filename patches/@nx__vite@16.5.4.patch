@@ -1,45 +1,51 @@
 diff --git a/src/executors/build/build.impl.js b/src/executors/build/build.impl.js
-index fd6654d64758f5e9863036e0ca6d8d3043108780..0a15317159409194d0f5d70253b2c3f8f072c295 100644
+index fd6654d64758f5e9863036e0ca6d8d3043108780..34fcc19b7fd7516b87ecef3744e2c7e9ce62b651 100644
 --- a/src/executors/build/build.impl.js
 +++ b/src/executors/build/build.impl.js
-@@ -27,9 +27,9 @@ async function* viteBuildExecutor(options, context) {
-     const projectRoot = context.projectsConfigurations.projects[context.projectName].root;
-     (0, _executorutils.registerPaths)(projectRoot, options, context);
-     const normalizedOptions = normalizeOptions(options);
--    const buildConfig = (0, _vite.mergeConfig)((0, _optionsutils.getViteSharedConfig)(normalizedOptions, false, context), {
--        build: (0, _optionsutils.getViteBuildOptions)(normalizedOptions, context)
--    });
-+    // const buildConfig = (0, _vite.mergeConfig)((0, _optionsutils.getViteSharedConfig)(normalizedOptions, false, context), {
-+    //     build: (0, _optionsutils.getViteBuildOptions)(normalizedOptions, context)
-+    // });
-     if (!options.skipTypeCheck) {
-         await (0, _executorutils.validateTypes)({
-             workspaceRoot: context.root,
-@@ -37,10 +37,10 @@ async function* viteBuildExecutor(options, context) {
-             tsconfig: (0, _optionsutils.getProjectTsConfigPath)(projectRoot)
+@@ -38,9 +38,9 @@ async function* viteBuildExecutor(options, context) {
          });
      }
--    const watcherOrOutput = await runInstance(buildConfig);
+     const watcherOrOutput = await runInstance(buildConfig);
 -    const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
 -    const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
 -    const distPackageJson = (0, _path.resolve)(normalizedOptions.outputPath, 'package.json');
-+    // const watcherOrOutput = await runInstance(buildConfig);
 +    // const libraryPackageJson = (0, _path.resolve)(projectRoot, 'package.json');
 +    // const rootPackageJson = (0, _path.resolve)(context.root, 'package.json');
 +    // const distPackageJson = (0, _path.resolve)(normalizedOptions.outputPath, 'package.json');
      // Generate a package.json if option has been set.
      if (options.generatePackageJson) {
          const builtPackageJson = (0, _js.createPackageJson)(context.projectName, context.projectGraph, {
-@@ -54,7 +54,8 @@ async function* viteBuildExecutor(options, context) {
+@@ -54,18 +54,19 @@ async function* viteBuildExecutor(options, context) {
          (0, _fs.writeFileSync)(`${options.outputPath}/${(0, _js.getLockFileName)()}`, lockFile, {
              encoding: 'utf-8'
          });
 -    } else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
-+    }
+-        await (0, _js.copyAssets)({
+-            outputPath: normalizedOptions.outputPath,
+-            assets: [
+-                {
+-                    input: projectRoot,
+-                    output: '.',
+-                    glob: 'package.json'
+-                }
+-            ]
+-        }, context);
+     }
 +    // else if (!(0, _fs.existsSync)(distPackageJson) && (0, _fs.existsSync)(libraryPackageJson) && rootPackageJson !== libraryPackageJson) {
-         await (0, _js.copyAssets)({
-             outputPath: normalizedOptions.outputPath,
-             assets: [
++    //     await (0, _js.copyAssets)({
++    //         outputPath: normalizedOptions.outputPath,
++    //         assets: [
++    //             {
++    //                 input: projectRoot,
++    //                 output: '.',
++    //                 glob: 'package.json'
++    //             }
++    //         ]
++    //     }, context);
++    // }
+     if ('on' in watcherOrOutput) {
+         const iterable = (0, _asynciterable.createAsyncIterable)(({ next  })=>{
+             let success = true;
 diff --git a/src/utils/options-utils.js b/src/utils/options-utils.js
 index def0aa897d56263facf63c4f7abd3a76d390532c..fd0fc0b2ccab7b985509e00929b2694230568850 100644
 --- a/src/utils/options-utils.js
