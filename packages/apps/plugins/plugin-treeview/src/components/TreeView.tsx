@@ -32,6 +32,9 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
+      // TODO(burdon): Handle drag into other space.
+      console.log('active', active);
+      console.log('over', over, over?.data?.current?.treeItem);
       const node: GraphNode | null = get(active, 'data.current.treeitem', null);
       if (
         parent.onChildrenRearrange &&
@@ -39,7 +42,7 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
         get(node, 'parent.id') === parent.id &&
         get(over, 'data.current.treeitem.parent.id') === parent.id
       ) {
-        dnd.overlayDropAnimation = 'around';
+        dnd.overlayDropAnimation = 'around'; // TODO(burdon): Use 'into' to signify added.
         const overId = get(over, 'data.current.treeitem.id', null);
         if (overId !== null && overId !== node.id) {
           const activeIndex = itemsInOrder.findIndex(({ id }) => id === node.id);

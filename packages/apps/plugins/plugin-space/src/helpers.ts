@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getIndices } from '@tldraw/indices';
+
 import { GraphNode } from '@braneframe/plugin-graph';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Query, SpaceProxy, subscribe, TypedObject, TypeFilter } from '@dxos/client';
 import { defaultMap } from '@dxos/util';
+
+export { getIndices } from '@tldraw/indices';
 
 export class GraphNodeAdapter<T extends TypedObject> {
   private readonly _queries = new Map<string, Query<T>>();
@@ -13,7 +17,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
 
   constructor(
     private readonly _filter: TypeFilter<T>,
-    private readonly _adapter: (parent: GraphNode, object: T) => GraphNode,
+    private readonly _adapter: (parent: GraphNode, object: T, index: string) => GraphNode,
   ) {}
 
   clear() {
@@ -35,18 +39,19 @@ export class GraphNodeAdapter<T extends TypedObject> {
     });
 
     // Subscribe to all objects.
-    return query.objects.map((object) => {
+    const stackIndices = getIndices(query.objects.length);
+    return query.objects.map((object, index) => {
       defaultMap(this._subscriptions, object.id, () =>
         object[subscribe](() => {
           if (object.__deleted) {
             this._subscriptions.delete(object.id);
           } else {
-            emit(this._adapter(parent, object));
+            emit(this._adapter(parent, object, stackIndices[index]));
           }
         }),
       );
 
-      return this._adapter(parent, object);
+      return this._adapter(parent, object, stackIndices[index]);
     });
   }
 }
