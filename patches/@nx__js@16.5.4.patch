@@ -1,21 +1,20 @@
 diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
-index c94cab9b6d99bbc5330ab4ea6c6a148c098cbfa1..701b170b3d8459a831f0e6863cc3d9441a99b862 100644
+index 824e8e4e0338c5c51c086a40085b02d24e6490eb..39df4c6f6470d37f7b64eac7b400ab3e1f965ca2 100644
 --- a/src/executors/tsc/tsc.impl.js
 +++ b/src/executors/tsc/tsc.impl.js
-@@ -8,10 +8,10 @@ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
+@@ -6,9 +6,9 @@ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
  const check_dependencies_1 = require("../../utils/check-dependencies");
  const compiler_helper_dependency_1 = require("../../utils/compiler-helper-dependency");
  const inline_1 = require("../../utils/inline");
 -const update_package_json_1 = require("../../utils/package-json/update-package-json");
 +// const update_package_json_1 = require("../../utils/package-json/update-package-json");
  const compile_typescript_files_1 = require("../../utils/typescript/compile-typescript-files");
- const load_ts_transformers_1 = require("../../utils/typescript/load-ts-transformers");
 -const watch_for_single_file_changes_1 = require("../../utils/watch-for-single-file-changes");
 +// const watch_for_single_file_changes_1 = require("../../utils/watch-for-single-file-changes");
- function normalizeOptions(options, contextRoot, sourceRoot, projectRoot) {
-     const outputPath = (0, path_1.join)(contextRoot, options.outputPath);
-     const rootDir = options.rootDir
-@@ -83,16 +83,16 @@ function tscExecutor(_options, context) {
+ const lib_1 = require("./lib");
+ function createTypeScriptCompilationOptions(normalizedOptions, context) {
+     return {
+@@ -48,16 +48,16 @@ function tscExecutor(_options, context) {
          }
          const typescriptCompilation = (0, compile_typescript_files_1.compileTypeScriptFiles)(options, tsCompilationOptions, () => tslib_1.__awaiter(this, void 0, void 0, function* () {
              yield assetHandler.processAllAssetsOnce();

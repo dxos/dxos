@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/experimental/kai-framework/src/index.ts",
         "outputPath": "packages/experimental/kai-framework/dist/types",
@@ -14,7 +14,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -54,7 +54,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -66,14 +66,14 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "kai-framework:bundle",
         "staticFilePath": "packages/experimental/kai-framework/out/kai-framework"
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "kai-framework:bundle"
       }
@@ -87,7 +87,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/experimental/kai-framework/.storybook",
         "uiFramework": "@storybook/react"
