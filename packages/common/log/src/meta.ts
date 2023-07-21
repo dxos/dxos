@@ -4,7 +4,7 @@
 
 /**
  * Metadata injected b y the log transform plugin.
- * 
+ *
  * Field names are intentionally short to reduce the size of the generated code.
  */
 export interface CallMetadata {

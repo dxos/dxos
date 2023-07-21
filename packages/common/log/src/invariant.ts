@@ -1,13 +1,21 @@
-import { CallMetadata } from "./meta";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { CallMetadata } from './meta';
 
 export type InvariantFn = (condition: unknown, message?: string, meta?: CallMetadata) => asserts condition;
 
 /**
  * Asserts that the condition is true.
- * 
+ *
  * @param message Optional message.
  */
-export const invariant: InvariantFn = (condition: unknown, message?: string, meta?: CallMetadata): asserts condition => {
+export const invariant: InvariantFn = (
+  condition: unknown,
+  message?: string,
+  meta?: CallMetadata,
+): asserts condition => {
   if (condition) {
     return;
   }
@@ -27,7 +35,7 @@ export const invariant: InvariantFn = (condition: unknown, message?: string, met
   }
 
   throw new InvariantViolation(errorMessage);
-}
+};
 
 export class InvariantViolation extends Error {
   constructor(message: string) {
