@@ -9,7 +9,7 @@ import { SpaceProxy } from '@dxos/client';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain } from './components';
-import { DebugContext, DebugPluginProvides } from './props';
+import { DEBUG_PANEL, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
@@ -17,7 +17,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
   return {
     meta: {
-      id: 'dxos.org/plugin/debug',
+      id: DEBUG_PANEL,
     },
     provides: {
       translations,

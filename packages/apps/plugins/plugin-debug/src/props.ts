@@ -9,6 +9,8 @@ import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Debug as DebugType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client';
 
+export const DEBUG_PANEL = 'dxos.org/plugin/debug';
+
 export type DebugContextType = {
   running: boolean;
   start: (cb: () => void, period: number) => void;
