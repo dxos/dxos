@@ -13,7 +13,8 @@ import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 import { Input as NaturalInput } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Input } from '@dxos/react-appkit';
-import { useConfig, useKeyStore } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
+import { useKeyStore } from '@dxos/react-client/halo';
 
 import { bool, botKeys, optionsKeys, useAppState } from '../hooks';
 

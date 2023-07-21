@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
@@ -161,7 +161,7 @@ export class ServiceContext {
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     const factory = this._handlerFactories.get(invitation.kind);
-    assert(factory, `Unknown invitation kind: ${invitation.kind}`);
+    invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);
   }
 
@@ -205,7 +205,7 @@ export class ServiceContext {
     await this.dataSpaceManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
-      assert(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
+      invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
       return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
     });
     this.initialized.wake();

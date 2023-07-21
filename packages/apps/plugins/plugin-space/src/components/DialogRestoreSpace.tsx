@@ -9,7 +9,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import { Button, Dialog, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Space } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
 
 import { restoreSpace } from '../backup';
 

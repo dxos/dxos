@@ -25,12 +25,8 @@ export interface BuildTestsOpts {
 export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
   const mainFile = join(opts.outDir, 'main.js');
   const mainContents = `
-    import debug from 'debug';
-
     ${opts.debug ? 'debugger;' : ''}
     
-    debug.enable('${process.env.DEBUG}');
-
     import { mocha } from 'mocha';
 
     import { BrowserReporter } from '@dxos/test/reporter';

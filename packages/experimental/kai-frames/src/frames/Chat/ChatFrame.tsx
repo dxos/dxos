@@ -5,7 +5,8 @@
 import React, { useEffect, useRef } from 'react';
 
 import { Message } from '@dxos/kai-types';
-import { useClient, useQuery } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { useFrameContext, useFrameRouter, useFrameRegistry } from '../../hooks';

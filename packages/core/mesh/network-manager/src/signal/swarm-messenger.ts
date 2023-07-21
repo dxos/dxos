@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
@@ -81,7 +81,7 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async signal(message: SignalMessage): Promise<void> {
-    assert(message.data?.signal || message.data?.signalBatch, 'Invalid message');
+    invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
@@ -131,11 +131,11 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {
-    assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
+    invariant(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
       this._offerRecords.delete(message.data.answer.offerMessageId);
-      assert(message.data?.answer, 'No answer');
+      invariant(message.data?.answer, 'No answer');
       log('resolving', { answer: message.data.answer });
       offerRecord.resolve(message.data.answer);
     }
@@ -150,7 +150,7 @@ export class SwarmMessenger implements SignalMessenger {
     recipient: PublicKey;
     message: SwarmMessage;
   }): Promise<void> {
-    assert(message.data.offer, 'No offer');
+    invariant(message.data.offer, 'No offer');
     const offerMessage: OfferMessage = {
       author,
       recipient,
@@ -183,8 +183,8 @@ export class SwarmMessenger implements SignalMessenger {
     recipient: PublicKey;
     message: SwarmMessage;
   }): Promise<void> {
-    assert(message.messageId);
-    assert(message.data.signal || message.data.signalBatch, 'Invalid message');
+    invariant(message.messageId);
+    invariant(message.data.signal || message.data.signalBatch, 'Invalid message');
     const signalMessage: SignalMessage = {
       author,
       recipient,

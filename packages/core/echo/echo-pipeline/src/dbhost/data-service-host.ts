@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
@@ -47,7 +47,7 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
-        assert(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
+        invariant(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
         log('message', { batch, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
@@ -74,7 +74,7 @@ export class DataServiceHost {
   }
 
   async write(request: WriteRequest): Promise<MutationReceipt> {
-    assert(this._writeStream, 'Cannot write mutations in readonly mode');
+    invariant(this._writeStream, 'Cannot write mutations in readonly mode');
 
     log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
 

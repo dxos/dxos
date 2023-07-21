@@ -11,7 +11,7 @@ import { SignalStatus } from '@dxos/messaging';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 const states = {
   [SignalState.CONNECTING]: { label: 'connecting', color: 'orange' },

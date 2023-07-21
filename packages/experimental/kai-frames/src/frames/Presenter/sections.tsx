@@ -10,7 +10,9 @@ import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
 import { DocumentStack, File } from '@dxos/kai-types';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { Config, Text, TypedObject, useConfig, useIdentity } from '@dxos/react-client';
+import { Config, useConfig } from '@dxos/react-client';
+import { Text, TypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { FilePreview } from '../../components';
 import { useFrameContext } from '../../hooks';

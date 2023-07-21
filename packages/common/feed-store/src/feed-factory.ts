@@ -4,7 +4,7 @@
 
 import { RandomAccessStorageConstructor } from 'random-access-storage';
 
-import { sha256, Signer } from '@dxos/crypto';
+import { Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import type { Hypercore, HypercoreOptions } from '@dxos/hypercore';
 import { createCrypto, hypercore } from '@dxos/hypercore';
@@ -57,7 +57,7 @@ export class FeedFactory<T extends {}> {
     };
   }
 
-  createFeed(publicKey: PublicKey, options?: FeedOptions): Hypercore<T> {
+  async createFeed(publicKey: PublicKey, options?: FeedOptions): Promise<Hypercore<T>> {
     if (options?.writable && !this._signer) {
       throw new Error('Signer required to create writable feeds.');
     }
@@ -66,7 +66,7 @@ export class FeedFactory<T extends {}> {
     }
 
     // Required due to hypercore's 32-byte key limit.
-    const key = sha256(publicKey.toHex());
+    const key = await subtleCrypto.digest('SHA-256', Buffer.from(publicKey.toHex()));
 
     const opts = Object.assign(
       {},
@@ -79,6 +79,6 @@ export class FeedFactory<T extends {}> {
       options,
     );
 
-    return hypercore(this._storage(publicKey), key, opts);
+    return hypercore(this._storage(publicKey), Buffer.from(key), opts);
   }
 }

@@ -10,8 +10,9 @@ import {
   CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
-} from '@dxos/client';
-import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
+  InvitationResult,
+  useInvitationStatus,
+} from '@dxos/react-client/invitations';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';

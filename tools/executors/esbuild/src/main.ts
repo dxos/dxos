@@ -80,7 +80,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 }
 
                 initialOptions.banner ||= {};
-                initialOptions.banner.js = 'import "@dxos/node-std/globals"';
+                initialOptions.banner.js = 'import "@dxos/node-std/globals";';
               }
 
               onResolve({ filter: /^node:.*/ }, (args) => {

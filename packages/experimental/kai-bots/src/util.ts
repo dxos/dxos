@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import yaml from 'js-yaml';
+import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';

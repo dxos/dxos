@@ -7,7 +7,7 @@ import { Context, createContext } from 'react';
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Debug as DebugType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client';
+import { isTypedObject } from '@dxos/client/echo';
 
 export type DebugContextType = {
   running: boolean;

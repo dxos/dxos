@@ -40,10 +40,10 @@ const sanitizeId = (id: string) => id.replace(/[^a-zA-Z]/g, '_');
 
 const processOutput = (output: string) => {
   const defaultImports = [...new Set([...output.matchAll(/var ([^{}\n]+?) = __require\("(.+?)"\)/g)].map((m) => m[2]))]
-    .map((module) => `import import$${sanitizeId(module)} from '${module}'`)
+    .map((module) => `import import$${sanitizeId(module)} from '${module}';`)
     .join('\n');
   const namedImports = [...new Set([...output.matchAll(/var {([\s\S]+?)} = __require\("(.+?)"\)/g)].map((m) => m[2]))]
-    .map((module) => `import * as import$${sanitizeId(module)} from '${module}'`)
+    .map((module) => `import * as import$${sanitizeId(module)} from '${module}';`)
     .join('\n');
 
   const withDefaultImports = [...output.matchAll(/var [^{}\n]+? = __require\("(.+?)"\)/g)].reduce((acc, m) => {
@@ -54,6 +54,11 @@ const processOutput = (output: string) => {
     const next = m[0].replace(`__require("${m[1]}")`, `import$${sanitizeId(m[1])}`);
     return acc.replace(m[0], next);
   }, withDefaultImports);
+
+  const [banner, ...rest] = withNamedImports.split('\n');
+  if (banner === 'import "@dxos/node-std/globals";') {
+    return [banner, defaultImports, namedImports, rest.join('\n')].filter((str) => str.length > 0).join('\n');
+  }
 
   return [defaultImports, namedImports, withNamedImports].filter((str) => str.length > 0).join('\n');
 };

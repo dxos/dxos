@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useDevtools } from '@dxos/react-client';
+import { useDevtools } from '@dxos/react-client/devtools';
 
 export const useSignal = () => {
   const devtoolsHost = useDevtools();

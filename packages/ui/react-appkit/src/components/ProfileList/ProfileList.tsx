@@ -5,8 +5,7 @@ import React from 'react';
 
 import { Tag, useTranslation } from '@dxos/aurora';
 import { staticDisabled, group, mx } from '@dxos/aurora-theme';
-import type { Identity } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';

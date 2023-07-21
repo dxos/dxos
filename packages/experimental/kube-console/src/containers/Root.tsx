@@ -6,10 +6,8 @@ import { ErrorBoundary } from '@sentry/react';
 import React, { FC, PropsWithChildren } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { fromHost } from '@dxos/client';
-import { Defaults, Envs, Local } from '@dxos/config';
 import { appkitTranslations, ErrorProvider, ResetDialog, ThemeProvider } from '@dxos/react-appkit';
-import { ClientProvider, Config } from '@dxos/react-client';
+import { fromHost, ClientProvider, Config, Defaults, Envs, Local } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
 
 const Fullscreen: FC<PropsWithChildren> = ({ children }) => {

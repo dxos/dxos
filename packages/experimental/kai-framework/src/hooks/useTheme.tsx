@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react';
 import { FC, useState } from 'react';
 
-import { useSubscription } from '@dxos/react-client';
+import { useSubscription } from '@dxos/react-client/echo';
 
 import { useAppRouter } from '../hooks';
 

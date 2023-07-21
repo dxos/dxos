@@ -9,7 +9,8 @@ import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { Input } from '@dxos/react-appkit';
-import { useClientServices, useStream } from '@dxos/react-client';
+import { useClientServices } from '@dxos/react-client';
+import { useStream } from '@dxos/react-client/devtools';
 
 import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
 

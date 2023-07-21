@@ -9,10 +9,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/keys';
 import { TableCellProps, TableColumn, Table, Toolbar } from '@dxos/mosaic';
 import { Select } from '@dxos/react-appkit';
-import { useKeyStore } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useKeyStore } from '@dxos/react-client/halo';
 
 import { useAppRouter, useBotClient, getBotEnvs, botKeys, botModules } from '../../hooks';
 

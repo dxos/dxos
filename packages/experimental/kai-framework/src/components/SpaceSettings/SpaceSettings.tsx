@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/react-client/echo';
 
 import { icons, themes } from '../../hooks';
 

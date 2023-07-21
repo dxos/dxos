@@ -4,8 +4,8 @@
 
 import { cloneElement } from 'react';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
-import { InvitationResult } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
+import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
 import { JoinSend, JoinState } from './joinMachine';
 

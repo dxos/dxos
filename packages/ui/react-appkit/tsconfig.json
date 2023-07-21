@@ -25,13 +25,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/react-async"
     },
     {
       "path": "../../common/sentry"
@@ -47,15 +41,6 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

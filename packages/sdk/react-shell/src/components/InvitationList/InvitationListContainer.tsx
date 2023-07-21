@@ -3,9 +3,9 @@
 //
 import React, { useCallback } from 'react';
 
-import type { CancellableInvitationObservable } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
-import { useSpace, useSpaceInvitations } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useSpace, useSpaceInvitations } from '@dxos/react-client/echo';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { InvitationList } from './InvitationList';
 import { SharedInvitationListProps } from './InvitationListProps';

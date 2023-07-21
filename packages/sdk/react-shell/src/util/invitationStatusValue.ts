@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 /**
  * This map assigns a numeric value to invitation states to facilitate
