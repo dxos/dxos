@@ -4,7 +4,7 @@
 
 import { cloneElement } from 'react';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
+import type { AuthenticatingInvitationObservable, Identity, Invitation } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 
 import { ViewStateProps } from './view-states/ViewState';
@@ -25,11 +25,24 @@ export interface JoinPanelProps {
 
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,
-  'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
+  'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
 > &
   Pick<ViewStateProps, 'send'> & {
     activeView: string;
-    failed: 'Halo' | 'Space' | null;
+    failed: Set<'Halo' | 'Space'>;
+    pending: boolean;
+    unredeemedCodes?: Partial<{
+      Halo: string;
+      Space: string;
+    }>;
+    invitationStates?: Partial<{
+      Halo: Invitation.State;
+      Space: Invitation.State;
+    }>;
+    onHaloInvitationCancel?: () => Promise<void>;
+    onSpaceInvitationCancel?: () => Promise<void>;
+    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void>;
+    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void>;
   };
 
 export interface IdentityAction {

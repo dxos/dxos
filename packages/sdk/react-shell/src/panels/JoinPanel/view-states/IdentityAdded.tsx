@@ -53,7 +53,7 @@ export const IdentityAdded = ({
   ...viewStateProps
 }: IdentityAddedProps) => {
   const disabled = !viewStateProps.active;
-  const { joinSend } = viewStateProps;
+  const { send } = viewStateProps;
   const { t } = useTranslation('os');
 
   return (
@@ -79,7 +79,7 @@ export const IdentityAdded = ({
           <Button
             disabled={disabled || !addedIdentity}
             classNames='grow flex items-center gap-2 pli-2 order-2'
-            onClick={() => addedIdentity && joinSend({ type: 'selectIdentity', identity: addedIdentity })}
+            onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
             <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
@@ -88,7 +88,7 @@ export const IdentityAdded = ({
           </Button>
           <Button
             disabled={disabled}
-            onClick={() => joinSend({ type: 'deselectAuthMethod' })}
+            onClick={() => send({ type: 'deselectAuthMethod' })}
             classNames='flex items-center gap-2 pis-2 pie-4'
           >
             <CaretLeft weight='bold' className={getSize(4)} />

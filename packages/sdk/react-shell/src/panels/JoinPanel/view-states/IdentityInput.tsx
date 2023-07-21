@@ -11,15 +11,14 @@ import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface IdentityCreatorProps extends ViewStateProps {
   method: 'recover identity' | 'create identity';
 }
 
-export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProps) => {
-  const disabled = !viewStateProps.active;
-  const { joinSend } = viewStateProps;
+export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) => {
+  const disabled = !active;
   const { t } = useTranslation('os');
   const [inputValue, setInputValue] = useState('');
   const client = useClient();
@@ -28,7 +27,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
   const handleNext = () => {
     void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
       (identity) => {
-        joinSend({ type: 'selectIdentity' as const, identity });
+        send({ type: 'selectIdentity' as const, identity });
       },
       (error) => {
         log.catch(error);
@@ -37,7 +36,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
     );
   };
   return (
-    <ViewState {...viewStateProps}>
+    <>
       <Input
         disabled={disabled}
         label={
@@ -70,7 +69,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
         </Button>
         <Button
           disabled={disabled}
-          onClick={() => joinSend({ type: 'deselectAuthMethod' })}
+          onClick={() => send({ type: 'deselectAuthMethod' })}
           classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
@@ -78,6 +77,6 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
           <span>{t('back label')}</span>
         </Button>
       </div>
-    </ViewState>
+    </>
   );
 };

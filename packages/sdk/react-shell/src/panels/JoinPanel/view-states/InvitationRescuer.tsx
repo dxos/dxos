@@ -9,28 +9,16 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
-import { JoinSend, JoinState } from '../joinMachine';
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { ViewStateHeading, ViewStateProps } from './ViewState';
 
 export interface InvitationConnectorProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
+  invitationState?: Invitation.State;
+  onInvitationCancel?: () => Promise<void>;
 }
 
-const InvitationActions = ({
-  invitationState,
-  disabled,
-  joinSend,
-  joinState,
-  Kind,
-}: {
-  invitationState?: Invitation.State;
-  disabled?: boolean;
-  joinSend: JoinSend;
-  joinState?: JoinState;
-  Kind: InvitationConnectorProps['Kind'];
-}) => {
+const InvitationActions = ({ invitationState, onInvitationCancel, active, send, Kind }: InvitationConnectorProps) => {
   const { t } = useTranslation('os');
-  const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   switch (invitationState) {
     case Invitation.State.CONNECTING:
       return (
@@ -44,9 +32,9 @@ const InvitationActions = ({
               <CaretRight weight='bold' className={getSize(4)} />
             </Button>
             <Button
-              disabled={disabled}
+              disabled={!active}
               classNames='flex items-center gap-2 pis-2 pie-4'
-              onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
+              onClick={onInvitationCancel}
               data-testid='invitation-rescuer-cancel'
             >
               <CaretLeft weight='bold' className={getSize(4)} />
@@ -72,9 +60,9 @@ const InvitationActions = ({
           </ViewStateHeading>
           <div role='none' className='grow' />
           <Button
-            disabled={disabled}
+            disabled={!active}
             classNames='flex items-center gap-2 pli-2'
-            onClick={() => joinSend({ type: `reset${Kind}Invitation` })}
+            onClick={() => send({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
             <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
@@ -86,22 +74,20 @@ const InvitationActions = ({
   }
 };
 
-export const InvitationRescuer = ({ Kind, ...viewStateProps }: InvitationConnectorProps) => {
-  const disabled = !viewStateProps.active;
-  const { joinSend, joinState } = viewStateProps;
-  const invitationState = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].invitation?.state;
+export const InvitationRescuer = (props: InvitationConnectorProps) => {
+  const { Kind, invitationState, active, send } = props;
   const { t } = useTranslation('os');
   return (
-    <ViewState {...viewStateProps}>
+    <>
       {typeof invitationState === 'undefined' ? (
         <>
           <div role='none' className='grow' />
           <Button
-            disabled={disabled}
+            disabled={!active}
             classNames='flex items-center gap-2 pli-2'
             data-autofocus={`inputting${Kind}InvitationCode`}
             data-testid='invitation-rescuer-blank-reset'
-            onClick={() => joinSend({ type: `reset${Kind}Invitation` })}
+            onClick={() => send({ type: `reset${Kind}Invitation` })}
           >
             <CaretLeft weight='bold' className={mx(getSize(5), 'invisible')} />
             <span className='grow'>{t('reset label')}</span>
@@ -109,8 +95,8 @@ export const InvitationRescuer = ({ Kind, ...viewStateProps }: InvitationConnect
           </Button>
         </>
       ) : (
-        <InvitationActions {...{ invitationState, disabled, joinSend, joinState, Kind }} />
+        <InvitationActions {...props} />
       )}
-    </ViewState>
+    </>
   );
 };

@@ -25,11 +25,16 @@ export const JoinPanelImpl = ({
   send,
   activeView,
   failed,
+  mode,
+  unredeemedCodes,
+  invitationStates,
   preventExit,
   onExit,
   onDone,
   exitActionParent,
   doneActionParent,
+  onHaloInvitationCancel,
+  onSpaceInvitationCancel,
 }: JoinPanelImplProps) => {
   const titleId = useId('joinPanel__title');
   return (
@@ -47,17 +52,28 @@ export const JoinPanelImpl = ({
             <IdentityInput send={send} method='recover identity' active={activeView === 'recover identity input'} />
           </Viewport.View>
           <Viewport.View id='halo invitation input'>
-            <InvitationInput send={send} Kind='Halo' active={activeView === 'halo invitation input'} />
+            <InvitationInput
+              send={send}
+              Kind='Halo'
+              active={activeView === 'halo invitation input'}
+              {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
+            />
           </Viewport.View>
           <Viewport.View id='halo invitation rescuer'>
-            <InvitationRescuer send={send} Kind='Halo' active={activeView === 'halo invitation rescuer'} />
+            <InvitationRescuer
+              send={send}
+              Kind='Halo'
+              active={activeView === 'halo invitation rescuer'}
+              invitationState={invitationStates?.Halo}
+              onInvitationCancel={onHaloInvitationCancel}
+            />
           </Viewport.View>
           <Viewport.View id='halo invitation authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
               active={activeView === 'halo invitation authenticator'}
-              {...(failed === 'Halo' && { failed: true })}
+              {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
           <Viewport.View id='halo invitation accepted'>
@@ -66,24 +82,34 @@ export const JoinPanelImpl = ({
             />
           </Viewport.View>
           <Viewport.View id='identity added'>
-            {/* todo(thure): Restore `mode` prop */}
             <IdentityAdded
-              {...{ send, active: activeView === 'identity added', doneActionParent, onDone }}
+              {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone }}
               send={send}
             />
           </Viewport.View>
           <Viewport.View id='space invitation input'>
-            <InvitationInput send={send} Kind='Space' active={activeView === 'space invitation input'} />
+            <InvitationInput
+              send={send}
+              Kind='Space'
+              active={activeView === 'space invitation input'}
+              {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
+            />
           </Viewport.View>
           <Viewport.View id='space invitation rescuer'>
-            <InvitationRescuer send={send} Kind='Space' active={activeView === 'space invitation rescuer'} />
+            <InvitationRescuer
+              send={send}
+              Kind='Space'
+              active={activeView === 'space invitation rescuer'}
+              invitationState={invitationStates?.Space}
+              onInvitationCancel={onSpaceInvitationCancel}
+            />
           </Viewport.View>
           <Viewport.View id='space invitation authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Space'
               active={activeView === 'space invitation authenticator'}
-              {...(failed === 'Space' && { failed: true })}
+              {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
           <Viewport.View id='space invitation accepted'>
@@ -232,6 +258,7 @@ export const JoinPanel = ({
   }, [joinState]);
 
   const failed = useMemo(() => {
+    const result: JoinPanelImplProps['failed'] = new Set();
     switch (true) {
       case joinState.matches({
         choosingIdentity: {
@@ -240,17 +267,34 @@ export const JoinPanel = ({
           },
         },
       }):
-        return 'Halo';
+        result.add('Halo');
+        break;
       case joinState.matches({
         acceptingSpaceInvitation: {
           acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
         },
       }):
-        return 'Space';
-      default:
-        return null;
+        result.add('Space');
+        break;
     }
+    return result;
   }, [joinState]);
+
+  const unredeemedCodes = useMemo(
+    () => ({
+      Halo: joinState.context.halo.unredeemedCode,
+      Space: joinState.context.space.unredeemedCode,
+    }),
+    [joinState],
+  );
+
+  const invitationStates = useMemo(
+    () => ({
+      Halo: joinState.context.halo.invitation?.state,
+      Space: joinState.context.space.invitation?.state,
+    }),
+    [joinState],
+  );
 
   return (
     <JoinPanelImpl
@@ -258,12 +302,19 @@ export const JoinPanel = ({
         send: joinSend,
         activeView,
         failed,
+        pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
+        unredeemedCodes,
+        invitationStates,
         identity,
         preventExit,
         onExit,
         onDone,
         exitActionParent,
         doneActionParent,
+        onHaloInvitationCancel: joinState.context.halo.invitationObservable?.cancel,
+        onSpaceInvitationCancel: joinState.context.space.invitationObservable?.cancel,
+        onHaloInvitationAuthenticate: joinState.context.halo.invitationObservable?.authenticate,
+        onSpaceInvitationAuthenticate: joinState.context.space.invitationObservable?.authenticate,
       }}
     />
   );
