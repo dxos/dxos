@@ -102,13 +102,13 @@
     "dirname": "dx",
     "commands": "./dist/src/commands",
     "hooks": {
-      "command_not_found": "./src/hooks/command-not-found"
+      "command_not_found": "./dist/src/hooks/command-not-found"
     },
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
-    "helpClass": "./src/help",
+    "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
       "config": {
