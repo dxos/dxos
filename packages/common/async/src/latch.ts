@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 type LatchProps = {
   count?: number;
@@ -16,7 +16,7 @@ type LatchResult = [() => Promise<number>, () => number, (err: Error) => void];
  */
 // TODO(burdon): Reconcile with until/trigger.
 export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
-  assert(count >= 0);
+  invariant(count >= 0);
 
   let t: ReturnType<typeof setTimeout>;
   let doResolve: (value: number) => void;

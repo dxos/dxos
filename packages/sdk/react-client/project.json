@@ -17,7 +17,12 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/sdk/react-client/src/devtools/index.ts",
+          "packages/sdk/react-client/src/echo/index.ts",
+          "packages/sdk/react-client/src/halo/index.ts",
           "packages/sdk/react-client/src/index.ts",
+          "packages/sdk/react-client/src/invitations/index.ts",
+          "packages/sdk/react-client/src/mesh/index.ts",
           "packages/sdk/react-client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/react-client/dist/lib"

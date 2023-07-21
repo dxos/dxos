@@ -4,8 +4,7 @@
 
 import urljoin from 'url-join';
 
-import { Config } from '@dxos/client';
-import { useConfig } from '@dxos/react-client';
+import { Config, useConfig } from '@dxos/react-client';
 
 export class KubeClient {
   private readonly _endpoint: string;

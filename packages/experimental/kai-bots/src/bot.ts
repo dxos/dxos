@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';

@@ -6,7 +6,7 @@ import { Octokit } from 'octokit';
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { useKeyStore } from '@dxos/react-client';
+import { useKeyStore } from '@dxos/react-client/halo';
 
 export type OctokitContextValue = {
   pat: string;

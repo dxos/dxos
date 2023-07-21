@@ -7,9 +7,10 @@ import React, { useCallback } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable } from '@dxos/client';
 import { Heading, DeviceList, HeadingWithActions, InvitationList } from '@dxos/react-appkit';
-import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useDevices, useHaloInvitations } from '@dxos/react-client/halo';
+import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { createInvitationUrl } from '../util';
 

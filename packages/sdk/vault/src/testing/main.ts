@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Config, fromIFrame } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { fromIFrame } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
 void (async () => {

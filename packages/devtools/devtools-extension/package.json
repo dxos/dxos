@@ -40,7 +40,6 @@
     "@dxos/kai-framework": "workspace:*",
     "@sentry/vite-plugin": "^0.7.2",
     "@types/chrome": "^0.0.125",
-    "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

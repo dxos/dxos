@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import startCase from 'lodash.startcase';
+import assert from 'node:assert';
 import { ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
-import { Space } from '@dxos/client';
-import { Text } from '@dxos/echo-schema';
+import { Space, Text, TextKind } from '@dxos/client/echo';
 import { Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 import { Resolver } from '../../resolver';
 import { ChatModel } from '../chat-model';

@@ -7,12 +7,12 @@ import '@dxosTheme';
 import { StoryContext, StoryFn } from '@storybook/react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Client, Invitation, InvitationEncoder } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider } from '@dxos/react-client';
+import { Client, ClientProvider } from '@dxos/react-client';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { TestBuilder } from '@dxos/react-client/testing';
 
 import { JoinDialog } from './JoinDialog';
 

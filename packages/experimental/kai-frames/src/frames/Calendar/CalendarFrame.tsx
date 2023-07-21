@@ -13,7 +13,7 @@ import { dateFnsLocalizer, Calendar as ReactBigCalendar, Event, Views } from 're
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Contact, Event as EventType } from '@dxos/kai-types';
-import { useQuery } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 
 // import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';

@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Input } from '@dxos/aurora';
 import { Client } from '@dxos/client';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/client/mesh';
 
 export type ToggleNetworkDecoratorOptions = {
   clients: Client[];

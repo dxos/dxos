@@ -7,8 +7,7 @@ import React, { FC } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
-import { TypedObject } from '@dxos/echo-schema';
+import { Space, TypedObject } from '@dxos/react-client/echo';
 
 export type KanbanCard = FC<{ space: Space; object: TypedObject }>;
 

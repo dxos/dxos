@@ -18,11 +18,8 @@
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@dxos/aurora-composer": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "^2.29.3",
     "lodash.get": "^4.4.2"

@@ -7,10 +7,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';
-import { useQuery } from '@dxos/react-client';
+import { useQuery, Text } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 import { sampleCode } from './sample';

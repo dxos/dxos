@@ -5,7 +5,8 @@
 import React, { useCallback, useContext } from 'react';
 
 import { Button, Dialog, Tree, useId, useTranslation } from '@dxos/aurora';
-import { useClient, useSpaces, Space } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useSpaces, Space } from '@dxos/react-client/echo';
 
 import { SpaceResolverContext } from './ResolverContext';
 import { SpacePickerTreeItem } from './SpacePickerTreeItem';

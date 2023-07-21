@@ -7,9 +7,8 @@ import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallba
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { AuthenticatingInvitationObservable } from '@dxos/client';
 import { Input } from '@dxos/react-appkit';
-import { useInvitationStatus } from '@dxos/react-client';
+import { AuthenticatingInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
 
 import { JoinSend, JoinState } from '../joinMachine';
 import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';

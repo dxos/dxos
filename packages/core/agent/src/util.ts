@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { DX_RUNTIME, getUnixSocket } from '@dxos/client';
+import { DX_RUNTIME } from '@dxos/client-protocol';
+import { getUnixSocket } from '@dxos/client/services';
 
 export const parseAddress = (sock: string) => {
   const [protocol, path] = sock.split('://');

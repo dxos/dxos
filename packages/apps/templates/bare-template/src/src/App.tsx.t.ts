@@ -6,10 +6,9 @@ export default defineTemplate(
     const { react, pwa, dxosUi, name } = input;
     const imports = new Imports();
     const render = renderSlots(slots)({ ...rest, input, defaultOutputFile, imports });
-    const ClientProvider = imports.lazy('ClientProvider', '@dxos/react-client');
-    const { Config, Dynamics, Defaults, Local } = imports.lazy(
-      ['Config', 'Dynamics', 'Defaults', 'Local'],
-      '@dxos/config',
+    const { ClientProvider, Config, Dynamics, Defaults, Local } = imports.lazy(
+      ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
+      '@dxos/react-client',
     );
     const ThemeProvider = imports.lazy('ThemeProvider', '@dxos/react-appkit');
     const useRegisterSW = imports.lazy('useRegisterSW', 'virtual:pwa-register/react');

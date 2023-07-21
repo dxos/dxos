@@ -5,8 +5,10 @@
 import clipboardCopy from 'clipboard-copy';
 import { useEffect, useState } from 'react';
 
-import { CancellableInvitationObservable, Invitation, PublicKey, ShellLayout, Space } from '@dxos/client';
 import { log } from '@dxos/log';
+import { PublicKey, ShellLayout } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
+import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
 import { useShell } from '@dxos/react-shell';
 
 import { createInvitationPath } from './useAppRouter';

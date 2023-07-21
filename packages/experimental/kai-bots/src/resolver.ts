@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 /**

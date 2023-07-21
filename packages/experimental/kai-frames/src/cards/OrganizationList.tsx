@@ -7,10 +7,9 @@ import React, { FC } from 'react';
 
 import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
 import { Address, Organization } from '@dxos/kai-types';
 import { Input } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 export const OrganizationList: FC<{ space: Space }> = ({ space }) => {
   const organizations: Organization[] = useQuery(space, Organization.filter());

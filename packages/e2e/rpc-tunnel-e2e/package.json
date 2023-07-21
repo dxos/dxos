@@ -20,14 +20,12 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
-    "debug": "^4.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-json-tree": "^0.18.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@types/debug": "^4.1.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "vite": "^4.3.9"

@@ -5,14 +5,14 @@
 import React, { ReactNode, useEffect } from 'react';
 
 import { useClient } from '../client';
-import { useIdentity } from '../halo';
+import { Identity, useIdentity } from '../halo';
 
 let didInit = false;
 
 /**
  * Automatically creates a random DXOS profile.
  */
-export const useTestProfile = () => {
+export const useTestProfile = (): Identity | null => {
   const client = useClient();
   const profile = useIdentity();
 

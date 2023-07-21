@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useSpaces } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { SpaceSettings } from './SpaceSettings';

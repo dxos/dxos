@@ -5,7 +5,7 @@
 import sub from 'date-fns/sub';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/react-client';
 
 export const createThread = () => {
   const now = new Date();

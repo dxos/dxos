@@ -3,7 +3,8 @@
 //
 
 import React from 'react';
-import { useIdentity, useSpaces } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
+import { useSpaces } from '@dxos/react-client/echo';
 
 export const Counter = () => {
   // Get the user to log in before a space can be obtained.
