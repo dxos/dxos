@@ -66,7 +66,7 @@ export class FeedFactory<T extends {}> {
     }
 
     // Required due to hypercore's 32-byte key limit.
-    const key = await subtleCrypto.digest('SHA-256', publicKey.asBuffer());
+    const key = await subtleCrypto.digest('SHA-256', Buffer.from(publicKey.toHex()));
 
     const opts = Object.assign(
       {},
