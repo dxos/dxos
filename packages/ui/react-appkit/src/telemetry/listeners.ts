@@ -2,13 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/react-client';
-import * as Telemetry from '@dxos/telemetry';
+import type * as Telemetry from '@dxos/telemetry';
 
 import { BASE_TELEMETRY_PROPERTIES, getTelemetryIdentifier } from './telemetry';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;
+
+const trigger = new Trigger<typeof Telemetry>();
+void import('@dxos/telemetry').then((module) => trigger.wake(module));
+export const withTelemetry = (fn: (telemetry: typeof Telemetry) => void) => trigger.wait().then(fn);
 
 export const setupTelemetryListeners = (namespace: string, client: Client) => {
   const clickCallback = (event: any) => {
@@ -18,35 +23,39 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
     }
 
     setTimeout(() =>
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.window.click`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          id: (event.target as HTMLElement)?.id,
-          path: (event.path as HTMLElement[])
-            ?.filter((el) => Boolean(el.tagName))
-            .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
-            .reverse()
-            .join('>'),
-        },
-      }),
+      withTelemetry((Telemetry) =>
+        Telemetry.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.window.click`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            href: window.location.href,
+            id: (event.target as HTMLElement)?.id,
+            path: (event.path as HTMLElement[])
+              ?.filter((el) => Boolean(el.tagName))
+              .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
+              .reverse()
+              .join('>'),
+          },
+        }),
+      ),
     );
   };
 
   const focusCallback = () => {
     const now = new Date();
     setTimeout(() =>
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.window.focus`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          timeAway: now.getTime() - lastFocusEvent.getTime(),
-        },
-      }),
+      withTelemetry((Telemetry) =>
+        Telemetry.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.window.focus`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            href: window.location.href,
+            timeAway: now.getTime() - lastFocusEvent.getTime(),
+          },
+        }),
+      ),
     );
     lastFocusEvent = now;
   };
@@ -55,15 +64,17 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() =>
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.window.blur`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          timeSpent,
-        },
-      }),
+      withTelemetry((Telemetry) =>
+        Telemetry.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.window.blur`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            href: window.location.href,
+            timeSpent,
+          },
+        }),
+      ),
     );
     lastFocusEvent = now;
     totalTime = totalTime + timeSpent;
@@ -71,31 +82,35 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
 
   const unloadCallback = () => {
     setTimeout(() =>
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.page.unload`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          timeSpent: totalTime,
-        },
-      }),
+      withTelemetry((Telemetry) =>
+        Telemetry.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.page.unload`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            href: window.location.href,
+            timeSpent: totalTime,
+          },
+        }),
+      ),
     );
   };
 
   const errorCallback = (event: ErrorEvent) => {
     setTimeout(() =>
-      Telemetry.event({
-        identityId: getTelemetryIdentifier(client),
-        name: `${namespace}.window.error`,
-        properties: {
-          ...BASE_TELEMETRY_PROPERTIES,
-          href: window.location.href,
-          message: event.message,
-          filename: event.filename,
-          stack: (event.error as Error).stack,
-        },
-      }),
+      withTelemetry((Telemetry) =>
+        Telemetry.event({
+          identityId: getTelemetryIdentifier(client),
+          name: `${namespace}.window.error`,
+          properties: {
+            ...BASE_TELEMETRY_PROPERTIES,
+            href: window.location.href,
+            message: event.message,
+            filename: event.filename,
+            stack: (event.error as Error).stack,
+          },
+        }),
+      ),
     );
   };
 
