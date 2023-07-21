@@ -19,7 +19,7 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
-} from './view-states';
+} from './steps';
 
 export const JoinPanelImpl = ({
   send,

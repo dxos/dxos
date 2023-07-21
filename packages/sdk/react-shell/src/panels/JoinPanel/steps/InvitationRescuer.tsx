@@ -9,9 +9,10 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/client';
 
-import { ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationConnectorProps extends ViewStateProps {
+export interface InvitationConnectorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   invitationState?: Invitation.State;
   onInvitationCancel?: () => Promise<void> | undefined;
@@ -23,7 +24,7 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
     case Invitation.State.CONNECTING:
       return (
         <>
-          <ViewStateHeading className={descriptionText}>{t('connecting status label')}</ViewStateHeading>
+          <PanelStepHeading className={descriptionText}>{t('connecting status label')}</PanelStepHeading>
           <div role='none' className='grow' />
           <div className='flex gap-2'>
             <Button disabled classNames='grow flex items-center gap-2 pli-2 order-2' data-testid='next'>
@@ -49,7 +50,7 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
     default:
       return (
         <>
-          <ViewStateHeading className={descriptionText}>
+          <PanelStepHeading className={descriptionText}>
             {t(
               invitationState === Invitation.State.TIMEOUT
                 ? 'timeout status label'
@@ -57,7 +58,7 @@ const InvitationActions = ({ invitationState, onInvitationCancel, active, send, 
                 ? 'cancelled status label'
                 : 'error status label',
             )}
-          </ViewStateHeading>
+          </PanelStepHeading>
           <div role='none' className='grow' />
           <Button
             disabled={!active}

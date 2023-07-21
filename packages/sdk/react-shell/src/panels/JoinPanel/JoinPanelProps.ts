@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
+import { cloneElement, ComponentProps } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
 import type { AuthenticatingInvitationObservable, Identity, Invitation } from '@dxos/client';
 import { InvitationResult } from '@dxos/react-client';
 
-import { ViewStateProps } from './view-states/ViewState';
+import { JoinEvent } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -27,7 +28,7 @@ export type JoinPanelImplProps = Pick<
   JoinPanelProps,
   'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
 > &
-  Pick<ViewStateProps, 'send'> & {
+  Pick<JoinStepProps, 'send'> & {
     activeView: string;
     failed: Set<'Halo' | 'Space'>;
     pending: boolean;
@@ -98,6 +99,11 @@ export type JoinView =
   | 'identity added'
   | 'space invitation acceptor'
   | 'halo invitation acceptor';
+
+export interface JoinStepProps extends ComponentProps<'div'> {
+  send: (event: SingleOrArray<Event<JoinEvent>>) => void;
+  active?: boolean;
+}
 
 export interface JoinStateContext {
   activeView: JoinView;

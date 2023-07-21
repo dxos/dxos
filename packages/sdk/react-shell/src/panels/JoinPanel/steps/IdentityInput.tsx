@@ -11,9 +11,10 @@ import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
-import { ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export interface IdentityCreatorProps extends ViewStateProps {
+export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';
 }
 
@@ -40,9 +41,9 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
       <Input
         disabled={disabled}
         label={
-          <ViewStateHeading>
+          <PanelStepHeading>
             {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-          </ViewStateHeading>
+          </PanelStepHeading>
         }
         onChange={({ target: { value } }) => setInputValue(value)}
         slots={{

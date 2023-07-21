@@ -8,9 +8,9 @@ import React, { cloneElement } from 'react';
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { ViewStateProps } from './ViewState';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationAcceptedProps extends ViewStateProps {
+export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: () => void;

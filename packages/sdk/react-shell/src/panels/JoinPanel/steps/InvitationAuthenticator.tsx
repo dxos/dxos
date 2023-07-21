@@ -8,11 +8,12 @@ import React, { ChangeEvent, useState } from 'react';
 import { Input, Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
 
-export interface InvitationAuthenticatorProps extends ViewStateProps {
+export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   failed?: boolean;
   pending?: boolean;
@@ -48,7 +49,7 @@ export const InvitationAuthenticator = ({
         })}
       >
         <Input.Label asChild>
-          <ViewStateHeading>{t('auth code input label')}</ViewStateHeading>
+          <PanelStepHeading>{t('auth code input label')}</PanelStepHeading>
         </Input.Label>
         <Input.PinInput
           {...{

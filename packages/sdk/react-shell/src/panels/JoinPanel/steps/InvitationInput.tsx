@@ -10,9 +10,10 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
-import { ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationInputProps extends ViewStateProps {
+export interface InvitationInputProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   unredeemedCode?: string;
 }
@@ -48,7 +49,7 @@ export const InvitationInput = ({ Kind, active, send, unredeemedCode }: Invitati
     <>
       <Input
         disabled={disabled}
-        label={<ViewStateHeading>{t('invitation input label')}</ViewStateHeading>}
+        label={<PanelStepHeading>{t('invitation input label')}</PanelStepHeading>}
         value={inputValue}
         onChange={({ target: { value } }) => setInputValue(value)}
         slots={{

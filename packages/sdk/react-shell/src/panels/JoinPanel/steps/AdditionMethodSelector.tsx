@@ -9,9 +9,10 @@ import { useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { CompoundButton } from '@dxos/react-appkit';
 
-import { ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export type AdditionMethodSelectorProps = ViewStateProps;
+export type AdditionMethodSelectorProps = JoinStepProps;
 
 export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorProps) => {
   const disabled = !viewStateProps.active;
@@ -27,7 +28,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
 
   return (
     <>
-      <ViewStateHeading>{t('addition method selector title')}</ViewStateHeading>
+      <PanelStepHeading>{t('addition method selector title')}</PanelStepHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}
