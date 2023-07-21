@@ -1327,6 +1327,7 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
@@ -1361,6 +1362,7 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
+      '@dxos/config': link:../../sdk/config
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@sentry/vite-plugin': 0.7.2
       '@types/react': 18.0.21
@@ -3066,6 +3068,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/gem-spore': workspace:*
@@ -3135,6 +3138,7 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
     devDependencies:
+      '@dxos/config': link:../../sdk/config
       '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/react-shell': link:../../sdk/react-shell
       '@types/lodash.defaultsdeep': 4.6.7

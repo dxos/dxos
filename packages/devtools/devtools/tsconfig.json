@@ -57,6 +57,9 @@
       "path": "../../experimental/mosaic"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
