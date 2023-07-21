@@ -51,8 +51,7 @@ export class Agent {
     return this;
   }
 
-  // TODO(mykola): Remove functions flag, and use different ports for different profiles.
-  async start({ functions = false }: { functions?: boolean } = {}) {
+  async start() {
     log('starting...');
 
     // TODO(burdon): Check if running.
