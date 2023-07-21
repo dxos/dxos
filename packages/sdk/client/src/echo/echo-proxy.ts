@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
 import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
@@ -37,16 +37,15 @@ export class EchoProxy implements Echo {
 
   private _invitationProxy?: InvitationsProxy;
   private readonly _instanceId = PublicKey.random().toHex();
-  /**
-   * @internal
-   */
-  public _traceParent?: string;
 
-  // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _modelFactory: ModelFactory
-  ) { }
+    private readonly _modelFactory: ModelFactory,
+    /**
+     * @internal
+     */
+    public readonly _traceParent?: string,
+  ) {}
 
   [inspect.custom]() {
     return inspectObject(this);
@@ -58,9 +57,6 @@ export class EchoProxy implements Echo {
     };
   }
 
-  /**
-   * @deprecated
-   */
   get modelFactory(): ModelFactory {
     return this._modelFactory;
   }

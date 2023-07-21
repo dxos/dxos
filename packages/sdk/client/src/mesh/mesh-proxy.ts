@@ -24,14 +24,13 @@ export class MeshProxy {
   private _ctx?: Context;
 
   private readonly _instanceId = PublicKey.random().toHex();
-  /**
-   * @internal
-   */
-  public _traceParent?: string;
 
-  // prettier-ignore
   constructor(
-    private readonly _serviceProvider: ClientServicesProvider
+    private readonly _serviceProvider: ClientServicesProvider,
+    /**
+     * @internal
+     */
+    public _traceParent?: string,
   ) {}
 
   toJSON() {

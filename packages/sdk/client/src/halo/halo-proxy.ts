@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import {
   asyncTimeout,
@@ -38,14 +38,12 @@ export class HaloProxy implements Halo {
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private _invitationProxy?: InvitationsProxy;
 
-  /**
-   * @internal
-   */
-  public _traceParent?: string;
-
-  // prettier-ignore
   constructor(
-    private readonly _serviceProvider: ClientServicesProvider
+    private readonly _serviceProvider: ClientServicesProvider,
+    /**
+     * @internal
+     */
+    public _traceParent?: string,
   ) {}
 
   [inspect.custom]() {

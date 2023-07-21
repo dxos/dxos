@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { inspect } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
@@ -24,12 +24,13 @@ import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, MaybePromise } from '@dxos/util';
 
-import type { Monitor } from './diagnostics';
-import type { EchoProxy } from './echo';
-import type { HaloProxy } from './halo';
-import type { MeshProxy } from './mesh';
-import type { PropertiesProps } from './proto';
-import { DXOS_VERSION } from './version';
+import type { Monitor } from '../diagnostics';
+import type { EchoProxy } from '../echo';
+import type { HaloProxy } from '../halo';
+import type { MeshProxy } from '../mesh';
+import type { PropertiesProps } from '../proto';
+import { DXOS_VERSION } from '../version';
+import { ClientRuntime } from './client-runtime';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -55,13 +56,9 @@ export class Client {
   public readonly version = DXOS_VERSION;
 
   private readonly _options: ClientOptions;
-  private _config!: Config;
-  private _modelFactory!: ModelFactory;
-  private _services!: ClientServicesProvider;
-  private _monitor!: Monitor;
-  private _halo!: HaloProxy;
-  private _echo!: EchoProxy;
-  private _mesh!: MeshProxy;
+  private _config?: Config;
+  private _services?: ClientServicesProvider;
+  private _runtime?: ClientRuntime;
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
@@ -78,7 +75,7 @@ export class Client {
     if (
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
-      !window.location.origin.includes('localhost')
+      !window.location.origin.endsWith('localhost')
     ) {
       console.warn(
         `DXOS Client will not function in a non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`,
@@ -102,9 +99,9 @@ export class Client {
   toJSON() {
     return {
       initialized: this.initialized,
-      echo: this._echo,
-      halo: this._halo,
-      mesh: this._mesh,
+      echo: this._runtime?.echo,
+      halo: this._runtime?.halo,
+      mesh: this._runtime?.mesh,
     };
   }
 
@@ -112,6 +109,7 @@ export class Client {
    * Current configuration object
    */
   get config(): Config {
+    invariant(this._config, 'Client not initialized.');
     return this._config;
   }
 
@@ -119,6 +117,7 @@ export class Client {
    * Current client services provider.
    */
   get services(): ClientServicesProvider {
+    invariant(this._services, 'Client not initialized.');
     return this._services;
   }
 
@@ -137,25 +136,33 @@ export class Client {
     return this._status;
   }
 
+  private get _echo(): EchoProxy {
+    invariant(this._runtime, 'Client not initialized.');
+    return this._runtime.echo;
+  }
+
   /**
    * HALO credentials.
    */
   get halo(): HaloProxy {
-    return this._halo;
+    invariant(this._runtime, 'Client not initialized.');
+    return this._runtime.halo;
   }
 
   /**
    * MESH networking.
    */
   get mesh(): MeshProxy {
-    return this._mesh;
+    invariant(this._runtime, 'Client not initialized.');
+    return this._runtime.mesh;
   }
 
   /**
    * Debug monitor.
    */
   get monitor(): Monitor {
-    return this._monitor;
+    invariant(this._runtime, 'Client not initialized.');
+    return this._runtime.monitor;
   }
 
   /**
@@ -209,30 +216,28 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
-    const { fromHost, fromIFrame } = await import('./services');
-    const { Monitor } = await import('./diagnostics');
-    const { EchoProxy, createDefaultModelFactory } = await import('./echo');
-    const { HaloProxy } = await import('./halo');
-    const { MeshProxy } = await import('./mesh');
+    const { fromHost, fromIFrame } = await import('../services');
+    const { Monitor } = await import('../diagnostics');
+    const { EchoProxy, createDefaultModelFactory } = await import('../echo');
+    const { HaloProxy } = await import('../halo');
+    const { MeshProxy } = await import('../mesh');
 
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
+    const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    this._monitor = new Monitor(this._services);
-    this._halo = new HaloProxy(this._services);
-    this._echo = new EchoProxy(this._services, this._modelFactory);
-    this._mesh = new MeshProxy(this._services);
-    this._halo._traceParent = this._instanceId;
-    this._echo._traceParent = this._instanceId;
-    this._mesh._traceParent = this._instanceId;
+    const monitor = new Monitor(this._services);
+    const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
+    const halo = new HaloProxy(this._services, this._instanceId);
+    const mesh = new MeshProxy(this._services, this._instanceId);
+    this._runtime = new ClientRuntime({ monitor, echo, halo, mesh });
 
     await this._services.open();
 
     // TODO(burdon): Remove?
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
-      const { createDevtoolsRpcServer } = await import('./devtools');
+      const { createDevtoolsRpcServer } = await import('../devtools');
       await createDevtoolsRpcServer(this, this._services);
     }
 
@@ -262,11 +267,7 @@ export class Client {
       throw err;
     }
 
-    // TODO(wittjosiah): Promise.all?
-    await this._monitor.open();
-    await this._halo._open();
-    await this._echo.open();
-    await this._mesh._open();
+    await this._runtime.open();
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', trace.end({ id: this._instanceId }));
@@ -282,14 +283,11 @@ export class Client {
       return;
     }
 
-    await this._halo._close();
-    await this._echo.close();
-    await this._mesh._close();
-    await this._monitor.close();
+    await this._runtime!.close();
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
-    await this._services.close();
+    await this.services.close();
 
     this._initialized = false;
   }
@@ -300,8 +298,8 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
+    invariant(this.services.services.SystemService, 'SystemService is not available.');
+    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
   }
 
   /**
@@ -313,8 +311,8 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
-    await this._services.services?.SystemService.reset();
+    invariant(this.services.services.SystemService, 'SystemService is not available.');
+    await this.services.services?.SystemService.reset();
     await this.destroy();
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
@@ -324,7 +322,7 @@ export class Client {
    * @deprecated
    */
   async createSerializer() {
-    const { SpaceSerializer } = await import('./echo/serializer');
+    const { SpaceSerializer } = await import('../echo/serializer');
     return new SpaceSerializer(this._echo);
   }
 }
