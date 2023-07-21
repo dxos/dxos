@@ -87,6 +87,7 @@ export const base = ({ name, monorepo, version, depVersion }: Context): Partial<
     },
     dependencies: {
       '@dxos/client': depVersion,
+      '@dxos/config': depVersion,
       '@dxos/vault': depVersion
     },
     devDependencies: {
