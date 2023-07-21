@@ -11,7 +11,6 @@ import { ClientContextProps } from '@dxos/react-client';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
-// TODO(burdon): Document (rename?)
 export const useRemoteClient = () => {
   const [client, setClient] = useState<ClientContextProps>();
   useAsyncEffect(async () => {
@@ -65,9 +64,10 @@ const createClientContext = async (): Promise<ClientContextProps> => {
     },
   };
 
+  // Configure vault.
   const searchParams = new URLSearchParams(window.location.search);
   const target = searchParams.get('target') ?? DEFAULT_TARGET;
-  const [protocol, ..._rest] = target.split(':');
+  const [protocol] = target.split(':');
   if (!(protocol in targetResolvers)) {
     throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
   }
