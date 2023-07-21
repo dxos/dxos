@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { transform } from '@swc/core';
 
 const wasmModule = require.resolve('@dxos/swc-log-plugin');
@@ -18,9 +22,8 @@ const _runTransform = async (source: string) => {
       target: 'es2022',
     },
   });
-}
+};
 
-// @ts-ignore-next-line
 // it('transform one', async () => {
 //   const source = `
 //     import { log } from '@dxos/log';
@@ -31,4 +34,3 @@ const _runTransform = async (source: string) => {
 //   const { code } = await runTransform(source)
 //   console.log(code)
 // })
-

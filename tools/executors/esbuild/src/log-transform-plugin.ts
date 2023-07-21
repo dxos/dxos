@@ -5,7 +5,6 @@
 import { transform } from '@swc/core';
 import { Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
-import { waitForDebugger } from 'inspector';
 import { basename } from 'path';
 
 const wasmModule = require.resolve('@dxos/swc-log-plugin');
@@ -18,7 +17,7 @@ const wasmModule = require.resolve('@dxos/swc-log-plugin');
 export class LogTransformer {
   private readonly _cache = new Map<string, Promise<string>>();
 
-  constructor(private readonly _options: { isVerbose: boolean }) { }
+  constructor(private readonly _options: { isVerbose: boolean }) {}
 
   private async _transform(filename: string): Promise<string> {
     const source = await readFile(filename, 'utf8');
@@ -34,25 +33,30 @@ export class LogTransformer {
           decorators: true,
         },
         experimental: {
-          plugins: [[wasmModule, {
-            filename,
-            symbols: [
+          plugins: [
+            [
+              wasmModule,
               {
-                function: "log",
-                package: "@dxos/log",
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
+                filename,
+                symbols: [
+                  {
+                    function: 'log',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: false,
+                    include_call_site: true,
+                  },
+                  {
+                    function: 'invariant',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: true,
+                    include_call_site: false,
+                  },
+                ],
               },
-              {
-                function: "invariant",
-                package: "@dxos/log",
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-              }
             ],
-          }]],
+          ],
         },
         target: 'es2022',
       },
@@ -60,7 +64,11 @@ export class LogTransformer {
     const end = performance.now();
 
     if (this._options.isVerbose) {
-      console.log(`transformed ${source.length.toString().padStart(6)} bytes in ${(end - begin).toFixed().padStart(6)}ms: ${filename}`)
+      console.log(
+        `transformed ${source.length.toString().padStart(6)} bytes in ${(end - begin)
+          .toFixed()
+          .padStart(6)}ms: ${filename}`,
+      );
     }
 
     return output.code;
