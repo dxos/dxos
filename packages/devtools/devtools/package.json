@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/mosaic": "workspace:*",
     "@dxos/react-shell": "workspace:*",

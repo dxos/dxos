@@ -30,6 +30,9 @@
       "path": "../../core/echo/echo-typegen"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
