@@ -116,9 +116,10 @@ export class ForeverDaemon implements Daemon {
           await services.close();
         }
       } catch (err) {
+        log.warn('Failed to start daemon.');
         const errContent = fs.readFileSync(errFile, 'utf-8');
         log.error(errContent);
-        throw err;
+        await this.stop(profile);
       }
     }
 
@@ -134,16 +135,16 @@ export class ForeverDaemon implements Daemon {
 
     const proc = await this._getProcess(profile);
 
-    if (force) {
-      // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
-      (await this.list()).forEach((process) => {
-        if (process.profile === profile) {
+    // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
+    (await this.list()).forEach((process) => {
+      if (process.profile === profile) {
+        if (force) {
           forever.stop(process.profile!);
+        } else {
+          forever.kill(proc.pid!, true, 'SIGINT');
         }
-      });
-    } else {
-      forever.kill(proc.pid!, true, 'SIGINT');
-    }
+      }
+    });
 
     await waitFor({
       condition: async () => !(await this.isRunning(profile)),
