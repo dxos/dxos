@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/apps/plugins/plugin-testing/src",
+  "sourceRoot": "packages/apps/plugins/plugin-debug/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/apps/plugins/plugin-testing/src/index.ts",
-        "outputPath": "packages/apps/plugins/plugin-testing/dist/types",
-        "tsConfig": "packages/apps/plugins/plugin-testing/tsconfig.json"
+        "main": "packages/apps/plugins/plugin-debug/src/index.ts",
+        "outputPath": "packages/apps/plugins/plugin-debug/dist/types",
+        "tsConfig": "packages/apps/plugins/plugin-debug/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,9 +17,9 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-testing/src/index.ts"
+          "packages/apps/plugins/plugin-debug/src/index.ts"
         ],
-        "outputPath": "packages/apps/plugins/plugin-testing/dist/lib",
+        "outputPath": "packages/apps/plugins/plugin-debug/dist/lib",
         "platforms": [
           "browser"
         ]
@@ -33,7 +33,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/apps/plugins/plugin-testing/src/**/*.{js,jsx,ts,tsx}"
+          "packages/apps/plugins/plugin-debug/src/**/*.{js,jsx,ts,tsx}"
         ]
       },
       "outputs": [
@@ -48,20 +48,20 @@
       },
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "configDir": "packages/apps/plugins/plugin-testing/.storybook"
+        "configDir": "packages/apps/plugins/plugin-debug/.storybook"
       }
     },
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/apps/plugins/plugin-testing",
-        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-testing",
-        "resultsPath": "test-results/packages/apps/plugins/plugin-testing",
+        "coveragePath": "coverage/packages/apps/plugins/plugin-debug",
+        "outputPath": "tmp/mocha/packages/apps/plugins/plugin-debug",
+        "resultsPath": "test-results/packages/apps/plugins/plugin-debug",
         "testPatterns": [
-          "packages/apps/plugins/plugin-testing/src/**/*.test.{ts,js}"
+          "packages/apps/plugins/plugin-debug/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/plugins/plugin-testing/src/**/*"
+          "packages/apps/plugins/plugin-debug/src/**/*"
         ]
       },
       "outputs": [

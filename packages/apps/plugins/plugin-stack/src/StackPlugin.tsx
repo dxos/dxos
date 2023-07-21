@@ -36,12 +36,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
+    // TODO(burdon): Open/close? (vs. ready/unload, initialize/destroy?)
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
     },
     provides: {
       graph: {
+        // TODO(burdon): Rename update (since not "event").
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
