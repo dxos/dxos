@@ -44,12 +44,12 @@ function readPackage(packageJson, context) {
     }
 
     // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-    case '@nrwl/nx-cloud': {
+    case '@nx/nx-cloud': {
       packageJson.dependencies['dotenv'] = '*'
       break;
     }
 
-    case '@nrwl/vite': {
+    case '@nx/vite': {
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
       break;

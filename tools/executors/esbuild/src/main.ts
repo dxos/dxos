@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import { build, Format, Platform } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';

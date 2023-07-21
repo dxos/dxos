@@ -2,7 +2,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/sdk/examples/src/index.ts",
         "outputPath": "packages/sdk/examples/dist/types",
@@ -13,7 +13,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -36,7 +36,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/sdk/examples/.storybook"
       }
@@ -47,7 +47,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "options": {
         "configDir": "packages/sdk/examples/.storybook",
         "outputDir": "packages/sdk/examples/out"

@@ -51,6 +51,9 @@
       "path": "../../ui/react-appkit"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../react-client"
     }
   ]
