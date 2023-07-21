@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/common/hypercore/src/index.ts",
         "outputPath": "packages/common/hypercore/dist/types",
@@ -83,7 +83,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

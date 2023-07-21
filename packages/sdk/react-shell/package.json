@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "@phosphor-icons/react": "^2.0.5",

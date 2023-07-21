@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
