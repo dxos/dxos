@@ -8,7 +8,8 @@ import { Observable } from 'lib0/observable';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import { Doc } from 'yjs';
 
-import { GossipMessage, Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
+import { GossipMessage } from '@dxos/client/mesh';
 import { log } from '@dxos/log';
 
 type Awareness = awarenessProtocol.Awareness;

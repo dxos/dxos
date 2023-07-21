@@ -9,12 +9,12 @@ import React, { useMemo, useState } from 'react';
 
 import { ThemeContext, useThemeContext } from '@dxos/aurora';
 import { mx, osTx } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, Client, Invitation } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { Loading } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider } from '@dxos/react-client';
+import { Client, ClientProvider } from '@dxos/react-client';
+import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
+import { TestBuilder } from '@dxos/react-client/testing';
 
 import { defaultSurface } from '../../styles';
 import { InvitationList } from './InvitationList';

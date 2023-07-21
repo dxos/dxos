@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 import * as varint from 'varint';
 
 import { RpcPort } from './rpc-port';
@@ -23,7 +23,7 @@ export class Framer {
     objectMode: false,
     read: () => {},
     write: (chunk, encoding, callback) => {
-      assert(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
+      invariant(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
 
       if (this._buffer && this._buffer.length > 0) {
         this._buffer = Buffer.concat([this._buffer, chunk]);
@@ -51,7 +51,7 @@ export class Framer {
       this._stream.push(encodeFrame(message));
     },
     subscribe: (callback) => {
-      assert(!this._messageCb, 'Rpc port already has a message listener.');
+      invariant(!this._messageCb, 'Rpc port already has a message listener.');
       this._messageCb = callback;
       this._subscribeCb?.();
       return () => {

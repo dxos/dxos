@@ -4,8 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { Config, Defaults, Dynamics, Local } from '@dxos/config';
-import { ClientProvider as NaturalClientProvider } from '@dxos/react-client';
+import { Config, Defaults, Dynamics, Local, ClientProvider as NaturalClientProvider } from '@dxos/react-client';
 
 const configProvider = async () => new Config(await Dynamics(), Local(), Defaults());
 

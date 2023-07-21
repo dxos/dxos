@@ -7,8 +7,11 @@ import React, { cloneElement } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
+import {
+  AuthenticatingInvitationObservable,
+  InvitationResult,
+  useInvitationStatus,
+} from '@dxos/react-client/invitations';
 
 import { ViewState, ViewStateProps } from './ViewState';
 

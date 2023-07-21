@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -79,7 +79,7 @@ export const wrapObservable = async (observable: CancellableInvitationObservable
     const subscription = observable.subscribe(
       (invitation: Invitation | undefined) => {
         // TODO(burdon): Throw error if auth requested.
-        assert(invitation?.state === Invitation.State.SUCCESS);
+        invariant(invitation?.state === Invitation.State.SUCCESS);
         subscription.unsubscribe();
         resolve(invitation);
       },

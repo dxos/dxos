@@ -6,9 +6,7 @@ import { Article as DocumentIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Document } from '@braneframe/types';
-import { Space } from '@dxos/client';
-import { Text } from '@dxos/echo-schema';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { Space, Text, TextKind } from '@dxos/react-client/echo';
 
 import { FrameRuntime } from '../../registry';
 

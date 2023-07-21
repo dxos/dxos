@@ -3,7 +3,7 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
@@ -135,8 +135,8 @@ export class SignalRPCClient {
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId });
     await this._connectTrigger.wait();
-    assert(!this._closed, 'SignalRPCClient is closed');
-    assert(this._rpc, 'Rpc is not initialized');
+    invariant(!this._closed, 'SignalRPCClient is closed');
+    invariant(this._rpc, 'Rpc is not initialized');
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array(),
@@ -147,9 +147,9 @@ export class SignalRPCClient {
 
   async receiveMessages(peerId: PublicKey): Promise<Stream<SignalMessage>> {
     log('receiveMessages', { peerId });
-    assert(!this._closed, 'SignalRPCClient is closed');
+    invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
-    assert(this._rpc, 'Rpc is not initialized');
+    invariant(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array(),
     });
@@ -159,9 +159,9 @@ export class SignalRPCClient {
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     log('sendMessage', { author, recipient, payload });
-    assert(!this._closed, 'SignalRPCClient is closed');
+    invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
-    assert(this._rpc, 'Rpc is not initialized');
+    invariant(this._rpc, 'Rpc is not initialized');
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),

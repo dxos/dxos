@@ -5,9 +5,10 @@
 import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationEncoder, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useSpace } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
+import { InvitationEncoder, Invitation } from '@dxos/react-client/invitations';
 
 import { SpaceInfo } from '../echo';
 import { ActionStatus, StatusState, TextInput, Panel } from '../util';

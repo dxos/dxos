@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
@@ -86,7 +86,7 @@ export class InvitationHostExtension extends RpcExtension<
       // Perhaps in the future we will have more complex logic here.
       InvitationHostService: {
         options: async (options) => {
-          assert(!this._remoteOptions, 'Remote options already set.');
+          invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
         },
@@ -128,7 +128,7 @@ export class InvitationHostExtension extends RpcExtension<
           log('received authentication request', { authCode: code });
           let status = AuthenticationResponse.Status.OK;
 
-          assert(this.invitation, 'Invitation is not set.');
+          invariant(this.invitation, 'Invitation is not set.');
           switch (this.invitation.authMethod) {
             case Invitation.AuthMethod.NONE: {
               log('authentication not required');
@@ -164,7 +164,7 @@ export class InvitationHostExtension extends RpcExtension<
           log.trace('dxos.sdk.invitation-handler.host.admit', trace.begin({ id: traceId }));
 
           try {
-            assert(this.invitation, 'Invitation is not set.');
+            invariant(this.invitation, 'Invitation is not set.');
             // Check authenticated.
             if (isAuthenticationRequired(this.invitation) && !this.authenticationPassed) {
               throw new Error('Not authenticated');
@@ -239,7 +239,7 @@ export class InvitationGuestExtension extends RpcExtension<
     return {
       InvitationHostService: {
         options: async (options) => {
-          assert(!this._remoteOptions, 'Remote options already set.');
+          invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
         },

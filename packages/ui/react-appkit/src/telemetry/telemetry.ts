@@ -5,10 +5,10 @@
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
-import type { Client, Config } from '@dxos/client';
 import { log } from '@dxos/log';
-import * as Sentry from '@dxos/sentry';
-import * as Telemetry from '@dxos/telemetry';
+import type { Client, Config } from '@dxos/react-client';
+import { InitOptions as SentryInitOptions } from '@dxos/sentry';
+import { InitOptions as TelemetryInitOptions } from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
 export const BASE_TELEMETRY_PROPERTIES: any = {};
@@ -68,9 +68,11 @@ export const getTelemetryGroup = async (namespace: string): Promise<string | nul
 export type AppTelemetryOptions = {
   namespace: string;
   config: Config;
-  sentryOptions?: Sentry.InitOptions;
-  telemetryOptions?: Telemetry.InitOptions;
+  sentryOptions?: SentryInitOptions;
+  telemetryOptions?: TelemetryInitOptions;
 };
+
+type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
 
 // TODO(wittjosiah): Store preference for disabling telemetry.
 //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
@@ -82,6 +84,42 @@ export const initializeAppTelemetry = async ({
   telemetryOptions,
 }: AppTelemetryOptions) => {
   try {
+    const Telemetry = await import('@dxos/telemetry');
+    const Sentry = await import('@dxos/sentry');
+
+    const getIPData = async (config: Config): Promise<IPData | void> => {
+      const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
+      type CachedIPData = {
+        data: IPData;
+        timestamp: number;
+      };
+
+      // Check cache first.
+      const cachedData: null | CachedIPData = await localForage.getItem('dxos:telemetry:ipdata');
+      if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
+        return cachedData.data;
+      }
+
+      // Fetch data if not cached.
+      const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
+      if (IPDATA_API_KEY) {
+        return fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
+          .then((res) => res.json())
+          .then((data) => {
+            // Cache data.
+            localForage
+              .setItem('dxos:telemetry:ipdata', {
+                data,
+                timestamp: Date.now(),
+              })
+              .catch((err) => Sentry.captureException(err));
+
+            return data;
+          })
+          .catch((err) => Sentry.captureException(err));
+      }
+    };
+
     const group = await getTelemetryGroup(namespace);
     const release = `${namespace}@${config.get('runtime.app.build.version')}`;
     const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
@@ -130,40 +168,5 @@ export const initializeAppTelemetry = async ({
     }
   } catch (err) {
     log.error('Failed to initialize app telemetry', err);
-  }
-};
-
-type IPData = { city: string; region: string; country: string; latitude: number; longitude: number };
-
-const getIPData = async (config: Config): Promise<IPData | void> => {
-  const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
-  type CachedIPData = {
-    data: IPData;
-    timestamp: number;
-  };
-
-  // Check cache first.
-  const cachedData: null | CachedIPData = await localForage.getItem('dxos:telemetry:ipdata');
-  if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
-    return cachedData.data;
-  }
-
-  // Fetch data if not cached.
-  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
-  if (IPDATA_API_KEY) {
-    return fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
-      .then((res) => res.json())
-      .then((data) => {
-        // Cache data.
-        localForage
-          .setItem('dxos:telemetry:ipdata', {
-            data,
-            timestamp: Date.now(),
-          })
-          .catch((err) => Sentry.captureException(err));
-
-        return data;
-      })
-      .catch((err) => Sentry.captureException(err));
   }
 };

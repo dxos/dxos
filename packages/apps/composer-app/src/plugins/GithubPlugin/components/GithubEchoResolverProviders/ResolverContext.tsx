@@ -5,10 +5,10 @@
 import React, { Context, createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Document } from '@braneframe/types';
-import { SpaceState } from '@dxos/client';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-async';
-import { Space, useIdentity, useQuery, useSpaces, Text } from '@dxos/react-client';
+import { Space, SpaceState, useQuery, useSpaces, Text } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { DocumentResolverProps, SpaceResolverProps } from './ResolverProps';
 import { displayName, matchSpace } from './spaceResolvers';

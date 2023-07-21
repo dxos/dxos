@@ -3,14 +3,14 @@
 //
 
 import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from '@phosphor-icons/react';
-import assert from 'assert';
 import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
+import invariant from 'tiny-invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-import { useQuery } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 
@@ -75,7 +75,7 @@ const Play: FC<{
   };
 
   const handleUpdate = (move: ChessMove) => {
-    assert(model);
+    invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
       game!.fen = model.chess.pgn();

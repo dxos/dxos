@@ -6,7 +6,8 @@ import { Box, Text } from 'ink';
 import * as process from 'node:process';
 import React, { useMemo } from 'react';
 
-import { useClient, useIdentity } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { ModuleProvider, useAppState } from '../hooks';
 import { Config } from './Config';

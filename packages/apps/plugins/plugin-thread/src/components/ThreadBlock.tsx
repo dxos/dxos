@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/client';
+import { PublicKey } from '@dxos/react-client';
 
 import { useSubscription } from './util';
 

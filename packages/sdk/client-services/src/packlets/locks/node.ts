@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
 import { FileHandle } from 'node:fs/promises';
+import invariant from 'tiny-invariant';
 
 import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
@@ -39,7 +39,7 @@ export class Lock implements ResourceLock {
 
   async release() {
     await this._onRelease?.();
-    assert(this._fileHandle, 'Lock is not acquired');
+    invariant(this._fileHandle, 'Lock is not acquired');
     await LockFile.release(this._fileHandle);
   }
 }

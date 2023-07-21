@@ -7,8 +7,6 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromIFrame, fromHost } from '@dxos/client';
-import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   appkitTranslations,
@@ -19,7 +17,7 @@ import {
   ServiceWorkerToast,
   ThemeProvider,
 } from '@dxos/react-appkit';
-import { ClientProvider } from '@dxos/react-client';
+import { Config, Defaults, Dynamics, Envs, Local, fromIFrame, fromHost, ClientProvider } from '@dxos/react-client';
 import { osTranslations } from '@dxos/react-shell';
 import { captureException } from '@dxos/sentry';
 

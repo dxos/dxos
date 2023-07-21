@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/client';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';

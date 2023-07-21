@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import { useId } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/client';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { PublicKey } from '@dxos/react-client';
+import { TextKind } from '@dxos/react-client/echo';
 import { ClientDecorator, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
 import { Replicator, useYjsModel } from '../../testing';

@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { FeedWriter } from '@dxos/feed-store';
+import type { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
@@ -32,7 +32,7 @@ export class ModelFactory {
   }
 
   getModel(modelType: ModelType) {
-    assert(modelType);
+    invariant(modelType);
     return this._models.get(modelType);
   }
 
@@ -75,7 +75,7 @@ export class ModelFactory {
     _memberKey: PublicKey, // TODO(burdon): Change to client ID?
     _writeStream?: FeedWriter<Any>,
   ): any {
-    assert(itemId);
+    invariant(itemId);
     const _constructor = this._models.get(modelType)?.constructor;
     return todo();
   }

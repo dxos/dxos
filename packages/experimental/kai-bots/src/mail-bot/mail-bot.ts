@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';

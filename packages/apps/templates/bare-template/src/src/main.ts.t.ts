@@ -9,8 +9,7 @@ export default defineTemplate<typeof config>(({ input, outputDirectory }) => {
   const { react, dxosUi } = input;
   return !react
     ? text`
-    import { Client } from '@dxos/client';
-    import { Config, Defaults, Dynamics, Local } from '@dxos/config';
+    import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 
     ${
       dxosUi &&

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Space } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
 
 import { Intent } from '../../util';
 import { SpaceItem } from './SpaceItem';

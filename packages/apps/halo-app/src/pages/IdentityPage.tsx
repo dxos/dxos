@@ -14,7 +14,8 @@ import {
   isTelemetryDisabled,
   storeTelemetryDisabled,
 } from '@dxos/react-appkit/telemetry';
-import { useClient, useIdentity } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 

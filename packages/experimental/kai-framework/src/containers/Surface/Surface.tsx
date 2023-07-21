@@ -5,8 +5,8 @@
 import React, { Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
 import { FrameContextProvider, FrameState, FrameDef } from '@dxos/kai-frames';
+import { Space } from '@dxos/react-client/echo';
 
 import { createPath, useAppReducer } from '../../hooks';
 

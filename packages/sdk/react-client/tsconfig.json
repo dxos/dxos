@@ -24,9 +24,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -39,25 +36,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/echo/text-model"
-    },
-    {
-      "path": "../../core/mesh/messaging"
-    },
-    {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../ui/aurora"
@@ -67,9 +49,6 @@
     },
     {
       "path": "../client"
-    },
-    {
-      "path": "../client-services"
     },
     {
       "path": "../config"

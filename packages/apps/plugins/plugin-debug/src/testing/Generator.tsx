@@ -5,7 +5,7 @@
 import type { Faker } from '@faker-js/faker';
 
 import { Document } from '@braneframe/types';
-import { SpaceProxy, Text } from '@dxos/client';
+import { SpaceProxy, Text } from '@dxos/client/echo';
 import { range } from '@dxos/util';
 
 export class Generator {

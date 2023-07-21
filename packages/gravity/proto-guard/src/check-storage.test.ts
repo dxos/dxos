@@ -6,7 +6,8 @@ import { expect } from 'chai';
 import fse from 'fs-extra';
 import path from 'node:path';
 
-import { Client, Text } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Text } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';

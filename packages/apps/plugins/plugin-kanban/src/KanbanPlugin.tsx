@@ -9,7 +9,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
