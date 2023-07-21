@@ -11,7 +11,7 @@ import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { Daemon, ProcessInfo } from '../daemon';
+import { Daemon, ProcessInfo, StartOptions } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../defs';
 import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 
@@ -59,7 +59,7 @@ export class ForeverDaemon implements Daemon {
     });
   }
 
-  async start(profile: string, params?: { config?: string }): Promise<ProcessInfo> {
+  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
@@ -154,9 +154,9 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async restart(profile: string): Promise<ProcessInfo> {
+  async restart(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     await this.stop(profile);
-    return this.start(profile);
+    return this.start(profile, params);
   }
 
   async _getProcess(profile?: string): Promise<ProcessInfo> {
