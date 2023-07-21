@@ -7,30 +7,24 @@ import React, { cloneElement } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
-import { ViewState, ViewStateProps } from './ViewState';
+import { ViewStateProps } from './ViewState';
 
 export interface InvitationAcceptedProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
   doneActionParent?: Parameters<typeof cloneElement>[0];
-  onDone?: (result: InvitationResult | null) => void;
+  onDone?: () => void;
 }
 
-const PureInvitationAcceptedContent = ({
-  onDone,
-  result,
-  Kind,
-  doneActionParent,
-  active,
-}: InvitationAcceptedProps & { result: InvitationResult | null }) => {
+export const InvitationAccepted = (props: InvitationAcceptedProps) => {
+  const { active, Kind, doneActionParent, onDone } = props;
+
   const disabled = !active;
   const { t } = useTranslation('os');
 
   const doneButton = (
     <Button
-      onClick={() => onDone?.(result)}
+      onClick={onDone}
       disabled={disabled}
       classNames='flex items-center gap-2 pli-2'
       data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
@@ -48,28 +42,5 @@ const PureInvitationAcceptedContent = ({
       <div role='none' className='grow' />
       {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
     </>
-  );
-};
-
-const InvitationAcceptedContent = (
-  props: InvitationAcceptedProps & { activeInvitation: AuthenticatingInvitationObservable },
-) => {
-  const { result } = useInvitationStatus(props.activeInvitation);
-  return <PureInvitationAcceptedContent {...props} result={result} />;
-};
-
-export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { Kind, doneActionParent: _doneActionParent, onDone: _onDone, ...viewStateProps } = props;
-  const activeInvitation =
-    viewStateProps.joinState?.context[Kind.toLowerCase() as 'halo' | 'space'].invitationObservable;
-
-  return (
-    <ViewState {...viewStateProps}>
-      {!activeInvitation ? (
-        <PureInvitationAcceptedContent {...props} result={null} />
-      ) : (
-        <InvitationAcceptedContent {...props} activeInvitation={activeInvitation} />
-      )}
-    </ViewState>
   );
 };

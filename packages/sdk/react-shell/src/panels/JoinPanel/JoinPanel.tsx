@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
@@ -30,7 +30,8 @@ export const JoinPanelImpl = ({
   invitationStates,
   preventExit,
   onExit,
-  onDone,
+  onHaloDone,
+  onSpaceDone,
   exitActionParent,
   doneActionParent,
   onHaloInvitationCancel,
@@ -82,12 +83,18 @@ export const JoinPanelImpl = ({
           </Viewport.View>
           <Viewport.View id='halo invitation accepted'>
             <InvitationAccepted
-              {...{ send, Kind: 'Halo', active: activeView === 'halo invitation accepted', doneActionParent, onDone }}
+              {...{
+                send,
+                Kind: 'Halo',
+                active: activeView === 'halo invitation accepted',
+                doneActionParent,
+                onDone: onHaloDone,
+              }}
             />
           </Viewport.View>
           <Viewport.View id='identity added'>
             <IdentityAdded
-              {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone }}
+              {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
               send={send}
             />
           </Viewport.View>
@@ -120,7 +127,13 @@ export const JoinPanelImpl = ({
           </Viewport.View>
           <Viewport.View id='space invitation accepted'>
             <InvitationAccepted
-              {...{ send, Kind: 'Space', active: activeView === 'space invitation accepted', doneActionParent, onDone }}
+              {...{
+                send,
+                Kind: 'Space',
+                active: activeView === 'space invitation accepted',
+                doneActionParent,
+                onDone: onSpaceDone,
+              }}
             />
           </Viewport.View>
         </Viewport.Views>
@@ -135,7 +148,7 @@ export const JoinPanel = ({
   exitActionParent,
   onExit,
   doneActionParent,
-  onDone,
+  onDone: propsOnDone,
   preventExit,
 }: JoinPanelProps) => {
   const client = useClient();
@@ -302,6 +315,22 @@ export const JoinPanel = ({
     [joinState],
   );
 
+  const onHaloDone = useCallback(() => {
+    propsOnDone?.({
+      identityKey: joinState.context.halo.invitation?.identityKey ?? null,
+      swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
+      spaceKey: joinState.context.halo.invitation?.spaceKey ?? null,
+    });
+  }, [joinState, propsOnDone]);
+
+  const onSpaceDone = useCallback(() => {
+    propsOnDone?.({
+      identityKey: joinState.context.space.invitation?.identityKey ?? null,
+      swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
+      spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
+    });
+  }, [joinState, propsOnDone]);
+
   console.log('[active view]', activeView);
 
   return (
@@ -316,11 +345,12 @@ export const JoinPanel = ({
         identity,
         preventExit,
         onExit,
-        onDone,
         exitActionParent,
         doneActionParent,
-        onHaloInvitationCancel: joinState.context.halo.invitationObservable?.cancel,
-        onSpaceInvitationCancel: joinState.context.space.invitationObservable?.cancel,
+        onHaloDone,
+        onSpaceDone,
+        onHaloInvitationCancel: () => joinState.context.halo.invitationObservable?.cancel(),
+        onSpaceInvitationCancel: () => joinState.context.space.invitationObservable?.cancel(),
         onHaloInvitationAuthenticate: (authCode: string) => {
           // todo(thure): Is this necessary? Shouldn’t the observable emit this?
           joinSend({ type: 'authenticateHaloVerificationCode' });

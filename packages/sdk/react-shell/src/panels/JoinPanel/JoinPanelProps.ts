@@ -39,6 +39,8 @@ export type JoinPanelImplProps = Pick<
       Halo: Invitation.State;
       Space: Invitation.State;
     }>;
+    onHaloDone?: () => void;
+    onSpaceDone?: () => void;
     onHaloInvitationCancel?: () => Promise<void> | undefined;
     onSpaceInvitationCancel?: () => Promise<void> | undefined;
     onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
