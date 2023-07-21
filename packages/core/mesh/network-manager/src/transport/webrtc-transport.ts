@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';

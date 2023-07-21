@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';

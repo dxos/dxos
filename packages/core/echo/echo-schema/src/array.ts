@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { inspect, CustomInspectFunction } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';

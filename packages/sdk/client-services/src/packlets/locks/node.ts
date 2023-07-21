@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { FileHandle } from 'node:fs/promises';
+import invariant from 'tiny-invariant';
 
 import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';

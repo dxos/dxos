@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';

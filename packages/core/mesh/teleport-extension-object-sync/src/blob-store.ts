@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import path from 'node:path';
+import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';

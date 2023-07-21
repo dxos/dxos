@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { Duplex, pipeline } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import * as pb from 'protobufjs';
+import invariant from 'tiny-invariant';
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';

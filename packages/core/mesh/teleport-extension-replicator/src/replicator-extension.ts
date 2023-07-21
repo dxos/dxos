@@ -3,8 +3,8 @@
 //
 
 import type { ProtocolStream } from 'hypercore-protocol';
-import invariant from 'tiny-invariant';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';

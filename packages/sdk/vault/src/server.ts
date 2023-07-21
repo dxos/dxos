@@ -6,9 +6,9 @@ import corsPlugin from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import fastify from 'fastify';
 import defaultsDeep from 'lodash.defaultsdeep';
-import invariant from 'tiny-invariant';
 import { join } from 'node:path';
 import pkgDir from 'pkg-dir';
+import invariant from 'tiny-invariant';
 
 import { definitions, ConfigPluginOpts } from '@dxos/config';
 
