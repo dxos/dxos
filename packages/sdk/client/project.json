@@ -52,7 +52,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/sdk/client/src/packlets/proto/gen"
+        "packages/sdk/client/src/proto/gen"
       ]
     },
     "test": {
