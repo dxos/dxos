@@ -108,13 +108,8 @@ export default class Start extends BaseCommand<typeof Start> {
         return;
       }
 
-      try {
-        await daemon.start(this.flags.profile, { config: this.flags.config });
-        this.log('Agent started.');
-      } catch (err) {
-        this.log(chalk`{red Failed to start daemon}: ${err}`);
-        await daemon.stop(this.flags.profile);
-      }
+      await daemon.start(this.flags.profile, { config: this.flags.config });
+      this.log('Agent started.');
     });
   }
 
