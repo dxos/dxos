@@ -3,7 +3,7 @@
 //
 
 import { CheckCircle, HourglassSimple, X } from '@phosphor-icons/react';
-import React, { ComponentProps, ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
+import React, { ComponentProps, ComponentPropsWithRef, forwardRef, ReactNode, useMemo } from 'react';
 import { Event, SingleOrArray } from 'xstate';
 
 import { useTranslation, useId } from '@dxos/aurora';
@@ -23,13 +23,15 @@ export interface ViewStateProps extends ComponentProps<'div'> {
 
 const stripe = mx('rounded-full grow', getSize(3));
 
-export const ViewStateHeading = ({ children, className, ...props }: ComponentPropsWithoutRef<'h2'>) => {
-  return (
-    <h2 {...props} className={mx('font-system-normal text-sm mbe-1 mli-1 text-center', className)}>
-      {children}
-    </h2>
-  );
-};
+export const ViewStateHeading = forwardRef<HTMLHeadingElement, ComponentPropsWithRef<'h2'>>(
+  ({ children, className, ...props }, forwardedRef) => {
+    return (
+      <h2 {...props} className={mx('font-system-normal text-sm mbe-1 mli-1 text-center', className)} ref={forwardedRef}>
+        {children}
+      </h2>
+    );
+  },
+);
 
 const PureViewStateInvitation = ({
   halted,
