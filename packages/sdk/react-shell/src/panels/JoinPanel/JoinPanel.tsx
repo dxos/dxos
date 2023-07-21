@@ -35,6 +35,8 @@ export const JoinPanelImpl = ({
   doneActionParent,
   onHaloInvitationCancel,
   onSpaceInvitationCancel,
+  onHaloInvitationAuthenticate,
+  onSpaceInvitationAuthenticate,
 }: JoinPanelImplProps) => {
   const titleId = useId('joinPanel__title');
   return (
@@ -73,6 +75,8 @@ export const JoinPanelImpl = ({
               send={send}
               Kind='Halo'
               active={activeView === 'halo invitation authenticator'}
+              onInvitationCancel={onHaloInvitationCancel}
+              onInvitationAuthenticate={onHaloInvitationAuthenticate}
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
@@ -109,6 +113,8 @@ export const JoinPanelImpl = ({
               send={send}
               Kind='Space'
               active={activeView === 'space invitation authenticator'}
+              onInvitationCancel={onSpaceInvitationCancel}
+              onInvitationAuthenticate={onSpaceInvitationAuthenticate}
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
@@ -313,8 +319,15 @@ export const JoinPanel = ({
         doneActionParent,
         onHaloInvitationCancel: joinState.context.halo.invitationObservable?.cancel,
         onSpaceInvitationCancel: joinState.context.space.invitationObservable?.cancel,
-        onHaloInvitationAuthenticate: joinState.context.halo.invitationObservable?.authenticate,
-        onSpaceInvitationAuthenticate: joinState.context.space.invitationObservable?.authenticate,
+        onHaloInvitationAuthenticate: (authCode: string) => {
+          // todo(thure): Is this necessary? Shouldn’t the observable emit this?
+          joinSend({ type: 'authenticateHaloVerificationCode' });
+          return joinState.context.halo.invitationObservable?.authenticate(authCode);
+        },
+        onSpaceInvitationAuthenticate: (authCode: string) => {
+          joinSend({ type: 'authenticateSpaceVerificationCode' });
+          return joinState.context.space.invitationObservable?.authenticate(authCode);
+        },
       }}
     />
   );

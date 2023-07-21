@@ -14,7 +14,7 @@ import { ViewStateHeading, ViewStateProps } from './ViewState';
 export interface InvitationConnectorProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
   invitationState?: Invitation.State;
-  onInvitationCancel?: () => Promise<void>;
+  onInvitationCancel?: () => Promise<void> | undefined;
 }
 
 const InvitationActions = ({ invitationState, onInvitationCancel, active, send, Kind }: InvitationConnectorProps) => {

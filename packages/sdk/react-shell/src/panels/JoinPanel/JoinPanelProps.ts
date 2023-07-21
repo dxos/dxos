@@ -39,10 +39,10 @@ export type JoinPanelImplProps = Pick<
       Halo: Invitation.State;
       Space: Invitation.State;
     }>;
-    onHaloInvitationCancel?: () => Promise<void>;
-    onSpaceInvitationCancel?: () => Promise<void>;
-    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void>;
-    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void>;
+    onHaloInvitationCancel?: () => Promise<void> | undefined;
+    onSpaceInvitationCancel?: () => Promise<void> | undefined;
+    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   };
 
 export interface IdentityAction {

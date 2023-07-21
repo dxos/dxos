@@ -3,56 +3,58 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ChangeEvent, ComponentProps, ComponentPropsWithoutRef, useCallback, useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { Input, Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { AuthenticatingInvitationObservable } from '@dxos/client';
-import { Input } from '@dxos/react-appkit';
-import { useInvitationStatus } from '@dxos/react-client';
 
-import { JoinSend, JoinState } from '../joinMachine';
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { ViewStateHeading, ViewStateProps } from './ViewState';
 
 const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends ViewStateProps {
   Kind: 'Space' | 'Halo';
   failed?: boolean;
+  pending?: boolean;
+  onInvitationCancel?: () => Promise<void> | undefined;
+  onInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
 }
 
-const PureInvitationAuthenticatorContent = ({
-  disabled,
+export const InvitationAuthenticator = ({
   failed,
-  joinSend,
-  joinState,
   Kind,
-  onChange,
-  onAuthenticate,
-}: {
-  disabled?: boolean;
-  joinSend: JoinSend;
-  joinState?: JoinState;
-  Kind: InvitationAuthenticatorProps['Kind'];
-  failed: InvitationAuthenticatorProps['failed'];
-  onChange: ComponentProps<typeof Input>['onChange'];
-  onAuthenticate: ComponentProps<typeof Button>['onClick'];
-}) => {
+  active,
+  pending,
+  onInvitationAuthenticate,
+  onInvitationCancel,
+}: InvitationAuthenticatorProps) => {
+  const disabled = active || pending;
   const { t } = useTranslation('os');
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
+  const [authCode, setAuthCode] = useState('');
+
+  const onChange = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+    setAuthCode(value);
+    if (value.length === pinLength) {
+      (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
+    }
+  };
+
   return (
     <>
-      <Input
-        label={<ViewStateHeading>{t('auth code input label')}</ViewStateHeading>}
-        size='pin'
-        length={pinLength}
-        onChange={onChange}
-        disabled={disabled}
-        slots={{
-          root: { className: 'm-0' },
-          description: { className: 'text-center' },
-          input: {
+      <Input.Root
+        {...(failed && {
+          validationValence: 'error',
+        })}
+      >
+        <Input.Label asChild>
+          <ViewStateHeading>{t('auth code input label')}</ViewStateHeading>
+        </Input.Label>
+        <Input.PinInput
+          {...{
             disabled,
+            length: pinLength,
+            onChange,
             inputMode: 'numeric',
             autoComplete: 'off',
             pattern: '\\d*',
@@ -60,19 +62,20 @@ const PureInvitationAuthenticatorContent = ({
             'data-prevent-ios-autofocus': true,
             'data-testid': `${invitationType}-auth-code-input`,
             'data-1p-ignore': true,
-          } as ComponentPropsWithoutRef<'input'>,
-        }}
-        {...(failed && {
-          validationValence: 'error',
-          validationMessage: t('failed to authenticate message'),
-        })}
-      />
+          }}
+        />
+        {failed && (
+          <Input.DescriptionAndValidation classNames='text-center'>
+            <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        )}
+      </Input.Root>
       <div role='none' className='grow' />
       <div className='flex gap-2'>
         <Button
           disabled={disabled}
           classNames='grow flex items-center gap-2 pli-2 order-2'
-          onClick={onAuthenticate}
+          onClick={() => onInvitationAuthenticate?.(authCode)}
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
@@ -83,7 +86,7 @@ const PureInvitationAuthenticatorContent = ({
         <Button
           disabled={disabled}
           classNames='flex items-center gap-2 pis-2 pie-4'
-          onClick={() => joinState?.context[invitationType].invitationObservable?.cancel()}
+          onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           <CaretLeft weight='bold' className={getSize(4)} />
@@ -91,64 +94,5 @@ const PureInvitationAuthenticatorContent = ({
         </Button>
       </div>
     </>
-  );
-};
-
-const InvitationAuthenticatorContent = ({
-  joinSend,
-  joinState,
-  disabled,
-  invitation,
-  Kind,
-  failed,
-}: {
-  joinSend: JoinSend;
-  joinState?: JoinState;
-  disabled?: boolean;
-  invitation: AuthenticatingInvitationObservable;
-  Kind: InvitationAuthenticatorProps['Kind'];
-  failed: InvitationAuthenticatorProps['failed'];
-}) => {
-  const invitationType = Kind.toLowerCase();
-  const [pinValue, setPinValue] = useState('');
-  const { authenticate } = useInvitationStatus(invitation);
-  const onAuthenticate = useCallback(() => {
-    joinSend({ type: `authenticate${Kind}VerificationCode` });
-    void authenticate(pinValue);
-  }, [joinSend, authenticate, pinValue]);
-  const onChange = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      setPinValue(value);
-      if (value.length === pinLength) {
-        (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
-      }
-    },
-    [authenticate, pinValue],
-  );
-  return (
-    <PureInvitationAuthenticatorContent
-      {...{ disabled, failed, joinSend, joinState, Kind, onChange, onAuthenticate }}
-    />
-  );
-};
-
-export const InvitationAuthenticator = ({ failed, Kind, ...viewStateProps }: InvitationAuthenticatorProps) => {
-  const { joinSend, joinState } = viewStateProps;
-  const disabled =
-    !viewStateProps.active ||
-    ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str));
-  const activeInvitation = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].invitationObservable;
-  return (
-    <ViewState {...viewStateProps}>
-      {!activeInvitation ? (
-        <PureInvitationAuthenticatorContent
-          {...{ disabled, failed, joinSend, joinState, Kind, onChange: () => {}, onAuthenticate: () => {} }}
-        />
-      ) : (
-        <InvitationAuthenticatorContent
-          {...{ disabled, failed, invitation: activeInvitation, joinSend, joinState, Kind }}
-        />
-      )}
-    </ViewState>
   );
 };
