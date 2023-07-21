@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
-import { defaultDisabled } from '@dxos/aurora-theme';
+import { staticDisabled } from '@dxos/aurora-theme';
 import { useMulticastObservable } from '@dxos/react-async';
 import { Space, SpaceState, useQuery } from '@dxos/react-client/echo';
 
@@ -52,7 +52,7 @@ export const SpacePickerTreeItem = ({
       collapsible
       open={open}
       onOpenChange={setOpen}
-      classNames={['mbe-2 block', disabled && defaultDisabled]}
+      classNames={['mbe-2 block', disabled && staticDisabled]}
       {...(disabled && { 'aria-disabled': true })}
     >
       <div role='none' className='flex items-center gap-2'>
@@ -61,7 +61,7 @@ export const SpacePickerTreeItem = ({
             <OpenTriggerIcon />
           </TreeItem.OpenTrigger>
         ) : (
-          <TreeItem.OpenTrigger disabled classNames={defaultDisabled}>
+          <TreeItem.OpenTrigger disabled classNames={staticDisabled}>
             <CaretRight />
           </TreeItem.OpenTrigger>
         )}

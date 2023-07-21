@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { JoinHeading } from './JoinHeading';
-import { JoinPanelProps } from './JoinPanelProps';
+import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
   AdditionMethodSelector,
@@ -21,49 +21,17 @@ import {
   InvitationAccepted,
 } from './view-states';
 
-export const JoinPanel = ({
-  mode = 'default',
-  initialInvitationCode,
-  exitActionParent,
-  onExit,
-  doneActionParent,
-  onDone,
+export const JoinPanelImpl = ({
+  mode,
+  state: joinState,
+  send: joinSend,
   preventExit,
-}: JoinPanelProps) => {
-  const client = useClient();
-  const identity = useIdentity();
+  onExit,
+  onDone,
+  exitActionParent,
+  doneActionParent,
+}: JoinPanelImplProps) => {
   const titleId = useId('joinPanel__title');
-  const { hasIosKeyboard } = useThemeContext();
-
-  const [joinState, joinSend, joinService] = useJoinMachine(client, {
-    context: {
-      mode,
-      identity,
-      ...(initialInvitationCode && {
-        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
-      }),
-    },
-  });
-
-  useEffect(() => {
-    const subscription = joinService.subscribe((state) => {
-      log('[state]', state);
-    });
-
-    return subscription.unsubscribe;
-  }, [joinService]);
-
-  useEffect(() => {
-    // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
-    const stateStack = joinState.configuration[0].id.split('.');
-    const innermostState = stateStack[stateStack.length - 1];
-    const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
-    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus~="${autoFocusValue}"]`);
-    if ($nextAutofocus && !(hasIosKeyboard && $nextAutofocus.hasAttribute('data-prevent-ios-autofocus'))) {
-      $nextAutofocus.focus();
-    }
-  }, [joinState.value, hasIosKeyboard]);
-
   return (
     <DensityProvider density='fine'>
       <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
@@ -246,5 +214,66 @@ export const JoinPanel = ({
         </div>
       </div>
     </DensityProvider>
+  );
+};
+
+export const JoinPanel = ({
+  mode = 'default',
+  initialInvitationCode,
+  exitActionParent,
+  onExit,
+  doneActionParent,
+  onDone,
+  preventExit,
+}: JoinPanelProps) => {
+  const client = useClient();
+  const identity = useIdentity();
+  const { hasIosKeyboard } = useThemeContext();
+
+  const [joinState, joinSend, joinService] = useJoinMachine(client, {
+    context: {
+      mode,
+      identity,
+      ...(initialInvitationCode && {
+        [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
+      }),
+    },
+  });
+
+  useEffect(() => {
+    const subscription = joinService.subscribe((state) => {
+      log('[state]', state);
+    });
+
+    return subscription.unsubscribe;
+  }, [joinService]);
+
+  useEffect(() => {
+    // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
+    const stateStack = joinState.configuration[0].id.split('.');
+    const innermostState = stateStack[stateStack.length - 1];
+    const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
+    const $nextAutofocus: HTMLElement | null = document.querySelector(`[data-autofocus~="${autoFocusValue}"]`);
+    if ($nextAutofocus && !(hasIosKeyboard && $nextAutofocus.hasAttribute('data-prevent-ios-autofocus'))) {
+      $nextAutofocus.focus();
+    }
+  }, [joinState.value, hasIosKeyboard]);
+
+  return (
+    <JoinPanelImpl
+      {...{
+        mode,
+        state: joinState,
+        send: joinSend,
+        identity,
+        hasIosKeyboard,
+        initialInvitationCode,
+        preventExit,
+        onExit,
+        onDone,
+        exitActionParent,
+        doneActionParent,
+      }}
+    />
   );
 };

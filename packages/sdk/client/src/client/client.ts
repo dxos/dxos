@@ -24,7 +24,7 @@ import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, MaybePromise } from '@dxos/util';
 
-import type { Monitor } from '../diagnostics';
+import type { ClientStats, DiagnosticOptions, Monitor } from '../diagnostics';
 import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
@@ -202,6 +202,14 @@ export class Client {
    */
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
     return this._echo.acceptInvitation(invitation);
+  }
+
+  /**
+   * Get client diagnostics data.
+   */
+  async diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<ClientStats>> {
+    const { diagnostics } = await import('../diagnostics');
+    return diagnostics(this, opts);
   }
 
   /**

@@ -80,8 +80,8 @@ export const ThreadChannel: FC<{
             variant='subdued'
             classNames='flex-1 is-auto pis-2'
             placeholder='Enter message.'
-            value={thread.name ?? ''}
-            onChange={({ target: { value } }) => (thread.name = value)}
+            value={thread.title ?? ''}
+            onChange={({ target: { value } }) => (thread.title = value)}
           />
         </Input.Root>
       </div>

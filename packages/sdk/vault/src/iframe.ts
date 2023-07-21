@@ -89,13 +89,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     return;
   } else {
     const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-
-    console.log(
-      `%cTo inspect this application, click here:\nhttps://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${
-        window.location.href
-      }`,
-      cssStyle,
-    );
+    const vaultUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org/?target=vault:${window.location.href}`;
+    console.log(`%cOpen devtools to inspect the application: ${vaultUrl}`, cssStyle);
   }
 
   if (typeof SharedWorker === 'undefined') {
@@ -132,10 +127,8 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    console.log(
-      `%cDXOS Client is communicating with the shared worker on ${window.location.origin}.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).`,
-      cssStyle,
-    );
+    console.log(`%cThe DXOS Client is connected to the shared worker: ${window.location.origin}`, cssStyle);
+    console.log('%cInspect the worker using: chrome://inspect/#workers (URL must be copied manually).', cssStyle);
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
       const { command, payload } = event.data;

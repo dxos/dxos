@@ -6,7 +6,7 @@ import { ArrowsClockwise, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { defaultDescription, getSize, mx } from '@dxos/aurora-theme';
+import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { JoinSend, JoinState } from '../joinMachine';
@@ -35,7 +35,7 @@ const InvitationActions = ({
     case Invitation.State.CONNECTING:
       return (
         <>
-          <ViewStateHeading className={defaultDescription}>{t('connecting status label')}</ViewStateHeading>
+          <ViewStateHeading className={descriptionText}>{t('connecting status label')}</ViewStateHeading>
           <div role='none' className='grow' />
           <div className='flex gap-2'>
             <Button disabled classNames='grow flex items-center gap-2 pli-2 order-2' data-testid='next'>
@@ -61,7 +61,7 @@ const InvitationActions = ({
     default:
       return (
         <>
-          <ViewStateHeading className={defaultDescription}>
+          <ViewStateHeading className={descriptionText}>
             {t(
               invitationState === Invitation.State.TIMEOUT
                 ? 'timeout status label'

@@ -5,7 +5,7 @@
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { defaultDescription, defaultFocus } from '../fragments';
+import { descriptionText, focusRing, chromeSurface, surfaceElevation } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;
@@ -19,14 +19,15 @@ export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc
 
 export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'shadow-lg rounded-xl flex p-2 gap-2',
-    'bg-white dark:bg-neutral-800',
+    'rounded-xl flex p-2 gap-2',
+    chromeSurface,
+    surfaceElevation({ elevation: 'chrome' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
     'radix-swipe-end:animate-toast-swipe-out',
     'translate-x-radix-toast-swipe-move-x',
     'radix-swipe-cancel:translate-x-0 radix-swipe-cancel:duration-200 radix-swipe-cancel:ease-[ease]',
-    defaultFocus,
+    focusRing,
     ...etc,
   );
 
@@ -40,7 +41,7 @@ export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...et
   mx('shrink-0 text-md font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx(defaultDescription, 'shrink-0', srOnly && 'sr-only', ...etc);
+  mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport: toastViewport,

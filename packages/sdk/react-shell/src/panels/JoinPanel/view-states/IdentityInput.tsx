@@ -28,7 +28,7 @@ export const IdentityInput = ({ method, ...viewStateProps }: IdentityCreatorProp
   const handleNext = () => {
     void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
       (identity) => {
-        joinSend({ type: 'selectIdentity', identity });
+        joinSend({ type: 'selectIdentity' as const, identity });
       },
       (error) => {
         log.catch(error);

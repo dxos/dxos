@@ -3,12 +3,11 @@
 //
 
 import { Flags } from '@oclif/core';
-import chalk from 'chalk';
+import rev from 'git-rev-sync';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
 import { diagnostics } from '@dxos/client/diagnostics';
-import { log } from '@dxos/log';
 import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { BaseCommand } from '../../base-command';
@@ -34,23 +33,29 @@ export default class Stats extends BaseCommand<typeof Stats> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      try {
-        const data = await asyncTimeout(
-          diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
-          5_000,
-        );
-        data.feeds = data.feeds.map((feed: SubscribeToFeedsResponse.Feed) => ({
-          ...feed,
-          downloaded: PublicKey.from(feed.downloaded).toString(),
-        }));
+      const data = await asyncTimeout(
+        diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
+        5_000,
+      );
 
-        return data;
-      } catch (err) {
-        this.log(chalk`{red Error}: Command failed`);
-        if (this.flags.verbose) {
-          log.catch(err);
-        }
-      }
+      return {
+        timestamp: new Date().toISOString(),
+        cli: {
+          version: this.config.version,
+          branch: rev.branch(),
+          hash: rev.long(),
+          commit: rev.date().toISOString(),
+        },
+        diagnostics: {
+          ...data,
+
+          // Convert to string.
+          feeds: data.feeds?.map((feed: SubscribeToFeedsResponse.Feed) => ({
+            ...feed,
+            downloaded: PublicKey.from(feed.downloaded).toString(),
+          })),
+        },
+      };
     });
   }
 }

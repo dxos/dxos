@@ -10,7 +10,7 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, defaultFocus, getSize } from '@dxos/aurora-theme';
+import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
 
 import { TreeView } from './TreeView';
 
@@ -69,7 +69,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1 rounded', defaultFocus, rearranging && 'invisible']}
+      classNames={['mbe-1 rounded', focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -78,7 +78,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
       <div role='none' className='flex mis-1 items-start'>
         <TreeItem.OpenTrigger
           disabled={disabled}
-          classNames={['grow flex', disabled && defaultDisabled]}
+          classNames={['grow flex', disabled && staticDisabled]}
           {...(disabled && { 'aria-disabled': true })}
           {...(!sidebarOpen && { tabIndex: -1 })}
         >
@@ -90,10 +90,10 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           <TreeItem.Heading
             data-testid='spacePlugin.spaceTreeItemHeading'
             classNames={[
-              'grow text-start break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+              'grow min-is-0 truncate text-start pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
               error && 'text-error-700 dark:text-error-300',
               !disabled && 'cursor-pointer',
-              disabled && defaultDisabled,
+              disabled && staticDisabled,
             ]}
             {...(disabled && { 'aria-disabled': true })}
           >

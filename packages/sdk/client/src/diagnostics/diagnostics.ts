@@ -6,8 +6,10 @@ import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
+import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { STORAGE_VERSION } from '@dxos/protocols';
 import { Device, Identity, SpaceMember, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
@@ -33,6 +35,8 @@ export type ClientStats = {
   devices: Device[];
   spaces: SpaceStats[];
   feeds: SubscribeToFeedsResponse.Feed[];
+  config: ConfigProto;
+  storageVersion: number;
 };
 
 export type DiagnosticOptions = {
@@ -41,7 +45,7 @@ export type DiagnosticOptions = {
 };
 
 // TODO(burdon): Move method to Monitor class.
-export const diagnostics = async (client: Client, options: DiagnosticOptions) => {
+export const diagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<ClientStats>> => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<ClientStats> = {};
 
@@ -115,6 +119,12 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions) =>
       }),
     );
   }
+
+  // Config.
+  data.config = await client.services.services.SystemService?.getConfig();
+
+  // Storage version.
+  data.storageVersion = STORAGE_VERSION;
 
   return data;
 };

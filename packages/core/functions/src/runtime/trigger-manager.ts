@@ -138,7 +138,7 @@ export class TriggerManager {
 
       log('result', { function: functionName, result: await res.json() });
     } catch (err: any) {
-      log('error', { function: functionName, error: err.message });
+      log.error('error', { function: functionName, error: err.message });
     }
   }
 }

@@ -537,6 +537,7 @@ importers:
   packages/apps/labs-app:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-debug': workspace:*
       '@braneframe/plugin-drawing': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-kanban': workspace:*
@@ -544,7 +545,6 @@ importers:
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-stack': workspace:*
-      '@braneframe/plugin-testing': workspace:*
       '@braneframe/plugin-theme': workspace:*
       '@braneframe/plugin-thread': workspace:*
       '@braneframe/plugin-treeview': workspace:*
@@ -594,6 +594,7 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@braneframe/plugin-client': link:../plugins/plugin-client
+      '@braneframe/plugin-debug': link:../plugins/plugin-debug
       '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
@@ -601,7 +602,6 @@ importers:
       '@braneframe/plugin-space': link:../plugins/plugin-space
       '@braneframe/plugin-splitview': link:../plugins/plugin-splitview
       '@braneframe/plugin-stack': link:../plugins/plugin-stack
-      '@braneframe/plugin-testing': link:../plugins/plugin-testing
       '@braneframe/plugin-theme': link:../plugins/plugin-theme
       '@braneframe/plugin-thread': link:../plugins/plugin-thread
       '@braneframe/plugin-treeview': link:../plugins/plugin-treeview
@@ -674,6 +674,59 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
+  packages/apps/plugins/plugin-debug:
+    specifiers:
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-markdown': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-splitview': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/echo-schema': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^7.3.0
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
+      '@faker-js/faker': 7.6.0
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/types': link:../../types
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
   packages/apps/plugins/plugin-dnd:
     specifiers:
       '@braneframe/plugin-theme': workspace:*
@@ -709,9 +762,11 @@ importers:
 
   packages/apps/plugins/plugin-drawing:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
@@ -734,6 +789,8 @@ importers:
       vite: ^4.3.9
       yjs: ^13.5.44
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
@@ -744,9 +801,9 @@ importers:
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44
     devDependencies:
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -799,10 +856,12 @@ importers:
 
   packages/apps/plugins/plugin-kanban:
     specifiers:
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dnd-kit/core': ^6.0.5
       '@dnd-kit/modifiers': ^6.0.0
@@ -827,6 +886,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -840,9 +901,9 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -917,12 +978,14 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@preact/signals-core': ^1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
@@ -938,11 +1001,13 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
+      '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
       '@preact/signals-core': 1.3.1
       '@tldraw/indices': 2.0.0-alpha.14
       jszip: 3.10.1
@@ -1050,57 +1115,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
-  packages/apps/plugins/plugin-testing:
-    specifiers:
-      '@braneframe/plugin-markdown': workspace:*
-      '@braneframe/plugin-space': workspace:*
-      '@braneframe/plugin-splitview': workspace:*
-      '@braneframe/plugin-theme': workspace:*
-      '@braneframe/types': workspace:*
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-surface': workspace:*
-      '@dxos/text-model': workspace:*
-      '@dxos/util': workspace:*
-      '@faker-js/faker': ^7.3.0
-      '@phosphor-icons/react': ^2.0.5
-      '@types/lodash.get': ^4.4.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      lodash.get: ^4.4.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/text-model': link:../../../core/echo/text-model
-      '@dxos/util': link:../../../common/util
-      '@faker-js/faker': 7.6.0
-      lodash.get: 4.4.2
-    devDependencies:
-      '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-splitview': link:../plugin-splitview
-      '@braneframe/plugin-theme': link:../plugin-theme
-      '@braneframe/types': link:../../types
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/react-surface': link:../../../sdk/react-surface
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@types/lodash.get': 4.4.7
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      vite: 4.3.9
-
   packages/apps/plugins/plugin-theme:
     specifiers:
       '@dxos/aurora': workspace:*
@@ -1129,10 +1143,12 @@ importers:
   packages/apps/plugins/plugin-thread:
     specifiers:
       '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
       '@braneframe/types': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
@@ -1152,6 +1168,8 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
@@ -1161,9 +1179,9 @@ importers:
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
       '@dxos/aurora-theme': link:../../../ui/aurora-theme
@@ -2095,28 +2113,20 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/node-std': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
       '@types/express': ^4.17.17
-      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/node': ^18.11.9
-      '@types/node-fetch': ^2.5.10
+      date-fns: ^2.29.3
       express: 4.17.1
       forever: ^4.0.3
-      growing-file: ^0.1.3
       isomorphic-ws: ^4.0.1
       nodemon: ^2.0.22
       ts-node: 10.9.1
@@ -2127,31 +2137,23 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-protocol': link:../../sdk/client-protocol
       '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../echo/echo-schema
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/node-std': link:../../common/node-std
       '@dxos/protocols': link:../protocols
-      '@dxos/rpc': link:../mesh/rpc
-      '@dxos/sentry': link:../../common/sentry
-      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../mesh/websocket-rpc
+      date-fns: 2.29.3
       express: 4.17.1
       forever: 4.0.3
-      growing-file: 0.1.3
       isomorphic-ws: 4.0.1_ws@7.5.9
       ws: 7.5.9
     devDependencies:
       '@types/express': 4.17.17
-      '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9
-      '@types/node-fetch': 2.6.2
       nodemon: 2.0.22
       ts-node: 10.9.1_rke3py7up3u364r7wwqfla7cdm_d2gyhxeuxd6tnmgqdyixls47tq
       typescript: 5.0.4
@@ -2963,7 +2965,6 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/websocket-rpc': workspace:*
-      '@faker-js/faker': ^7.3.0
       '@oclif/core': ^2.6.5
       '@oclif/plugin-help': ^5.2.8
       '@oclif/plugin-plugins': ^2.4.3
@@ -2981,6 +2982,7 @@ importers:
       do-wrapper: ^4.5.1
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
+      git-rev-sync: ^3.0.2
       globby: ^11.1.0
       inquirer: ^8.2.0
       ipfs-http-client: ~56.0.1
@@ -3019,7 +3021,6 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
-      '@faker-js/faker': 7.6.0
       '@oclif/core': 2.6.5_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.8_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 2.4.3_d2gyhxeuxd6tnmgqdyixls47tq
@@ -3030,6 +3031,7 @@ importers:
       do-wrapper: 4.5.1
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
+      git-rev-sync: 3.0.2
       inquirer: 8.2.4
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.9
@@ -5219,9 +5221,12 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
+      '@fluentui/react-tabster': ^9.8.1
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-accordion': ^1.1.1
+      '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-radio-group': ^1.1.2
+      '@radix-ui/react-use-controllable-state': ^1.0.0
       '@react-hook/async': ^3.1.1
       '@types/lodash.toarray': ^4.4.7
       '@types/react': ^18.0.21
@@ -5245,8 +5250,11 @@ importers:
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-client': link:../react-client
       '@dxos/util': link:../../common/util
+      '@fluentui/react-tabster': 9.9.0_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-accordion': 1.1.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-context': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@radix-ui/react-radio-group': 1.1.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-controllable-state': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
       lodash.toarray: 4.4.0
@@ -5363,6 +5371,7 @@ importers:
       '@radix-ui/react-context': ^1.0.0
       '@radix-ui/react-dialog': ^1.0.3
       '@radix-ui/react-dropdown-menu': ^2.0.5
+      '@radix-ui/react-popover': ^1.0.6
       '@radix-ui/react-primitive': ^1.0.2
       '@radix-ui/react-slot': ^1.0.1
       '@radix-ui/react-toast': ^1.1.3
@@ -5391,6 +5400,7 @@ importers:
       '@radix-ui/react-context': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@radix-ui/react-dialog': 1.0.3_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-dropdown-menu': 2.0.5_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-popover': 1.0.6_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-primitive': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-slot': 1.0.2_iapumuv4e6jcjznwuxpf4tt22e
       '@radix-ui/react-toast': 1.1.3_biqbaboplfbrettd7655fr4n2y
@@ -5661,7 +5671,7 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@radix-ui/react-compose-refs': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.2
-      '@radix-ui/react-popover': ^1.0.5
+      '@radix-ui/react-popover': ^1.0.6
       '@radix-ui/react-portal': ^1.0.2
       '@radix-ui/react-select': ^1.2.1
       '@radix-ui/react-toolbar': ^1.0.3
@@ -5694,7 +5704,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
       '@radix-ui/react-navigation-menu': 1.1.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-popover': 1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-popover': 1.0.6_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-portal': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
       '@radix-ui/react-select': 1.2.1_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-toolbar': 1.0.3_biqbaboplfbrettd7655fr4n2y
@@ -11766,34 +11776,6 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /@radix-ui/react-popover/1.0.5_rj7ozvcq3uehdlnj3cbwzbi5ce:
-    resolution: {integrity: sha512-GRHZ8yD12MrN2NLobHPE8Rb5uHTxd9x372DE9PPNnBjpczAQHcZ5ne0KXG4xpf+RDdXSzdLv9ym6mYJCDTaUZg==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.21.0
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-dismissable-layer': 1.0.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-focus-guards': 1.0.0_react@18.2.0
-      '@radix-ui/react-focus-scope': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-id': 1.0.0_react@18.2.0
-      '@radix-ui/react-popper': 1.1.1_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-portal': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-primitive': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-slot': 1.0.1_react@18.2.0
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      aria-hidden: 1.2.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-remove-scroll: 2.5.5_iapumuv4e6jcjznwuxpf4tt22e
-    transitivePeerDependencies:
-      - '@types/react'
-    dev: false
-
   /@radix-ui/react-popover/1.0.6-rc.5_rj7ozvcq3uehdlnj3cbwzbi5ce:
     resolution: {integrity: sha512-x52g7glgCUf2yLOWo9jLnZLwxFznrBxLyWHY+pLjE2GYYhlPQHfxAmYPPycrrEg+7KdGhLwNH0BnzUI0kET6/Q==}
     peerDependencies:
@@ -11820,6 +11802,41 @@ packages:
       react-remove-scroll: 2.5.5_iapumuv4e6jcjznwuxpf4tt22e
     transitivePeerDependencies:
       - '@types/react'
+    dev: false
+
+  /@radix-ui/react-popover/1.0.6_5uumaiclxbdbzaqafclbf6maf4:
+    resolution: {integrity: sha512-cZ4defGpkZ0qTRtlIBzJLSzL6ht7ofhhW4i1+pkemjV1IKXm0wgCRnee154qlV6r9Ttunmh2TNZhMfV2bavUyA==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.21.0
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-context': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-dismissable-layer': 1.0.4_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-focus-guards': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-focus-scope': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-id': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-popper': 1.1.2_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-portal': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-presence': 1.0.1_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-primitive': 1.0.3_5uumaiclxbdbzaqafclbf6maf4
+      '@radix-ui/react-slot': 1.0.2_iapumuv4e6jcjznwuxpf4tt22e
+      '@radix-ui/react-use-controllable-state': 1.0.1_iapumuv4e6jcjznwuxpf4tt22e
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      aria-hidden: 1.2.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-remove-scroll: 2.5.5_iapumuv4e6jcjznwuxpf4tt22e
     dev: false
 
   /@radix-ui/react-popper/1.1.1_rj7ozvcq3uehdlnj3cbwzbi5ce:
@@ -24870,6 +24887,14 @@ packages:
     resolution: {integrity: sha512-Y7wLWcrLUXwk2noSka166byGCvhMtDRpgHdzCno1UQv/n/Hegp++a2xBWJL1lJarnKD3SWaljD+0z1ztqxuKyQ==}
     dev: false
 
+  /git-rev-sync/3.0.2:
+    resolution: {integrity: sha512-Nd5RiYpyncjLv0j6IONy0lGzAqdRXUaBctuGBbrEA2m6Bn4iDrN/9MeQTXuiquw8AEKL9D2BW0nw5m/lQvxqnQ==}
+    dependencies:
+      escape-string-regexp: 1.0.5
+      graceful-fs: 4.1.15
+      shelljs: 0.8.5
+    dev: false
+
   /github-markdown-css/5.2.0:
     resolution: {integrity: sha512-hq5RaCInSUZ48bImOZpkppW2/MT44StRgsbsZ8YA4vJFwLKB/Vo3k7R2t+pUGqO+ThG0QDMi96TewV/B3vyItg==}
     dev: false
@@ -25206,6 +25231,10 @@ packages:
       url-to-options: 1.0.1
     dev: true
 
+  /graceful-fs/4.1.15:
+    resolution: {integrity: sha512-6uHUhOPEBgQ24HM+r6b/QwWfZq+yiFcipKFrOFiBEnWdy5sdzYoi+pJeQaPI5qOLRFqWmAXUPQNsielzdLoecA==}
+    dev: false
+
   /graceful-fs/4.2.10:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
 
@@ -25232,12 +25261,6 @@ packages:
   /grouped-queue/2.0.0:
     resolution: {integrity: sha512-/PiFUa7WIsl48dUeCvhIHnwNmAAzlI/eHoJl0vu3nsFA366JleY7Ff8EVTplZu5kO0MIdZjKTTnzItL61ahbnw==}
     engines: {node: '>=8.0.0'}
-    dev: false
-
-  /growing-file/0.1.3:
-    resolution: {integrity: sha512-5+YYjm3sKIxyHAhlgDOzs1mL7sT9tbT3Unt1xymjkAgXZ2KwpLzYaaaNp3z1KIOXaKTYdJiUqxZmRusOTrO0gg==}
-    dependencies:
-      oop: 0.0.3
     dev: false
 
   /growl/1.10.5:
@@ -31859,11 +31882,6 @@ packages:
     dependencies:
       mimic-fn: 4.0.0
     dev: true
-
-  /oop/0.0.3:
-    resolution: {integrity: sha512-NCkLvw6ZyDnLCFNWIXtbrhNKEVBwHxv8n003Lum8Y5YF3dZtbSYSZZN/8gGJ1Ey52hCpsBQ6n5qutYAc4OOhFA==}
-    engines: {node: '>=0.4.0'}
-    dev: false
 
   /open/7.4.2:
     resolution: {integrity: sha512-MVHddDVweXZF3awtlAS+6pgKLlm/JgxZ90+/NBurBoQctVOOB/zDdVjcyPzQ+0laDGbsWgrRkflI65sQeOgT9Q==}

@@ -2,48 +2,100 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { Kanban } from '@phosphor-icons/react';
+import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
+import React from 'react';
 
-// import { Kanban as KanbanType } from '@braneframe/types';
-import { PluginDefinition } from '@dxos/react-surface';
+import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { TreeViewProvides } from '@braneframe/plugin-treeview';
+import { Kanban as KanbanType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
-import { isKanban, KanbanPluginProvides } from './props';
+import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
 import translations from './translations';
 
-export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => ({
-  meta: {
-    // TODO(burdon): Make id consistent with other plugins.
-    id: 'dxos.org/plugin/kanban',
-  },
-  provides: {
-    translations,
-    // todo(thure): Do graph nodes.
-    // space: {
-    //   types: [
-    //     {
-    //       id: 'create-kanban',
-    //       testId: 'kanbanPlugin.createStack',
-    //       label: ['create kanban label', { ns: 'dxos.org/plugin/kanban' }],
-    //       icon: Kanban,
-    //       Type: KanbanType,
-    //     },
-    //   ],
-    // },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isKanban(datum[datum.length - 1])) {
-            return KanbanMain;
-          } else {
-            return null;
+export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
+  const objectToGraphNode = (parent: GraphNode, object: KanbanType): GraphNode => ({
+    id: object.id,
+    index: 'a1', // TODO(burdon): Index.
+    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+    icon: (props: IconProps) => <Kanban {...props} />,
+    data: object,
+    parent,
+    pluginActions: {
+      [KANBAN_PLUGIN]: [
+        {
+          id: 'delete', // TODO(burdon): Namespace.
+          index: 'a1',
+          label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
+          icon: (props: IconProps) => <Trash {...props} />,
+          invoke: async () => parent.data?.db.remove(object),
+        },
+      ],
+    },
+  });
+
+  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
+
+  return {
+    meta: {
+      id: KANBAN_PLUGIN,
+    },
+    unload: async () => {
+      adapter.clear();
+    },
+    provides: {
+      translations,
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
-          return null;
-      }
+
+          const space = parent.data;
+          return adapter.createNodes(space, parent, emit);
+        },
+        actions: (parent, _, plugins) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+          const space = parent.data;
+          return [
+            {
+              id: `${KANBAN_PLUGIN}/create-kanban`, // TODO(burdon): Namespace?
+              index: 'a1', // TODO(burdon): ???
+              testId: 'kanbanPlugin.createKanban', // TODO(burdon): Namespace?
+              label: ['create kanban label', { ns: KANBAN_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              invoke: async () => {
+                const object = space.db.add(new KanbanType());
+                if (treeViewPlugin) {
+                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
+                }
+              },
+            },
+          ];
+        },
+      },
+      component: (datum, role) => {
+        switch (role) {
+          case 'main':
+            if (Array.isArray(datum) && isKanban(datum[datum.length - 1])) {
+              return KanbanMain;
+            } else {
+              return null;
+            }
+          default:
+            return null;
+        }
+      },
+      components: {
+        KanbanMain,
+      },
     },
-    components: {
-      KanbanMain,
-    },
-  },
-});
+  };
+};

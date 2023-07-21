@@ -155,7 +155,6 @@ export class DataSpaceManager {
 
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
-
     space.initializeDataPipelineAsync();
 
     this.updated.emit();

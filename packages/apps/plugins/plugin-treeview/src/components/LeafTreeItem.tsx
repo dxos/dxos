@@ -20,11 +20,9 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, defaultDisabled, defaultFocus, getSize, mx } from '@dxos/aurora-theme';
+import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
-
-const spaceExp = /\s/g;
 
 type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
 
@@ -76,16 +74,9 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const label = Array.isArray(node.label) ? t(...node.label) : node.label;
-  const wrap = spaceExp.test(label);
-
   return (
     <TreeItem.Root
-      classNames={[
-        'pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded',
-        defaultFocus,
-        rearranging && 'invisible',
-      ]}
+      classNames={['pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded', focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -101,7 +92,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           'grow min-is-0 text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
           error && 'text-error-700 dark:text-error-300',
           !disabled && 'cursor-pointer',
-          disabled && defaultDisabled,
+          disabled && staticDisabled,
         )}
         {...(disabled && { 'aria-disabled': true })}
       >
@@ -124,7 +115,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           className='text-start flex gap-2 justify-start'
         >
           <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-          <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1', wrap ? 'break-words' : 'truncate')}>
+          <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1 truncate')}>
             {Array.isArray(node.label) ? t(...node.label) : node.label}
           </p>
         </button>

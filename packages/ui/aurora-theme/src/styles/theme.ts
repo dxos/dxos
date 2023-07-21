@@ -18,6 +18,7 @@ import {
   listOsTheme,
   mainTheme,
   messageTheme,
+  popoverTheme,
   toastTheme,
   tooltipTheme,
   tagTheme,
@@ -39,6 +40,7 @@ export const theme: Theme<Record<string, any>> = {
   tag: tagTheme,
   toast: toastTheme,
   tooltip: tooltipTheme,
+  popover: popoverTheme,
 };
 
 export const osTheme: Theme<Record<string, any>> = {
