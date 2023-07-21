@@ -28,7 +28,7 @@ export const InvitationAuthenticator = ({
   onInvitationAuthenticate,
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
-  const disabled = active || pending;
+  const disabled = !active || pending;
   const { t } = useTranslation('os');
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
