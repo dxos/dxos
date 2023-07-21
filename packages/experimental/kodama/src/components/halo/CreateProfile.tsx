@@ -5,8 +5,8 @@
 import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { Identity } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
+import { Identity } from '@dxos/react-client/halo';
 
 import { TextInput, Panel } from '../util';
 

@@ -5,7 +5,7 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-import { useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export interface RequireProfileProps {
   redirect: string;

@@ -6,7 +6,7 @@ import { Context, createContext } from 'react';
 
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Testing as TestingType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client';
+import { isTypedObject } from '@dxos/client/echo';
 
 export type TestingContextType = {
   running: boolean;

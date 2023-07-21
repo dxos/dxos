@@ -4,7 +4,7 @@
 
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client';
+import { isTypedObject } from '@dxos/client/echo';
 
 /**
  * Kanban data model.

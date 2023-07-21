@@ -3,15 +3,15 @@
 //
 
 import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from '@phosphor-icons/react';
-import assert from 'assert';
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
+import invariant from 'tiny-invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { File, Sketch } from '@dxos/kai-types';
-import { SpaceMember, useMembers, useSubscription } from '@dxos/react-client';
+import { SpaceMember, useMembers, useSubscription } from '@dxos/react-client/echo';
 
 import { InvitationQRCode } from '../../components';
 import { useFrameContext, useFileDownload, useIpfsClient } from '../../hooks';

@@ -7,7 +7,8 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Main, useSidebar } from '@dxos/aurora';
 import { useTelemetry } from '@dxos/react-appkit';
-import { SpaceState, useSpaces, useIdentity } from '@dxos/react-client';
+import { SpaceState, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Surface, Sidebar } from '../containers';
 import { createPath, defaultFrameId, useAppRouter, useAppState } from '../hooks';

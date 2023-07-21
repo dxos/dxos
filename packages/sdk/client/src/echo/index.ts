@@ -18,18 +18,23 @@ export {
 } from '@dxos/echo-db';
 export {
   createSubscription,
+  isTypedObject,
+  base,
+  subscribe,
+  EchoDatabase,
   EchoObject,
   EchoSchema,
   Expando,
-  type Filter,
   Query,
+  Text,
+  TypedObject,
+  type Filter,
   type Selection,
   type SubscriptionHandle,
-  Text,
   type TypeFilter,
-  TypedObject,
 } from '@dxos/echo-schema';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { TextModel } from '@dxos/text-model';
 
 export { Properties, type PropertiesProps } from '../proto';

@@ -21,25 +21,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/react-async"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

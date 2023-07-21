@@ -353,10 +353,7 @@ importers:
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -364,7 +361,6 @@ importers:
       '@dxos/react-shell': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/sentry': workspace:*
-      '@dxos/text-model': workspace:*
       '@dxos/vault': workspace:*
       '@octokit/openapi-types': ^16.0.0
       '@phosphor-icons/react': ^2.0.5
@@ -409,10 +405,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
@@ -420,7 +413,6 @@ importers:
       '@dxos/react-shell': link:../../sdk/react-shell
       '@dxos/react-surface': link:../../sdk/react-surface
       '@dxos/sentry': link:../../common/sentry
-      '@dxos/text-model': link:../../core/echo/text-model
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@sentry/react': 7.42.0_react@18.2.0
@@ -472,13 +464,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
-      '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
@@ -512,13 +500,9 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/metagraph': link:../../experimental/metagraph
-      '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
       '@dxos/react-async': link:../../common/react-async
@@ -1155,12 +1139,9 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
-      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
@@ -1174,11 +1155,8 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
-      '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
-      '@dxos/keys': link:../../../common/keys
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
       date-fns: 2.29.3
       lodash.get: 4.4.2
@@ -1333,9 +1311,6 @@ importers:
     specifiers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/echo-schema': workspace:*
       '@dxos/echo-typegen': workspace:*
       '@dxos/log': workspace:*
@@ -1357,9 +1332,6 @@ importers:
       workbox-window: ^6.5.4
     dependencies:
       '@dxos/aurora': link:../../ui/aurora
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../../ui/react-appkit
@@ -2978,14 +2950,12 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-protocol': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/functions': workspace:*
       '@dxos/hello-template': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
@@ -3036,14 +3006,12 @@ importers:
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
       '@dxos/client-protocol': link:../../sdk/client-protocol
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/functions': link:../../core/functions
       '@dxos/hello-template': link:../../apps/templates/hello-template
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/plate': link:../../common/plate
       '@dxos/protocols': link:../../core/protocols
@@ -3098,12 +3066,9 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/gem-spore': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/mosaic': workspace:*
@@ -3115,7 +3080,6 @@ importers:
       '@dxos/react-shell': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
-      '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -3145,11 +3109,8 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/mosaic': link:../../experimental/mosaic
@@ -3160,7 +3121,6 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
-      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
@@ -3491,6 +3451,7 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
+      tiny-invariant: ^1.3.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/gem-core': link:../gem-core
@@ -3504,6 +3465,7 @@ importers:
       immutability-helper: 3.1.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      tiny-invariant: 1.3.1
     devDependencies:
       '@babel/core': 7.21.3
       '@dxos/aurora': link:../../ui/aurora
@@ -3741,9 +3703,7 @@ importers:
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/chess-app': workspace:*
-      '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -3821,6 +3781,7 @@ importers:
       simple-peer: 9.11.1
       string-hash: ~1.1.3
       tailwindcss: ~3.3.2
+      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       url-join: ^5.0.0
       vite: ^4.3.9
@@ -3839,7 +3800,6 @@ importers:
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/chess-app': link:../chess-app
-      '@dxos/client': link:../../sdk/client
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -3896,11 +3856,11 @@ importers:
       remark-parse-frontmatter: 1.0.3
       simple-peer: 9.11.1
       string-hash: 1.1.3
+      tiny-invariant: 1.3.1
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
       '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/config': link:../../sdk/config
       '@faker-js/faker': 7.6.0
       '@monaco-editor/react': 4.4.6_mxtbfgz57rpc6pjn6jsomqlbdm
       '@remix-run/router': 1.0.2
@@ -3941,8 +3901,7 @@ importers:
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/chess-app': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/crypto': workspace:*
@@ -3952,7 +3911,6 @@ importers:
       '@dxos/kai-frames': workspace:*
       '@dxos/kai-sandbox': workspace:*
       '@dxos/kai-types': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
       '@dxos/mosaic': workspace:*
@@ -4004,6 +3962,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       storybook-addon-react-router-v6: ^0.3.2
       tailwindcss: ~3.3.2
+      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       url-join: ^5.0.0
       vite: ^4.3.9
@@ -4022,8 +3981,7 @@ importers:
       '@dxos/aurora-composer': link:../../ui/aurora-composer
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/chess-app': link:../chess-app
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/client-protocol': link:../../sdk/client-protocol
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/crypto': link:../../common/crypto
@@ -4033,7 +3991,6 @@ importers:
       '@dxos/kai-frames': link:../kai-frames
       '@dxos/kai-sandbox': link:../kai-sandbox
       '@dxos/kai-types': link:../kai-types
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/metagraph': link:../metagraph
       '@dxos/mosaic': link:../mosaic
@@ -4066,6 +4023,7 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
+      tiny-invariant: 1.3.1
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.21.3
@@ -4166,6 +4124,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
@@ -4201,6 +4160,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-protocol': link:../../sdk/client-protocol
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
@@ -4290,12 +4250,7 @@ importers:
   packages/experimental/kodama:
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@types/copy-paste': ^1.1.30
@@ -4327,12 +4282,7 @@ importers:
       yargs: ~16.2.0
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       chalk: 4.1.2
@@ -4371,7 +4321,6 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/crypto': workspace:*
@@ -4381,7 +4330,6 @@ importers:
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
       '@dxos/kai-frames': workspace:*
-      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/metagraph': workspace:*
       '@dxos/mosaic': workspace:*
@@ -4446,7 +4394,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/crypto': link:../../common/crypto
@@ -4456,7 +4403,6 @@ importers:
       '@dxos/gem-core': link:../gem-core
       '@dxos/gem-spore': link:../gem-spore
       '@dxos/kai-frames': link:../kai-frames
-      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/metagraph': link:../metagraph
       '@dxos/mosaic': link:../mosaic
@@ -4574,6 +4520,7 @@ importers:
       react-resize-detector: ^7.1.2
       react-table: ^7.8.0
       tailwindcss: ~3.3.2
+      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       vite: ^4.3.9
       vite-plugin-fonts: ^0.7.0
@@ -4601,6 +4548,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-table: 7.8.0_react@18.2.0
+      tiny-invariant: 1.3.1
     devDependencies:
       '@babel/core': 7.21.3
       '@dxos/config': link:../../sdk/config
@@ -5483,8 +5431,6 @@ importers:
       '@codemirror/view': ^6.9.2
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -5566,8 +5512,6 @@ importers:
       y-protocols: 1.0.5
       yjs: 13.5.44
     devDependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
@@ -38796,7 +38740,7 @@ packages:
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
       rollup: 3.23.0
-      vite: 4.3.9
+      vite: 4.3.9_@types+node@18.11.9
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:

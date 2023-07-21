@@ -8,7 +8,7 @@ import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
+import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo } from '../daemon';

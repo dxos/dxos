@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -33,16 +30,7 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/text-model"
-    },
-    {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

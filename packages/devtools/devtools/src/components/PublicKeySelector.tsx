@@ -4,8 +4,8 @@
 
 import React, { FC } from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { Select } from '@dxos/react-appkit';
+import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {

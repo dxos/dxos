@@ -7,8 +7,6 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { fromIFrame, fromHost } from '@dxos/client';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import {
   appkitTranslations,
   ClientFallback,
@@ -19,7 +17,7 @@ import {
   useTelemetry,
   ThemeProvider,
 } from '@dxos/react-appkit';
-import { ClientProvider } from '@dxos/react-client';
+import { Config, Defaults, Dynamics, Envs, fromIFrame, fromHost, ClientProvider } from '@dxos/react-client';
 import { MetagraphProvider } from '@dxos/react-metagraph';
 import { captureException } from '@dxos/sentry';
 

@@ -3,10 +3,11 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { Client, clientServiceBundle, ClientServicesProvider, Invitation, Space } from '@dxos/client';
-import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/keys';
+import { clientServiceBundle } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
+import { Client, ClientServicesProvider, Config, PublicKey } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
+import { Invitation } from '@dxos/react-client/invitations';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 

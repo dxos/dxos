@@ -6,7 +6,8 @@ import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import assert from 'node:assert';
 
-import { Client, Expando, PublicKey } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { Expando } from '@dxos/client/echo';
 
 import { BaseCommand } from '../../base-command';
 import { selectSpace } from '../../util';

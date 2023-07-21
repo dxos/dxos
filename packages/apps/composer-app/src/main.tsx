@@ -17,9 +17,9 @@ import { StackPlugin } from '@braneframe/plugin-stack';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
-import { TypedObject } from '@dxos/client';
-import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+import { Config, Defaults } from '@dxos/react-client';
+import { TypedObject } from '@dxos/react-client/echo';
 import { PluginContextProvider } from '@dxos/react-surface';
 
 import { GithubPlugin, LocalFilesPlugin } from './plugins';

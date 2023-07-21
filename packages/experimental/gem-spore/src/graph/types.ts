@@ -7,7 +7,7 @@
 // Generic graph data type.
 //
 
-import assert from 'assert';
+import invariant from 'tiny-invariant';
 
 import { Point } from '@dxos/gem-core';
 

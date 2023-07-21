@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -18,7 +18,7 @@ export abstract class Bot {
   protected _space?: Space;
 
   constructor(private readonly _id: string) {
-    invariant(this._id);
+    assert(this._id);
   }
 
   [inspect.custom]() {
@@ -46,8 +46,8 @@ export abstract class Bot {
   }
 
   async init(config: Config, space: Space) {
-    invariant(config);
-    invariant(space);
+    assert(config);
+    assert(space);
     this._config = config;
     this._space = space;
 

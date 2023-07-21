@@ -6,7 +6,8 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client, PublicKey, diagnostics } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { diagnostics } from '@dxos/client/diagnostics';
 import { log } from '@dxos/log';
 import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 

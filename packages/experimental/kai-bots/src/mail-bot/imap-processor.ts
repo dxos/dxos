@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import sub from 'date-fns/sub';
 import { convert } from 'html-to-text';
 import { Config as ImapConfig } from 'imap';
 import imaps, { Message as ImapMessage, ImapSimple } from 'imap-simple';
 import { simpleParser, EmailAddress } from 'mailparser';
+import assert from 'node:assert';
 
 import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
@@ -25,8 +25,8 @@ export class ImapProcessor {
   private _connection?: ImapSimple;
 
   constructor(private readonly _id: string, private readonly _config: ImapConfig) {
-    invariant(this._id);
-    invariant(this._config);
+    assert(this._id);
+    assert(this._config);
   }
 
   // https://www.npmjs.com/package/imap-simple

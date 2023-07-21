@@ -8,7 +8,8 @@ import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import { Testing as TestingType } from '@braneframe/types';
 import { Button, DensityProvider, Main } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { diagnostics, SpaceProxy } from '@dxos/client';
+import { diagnostics } from '@dxos/client/diagnostics';
+import { SpaceProxy } from '@dxos/client/echo';
 import { useClient } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 

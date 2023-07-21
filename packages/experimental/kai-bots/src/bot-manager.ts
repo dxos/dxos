@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { Config, Space } from '@dxos/client';
+import { Config } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 
 import { Bot } from './bot';
 
@@ -21,7 +22,7 @@ export class BotManager {
 
   async create(config: Config, botId: string, space: Space): Promise<Bot> {
     const constructor = this._botMap.get(botId);
-    invariant(constructor);
+    assert(constructor);
 
     const bot = constructor();
     await bot.init(config, space);

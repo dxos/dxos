@@ -9,7 +9,7 @@ import React from 'react';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/client';
+import { EchoObject, Space } from '@dxos/client/echo';
 import { Plugin } from '@dxos/react-surface';
 
 import { MarkdownProperties, MarkdownProvides } from './types';

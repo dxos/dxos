@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import yaml from 'js-yaml';
+import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
@@ -11,7 +11,7 @@ import * as process from 'node:process';
 import { Config } from '@dxos/config';
 
 export const loadJson = (filename: string) => {
-  invariant(filename, 'Invalid path');
+  assert(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
 };
 

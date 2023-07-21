@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { defaultBlockSeparator, mx } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client/echo';
 import { Text } from '@dxos/echo-schema';
 
 import type { KanbanModel } from '../props';

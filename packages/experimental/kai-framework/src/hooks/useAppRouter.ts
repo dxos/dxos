@@ -4,10 +4,10 @@
 
 import { useParams } from 'react-router-dom';
 
-import { Invitation, InvitationEncoder, Space } from '@dxos/client';
 import { useFrameRegistry, FrameDef } from '@dxos/kai-frames';
-import { PublicKey } from '@dxos/keys';
-import { useSpaces } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useSpaces, Space } from '@dxos/react-client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 // TODO(burdon): Create defs/helpers for other routes.
 export enum Section {

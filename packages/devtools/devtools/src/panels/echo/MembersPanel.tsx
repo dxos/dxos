@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { TableColumn } from '@dxos/mosaic';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { useMembers } from '@dxos/react-client';
+import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
