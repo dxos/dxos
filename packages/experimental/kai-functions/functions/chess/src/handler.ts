@@ -3,7 +3,8 @@
 //
 
 // import { log } from '@dxos/log';
-import { Client, Config, PublicKey, fromSocket } from '@dxos/client';
+import { Client, Config, PublicKey } from '@dxos/client';
+import { fromSocket } from '@dxos/client/services';
 
 module.exports = async (event: any, context: any) => {
   const clientUrl = event?.body?.context?.clientUrl;
