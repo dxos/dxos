@@ -26,26 +26,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "test": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "coveragePath": "coverage/tools/executors/esbuild",
-        "forceExit": true,
-        "outputPath": "tmp/mocha/tools/executors/esbuild",
-        "resultsPath": "test-results/tools/executors/esbuild",
-        "testPatterns": [
-          "tools/executors/esbuild/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "tools/executors/esbuild/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
     }
   },
   "implicitDependencies": [
