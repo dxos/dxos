@@ -109,7 +109,9 @@ describe('agent', () => {
       await runCommand(`agent stop --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
       await runCommand(`agent stop --profile=${guest} --config=${GUEST_CONFIG_PATH}`, __dirname);
     }
-  }).timeout(120_000).tag('flaky');
+  })
+    .timeout(120_000)
+    .tag('flaky');
 });
 
 type AgentDescription = {
