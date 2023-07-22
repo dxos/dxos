@@ -45,7 +45,7 @@
   "devDependencies": {
     "@dxos/signal": "workspace:*",
     "@swc-node/register": "1.5.4",
-    "@swc/core": "1.3.21",
+    "@swc/core": "1.3.70",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",

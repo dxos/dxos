@@ -50,9 +50,9 @@
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@oclif/core": "^2.6.5",
-    "@oclif/plugin-help": "^5.2.8",
-    "@oclif/plugin-plugins": "^2.4.3",
+    "@oclif/core": "^2.9.4",
+    "@oclif/plugin-help": "^5.2.14",
+    "@oclif/plugin-plugins": "^3.1.8",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -76,7 +76,7 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.11",
+    "@oclif/test": "^2.3.31",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",
