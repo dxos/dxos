@@ -21,6 +21,8 @@ import {
   InvitationAccepted,
 } from './steps';
 
+const viewStyles = 'pbe-3 pli-3';
+
 export const JoinPanelImpl = ({
   send,
   activeView,
@@ -42,19 +44,19 @@ export const JoinPanelImpl = ({
   const titleId = useId('joinPanel__title');
   return (
     <DensityProvider density='fine'>
-      <JoinHeading {...{ titleId, onExit, exitActionParent, preventExit }} />
+      <JoinHeading {...{ titleId, mode, onExit, exitActionParent, preventExit }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='addition method selector'>
+          <Viewport.View classNames={viewStyles} id='addition method selector'>
             <AdditionMethodSelector send={send} active={activeView === 'addition method selector'} />
           </Viewport.View>
-          <Viewport.View id='create identity input'>
+          <Viewport.View classNames={viewStyles} id='create identity input'>
             <IdentityInput send={send} method='create identity' active={activeView === 'create identity input'} />
           </Viewport.View>
-          <Viewport.View id='recover identity input'>
+          <Viewport.View classNames={viewStyles} id='recover identity input'>
             <IdentityInput send={send} method='recover identity' active={activeView === 'recover identity input'} />
           </Viewport.View>
-          <Viewport.View id='halo invitation input'>
+          <Viewport.View classNames={viewStyles} id='halo invitation input'>
             <InvitationInput
               send={send}
               Kind='Halo'
@@ -62,7 +64,7 @@ export const JoinPanelImpl = ({
               {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
             />
           </Viewport.View>
-          <Viewport.View id='halo invitation rescuer'>
+          <Viewport.View classNames={viewStyles} id='halo invitation rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Halo'
@@ -71,7 +73,7 @@ export const JoinPanelImpl = ({
               onInvitationCancel={onHaloInvitationCancel}
             />
           </Viewport.View>
-          <Viewport.View id='halo invitation authenticator'>
+          <Viewport.View classNames={viewStyles} id='halo invitation authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
@@ -81,7 +83,7 @@ export const JoinPanelImpl = ({
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
-          <Viewport.View id='halo invitation accepted'>
+          <Viewport.View classNames={viewStyles} id='halo invitation accepted'>
             <InvitationAccepted
               {...{
                 send,
@@ -92,13 +94,13 @@ export const JoinPanelImpl = ({
               }}
             />
           </Viewport.View>
-          <Viewport.View id='identity added'>
+          <Viewport.View classNames={viewStyles} id='identity added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
               send={send}
             />
           </Viewport.View>
-          <Viewport.View id='space invitation input'>
+          <Viewport.View classNames={viewStyles} id='space invitation input'>
             <InvitationInput
               send={send}
               Kind='Space'
@@ -106,7 +108,7 @@ export const JoinPanelImpl = ({
               {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
             />
           </Viewport.View>
-          <Viewport.View id='space invitation rescuer'>
+          <Viewport.View classNames={viewStyles} id='space invitation rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Space'
@@ -115,7 +117,7 @@ export const JoinPanelImpl = ({
               onInvitationCancel={onSpaceInvitationCancel}
             />
           </Viewport.View>
-          <Viewport.View id='space invitation authenticator'>
+          <Viewport.View classNames={viewStyles} id='space invitation authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Space'
@@ -125,7 +127,7 @@ export const JoinPanelImpl = ({
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
-          <Viewport.View id='space invitation accepted'>
+          <Viewport.View classNames={viewStyles} id='space invitation accepted'>
             <InvitationAccepted
               {...{
                 send,
@@ -330,8 +332,6 @@ export const JoinPanel = ({
       spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
     });
   }, [joinState, propsOnDone]);
-
-  console.log('[active view]', activeView);
 
   return (
     <JoinPanelImpl
