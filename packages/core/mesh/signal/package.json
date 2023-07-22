@@ -13,17 +13,14 @@
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "debug": "^4.3.3",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
-    "@types/node-fetch": "^2.5.10",
-    "debug": "^4.3.3"
+    "@types/node-fetch": "^2.5.10"
   },
   "publishConfig": {
     "access": "public"

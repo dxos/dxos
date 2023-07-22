@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useDevices, useIdentity } from '@dxos/react-client';
+import { useDevices, useIdentity } from '@dxos/react-client/halo';
 
 import { JsonView, PanelContainer } from '../../components';
 

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
@@ -95,14 +95,14 @@ export class WebsocketSignalManager implements SignalManager {
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('Join', { topic, peerId });
-    assert(this._opened, 'Closed');
+    invariant(this._opened, 'Closed');
     await this._forEachServer((server) => server.join({ topic, peerId }));
   }
 
   @synchronized
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('leaving', { topic, peerId });
-    assert(this._opened, 'Closed');
+    invariant(this._opened, 'Closed');
 
     await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
@@ -117,7 +117,7 @@ export class WebsocketSignalManager implements SignalManager {
     payload: Any;
   }): Promise<void> {
     log(`Signal ${recipient}`);
-    assert(this._opened, 'Closed');
+    invariant(this._opened, 'Closed');
 
     void this._forEachServer(async (server) => {
       void server.sendMessage({ author, recipient, payload }).catch((err) => log(err));
@@ -126,14 +126,14 @@ export class WebsocketSignalManager implements SignalManager {
 
   async subscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
-    assert(this._opened, 'Closed');
+    invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.subscribeMessages(peerId));
   }
 
   async unsubscribeMessages(peerId: PublicKey) {
     log(`Subscribed for message stream peerId=${peerId}`);
-    assert(this._opened, 'Closed');
+    invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
   }

@@ -8,11 +8,12 @@ import urlJoin from 'url-join';
 
 import { Document } from '@braneframe/types';
 import { Composer } from '@dxos/aurora-composer';
-import { TypedObject, Space, Config } from '@dxos/client';
 import { Contact, DocumentStack, File, Table, TaskList } from '@dxos/kai-types';
 import { Table as TableComponent } from '@dxos/mosaic';
 import { Dialog } from '@dxos/react-appkit';
-import { useConfig, useIdentity, useQuery } from '@dxos/react-client';
+import { Config, useConfig } from '@dxos/react-client';
+import { TypedObject, Space, useQuery } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { TaskList as TaskListComponent } from '../../cards';
 import { FilePreview } from '../../components';

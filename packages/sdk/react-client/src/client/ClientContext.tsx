@@ -13,7 +13,8 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Client, type ClientServices, type ClientServicesProvider, SystemStatus } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { SystemStatus, type ClientServices, type ClientServicesProvider } from '@dxos/client/services';
 import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
@@ -100,6 +101,8 @@ export const ClientProvider = ({
   onInitialized,
 }: ClientProviderProps) => {
   useMemo(() => {
+    // TODO(wittjosiah): Ideally this should be imported asynchronosly because it is optional.
+    //   Unfortunately, aysnc import seemed to break signals React instrumentation.
     register && registerSignalFactory();
   }, []);
 

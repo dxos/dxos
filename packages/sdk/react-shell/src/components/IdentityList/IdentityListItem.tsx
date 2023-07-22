@@ -5,8 +5,9 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { Identity, SpaceMember } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
+import { SpaceMember } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
 
 export const IdentityListItem = ({
   identity,

@@ -5,7 +5,8 @@
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { useIdentity, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export interface RequireIdentityProps {
   redirect?: string;

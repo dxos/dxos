@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { trackLeaks, Trigger, Lock } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
@@ -121,7 +121,7 @@ export class BlobSync {
           this._downloadRequests.get(blobChunk.id)?.trigger.wake();
           this._downloadRequests.delete(blobChunk.id);
         } else {
-          assert(meta.bitfield);
+          invariant(meta.bitfield);
           this._downloadRequests.get(blobChunk.id)!.want.bitfield = BitField.invert(meta.bitfield);
         }
 

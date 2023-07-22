@@ -22,6 +22,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",

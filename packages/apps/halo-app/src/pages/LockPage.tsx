@@ -7,9 +7,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button, useTranslation, Trans } from '@dxos/aurora';
 import { group, getSize, mx } from '@dxos/aurora-theme';
-import { Client, Space } from '@dxos/client';
 import { AuthChoices, Avatar, Heading } from '@dxos/react-appkit';
-import { useIdentity } from '@dxos/react-client';
+import { Client } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 // TODO(burdon): Use @dxos/react-icons.

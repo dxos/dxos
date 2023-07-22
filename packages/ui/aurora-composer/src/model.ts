@@ -6,7 +6,8 @@ import { EditorView } from '@codemirror/view';
 import { ComponentProps, useMemo } from 'react';
 import * as awarenessProtocol from 'y-protocols/awareness';
 
-import { Identity, Space, Text } from '@dxos/client';
+import { Space, Text } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
 import type { YText, YXmlFragment } from '@dxos/text-model';
 
 import { SpaceAwarenessProvider } from './yjs';

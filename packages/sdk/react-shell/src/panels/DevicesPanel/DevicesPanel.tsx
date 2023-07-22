@@ -8,14 +8,9 @@ import React, { cloneElement, useCallback, useReducer } from 'react';
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '@dxos/react-appkit';
-import {
-  Invitation,
-  InvitationEncoder,
-  useClient,
-  useDevices,
-  useHaloInvitations,
-  useIdentity,
-} from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { DeviceList, InvitationList, PanelSeparator } from '../../components';
 import { defaultSurface, subduedSurface } from '../../styles';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Keyring } from '@dxos/keyring';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -29,7 +29,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   async admit(request: AdmissionRequest): Promise<AdmissionResponse> {
-    assert(request.device);
+    invariant(request.device);
     const identity = this._getIdentity();
     await identity.admitDevice(request.device);
 
@@ -62,10 +62,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
-    assert(response.device);
+    invariant(response.device);
     const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
 
-    assert(request.device);
+    invariant(request.device);
     const { deviceKey, controlFeedKey, dataFeedKey } = request.device;
 
     await this._acceptIdentity({

@@ -6,7 +6,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { Menubar, Separator } from '@dxos/react-appkit';
-import { useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import { IdentityPopover } from '@dxos/react-shell';
 
 import { Main } from '../components';

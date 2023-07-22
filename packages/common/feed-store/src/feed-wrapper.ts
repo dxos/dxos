@@ -3,9 +3,9 @@
 //
 
 import { Range } from 'hypercore';
-import assert from 'node:assert';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
@@ -32,8 +32,8 @@ export class FeedWrapper<T extends {}> {
     private _hypercore: Hypercore<T>,
     private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
   ) {
-    assert(this._hypercore);
-    assert(this._key);
+    invariant(this._hypercore);
+    invariant(this._key);
     this._writeLock.wake();
   }
 
@@ -87,7 +87,7 @@ export class FeedWrapper<T extends {}> {
     return {
       write: async (data: T, { afterWrite } = {}) => {
         log('write', { feed: this._key, seq: this._hypercore.length, data });
-        assert(!this._closed, 'Feed closed');
+        invariant(!this._closed, 'Feed closed');
         const stackTrace = new StackTrace();
 
         try {
@@ -114,7 +114,7 @@ export class FeedWrapper<T extends {}> {
 
   async appendWithReceipt(data: T): Promise<WriteReceipt> {
     const seq = await this.append(data);
-    assert(seq < this.length, 'Invalid seq after write');
+    invariant(seq < this.length, 'Invalid seq after write');
     log('write complete', { feed: this._key, seq });
     const receipt: WriteReceipt = {
       feedKey: this.key,

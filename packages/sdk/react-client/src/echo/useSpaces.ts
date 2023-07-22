@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Space, SpaceState } from '@dxos/client';
-import { PublicKeyLike } from '@dxos/keys';
+import { PublicKeyLike } from '@dxos/client';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';

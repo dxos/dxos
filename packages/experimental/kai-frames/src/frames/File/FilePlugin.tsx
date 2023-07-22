@@ -11,7 +11,8 @@ import { getSize } from '@dxos/aurora-theme';
 import { File } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 import { EditableObjectList } from '@dxos/mosaic';
-import { Space, useConfig, useQuery } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 import { useFileDownload, useIpfsClient } from '../../hooks';
 import { FileUpload } from './FileUpload';

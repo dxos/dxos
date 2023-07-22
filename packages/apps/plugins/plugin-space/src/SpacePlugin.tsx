@@ -13,13 +13,8 @@ import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
-import {
-  IFrameClientServicesHost,
-  IFrameClientServicesProxy,
-  ShellLayout,
-  Space,
-  SpaceProxy,
-} from '@dxos/react-client';
+import { IFrameClientServicesHost, IFrameClientServicesProxy, ShellLayout } from '@dxos/react-client';
+import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';

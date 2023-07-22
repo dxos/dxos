@@ -3,8 +3,7 @@
 //
 
 import React from 'react';
-import { useQuery, useSpace } from '@dxos/react-client';
-import { Expando } from '@dxos/react-client';
+import { Expando, useSpace } from '@dxos/react-client/echo';
 
 // ensure there is a ClientProvider somewhere in the tree above
 export const Component = () => {

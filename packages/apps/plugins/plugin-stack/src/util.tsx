@@ -8,7 +8,7 @@ import React from 'react';
 
 import type { GraphNode } from '@braneframe/plugin-graph';
 import { Stack } from '@braneframe/types';
-import { EchoObject, Space } from '@dxos/client';
+import { EchoObject, Space } from '@dxos/client/echo';
 
 import { GenericStackObject, StackModel, StackObject, StackProperties } from './types';
 

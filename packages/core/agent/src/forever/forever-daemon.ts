@@ -8,10 +8,10 @@ import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
+import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
-import { Daemon, ProcessInfo } from '../daemon';
+import { Daemon, ProcessInfo, StartOptions } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../defs';
 import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 
@@ -59,7 +59,7 @@ export class ForeverDaemon implements Daemon {
     });
   }
 
-  async start(profile: string, params?: { config?: string }): Promise<ProcessInfo> {
+  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
@@ -116,9 +116,10 @@ export class ForeverDaemon implements Daemon {
           await services.close();
         }
       } catch (err) {
+        log.warn('Failed to start daemon.');
         const errContent = fs.readFileSync(errFile, 'utf-8');
         log.error(errContent);
-        throw err;
+        await this.stop(profile);
       }
     }
 
@@ -134,16 +135,16 @@ export class ForeverDaemon implements Daemon {
 
     const proc = await this._getProcess(profile);
 
-    if (force) {
-      // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
-      (await this.list()).forEach((process) => {
-        if (process.profile === profile) {
+    // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
+    (await this.list()).forEach((process) => {
+      if (process.profile === profile) {
+        if (force) {
           forever.stop(process.profile!);
+        } else {
+          forever.kill(proc.pid!, true, 'SIGINT');
         }
-      });
-    } else {
-      forever.kill(proc.pid!, true, 'SIGINT');
-    }
+      }
+    });
 
     await waitFor({
       condition: async () => !(await this.isRunning(profile)),
@@ -154,9 +155,9 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async restart(profile: string): Promise<ProcessInfo> {
+  async restart(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     await this.stop(profile);
-    return this.start(profile);
+    return this.start(profile, params);
   }
 
   async _getProcess(profile?: string): Promise<ProcessInfo> {

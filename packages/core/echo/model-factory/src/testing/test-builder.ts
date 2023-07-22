@@ -2,20 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
-
 import { Trigger } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { createFeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
 import { ModelFactory } from '../model-factory';
 import { ModelConstructor, ModelMessage } from '../types';
-
-const log = debug('dxos:echo:model-test-rig');
 
 /**
  * Factory for peers to test model replication.

@@ -7,7 +7,9 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { Menubar, useSafeSpaceKey, Separator, ProfileMenu, SpacesLink } from '@dxos/react-appkit';
-import { useClient, useIdentity, useSpace } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export interface AppLayoutProps {
   spacesPath?: string;

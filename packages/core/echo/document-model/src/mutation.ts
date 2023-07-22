@@ -6,7 +6,7 @@
 
 import get from 'lodash.get';
 import set from 'lodash.set';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import {
   KeyValue,
@@ -59,7 +59,7 @@ const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.
  */
 export class KeyValueUtil {
   static createMessage(key: string, value: any): KeyValue {
-    assert(key);
+    invariant(key);
 
     return {
       key,
@@ -184,8 +184,8 @@ export class ValueUtil {
   }
 
   static applyValue(object: any, key: string, value?: Value) {
-    assert(object);
-    assert(key);
+    invariant(object);
+    invariant(key);
 
     // Delete property.
     if (value === undefined) {
@@ -239,7 +239,7 @@ export class ValueUtil {
  */
 export class MutationUtil {
   static applyMutationSet(object: DocumentModelState, message: ObjectMutationSet): DocumentModelState {
-    assert(message);
+    invariant(message);
     if (message.type) {
       object.type = message.type;
     }
@@ -249,7 +249,7 @@ export class MutationUtil {
   }
 
   static applyMutation(object: Record<string, any>, mutation: ObjectMutation) {
-    assert(object);
+    invariant(object);
     const { operation = ObjectMutation.Operation.SET, key, value } = mutation;
     switch (operation) {
       case ObjectMutation.Operation.SET: {

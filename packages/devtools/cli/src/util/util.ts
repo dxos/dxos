@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 

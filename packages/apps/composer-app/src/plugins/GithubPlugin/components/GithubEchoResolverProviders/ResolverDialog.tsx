@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
-import { ShellLayout } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+import { ShellLayout, useClient } from '@dxos/react-client';
 import { useShell } from '@dxos/react-shell';
 
 import { ResolverTree } from './ResolverTree';

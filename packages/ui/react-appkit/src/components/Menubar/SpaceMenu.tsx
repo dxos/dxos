@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { inlineSeparator, getSize, mx, appTx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
-import { useMembers } from '@dxos/react-client';
+import { Space, useMembers } from '@dxos/react-client/echo';
 
 import { Popover } from '../Popover';
 

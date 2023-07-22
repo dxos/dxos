@@ -3,7 +3,8 @@
 //
 
 import React, { useEffect } from 'react';
-import { Expando, useIdentity, useQuery, useSpaces } from '@dxos/react-client';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   useIdentity();

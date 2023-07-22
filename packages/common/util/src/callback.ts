@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 /**
  * Represents a callback that can be set once.
@@ -17,7 +17,7 @@ export class Callback<T extends (...args: any[]) => any> {
   private _callback: T | undefined;
 
   public call(...args: Parameters<T>): ReturnType<T> {
-    assert(this._callback, 'Callback not set');
+    invariant(this._callback, 'Callback not set');
     return this._callback(...args);
   }
 
@@ -26,7 +26,7 @@ export class Callback<T extends (...args: any[]) => any> {
   }
 
   public set(callback: T) {
-    assert(!this._callback, 'Callback already set');
+    invariant(!this._callback, 'Callback already set');
     this._callback = callback;
   }
 

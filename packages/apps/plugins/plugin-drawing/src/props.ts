@@ -7,7 +7,7 @@ import { TLStore } from '@tldraw/tlschema';
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client';
+import { isTypedObject } from '@dxos/client/echo';
 
 export const DRAWING_PLUGIN = 'dxos.org/plugin/drawing';
 

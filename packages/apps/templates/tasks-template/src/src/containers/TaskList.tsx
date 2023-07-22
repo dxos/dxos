@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Space, Expando, useQuery } from '@dxos/react-client';
+import { Space, Expando, useQuery } from '@dxos/react-client/echo';
 
 import { TaskList as TaskListComponent } from '../components/TaskList';
 

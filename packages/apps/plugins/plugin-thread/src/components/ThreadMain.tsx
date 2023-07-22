@@ -8,8 +8,9 @@ import React, { FC } from 'react';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { PublicKey, SpaceProxy } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { SpaceProxy } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { ThreadChannel } from './ThreadChannel';
 

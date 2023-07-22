@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { SystemStatus } from '@dxos/client';
+import type { SystemStatus } from '@dxos/client/services';
 import { raise } from '@dxos/debug';
 
 import { ClientContext } from './ClientContext';

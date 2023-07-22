@@ -7,10 +7,9 @@ import React, { cloneElement, ForwardedRef, forwardRef } from 'react';
 import { Button, useId, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { Heading } from '@dxos/react-appkit';
-import { useSpace } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { InvitationEmoji } from '../../components';
-import { defaultSurface } from '../../styles';
 import { JoinPanelMode } from './JoinPanelProps';
 import { JoinState } from './joinMachine';
 
@@ -50,7 +49,7 @@ export const JoinHeading = forwardRef(
     );
 
     return (
-      <div role='none' className={mx(defaultSurface, 'pbs-3 pbe-1 rounded-bs-md relative')} ref={ref}>
+      <div role='none' className='pbs-3 pbe-1 relative' ref={ref}>
         {!preventExit &&
           mode !== 'halo-only' &&
           (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}

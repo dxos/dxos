@@ -9,7 +9,8 @@ export default defineTemplate(
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-appkit';
-    import { useQuery, Expando, useIdentity, useSpaces } from '@dxos/react-client';
+    import { useQuery, Expando, useSpaces } from '@dxos/react-client/echo';
+    import { useIdentity } from '@dxos/react-client/halo';
 
     export const Counter = () => {
       const identity = useIdentity();

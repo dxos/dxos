@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-import { Device } from '@dxos/protocols/proto/dxos/client/services';
+import type { Device } from '@dxos/client/halo';
 
 import { useClient } from '../client';
 

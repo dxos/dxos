@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
@@ -284,7 +284,7 @@ export class RpcPeer {
       }
 
       const responseId = decoded.response.id;
-      assert(typeof responseId === 'number');
+      invariant(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
         log('received response with invalid id', { responseId });
         return; // Ignore requests with incorrect id.
@@ -319,7 +319,7 @@ export class RpcPeer {
       }
 
       log('received stream close', { id: decoded.streamClose.id });
-      assert(typeof decoded.streamClose.id === 'number');
+      invariant(typeof decoded.streamClose.id === 'number');
       const stream = this._localStreams.get(decoded.streamClose.id);
       if (!stream) {
         log('no local stream', { id: decoded.streamClose.id });
@@ -375,7 +375,7 @@ export class RpcPeer {
       const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;
-      assert(response.id === id);
+      invariant(response.id === id);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -461,9 +461,9 @@ export class RpcPeer {
 
   private async _callHandler(req: Request): Promise<Response> {
     try {
-      assert(typeof req.id === 'number');
-      assert(req.payload);
-      assert(req.method);
+      invariant(typeof req.id === 'number');
+      invariant(req.payload);
+      invariant(req.method);
 
       const response = await this._options.callHandler(req.method, req.payload);
       return {
@@ -480,10 +480,10 @@ export class RpcPeer {
 
   private _callStreamHandler(req: Request, callback: (response: Response) => void) {
     try {
-      assert(this._options.streamHandler, 'Requests with streaming responses are not supported.');
-      assert(typeof req.id === 'number');
-      assert(req.payload);
-      assert(req.method);
+      invariant(this._options.streamHandler, 'Requests with streaming responses are not supported.');
+      invariant(typeof req.id === 'number');
+      invariant(req.payload);
+      invariant(req.method);
 
       const responseStream = this._options.streamHandler(req.method, req.payload);
       responseStream.onReady(() => {

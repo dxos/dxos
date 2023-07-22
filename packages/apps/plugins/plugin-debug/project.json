@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/plugins/plugin-debug/src/index.ts",
         "outputPath": "packages/apps/plugins/plugin-debug/dist/types",
@@ -29,7 +29,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -46,7 +46,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/apps/plugins/plugin-debug/.storybook"
       }

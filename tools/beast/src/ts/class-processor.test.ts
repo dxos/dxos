@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { join } from 'path';
+import { join } from 'node:path';
 
 import { describe, test } from '@dxos/test';
 
@@ -31,7 +31,7 @@ describe('Code analysis', () => {
       join(baseDir, 'packages/sdk/client-services/src/**/*.ts')
     ]);
 
-    processor.processFile(join(baseDir, 'packages/sdk/client/src/packlets/client/client.ts'));
+    processor.processFile(join(baseDir, 'packages/sdk/client/src/client/client.ts'));
   });
 
   test('traverses client-services', () => {

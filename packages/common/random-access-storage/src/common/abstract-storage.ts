@@ -41,7 +41,7 @@ export abstract class AbstractStorage implements Storage {
 
   // TODO(burdon): Make required.
   public createDirectory(sub = ''): Directory {
-    // assert(sub.length);
+    // invariant(sub.length);
     return new Directory(
       this.type,
       getFullPath(this.path, sub),

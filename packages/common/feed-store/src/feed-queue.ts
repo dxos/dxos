@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { inspect } from 'node:util';
 import { Writable } from 'streamx';
 
@@ -149,7 +148,7 @@ export class FeedQueue<T extends {}> {
   async close() {
     if (this.isOpen) {
       invariant(this._feedConsumer);
-      assert(!this._feed.properties.closed);
+      invariant(!this._feed.properties.closed);
 
       log('closing', { feedKey: this._feed.key });
       const [closed, setClosed] = latch();

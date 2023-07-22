@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, TypedObject } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { TypedObject } from '@dxos/client/echo';
 
 const client = new Client();
 
