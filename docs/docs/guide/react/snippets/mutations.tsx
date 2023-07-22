@@ -4,13 +4,9 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  Expando,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const App = () => {
   useIdentity();

@@ -4,9 +4,9 @@
 import React from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
-import type { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
 
 export const IdentityPanel = ({
   identity,

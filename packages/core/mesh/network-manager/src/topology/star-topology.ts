@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,12 +22,12 @@ export class StarTopology implements Topology {
   }
 
   init(controller: SwarmController): void {
-    assert(!this._controller, 'Already initialized.');
+    invariant(!this._controller, 'Already initialized.');
     this._controller = controller;
   }
 
   update(): void {
-    assert(this._controller, 'Not initialized.');
+    invariant(this._controller, 'Not initialized.');
     const { candidates, connected, ownPeerId } = this._controller.getState();
     if (!ownPeerId.equals(this._centralPeer)) {
       log('leaf peer dropping all connections apart from central peer.');
@@ -51,7 +51,7 @@ export class StarTopology implements Topology {
   }
 
   async onOffer(peer: PublicKey): Promise<boolean> {
-    assert(this._controller, 'Not initialized.');
+    invariant(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
     log('offer', {
       peer,

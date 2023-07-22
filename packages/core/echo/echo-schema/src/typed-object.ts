@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';
@@ -378,7 +378,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
   }
 
   override _beforeBind() {
-    assert(this._linkCache);
+    invariant(this._linkCache);
     for (const obj of this._linkCache.values()) {
       this._database!.add(obj as TypedObject);
     }
@@ -393,7 +393,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     if (this._database) {
       this._database.add(obj as TypedObject);
     } else {
-      assert(this._linkCache);
+      invariant(this._linkCache);
       this._linkCache.set(obj.id, obj);
     }
   }
@@ -406,7 +406,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
     if (this._database) {
       return this._database.getObjectById(id);
     } else {
-      assert(this._linkCache);
+      invariant(this._linkCache);
       return this._linkCache.get(id);
     }
   }
@@ -434,6 +434,7 @@ type TypedObjectConstructor = {
    * Create a new document.
    * @param initialProps Initial properties.
    * @param _schemaType Schema type for generated types.
+   * @param opts
    */
   new <T extends Record<string, any> = Record<string, any>>(
     initialProps?: NoInfer<Partial<T>>,

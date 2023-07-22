@@ -7,9 +7,9 @@ import React, { cloneElement } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import type { Identity } from '@dxos/client';
 import { Avatar } from '@dxos/react-appkit';
-import { InvitationResult } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
+import { InvitationResult } from '@dxos/react-client/invitations';
 
 import { PanelStepHeading } from '../../../components';
 import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';

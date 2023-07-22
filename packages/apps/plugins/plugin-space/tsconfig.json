@@ -30,10 +30,16 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/util"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"

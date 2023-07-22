@@ -7,8 +7,7 @@ import { Box } from 'ink';
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { KeyType, useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { Table } from '../util';
 

@@ -4,9 +4,10 @@
 
 import { useMemo } from 'react';
 
-import { Space } from '@dxos/client';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { useConfig, useKeyStore } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
+import { useKeyStore } from '@dxos/react-client/halo';
 
 import { BotClient } from '../bots';
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
@@ -101,7 +101,7 @@ export class InvitationsServiceImpl implements InvitationsService {
 
   async authenticate({ invitationId, authCode }: AuthenticationRequest): Promise<void> {
     log('authenticating...');
-    assert(invitationId);
+    invariant(invitationId);
     const observable = this._acceptInvitations.get(invitationId);
     if (!observable) {
       log.warn('invalid invitation', { invitationId });
@@ -112,7 +112,7 @@ export class InvitationsServiceImpl implements InvitationsService {
 
   async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
     log('deleting...');
-    assert(invitationId);
+    invariant(invitationId);
     const created = this._createInvitations.get(invitationId);
     const accepted = this._acceptInvitations.get(invitationId);
     if (created) {

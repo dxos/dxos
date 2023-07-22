@@ -5,7 +5,8 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, Invitation, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
 import { hostInvitation } from '../../util';
@@ -37,14 +38,13 @@ export default class Share extends BaseCommand<typeof Share> {
         callbacks: {
           onConnecting: async () => {
             const invitationCode = InvitationEncoder.encode(observable.get());
-
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
             !this.flags.noCode && this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
           },
         },
       });
 
-      ux.action.start('Waiting for peer to connect');
+      ux.action.start('Waiting for peer to connect...');
       await invitationSuccess;
       ux.action.stop();
     });

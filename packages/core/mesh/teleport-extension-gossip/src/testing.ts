@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -40,7 +40,7 @@ export class TestAgent extends TestPeerBase {
   }
 
   waitForAgentsOnline(agents: TestAgent[], timeout = 1000) {
-    assert(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
+    invariant(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
         const connections = this.presence.getPeersOnline().map((state) => state.identityKey.toHex());

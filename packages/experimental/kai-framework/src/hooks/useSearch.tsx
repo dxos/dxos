@@ -5,10 +5,8 @@
 import { Circle } from '@phosphor-icons/react';
 import { FC, useMemo } from 'react';
 
-import { Space } from '@dxos/client';
-import { TypedObject } from '@dxos/echo-schema';
 import { searchMeta } from '@dxos/kai-frames';
-import { useQuery } from '@dxos/react-client';
+import { Space, TypedObject, useQuery } from '@dxos/react-client/echo';
 
 // TODO(burdon): Cyclic dependency.
 

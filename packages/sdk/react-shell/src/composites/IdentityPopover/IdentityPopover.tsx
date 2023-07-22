@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Popover, Avatar, useJdenticonHref } from '@dxos/aurora';
 import { openOutline, focusRing, hoverColors } from '@dxos/aurora-theme';
-import { Identity } from '@dxos/client';
+import { Identity } from '@dxos/react-client/halo';
 
 import { IdentityPanel } from '../../panels';
 

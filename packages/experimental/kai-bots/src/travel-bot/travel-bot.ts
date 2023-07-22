@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
 import { formatISO9075 } from 'date-fns';
+import assert from 'node:assert';
 
 import { debounce } from '@dxos/async';
 import { Subscription } from '@dxos/echo-schema';

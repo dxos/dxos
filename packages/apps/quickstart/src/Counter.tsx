@@ -5,7 +5,8 @@
 import React, { useEffect } from 'react';
 
 import { Loading } from '@dxos/react-appkit';
-import { Expando, useQuery, useIdentity, useSpaces } from '@dxos/react-client';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {
   const identity = useIdentity();

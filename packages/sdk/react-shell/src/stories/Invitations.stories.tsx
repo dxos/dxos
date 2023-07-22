@@ -9,17 +9,12 @@ import React, { useMemo, useState } from 'react';
 
 import { Button, ButtonGroup } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { Group } from '@dxos/react-appkit';
-import {
-  InvitationEncoder,
-  Space,
-  SpaceProxy,
-  useClient,
-  useIdentity,
-  useNetworkStatus,
-  useSpaces,
-} from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { Space, SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { IdentityListItem, SpaceListItem } from '../components';

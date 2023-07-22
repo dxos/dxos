@@ -2,7 +2,7 @@
   "sourceRoot": "tools/apidoc/src",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/apidoc/src/index.ts",
         "outputPath": "tools/apidoc/dist",
@@ -25,7 +25,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

@@ -5,7 +5,7 @@ import { StoryFn } from '@storybook/react';
 import React from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 import { defaultSurface } from '../../styles';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';

@@ -3,7 +3,7 @@
 //
 
 import Analytics from 'analytics-node';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
@@ -17,7 +17,7 @@ let analytics: Analytics | undefined;
  */
 export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
   try {
-    assert(apiKey, 'Key required to send telemetry');
+    invariant(apiKey, 'Key required to send telemetry');
 
     analytics = new Analytics(apiKey, {
       flushAt: batchSize,

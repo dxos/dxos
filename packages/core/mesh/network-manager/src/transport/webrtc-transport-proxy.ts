@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -158,7 +158,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
   }
 
   createTransport(options: TransportOptions): Transport {
-    assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
+    invariant(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
 
     const transport = new WebRTCTransportProxy({
       ...options,

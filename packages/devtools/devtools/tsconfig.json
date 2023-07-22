@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM"
@@ -21,9 +22,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -37,9 +35,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/mesh/messaging"
@@ -61,9 +56,6 @@
     },
     {
       "path": "../../experimental/mosaic"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"

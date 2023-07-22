@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
@@ -29,9 +30,6 @@
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -68,9 +66,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

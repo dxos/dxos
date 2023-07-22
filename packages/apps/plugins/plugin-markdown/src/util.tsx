@@ -9,7 +9,7 @@ import React from 'react';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/client';
+import { EchoObject, Space } from '@dxos/client/echo';
 import { Plugin } from '@dxos/react-surface';
 
 import { MarkdownProperties, MarkdownProvides } from './types';
@@ -50,7 +50,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 export const documentToGraphNode = (document: Document, parent: GraphNode<Space>, index: string): GraphNode => ({
   id: document.id,
   index: get(document, 'meta.index', index),
-  label: document.title ?? 'Untitled Document',
+  label: document.title ?? 'New Document', // TODO(burdon): Translation.
   icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
   data: document,
   parent,

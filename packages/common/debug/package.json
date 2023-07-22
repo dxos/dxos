@@ -16,11 +16,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "debug": "^4.3.3"
-  },
-  "devDependencies": {
-    "@types/debug": "^4.1.7"
+    "@dxos/node-std": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

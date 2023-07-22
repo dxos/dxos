@@ -10,7 +10,7 @@ export default defineTemplate(
       projectType: 'library',
       targets: {
         build: {
-          executor: '@nrwl/js:tsc',
+          executor: '@nx/js:tsc',
           options: {
             main: relative('src', 'index.ts'),
             outputPath: relative('dist'),
@@ -19,7 +19,7 @@ export default defineTemplate(
           outputs: ['{options.outputPath}']
         },
         lint: {
-          executor: '@nrwl/linter:eslint',
+          executor: '@nx/linter:eslint',
           options: {
             format: 'unix',
             lintFilePatterns: [relative('src/**/*.{ts,js,tsx,jsx}')]

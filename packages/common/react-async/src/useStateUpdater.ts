@@ -21,7 +21,10 @@ import { Dispatch, SetStateAction, useState } from 'react';
  * ```
  *
  * @param initialValue
+ *
+ * @deprecated
  */
+// TODO(wittjosiah): Unused, remove?
 export const useStateUpdater = <T>(initialValue: T): [T, Dispatch<SetStateAction<T>>, (spec: any) => T] => {
   const [value, setValue] = useState<T>(initialValue);
   const handleUpdate = (spec: any) => {

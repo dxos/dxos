@@ -7,9 +7,10 @@ import { useCallback } from 'react';
 import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
 import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
-import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
+import type { Client } from '@dxos/react-client';
+import { Identity } from '@dxos/react-client/halo';
+import { AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { JoinPanelMode } from './JoinPanelProps';
 

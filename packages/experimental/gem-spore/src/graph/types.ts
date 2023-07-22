@@ -7,14 +7,14 @@
 // Generic graph data type.
 //
 
-import assert from 'assert';
+import invariant from 'tiny-invariant';
 
 import { Point } from '@dxos/gem-core';
 
 export type IdAccessor<N = any> = (node: N) => string;
 
 export const defaultIdAccessor = (node: any) => {
-  assert(node.id);
+  invariant(node.id);
   return node.id;
 };
 

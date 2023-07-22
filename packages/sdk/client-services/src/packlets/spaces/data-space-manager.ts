@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
@@ -112,7 +112,7 @@ export class DataSpaceManager {
    */
   @synchronized
   async createSpace() {
-    assert(this._isOpen, 'Not open.');
+    invariant(this._isOpen, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -130,7 +130,7 @@ export class DataSpaceManager {
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
-    assert(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
@@ -143,8 +143,8 @@ export class DataSpaceManager {
   @synchronized
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
-    assert(this._isOpen, 'Not open.');
-    assert(!this._spaces.has(opts.spaceKey), 'Space already exists.');
+    invariant(this._isOpen, 'Not open.');
+    invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
@@ -155,7 +155,6 @@ export class DataSpaceManager {
 
     const space = await this._constructSpace(metadata);
     await this._metadataStore.addSpace(metadata);
-
     space.initializeDataPipelineAsync();
 
     this.updated.emit();

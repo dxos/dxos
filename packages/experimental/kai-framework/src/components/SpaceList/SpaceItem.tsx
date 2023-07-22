@@ -7,8 +7,8 @@ import React, { ReactNode } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
 import { Input } from '@dxos/react-appkit';
+import { Space } from '@dxos/react-client/echo';
 
 import { getIcon } from '../../hooks';
 import { Intent, IntentAction } from '../../util';

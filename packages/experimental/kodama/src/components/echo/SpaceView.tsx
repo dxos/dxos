@@ -5,7 +5,7 @@
 import { Box, Text, useFocus, useFocusManager } from 'ink';
 import React, { useState } from 'react';
 
-import { useSpace } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { useAppState } from '../../hooks';
 import { ItemList } from './ItemList';

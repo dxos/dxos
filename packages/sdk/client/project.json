@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/sdk/client/src/index.ts",
         "outputPath": "packages/sdk/client/dist/types",
@@ -17,8 +17,16 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/sdk/client/src/devtools/index.ts",
+          "packages/sdk/client/src/diagnostics/index.ts",
+          "packages/sdk/client/src/echo/index.ts",
+          "packages/sdk/client/src/halo/index.ts",
           "packages/sdk/client/src/index.ts",
-          "packages/sdk/client/src/packlets/testing/index.ts"
+          "packages/sdk/client/src/invitations/index.ts",
+          "packages/sdk/client/src/mesh/index.ts",
+          "packages/sdk/client/src/proto/index.ts",
+          "packages/sdk/client/src/services/index.ts",
+          "packages/sdk/client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/client/dist/lib"
       },
@@ -27,9 +35,8 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
-        "eslintConfig": "packages/sdk/client/eslint-config.json",
         "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
@@ -45,7 +52,7 @@
         "script": "prebuild"
       },
       "outputs": [
-        "packages/sdk/client/src/packlets/proto/gen"
+        "packages/sdk/client/src/proto/gen"
       ]
     },
     "test": {

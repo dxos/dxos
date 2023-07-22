@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { XmlElement, XmlText } from 'yjs';
 
 import { UnsubscribeCallback } from '@dxos/async';
-import { Space } from '@dxos/client';
+import type { Space } from '@dxos/client/echo';
 import { YText, YXmlFragment } from '@dxos/text-model';
 
 // TODO(wittjosiah): Replace with gravity agent?

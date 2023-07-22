@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { Heading, SpaceList } from '@dxos/react-appkit';
-import { useSpaces } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 
 export const SpacesPage = () => {
   const spaces = useSpaces();

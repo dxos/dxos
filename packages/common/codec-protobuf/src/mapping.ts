@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import protobufjs from 'protobufjs';
+import invariant from 'tiny-invariant';
 
 import { Substitutions } from './common';
 
@@ -58,7 +58,7 @@ const mapField = async (field: protobufjs.Field, mapper: FieldMapper, value: any
   } else if (field.repeated) {
     return await Promise.all(value.map((value: any) => mapScalarField(field, mapper, value)));
   } else if (field.map) {
-    assert(field instanceof protobufjs.MapField);
+    invariant(field instanceof protobufjs.MapField);
     return await asyncObjectMap((value) => mapScalarField(field, mapper, value), value);
   } else {
     return mapScalarField(field, mapper, value);

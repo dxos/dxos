@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -44,6 +45,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
     },
     {
       "path": "../client-services"

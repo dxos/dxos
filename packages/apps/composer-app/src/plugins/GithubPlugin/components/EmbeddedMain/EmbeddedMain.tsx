@@ -29,8 +29,8 @@ import {
 } from '@dxos/aurora';
 import { useTextModel } from '@dxos/aurora-composer';
 import { descriptionText, getSize, mx, osTx } from '@dxos/aurora-theme';
-import { ShellLayout } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { ShellLayout } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import { useShell } from '@dxos/react-shell';
 import { Surface } from '@dxos/react-surface';
 

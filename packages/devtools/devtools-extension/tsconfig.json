@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "composite": false,
     "declaration": false,
     "declarationMap": false,
@@ -44,6 +45,9 @@
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/config"

@@ -13,7 +13,7 @@ import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { GeoLocation, Organization } from '@dxos/kai-types';
 import { NavMenu } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 

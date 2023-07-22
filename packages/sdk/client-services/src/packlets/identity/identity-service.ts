@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { signPresentation } from '@dxos/credentials';
@@ -54,7 +54,7 @@ export class IdentityServiceImpl implements IdentityService {
   }
 
   async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
-    assert(this._serviceContext.identityManager.identity, 'Identity not initialized.');
+    invariant(this._serviceContext.identityManager.identity, 'Identity not initialized.');
 
     return await signPresentation({
       presentation,
