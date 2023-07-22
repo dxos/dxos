@@ -10,10 +10,12 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
-import { ViewState, ViewStateHeading, ViewStateProps } from './ViewState';
+import { PanelStepHeading } from '../../../components';
+import { JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationInputProps extends ViewStateProps {
+export interface InvitationInputProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
+  unredeemedCode?: string;
 }
 
 const invitationCodeFromUrl = (text: string) => {
@@ -27,30 +29,27 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProps) => {
-  const disabled = !viewStateProps.active;
-  const { joinSend, joinState } = viewStateProps;
+export const InvitationInput = ({ Kind, active, send, unredeemedCode }: InvitationInputProps) => {
+  const disabled = !active;
   const { t } = useTranslation('os');
 
-  const contextUnredeemedCode = joinState?.context[Kind.toLowerCase() as 'space' | 'halo'].unredeemedCode;
-
-  const [inputValue, setInputValue] = useState(contextUnredeemedCode ?? '');
+  const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 
   useEffect(() => {
-    contextUnredeemedCode && setInputValue(contextUnredeemedCode ?? '');
-  }, [contextUnredeemedCode]);
+    unredeemedCode && setInputValue(unredeemedCode ?? '');
+  }, [unredeemedCode]);
 
   const handleNext = () =>
-    joinSend({
+    send({
       type: `set${Kind}InvitationCode`,
       code: invitationCodeFromUrl(inputValue),
     });
 
   return (
-    <ViewState {...viewStateProps}>
+    <>
       <Input
         disabled={disabled}
-        label={<ViewStateHeading>{t('invitation input label')}</ViewStateHeading>}
+        label={<PanelStepHeading>{t('invitation input label')}</PanelStepHeading>}
         value={inputValue}
         onChange={({ target: { value } }) => setInputValue(value)}
         slots={{
@@ -76,7 +75,7 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
         </Button>
         <Button
           disabled={disabled || Kind === 'Space'}
-          onClick={() => joinSend({ type: 'deselectAuthMethod' })}
+          onClick={() => send({ type: 'deselectAuthMethod' })}
           classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
         >
@@ -84,6 +83,6 @@ export const InvitationInput = ({ Kind, ...viewStateProps }: InvitationInputProp
           <span>{t('back label')}</span>
         </Button>
       </div>
-    </ViewState>
+    </>
   );
 };
