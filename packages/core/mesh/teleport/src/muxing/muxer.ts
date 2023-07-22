@@ -181,6 +181,7 @@ export class Muxer {
       },
     });
     this._dispose();
+    void this._ctx.dispose();
   }
 
   private _dispose(err?: Error) {
@@ -200,8 +201,6 @@ export class Muxer {
     // Make it easy for GC.
     this._channelsByLocalId.clear();
     this._channelsByTag.clear();
-
-    void this._ctx.dispose();
   }
 
   private _handleCommand(cmd: Command) {
