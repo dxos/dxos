@@ -54,6 +54,11 @@
       "type": "object",
       "description": "Alias imports",
       "default": {}
+    },
+    "setExports": {
+      "type": "boolean",
+      "description": "Write package json exports field",
+      "default": true
     }
   },
   "required": ["entryPoints", "outputPath"]

@@ -7,7 +7,7 @@ import { build, Format, Platform } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
@@ -25,6 +25,7 @@ export interface EsbuildExecutorOptions {
   platforms: Platform[];
   sourcemap: boolean;
   watch: boolean;
+  setExports: boolean;
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -139,5 +140,74 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     await new Promise(() => {}); // Wait indefinitely.
   }
 
+  if(options.setExports) {
+    await setPackageExports(options, context);
+  }
+
   return { success: errors.flat().length === 0 };
 };
+
+const setPackageExports = async (options: EsbuildExecutorOptions, context: ExecutorContext) => {
+  const packageRoot = context.workspace!.projects[context.projectName!].root;
+  const manifestPath = join(packageRoot, 'package.json');
+  const packageJson = JSON.parse(await readFile(manifestPath, 'utf-8'));
+
+  const exports: any = {}
+  let types = ''
+  const typesVersions: any = { '*': {} }
+
+  for(const entrypoint of options.entryPoints) {
+    // path relative to src dir
+    const relativePath = relative(join(packageRoot, 'src'), entrypoint);
+    
+    // remove trailing index.ts
+    let entrypointName = relativePath
+      .replace(/index\.ts$/, '')
+      .replace(/\/$/, '')
+      .replace(/\.ts$/, ''); // remove extension
+
+    // add leading .
+    const exportName = entrypointName === '' ? '.' : `./${entrypointName}`;
+
+    const relativeOutDir = relative(packageRoot, options.outputPath);
+    const artifactName = relativePath.replace(/\.ts$/, '');
+
+    // TODO(dmaretskyi): Update with Node ESM.
+    exports[exportName] = {}
+
+    // NOTE: Order is significant and represents priority.
+    if(options.platforms.includes('node')) {
+      exports[exportName].node = './' + join(relativeOutDir, 'node', `${artifactName}.cjs`);
+    }
+    if(options.platforms.includes('browser')) {
+      exports[exportName].browser = './' + join(relativeOutDir, 'browser', `${artifactName}.mjs`);
+    }
+    if(options.platforms.includes('node')) {
+      exports[exportName].require = './' + join(relativeOutDir, 'node', `${artifactName}.cjs`);
+    }
+    if(options.platforms.includes('browser')) {
+      exports[exportName].import = './' + join(relativeOutDir, 'browser', `${artifactName}.mjs`);
+    }
+
+    if(entrypointName === '') {
+      types = 'dist/types/src/index.d.ts'
+    } else {
+      typesVersions['*'][entrypointName] = [join('dist/types/src', entrypointName, 'index.d.ts')]
+    }
+
+  }
+
+  packageJson.exports = exports;
+  if(types) {
+    packageJson.types = types;
+  }
+  packageJson.typesVersions = typesVersions;
+
+  delete packageJson.main;
+  delete packageJson.module;
+  if(typeof packageJson.browser === 'string') {
+    delete packageJson.browser;
+  }
+
+  await writeFile(manifestPath, JSON.stringify(packageJson, null, 2), 'utf-8');
+}
