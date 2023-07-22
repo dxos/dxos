@@ -5,7 +5,8 @@
 import { cloneElement, ComponentProps } from 'react';
 import { Event, SingleOrArray } from 'xstate';
 
-import type { Identity, Invitation } from '@dxos/react-client/halo';
+import type { Identity } from '@dxos/react-client/halo';
+import type { Invitation } from '@dxos/react-client/invitations';
 import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
 import { JoinEvent } from './joinMachine';
