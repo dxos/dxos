@@ -2,25 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
+import { Article, IconProps, Plus, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
+import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
-import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy, subscribe } from '@dxos/client';
+import { Space, SpaceProxy } from '@dxos/client';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
 import { stackState } from './stores';
 import translations from './translations';
 import { StackPluginProvides, StackProvides } from './types';
-import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
+import { STACK_PLUGIN, isStack } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const queries = new Map<string, Query<Stack>>();
-  const subscriptions = new Map<string, UnsubscribeCallback>();
+  const objectToGraphNode = (parent: GraphNode<Space>, object: Stack, index: string): GraphNode => ({
+    id: object.id,
+    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
+    label: object.title ?? 'New Stack', // TODO(burdon): Translation.
+    icon: (props: IconProps) => <Article {...props} />,
+    data: object,
+    parent,
+    pluginActions: {
+      [STACK_PLUGIN]: [
+        {
+          id: 'delete',
+          index: 'a1',
+          label: ['delete stack label', { ns: STACK_PLUGIN }],
+          icon: (props: IconProps) => <Trash {...props} />,
+          invoke: async () => {
+            parent.data?.db.remove(object);
+          },
+        },
+      ],
+    },
+  });
+
+  const adapter = new GraphNodeAdapter(Stack.filter(), objectToGraphNode);
 
   return {
     meta: {
@@ -36,50 +58,18 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
-    // TODO(burdon): Open/close? (vs. ready/unload, initialize/destroy?)
     unload: async () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      subscriptions.clear();
+      adapter.clear();
     },
     provides: {
       graph: {
-        // TODO(burdon): Rename update (since not "event").
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
           const space = parent.data;
-          let query = queries.get(parent.id);
-          if (!query) {
-            query = space.db.query(Stack.filter());
-            queries.set(parent.id, query);
-          }
-          if (!subscriptions.has(parent.id)) {
-            subscriptions.set(
-              parent.id,
-              query.subscribe(() => emit()),
-            );
-          }
-
-          const stackIndices = getIndices(query.objects.length);
-          query.objects.forEach((stack, index) => {
-            if (!subscriptions.has(stack.id)) {
-              subscriptions.set(
-                stack.id,
-                stack[subscribe](() => {
-                  if (stack.__deleted) {
-                    subscriptions.delete(stack.id);
-                    return;
-                  }
-
-                  emit(stackToGraphNode(stack, parent, stackIndices[index]));
-                }),
-              );
-            }
-          });
-
-          return query.objects.map((stack, index) => stackToGraphNode(stack, parent, stackIndices[index]));
+          return adapter.createNodes(space, parent, emit);
         },
         actions: (parent, _, plugins) => {
           if (!(parent.data instanceof SpaceProxy)) {
