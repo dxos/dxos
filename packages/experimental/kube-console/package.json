@@ -7,10 +7,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -89,5 +85,13 @@
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-inspect": "^0.7.15",
     "workbox-window": "^6.5.4"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

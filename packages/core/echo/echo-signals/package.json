@@ -7,23 +7,23 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
     "./core": {
+      "node": "./dist/lib/node/core.cjs",
       "browser": "./dist/lib/browser/core.mjs",
-      "import": "./dist/lib/browser/core.mjs",
       "require": "./dist/lib/node/core.cjs",
-      "node": "./dist/lib/node/core.cjs"
+      "import": "./dist/lib/browser/core.mjs"
+    },
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
     },
     "./react": {
+      "node": "./dist/lib/node/react.cjs",
       "browser": "./dist/lib/browser/react.mjs",
-      "import": "./dist/lib/browser/react.mjs",
       "require": "./dist/lib/node/react.cjs",
-      "node": "./dist/lib/node/react.cjs"
+      "import": "./dist/lib/browser/react.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

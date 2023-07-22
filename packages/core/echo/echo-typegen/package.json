@@ -39,5 +39,18 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {}
+  "beast": {},
+  "exports": {
+    "./main": {
+      "node": "./dist/lib/node/main.cjs",
+      "require": "./dist/lib/node/main.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  }
 }

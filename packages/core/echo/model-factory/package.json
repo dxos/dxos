@@ -8,16 +8,16 @@
   "author": "info@dxos.org",
   "exports": {
     ".": {
+      "node": "./dist/lib/node/index.cjs",
       "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
       "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "import": "./dist/lib/browser/index.mjs"
     },
     "./testing": {
+      "node": "./dist/lib/node/testing/index.cjs",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
+      "import": "./dist/lib/browser/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -6,9 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
   "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,5 +48,26 @@
         "root": "src/packlets/database/database-backend.ts"
       }
     ]
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    },
+    "./packlets/testing": {
+      "node": "./dist/lib/node/packlets/testing/index.cjs",
+      "browser": "./dist/lib/browser/packlets/testing/index.mjs",
+      "require": "./dist/lib/node/packlets/testing/index.cjs",
+      "import": "./dist/lib/browser/packlets/testing/index.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "packlets/testing": [
+        "dist/types/src/packlets/testing/index.d.ts"
+      ]
+    }
   }
 }

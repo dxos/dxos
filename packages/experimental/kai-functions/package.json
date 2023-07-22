@@ -7,7 +7,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
@@ -47,5 +46,13 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.startcase": "^4.4.7",
     "@types/split2": "^3.2.1"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

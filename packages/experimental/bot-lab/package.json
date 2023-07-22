@@ -7,10 +7,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "src",
@@ -37,5 +33,13 @@
     "http-proxy": "^1.18.1",
     "node-http-proxy": "^0.2.4",
     "sort-keys": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

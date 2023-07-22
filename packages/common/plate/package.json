@@ -5,7 +5,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "bin": {
     "plate": "bin/plate.js"
@@ -49,5 +48,22 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "require": "./dist/lib/node/index.cjs"
+    },
+    "./main": {
+      "node": "./dist/lib/node/main.cjs",
+      "require": "./dist/lib/node/main.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
   }
 }

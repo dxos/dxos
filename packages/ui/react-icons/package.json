@@ -7,7 +7,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "assets"
@@ -27,5 +26,11 @@
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
+  },
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

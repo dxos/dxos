@@ -6,10 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/platform/node/index.ts": "./src/platform/browser/index.ts",
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./src/processors/console-processor.ts": "./src/processors/console-stub.ts"
   },
   "types": "dist/types/src/index.d.ts",
@@ -38,5 +36,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

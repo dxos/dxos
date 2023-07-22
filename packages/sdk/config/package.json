@@ -6,11 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/loaders/index.ts": "./src/loaders/browser.js",
-    "./src/plugin/index.ts": false,
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    "./src/plugin/index.ts": false
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -51,5 +49,32 @@
   },
   "typedoc": {
     "entryPoint": "src/index.ts"
+  },
+  "exports": {
+    "./plugin/esbuild-plugin": {
+      "node": "./dist/plugin/node/plugin/esbuild-plugin.cjs",
+      "require": "./dist/plugin/node/plugin/esbuild-plugin.cjs"
+    },
+    "./plugin/rollup-plugin": {
+      "node": "./dist/plugin/node/plugin/rollup-plugin.cjs",
+      "require": "./dist/plugin/node/plugin/rollup-plugin.cjs"
+    },
+    "./plugin/vite-plugin": {
+      "node": "./dist/plugin/node/plugin/vite-plugin.cjs",
+      "require": "./dist/plugin/node/plugin/vite-plugin.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "plugin/esbuild-plugin": [
+        "dist/types/src/plugin/esbuild-plugin.d.ts"
+      ],
+      "plugin/rollup-plugin": [
+        "dist/types/src/plugin/rollup-plugin.d.ts"
+      ],
+      "plugin/vite-plugin": [
+        "dist/types/src/plugin/vite-plugin.d.ts"
+      ]
+    }
   }
 }

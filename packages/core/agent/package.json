@@ -6,7 +6,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "bin": {
     "agent": "./bin/agent"
@@ -51,5 +50,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }

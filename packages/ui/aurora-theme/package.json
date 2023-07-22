@@ -6,7 +6,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/browser/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -40,5 +39,32 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    "./esbuild-plugin": {
+      "node": "./dist/plugin/node/esbuild-plugin.cjs",
+      "require": "./dist/plugin/node/esbuild-plugin.cjs"
+    },
+    "./plugin": {
+      "node": "./dist/plugin/node/plugin.cjs",
+      "require": "./dist/plugin/node/plugin.cjs"
+    },
+    "./theme.css": {
+      "node": "./dist/plugin/node/theme.css.cjs",
+      "require": "./dist/plugin/node/theme.css.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "esbuild-plugin": [
+        "dist/types/src/esbuild-plugin.d.ts"
+      ],
+      "plugin": [
+        "dist/types/src/plugin.d.ts"
+      ],
+      "theme.css": [
+        "dist/types/src/theme.css.d.ts"
+      ]
+    }
   }
 }

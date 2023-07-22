@@ -6,7 +6,10 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs"
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

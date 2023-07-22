@@ -7,7 +7,6 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "bin": {
     "agent": "./bin/agent.js"
@@ -51,5 +50,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    "./main": {
+      "node": "./dist/lib/node/main.cjs",
+      "require": "./dist/lib/node/main.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
   }
 }

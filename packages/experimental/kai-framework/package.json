@@ -8,13 +8,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": "./dist/lib/browser/index.mjs",
-    "./testing": "./dist/lib/browser/testing/index.mjs",
-    "./theme-extensions": "./theme-extensions.js"
-  },
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {

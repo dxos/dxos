@@ -9,19 +9,23 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
+      "node": "./dist/lib/node/index.cjs",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node/index.cjs"
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
     },
     "./proto": {
+      "node": "./dist/lib/node/proto/index.cjs",
       "browser": "./dist/lib/browser/proto/index.mjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+      "require": "./dist/lib/node/proto/index.cjs",
+      "import": "./dist/lib/browser/proto/index.mjs"
     }
   },
-  "types": "./dist/types/src/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "proto": [
-        "dist/types/src/proto"
+        "dist/types/src/proto/index.d.ts"
       ]
     }
   },

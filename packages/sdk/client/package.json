@@ -8,59 +8,65 @@
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
     "./devtools": {
+      "node": "./dist/lib/node/devtools/index.cjs",
       "browser": "./dist/lib/browser/devtools/index.mjs",
-      "import": "./dist/lib/browser/devtools/index.mjs",
       "require": "./dist/lib/node/devtools/index.cjs",
-      "node": "./dist/lib/node/devtools/index.cjs"
+      "import": "./dist/lib/browser/devtools/index.mjs"
     },
     "./diagnostics": {
+      "node": "./dist/lib/node/diagnostics/index.cjs",
       "browser": "./dist/lib/browser/diagnostics/index.mjs",
-      "import": "./dist/lib/browser/diagnostics/index.mjs",
       "require": "./dist/lib/node/diagnostics/index.cjs",
-      "node": "./dist/lib/node/diagnostics/index.cjs"
+      "import": "./dist/lib/browser/diagnostics/index.mjs"
     },
     "./echo": {
+      "node": "./dist/lib/node/echo/index.cjs",
       "browser": "./dist/lib/browser/echo/index.mjs",
-      "import": "./dist/lib/browser/echo/index.mjs",
       "require": "./dist/lib/node/echo/index.cjs",
-      "node": "./dist/lib/node/echo/index.cjs"
+      "import": "./dist/lib/browser/echo/index.mjs"
     },
     "./halo": {
+      "node": "./dist/lib/node/halo/index.cjs",
       "browser": "./dist/lib/browser/halo/index.mjs",
-      "import": "./dist/lib/browser/halo/index.mjs",
       "require": "./dist/lib/node/halo/index.cjs",
-      "node": "./dist/lib/node/halo/index.cjs"
+      "import": "./dist/lib/browser/halo/index.mjs"
+    },
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
     },
     "./invitations": {
+      "node": "./dist/lib/node/invitations/index.cjs",
       "browser": "./dist/lib/browser/invitations/index.mjs",
-      "import": "./dist/lib/browser/invitations/index.mjs",
       "require": "./dist/lib/node/invitations/index.cjs",
-      "node": "./dist/lib/node/invitations/index.cjs"
+      "import": "./dist/lib/browser/invitations/index.mjs"
     },
     "./mesh": {
+      "node": "./dist/lib/node/mesh/index.cjs",
       "browser": "./dist/lib/browser/mesh/index.mjs",
-      "import": "./dist/lib/browser/mesh/index.mjs",
       "require": "./dist/lib/node/mesh/index.cjs",
-      "node": "./dist/lib/node/mesh/index.cjs"
+      "import": "./dist/lib/browser/mesh/index.mjs"
+    },
+    "./proto": {
+      "node": "./dist/lib/node/proto/index.cjs",
+      "browser": "./dist/lib/browser/proto/index.mjs",
+      "require": "./dist/lib/node/proto/index.cjs",
+      "import": "./dist/lib/browser/proto/index.mjs"
     },
     "./services": {
+      "node": "./dist/lib/node/services/index.cjs",
       "browser": "./dist/lib/browser/services/index.mjs",
-      "import": "./dist/lib/browser/services/index.mjs",
       "require": "./dist/lib/node/services/index.cjs",
-      "node": "./dist/lib/node/services/index.cjs"
+      "import": "./dist/lib/browser/services/index.mjs"
     },
     "./testing": {
+      "node": "./dist/lib/node/testing/index.cjs",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
+      "import": "./dist/lib/browser/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -83,6 +89,9 @@
       ],
       "mesh": [
         "dist/types/src/mesh/index.d.ts"
+      ],
+      "proto": [
+        "dist/types/src/proto/index.d.ts"
       ],
       "services": [
         "dist/types/src/services/index.d.ts"

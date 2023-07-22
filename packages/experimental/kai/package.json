@@ -73,5 +73,14 @@
     "vite-plugin-mkcert": "^1.13.4",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
-  }
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts"
 }

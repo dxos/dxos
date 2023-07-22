@@ -7,7 +7,6 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -24,5 +23,11 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "require": "./dist/lib/node/index.cjs"
+    }
   }
 }

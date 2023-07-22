@@ -192,7 +192,12 @@ const setPackageExports = async (options: EsbuildExecutorOptions, context: Execu
     if(entrypointName === '') {
       types = 'dist/types/src/index.d.ts'
     } else {
-      typesVersions['*'][entrypointName] = [join('dist/types/src', entrypointName, 'index.d.ts')]
+      typesVersions['*'][entrypointName] = [
+        relativePath.endsWith('index.ts')
+        ? join('dist/types/src', entrypointName, 'index.d.ts')
+        : join('dist/types/src', `${entrypointName}.d.ts`),
+
+        ]
     }
 
   }
@@ -203,9 +208,15 @@ const setPackageExports = async (options: EsbuildExecutorOptions, context: Execu
   }
   packageJson.typesVersions = typesVersions;
 
+  if(Object.keys(packageJson.typesVersions['*']).length === 0) {
+    delete packageJson.typesVersions;
+  }
   delete packageJson.main;
   delete packageJson.module;
-  if(typeof packageJson.browser === 'string') {
+  if(packageJson.browser) {
+    delete packageJson.browser['./dist/lib/node/index.cjs'];
+  }
+  if(typeof packageJson.browser === 'string' || packageJson.browser && Object.keys(packageJson.browser).length === 0) {
     delete packageJson.browser;
   }
 

@@ -8,9 +8,10 @@
   "author": "info@dxos.org",
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node/index.cjs",
-      "default": "./dist/lib/node/index.cjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

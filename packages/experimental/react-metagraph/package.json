@@ -6,10 +6,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -46,5 +42,13 @@
   },
   "typedoc": {
     "entryPoint": "src/index.ts"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/lib/node/index.cjs",
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs"
+    }
   }
 }
