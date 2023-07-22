@@ -13,8 +13,9 @@
     "./dist/lib/node/testing.cjs": "./dist/lib/browser/testing.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "type": "module",
   "scripts": {
-    "run-tests": "node -r ts-node/register ./src/main.ts"
+    "run-tests": "NODE_OPTIONS='--es-module-specifier-resolution=node' ts-node ./src/main.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

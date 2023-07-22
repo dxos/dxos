@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "CommonJS",
+    "module": "ESNext",
     "outDir": "dist",
     "target": "esnext"
   },
@@ -17,6 +17,10 @@
   "include": [
     "src"
   ],
+  "ts-node": {
+    "esm": true,
+    "swc": true
+  },
   "references": [
     {
       "path": "../../common/async"
