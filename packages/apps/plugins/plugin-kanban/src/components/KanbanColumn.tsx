@@ -12,6 +12,7 @@ import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
+import { Styles } from '../styles';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 
@@ -41,7 +42,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
-    <div className='flex flex-col justify-center shadow rounded w-80 h-80 bg-neutral-50 dark:bg-neutral-900'>
+    <div className={mx('flex flex-col justify-center shadow rounded w-80 h-80', Styles.level1.bg)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -93,8 +94,9 @@ export const KanbanColumnComponent: FC<{
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
-          'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-900',
-          isDragging && 'bg-neutral-100 dark:bg-neutral-800',
+          'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px]',
+          Styles.level1.bg,
+          isDragging && Styles.level2.bg,
         )}
       >
         <div className='flex items-center mb-2 px-2'>

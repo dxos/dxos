@@ -11,6 +11,7 @@ import { SpaceProxy } from '@dxos/client';
 import { Text } from '@dxos/echo-schema';
 
 import type { KanbanModel } from '../props';
+import { Styles } from '../styles';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
@@ -31,9 +32,8 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
       ),
   };
 
-  // TODO(burdon): Style/color standards for panels, borders, text, etc.
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
+    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', Styles.level0.bg)}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>

@@ -12,6 +12,8 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 
+import { Styles } from '../styles';
+
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
@@ -40,9 +42,9 @@ export const KanbanItemComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
+      className={mx('flex grow', Styles.level0.border, isDragging && 'border-dashed')}
     >
-      <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'opacity-10')}>
+      <div className={mx('flex items-start grow p-1', Styles.level0.bg, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
