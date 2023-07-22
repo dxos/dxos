@@ -22,6 +22,7 @@ export type GraphNode<TDatum = any> = {
   icon?: FC;
   data?: TDatum; // nit about naming this
   parent?: GraphNode;
+  // TODO(burdon): Extend to enable moving between spaces.
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
   pluginChildren?: { [key: string]: GraphNode[] };

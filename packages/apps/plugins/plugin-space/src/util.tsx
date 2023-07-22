@@ -61,8 +61,9 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     icon: (props) => <Planet {...props} />,
     data: space,
     onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
-      console.log('[plugin-space]', 'on children rearrange', child.data?.meta, nextIndex);
+      console.log('[plugin-space]', 'on children rearrange', child.data?.meta, nextIndex); // TODO(burdon): Remove.
       if (child.data) {
+        // TODO(burdon): Decouple from object's data structure.
         child.data.meta = {
           ...child.data?.meta,
           index: nextIndex,

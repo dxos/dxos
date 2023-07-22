@@ -35,6 +35,7 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
       // TODO(burdon): Handle drag into other space.
       console.log('active', active);
       console.log('over', over, over?.data?.current?.treeItem);
+
       const node: GraphNode | null = get(active, 'data.current.treeitem', null);
       if (
         parent.onChildrenRearrange &&

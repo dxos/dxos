@@ -14,6 +14,7 @@ export default [
         'empty choose markdown from space message': 'None available; try creating a new one instead?',
         'chooser done label': 'Add selected',
         'create document label': 'Create new document',
+        'delete document label': 'Delete',
       },
     },
   },
