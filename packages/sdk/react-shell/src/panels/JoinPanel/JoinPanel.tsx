@@ -1,13 +1,14 @@
 //
 // Copyright 2023 DXOS.org
 //
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { DensityProvider, useId, useThemeContext } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { Viewport } from '../../components';
 import { JoinHeading } from './JoinHeading';
 import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
@@ -19,200 +20,127 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
-} from './view-states';
+} from './steps';
+
+const viewStyles = 'pbe-3 pli-3';
 
 export const JoinPanelImpl = ({
+  send,
+  activeView,
+  failed,
   mode,
-  state: joinState,
-  send: joinSend,
+  unredeemedCodes,
+  invitationStates,
   preventExit,
   onExit,
-  onDone,
+  onHaloDone,
+  onSpaceDone,
   exitActionParent,
   doneActionParent,
+  onHaloInvitationCancel,
+  onSpaceInvitationCancel,
+  onHaloInvitationAuthenticate,
+  onSpaceInvitationAuthenticate,
 }: JoinPanelImplProps) => {
   const titleId = useId('joinPanel__title');
   return (
     <DensityProvider density='fine'>
-      <JoinHeading {...{ mode, titleId, joinState, onExit, exitActionParent, preventExit }} />
-      <div role='none' className='is-full overflow-hidden'>
-        <div role='none' className='flex is-[1200%]' aria-live='polite'>
-          <AdditionMethodSelector
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'choosingAuthMethod' }),
-            }}
-          />
-          <IdentityInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'creatingIdentity' }),
-              method: 'create identity',
-            }}
-          />
-          <IdentityInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({ choosingIdentity: 'recoveringIdentity' }),
-              method: 'recover identity',
-            }}
-          />
-          <InvitationInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({
-                choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' },
-              }),
-              Kind: 'Halo',
-            }}
-          />
-          <InvitationRescuer
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' },
-                  },
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' },
-                  },
-                },
-              ].some(joinState.matches),
-              Kind: 'Halo',
-            }}
-          />
-          <InvitationAuthenticator
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' },
-                  },
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' },
-                  },
-                },
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: {
-                      acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
-                    },
-                  },
-                },
-              ].some(joinState.matches),
-              Kind: 'Halo',
-              ...(joinState.matches({
-                choosingIdentity: {
-                  acceptingHaloInvitation: {
-                    acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
-                  },
-                },
-              }) && { failed: true }),
-            }}
-          />
-          <InvitationAccepted
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  choosingIdentity: {
-                    acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' },
-                  },
-                },
-                'finishingJoiningHalo',
-              ].some(joinState.matches),
-              Kind: 'Halo',
-              doneActionParent,
-              onDone,
-            }}
-          />
-          <IdentityAdded
-            {...{
-              joinState,
-              joinSend,
-              mode,
-              active: joinState.matches({
-                choosingIdentity: 'confirmingAddedIdentity',
-              }),
-              doneActionParent,
-              onDone,
-            }}
-          />
-          <InvitationInput
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches({
-                acceptingSpaceInvitation: 'inputtingSpaceInvitationCode',
-              }),
-              Kind: 'Space',
-            }}
-          />
-          <InvitationRescuer
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' },
-                },
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' },
-                },
-              ].some(joinState.matches),
-              Kind: 'Space',
-            }}
-          />
-          <InvitationAuthenticator
-            {...{
-              joinState,
-              joinSend,
-              active: [
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' },
-                },
-                {
-                  acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' },
-                },
-                {
-                  acceptingSpaceInvitation: {
-                    acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
-                  },
-                },
-              ].some(joinState.matches),
-              Kind: 'Space',
-              ...(joinState.matches({
-                acceptingSpaceInvitation: {
-                  acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
-                },
-              }) && { failed: true }),
-            }}
-          />
-          <InvitationAccepted
-            {...{
-              joinState,
-              joinSend,
-              active: joinState.matches('finishingJoiningSpace'),
-              Kind: 'Space',
-              doneActionParent,
-              onDone,
-            }}
-          />
-        </div>
-      </div>
+      <JoinHeading {...{ titleId, mode, onExit, exitActionParent, preventExit }} />
+      <Viewport.Root activeView={activeView}>
+        <Viewport.Views>
+          <Viewport.View classNames={viewStyles} id='addition method selector'>
+            <AdditionMethodSelector send={send} active={activeView === 'addition method selector'} />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='create identity input'>
+            <IdentityInput send={send} method='create identity' active={activeView === 'create identity input'} />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='recover identity input'>
+            <IdentityInput send={send} method='recover identity' active={activeView === 'recover identity input'} />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='halo invitation input'>
+            <InvitationInput
+              send={send}
+              Kind='Halo'
+              active={activeView === 'halo invitation input'}
+              {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='halo invitation rescuer'>
+            <InvitationRescuer
+              send={send}
+              Kind='Halo'
+              active={activeView === 'halo invitation rescuer'}
+              invitationState={invitationStates?.Halo}
+              onInvitationCancel={onHaloInvitationCancel}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='halo invitation authenticator'>
+            <InvitationAuthenticator
+              send={send}
+              Kind='Halo'
+              active={activeView === 'halo invitation authenticator'}
+              onInvitationCancel={onHaloInvitationCancel}
+              onInvitationAuthenticate={onHaloInvitationAuthenticate}
+              {...(failed.has('Halo') && { failed: true })}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='halo invitation accepted'>
+            <InvitationAccepted
+              {...{
+                send,
+                Kind: 'Halo',
+                active: activeView === 'halo invitation accepted',
+                doneActionParent,
+                onDone: onHaloDone,
+              }}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='identity added'>
+            <IdentityAdded
+              {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
+              send={send}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='space invitation input'>
+            <InvitationInput
+              send={send}
+              Kind='Space'
+              active={activeView === 'space invitation input'}
+              {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='space invitation rescuer'>
+            <InvitationRescuer
+              send={send}
+              Kind='Space'
+              active={activeView === 'space invitation rescuer'}
+              invitationState={invitationStates?.Space}
+              onInvitationCancel={onSpaceInvitationCancel}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='space invitation authenticator'>
+            <InvitationAuthenticator
+              send={send}
+              Kind='Space'
+              active={activeView === 'space invitation authenticator'}
+              onInvitationCancel={onSpaceInvitationCancel}
+              onInvitationAuthenticate={onSpaceInvitationAuthenticate}
+              {...(failed.has('Space') && { failed: true })}
+            />
+          </Viewport.View>
+          <Viewport.View classNames={viewStyles} id='space invitation accepted'>
+            <InvitationAccepted
+              {...{
+                send,
+                Kind: 'Space',
+                active: activeView === 'space invitation accepted',
+                doneActionParent,
+                onDone: onSpaceDone,
+              }}
+            />
+          </Viewport.View>
+        </Viewport.Views>
+      </Viewport.Root>
     </DensityProvider>
   );
 };
@@ -223,7 +151,7 @@ export const JoinPanel = ({
   exitActionParent,
   onExit,
   doneActionParent,
-  onDone,
+  onDone: propsOnDone,
   preventExit,
 }: JoinPanelProps) => {
   const client = useClient();
@@ -249,7 +177,7 @@ export const JoinPanel = ({
   }, [joinService]);
 
   useEffect(() => {
-    // TODO(thure): Validate if this is sufficiently synchronous for iOS to move focus. It might not be!
+    // TODO(thure): Add `focusManaged` flag to `Viewport.View` so there’s no race condition.
     const stateStack = joinState.configuration[0].id.split('.');
     const innermostState = stateStack[stateStack.length - 1];
     const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
@@ -259,20 +187,180 @@ export const JoinPanel = ({
     }
   }, [joinState.value, hasIosKeyboard]);
 
+  const activeView = useMemo(() => {
+    switch (true) {
+      case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
+        return 'addition method selector';
+      case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
+        return 'create identity input';
+      case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
+        return 'recover identity input';
+      case joinState.matches({
+        choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' },
+      }):
+        return 'halo invitation input';
+      case [
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'connectingHaloInvitation' },
+          },
+        },
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'failingHaloInvitation' },
+          },
+        },
+      ].some(joinState.matches):
+        return 'halo invitation rescuer';
+      case [
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'inputtingHaloVerificationCode' },
+          },
+        },
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'authenticatingHaloVerificationCode' },
+          },
+        },
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: {
+              acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
+            },
+          },
+        },
+      ].some(joinState.matches):
+        return 'halo invitation authenticator';
+      case [
+        {
+          choosingIdentity: {
+            acceptingHaloInvitation: { acceptingRedeemedHaloInvitation: 'successHaloInvitation' },
+          },
+        },
+        'finishingJoiningHalo',
+      ].some(joinState.matches):
+        return 'halo invitation accepted';
+      case joinState.matches({
+        choosingIdentity: 'confirmingAddedIdentity',
+      }):
+        return 'identity added';
+      case joinState.matches({
+        acceptingSpaceInvitation: 'inputtingSpaceInvitationCode',
+      }):
+        return 'space invitation input';
+      case [
+        {
+          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'connectingSpaceInvitation' },
+        },
+        {
+          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'failingSpaceInvitation' },
+        },
+      ].some(joinState.matches):
+        return 'space invitation rescuer';
+      case [
+        {
+          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'inputtingSpaceVerificationCode' },
+        },
+        {
+          acceptingSpaceInvitation: { acceptingRedeemedSpaceInvitation: 'authenticatingSpaceVerificationCode' },
+        },
+        {
+          acceptingSpaceInvitation: {
+            acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
+          },
+        },
+      ].some(joinState.matches):
+        return 'space invitation authenticator';
+      case joinState.matches('finishingJoiningSpace'):
+        return 'space invitation accepted';
+      default:
+        return 'never';
+    }
+  }, [joinState]);
+
+  const failed = useMemo(() => {
+    const result: JoinPanelImplProps['failed'] = new Set();
+    switch (true) {
+      case joinState.matches({
+        choosingIdentity: {
+          acceptingHaloInvitation: {
+            acceptingRedeemedHaloInvitation: 'authenticationFailingHaloVerificationCode',
+          },
+        },
+      }):
+        result.add('Halo');
+        break;
+      case joinState.matches({
+        acceptingSpaceInvitation: {
+          acceptingRedeemedSpaceInvitation: 'authenticationFailingSpaceVerificationCode',
+        },
+      }):
+        result.add('Space');
+        break;
+    }
+    return result;
+  }, [joinState]);
+
+  const unredeemedCodes = useMemo(
+    () => ({
+      Halo: joinState.context.halo.unredeemedCode,
+      Space: joinState.context.space.unredeemedCode,
+    }),
+    [joinState],
+  );
+
+  const invitationStates = useMemo(
+    () => ({
+      Halo: joinState.context.halo.invitation?.state,
+      Space: joinState.context.space.invitation?.state,
+    }),
+    [joinState],
+  );
+
+  const onHaloDone = useCallback(() => {
+    propsOnDone?.({
+      identityKey: joinState.context.halo.invitation?.identityKey ?? null,
+      swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
+      spaceKey: joinState.context.halo.invitation?.spaceKey ?? null,
+    });
+  }, [joinState, propsOnDone]);
+
+  const onSpaceDone = useCallback(() => {
+    propsOnDone?.({
+      identityKey: joinState.context.space.invitation?.identityKey ?? null,
+      swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
+      spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
+    });
+  }, [joinState, propsOnDone]);
+
   return (
     <JoinPanelImpl
       {...{
-        mode,
-        state: joinState,
         send: joinSend,
+        activeView,
+        failed,
+        pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
+        unredeemedCodes,
+        invitationStates,
         identity,
-        hasIosKeyboard,
-        initialInvitationCode,
         preventExit,
         onExit,
-        onDone,
         exitActionParent,
         doneActionParent,
+        onHaloDone,
+        onSpaceDone,
+        onHaloInvitationCancel: () => joinState.context.halo.invitationObservable?.cancel(),
+        onSpaceInvitationCancel: () => joinState.context.space.invitationObservable?.cancel(),
+        onHaloInvitationAuthenticate: (authCode: string) => {
+          // todo(thure): Is this necessary? Shouldn’t the observable emit this?
+          joinSend({ type: 'authenticateHaloVerificationCode' });
+          return joinState.context.halo.invitationObservable?.authenticate(authCode);
+        },
+        onSpaceInvitationAuthenticate: (authCode: string) => {
+          joinSend({ type: 'authenticateSpaceVerificationCode' });
+          return joinState.context.space.invitationObservable?.authenticate(authCode);
+        },
       }}
     />
   );
