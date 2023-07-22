@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { AlertDialog, ThemeContext, AlertDialogContentProps, useId, useThemeContext } from '@dxos/aurora';
-import { osTx } from '@dxos/aurora-theme';
+import { AlertDialog, AlertDialogContentProps, useId } from '@dxos/aurora';
 
 import { JoinPanel, JoinPanelProps } from '../../panels';
+import { defaultSurface } from '../../styles';
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>,
@@ -15,26 +15,23 @@ export interface JoinDialogProps
 
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
-  const themeContextValue = useThemeContext();
 
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <AlertDialog.Root defaultOpen>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay>
-            <AlertDialog.Content>
-              <JoinPanel
-                {...{
-                  ...joinPanelProps,
-                  titleId,
-                  exitActionParent: <AlertDialog.Cancel asChild />,
-                  doneActionParent: <AlertDialog.Action asChild />,
-                }}
-              />
-            </AlertDialog.Content>
-          </AlertDialog.Overlay>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
-    </ThemeContext.Provider>
+    <AlertDialog.Root defaultOpen>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay>
+          <AlertDialog.Content aria-labelledby={titleId} classNames={defaultSurface}>
+            <JoinPanel
+              {...{
+                ...joinPanelProps,
+                titleId,
+                exitActionParent: <AlertDialog.Cancel asChild />,
+                doneActionParent: <AlertDialog.Action asChild />,
+              }}
+            />
+          </AlertDialog.Content>
+        </AlertDialog.Overlay>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 };

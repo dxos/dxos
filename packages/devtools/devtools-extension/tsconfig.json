@@ -1,10 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
     "composite": false,
     "declaration": false,
     "declarationMap": false,
+    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
