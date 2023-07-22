@@ -44,7 +44,9 @@ export const KanbanItemComponent: FC<{
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex grow', Styles.level0.border, isDragging && 'border-dashed')}
     >
-      <div className={mx('flex items-start grow p-1', Styles.level0.bg, isDragging && 'opacity-10')}>
+      <div
+        className={mx('flex items-start grow p-1', Styles.level0.bg, Styles.level0.text, isDragging && 'opacity-10')}
+      >
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
