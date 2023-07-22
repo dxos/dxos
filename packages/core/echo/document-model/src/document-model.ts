@@ -3,7 +3,7 @@
 //
 
 import get from 'lodash.get';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
@@ -24,7 +24,7 @@ class DocumentModelStateMachine implements StateMachine<DocumentModelState, Obje
   }
 
   reset(snapshot: ObjectSnapshot): void {
-    assert(snapshot.root);
+    invariant(snapshot.root);
     const object: DocumentModelState = { data: {} };
     ValueUtil.applyValue(object, 'data', snapshot.root);
     this._object = object;
@@ -60,9 +60,9 @@ export class MutationBuilder {
   }
 
   private _yjsTransact(key: string, tx: (arr: OrderedArray) => void): this {
-    assert(this._model);
+    invariant(this._model);
     const arrayInstance = this._model.get(key);
-    assert(arrayInstance instanceof OrderedArray);
+    invariant(arrayInstance instanceof OrderedArray);
     const mutation = arrayInstance.transact(() => {
       tx(arrayInstance);
     });
@@ -101,7 +101,7 @@ export class MutationBuilder {
   }
 
   async commit() {
-    assert(this._model);
+    invariant(this._model);
     return this._model._makeMutation({ mutations: this._mutations });
   }
 

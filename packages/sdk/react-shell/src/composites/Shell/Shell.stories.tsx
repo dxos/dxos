@@ -9,9 +9,9 @@ import React, { useState } from 'react';
 
 import { Button, ButtonGroup } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { PublicKey, ShellLayout } from '@dxos/client';
 import { Group, TooltipRoot, TooltipContent, TooltipTrigger } from '@dxos/react-appkit';
-import { useClient, useSpace, useSpaces } from '@dxos/react-client';
+import { PublicKey, ShellLayout, useClient } from '@dxos/react-client';
+import { useSpace, useSpaces } from '@dxos/react-client/echo';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { SpaceListItem } from '../../components';

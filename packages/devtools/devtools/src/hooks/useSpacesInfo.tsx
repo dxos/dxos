@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 export const useSpacesInfo = () => {
   const devtoolsHost = useDevtools();

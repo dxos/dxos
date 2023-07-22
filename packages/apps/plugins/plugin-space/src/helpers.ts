@@ -6,7 +6,7 @@ import { getIndices } from '@tldraw/indices';
 
 import { GraphNode } from '@braneframe/plugin-graph';
 import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy, subscribe, TypedObject, TypeFilter } from '@dxos/client';
+import { Query, SpaceProxy, subscribe, TypedObject, TypeFilter } from '@dxos/react-client/echo';
 import { defaultMap } from '@dxos/util';
 
 export { getIndices } from '@tldraw/indices';

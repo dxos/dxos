@@ -10,7 +10,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/react-client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain } from './components';

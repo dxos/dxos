@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
 import path from 'node:path';
+import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
@@ -59,8 +59,8 @@ export class BlobStore {
     const beginChunk = Math.floor(offset / metadata.chunkSize);
     const endChunk = Math.ceil((offset + length) / metadata.chunkSize);
 
-    assert(metadata.bitfield, 'Bitfield not present');
-    assert(metadata.bitfield.length >= endChunk, 'Invalid bitfield length');
+    invariant(metadata.bitfield, 'Bitfield not present');
+    invariant(metadata.bitfield.length >= endChunk, 'Invalid bitfield length');
 
     const present = BitField.count(metadata.bitfield, beginChunk, endChunk) === endChunk - beginChunk;
 
@@ -122,7 +122,7 @@ export class BlobStore {
     // Init metadata.
     let meta = await this._getMeta(chunk.id);
     if (!meta) {
-      assert(chunk.totalLength, 'totalLength is not present');
+      invariant(chunk.totalLength, 'totalLength is not present');
       meta = {
         id: chunk.id,
         state: BlobMeta.State.PARTIALLY_PRESENT,
@@ -137,8 +137,8 @@ export class BlobStore {
       throw new Error('Invalid chunk size');
     }
 
-    assert(meta.bitfield, 'Bitfield not present');
-    assert(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
+    invariant(meta.bitfield, 'Bitfield not present');
+    invariant(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
     // Write chunk.
     await this._getDataFile(chunk.id).write(chunk.chunkOffset, arrayToBuffer(chunk.payload));

@@ -10,7 +10,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';
-import { Space, SpaceProxy } from '@dxos/client';
+import { Space, SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
@@ -22,7 +22,7 @@ import { STACK_PLUGIN, isStack } from './util';
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const objectToGraphNode = (parent: GraphNode<Space>, object: StackType, index: string): GraphNode => ({
     id: object.id,
-    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
+    index: get(object, 'meta.index', index),
     label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <Article {...props} />,
     data: object,

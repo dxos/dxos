@@ -5,7 +5,7 @@
 import { Dispatch, SetStateAction } from 'react';
 
 import { Document } from '@braneframe/types';
-import { Space } from '@dxos/client';
+import { Space } from '@dxos/react-client/echo';
 
 export type EditorViewState = 'editor' | 'preview';
 

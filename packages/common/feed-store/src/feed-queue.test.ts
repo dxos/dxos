@@ -149,7 +149,7 @@ describe('FeedQueue', () => {
   test
     .skip('responds immediately when feed is appended', async () => {
       const key = await builder.keyring.createKey();
-      const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+      const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
       await feed.open();
 
       const queue = new FeedQueue<any>(feed);
@@ -201,7 +201,7 @@ describe('FeedQueue', () => {
 
   test('peeks ahead', async () => {
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
     const queue = new FeedQueue<any>(feed);
@@ -246,7 +246,7 @@ describe('FeedQueue', () => {
     const start = 2;
 
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
     // Write blocks.

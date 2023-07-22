@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, fromIFrame } from '@dxos/client';
 import { log } from '@dxos/log';
+import { Client, fromIFrame } from '@dxos/react-client';
 
 void (async () => {
   const client = new Client({ services: fromIFrame() });

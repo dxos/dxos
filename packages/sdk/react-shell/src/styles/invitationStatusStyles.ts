@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 export const inactiveBgColor = 'bg-neutral-100 dark:bg-neutral-600';
 export const activeBgColor = 'bg-primary-500 dark:bg-primary-400';

@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { humanize } from '@dxos/util';
 
 import { MasterDetailTable } from '../../components';

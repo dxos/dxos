@@ -4,6 +4,7 @@
     "composite": false,
     "declaration": false,
     "declarationMap": false,
+    "emitDeclarationOnly": false,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -44,6 +45,9 @@
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/config"

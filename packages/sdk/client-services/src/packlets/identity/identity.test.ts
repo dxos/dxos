@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 
-import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MetadataStore,
@@ -27,6 +26,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { afterTest, describe, test } from '@dxos/test';
 
+import { createDefaultModelFactory } from '../services';
 import { Identity } from './identity';
 
 const createStores = () => {

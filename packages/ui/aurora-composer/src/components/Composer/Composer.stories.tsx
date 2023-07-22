@@ -6,9 +6,9 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { useId } from '@dxos/aurora';
-import { PublicKey, Text } from '@dxos/client';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { useIdentity, useQuery, useSpace } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { Text, TextKind, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { ClientDecorator, setupPeersInSpace, textGenerator, useDataGenerator } from '@dxos/react-client/testing';
 
 import { ComposerDocument, schema } from '../../testing';

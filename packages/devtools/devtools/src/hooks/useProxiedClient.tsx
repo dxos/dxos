@@ -4,9 +4,8 @@
 
 import { useState } from 'react';
 
-import { Client, ClientServicesProxy } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientContextProps } from '@dxos/react-client';
+import { Client, ClientServicesProxy, ClientContextProps } from '@dxos/react-client';
 import { RpcPort } from '@dxos/rpc';
 
 /**

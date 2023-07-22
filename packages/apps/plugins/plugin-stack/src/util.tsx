@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EchoObject } from '@dxos/client';
+import { EchoObject } from '@dxos/client/echo';
 
 import { GenericStackObject, StackModel, StackObject, StackProperties } from './types';
 

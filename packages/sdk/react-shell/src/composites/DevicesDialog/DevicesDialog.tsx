@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { DialogContentProps, Dialog, ThemeContext, useId, useThemeContext } from '@dxos/aurora';
-import { osTx } from '@dxos/aurora-theme';
+import { DialogContentProps, Dialog, useId } from '@dxos/aurora';
 
 import { DevicesPanel, DevicesPanelProps } from '../../panels';
 
@@ -15,25 +14,21 @@ export interface DevicesDialogProps
 
 export const DevicesDialog = ({ ...devicesDialogProps }: DevicesDialogProps) => {
   const titleId = useId('spaceDialog__title');
-  const themeContextValue = useThemeContext();
-
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <Dialog.Root defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
-        <Dialog.Portal>
-          <Dialog.Overlay>
-            <Dialog.Content>
-              <DevicesPanel
-                {...{
-                  ...devicesDialogProps,
-                  titleId,
-                  doneActionParent: <Dialog.Close asChild />,
-                }}
-              />
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </ThemeContext.Provider>
+    <Dialog.Root defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
+      <Dialog.Portal>
+        <Dialog.Overlay>
+          <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(e) => e.preventDefault()}>
+            <DevicesPanel
+              {...{
+                ...devicesDialogProps,
+                titleId,
+                doneActionParent: <Dialog.Close asChild />,
+              }}
+            />
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
@@ -78,8 +78,8 @@ export class MutationQueue<T> {
    * The mutation is always appended to the end of the queue.
    */
   pushOptimistic(entry: MutationInQueue<T>) {
-    assert(entry.mutation.meta!.clientTag);
-    assert(
+    invariant(entry.mutation.meta!.clientTag);
+    invariant(
       this._optimistic.findIndex((message) => message.mutation.meta!.clientTag === entry.mutation.meta!.clientTag) ===
         -1,
       `Mutation with the same tag already exists: ${entry.mutation.meta!.clientTag}}`,
@@ -93,9 +93,9 @@ export class MutationQueue<T> {
    * Pops optimistic mutation with the same tag.
    */
   pushConfirmed(entry: MutationInQueue<T>): PushResult {
-    assert(entry.mutation.meta!.feedKey);
-    assert(typeof entry.mutation.meta!.seq === 'number');
-    assert(entry.mutation.meta!.timeframe);
+    invariant(entry.mutation.meta!.feedKey);
+    invariant(typeof entry.mutation.meta!.seq === 'number');
+    invariant(entry.mutation.meta!.timeframe);
 
     // Remove optimistic mutation from the queue.
     const optimisticIndex = !entry.mutation.meta!.clientTag

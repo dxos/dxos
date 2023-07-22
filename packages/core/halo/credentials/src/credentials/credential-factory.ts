@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Signer, subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
@@ -43,11 +43,11 @@ export const createCredential = async ({
   chain,
   nonce,
 }: CreateCredentialParams): Promise<Credential> => {
-  assert(assertion['@type'], 'Invalid assertion.');
-  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+  invariant(assertion['@type'], 'Invalid assertion.');
+  invariant(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
   if (chain) {
     const result = await verifyChain(chain, issuer, signingKey!);
-    assert(result.kind === 'pass', 'Invalid chain.');
+    invariant(result.kind === 'pass', 'Invalid chain.');
   }
 
   // Create the credential with proof value and chain fields missing (for signature payload).

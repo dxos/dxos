@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PropertiesProps } from '@dxos/client';
+import { PropertiesProps } from '@dxos/client/echo';
 
 export const expectedEpoch = 1;
 

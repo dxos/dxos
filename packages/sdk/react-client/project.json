@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/sdk/react-client/src/index.ts",
         "outputPath": "packages/sdk/react-client/dist/types",
@@ -17,7 +17,12 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "packages/sdk/react-client/src/devtools/index.ts",
+          "packages/sdk/react-client/src/echo/index.ts",
+          "packages/sdk/react-client/src/halo/index.ts",
           "packages/sdk/react-client/src/index.ts",
+          "packages/sdk/react-client/src/invitations/index.ts",
+          "packages/sdk/react-client/src/mesh/index.ts",
           "packages/sdk/react-client/src/testing/index.ts"
         ],
         "outputPath": "packages/sdk/react-client/dist/lib"
@@ -53,7 +58,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -70,7 +75,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/sdk/react-client/.storybook"
       }

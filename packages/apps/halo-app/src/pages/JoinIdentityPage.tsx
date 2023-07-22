@@ -6,9 +6,9 @@ import React, { useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useTranslation } from '@dxos/aurora';
-import type { Invitation } from '@dxos/client';
 import { Heading, JoinPanel } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
+import type { Invitation } from '@dxos/react-client/invitations';
 
 import { invitationCodeFromUrl } from '../util';
 

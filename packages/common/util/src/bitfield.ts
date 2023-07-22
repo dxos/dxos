@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 /**
  * Bitfield encodes indices from MSB to LSB.
@@ -49,7 +49,7 @@ export class BitField {
   }
 
   static and(first: Uint8Array, second: Uint8Array) {
-    assert(first.length === second.length, 'Bitfields must be of the same length');
+    invariant(first.length === second.length, 'Bitfields must be of the same length');
     const result = new Uint8Array(first.length);
     for (let i = 0; i < first.length; i++) {
       result[i] = first[i] & second[i];

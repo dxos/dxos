@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Duplex, pipeline } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,9 +34,9 @@ export class TestBuilder {
   }
 
   async connect(peer1: TestPeer, peer2: TestPeer) {
-    assert(peer1 !== peer2);
-    assert(this._peers.has(peer1));
-    assert(this._peers.has(peer1));
+    invariant(peer1 !== peer2);
+    invariant(this._peers.has(peer1));
+    invariant(this._peers.has(peer1));
 
     const connection1 = peer1.createConnection({ initiator: true, remotePeerId: peer2.peerId });
     const connection2 = peer2.createConnection({ initiator: false, remotePeerId: peer1.peerId });
@@ -48,9 +48,9 @@ export class TestBuilder {
   }
 
   async disconnect(peer1: TestPeer, peer2: TestPeer) {
-    assert(peer1 !== peer2);
-    assert(this._peers.has(peer1));
-    assert(this._peers.has(peer1));
+    invariant(peer1 !== peer2);
+    invariant(this._peers.has(peer1));
+    invariant(this._peers.has(peer1));
 
     const connection1 = Array.from(peer1.connections).find((connection) =>
       connection.remotePeerId.equals(peer2.peerId),
@@ -59,8 +59,8 @@ export class TestBuilder {
       connection.remotePeerId.equals(peer1.peerId),
     );
 
-    assert(connection1);
-    assert(connection2);
+    invariant(connection1);
+    invariant(connection2);
 
     await Promise.all([peer1.closeConnection(connection1), peer2.closeConnection(connection2)]);
   }
@@ -81,13 +81,13 @@ export class TestPeer {
   }
 
   async openConnection(connection: TestConnection) {
-    assert(this.connections.has(connection));
+    invariant(this.connections.has(connection));
     await connection.teleport.open();
     await this.onOpen(connection);
   }
 
   async closeConnection(connection: TestConnection) {
-    assert(this.connections.has(connection));
+    invariant(this.connections.has(connection));
     await this.onClose(connection);
     await connection.teleport.close();
     this.connections.delete(connection);

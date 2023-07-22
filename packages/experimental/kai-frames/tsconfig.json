@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
+    "emitDeclarationOnly": false,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -58,13 +59,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

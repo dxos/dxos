@@ -6,7 +6,8 @@ import { expect } from 'chai';
 
 import { Document } from '@braneframe/types';
 import { Trigger } from '@dxos/async';
-import { Client, Config, fromHost } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { fromHost } from '@dxos/client/services';
 import { Contact, DocumentStack, Organization } from '@dxos/kai-types';
 import { describe, test } from '@dxos/test';
 

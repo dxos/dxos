@@ -8,7 +8,7 @@ import React, { KeyboardEventHandler, useState } from 'react';
 import { Button, Input } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import type { PublicKey } from '@dxos/client';
-import { useQuery, useSpace } from '@dxos/react-client';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 
 import { Task } from '../proto';
 

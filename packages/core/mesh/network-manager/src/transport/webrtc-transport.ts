@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
@@ -95,7 +95,7 @@ export class WebRTCTransport implements Transport {
       return; // Ignore signals after close.
     }
 
-    assert(signal.payload.data, 'Signal message must contain signal data.');
+    invariant(signal.payload.data, 'Signal message must contain signal data.');
     this._peer.signal(signal.payload.data);
   }
 

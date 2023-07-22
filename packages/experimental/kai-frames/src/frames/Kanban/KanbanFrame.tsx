@@ -4,12 +4,11 @@
 
 import React, { FC, useState } from 'react';
 
-import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Contact, Project } from '@dxos/kai-types';
 import { tags } from '@dxos/kai-types/testing';
 import { Toolbar } from '@dxos/mosaic';
 import { Select } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { TypedObject, TypeFilter, useQuery } from '@dxos/react-client/echo';
 
 import { ProjectCard, ContactCard } from '../../cards';
 import { useFrameContext } from '../../hooks';

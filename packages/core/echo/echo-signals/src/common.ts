@@ -6,8 +6,8 @@ import type { signal } from '@preact/signals-core';
 
 import { registerSignalFactory } from '@dxos/echo-schema';
 
-export const constructRegisterSignalFactory = (constructSignal: typeof signal) => () =>
-  registerSignalFactory(() => {
+export const constructRegisterSignalFactory = (constructSignal: typeof signal) => () => {
+  const signalFactory = () => {
     const signal = constructSignal({});
 
     return {
@@ -18,4 +18,7 @@ export const constructRegisterSignalFactory = (constructSignal: typeof signal) =
         signal.value = {};
       },
     };
-  });
+  };
+
+  registerSignalFactory(signalFactory);
+};

@@ -83,8 +83,8 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   const parts: FormatParts = { level, message, error };
 
   if (meta) {
-    parts.path = getRelativeFilename(meta.file);
-    parts.line = meta.line;
+    parts.path = getRelativeFilename(meta.F);
+    parts.line = meta.L;
   }
 
   const context = getContextFromEntry(entry);

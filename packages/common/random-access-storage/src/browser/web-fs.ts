@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
+import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -63,7 +63,7 @@ export class WebFS implements Storage {
       return this._root;
     }
     this._root = await navigator.storage.getDirectory();
-    assert(this._root, 'Root is undefined');
+    invariant(this._root, 'Root is undefined');
     return this._root;
   }
 

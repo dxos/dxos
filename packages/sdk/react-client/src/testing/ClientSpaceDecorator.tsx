@@ -7,7 +7,8 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React, { PropsWithChildren, ReactNode, useState } from 'react';
 
-import { Client, EchoSchema, PublicKey, Space, SpaceProxy } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { EchoSchema, SpaceProxy, Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { MaybePromise } from '@dxos/util';
 

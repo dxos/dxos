@@ -20,13 +20,14 @@ import {
   type ShellController,
   ShellDisplay,
   ShellLayout,
-  type Space,
   IFrameClientServicesHost,
-} from '@dxos/client';
-import { MemoryShellRuntime } from '@dxos/client-services';
-import { useClient, useIdentity } from '@dxos/react-client';
+  useClient,
+} from '@dxos/react-client';
+import type { Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Shell } from './Shell';
+import { MemoryShellRuntime } from './memory-shell-runtime';
 
 export type ShellContextProps = {
   runtime?: MemoryShellRuntime;

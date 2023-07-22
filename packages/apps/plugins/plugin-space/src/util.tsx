@@ -11,7 +11,8 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
-import { EchoDatabase, Space, SpaceState, ShellLayout, TypedObject } from '@dxos/react-client';
+import { ShellLayout } from '@dxos/react-client';
+import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';

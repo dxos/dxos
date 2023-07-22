@@ -33,7 +33,7 @@ export class LoggingServiceImpl implements LoggingService {
 
         // Prevent logging feedback loop from logging service.
         if (
-          entry.meta?.file.includes('logging-service') ||
+          entry.meta?.F.includes('logging-service') ||
           (entry.context &&
             Object.values(entry.context).some((value) => typeof value === 'string' && value.includes('LoggingService')))
         ) {
@@ -50,8 +50,8 @@ export class LoggingServiceImpl implements LoggingService {
           timestamp: new Date(),
           meta: {
             // TODO(dmaretskyi): Fix proto.
-            file: entry.meta?.file ?? '',
-            line: entry.meta?.line ?? 0,
+            file: entry.meta?.F ?? '',
+            line: entry.meta?.L ?? 0,
           },
         };
 
@@ -94,7 +94,7 @@ const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean =
   if (request.filters === undefined) {
     return options === QueryLogsRequest.MatchingOptions.INCLUSIVE;
   } else {
-    return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? '', options));
+    return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? '', options));
   }
 };
 

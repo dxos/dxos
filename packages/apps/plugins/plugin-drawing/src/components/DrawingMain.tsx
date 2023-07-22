@@ -8,7 +8,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { Main, useThemeContext } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import '@tldraw/tldraw/tldraw.css';
 

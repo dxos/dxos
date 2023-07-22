@@ -5,8 +5,8 @@
 import React, { FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { useSpaces } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 
 import { List } from '../util';
 

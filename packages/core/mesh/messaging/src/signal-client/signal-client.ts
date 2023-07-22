@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
@@ -222,7 +222,7 @@ export class SignalClient implements SignalMethods {
   async sendMessage(msg: Message): Promise<void> {
     this._performance.sentMessages++;
     await this._clientReady.wait();
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
     await this._client!.sendMessage(msg);
   }
 
@@ -258,7 +258,7 @@ export class SignalClient implements SignalMethods {
 
   private _createClient() {
     log('creating client', { host: this._host, state: this._state });
-    assert(!this._client, 'Client already created');
+    invariant(!this._client, 'Client already created');
 
     this._connectionStarted = new Date();
 
@@ -357,7 +357,7 @@ export class SignalClient implements SignalMethods {
     await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from topics that are no longer needed.
     for (const { topic, peerId } of this._swarmStreams.keys()) {
@@ -397,7 +397,7 @@ export class SignalClient implements SignalMethods {
     await asyncTimeout(cancelWithContext(this._connectionCtx!, this._clientReady.wait()), 5_000);
     // Copy Client reference to avoid client change during the reconcile.
     const client = this._client!;
-    assert(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
+    invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
 
     // Unsubscribe from messages that are no longer needed.
     for (const peerId of this._messageStreams.keys()) {

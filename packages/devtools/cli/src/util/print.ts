@@ -4,9 +4,8 @@
 
 import { ux } from '@oclif/core';
 
-import { Space, SpaceMember } from '@dxos/client';
-import { Device } from '@dxos/protocols/proto/dxos/client/services';
-import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Space, SpaceMember } from '@dxos/client/echo';
+import { Device, Credential } from '@dxos/client/halo';
 
 import { maybeTruncateKey } from './util';
 

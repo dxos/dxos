@@ -3,7 +3,7 @@
 //
 
 import { ComposerModel, YText } from '@dxos/aurora-composer';
-import { EchoObject } from '@dxos/client';
+import { EchoObject } from '@dxos/client/echo';
 import { Plugin } from '@dxos/react-surface';
 
 import { MarkdownProperties, MarkdownProvides } from './types';

@@ -5,7 +5,7 @@ export default defineTemplate(
   ({ input: { react } }) => {
     return react ? text /* javascript */`
     import React, { useEffect, useState } from 'react';
-    import { useIdentity } from '@dxos/react-client';
+    import { useIdentity } from '@dxos/react-client/halo';
     import { Counter } from './Counter';
     
     export const Welcome = ({ name }: { name: string }) => {

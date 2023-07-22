@@ -3,8 +3,8 @@
 //
 
 import { Info, Plus, Trash, X } from '@phosphor-icons/react';
-import assert from 'assert';
 import React, { FC, useState } from 'react';
+import invariant from 'tiny-invariant';
 
 import { getSize } from '@dxos/aurora-theme';
 import { range } from '@dxos/util';
@@ -81,7 +81,7 @@ const Test = () => {
       }
 
       case 'delete': {
-        assert(section);
+        invariant(section);
         setSections((sections) => {
           const idx = sections.findIndex(({ id }) => id === section.id);
           if (idx !== -1) {

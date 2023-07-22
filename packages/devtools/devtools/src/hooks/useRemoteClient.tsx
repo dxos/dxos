@@ -4,10 +4,19 @@
 
 import { useState } from 'react';
 
-import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame, fromHost, fromSocket } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientContextProps } from '@dxos/react-client';
+import {
+  Config,
+  Defaults,
+  Dynamics,
+  Client,
+  ClientServices,
+  DEFAULT_CLIENT_ORIGIN,
+  fromIFrame,
+  fromHost,
+  fromSocket,
+  ClientContextProps,
+} from '@dxos/react-client';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
@@ -36,7 +45,7 @@ const createClientContext = async (): Promise<ClientContextProps> => {
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-    const servicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
+    const servicesProvider = await (remoteSource ? fromIFrame(config) : fromHost(config));
     const client = new Client({ config, services: servicesProvider });
     await client.initialize();
 

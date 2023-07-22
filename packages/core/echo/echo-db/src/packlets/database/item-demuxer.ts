@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -41,14 +41,14 @@ export class ItemDemuxer {
 
       for (const object of batch.objects ?? []) {
         const { objectId, genesis, mutations } = object;
-        assert(objectId);
+        invariant(objectId);
 
         //
         // New item.
         //
         if (genesis) {
           const { modelType } = genesis;
-          assert(modelType);
+          invariant(modelType);
 
           const entity = this._itemManager.constructItem({
             itemId: objectId,
@@ -58,7 +58,7 @@ export class ItemDemuxer {
           setMetadataOnObject(object, meta);
           entity.resetToSnapshot(object);
 
-          assert(entity.id === objectId);
+          invariant(entity.id === objectId);
         } else {
           if (mutations && mutations.length > 0) {
             for (const mutation of mutations) {
@@ -87,9 +87,9 @@ export class ItemDemuxer {
 
     log(`Restoring ${items.length} items from snapshot.`);
     for (const item of sortItemsTopologically(items)) {
-      assert(item.objectId);
-      assert(item.genesis?.modelType);
-      assert(item.snapshot);
+      invariant(item.objectId);
+      invariant(item.genesis?.modelType);
+      invariant(item.snapshot);
 
       const obj = this._itemManager.constructItem({
         itemId: item.objectId,
@@ -111,7 +111,7 @@ export const sortItemsTopologically = (items: EchoObject[]): EchoObject[] => {
   while (snapshots.length !== items.length) {
     const prevLength = snapshots.length;
     for (const item of items) {
-      assert(item.objectId);
+      invariant(item.objectId);
       if (!seenIds.has(item.objectId) && (!item.snapshot?.parentId || seenIds.has(item.snapshot.parentId))) {
         snapshots.push(item);
         seenIds.add(item.objectId);

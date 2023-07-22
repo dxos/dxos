@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "compile": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/log-hook/src/index.ts",
         "outputPath": "tools/log-hook/dist",
@@ -14,7 +14,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

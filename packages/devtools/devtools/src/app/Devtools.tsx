@@ -6,9 +6,8 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { DensityProvider } from '@dxos/aurora';
-import { ClientServices } from '@dxos/client';
 import { appkitTranslations, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
-import { Client, ClientContext } from '@dxos/react-client';
+import { ClientServices, Client, ClientContext } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';

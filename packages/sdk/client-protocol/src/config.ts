@@ -3,9 +3,6 @@
 //
 
 import { ConfigProto } from '@dxos/config';
-import { DocumentModel } from '@dxos/document-model';
-import { ModelFactory } from '@dxos/model-factory';
-import { TextModel } from '@dxos/text-model';
 
 export const DEFAULT_INTERNAL_CHANNEL = 'dxos:vault';
 export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';
@@ -43,9 +40,3 @@ export const DX_RUNTIME = '/tmp/dx/run';
 export const ENV_DX_CONFIG = 'DX_CONFIG';
 export const ENV_DX_PROFILE = 'DX_PROFILE';
 export const ENV_DX_PROFILE_DEFAULT = 'default';
-
-// TODO(burdon): Factor out to spaces.
-// TODO(burdon): Defaults (with TextModel).
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};

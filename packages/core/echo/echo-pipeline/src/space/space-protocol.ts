@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { discoveryKey, sha256 } from '@dxos/crypto';
+import { discoveryKey, subtleCrypto } from '@dxos/crypto';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -61,7 +61,7 @@ export class SpaceProtocol {
   public readonly blobSync: BlobSync;
 
   @logInfo
-  private readonly _topic: PublicKey;
+  private readonly _topic: Promise<PublicKey>;
 
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
   private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
@@ -88,7 +88,7 @@ export class SpaceProtocol {
     this._onAuthFailure = onAuthFailure;
     this.blobSync = new BlobSync({ blobStore });
 
-    this._topic = PublicKey.from(discoveryKey(sha256(topic.toHex())));
+    this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -122,7 +122,7 @@ export class SpaceProtocol {
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
       peerId: this._swarmIdentity.peerKey,
-      topic: this._topic,
+      topic: await this._topic,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._topic}`,
     });

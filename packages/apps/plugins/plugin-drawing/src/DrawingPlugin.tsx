@@ -10,7 +10,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Drawing as DrawingType } from '@braneframe/types';
-import { SpaceProxy } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DrawingMain } from './components';

@@ -13,7 +13,7 @@ import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Document as DocumentType } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, TextKind } from '@dxos/aurora-composer';
-import { Space, SpaceProxy } from '@dxos/client';
+import { Space, SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {

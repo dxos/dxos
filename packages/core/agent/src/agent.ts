@@ -8,7 +8,8 @@ import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
-import { fromHost, ClientServices, Config, Client, ClientServicesProvider, PublicKey } from '@dxos/client';
+import { Config, Client, PublicKey } from '@dxos/client';
+import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
@@ -51,15 +52,14 @@ export class Agent {
     return this;
   }
 
-  // TODO(mykola): Remove functions flag, and use different ports for different profiles.
-  async start({ functions = false }: { functions?: boolean } = {}) {
+  async start() {
     log('starting...');
 
     // TODO(burdon): Check if running.
     // await this.stop();
 
     // Create client services.
-    this._clientServices = fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
+    this._clientServices = await fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
     await this._clientServices.open();
 
     // Create client.
