@@ -126,7 +126,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['download all docs in space label', { ns: 'composer' }],
           icon: (props) => <Download {...props} />,
           invoke: async (t) => {
-            const backupBlob = await backupSpace(space, t('untitled document title'));
+            const backupBlob = await backupSpace(space, t('document title placeholder'));
             const url = URL.createObjectURL(backupBlob);
             const element = document.createElement('a');
             element.setAttribute('href', url);

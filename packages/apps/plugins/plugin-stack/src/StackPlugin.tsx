@@ -9,7 +9,7 @@ import React from 'react';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { Stack } from '@braneframe/types';
+import { Stack as StackType } from '@braneframe/types';
 import { Space, SpaceProxy } from '@dxos/client';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
@@ -20,10 +20,10 @@ import { StackPluginProvides, StackProvides } from './types';
 import { STACK_PLUGIN, isStack } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode<Space>, object: Stack, index: string): GraphNode => ({
+  const objectToGraphNode = (parent: GraphNode<Space>, object: StackType, index: string): GraphNode => ({
     id: object.id,
     index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
-    label: object.title ?? 'New Stack', // TODO(burdon): Translation.
+    label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <Article {...props} />,
     data: object,
     parent,
@@ -42,7 +42,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     },
   });
 
-  const adapter = new GraphNodeAdapter(Stack.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter(StackType.filter(), objectToGraphNode);
 
   return {
     meta: {
@@ -86,7 +86,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               label: ['create stack label', { ns: STACK_PLUGIN }],
               icon: (props) => <Plus {...props} />,
               invoke: async () => {
-                const object = space.db.add(new Stack());
+                const object = space.db.add(new StackType());
                 if (treeViewPlugin) {
                   treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
                 }

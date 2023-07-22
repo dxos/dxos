@@ -46,7 +46,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const objectToGraphNode = (parent: GraphNode<Space>, object: DocumentType, index: string): GraphNode => ({
     id: object.id,
     index: get(object, 'meta.index', index),
-    label: object.title ?? 'New Document', // TODO(burdon): Translation.
+    label: object.title ?? ['kanban title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) => (object.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
     data: object,
     parent,
