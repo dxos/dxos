@@ -28,12 +28,11 @@ export const createFileProcessor = ({ path, levels }: { path: string; levels: Lo
       ...entry,
       timestamp: Date.now(),
       meta: {
-        ...entry.meta,
+        file: entry.meta?.F,
+        line: entry.meta?.L,
       },
       context: jsonify(getContextFromEntry(entry)),
     };
-    delete record.meta?.bugcheck;
-    delete record.meta?.scope;
     appendFileSync(fd, JSON.stringify(record) + '\n');
   };
 };

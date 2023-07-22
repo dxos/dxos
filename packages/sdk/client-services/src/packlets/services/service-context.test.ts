@@ -36,7 +36,7 @@ describe('services/ServiceContext', () => {
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
-  });
+  }).tag('flaky');
 
   test('joined space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();

@@ -3,6 +3,7 @@
 //
 
 import { LogConfig, LogFilter, LogLevel } from './config';
+import { CallMetadata } from './meta';
 import { gatherLogInfoFromScope } from './scope';
 
 /**
@@ -11,37 +12,13 @@ import { gatherLogInfoFromScope } from './scope';
 export type LogContext = Record<string, any> | Error | any;
 
 /**
- * Generated meta data from source map.
- */
-// TODO(burdon): Protobuf structure?
-export interface LogMetadata {
-  file: string;
-  line: number;
-
-  /**
-   * Value of `this` at the site of the log call.
-   * Will be set to the class instance if the call is inside a method, or to the `globalThis` (`window` or `global`) otherwise.
-   */
-  scope: any | undefined;
-
-  // Useful for pre-processor hook debugging.
-  bugcheck?: string;
-
-  /**
-   * A callback that will invoke the provided function with provided arguments.
-   * Useful in the browser to force a `console.log` call to have a certain stack-trace.
-   */
-  callSite?: (fn: Function, args: any[]) => void;
-}
-
-/**
  * Record for current log line.
  */
 export interface LogEntry {
   level: LogLevel;
   message: string;
   context?: LogContext;
-  meta?: LogMetadata;
+  meta?: CallMetadata;
   error?: Error;
 }
 
@@ -61,14 +38,14 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
   if (filters === undefined) {
     return true;
   } else {
-    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.file ?? ''));
+    return filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? ''));
   }
 };
 
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
   let context;
   if (entry.meta) {
-    const scopeInfo = gatherLogInfoFromScope(entry.meta.scope);
+    const scopeInfo = gatherLogInfoFromScope(entry.meta.S);
     if (Object.keys(scopeInfo).length > 0) {
       context = Object.assign(context ?? {}, scopeInfo);
     }
