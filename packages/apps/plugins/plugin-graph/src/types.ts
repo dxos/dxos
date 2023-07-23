@@ -23,6 +23,7 @@ export type GraphNode<TDatum = any> = {
   data?: TDatum; // nit about naming this
   parent?: GraphNode;
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
+  onMoveNode?: (source: GraphNode, target: GraphNode, child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
   pluginChildren?: { [key: string]: GraphNode[] };
   pluginActions?: { [key: string]: GraphNodeAction[] };
