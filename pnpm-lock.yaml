@@ -894,6 +894,7 @@ importers:
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -908,7 +909,6 @@ importers:
     devDependencies:
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-splitview': link:../plugin-splitview
-      '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
