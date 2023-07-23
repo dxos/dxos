@@ -1172,6 +1172,7 @@ importers:
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
@@ -1182,7 +1183,6 @@ importers:
       '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-markdown': link:../plugin-markdown
       '@braneframe/plugin-splitview': link:../plugin-splitview
-      '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora

@@ -6,8 +6,10 @@ import React, { FC, KeyboardEvent, useState } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
 
+import { THREAD_PLUGIN } from '../props';
+
 export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
-  const { t } = useTranslation('dxos.org/plugin/thread');
+  const { t } = useTranslation(THREAD_PLUGIN);
   const [text, setText] = useState('');
 
   const handleMessage = () => {

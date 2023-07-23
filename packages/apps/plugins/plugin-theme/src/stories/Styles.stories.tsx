@@ -7,6 +7,7 @@ import React, { PropsWithChildren } from 'react';
 import { mx } from '@dxos/aurora-theme';
 
 import '@dxosTheme';
+
 import { Styles } from '../styles';
 
 const Panel = ({ children, level }: PropsWithChildren & { level: string }) => {

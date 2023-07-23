@@ -4,6 +4,7 @@
 
 import React, { FC } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { blockSeparator, mx } from '@dxos/aurora-theme';
@@ -11,7 +12,6 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { Text } from '@dxos/echo-schema';
 
 import type { KanbanModel } from '../props';
-import { Styles } from '../styles';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?

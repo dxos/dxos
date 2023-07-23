@@ -7,12 +7,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
-
-import { Styles } from '../styles';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');

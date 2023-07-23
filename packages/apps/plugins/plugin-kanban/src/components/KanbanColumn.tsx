@@ -8,11 +8,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { Styles } from '../styles';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 
