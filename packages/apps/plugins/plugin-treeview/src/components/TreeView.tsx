@@ -32,31 +32,28 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
-      // TODO(burdon): Handle drag into other space.
-      // console.log('active', active);
-      // console.log('over', over, over?.data?.current?.treeItem);
-
-      const node: GraphNode | null = get(active, 'data.current.treeitem', null);
-      if (
-        parent.onChildrenRearrange &&
-        node &&
-        get(node, 'parent.id') === parent.id &&
-        get(over, 'data.current.treeitem.parent.id') === parent.id
-      ) {
-        dnd.overlayDropAnimation = 'around'; // TODO(burdon): Use 'into' to signify added.
-        const overId = get(over, 'data.current.treeitem.id', null);
-        if (overId !== null && overId !== node.id) {
-          const activeIndex = itemsInOrder.findIndex(({ id }) => id === node.id);
-          const overIndex = itemsInOrder.findIndex(({ id }) => id === overId);
-          parent.onChildrenRearrange(
-            node,
-            overIndex < 1
-              ? getIndexBelow(itemsInOrder[0].index)
-              : getIndexBetween(
-                  itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1].index,
-                  itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex]?.index,
-                ),
-          );
+      // TODO(burdon): Use traversal instead of `get`?
+      const activeNode = active?.data?.current?.treeitem as GraphNode | null;
+      const overNode = over?.data?.current?.treeitem as GraphNode | null;
+      if (activeNode && overNode && activeNode.parent?.id === parent.id) {
+        if (parent.onChildrenRearrange && overNode.parent?.id === parent.id) {
+          if (overNode.id !== activeNode.id) {
+            dnd.overlayDropAnimation = 'around';
+            const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
+            const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
+            parent.onChildrenRearrange(
+              activeNode,
+              overIndex < 1
+                ? getIndexBelow(itemsInOrder[0].index)
+                : getIndexBetween(
+                    itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1].index,
+                    itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex]?.index,
+                  ),
+            );
+          }
+        } else if (overNode.parent?.onMoveNode) {
+          dnd.overlayDropAnimation = 'into';
+          overNode.parent?.onMoveNode(overNode.parent, activeNode.parent!, activeNode, 'a1'); // TODO(burdon): Index.
         }
       }
       setActiveId(null);
