@@ -52,7 +52,7 @@ export type DataSpaceParams = {
 
 @trackLeaks('open', 'close')
 export class DataSpace {
-  private readonly _ctx = new Context();
+  private _ctx = new Context();
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -60,7 +60,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPlugin  = new NotarizationPlugin();
+  private readonly _notarizationPlugin = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache;
 
@@ -143,6 +143,7 @@ export class DataSpace {
     await this._inner.open();
     this._state = SpaceState.CONTROL_ONLY;
     this.stateUpdate.emit();
+    this.metrics = {};
     this.metrics.open = new Date();
   }
 
@@ -154,6 +155,7 @@ export class DataSpace {
   private async _close() {
     this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
+    this._ctx = new Context();
 
     await this.authVerifier.close();
 
@@ -213,14 +215,16 @@ export class DataSpace {
     log('Writable feeds created');
     this.stateUpdate.emit();
 
-    this.notarizationPlugin.setWriter(
-      createMappedFeedWriter<Credential, FeedMessage.Payload>(
-        (credential) => ({
-          credential: { credential },
-        }),
-        this._inner.controlPipeline.writer,
-      ),
-    );
+    if (!this.notarizationPlugin.hasWriter) {
+      this.notarizationPlugin.setWriter(
+        createMappedFeedWriter<Credential, FeedMessage.Payload>(
+          (credential) => ({
+            credential: { credential },
+          }),
+          this._inner.controlPipeline.writer,
+        ),
+      );
+    }
 
     await this._inner.initializeDataPipeline();
 
@@ -327,7 +331,7 @@ export class DataSpace {
     if (this._state !== SpaceState.INACTIVE) {
       throw new SystemError('Invalid operation');
     }
-    
+
     await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
     await this._open();
     this.initializeDataPipelineAsync();
