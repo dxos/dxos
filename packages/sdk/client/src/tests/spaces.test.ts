@@ -18,6 +18,8 @@ import { range } from '@dxos/util';
 import { Client } from '../client';
 import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { SpaceState } from '../echo';
+import waitForExpect from 'wait-for-expect';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -80,8 +82,6 @@ describe('Spaces', () => {
     }
 
     await client.destroy();
-
-    log.break();
 
     await client.initialize();
 
@@ -205,5 +205,36 @@ describe('Spaces', () => {
       await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
       expect(feed2.has(amount + 1)).to.be.true;
     }
+  });
+
+  test.only('spaces can be activated and deactivated', async () => {
+    const testBuilder = new TestBuilder();
+    const services = testBuilder.createLocal();
+    const client = new Client({ services });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.createSpace();
+
+    const { id } = space.db.add(new Expando({ data: 'test' }));
+    await space.db.flush();
+
+    debugger;
+    await space.internal.deactivate();
+    // Since updates are throttled we need to wait for the state to change.
+    await waitForExpect(() => {
+      expect(space.state.get()).to.equal(SpaceState.INACTIVE);
+    }, 1000);
+
+    await space.internal.activate();
+    await space.waitUntilReady();
+    await waitForExpect(() => {
+      expect(space.state.get()).to.equal(SpaceState.READY);
+    }, 1000);
+    expect(space.db.getObjectById(id)).to.exist;
+
+    space.db.getObjectById(id)!.data = 'test2';    
+    await space.db.flush();
   });
 });

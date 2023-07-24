@@ -56,11 +56,11 @@ export class SpacesServiceImpl implements SpacesService {
     if (state) {
       switch (state) {
         case SpaceState.ACTIVE:
-
+          await space.activate();
           break;
 
         case SpaceState.INACTIVE:
-
+          await space.deactivate();
           break;
         default:
           throw new ApiError(`Invalid space state`);

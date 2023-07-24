@@ -19,6 +19,19 @@ export interface SpaceInternal {
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
+
+  /**
+   * Activates the space enabling the use of the database and starts replication with peers.
+   * The setting is persisted on the local device.
+   */
+  activate(): Promise<void>;
+
+  /**
+   * Deactivates the space stopping replication with other peers.
+   * The space will not auto-open on the next app launch.
+   * The setting is persisted on the local device.
+   */
+  deactivate(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).

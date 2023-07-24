@@ -246,6 +246,6 @@ describe('DataSpaceManager', () => {
       await space.activate();
       await asyncTimeout(space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY), 500);
       await testLocalDatabase(space.dataPipeline);
-    }).timeout(10_0000000)
+    });
   })
 });
