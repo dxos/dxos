@@ -22,7 +22,6 @@ export class ExtensionManager {
 
     const context = await getPersistentContext(this._browserName);
     this.extensionId = await asyncTimeout(extensionId(context), 2000);
-
     const { page } = await setupPage(context, {
       url: `chrome-extension://${this.extensionId}/popup.html`,
       // TODO(wittjosiah): Use data-testid.

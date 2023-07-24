@@ -11,6 +11,7 @@
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
+    "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-drawing": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-kanban": "workspace:*",

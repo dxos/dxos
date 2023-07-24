@@ -2,14 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Article, ArticleMedium, Trash } from '@phosphor-icons/react';
-import get from 'lodash.get';
-import React from 'react';
-
-import { GraphNode } from '@braneframe/plugin-graph';
-import { Document } from '@braneframe/types';
-import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/client/echo';
+import { ComposerModel, YText } from '@dxos/aurora-composer';
+import { EchoObject } from '@dxos/client/echo';
 import { Plugin } from '@dxos/react-surface';
 
 import { MarkdownProperties, MarkdownProvides } from './types';
@@ -46,25 +40,3 @@ type MarkdownPlugin = Plugin<MarkdownProvides>;
 export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
-
-export const documentToGraphNode = (document: Document, parent: GraphNode<Space>, index: string): GraphNode => ({
-  id: document.id,
-  index: get(document, 'meta.index', index),
-  label: document.title ?? 'New Document', // TODO(burdon): Translation.
-  icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
-  data: document,
-  parent,
-  pluginActions: {
-    [MARKDOWN_PLUGIN]: [
-      {
-        id: 'delete',
-        index: 'a1',
-        label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
-        icon: (props) => <Trash {...props} />,
-        invoke: async () => {
-          parent.data?.db.remove(document);
-        },
-      },
-    ],
-  },
-});

@@ -2,19 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, ArticleMedium } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
+import { Article, ArticleMedium, Plus, Trash } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
-import { GraphProvides } from '@braneframe/plugin-graph';
+import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { Document } from '@braneframe/types';
-import { UnsubscribeCallback } from '@dxos/async';
-import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { Query, SpaceProxy, subscribe } from '@dxos/client/echo';
+import { Document as DocumentType } from '@braneframe/types';
+import { ComposerModel, MarkdownComposerProps, TextKind } from '@dxos/aurora-composer';
+import { Space, SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import {
@@ -28,7 +27,6 @@ import translations from './translations';
 import { MarkdownProperties } from './types';
 import {
   MARKDOWN_PLUGIN,
-  documentToGraphNode,
   isMarkdown,
   isMarkdownContent,
   isMarkdownPlaceholder,
@@ -44,8 +42,30 @@ type MarkdownPluginProvides = GraphProvides &
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
-  const queries = new Map<string, Query<Document>>();
-  const subscriptions = new Map<string, UnsubscribeCallback>();
+
+  const objectToGraphNode = (parent: GraphNode<Space>, object: DocumentType, index: string): GraphNode => ({
+    id: object.id,
+    index: get(object, 'meta.index', index),
+    label: object.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
+    icon: (props) => (object.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
+    data: object,
+    parent,
+    pluginActions: {
+      [MARKDOWN_PLUGIN]: [
+        {
+          id: 'delete',
+          index: 'a1',
+          label: ['delete document label', { ns: MARKDOWN_PLUGIN }],
+          icon: (props) => <Trash {...props} />,
+          invoke: async () => {
+            parent.data?.db.remove(object);
+          },
+        },
+      ],
+    },
+  });
+
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), objectToGraphNode);
 
   const MarkdownMainStandalone = ({
     data: [model, properties],
@@ -75,9 +95,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       });
     },
     unload: async () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      subscriptions.clear();
-      queries.clear();
+      adapter.clear();
     },
     provides: {
       graph: {
@@ -87,36 +105,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }
 
           const space = parent.data;
-          let query = queries.get(parent.id);
-          if (!query) {
-            query = space.db.query(Document.filter());
-            queries.set(parent.id, query);
-          }
-          if (!subscriptions.has(parent.id)) {
-            subscriptions.set(
-              parent.id,
-              query.subscribe(() => emit()),
-            );
-          }
-
-          const documentIndices = getIndices(query.objects.length);
-          query.objects.forEach((document, index) => {
-            if (!subscriptions.has(document.id)) {
-              subscriptions.set(
-                document.id,
-                document[subscribe](() => {
-                  if (document.__deleted) {
-                    subscriptions.delete(document.id);
-                    return;
-                  }
-
-                  emit(documentToGraphNode(document, parent, documentIndices[index]));
-                }),
-              );
-            }
-          });
-
-          return query.objects.map((document, index) => documentToGraphNode(document, parent, documentIndices[index]));
+          return adapter.createNodes(space, parent, emit);
         },
         actions: (parent, _, plugins) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -134,7 +123,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               icon: (props) => <Plus {...props} />,
               disposition: 'toolbar',
               invoke: async () => {
-                const object = space.db.add(new Document());
+                const object = space.db.add(new DocumentType());
                 if (treeViewPlugin) {
                   treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
                 }

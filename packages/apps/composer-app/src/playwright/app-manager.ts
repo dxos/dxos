@@ -11,7 +11,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
 
-  private _inIframe: boolean | undefined = undefined;
+  private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
   constructor(private readonly _browser: Browser, inIframe?: boolean) {
