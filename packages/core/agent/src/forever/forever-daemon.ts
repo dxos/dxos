@@ -31,10 +31,13 @@ export class ForeverDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-    return (
-      isLocked(lockFilePath(profile)) ||
-      (await this.list()).some((process) => process.profile === profile && process.running)
-    );
+
+    const locked = await isLocked(lockFilePath(profile));
+    const running = (await this.list()).some((process) => process.profile === profile && process.running);
+
+    console.log('???', { profile, locked, running });
+
+    return locked || running;
   }
 
   async list(): Promise<ProcessInfo[]> {
