@@ -47,7 +47,6 @@ const getBlockProperties = (identityKey: PublicKey) => ({
 // return dailyBlocks;
 // };
 
-// TODO(burdon): Different width form factors.
 export const ThreadChannel: FC<{
   identityKey: PublicKey;
   thread: ThreadType;
@@ -69,7 +68,7 @@ export const ThreadChannel: FC<{
   return (
     <div
       className={mx(
-        'flex flex-col h-full w-full min-w-[300px] md:max-w-[480px] overflow-hidden m-4 p-2',
+        'flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-4 p-2',
         Styles.level0.bg,
       )}
     >

@@ -23,7 +23,7 @@ describe.skip('ChatModel', () => {
   const createChatModel = (): ChatModel => {
     const config = getConfig()!;
     return new ChatModel({
-      organization: getKey(config, 'com.openai.org_id')!,
+      orgId: getKey(config, 'com.openai.org_id')!,
       apiKey: getKey(config, 'com.openai.api_key')!,
     });
   };
