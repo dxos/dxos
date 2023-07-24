@@ -89,7 +89,7 @@ export class ForeverDaemon implements Daemon {
           params?.config ? `--config=${params.config}` : '',
         ],
         uid: profile,
-        max: 1,
+        max: 0,
         logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.

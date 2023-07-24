@@ -12,8 +12,8 @@ export default class Stop extends BaseCommand<typeof Stop> {
 
   static override flags = {
     ...BaseCommand.flags,
-    all: Flags.boolean({ description: 'Stop all agents.' }),
-    force: Flags.boolean({ description: 'Force stop.' }),
+    all: Flags.boolean({ char: 'a', description: 'Stop all agents.' }),
+    force: Flags.boolean({ char: 'f', description: 'Force stop.' }),
   };
 
   async run(): Promise<any> {
@@ -29,11 +29,13 @@ export default class Stop extends BaseCommand<typeof Stop> {
         const processes = await daemon.list();
         await Promise.all(
           processes.map(async ({ profile }) => {
-            await stop(profile!);
+            await daemon.stop(profile!, { force: this.flags.force });
+            this.log(`Agent stopped: ${profile}`);
           }),
         );
       } else {
-        await stop(this.flags.profile);
+        await daemon.stop(this.flags.profile, { force: this.flags.force });
+        this.log('Agent stopped');
       }
     });
   }
