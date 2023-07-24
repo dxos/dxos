@@ -67,8 +67,8 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
 @trackLeaks('open', 'close')
 export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
-  private _pipeline?: Pipeline;
-  private _targetTimeframe?: Timeframe;
+  private _pipeline?: Pipeline = undefined;
+  private _targetTimeframe?: Timeframe = undefined;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
   private _isOpen = false;
@@ -84,16 +84,17 @@ export class DataPipeline implements CredentialProcessor {
   /**
    * Current epoch. Might be still processing.
    */
-  public currentEpoch?: SpecificCredential<Epoch>;
+  public currentEpoch?: SpecificCredential<Epoch> = undefined;;
 
   /**
    * Epoch currently applied.
    */
-  public appliedEpoch?: SpecificCredential<Epoch>;
+  public appliedEpoch?: SpecificCredential<Epoch> = undefined;;
 
   private _lastProcessedEpoch = -1;
-  public onNewEpoch = new Event<Credential>();
   private _epochCtx?: Context;
+
+  public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
     return this._isOpen;
@@ -182,9 +183,18 @@ export class DataPipeline implements CredentialProcessor {
     } catch (err) {
       log.catch(err);
     }
-
+    
     await this.databaseHost?.close();
     await this.itemManager?.destroy();
+    
+    this._ctx = new Context();
+    this._pipeline = undefined;
+    this._targetTimeframe = undefined;
+    this._lastAutomaticSnapshotTimeframe = new Timeframe();
+    this.currentEpoch = undefined;
+    this.appliedEpoch = undefined;
+    this._lastProcessedEpoch = -1;
+    this._epochCtx = undefined;
   }
 
   private async _consumePipeline() {
