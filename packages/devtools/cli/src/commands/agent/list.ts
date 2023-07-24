@@ -44,7 +44,9 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const result = await daemon.list();
-      printAgents(result);
+      if (!this.flags.json) {
+        printAgents(result);
+      }
       return result;
     });
   }
