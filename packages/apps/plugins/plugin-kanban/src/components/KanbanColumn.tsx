@@ -42,7 +42,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation('dxos.org/plugin/kanban');
   return (
-    <div className={mx('flex flex-col justify-center shadow rounded w-80 h-80', Styles.level1.bg)}>
+    <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', Styles.level1.bg)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -94,7 +94,7 @@ export const KanbanColumnComponent: FC<{
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
-          'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px]',
+          'flex flex-col py-2 overflow-hidden shadow rounded w-[300px] min-h-[300px]',
           Styles.level1.bg,
           isDragging && Styles.level2.bg,
         )}
