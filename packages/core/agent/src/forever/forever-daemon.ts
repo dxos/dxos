@@ -31,12 +31,9 @@ export class ForeverDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-
     const locked = await isLocked(lockFilePath(profile));
     const running = (await this.list()).some((process) => process.profile === profile && process.running);
-
-    console.log('???', { profile, locked, running });
-
+    // TODO(burdon): Health check to see these are in sync?
     return locked || running;
   }
 
@@ -149,7 +146,8 @@ export class ForeverDaemon implements Daemon {
 
     const proc = await this._getProcess(profile);
 
-    // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
+    // NOTE: Kill all processes with the given profile.
+    // This is necessary when somehow few processes are started with the same profile.
     (await this.list()).forEach((process) => {
       if (process.profile === profile) {
         if (force) {

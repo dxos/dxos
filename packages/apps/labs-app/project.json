@@ -25,34 +25,6 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
-        "coveragePath": "coverage/packages/apps/labs-app",
-        "outputPath": "tmp/playwright/packages/apps/labs-app",
-        "playwrightConfigPath": "packages/apps/labs-app/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/labs-app",
-        "serve": "labs-app:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
-        "testPatterns": [
-          "packages/apps/labs-app/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/labs-app/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {

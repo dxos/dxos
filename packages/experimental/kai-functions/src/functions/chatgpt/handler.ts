@@ -46,6 +46,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
       // TODO(burdon): Use to distinguish generated messages.
       if (!block.meta) {
         const model = new ChatModel({
+          // TODO(burdon): Normalize env.
           orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(config, 'openai.com/org_id')!,
           apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
         });
