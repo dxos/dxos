@@ -6,7 +6,7 @@ import { InputOf } from '@dxos/plate';
 
 import template from '../src/template.t';
 
-export const configs: InputOf<typeof template>[] = [
+export const scenarios: InputOf<typeof template>[] = [
   {
     name: 'min',
     monorepo: true,

@@ -8,8 +8,8 @@
     "rootDir": "../../.."
   },
   "include": [
-    "apps/templates/bare/**/*.t.ts",
-    "apps/templates/bare/package.json",
+    "apps/templates/bare-template/**/*.t.ts",
+    "apps/templates/bare-template/package.json",
     "./tsconfig.json"
   ]
 }
