@@ -7,6 +7,10 @@ import { FunctionContext } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { ChatModel } from '../../bots';
+
+console.log(ChatModel);
+
 type HandlerProps = {
   space: string;
   objects: string[];
@@ -18,6 +22,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
   const { space: spaceKey, objects: blockIds } = event; // TODO(burdon): Rename objects.
   const space = context.client.getSpace(PublicKey.from(spaceKey))!;
   log.info('chatgpt', { space: space.key });
+
+  console.log(JSON.stringify(context.client.config.values, undefined, 2));
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?

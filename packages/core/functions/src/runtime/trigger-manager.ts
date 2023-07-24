@@ -74,7 +74,6 @@ export class TriggerManager {
         });
       });
 
-      // TODO(burdon): Removed?
       const selection = createSubscription(({ added, updated }) => {
         for (const object of added) {
           objectIds.add(object.id);
@@ -100,8 +99,10 @@ export class TriggerManager {
 
       ctx.onDispose(() => selection.unsubscribe());
 
-      const query = space.db.query({ ...trigger.subscription.props, '@type': trigger.subscription.type });
+      // TODO(burdon): DSL for query (replace props).
+      const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
       const unsubscribe = query.subscribe(({ objects }) => {
+        console.log('::::', objects);
         selection.update(objects);
       });
 

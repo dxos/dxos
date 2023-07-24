@@ -1,8 +1,10 @@
 functions:
   chess:
     description: "Chess bot."
+
   chatgpt:
     description: "Chat GPT."
+
   hello:
     description: "Test function."
 
