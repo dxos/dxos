@@ -50,8 +50,6 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
         });
 
-        console.log(JSON.stringify(config.values, null, 2));
-
         log.info('block', {
           thread: thread?.id.slice(0, 8),
           block: block.id.slice(0, 8),
@@ -63,25 +61,67 @@ export default async (event: HandlerProps, context: FunctionContext) => {
         const { content } =
           (await model.request(block.messages.map((message) => ({ role: 'user', content: message.text ?? '' })))) ?? {};
 
-        const response = space.db.add(
-          new Thread.Block({
-            identityKey,
-            meta: {
-              keys: [{ source: 'openai.com' }],
-            },
-            messages: [
+        if (content) {
+          const messages = [];
+          // TODO(burdon): Parse results (possibly multiple JSON segments).
+          const match = content.replace(/\n/, '').match(/(.+)?```json(.+)```(.+)/);
+          const timestamp = new Date().toISOString();
+          console.log(content, match);
+          if (match) {
+            const [_, before, json, after] = match;
+            messages.push(
               {
-                timestamp: new Date().toISOString(),
-                text: content ?? 'ERROR',
+                timestamp,
+                text: before,
               },
-            ],
-          }),
-        );
+              {
+                timestamp,
+                data: JSON.stringify(parseJson(json)),
+              },
+              {
+                timestamp,
+                text: after,
+              },
+            );
+          } else {
+            const data = parseJson(content);
+            if (data) {
+              messages.push({
+                timestamp,
+                data: JSON.stringify(data),
+              });
+            } else {
+              messages.push({
+                timestamp,
+                text: content,
+              });
+            }
+          }
 
-        thread.blocks.push(response);
+          const response = space.db.add(
+            new Thread.Block({
+              identityKey,
+              meta: {
+                keys: [{ source: 'openai.com' }],
+              },
+              messages,
+            }),
+          );
+
+          thread.blocks.push(response);
+        }
       }
     }),
   );
 
   return context.status(200).succeed();
+};
+
+// TODO(burdon): Factor out.
+const parseJson = (content: string) => {
+  try {
+    return JSON.parse(content);
+  } catch (err) {
+    return null;
+  }
 };
