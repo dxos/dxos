@@ -23,7 +23,8 @@ export default async (event: HandlerProps, context: FunctionContext) => {
   const space = context.client.getSpace(PublicKey.from(spaceKey))!;
   log.info('chatgpt', { space: space.key });
 
-  console.log(JSON.stringify(context.client.config.values, undefined, 2));
+  // TODO(burdon): Get API keys from config.
+  // console.log(JSON.stringify(context.client.config.values, undefined, 2));
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
@@ -54,15 +55,15 @@ export default async (event: HandlerProps, context: FunctionContext) => {
       const response = space.db.add(
         new Thread.Block({
           identityKey,
+          meta: {
+            keys: [{ source: 'openai.com' }],
+          },
           messages: [
             {
               timestamp: new Date().toISOString(),
               text: 'Hello from GPT!',
             },
           ],
-          meta: {
-            keys: [{ source: 'openai.com' }],
-          },
         }),
       );
 
@@ -70,5 +71,5 @@ export default async (event: HandlerProps, context: FunctionContext) => {
     }
   });
 
-  return context.status(200).succeed({ greeting: 'Hello' });
+  return context.status(200).succeed();
 };
