@@ -3,8 +3,7 @@
 //
 import React from 'react';
 
-import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
-import { Avatar } from '@dxos/react-appkit';
+import { Avatar, Button, DensityProvider, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { useClient } from '@dxos/react-client';
 import type { Identity } from '@dxos/react-client/halo';
 
@@ -22,15 +21,16 @@ export const IdentityPanel = ({
     const tab = window.open(remoteSource.origin, '_blank');
     tab?.focus();
   };
+  const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 16);
   return (
     <DensityProvider density='fine'>
-      <div className='flex flex-col gap-2 justify-center items-center'>
-        <Avatar
-          size={16}
-          variant='circle'
-          fallbackValue={identity.identityKey.toHex()}
-          label={identity.profile?.displayName ?? ''}
-        />
+      <div role='none' className='flex flex-col gap-2 justify-center items-center'>
+        <Avatar.Root size={16} variant='circle'>
+          <Avatar.Frame>
+            <Avatar.Fallback href={fallbackHref} />
+          </Avatar.Frame>
+          <Avatar.Label>{identity.profile?.displayName ?? ''}</Avatar.Label>
+        </Avatar.Root>
         <Button onClick={onClickManageProfile ?? defaultManageProfile} classNames='is-full'>
           {t('manage profile label')}
         </Button>
