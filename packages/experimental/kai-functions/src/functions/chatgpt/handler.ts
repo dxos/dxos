@@ -8,8 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { ChatModel } from '../../bots';
-
-console.log(ChatModel);
+import { getKey } from '../../bots/util';
 
 type HandlerProps = {
   space: string;
@@ -20,11 +19,11 @@ const identityKey = PublicKey.random().toHex(); // TODO(burdon): ???
 
 export default async (event: HandlerProps, context: FunctionContext) => {
   const { space: spaceKey, objects: blockIds } = event; // TODO(burdon): Rename objects.
+  const config = context.client.config;
   const space = context.client.getSpace(PublicKey.from(spaceKey))!;
-  log.info('chatgpt', { space: space.key });
 
-  // TODO(burdon): Get API keys from config.
-  // console.log(JSON.stringify(context.client.config.values, undefined, 2));
+  // TODO(burdon): Logging (filename missing).
+  log.info('chatgpt', { space: space.key });
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
@@ -39,37 +38,50 @@ export default async (event: HandlerProps, context: FunctionContext) => {
   }, new Set<Thread>());
 
   // Process threads.
-  activeThreads.forEach((thread) => {
-    // TODO(burdon): Create set of messages.
-    const block = thread.blocks[thread.blocks.length - 1];
+  await Promise.all(
+    Array.from(activeThreads).map(async (thread) => {
+      // TODO(burdon): Create set of messages.
+      const block = thread.blocks[thread.blocks.length - 1];
 
-    // TODO(burdon): Use to distinguish generated messages.
-    if (!block.meta) {
-      log.info('block', {
-        thread: thread?.id.slice(0, 8),
-        block: block.id.slice(0, 8),
-        messages: block.messages.length,
-        meta: block.meta, // TODO(burdon): Use to distinguish generated messages.
-      });
+      // TODO(burdon): Use to distinguish generated messages.
+      if (!block.meta) {
+        const model = new ChatModel({
+          orgId: process.env.COM_OPENAI_ORG_ID ?? getKey(config, 'openai.com/org_id')!,
+          apiKey: process.env.COM_OPENAI_API_KEY ?? getKey(config, 'openai.com/api_key')!,
+        });
 
-      const response = space.db.add(
-        new Thread.Block({
-          identityKey,
-          meta: {
-            keys: [{ source: 'openai.com' }],
-          },
-          messages: [
-            {
-              timestamp: new Date().toISOString(),
-              text: 'Hello from GPT!',
+        console.log(JSON.stringify(config.values, null, 2));
+
+        log.info('block', {
+          thread: thread?.id.slice(0, 8),
+          block: block.id.slice(0, 8),
+          messages: block.messages.length,
+          meta: block.meta, // TODO(burdon): Use to distinguish generated messages.
+        });
+
+        // TODO(burdon): Error handling (e.g., 401);
+        const { content } =
+          (await model.request(block.messages.map((message) => ({ role: 'user', content: message.text ?? '' })))) ?? {};
+
+        const response = space.db.add(
+          new Thread.Block({
+            identityKey,
+            meta: {
+              keys: [{ source: 'openai.com' }],
             },
-          ],
-        }),
-      );
+            messages: [
+              {
+                timestamp: new Date().toISOString(),
+                text: content ?? 'ERROR',
+              },
+            ],
+          }),
+        );
 
-      thread.blocks.push(response);
-    }
-  });
+        thread.blocks.push(response);
+      }
+    }),
+  );
 
   return context.status(200).succeed();
 };
