@@ -9,7 +9,7 @@ export const composer = {
   'tree branch options label': 'More options',
   'tree leaf options label': 'More options',
   'create document label': 'Create new document',
-  'untitled document title': 'New document',
+  'document title placeholder': 'New document',
   'untitled space title': 'New space',
   'loading space title': 'Loading space…',
   'first run message': 'Choose a document or create one to get started',

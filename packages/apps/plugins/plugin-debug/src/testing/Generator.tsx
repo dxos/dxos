@@ -6,6 +6,7 @@ import type { Faker } from '@faker-js/faker';
 
 import { Document } from '@braneframe/types';
 import { SpaceProxy, Text } from '@dxos/client/echo';
+import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 export class Generator {
@@ -21,6 +22,7 @@ export class Generator {
   }
 
   createObject(type = Document.type.name) {
+    log('update', { type });
     switch (type) {
       case Document.type.name: {
         // TODO(burdon): Factor out generators.
@@ -36,6 +38,7 @@ export class Generator {
   }
 
   updateObject(type = Document.type.name) {
+    log('update', { type });
     switch (type) {
       case Document.type.name: {
         const { objects } = this._space.db.query(Document.filter());

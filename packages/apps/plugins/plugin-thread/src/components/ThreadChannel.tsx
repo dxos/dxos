@@ -4,12 +4,14 @@
 
 import React, { FC, useRef } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { humanize } from '@dxos/util';
 
+import { THREAD_PLUGIN } from '../props';
 import { ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 
@@ -51,7 +53,7 @@ export const ThreadChannel: FC<{
   thread: ThreadType;
   onAddMessage: (text: string) => boolean | undefined;
 }> = ({ identityKey, thread, onAddMessage }) => {
-  const { t } = useTranslation('dxos.org/plugin/thread');
+  const { t } = useTranslation(THREAD_PLUGIN);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleAddMessage = (text: string) => {
@@ -68,18 +70,17 @@ export const ThreadChannel: FC<{
     <div
       className={mx(
         'flex flex-col h-full w-full min-w-[300px] md:max-w-[480px] overflow-hidden m-4 p-2',
-        'bg-zinc-50 dark:text-neutral-800',
+        Styles.level0.bg,
       )}
     >
       <div className='flex px-6 pb-4'>
         <Input.Root>
           <Input.Label srOnly>{t('thread name placeholder')}</Input.Label>
           <Input.TextInput
-            autoFocus
             autoComplete='off'
             variant='subdued'
             classNames='flex-1 is-auto pis-2'
-            placeholder='Enter message.'
+            placeholder={t('thread title placeholder')}
             value={thread.title ?? ''}
             onChange={({ target: { value } }) => (thread.title = value)}
           />

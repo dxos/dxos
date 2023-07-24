@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 // import { LocalFilesPlugin, GithubPlugin } from '@braneframe/composer-app';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
+import { DndPlugin } from '@braneframe/plugin-dnd';
 import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
       plugins={[
         ThemePlugin(),
         ClientPlugin(),
+        DndPlugin(),
         GraphPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),

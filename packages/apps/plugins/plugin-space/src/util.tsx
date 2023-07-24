@@ -11,6 +11,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ShellLayout } from '@dxos/react-client';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 import { Plugin, findPlugin } from '@dxos/react-surface';
@@ -61,14 +62,24 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     description: space.properties.description,
     icon: (props) => <Planet {...props} />,
     data: space,
+    // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
     onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
-      console.log('[plugin-space]', 'on children rearrange', child.data?.meta, nextIndex);
+      log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
       if (child.data) {
+        // TODO(burdon): Decouple from object's data structure.
         child.data.meta = {
           ...child.data?.meta,
           index: nextIndex,
         };
       }
+    },
+    onMoveNode: (
+      source: GraphNode<TypedObject>,
+      target: GraphNode<TypedObject>,
+      child: GraphNode<TypedObject>,
+      nextIndex,
+    ) => {
+      log.info('onParentMove', { source: source.id, target: target.id, child: child.id, nextIndex });
     },
     attributes: {
       role: 'branch',
@@ -126,7 +137,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['download all docs in space label', { ns: 'composer' }],
           icon: (props) => <Download {...props} />,
           invoke: async (t) => {
-            const backupBlob = await backupSpace(space, t('untitled document title'));
+            const backupBlob = await backupSpace(space, t('document title placeholder'));
             const url = URL.createObjectURL(backupBlob);
             const element = document.createElement('a');
             element.setAttribute('href', url);

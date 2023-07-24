@@ -6,6 +6,7 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
 import React, { FC } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
@@ -38,8 +39,8 @@ export const ThreadBlock: FC<{
       key={block.id}
       className={mx(
         'flex flex-col',
-        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) &&
-          'rounded shadow bg-white dark:bg-neutral-900',
+        Styles.level1.bg,
+        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >
       <div className='flex __divide-x'>
@@ -60,7 +61,13 @@ export const ThreadBlock: FC<{
           <div className='__divide-y pb-1'>
             {block.messages.map((message, i) => (
               <div key={i} className='flex px-2 py-1 group'>
-                <div className='grow overflow-hidden break-all mr-2 text-sm'>{message.text}</div>
+                {message.text && <div className='grow overflow-hidden break-all mr-2 text-sm'>{message.text}</div>}
+                {message.data && (
+                  // TODO(burdon): Colorize (reuse codemirror or hljs?)
+                  <pre className='grow overflow-hidden break-all mr-2 text-sm'>
+                    <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
+                  </pre>
+                )}
                 {onDeleteMessage && (
                   <button className='invisible group-hover:visible' onClick={() => onDeleteMessage(block.id, i)}>
                     <X />
@@ -73,4 +80,13 @@ export const ThreadBlock: FC<{
       </div>
     </div>
   );
+};
+
+// TODO(burdon): Move to util.
+export const safeParseJson = (data: string) => {
+  try {
+    return JSON.parse(data);
+  } catch (err) {
+    return data;
+  }
 };

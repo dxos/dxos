@@ -6,7 +6,7 @@ import { Editor, Tldraw } from '@tldraw/tldraw';
 import React, { FC, useEffect, useState } from 'react';
 
 import { Drawing as DrawingType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
+import { Main, useThemeContext } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 
@@ -20,8 +20,11 @@ export type DrawingMainOptions = {
 
 export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data: [_, drawing] }) => {
   const { store } = useDrawingModel(drawing);
+  const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
-  useEffect(() => {}, [editor]);
+  useEffect(() => {
+    editor?.setDarkMode(themeMode === 'dark');
+  }, [editor, themeMode]);
 
   // TODO(burdon): Config.
   const readonly = false;
@@ -34,7 +37,6 @@ export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data: [_,
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
-  // TODO(burdon): Dark mode.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
       <div
