@@ -36,7 +36,7 @@ const DefaultThreadPluginStory = () => {
 
 const ThreadPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/ThreadPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
+    id: 'dxos.org/plugin/thread-story',
   },
   provides: {
     components: {

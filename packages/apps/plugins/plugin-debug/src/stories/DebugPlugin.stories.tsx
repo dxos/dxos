@@ -18,7 +18,7 @@ const DefaultDebugPluginStory = () => {
 
 const DebugPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/debugPluginStoryPlugin',
+    id: 'dxos.org/plugin/debug-story',
   },
   provides: {
     components: {
