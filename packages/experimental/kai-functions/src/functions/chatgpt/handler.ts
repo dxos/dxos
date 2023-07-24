@@ -117,12 +117,3 @@ export default async (event: HandlerProps, context: FunctionContext) => {
 
   return context.status(200).succeed();
 };
-
-// TODO(burdon): Factor out.
-const parseJson = (content: string) => {
-  try {
-    return JSON.parse(content);
-  } catch (err) {
-    return null;
-  }
-};

@@ -40,6 +40,7 @@ export const ThreadBlock: FC<{
       className={mx(
         'flex flex-col overflow-hidden',
         Styles.level1.bg,
+        Styles.level1.bg,
         !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >
