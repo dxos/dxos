@@ -3,10 +3,11 @@
 //
 
 import { CompassTool, IconProps, Plus, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -17,9 +18,9 @@ import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides } from './props';
 import translations from './translations';
 
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode, object: DrawingType): GraphNode => ({
+  const objectToGraphNode = (parent: GraphNode, object: DrawingType, index: string): GraphNode => ({
     id: object.id,
-    index: 'a1',
+    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
     label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],
     icon: (props: IconProps) => <CompassTool {...props} />,
     data: object,
@@ -67,7 +68,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           return [
             {
               id: `${DRAWING_PLUGIN}/create-drawing`,
-              index: 'a1',
+              index: getIndices(1)[0],
               testId: 'drawingPlugin.createDrawing',
               label: ['create drawing label', { ns: DRAWING_PLUGIN }],
               icon: (props) => <Plus {...props} />,

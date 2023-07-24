@@ -37,6 +37,8 @@ export const SplitView = () => {
       </div>
       <Main.Overlay />
       <Surface name='main' />
+      {/* TODO(burdon): Feature flag. */}
+      {/* <Surface name='context-sidebar' /> */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
           <Dialog.Overlay>

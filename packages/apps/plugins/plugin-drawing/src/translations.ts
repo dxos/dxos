@@ -9,7 +9,7 @@ export default [
         'plugin name': 'Drawing',
         'drawing title placeholder': 'New drawing',
         'create drawing label': 'Create drawing',
-        'delete drawing label': 'Delete drawing',
+        'delete drawing label': 'Delete',
       },
     },
   },

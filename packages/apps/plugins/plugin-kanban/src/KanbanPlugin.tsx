@@ -3,10 +3,11 @@
 //
 
 import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -17,9 +18,9 @@ import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
 import translations from './translations';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode, object: KanbanType): GraphNode => ({
+  const objectToGraphNode = (parent: GraphNode, object: KanbanType, index: string): GraphNode => ({
     id: object.id,
-    index: 'a1', // TODO(burdon): Index.
+    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
     label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
     icon: (props: IconProps) => <Kanban {...props} />,
     data: object,
@@ -27,7 +28,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
     pluginActions: {
       [KANBAN_PLUGIN]: [
         {
-          id: 'delete', // TODO(burdon): Namespace.
+          id: 'delete', // TODO(burdon): Namespac@e.
           index: 'a1',
           label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
           icon: (props: IconProps) => <Trash {...props} />,
@@ -67,7 +68,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           return [
             {
               id: `${KANBAN_PLUGIN}/create-kanban`, // TODO(burdon): Namespace?
-              index: 'a1', // TODO(burdon): ???
+              index: getIndices(1)[0],
               testId: 'kanbanPlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create kanban label', { ns: KANBAN_PLUGIN }],
               icon: (props) => <Plus {...props} />,

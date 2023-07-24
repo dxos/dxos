@@ -3,10 +3,11 @@
 //
 
 import { Chat, IconProps, Plus, Trash } from '@phosphor-icons/react';
+import get from 'lodash.get';
 import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -17,9 +18,9 @@ import { isThread, THREAD_PLUGIN, ThreadPluginProvides } from './props';
 import translations from './translations';
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode, object: ThreadType): GraphNode => ({
+  const objectToGraphNode = (parent: GraphNode, object: ThreadType, index: string): GraphNode => ({
     id: object.id,
-    index: 'a1', // TODO(burdon): Index.
+    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
     label: object.title ?? ['thread title placeholder', { ns: THREAD_PLUGIN }],
     icon: (props: IconProps) => <Chat {...props} />,
     data: object,
@@ -67,7 +68,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             {
               id: `${THREAD_PLUGIN}/create-thread`, // TODO(burdon): Namespace?
-              index: 'a1', // TODO(burdon): ???
+              index: getIndices(1)[0],
               testId: 'threadPlugin.createThread', // TODO(burdon): Namespace?
               label: ['create thread label', { ns: THREAD_PLUGIN }],
               icon: (props) => <Plus {...props} />,
