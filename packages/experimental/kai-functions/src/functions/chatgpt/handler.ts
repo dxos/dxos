@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 
 import { ChatModel } from '../../bots';
 import { getKey } from '../../bots/util';
+import { parseMessage } from './parser';
 
 type HandlerProps = {
   space: string;
@@ -63,40 +64,20 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           (await model.request(block.messages.map((message) => ({ role: 'user', content: message.text ?? '' })))) ?? {};
 
         if (content) {
-          const messages = [];
-          // TODO(burdon): Parse results (possibly multiple JSON segments).
-          const match = content.replace(/\n/, '').match(/(.+)?```json(.+)```(.+)/);
           const timestamp = new Date().toISOString();
-          console.log(content, match);
-          if (match) {
-            const [_, before, json, after] = match;
-            messages.push(
-              {
-                timestamp,
-                text: before,
-              },
-              {
-                timestamp,
-                data: JSON.stringify(parseJson(json)),
-              },
-              {
-                timestamp,
-                text: after,
-              },
-            );
+          const messages = [];
+
+          const result = parseMessage(content, 'json');
+          if (result) {
+            const { pre, data, post } = result;
+            pre && messages.push({ timestamp, text: pre });
+            messages.push({ timestamp, data: JSON.stringify(data) });
+            post && messages.push({ timestamp, text: post }); // TODO(burdon): Skip TS.
           } else {
-            const data = parseJson(content);
-            if (data) {
-              messages.push({
-                timestamp,
-                data: JSON.stringify(data),
-              });
-            } else {
-              messages.push({
-                timestamp,
-                text: content,
-              });
-            }
+            messages.push({
+              timestamp,
+              text: content,
+            });
           }
 
           const response = space.db.add(
