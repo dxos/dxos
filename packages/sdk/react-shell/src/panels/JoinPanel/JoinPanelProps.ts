@@ -30,6 +30,7 @@ export type JoinPanelImplProps = Pick<
   'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
 > &
   Pick<JoinStepProps, 'send'> & {
+    titleId: string;
     activeView: string;
     failed: Set<'Halo' | 'Space'>;
     pending: boolean;
