@@ -71,7 +71,7 @@ export class TriggerManager {
       });
 
       let count = 0;
-      const selection = createSubscription(({ added, updated }) => {
+      const subscription = createSubscription(({ added, updated }) => {
         for (const object of added) {
           objectIds.add(object.id);
         }
@@ -90,14 +90,16 @@ export class TriggerManager {
         count++;
       });
 
-      ctx.onDispose(() => selection.unsubscribe());
+      ctx.onDispose(() => subscription.unsubscribe());
 
       // TODO(burdon): DSL for query (replace props).
       const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
       const unsubscribe = query.subscribe(({ objects }) => {
-        console.log('???', objects.length); // TODO(burdon): Not updated.
-        selection.update(objects);
+        subscription.update(objects);
       });
+
+      // TODO(burdon): Option to trigger on first subscription.
+      // TODO(burdon): After restart not triggered.
 
       ctx.onDispose(() => unsubscribe());
     }
