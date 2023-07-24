@@ -413,11 +413,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/bot-lab/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
@@ -434,6 +429,11 @@
         {
           "type": "json",
           "path": "packages/experimental/kai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-bots/package.json",
           "jsonpath": "$.version"
         },
         {

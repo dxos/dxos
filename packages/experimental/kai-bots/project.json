@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/experimental/bot-lab/src",
+  "sourceRoot": "packages/experimental/kai-bots/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/experimental/bot-lab/src/index.ts",
-        "outputPath": "packages/experimental/bot-lab/dist/types",
-        "tsConfig": "packages/experimental/bot-lab/tsconfig.json"
+        "main": "packages/experimental/kai-bots/src/index.ts",
+        "outputPath": "packages/experimental/kai-bots/dist/types",
+        "tsConfig": "packages/experimental/kai-bots/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -17,10 +17,10 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
-          "packages/experimental/bot-lab/src/index.ts"
+          "packages/experimental/kai-bots/src/index.ts"
         ],
         "injectGlobals": true,
-        "outputPath": "packages/experimental/bot-lab/dist/lib"
+        "outputPath": "packages/experimental/kai-bots/dist/lib"
       },
       "outputs": [
         "{options.outputPath}"
@@ -31,7 +31,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/experimental/bot-lab/**/*.{ts,js}"
+          "packages/experimental/kai-bots/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -41,14 +41,14 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "coveragePath": "coverage/packages/experimental/bot-lab",
-        "outputPath": "tmp/mocha/packages/experimental/bot-lab",
-        "resultsPath": "test-results/packages/experimental/bot-lab",
+        "coveragePath": "coverage/packages/experimental/kai-bots",
+        "outputPath": "tmp/mocha/packages/experimental/kai-bots",
+        "resultsPath": "test-results/packages/experimental/kai-bots",
         "testPatterns": [
-          "packages/experimental/bot-lab/src/**/*.test.{ts,js}"
+          "packages/experimental/kai-bots/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/experimental/bot-lab/src/**/*"
+          "packages/experimental/kai-bots/src/**/*"
         ]
       },
       "outputs": [

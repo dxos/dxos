@@ -3327,40 +3327,6 @@ importers:
       '@types/react-dom': 18.0.6
       vite: 4.3.9
 
-  packages/experimental/bot-lab:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/kai-functions': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/node-std': workspace:*
-      '@dxos/websocket-rpc': workspace:*
-      '@types/cors': ^2.8.13
-      '@types/express': ^4.17.17
-      '@types/http-proxy': ^1.17.10
-      cors: ^2.8.5
-      esbuild: ^0.16.14
-      express: 4.17.1
-      http-proxy: ^1.18.1
-      node-http-proxy: ^0.2.4
-      sort-keys: ^5.0.0
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/kai-functions': link:../kai-functions
-      '@dxos/log': link:../../common/log
-      '@dxos/node-std': link:../../common/node-std
-      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
-      '@types/cors': 2.8.13
-      '@types/express': 4.17.17
-      '@types/http-proxy': 1.17.10
-      cors: 2.8.5
-      esbuild: 0.16.14
-      express: 4.17.1
-      http-proxy: 1.18.1
-      node-http-proxy: 0.2.4
-      sort-keys: 5.0.0
-
   packages/experimental/chess-app:
     specifiers:
       '@dxos/aurora-theme': workspace:*
@@ -3610,6 +3576,40 @@ importers:
       vite-plugin-mkcert: 1.13.4_vite@4.3.9
       vite-plugin-pwa: 0.14.1_vite@4.3.9
       workbox-window: 6.5.4
+
+  packages/experimental/kai-bots:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/kai-functions': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/websocket-rpc': workspace:*
+      '@types/cors': ^2.8.13
+      '@types/express': ^4.17.17
+      '@types/http-proxy': ^1.17.10
+      cors: ^2.8.5
+      esbuild: ^0.16.14
+      express: 4.17.1
+      http-proxy: ^1.18.1
+      node-http-proxy: ^0.2.4
+      sort-keys: ^5.0.0
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/kai-functions': link:../kai-functions
+      '@dxos/log': link:../../common/log
+      '@dxos/node-std': link:../../common/node-std
+      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
+      '@types/cors': 2.8.13
+      '@types/express': 4.17.17
+      '@types/http-proxy': 1.17.10
+      cors: 2.8.5
+      esbuild: 0.16.17
+      express: 4.17.1
+      http-proxy: 1.18.1
+      node-http-proxy: 0.2.4
+      sort-keys: 5.0.0
 
   packages/experimental/kai-frames:
     specifiers:
@@ -9404,7 +9404,6 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/android-arm/0.17.12:
@@ -9430,7 +9429,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/android-arm64/0.17.12:
@@ -9456,7 +9454,6 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/android-x64/0.17.12:
@@ -9482,7 +9479,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/darwin-arm64/0.17.12:
@@ -9508,7 +9504,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/darwin-x64/0.17.12:
@@ -9534,7 +9529,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/freebsd-arm64/0.17.12:
@@ -9560,7 +9554,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/freebsd-x64/0.17.12:
@@ -9586,7 +9579,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-arm/0.17.12:
@@ -9612,7 +9604,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-arm64/0.17.12:
@@ -9638,7 +9629,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-ia32/0.17.12:
@@ -9673,7 +9663,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.17.12:
@@ -9699,7 +9688,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-mips64el/0.17.12:
@@ -9725,7 +9713,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-ppc64/0.17.12:
@@ -9751,7 +9738,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-riscv64/0.17.12:
@@ -9777,7 +9763,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-s390x/0.17.12:
@@ -9803,7 +9788,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-x64/0.17.12:
@@ -9829,7 +9813,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/netbsd-x64/0.17.12:
@@ -9855,7 +9838,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/openbsd-x64/0.17.12:
@@ -9881,7 +9863,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/sunos-x64/0.17.12:
@@ -9907,7 +9888,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-arm64/0.17.12:
@@ -9933,7 +9913,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-ia32/0.17.12:
@@ -9959,7 +9938,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-x64/0.17.12:
@@ -24369,7 +24347,6 @@ packages:
       '@esbuild/win32-arm64': 0.16.17
       '@esbuild/win32-ia32': 0.16.17
       '@esbuild/win32-x64': 0.16.17
-    dev: true
 
   /esbuild/0.17.12:
     resolution: {integrity: sha512-bX/zHl7Gn2CpQwcMtRogTTBf9l1nl+H6R8nUbjk+RuKqAE3+8FDulLA+pHvX7aA7Xe07Iwa+CWvy9I8Y2qqPKQ==}
