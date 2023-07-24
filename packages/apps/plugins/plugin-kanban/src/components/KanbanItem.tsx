@@ -13,8 +13,10 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx } from '@dxos/aurora-theme';
 
+import { KANBAN_PLUGIN } from '../props';
+
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete item label')}</span>
@@ -29,7 +31,7 @@ export const KanbanItemComponent: FC<{
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
     data: { type: 'item', column },
