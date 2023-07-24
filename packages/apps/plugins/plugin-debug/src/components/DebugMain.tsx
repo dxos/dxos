@@ -13,13 +13,13 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DebugContext } from '../props';
+import { DEBUG_PANEL, DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
 export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space, _] }) => {
-  const { t } = useTranslation('dxos.org/plugin/debug');
+  const { t } = useTranslation(DEBUG_PANEL);
 
   const client = useClient();
   const [data, setData] = useState<any>({});
@@ -31,8 +31,7 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
     void handleRefresh();
   }, []);
 
-  const [mutationCount, setMutationCount] = useState('10');
-  const [mutationPeriod, setMutationPeriod] = useState('1000');
+  const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
 
   const generator = useMemo(() => {
     const generator = new Generator(space);
@@ -46,7 +45,7 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
       stop();
       void handleRefresh();
     } else {
-      start(() => generator.updateObject(), DEFAULT_PERIOD);
+      start(() => generator.updateObject(), parseInt(mutationInterval));
     }
   };
 
@@ -55,16 +54,7 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
   };
 
   const handleUpdateObject = async () => {
-    let count = parseInt(mutationCount);
-    const period = parseInt(mutationPeriod);
-    const delta = period / count;
-    const interval = setInterval(() => {
-      console.log('ping');
-      generator.updateObject();
-      if (--count === 0) {
-        clearInterval(interval);
-      }
-    }, delta);
+    generator.updateObject();
   };
 
   const handleCreateEpoch = async () => {
@@ -85,18 +75,7 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
-          <div className='w-[80px]'>
-            <Input.Root>
-              <Input.TextInput
-                title={t('mutation count')}
-                autoComplete='off'
-                classNames='flex-1 is-auto pis-2 text-right'
-                placeholder='Num mutations'
-                value={mutationCount}
-                onChange={({ target: { value } }) => setMutationCount(value)}
-              />
-            </Input.Root>
-          </div>
+          <Button onClick={handleUpdateObject}>Update</Button>
           <div className='w-[80px]'>
             <Input.Root>
               <Input.TextInput
@@ -104,12 +83,11 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
                 autoComplete='off'
                 classNames='flex-1 is-auto pis-2 text-right'
                 placeholder='Mutation period'
-                value={mutationPeriod}
-                onChange={({ target: { value } }) => setMutationPeriod(value)}
+                value={mutationInterval}
+                onChange={({ target: { value } }) => setMutationInterval(value)}
               />
             </Input.Root>
           </div>
-          <Button onClick={handleUpdateObject}>Update</Button>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>

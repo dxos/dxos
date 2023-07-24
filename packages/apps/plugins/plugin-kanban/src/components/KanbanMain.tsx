@@ -4,6 +4,7 @@
 
 import React, { FC } from 'react';
 
+import { Styles } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { blockSeparator, mx } from '@dxos/aurora-theme';
@@ -31,9 +32,8 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
       ),
   };
 
-  // TODO(burdon): Style/color standards for panels, borders, text, etc.
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
+    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', Styles.level0.bg)}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>

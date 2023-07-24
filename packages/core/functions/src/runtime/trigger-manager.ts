@@ -83,16 +83,19 @@ export class TriggerManager {
           objectIds.add(object.id);
         }
 
-        log.info('updated', {
+        log('updated', {
           space: space.key,
           objects: objectIds.size,
           added: added.length,
           updated: updated.length,
           count,
         });
-        if (count++) {
-          task.schedule();
-        }
+
+        // Exec if not first update.
+        // if (count++) {
+        task.schedule();
+        count++;
+        // }
       });
 
       ctx.onDispose(() => selection.unsubscribe());
@@ -102,12 +105,13 @@ export class TriggerManager {
         selection.update(objects);
       });
 
+      // TODO(burdon): Calculate diff.
       // Trigger first update, but don't schedule task.
       // selection.update(query.objects);
 
       ctx.onDispose(unsubscribe);
 
-      log.info('mounted', { space: space.key, trigger });
+      log('mounted', { space: space.key, trigger });
     }
   }
 

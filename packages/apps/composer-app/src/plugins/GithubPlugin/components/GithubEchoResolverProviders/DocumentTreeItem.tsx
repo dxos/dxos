@@ -17,7 +17,7 @@ export const DocumentTreeItem = ({ document }: { document: Document }) => {
     <TreeItem.Root classNames='flex gap-2'>
       <TreeItem.Heading classNames='contents'>
         <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
-        <span className='grow mbs-2 text-sm no-leading'>{document.title || t('untitled document title')}</span>
+        <span className='grow mbs-2 text-sm no-leading'>{document.title || t('document title placeholder')}</span>
       </TreeItem.Heading>
     </TreeItem.Root>
   );

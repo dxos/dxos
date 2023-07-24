@@ -127,7 +127,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
       iframeRuntime.stop().catch((err: Error) => log.catch(err));
     });
   } else {
-    console.log(`%cThe DXOS Client is connected to the shared worker: ${window.location.origin}`, cssStyle);
+    console.log(`%cDXOS vault (shared worker) connection: ${window.location.origin}`, cssStyle);
     console.log('%cInspect the worker using: chrome://inspect/#workers (URL must be copied manually).', cssStyle);
     const ports = new Trigger<{ systemPort: MessagePort; shellPort: MessagePort; appPort: MessagePort }>();
     createWorker().port.onmessage = (event) => {
