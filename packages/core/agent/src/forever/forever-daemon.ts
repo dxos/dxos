@@ -31,10 +31,7 @@ export class ForeverDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-    const locked = await isLocked(lockFilePath(profile));
-    const running = (await this.list()).some((process) => process.profile === profile && process.running);
-    // TODO(burdon): Health check to see these are in sync?
-    return locked || running;
+    return await isLocked(lockFilePath(profile));
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -124,6 +121,7 @@ export class ForeverDaemon implements Daemon {
           stream.close();
           await services.close();
         }
+        return await this._getProcess(profile);
       } catch (err) {
         log.warn('Failed to start daemon.');
         const errContent = fs.readFileSync(errFile, 'utf-8');
@@ -138,11 +136,7 @@ export class ForeverDaemon implements Daemon {
   }
 
   async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
-    const running = await this.isRunning(profile);
     log.info('stopping', { profile, running });
-    if (!running) {
-      return undefined;
-    }
 
     const proc = await this._getProcess(profile);
 
@@ -151,6 +145,7 @@ export class ForeverDaemon implements Daemon {
     (await this.list()).forEach((process) => {
       if (process.profile === profile) {
         if (force) {
+          console.log('Killing process force');
           forever.stop(process.profile!);
         } else {
           forever.kill(proc.pid!, true, 'SIGINT');
