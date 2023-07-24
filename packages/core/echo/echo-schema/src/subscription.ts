@@ -10,7 +10,7 @@ export type Selection = any[];
 
 // TODO(dmaretskyi): Convert to class.
 export interface SubscriptionHandle {
-  update: (selection: any) => SubscriptionHandle;
+  update: (selection: Selection) => SubscriptionHandle;
   subscribed: boolean;
   unsubscribe: () => void;
   selected: Set<any>;

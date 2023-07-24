@@ -376,11 +376,11 @@ message Runtime {
 
   optional Client client = 1;
   optional App app = 2;
-  optional Agent agent = 9;
   optional CLI cli = 3;
   optional Props props = 4;
   optional Services services = 5;
   optional System system = 6;
   optional Kube kube = 7;
   repeated Keys keys = 8;
+  optional Agent agent = 9;
 }
