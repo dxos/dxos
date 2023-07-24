@@ -21,7 +21,7 @@ describe('FeedWrapper', () => {
 
   test('creates a readable feed', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(factory.createFeed(key), key);
+    const feed = new FeedWrapper(await factory.createFeed(key), key);
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.false;
@@ -30,7 +30,7 @@ describe('FeedWrapper', () => {
 
   test('creates a writable feed', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(await factory.createFeed(key, { writable: true }), key);
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.true;
@@ -39,7 +39,7 @@ describe('FeedWrapper', () => {
 
   test('creates, opens, and closes a feed multiple times', async () => {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(factory.createFeed(key), key);
+    const feed = new FeedWrapper(await factory.createFeed(key), key);
 
     await feed.open();
     expect(feed.properties.opened).to.be.true;
@@ -57,7 +57,7 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(await feedFactory.createFeed(key, { writable: true }), key);
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
       await feed.append(faker.lorem.sentence());
@@ -71,7 +71,7 @@ describe('FeedWrapper', () => {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(await feedFactory.createFeed(key, { writable: true }), key);
 
     let emittedAppend = 0;
     feed.on('append', () => {
@@ -90,7 +90,7 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
     const feed = new FeedWrapper<TestItem>(
-      feedFactory.createFeed(key, {
+      await feedFactory.createFeed(key, {
         writable: true,
         valueEncoding: defaultValueEncoding,
       }),
@@ -116,7 +116,7 @@ describe('FeedWrapper', () => {
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(
-      factory.createFeed(key, {
+      await factory.createFeed(key, {
         writable: true,
         valueEncoding: defaultValueEncoding,
       }),
@@ -150,8 +150,8 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true }), key1);
-    const feed2 = new FeedWrapper(feedFactory.createFeed(key1), key1);
+    const feed1 = new FeedWrapper(await feedFactory.createFeed(key1, { writable: true }), key1);
+    const feed2 = new FeedWrapper(await feedFactory.createFeed(key1), key1);
 
     await feed1.open();
     await feed2.open();
@@ -204,8 +204,8 @@ describe('FeedWrapper', () => {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true }), key1);
-    const feed2 = new FeedWrapper(feedFactory.createFeed(key1, { sparse: true }), key1);
+    const feed1 = new FeedWrapper(await feedFactory.createFeed(key1, { writable: true }), key1);
+    const feed2 = new FeedWrapper(await feedFactory.createFeed(key1, { sparse: true }), key1);
 
     await feed1.open();
     await feed2.open();

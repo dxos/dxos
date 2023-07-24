@@ -4,7 +4,7 @@
 
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -23,7 +23,7 @@ export const configureTracing = () => {
       name: 'DXOS Core Tracing',
       op: 'dxos',
     });
-    assert(TX, 'Failed to create trace');
+    invariant(TX, 'Failed to create trace');
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
         finish();

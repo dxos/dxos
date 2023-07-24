@@ -3,7 +3,7 @@
 //
 
 import CRC32 from 'crc-32';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
@@ -134,7 +134,7 @@ export class MetadataStore {
     }
 
     const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
+    invariant(space, 'Space not found');
     return space;
   }
 
@@ -152,14 +152,14 @@ export class MetadataStore {
   }
 
   async setIdentityRecord(record: IdentityRecord) {
-    assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
+    invariant(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
     await this._save();
   }
 
   async addSpace(record: SpaceMetadata) {
-    assert(
+    invariant(
       !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
       'Cannot overwrite existing space in metadata',
     );

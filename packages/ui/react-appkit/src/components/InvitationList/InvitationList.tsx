@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { staticDisabled, mx } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable } from '@dxos/client';
+import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { Group } from '../Group';
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';

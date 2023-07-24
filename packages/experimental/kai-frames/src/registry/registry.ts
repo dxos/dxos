@@ -4,9 +4,8 @@
 
 import { FC } from 'react';
 
-import { Space } from '@dxos/client';
-import { TypedObject, TypeFilter } from '@dxos/echo-schema';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { Space, TypedObject, TypeFilter } from '@dxos/react-client/echo';
 
 // TODO(burdon): Hack for sidebar content.
 export type PluginProps = { space: Space; onSelect?: (objectId: string | undefined) => void };

@@ -3,7 +3,7 @@
 //
 
 import { SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 export const useMetadata = () => {
   const devtoolsHost = useDevtools();

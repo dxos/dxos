@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
 import { FeedInfo } from '@dxos/credentials';
@@ -68,7 +68,7 @@ export class Space {
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
   constructor(params: SpaceParams) {
-    assert(params.spaceKey && params.feedProvider);
+    invariant(params.spaceKey && params.feedProvider);
     this._key = params.spaceKey;
     this._genesisFeedKey = params.genesisFeed.key;
     this._feedProvider = params.feedProvider;
@@ -178,14 +178,14 @@ export class Space {
   }
 
   setControlFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._controlFeed, 'Control feed already set.');
+    invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
     this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
   setDataFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._dataFeed, 'Data feed already set.');
+    invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
@@ -241,7 +241,7 @@ export class Space {
   @synchronized
   async initializeDataPipeline() {
     log('initializeDataPipeline');
-    assert(this._isOpen, 'Space must be open to initialize data pipeline.');
+    invariant(this._isOpen, 'Space must be open to initialize data pipeline.');
     await this._dataPipeline.open();
   }
 }

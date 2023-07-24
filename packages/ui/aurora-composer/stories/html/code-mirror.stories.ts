@@ -10,9 +10,10 @@ import { basicSetup } from 'codemirror';
 import { yCollab } from 'y-codemirror.next';
 
 import { EventSubscriptions } from '@dxos/async';
-import { Client, Identity, PublicKey, Space, Text } from '@dxos/client';
-import { joinCommonSpace, TestBuilder } from '@dxos/client/testing';
-import { textGenerator } from '@dxos/react-client/testing';
+import { Client, PublicKey } from '@dxos/react-client';
+import { Space, Text } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
+import { joinCommonSpace, TestBuilder, textGenerator } from '@dxos/react-client/testing';
 import { YText } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
@@ -65,11 +66,11 @@ const setupEditor = async (id: number, client: Client, spaceKey: PublicKey, edit
   const query = space.db.query(ComposerDocument.filter());
   query.subscribe(({ objects }) => {
     const text = objects[0]?.content;
-    text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
+    void (text && updateEditor(id, editor, client.halo.identity.get()!, space, text));
   });
 
   const text = query.objects[0]?.content;
-  text && updateEditor(id, editor, client.halo.identity.get()!, space, text);
+  void (text && updateEditor(id, editor, client.halo.identity.get()!, space, text));
 };
 
 const setupSpace = async (count: number) => {

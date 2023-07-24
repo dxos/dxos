@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement } from 'react';
+import { cloneElement, ComponentProps } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
-import { InvitationResult } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
+import type { Invitation } from '@dxos/react-client/invitations';
+import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { JoinSend, JoinState } from './joinMachine';
+import { JoinEvent } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -26,10 +28,26 @@ export interface JoinPanelProps {
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,
   'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
-> & {
-  state: JoinState;
-  send: JoinSend;
-};
+> &
+  Pick<JoinStepProps, 'send'> & {
+    activeView: string;
+    failed: Set<'Halo' | 'Space'>;
+    pending: boolean;
+    unredeemedCodes?: Partial<{
+      Halo: string;
+      Space: string;
+    }>;
+    invitationStates?: Partial<{
+      Halo: Invitation.State;
+      Space: Invitation.State;
+    }>;
+    onHaloDone?: () => void;
+    onSpaceDone?: () => void;
+    onHaloInvitationCancel?: () => Promise<void> | undefined;
+    onSpaceInvitationCancel?: () => Promise<void> | undefined;
+    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  };
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
@@ -82,6 +100,11 @@ export type JoinView =
   | 'identity added'
   | 'space invitation acceptor'
   | 'halo invitation acceptor';
+
+export interface JoinStepProps extends ComponentProps<'div'> {
+  send: (event: SingleOrArray<Event<JoinEvent>>) => void;
+  active?: boolean;
+}
 
 export interface JoinStateContext {
   activeView: JoinView;

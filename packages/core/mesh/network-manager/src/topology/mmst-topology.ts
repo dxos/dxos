@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import distance from 'xor-distance';
 
 import { PublicKey } from '@dxos/keys';
@@ -43,12 +43,12 @@ export class MMSTTopology implements Topology {
   }
 
   init(controller: SwarmController): void {
-    assert(!this._controller, 'Already initialized');
+    invariant(!this._controller, 'Already initialized');
     this._controller = controller;
   }
 
   update(): void {
-    assert(this._controller, 'Not initialized');
+    invariant(this._controller, 'Not initialized');
     const { connected, candidates } = this._controller.getState();
     // Run the algorithms if we have first candidates, ran it before, or have more connections than needed.
     if (this._sampleCollected || connected.length > this._maxPeers || candidates.length > 0) {
@@ -59,7 +59,7 @@ export class MMSTTopology implements Topology {
   }
 
   async onOffer(peer: PublicKey): Promise<boolean> {
-    assert(this._controller, 'Not initialized');
+    invariant(this._controller, 'Not initialized');
     const { connected } = this._controller.getState();
     const accept = connected.length < this._maxPeers;
     log(`Offer ${peer} accept=${accept}`);
@@ -71,7 +71,7 @@ export class MMSTTopology implements Topology {
   }
 
   private _runAlgorithm() {
-    assert(this._controller, 'Not initialized');
+    invariant(this._controller, 'Not initialized');
     const { connected, candidates, ownPeerId } = this._controller.getState();
 
     if (connected.length > this._maxPeers) {

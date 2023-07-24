@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/experimental/gem-core/src/index.ts",
         "outputPath": "packages/experimental/gem-core/dist/types",
@@ -26,7 +26,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -43,7 +43,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/experimental/gem-core/.storybook",
         "uiFramework": "@storybook/react"

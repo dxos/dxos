@@ -71,6 +71,7 @@ export class DevServer {
 
     app.post('/:functionName', async (req, res) => {
       const functionName = req.params.functionName;
+      log('invoke', { function: functionName, data: req.body });
 
       const builder: Response = {
         status: (code: number) => {
@@ -101,6 +102,8 @@ export class DevServer {
     this._port = await getPortPromise({ startPort: DEFAULT_PORT });
     this._server = app.listen(this._port);
 
+    // TODO(burdon): Check plugin is registered.
+    //  TypeError: Cannot read properties of undefined (reading 'register')
     const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
       endpoint: this.endpoint!,
       functions: this.functions.map((name) => ({ name })),

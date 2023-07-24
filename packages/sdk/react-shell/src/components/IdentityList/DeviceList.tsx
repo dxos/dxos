@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Device } from '@dxos/protocols/proto/dxos/client/services';
+import { Device } from '@dxos/react-client/halo';
 
 import { IdentityListItem } from './IdentityListItem';
 

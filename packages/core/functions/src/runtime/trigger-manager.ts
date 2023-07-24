@@ -5,7 +5,8 @@
 import assert from 'node:assert';
 
 import { DeferredTask } from '@dxos/async';
-import { Client, PublicKey, Space } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -137,7 +138,7 @@ export class TriggerManager {
 
       log('result', { function: functionName, result: await res.json() });
     } catch (err: any) {
-      log('error', { function: functionName, error: err.message });
+      log.error('error', { function: functionName, error: err.message });
     }
   }
 }

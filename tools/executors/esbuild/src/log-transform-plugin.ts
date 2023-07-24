@@ -22,6 +22,7 @@ export class LogTransformer {
   private async _transform(filename: string): Promise<string> {
     const source = await readFile(filename, 'utf8');
 
+    const begin = performance.now();
     const output = await transform(source, {
       filename: basename(filename),
       sourceMaps: 'inline',
@@ -32,11 +33,43 @@ export class LogTransformer {
           decorators: true,
         },
         experimental: {
-          plugins: [[wasmModule, {}]],
+          plugins: [
+            [
+              wasmModule,
+              {
+                filename,
+                symbols: [
+                  {
+                    function: 'log',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: false,
+                    include_call_site: true,
+                  },
+                  {
+                    function: 'invariant',
+                    package: '@dxos/log',
+                    param_index: 2,
+                    include_args: true,
+                    include_call_site: false,
+                  },
+                ],
+              },
+            ],
+          ],
         },
         target: 'es2022',
       },
     });
+    const end = performance.now();
+
+    if (this._options.isVerbose) {
+      console.log(
+        `transformed ${source.length.toString().padStart(6)} bytes in ${(end - begin)
+          .toFixed()
+          .padStart(6)}ms: ${filename}`,
+      );
+    }
 
     return output.code;
   }

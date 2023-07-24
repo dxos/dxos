@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
 
@@ -30,7 +30,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
   }
 
   get rpc(): Client {
-    assert(this._rpc);
+    invariant(this._rpc);
     return this._rpc.rpc;
   }
 

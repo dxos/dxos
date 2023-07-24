@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';
@@ -142,7 +142,7 @@ export abstract class EchoObject<T extends Model = any> {
    */
   _createSnapshot(): Any {
     if (this._stateMachine) {
-      assert(this._modelConstructor.meta.snapshotCodec);
+      invariant(this._modelConstructor.meta.snapshotCodec);
       return (this._modelConstructor.meta.snapshotCodec as ProtoCodec).encodeAsAny(this._stateMachine.snapshot());
     } else {
       throw new Error('Only implemented on unpersisted objects.');
@@ -156,7 +156,7 @@ export abstract class EchoObject<T extends Model = any> {
     if (this._stateMachine) {
       return this._stateMachine.getState();
     } else {
-      assert(this._item);
+      invariant(this._item);
       return this._item.state;
     }
   }
@@ -179,7 +179,7 @@ export abstract class EchoObject<T extends Model = any> {
     if (this._stateMachine) {
       this._stateMachine.process(mutation);
     } else {
-      assert(this._database);
+      invariant(this._database);
       return this._database._backend.mutate(
         createModelMutation(this._id, encodeModelMutation(this._model!.modelMeta, mutation)),
       );
@@ -188,6 +188,6 @@ export abstract class EchoObject<T extends Model = any> {
 }
 
 export const setStateFromSnapshot = (obj: EchoObject, snapshot: ObjectSnapshot) => {
-  assert(obj[base]._stateMachine);
+  invariant(obj[base]._stateMachine);
   obj[base]._stateMachine.reset(snapshot);
 };

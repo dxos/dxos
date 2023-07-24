@@ -7,7 +7,8 @@ import React from 'react';
 
 import { Button, Input } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { ShellLayout, useClient, useSpaces } from '@dxos/react-client';
+import { ShellLayout, useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useShell } from '@dxos/react-shell';
 
 import { SpaceList, SpaceListAction, SpaceSettings } from '../../components';

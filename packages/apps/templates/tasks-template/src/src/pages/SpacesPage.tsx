@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate, generatePath } from 'react-router-dom';
 
 import { SpacesPageComponent } from '@dxos/react-appkit';
-import { Expando } from '@dxos/react-client';
+import { Expando } from '@dxos/react-client/echo';
 
 export type SpacesPageProps = {};
 

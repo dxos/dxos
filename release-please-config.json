@@ -43,6 +43,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-debug/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-dnd/package.json",
           "jsonpath": "$.version"
         },
@@ -79,11 +84,6 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/plugins/plugin-testing/package.json",
           "jsonpath": "$.version"
         },
         {

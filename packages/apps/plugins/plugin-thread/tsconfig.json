@@ -21,19 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../common/keys"
-    },
-    {
       "path": "../../../common/util"
     },
     {
       "path": "../../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../../core/echo/text-model"
-    },
-    {
-      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
@@ -57,6 +48,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -67,6 +61,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }

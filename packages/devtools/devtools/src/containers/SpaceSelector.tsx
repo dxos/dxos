@@ -6,10 +6,10 @@ import { Planet } from '@phosphor-icons/react';
 import * as localForage from 'localforage';
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { Select } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { useSpaces } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';

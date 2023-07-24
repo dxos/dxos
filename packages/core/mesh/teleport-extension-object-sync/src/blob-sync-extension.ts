@@ -4,7 +4,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -176,9 +176,9 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
         // Skip this header
         continue;
       }
-      assert(meta.bitfield);
-      assert(meta.chunkSize);
-      assert(meta.length);
+      invariant(meta.bitfield);
+      invariant(meta.chunkSize);
+      invariant(meta.length);
 
       if (header.chunkSize && header.chunkSize !== meta.chunkSize) {
         log.warn('Invalid chunk size', { header, meta });

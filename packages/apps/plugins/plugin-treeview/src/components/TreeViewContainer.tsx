@@ -23,7 +23,7 @@ import {
   DropdownMenu,
 } from '@dxos/aurora';
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
-import { useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { TREE_VIEW_PLUGIN } from '../TreeViewPlugin';
 import { TreeView } from './TreeView';

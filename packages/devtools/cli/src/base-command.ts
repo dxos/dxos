@@ -13,8 +13,16 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Daemon, ForeverDaemon } from '@dxos/agent';
-import { Client, fromAgent, Config, DX_DATA, DX_RUNTIME } from '@dxos/client';
-import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { Client, Config } from '@dxos/client';
+import {
+  DX_CONFIG,
+  DX_DATA,
+  DX_RUNTIME,
+  ENV_DX_CONFIG,
+  ENV_DX_PROFILE,
+  ENV_DX_PROFILE_DEFAULT,
+} from '@dxos/client-protocol';
+import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -63,6 +71,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   public static override enableJsonFlag = true;
 
   static override flags = {
+    // Even though oclif should support this out of the box there seems to be a bug.
+    json: Flags.boolean({
+      description: 'Output as JSON.',
+      default: false,
+    }),
+
     'dry-run': Flags.boolean({
       description: 'Dry run.',
       default: false,
@@ -273,14 +287,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
     super.error(err, options as any);
-    this._failing = true;
   }
 
   override async catch(err: Error, options?: any) {
-    // Will only submit if API key.
+    // Will only submit if API key exists (i.e., prod).
     super.error(err, options as any);
-    Sentry.captureException(err);
     this._failing = true;
+    throw err;
   }
 
   /**
@@ -305,7 +318,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
           this.log(`Starting agent (${this.flags.profile})`);
-          await daemon.start(this.flags.profile);
+          await daemon.start(this.flags.profile, { config: this.flags.config });
         }
       });
     }
@@ -317,7 +330,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     assert(this._clientConfig);
     if (!this._client) {
-      assert(this._clientConfig);
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {

@@ -5,7 +5,7 @@
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { Space, useQuery } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../proto';

@@ -12,8 +12,7 @@ export default async (event: any, context: FunctionContext) => {
   const space = context.client.getSpace(PublicKey.from(spaceKey))!;
   log.info('chatgpt', { space: space.key });
 
-  // TODO(burdon): Query by type?
-  const query = space.db.query((object) => object.__typename === Thread.type.name);
+  const query = space.db.query(Thread.filter());
   // TODO(burdon): Infer type.
   const threads: Thread[] = query.objects as Thread[];
   objects.forEach((objectId: string) => {

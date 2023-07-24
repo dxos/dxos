@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import * as pb from 'protobufjs';
+import invariant from 'tiny-invariant';
 
 import { MapingDescriptors, TypeMapperContext } from '../mapping';
 import { codegen, ref } from './codegen';
@@ -48,7 +48,7 @@ const createMessageMapperCached = (
             genMapScalar('item');
             c`);`;
           } else if (field.map) {
-            assert(field instanceof pb.MapField);
+            invariant(field instanceof pb.MapField);
             c`res.${field.name} = {};`;
             c`for(const key of Object.keys(obj.${field.name})) {`;
             {

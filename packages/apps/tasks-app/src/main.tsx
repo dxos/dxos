@@ -7,8 +7,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './main.scss';
 
-import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+import { Config, Defaults } from '@dxos/react-client';
 
 import { App } from './App';
 import { namespace } from './Routes';

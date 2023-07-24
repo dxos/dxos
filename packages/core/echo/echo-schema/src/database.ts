@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
@@ -71,8 +71,8 @@ export class EchoDatabase {
    */
   add<T extends EchoObject>(obj: T): T {
     log('save', { id: obj.id, type: (obj as any).__typename });
-    assert(obj.id); // TODO(burdon): Undefined when running in test.
-    assert(obj[base]);
+    invariant(obj.id); // TODO(burdon): Undefined when running in test.
+    invariant(obj[base]);
     if (obj[base]._database) {
       this._backend.mutate({
         objects: [
@@ -89,7 +89,7 @@ export class EchoDatabase {
       return obj;
     }
 
-    assert(!obj[db]);
+    invariant(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
@@ -113,7 +113,7 @@ export class EchoDatabase {
           },
         ],
       });
-      assert(result.objectsUpdated.length === 1);
+      invariant(result.objectsUpdated.length === 1);
 
       obj[base]._bind(result.objectsUpdated[0]);
     } finally {

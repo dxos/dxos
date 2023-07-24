@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { Generator } from '@dxos/kai-types/testing';
-import { useSpaces } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { ClientSpaceDecorator } from '@dxos/react-client/testing';
 
 import { SearchPanel } from './SearchPanel';

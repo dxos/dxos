@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import type { SpaceMember } from '@dxos/client';
+import type { SpaceMember } from '@dxos/react-client/echo';
 
 import { IdentityListItem } from './IdentityListItem';
 

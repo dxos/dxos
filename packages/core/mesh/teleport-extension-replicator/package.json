@@ -29,7 +29,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "tiny-invariant": "^1.3.1"
   },
   "devDependencies": {
     "@dxos/keyring": "workspace:*",

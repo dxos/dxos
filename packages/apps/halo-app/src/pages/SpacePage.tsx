@@ -6,9 +6,9 @@ import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useTranslation } from '@dxos/aurora';
-import { Identity } from '@dxos/client';
 import { Heading, useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
-import { useMembers } from '@dxos/react-client';
+import { useMembers } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
 
 const SpacePage = () => {
   const { t } = useTranslation('halo');

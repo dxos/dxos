@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import {
@@ -48,7 +48,7 @@ export class WorkerSession {
   public bridgeService?: BridgeService;
 
   constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionParams) {
-    assert(serviceHost);
+    invariant(serviceHost);
     this._serviceHost = serviceHost;
 
     const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {

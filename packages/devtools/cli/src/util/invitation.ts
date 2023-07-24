@@ -5,7 +5,11 @@
 import assert from 'node:assert';
 
 import { Trigger, Event } from '@dxos/async';
-import { AuthenticatingInvitationObservable, CancellableInvitationObservable, Invitation } from '@dxos/client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitation,
+} from '@dxos/client/invitations';
 
 export const hostInvitation = async ({
   observable,

@@ -4,8 +4,8 @@
 
 import React, { Context, FC, ReactNode, createContext, useContext } from 'react';
 
-import { Space } from '@dxos/client';
 import { raise } from '@dxos/debug';
+import { Space } from '@dxos/react-client/echo';
 
 import { FrameDef, FrameRegistry } from '../registry';
 

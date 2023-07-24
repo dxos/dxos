@@ -4,7 +4,7 @@
 
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
@@ -19,7 +19,7 @@ export class HypercoreFactory<T> {
     private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
     private readonly _options?: HypercoreOptions
   ) {
-    assert(this._root);
+    invariant(this._root);
   }
 
   /**

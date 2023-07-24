@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -123,7 +123,7 @@ export class Swarm {
   }
 
   async open() {
-    assert(!this._listeningHandle);
+    invariant(!this._listeningHandle);
     this._listeningHandle = await this._messenger.listen({
       peerId: this._ownPeerId,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
@@ -147,7 +147,7 @@ export class Swarm {
   }
 
   async setTopology(topology: Topology) {
-    assert(!this._ctx.disposed, 'Swarm is offline');
+    invariant(!this._ctx.disposed, 'Swarm is offline');
     if (topology === this._topology) {
       return;
     }
@@ -201,7 +201,7 @@ export class Swarm {
     }
 
     // Id of the peer offering us the connection.
-    assert(message.author);
+    invariant(message.author);
     if (!message.recipient?.equals(this._ownPeerId)) {
       log('rejecting offer with incorrect peerId', { message });
       return { accept: false };
@@ -224,12 +224,12 @@ export class Swarm {
       log.info('ignored for offline swarm');
       return;
     }
-    assert(
+    invariant(
       message.recipient?.equals(this._ownPeerId),
       `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`,
     );
-    assert(message.topic?.equals(this._topic));
-    assert(message.author);
+    invariant(message.topic?.equals(this._topic));
+    invariant(message.author);
 
     const peer = this._getOrCreatePeer(message.author);
     await peer.onSignal(message);
@@ -298,7 +298,7 @@ export class Swarm {
   }
 
   private async _destroyPeer(peerId: PublicKey) {
-    assert(this._peers.has(peerId));
+    invariant(this._peers.has(peerId));
     await this._peers.get(peerId)!.destroy();
     this._peers.delete(peerId);
   }

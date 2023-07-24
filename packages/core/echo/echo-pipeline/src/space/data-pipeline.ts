@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -143,8 +143,8 @@ export class DataPipeline implements CredentialProcessor {
     // Create database backend.
     const feedWriter: FeedWriter<DataMessage> = {
       write: (data, options) => {
-        assert(this._pipeline, 'Pipeline is not initialized.');
-        assert(this.currentEpoch, 'Epoch is not initialized.');
+        invariant(this._pipeline, 'Pipeline is not initialized.');
+        invariant(this.currentEpoch, 'Epoch is not initialized.');
         return this._pipeline.writer.write({ data }, options);
       },
     };
@@ -204,7 +204,7 @@ export class DataPipeline implements CredentialProcessor {
       await waitForOneEpoch;
     }
 
-    assert(this._pipeline, 'Pipeline is not initialized.');
+    invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
@@ -243,7 +243,7 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   private _createSnapshot(): SpaceSnapshot {
-    assert(this.databaseHost, 'Database backend is not initialized.');
+    invariant(this.databaseHost, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe: this._pipeline!.state.timeframe,
@@ -326,8 +326,8 @@ export class DataPipeline implements CredentialProcessor {
 
   @synchronized
   private async _processEpoch(ctx: Context, epoch: Epoch) {
-    assert(this._isOpen, 'Space is closed.');
-    assert(this._pipeline);
+    invariant(this._isOpen, 'Space is closed.');
+    invariant(this._pipeline);
     this._lastProcessedEpoch = epoch.number;
 
     log('Processing epoch', { epoch });
@@ -346,14 +346,14 @@ export class DataPipeline implements CredentialProcessor {
   }
 
   async waitUntilTimeframe(timeframe: Timeframe) {
-    assert(this._pipeline, 'Pipeline is not initialized.');
+    invariant(this._pipeline, 'Pipeline is not initialized.');
     await this._pipeline.state.waitUntilTimeframe(timeframe);
   }
 
   @synchronized
   async createEpoch(): Promise<Epoch> {
-    assert(this._pipeline);
-    assert(this.currentEpoch);
+    invariant(this._pipeline);
+    invariant(this.currentEpoch);
 
     await this._pipeline.pause();
 

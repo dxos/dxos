@@ -9,7 +9,7 @@ import React from 'react';
 import { TreeViewProvides } from '@braneframe/plugin-treeview';
 import { Stack } from '@braneframe/types';
 import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy, subscribe } from '@dxos/client';
+import { Query, SpaceProxy, subscribe } from '@dxos/client/echo';
 import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
@@ -36,12 +36,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
+    // TODO(burdon): Open/close? (vs. ready/unload, initialize/destroy?)
     unload: async () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
       subscriptions.clear();
     },
     provides: {
       graph: {
+        // TODO(burdon): Rename update (since not "event").
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
