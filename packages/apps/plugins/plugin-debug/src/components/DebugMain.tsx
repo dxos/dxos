@@ -98,8 +98,12 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>
       </div>
-      <div className='flex grow overflow-auto p-2'>
-        <pre>{JSON.stringify(data, replacer, 2)}</pre>
+
+      {/* TODO(burdon): Highlight. */}
+      <div className='flex grow overflow-auto p-2 text-sm font-thin'>
+        <pre>
+          <code>{JSON.stringify(data, replacer, 2)}</code>
+        </pre>
       </div>
     </Main.Content>
   );

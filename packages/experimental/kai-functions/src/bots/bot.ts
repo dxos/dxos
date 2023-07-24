@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 
 /**
  * Adds info to records.
+ * @deprecated Replaced by functions.
  */
 export abstract class Bot {
   protected _config?: Config;
