@@ -6,7 +6,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 
 export const uriToSelected = (uri: string) => {
   const [_, namespace, type, id, ...rest] = uri.split('/');
-  return [`${namespace}:${type}/${id}`, ...rest];
+  return namespace && type && id ? [`${namespace}:${type}/${id}`, ...rest] : [];
 };
 
 export const selectedToUri = (selected: string[]) => '/' + selected.join('/').replace(':', '/');
