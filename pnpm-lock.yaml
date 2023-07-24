@@ -704,6 +704,7 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/keys': link:../../../common/keys
@@ -716,7 +717,6 @@ importers:
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-markdown': link:../plugin-markdown
-      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/types': link:../../types

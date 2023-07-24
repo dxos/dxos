@@ -15,6 +15,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-space": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -28,7 +29,6 @@
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/types": "workspace:*",

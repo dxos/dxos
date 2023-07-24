@@ -5,6 +5,7 @@
 import { Hammer, IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { getIndices } from '@braneframe/plugin-space';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -47,13 +48,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             return [];
           }
 
-          const nodeId = 'debug';
+          const nodeId = parent.id + '-debug';
           nodeIds.add(nodeId);
 
           return [
             {
               id: nodeId,
-              index: 'a1',
+              index: getIndices(1)[0], // TODO(burdon): Prevent drag?
               label: 'Debug',
               icon: (props: IconProps) => <Hammer {...props} />,
               data: { id: nodeId },
