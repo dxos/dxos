@@ -3,10 +3,9 @@
 //
 
 import { inspect, InspectOptionsStylized } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 
 import { EchoArray } from './array';

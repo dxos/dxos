@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Keyring } from '@dxos/keyring';
+import { invariant } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { AdmissionRequest, AdmissionResponse, IntroductionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 

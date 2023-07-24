@@ -2,14 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { CancelledError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 

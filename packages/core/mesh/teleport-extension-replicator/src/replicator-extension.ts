@@ -4,14 +4,13 @@
 
 import type { ProtocolStream } from 'hypercore-protocol';
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log, logInfo } from '@dxos/log';
+import { invariant, log, logInfo } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
 import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';

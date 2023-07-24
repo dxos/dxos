@@ -2,14 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import type { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 

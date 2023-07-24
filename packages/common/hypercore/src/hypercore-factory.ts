@@ -4,8 +4,8 @@
 
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/log';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
 import { py } from './util';

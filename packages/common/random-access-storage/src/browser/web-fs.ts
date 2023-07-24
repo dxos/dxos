@@ -5,10 +5,9 @@
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
-import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
 

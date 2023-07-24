@@ -3,12 +3,11 @@
 //
 
 import { Transform } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log, logInfo } from '@dxos/log';
+import { invariant, log, logInfo } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 

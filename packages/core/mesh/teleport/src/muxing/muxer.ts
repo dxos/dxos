@@ -3,12 +3,11 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';

@@ -2,12 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, sleep } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedFactory, FeedOptions } from './feed-factory';

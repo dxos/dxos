@@ -2,13 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log, logInfo } from '@dxos/log';
+import { invariant, log, logInfo } from '@dxos/log';
 import { ListeningHandle, Messenger } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';

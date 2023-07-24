@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import {
@@ -19,7 +17,7 @@ import { failUndefined } from '@dxos/debug';
 import { Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';

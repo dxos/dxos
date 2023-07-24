@@ -3,8 +3,9 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 import * as varint from 'varint';
+
+import { invariant } from '@dxos/log';
 
 import { RpcPort } from './rpc-port';
 

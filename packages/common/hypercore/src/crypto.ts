@@ -4,11 +4,11 @@
 
 import { AbstractValueEncoding, Crypto } from 'hypercore';
 import { callbackify } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Codec, EncodingOptions } from '@dxos/codec-protobuf';
 import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
 import { arrayToBuffer } from '@dxos/util';
 
 /**

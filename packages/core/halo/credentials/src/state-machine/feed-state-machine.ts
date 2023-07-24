@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 

@@ -3,12 +3,11 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';

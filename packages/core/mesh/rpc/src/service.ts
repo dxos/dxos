@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
+import { invariant } from '@dxos/log';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 

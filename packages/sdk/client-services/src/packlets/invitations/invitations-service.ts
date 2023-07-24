@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import {
   AuthenticationRequest,
   Invitation,

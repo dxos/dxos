@@ -38,8 +38,7 @@
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^7.3.0",
     "random-access-storage": "^3.0.0",
-    "streamx": "^2.12.5",
-    "tiny-invariant": "^1.3.1"
+    "streamx": "^2.12.5"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",

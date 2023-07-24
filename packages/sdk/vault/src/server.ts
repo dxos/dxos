@@ -8,9 +8,9 @@ import fastify from 'fastify';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { join } from 'node:path';
 import pkgDir from 'pkg-dir';
-import invariant from 'tiny-invariant';
 
 import { definitions, ConfigPluginOpts } from '@dxos/config';
+import { invariant } from '@dxos/log';
 
 export type StartVaultOptions = {
   config?: ConfigPluginOpts;

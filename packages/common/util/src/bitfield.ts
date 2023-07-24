@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/log';
 
 /**
  * Bitfield encodes indices from MSB to LSB.

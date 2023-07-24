@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, ReadOnlyEvent } from '@dxos/async';
+import { invariant } from '@dxos/log';
 
 /**
  * Reactive query results.

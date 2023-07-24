@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
@@ -12,7 +10,7 @@ import { raise } from '@dxos/debug';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, genesisMutation } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

@@ -3,9 +3,8 @@
 //
 
 import Analytics from 'analytics-node';
-import invariant from 'tiny-invariant';
 
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { EventOptions, InitOptions, PageOptions } from './types';

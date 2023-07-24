@@ -4,11 +4,10 @@
 
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
-import invariant from 'tiny-invariant';
 
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
+import { invariant, getContextFromEntry, log, LogLevel, LogProcessor } from '@dxos/log';
 import { humanize } from '@dxos/util';
 
 let TX!: Transaction;

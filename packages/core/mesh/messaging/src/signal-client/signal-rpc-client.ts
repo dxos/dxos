@@ -3,12 +3,11 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import { Message as SignalMessage, Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';

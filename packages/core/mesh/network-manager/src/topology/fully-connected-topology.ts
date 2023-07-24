@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
 
 import { SwarmController, Topology } from './topology';
 

@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { GossipMessage, GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';

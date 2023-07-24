@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import distance from 'xor-distance';
 
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 
 import { SwarmController, Topology } from './topology';
 

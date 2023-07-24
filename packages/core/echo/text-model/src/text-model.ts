@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
 import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
+import { invariant } from '@dxos/log';
 import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 import { ItemID, schema } from '@dxos/protocols';
 import { TextMutation, TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';

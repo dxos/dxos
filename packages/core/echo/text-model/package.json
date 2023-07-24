@@ -25,7 +25,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/node": "^18.11.9",
-    "tiny-invariant": "^1.3.1",
     "yjs": "^13.5.44"
   },
   "devDependencies": {

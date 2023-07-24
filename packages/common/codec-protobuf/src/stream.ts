@@ -2,10 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
 
 type Callbacks<T> = {

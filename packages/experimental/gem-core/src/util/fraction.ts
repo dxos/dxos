@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/log';
 
 // TODO(burdon): Protobuf mapping?
 export type Fraction = [num: number, denum: number];

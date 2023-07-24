@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import {
   asyncTimeout,
@@ -18,7 +17,7 @@ import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protoco
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Contact, Device, DeviceKind, Identity, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential, Presentation, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
