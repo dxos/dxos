@@ -1,12 +1,13 @@
 functions:
   chess:
     description: "Chess bot."
+
   chatgpt:
     description: "Chat GPT."
+
   hello:
     description: "Test function."
 
-# TODO(dmaretskyi): Extract to separate file (dev only)?
 triggers:
   - function: chess
     subscription:

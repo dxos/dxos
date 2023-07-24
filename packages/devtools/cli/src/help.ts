@@ -4,6 +4,7 @@
 
 import { Help } from '@oclif/core';
 import chalk from 'chalk';
+import rev from 'git-rev-sync';
 
 // http://patorjk.com/software/taag/#p=testall&f=Patorjk-HeX&t=DXOS
 export const BANNER =
@@ -20,7 +21,7 @@ export default class CustomHelp extends Help {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(chalk`{yellow.bold Warning: development mode.}\n`);
+      console.log(chalk`{yellow.bold Warning: development mode (${rev.branch()} #${rev.short()})}\n`);
     }
 
     await super.showHelp(args);

@@ -7,7 +7,7 @@ import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { log } from '@dxos/log';
 
 export type ChatModelOptions = {
-  organization: string;
+  orgId: string;
   apiKey: string;
   model?: string;
 };
@@ -27,7 +27,7 @@ export class ChatModel {
   constructor(private readonly _options: ChatModelOptions) {
     // https://beta.openai.com/docs/api-reference/authentication
     const configuration = new Configuration({
-      organization: this._options.organization,
+      organization: this._options.orgId,
       apiKey: this._options.apiKey,
     });
 

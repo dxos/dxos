@@ -93,13 +93,25 @@ declare module 'forever' {
 
   // TODO(mykola): Get full ForeverProcess type.
   export type ForeverProcess = {
+    args: string[];
+    command: string;
+    cwd: string;
     ctime: number;
+    errFile: string;
+    file: string;
     foreverPid: number;
+    id: string;
+    isMaster: boolean;
+    logFile: string;
+    outFile: string;
     pid: number;
-    uid: string;
-    running: boolean;
+    pidFile: string;
     restarts: number;
+    running: boolean;
+    silent: boolean;
     socket: string;
+    spawnWith: string;
+    uid: string;
   };
 
   /**

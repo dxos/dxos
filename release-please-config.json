@@ -438,11 +438,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/kai-bots/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/kai-frames/package.json",
           "jsonpath": "$.version"
         },

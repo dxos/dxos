@@ -24,7 +24,7 @@
       "path": "../../sdk/client-services"
     },
     {
-      "path": "../kai-bots"
+      "path": "../kai-functions"
     }
   ]
 }
