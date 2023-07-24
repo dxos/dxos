@@ -71,6 +71,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   public static override enableJsonFlag = true;
 
   static override flags = {
+    // Even though oclif should support this out of the box there seems to be a bug.
+    json: Flags.boolean({
+      description: 'Output as JSON.',
+      default: false,
+    }),
+
     'dry-run': Flags.boolean({
       description: 'Dry run.',
       default: false,
