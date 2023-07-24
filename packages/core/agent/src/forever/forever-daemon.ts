@@ -49,12 +49,15 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map(({ uid, foreverPid, running, ctime }: ForeverProcess) => {
+    return result.map(({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+      // console.log(Object.keys(_rest));
       return {
         profile: uid,
         pid: foreverPid,
-        running,
         started: ctime,
+        running,
+        restarts,
+        logFile,
       };
     });
   }
@@ -90,6 +93,12 @@ export class ForeverDaemon implements Daemon {
         logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.
+
+        // TODO(burdon): Configure to watch config file.
+        //  https://github.com/foreversd/forever-monitor/blob/master/lib/forever-monitor/plugins/watch.js
+        // watch: true,
+        // watchIgnorePatterns (ignore all profiles except the current one).
+        // watchDirectory
       });
 
       try {
@@ -128,9 +137,11 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo> {
-    if (!(await this.isRunning(profile))) {
-      return {};
+  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
+    const running = await this.isRunning(profile);
+    log.info('stopping', { profile, running });
+    if (!running) {
+      return undefined;
     }
 
     const proc = await this._getProcess(profile);
@@ -155,9 +166,9 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async restart(profile: string, params?: StartOptions): Promise<ProcessInfo> {
+  async restart(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     await this.stop(profile);
-    return this.start(profile, params);
+    return this.start(profile, options);
   }
 
   async _getProcess(profile?: string): Promise<ProcessInfo> {

@@ -17,9 +17,18 @@ export const printAgents = (daemons: any[], flags = {}) => {
       pid: {
         header: 'process',
       },
+      running: {
+        header: 'running',
+      },
+      restarts: {
+        header: 'restarts',
+      },
       uptime: {
         header: 'uptime',
         get: (row) => formatDistance(new Date(), new Date(row.started)),
+      },
+      logFile: {
+        header: 'logFile',
       },
     },
     {
