@@ -16,6 +16,9 @@ type HandlerProps = {
   objects: string[];
 };
 
+// TODO(burdon): Feedback (presence).
+// TODO(burdon): Prevent multiple responses (esp. if slow).
+
 const identityKey = PublicKey.random().toHex(); // TODO(burdon): ???
 
 export default async (event: HandlerProps, context: FunctionContext) => {
@@ -59,6 +62,7 @@ export default async (event: HandlerProps, context: FunctionContext) => {
           meta: block.meta, // TODO(burdon): Use to distinguish generated messages.
         });
 
+        // TODO(burdon): Pass in history.
         // TODO(burdon): Error handling (e.g., 401);
         const { content } =
           (await model.request(block.messages.map((message) => ({ role: 'user', content: message.text ?? '' })))) ?? {};
