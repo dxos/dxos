@@ -4,7 +4,7 @@
 
 import { Duplex } from 'node:stream';
 
-import { DeferredTask, Event, sleep } from '@dxos/async';
+import { Event, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant, log } from '@dxos/log';
@@ -30,7 +30,7 @@ export type CreateChannelOpts = {
   contentType?: string;
 };
 
-const DEBOUNCE_STATS_INTERVAL = 1000;
+const STATS_INTERVAL = 1000;
 
 /**
  * Channel based multiplexer.
@@ -58,27 +58,13 @@ export class Muxer {
   public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
 
   private readonly _ctx = new Context();
-  private readonly _emitStats = new DeferredTask(this._ctx, async () => {
-    if (this._destroyed || this._destroying) {
-      return;
-    }
-
-    this.statsUpdated.emit(
-      Array.from(this._channelsByTag.values()).map((channel) => ({
-        id: channel.id,
-        tag: channel.tag,
-        bytesSent: channel.stats.bytesSent,
-        bytesReceived: channel.stats.bytesReceived,
-      })),
-    );
-
-    await sleep(DEBOUNCE_STATS_INTERVAL);
-  });
 
   constructor() {
     this._framer.port.subscribe((msg) => {
       this._handleCommand(codec.decode(msg));
     });
+
+    scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
   }
 
   /**
@@ -105,7 +91,6 @@ export class Muxer {
 
     channel.push = (data) => {
       channel.stats.bytesReceived += data.length;
-      this._emitStats.schedule();
       stream.push(data);
     };
     channel.destroy = (err) => {
@@ -144,7 +129,6 @@ export class Muxer {
 
     channel.push = (data) => {
       channel.stats.bytesReceived += data.length;
-      this._emitStats.schedule();
       if (callback) {
         callback(data);
       } else {
@@ -196,6 +180,7 @@ export class Muxer {
       },
     });
     this._dispose();
+    void this._ctx.dispose();
   }
 
   private _dispose(err?: Error) {
@@ -215,8 +200,6 @@ export class Muxer {
     // Make it easy for GC.
     this._channelsByLocalId.clear();
     this._channelsByTag.clear();
-
-    void this._ctx.dispose();
   }
 
   private _handleCommand(cmd: Command) {
@@ -286,7 +269,6 @@ export class Muxer {
 
   private _sendData(channel: Channel, data: Uint8Array) {
     channel.stats.bytesSent += data.length;
-    this._emitStats.schedule();
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
       channel.buffer.push(data);
@@ -298,6 +280,21 @@ export class Muxer {
         },
       });
     }
+  }
+
+  private async _emitStats() {
+    if (this._destroyed || this._destroying) {
+      return;
+    }
+
+    this.statsUpdated.emit(
+      Array.from(this._channelsByTag.values()).map((channel) => ({
+        id: channel.id,
+        tag: channel.tag,
+        bytesSent: channel.stats.bytesSent,
+        bytesReceived: channel.stats.bytesReceived,
+      })),
+    );
   }
 }
 
