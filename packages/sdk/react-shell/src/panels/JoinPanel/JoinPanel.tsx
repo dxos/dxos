@@ -98,7 +98,6 @@ export const JoinPanelImpl = ({
           <Viewport.View classNames={viewStyles} id='identity added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
-              send={send}
             />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='space invitation input'>
