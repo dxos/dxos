@@ -33,7 +33,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
   }, []);
 
   const doneButton = (
-    <Button onClick={onDone} disabled={!active} classNames='grow pli-2 order-1' data-testid='manage-devices-done'>
+    <Button onClick={onDone} disabled={!active} classNames='grow pli-2 order-1' data-testid='identity-panel-done'>
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
       <Check weight='bold' className={getSize(4)} />

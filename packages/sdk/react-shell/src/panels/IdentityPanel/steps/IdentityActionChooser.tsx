@@ -2,20 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
-import React from 'react';
+import { CaretLeft, CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
+import React, { cloneElement } from 'react';
 
-import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, DensityProvider, Separator, useTranslation } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export const IdentityActionChooser = ({ send, active }: IdentityPanelStepProps) => {
+export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }: IdentityPanelStepProps) => {
   const { t } = useTranslation('os');
+  const doneButton = (
+    <Button density='fine' onClick={onDone} disabled={!active} classNames='pli-4' data-testid='identity-panel-done'>
+      <CaretLeft weight='bold' className={mx(getSize(4), 'invisible')} />
+      <span className='grow'>{t('done label')}</span>
+      <Check weight='bold' className={getSize(4)} />
+    </Button>
+  );
   return (
-    <DensityProvider density='coarse'>
-      <div role='none' className='grow flex justify-center items-center'>
-        <div role='none' className='flex flex-col gap-1'>
+    <div role='none' className='grow flex flex-col gap-1 justify-around'>
+      <div className='flex flex-col gap-1'>
+        <DensityProvider density='coarse'>
           <Button disabled={!active} data-testid='manage-devices' onClick={() => send({ type: 'chooseDevices' })}>
             <Plus className={getSize(6)} />
             <span className='grow mli-3'>{t('choose devices label')}</span>
@@ -35,8 +42,10 @@ export const IdentityActionChooser = ({ send, active }: IdentityPanelStepProps) 
             <span className='grow mli-3'>{t('choose sign out label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
-        </div>
+        </DensityProvider>
       </div>
-    </DensityProvider>
+      <Separator classNames='mlb-2' />
+      {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+    </div>
   );
 };
