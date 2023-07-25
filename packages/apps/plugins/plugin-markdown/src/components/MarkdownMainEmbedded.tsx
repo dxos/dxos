@@ -10,10 +10,10 @@ import { MarkdownProperties } from '../types';
 import { MarkdownMain } from './MarkdownMain';
 
 export const MarkdownMainEmbedded = ({
-  data: [model, properties, _],
+  data: { composer, properties },
 }: {
-  data: [ComposerModel, MarkdownProperties, 'embedded'];
+  data: { composer: ComposerModel; properties: MarkdownProperties; view: 'embedded' };
   role?: string;
 }) => {
-  return <MarkdownMain model={model} properties={properties} layout='embedded' />;
+  return <MarkdownMain model={composer} properties={properties} layout='embedded' />;
 };

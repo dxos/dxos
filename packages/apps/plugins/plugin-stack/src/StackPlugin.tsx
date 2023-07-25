@@ -78,15 +78,19 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       translations,
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isStack(datum[datum.length - 1])) {
+            if ('object' in datum && isStack(datum.object)) {
               return StackMain;
             } else {
               return null;
             }
           case 'dragoverlay':
-            if (datum && typeof datum === 'object' && 'object' in datum) {
+            if ('object' in datum) {
               return StackSectionOverlay;
             } else {
               return null;
