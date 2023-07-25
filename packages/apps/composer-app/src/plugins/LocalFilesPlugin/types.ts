@@ -3,7 +3,18 @@
 //
 
 import { GraphProvides } from '@braneframe/plugin-graph';
+import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
+
+export const LOCAL_FILES_PLUGIN = 'dxos:local';
+
+export enum LocalFilesAction {
+  OPEN_FILE = `${LOCAL_FILES_PLUGIN}:open-file`,
+  OPEN_DIRECTORY = `${LOCAL_FILES_PLUGIN}:open-directory`,
+  RECONNECT = `${LOCAL_FILES_PLUGIN}:reconnect`,
+  CLOSE = `${LOCAL_FILES_PLUGIN}:close`,
+  SAVE = `${LOCAL_FILES_PLUGIN}:save`,
+}
 
 type PermissionStatus = 'granted' | 'denied' | 'prompt';
 
@@ -27,4 +38,4 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export type LocalFilesPluginProvides = GraphProvides & TranslationsProvides;
+export type LocalFilesPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;

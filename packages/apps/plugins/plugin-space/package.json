@@ -34,6 +34,7 @@
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",

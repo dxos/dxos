@@ -25,11 +25,11 @@ import {
 import { getSize, mx, osTx } from '@dxos/aurora-theme';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { TREE_VIEW_PLUGIN } from '../TreeViewPlugin';
+import { TREE_VIEW_PLUGIN } from '../types';
 import { TreeView } from './TreeView';
 
 export const TreeViewContainer = () => {
-  const graph = useGraph();
+  const { graph, invokeAction } = useGraph();
 
   const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
@@ -70,7 +70,7 @@ export const TreeViewContainer = () => {
                       variant='ghost'
                       key={action.id}
                       {...(action.testId && { 'data-testid': action.testId })}
-                      onClick={(event) => action.invoke(t, event)}
+                      onClick={() => invokeAction(action)}
                       classNames='pli-2 pointer-fine:pli-1'
                       {...(!sidebarOpen && { tabIndex: -1 })}
                     >
@@ -132,7 +132,7 @@ export const TreeViewContainer = () => {
                             // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                             suppressNextTooltip.current = true;
                             setOptionsMenuOpen(false);
-                            void action.invoke(t, event);
+                            void invokeAction(action);
                           }}
                           classNames='gap-2'
                         >
