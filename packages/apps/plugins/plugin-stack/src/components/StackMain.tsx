@@ -369,7 +369,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   );
 };
 
-export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
-  const stack = data[data.length - 1] as StackModel & StackProperties;
+export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
+  const stack = data.object as StackModel & StackProperties;
   return <StackMainImpl stack={stack} />;
 };
