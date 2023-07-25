@@ -5,7 +5,6 @@
 import { Play, HandPalm } from '@phosphor-icons/react';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Debug as DebugType } from '@braneframe/types';
 import { Button, DensityProvider, Input, Main, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { diagnostics } from '@dxos/client/diagnostics';
@@ -18,7 +17,7 @@ import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space, _] }) => {
+export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
   const { t } = useTranslation(DEBUG_PANEL);
 
   const client = useClient();

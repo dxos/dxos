@@ -11,12 +11,10 @@ import { PluginDefinition, Surface } from '@dxos/react-surface';
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
-import { TreeViewContextValue, TreeViewProvides } from './types';
+import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 import { resolveNodes } from './util';
 
-export const TREE_VIEW_PLUGIN = 'dxos:treeview';
-
-export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
+export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   const state = deepSignal<TreeViewContextValue>({ selected: [] });
 
   return {
@@ -31,7 +29,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
       components: {
         default: () => {
           const treeView = useTreeView();
-          const graph = useGraph();
+          const { graph } = useGraph();
           const [plugin] = treeView.selected[0]?.split('/') ?? [];
           const nodes = resolveNodes(
             Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[],
@@ -75,6 +73,19 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
           default:
             return null;
         }
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case TreeViewAction.SELECT: {
+              if (Array.isArray(intent.data)) {
+                state.selected = intent.data;
+                return true;
+              }
+              break;
+            }
+          }
+        },
       },
     },
   };

@@ -37,17 +37,19 @@ export const getActions = (node: GraphNode): GraphNodeAction[] =>
       return 1;
     });
 
-export const buildGraph = (
-  from: GraphNode,
-  plugins: Plugin[],
-  onUpdate?: (path: string[], nodes: GraphNode | GraphNode[]) => void,
-  path: string[] = [],
-  ignore: string[] = [],
-): GraphNode => {
+export type BuildGraphOptions = {
+  from: GraphNode;
+  onUpdate?: (path: string[], nodes: GraphNode | GraphNode[]) => void;
+  plugins?: Plugin[];
+  path?: string[];
+  ignore?: string[];
+};
+
+export const buildGraph = ({ from, onUpdate, plugins = [], path = [], ignore = [] }: BuildGraphOptions): GraphNode => {
   const validPlugins = graphPlugins(plugins).filter((plugin) => !ignore.includes(plugin.meta.id));
 
   from.pluginChildren = validPlugins.reduce((acc, plugin) => {
-    const emit = (newFrom?: GraphNode) => {
+    const invalidate = (newFrom?: GraphNode) => {
       if (!onUpdate) {
         return;
       }
@@ -55,38 +57,37 @@ export const buildGraph = (
       if (newFrom) {
         const index = nodes.findIndex((n) => n.id === newFrom.id);
         const stringIndex = index >= 0 ? String(index) : String(nodes.length);
-        buildGraph(
-          newFrom,
+        buildGraph({
+          from: newFrom,
           plugins,
           onUpdate,
-          [...path, 'pluginChildren', plugin.meta.id, stringIndex],
-          [...ignore, plugin.meta.id],
-        );
+          path: [...path, 'pluginChildren', plugin.meta.id, stringIndex],
+          ignore: [...ignore, plugin.meta.id],
+        });
         onUpdate([...path, 'pluginChildren', plugin.meta.id, stringIndex], newFrom);
         return;
       }
 
-      const newNodes = plugin.provides.graph.nodes?.(from, emit, plugins) ?? [];
+      const newNodes = plugin.provides.graph.nodes?.(from, invalidate, plugins) ?? [];
       newNodes.forEach((node, index) =>
-        buildGraph(
-          node,
+        buildGraph({
+          from: node,
           plugins,
           onUpdate,
-          [...path, 'pluginChildren', plugin.meta.id, String(index)],
-          [...ignore, plugin.meta.id],
-        ),
+          path: [...path, 'pluginChildren', plugin.meta.id, String(index)],
+          ignore: [...ignore, plugin.meta.id],
+        }),
       );
       onUpdate([...path, 'pluginChildren', plugin.meta.id], newNodes);
     };
-
-    const nodes = plugin.provides.graph.nodes?.(from, emit, plugins) ?? [];
+    const nodes = plugin.provides.graph.nodes?.(from, invalidate, plugins) ?? [];
     acc[plugin.meta.id] = nodes;
     return acc;
   }, (from.pluginChildren ?? {}) as Record<string, GraphNode[]>);
 
   from.pluginActions = validPlugins.reduce((acc, plugin) => {
-    // TODO(wittjosiah): Actions emit.
-    const actions = plugin.provides.graph.actions?.(from, () => {}, plugins) ?? [];
+    // TODO(wittjosiah): Actions invalidate.
+    const actions = plugin.provides.graph.actions?.(from, () => {}) ?? [];
     acc[plugin.meta.id] = actions;
     return acc;
   }, (from.pluginActions ?? {}) as Record<string, GraphNodeAction[]>);
@@ -94,7 +95,13 @@ export const buildGraph = (
   for (const [id, nodes] of Object.entries(from.pluginChildren)) {
     for (const index in nodes) {
       const node = nodes[index];
-      buildGraph(node, plugins, onUpdate, [...path, 'pluginChildren', id, index], [...ignore, id]);
+      buildGraph({
+        from: node,
+        plugins,
+        onUpdate,
+        path: [...path, 'pluginChildren', id, index],
+        ignore: [...ignore, id],
+      });
     }
   }
 

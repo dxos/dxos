@@ -8,7 +8,7 @@ import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions } from '@braneframe/plugin-graph';
+import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -54,6 +54,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 >(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
+  const { invokeAction } = useGraph();
   const { sidebarOpen, closeSidebar } = useSidebar();
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
@@ -168,7 +169,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
                     onClick={(event) => {
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
-                      void action.invoke(t, event);
+                      void invokeAction(action);
                     }}
                     classNames='gap-2'
                   >
@@ -194,7 +195,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             <Button
               variant='ghost'
               classNames='shrink-0 pli-2 pointer-fine:pli-1'
-              onClick={(event) => primaryAction.invoke(t, event)}
+              onClick={() => invokeAction(primaryAction)}
               {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
               {...(!sidebarOpen && { tabIndex: -1 })}
             >

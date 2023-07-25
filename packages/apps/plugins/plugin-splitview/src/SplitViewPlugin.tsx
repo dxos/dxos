@@ -6,15 +6,11 @@ import { ArrowLineLeft } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React, { PropsWithChildren } from 'react';
 
-import { GraphProvides } from '@braneframe/plugin-graph';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { SplitViewContext, SplitViewContextValue } from './SplitViewContext';
+import { SplitViewContext } from './SplitViewContext';
 import { SplitView, SplitViewMainContentEmpty } from './components';
-
-export type SplitViewProvides = GraphProvides & {
-  splitView: SplitViewContextValue;
-};
+import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
 
 export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
   const state = deepSignal({
@@ -25,7 +21,7 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
 
   return {
     meta: {
-      id: 'dxos:splitview',
+      id: SPLITVIEW_PLUGIN,
     },
     provides: {
       context: (props: PropsWithChildren) => (
@@ -44,11 +40,23 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
               index: 'a1',
               label: ['close sidebar label', { ns: 'os' }],
               icon: (props) => <ArrowLineLeft {...props} />,
-              invoke: async () => {
-                state.sidebarOpen = false;
+              intent: {
+                plugin: SPLITVIEW_PLUGIN,
+                action: SplitViewAction.TOGGLE_SIDEBAR,
+                data: { state: false },
               },
             },
           ];
+        },
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case SplitViewAction.TOGGLE_SIDEBAR: {
+              state.sidebarOpen = intent.data.state ?? !state.sidebarOpen;
+              return true;
+            }
+          }
         },
       },
       splitView: state,
