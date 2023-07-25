@@ -122,4 +122,6 @@ declare module 'forever' {
   export const list: (format: boolean, callback: (err: Error, processes: ForeverProcess[]) => void) => void;
 
   export const kill: (pid: number, killTree?: boolean, signal?: string, callback?: () => any) => void;
+
+  export const cleanUp: (cleanUpLogs: boolean, allowManager: boolean) => void;
 }
