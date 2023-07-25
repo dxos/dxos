@@ -28,6 +28,7 @@
   "devDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
@@ -43,6 +44,7 @@
   "peerDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",

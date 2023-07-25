@@ -2,43 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IconProps, Kanban, Plus, Trash } from '@phosphor-icons/react';
-import get from 'lodash.get';
+import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
-import { GraphNodeAdapter, getIndices } from '@braneframe/plugin-space';
-import { TreeViewProvides } from '@braneframe/plugin-treeview';
+import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
-import { findPlugin, PluginDefinition } from '@dxos/react-surface';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
-import { isKanban, KANBAN_PLUGIN, KanbanPluginProvides } from './props';
+import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides, kanbanToGraphNode } from './props';
 import translations from './translations';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const objectToGraphNode = (parent: GraphNode, object: KanbanType, index: string): GraphNode => ({
-    id: object.id,
-    index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
-    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
-    icon: (props: IconProps) => <Kanban {...props} />,
-    data: object,
-    parent,
-    pluginActions: {
-      [KANBAN_PLUGIN]: [
-        {
-          id: 'delete', // TODO(burdon): Namespac@e.
-          index: 'a1',
-          label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
-          icon: (props: IconProps) => <Trash {...props} />,
-          invoke: async () => parent.data?.db.remove(object),
-        },
-      ],
-    },
-  });
-
-  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
+  const adapter = new GraphNodeAdapter(KanbanType.filter(), kanbanToGraphNode);
 
   return {
     meta: {
@@ -58,13 +36,11 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           const space = parent.data;
           return adapter.createNodes(space, parent, emit);
         },
-        actions: (parent, _, plugins) => {
+        actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
-          const space = parent.data;
           return [
             {
               id: `${KANBAN_PLUGIN}/create-kanban`, // TODO(burdon): Namespace?
@@ -72,20 +48,31 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               testId: 'kanbanPlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create kanban label', { ns: KANBAN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              invoke: async () => {
-                const object = space.db.add(new KanbanType());
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
-                }
-              },
+              intent: [
+                {
+                  plugin: KANBAN_PLUGIN,
+                  action: KanbanAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.ACTIVATE,
+                },
+              ],
             },
           ];
         },
       },
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isKanban(datum[datum.length - 1])) {
+            if ('object' in datum && isKanban(datum.object)) {
               return KanbanMain;
             } else {
               return null;
@@ -96,6 +83,15 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       },
       components: {
         KanbanMain,
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case KanbanAction.CREATE: {
+              return { object: new KanbanType() };
+            }
+          }
+        },
       },
     },
   };

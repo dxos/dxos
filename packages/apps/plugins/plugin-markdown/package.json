@@ -26,7 +26,10 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
     "@dxos/aurora": "workspace:*",
@@ -41,7 +44,9 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
