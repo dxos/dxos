@@ -62,7 +62,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const treeView = useTreeView();
 
-  const active = node.id === treeView.selected.at(-1);
+  const active = node.id === treeView.active.at(-1);
   const modified = node.attributes?.modified ?? false;
   const disabled = node.attributes?.disabled ?? false;
   const error = node.attributes?.error ?? false;
@@ -104,13 +104,15 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
           onKeyDown={(event) => {
             if (event.key === ' ' || event.key === 'Enter') {
               event.stopPropagation();
-              treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
+              // TODO(wittjosiah): Intent.
+              treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
               !isLg && closeSidebar();
             }
           }}
           onClick={(event) => {
+            // TODO(wittjosiah): Intent.
             // TODO(wittjosiah): Make recursive.
-            treeView.selected = node.parent ? [node.parent.id, node.id] : [node.id];
+            treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
             !isLg && closeSidebar();
           }}
           className='text-start flex gap-2 justify-start'

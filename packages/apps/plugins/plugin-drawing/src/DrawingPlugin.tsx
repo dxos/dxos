@@ -58,7 +58,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: TreeViewAction.SELECT,
+                  action: TreeViewAction.ACTIVATE,
                 },
               ],
             },

@@ -19,14 +19,14 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
         // Update selection based on browser navigation.
         useEffect(() => {
           const handleNavigation = () => {
-            treeView.selected =
+            treeView.active =
               // TODO(wittjosiah): Remove. This is here for backwards compatibility.
               window.location.pathname === '/embedded'
                 ? ['dxos:github/embedded']
                 : uriToSelected(window.location.pathname);
           };
 
-          if (treeView.selected.length === 0 && window.location.pathname.length > 1) {
+          if (treeView.active.length === 0 && window.location.pathname.length > 1) {
             handleNavigation();
           }
 
@@ -38,12 +38,12 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
 
         // Update URL when selection changes.
         useEffect(() => {
-          const selectedPath = selectedToUri(treeView.selected);
+          const selectedPath = selectedToUri(treeView.active);
           if (window.location.pathname !== selectedPath) {
             // TODO(wittjosiah): Better support for search params?
             history.pushState(null, '', `${selectedPath}${window.location.search}`);
           }
-        }, [treeView.selected]);
+        }, [treeView.active]);
 
         return null;
       },
