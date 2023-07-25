@@ -64,7 +64,9 @@ const IdentityPanelImpl = ({ identity, titleId, activeView, send, createInvitati
   );
 };
 
-export type IdentityPanelProps = Partial<Pick<IdentityPanelImplProps, 'titleId' | 'createInvitationUrl'>>;
+export type IdentityPanelProps = Partial<
+  Pick<IdentityPanelImplProps, 'titleId' | 'createInvitationUrl'> & { onDone?: () => void }
+>;
 
 export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (code) => code }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
