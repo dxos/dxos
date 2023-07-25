@@ -11,14 +11,18 @@ import { humanize } from '@dxos/util';
 
 import { Viewport } from '../../components';
 import { IdentitySend, useIdentityMachine } from './identityMachine';
-import { IdentityActionChooser } from './steps';
+import { DeviceManager, IdentityActionChooser } from './steps';
 
 type IdentityPanelHeadingProps = {
   titleId: string;
   identity: Identity;
 };
 
-type IdentityPanelImplProps = IdentityPanelHeadingProps & { activeView: string; send: IdentitySend };
+type IdentityPanelImplProps = IdentityPanelHeadingProps & {
+  activeView: string;
+  send: IdentitySend;
+  createInvitationUrl: (invitationCode: string) => string;
+};
 
 const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   const { t } = useTranslation('os');
@@ -40,7 +44,7 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   );
 };
 
-const IdentityPanelImpl = ({ identity, titleId, activeView, send }: IdentityPanelImplProps) => {
+const IdentityPanelImpl = ({ identity, titleId, activeView, send, createInvitationUrl }: IdentityPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
       <IdentityHeading {...{ identity, titleId }} />
@@ -49,16 +53,20 @@ const IdentityPanelImpl = ({ identity, titleId, activeView, send }: IdentityPane
           <Viewport.View id='choosing action'>
             <IdentityActionChooser send={send} />
           </Viewport.View>
-          <Viewport.View id='editing devices'></Viewport.View>
-          <Viewport.View id='editing profile'></Viewport.View>
-          <Viewport.View id='signing out'></Viewport.View>
+          <Viewport.View id='managing devices'>
+            <DeviceManager createInvitationUrl={createInvitationUrl} />
+          </Viewport.View>
+          {/* <Viewport.View id='managing profile'></Viewport.View> */}
+          {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
     </DensityProvider>
   );
 };
 
-export const IdentityPanel = ({ titleId: propsTitleId }: { titleId?: string }) => {
+export type IdentityPanelProps = Partial<Pick<IdentityPanelImplProps, 'titleId' | 'createInvitationUrl'>>;
+
+export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (code) => code }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
   const identity = useIdentity();
   if (!identity) {
@@ -79,16 +87,24 @@ export const IdentityPanel = ({ titleId: propsTitleId }: { titleId?: string }) =
     switch (true) {
       case identityState.matches('choosingAction'):
         return 'choosing action';
-      case identityState.matches('editingDevices'):
-        return 'editing devices';
-      case identityState.matches('editingProfile'):
-        return 'editing profile';
-      case identityState.matches('signingOut'):
-        return 'signing out';
+      case identityState.matches('managingDevices'):
+        return 'managing devices';
+      // case identityState.matches('managingProfile'):
+      //   return 'managing profile';
+      // case identityState.matches('signingOut'):
+      //   return 'signing out';
       default:
         return 'never';
     }
   }, [identityState]);
 
-  return <IdentityPanelImpl identity={identity} activeView={activeView} send={identitySend} titleId={titleId} />;
+  return (
+    <IdentityPanelImpl
+      identity={identity}
+      activeView={activeView}
+      send={identitySend}
+      titleId={titleId}
+      createInvitationUrl={createInvitationUrl}
+    />
+  );
 };

@@ -13,7 +13,7 @@ type IdentityMachineContext = {
 };
 
 type IdentityChooseActionEvent = {
-  type: 'chooseProfile' | 'chooseDevices' | 'chooseSignOut' | 'unchooseAction';
+  type: 'chooseDevices' | /* 'chooseProfile' | 'chooseSignOut' | */ 'unchooseAction';
 };
 
 type IdentityEvent = IdentityChooseActionEvent;
@@ -28,15 +28,15 @@ const identityMachine = createMachine<IdentityMachineContext, IdentityEvent>(
     initial: 'choosingAction',
     states: {
       choosingAction: {},
-      editingDevices: {},
-      editingProfile: {},
-      signingOut: {},
+      managingDevices: {},
+      // managingProfile: {},
+      // signingOut: {},
     },
     on: {
-      chooseProfile: { target: '.editingProfile', actions: 'log' },
-      chooseDevices: { target: '.editingDevices', actions: 'log' },
-      chooseSignOut: { target: '.signingOut', actions: 'log' },
       unchooseAction: { target: '.choosingAction', actions: 'log' },
+      chooseDevices: { target: '.managingDevices', actions: 'log' },
+      // chooseProfile: { target: '.managingProfile', actions: 'log' },
+      // chooseSignOut: { target: '.signingOut', actions: 'log' },
     },
   },
   {
