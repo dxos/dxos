@@ -3,6 +3,7 @@
 //
 
 import { Flags } from '@oclif/core';
+import chalk from 'chalk';
 
 import { BaseCommand } from '../../base-command';
 
@@ -19,6 +20,9 @@ export default class Stop extends BaseCommand<typeof Stop> {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const stop = async (profile: string) => {
+        if (this.flags.force) {
+          this.log(chalk`Force stopping agent {yellow ${profile}}`);
+        }
         const process = await daemon.stop(profile, { force: this.flags.force });
         if (process) {
           this.log('Agent stopped');
@@ -27,11 +31,7 @@ export default class Stop extends BaseCommand<typeof Stop> {
 
       if (this.flags.all) {
         const processes = await daemon.list();
-        await Promise.all(
-          processes.map(async ({ profile }) => {
-            await stop(profile!);
-          }),
-        );
+        await Promise.all(processes.map((process) => stop(process.profile!)));
       } else {
         await stop(this.flags.profile);
       }

@@ -31,10 +31,7 @@ export class ForeverDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-    const locked = await isLocked(lockFilePath(profile));
-    const running = (await this.list()).some((process) => process.profile === profile && process.running);
-    // TODO(burdon): Health check to see these are in sync?
-    return locked || running;
+    return await isLocked(lockFilePath(profile));
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -50,7 +47,6 @@ export class ForeverDaemon implements Daemon {
     });
 
     return result.map(({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
-      // console.log(Object.keys(_rest));
       return {
         profile: uid,
         pid: foreverPid,
@@ -64,6 +60,12 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
+      // Check if there is stopped process.
+      if ((await this._getProcess(profile)).running === false) {
+        // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
+        await this.stop(profile);
+      }
+
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
@@ -89,7 +91,7 @@ export class ForeverDaemon implements Daemon {
           params?.config ? `--config=${params.config}` : '',
         ],
         uid: profile,
-        max: 1,
+        max: 0,
         logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.
@@ -124,6 +126,7 @@ export class ForeverDaemon implements Daemon {
           stream.close();
           await services.close();
         }
+        return await this._getProcess(profile);
       } catch (err) {
         log.warn('Failed to start daemon.');
         const errContent = fs.readFileSync(errFile, 'utf-8');
@@ -137,20 +140,14 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
-    const running = await this.isRunning(profile);
-    log.info('stopping', { profile, running });
-    if (!running) {
-      return undefined;
-    }
-
+  async stop(profile: string, { force = false }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
     // NOTE: Kill all processes with the given profile.
     // This is necessary when somehow few processes are started with the same profile.
     (await this.list()).forEach((process) => {
       if (process.profile === profile) {
-        if (force) {
+        if (force && process.running) {
           forever.stop(process.profile!);
         } else {
           forever.kill(proc.pid!, true, 'SIGINT');
@@ -163,7 +160,6 @@ export class ForeverDaemon implements Daemon {
     });
 
     removeSocketFile(profile);
-    log.info('stopped', { profile });
     return proc;
   }
 
