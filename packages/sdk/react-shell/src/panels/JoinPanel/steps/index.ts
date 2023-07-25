@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AdditionMethodSelector';
+export * from './AdditionMethodChooser';
 export * from './IdentityAdded';
 export * from './IdentityInput';
 export * from './InvitationAccepted';

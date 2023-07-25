@@ -13,7 +13,7 @@ import { JoinHeading } from './JoinHeading';
 import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
-  AdditionMethodSelector,
+  AdditionMethodChooser,
   IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
@@ -48,8 +48,8 @@ export const JoinPanelImpl = ({
       <JoinHeading {...{ titleId, mode, onExit, exitActionParent, preventExit }} />
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View classNames={viewStyles} id='addition method selector'>
-            <AdditionMethodSelector send={send} active={activeView === 'addition method selector'} />
+          <Viewport.View classNames={viewStyles} id='addition method chooser'>
+            <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='create identity input'>
             <IdentityInput send={send} method='create identity' active={activeView === 'create identity input'} />
@@ -190,7 +190,7 @@ export const JoinPanel = ({
   const activeView = useMemo(() => {
     switch (true) {
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
-        return 'addition method selector';
+        return 'addition method chooser';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
         return 'create identity input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):

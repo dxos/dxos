@@ -28,7 +28,7 @@ export const os = {
   'join identity label': 'Use an authed device',
   'join identity description': 'Add this device to an identity you’re already logged into on another device.',
   'deselect identity label': 'Back to identities',
-  'addition method selector title': 'An identity is required to continue',
+  'addition method chooser title': 'An identity is required to continue',
   'new identity input label': 'Add a display name',
   'recover identity input label': 'Type or paste your seed phrase',
   'failed to create identity message': 'Failed to create an identity.',

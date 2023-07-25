@@ -96,7 +96,7 @@ export type InvitationView =
 
 export type JoinView =
   | 'identity selector'
-  | 'addition method selector'
+  | 'addition method chooser'
   | 'identity input'
   | 'identity added'
   | 'space invitation acceptor'
