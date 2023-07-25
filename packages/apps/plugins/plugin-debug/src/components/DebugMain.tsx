@@ -106,7 +106,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
       </div>
 
       {/* TODO(burdon): Highlight. */}
-      <div className='flex grow overflow-hidden p-2'>
+      <div className='flex grow overflow-hidden px-2'>
         <SyntaxHighlighter className='w-full' language='json' style={themeMode === 'dark' ? styleDark : styleLight}>
           {JSON.stringify(data, replacer, 2)}
         </SyntaxHighlighter>

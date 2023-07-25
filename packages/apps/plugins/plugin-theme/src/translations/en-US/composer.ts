@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Rename "app" and factor out Composer specific translations.
 export const composer = {
   'current app name': 'Composer',
   'sidebar tree label': 'Spaces with documents',
