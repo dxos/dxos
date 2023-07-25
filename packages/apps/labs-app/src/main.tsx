@@ -22,9 +22,17 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
+import { SpaceProxy } from '@dxos/client/echo';
 import { Config, Defaults } from '@dxos/config';
+import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
+
+// TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[TypedObject.name] = TypedObject;
+(globalThis as any)[EchoDatabase.name] = EchoDatabase;
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
 
