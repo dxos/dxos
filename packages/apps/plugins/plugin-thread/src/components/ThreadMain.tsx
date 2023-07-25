@@ -20,7 +20,7 @@ import { ThreadChannel } from './ThreadChannel';
 // - Lightweight threads for document comments, inline AI, etc.
 //    (Similar reusable components everywhere; same data structure).
 
-export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
+export const ThreadMain: FC<{ data: { space: SpaceProxy; object: ThreadType } }> = ({ data: { object: thread } }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
   const identityKey = identity!.identityKey;
   // const identityKey = PublicKey.random().toHex();

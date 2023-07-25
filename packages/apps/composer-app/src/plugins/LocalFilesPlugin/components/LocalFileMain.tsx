@@ -10,20 +10,23 @@ import { Surface } from '@dxos/react-surface';
 import { LocalFileMainPermissions } from './LocalFileMainPermissions';
 
 export const LocalFileMain: FC<{ data: unknown }> = ({ data }) => {
-  const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) ? data : [];
+  const [parentNode, childNode] =
+    data && typeof data === 'object' && 'active' in data && Array.isArray(data.active) && isGraphNode(data.active[0])
+      ? [data.active[0], data.active[1]]
+      : [];
   const node = childNode ?? parentNode;
   const transformedData = useMemo(
     () =>
       node?.attributes?.disabled
-        ? [
-            { id: node.id, content: () => <LocalFileMainPermissions data={node} /> },
-            { title: node.data.title, readOnly: true },
-          ]
+        ? {
+            composer: { id: node.id, content: () => <LocalFileMainPermissions data={node} /> },
+            properties: { title: node.data.title, readOnly: true },
+          }
         : node?.data?.text
-        ? [
-            { id: node.id, content: node.data.text },
-            { title: node.data.title, readOnly: true },
-          ]
+        ? {
+            composer: { id: node.id, content: node.data.text },
+            properties: { title: node.data.title, readOnly: true },
+          }
         : node?.data
         ? node.data
         : null,
