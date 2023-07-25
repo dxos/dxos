@@ -376,7 +376,7 @@ importers:
       '@types/showdown': ^2.0.0
       '@types/turndown': ^5.0.1
       '@vitejs/plugin-react': ^3.0.1
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       dompurify: ^3.0.3
       github-markdown-css: ^5.2.0
       isomorphic-fetch: ^3.0.0
@@ -417,7 +417,7 @@ importers:
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       dompurify: 3.0.3
       github-markdown-css: 5.2.0
       isomorphic-fetch: 3.0.0
@@ -745,7 +745,7 @@ importers:
       '@dxos/util': workspace:*
       '@faker-js/faker': ^7.3.0
       '@phosphor-icons/react': ^2.0.5
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^5.0.4
@@ -753,7 +753,7 @@ importers:
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
     devDependencies:
       '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora': link:../../../ui/aurora
@@ -841,7 +841,7 @@ importers:
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       lodash.set: ^4.3.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -850,7 +850,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
       '@dxos/util': link:../../../common/util
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       lodash.set: 4.3.2
     devDependencies:
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -870,11 +870,11 @@ importers:
     specifiers:
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       react: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
@@ -966,7 +966,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -979,7 +979,7 @@ importers:
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/client': link:../../../sdk/client
       '@dxos/text-model': link:../../../core/echo/text-model
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
@@ -1073,13 +1073,13 @@ importers:
       '@phosphor-icons/react': ^2.0.5
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@dxos/debug': link:../../../common/debug
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -1116,7 +1116,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1129,7 +1129,7 @@ importers:
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/client': link:../../../sdk/client
       '@dxos/util': link:../../../common/util
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
@@ -1157,13 +1157,13 @@ importers:
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       i18next: ^21.10.0
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       i18next: 21.10.0
     devDependencies:
       '@dxos/aurora': link:../../../ui/aurora
@@ -1252,7 +1252,7 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      deepsignal: ^1.3.3
+      deepsignal: ^1.4.0-shallow.0
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1265,7 +1265,7 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
-      deepsignal: 1.3.4_react@18.2.0
+      deepsignal: 1.4.0-shallow.0_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
@@ -12711,14 +12711,6 @@ packages:
       use-sync-external-store: 1.2.0_react@18.2.0
     dev: false
 
-  /@preact/signals/1.1.5:
-    resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
-    peerDependencies:
-      preact: 10.x
-    dependencies:
-      '@preact/signals-core': 1.3.1
-    dev: false
-
   /@preact/signals/1.1.5_preact@10.11.2:
     resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
     peerDependencies:
@@ -23274,10 +23266,9 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  /deepsignal/1.3.4_react@18.2.0:
-    resolution: {integrity: sha512-yZEhFIZPnCN6uq07XykaeLRqqgBltF1sf4wvaucOhqb6w+ynoKZSpI00XKfvn6qMF8BRB9FFOttgAH1ljom3JA==}
+  /deepsignal/1.4.0-shallow.0_react@18.2.0:
+    resolution: {integrity: sha512-xMLJPVks5Z/2xWoUuj3YCZXpvtWRWme1kxGmwTV4AsX0EYYtFtXW55NiHmL5xZcco9m6TqVCtl2UsW2bq53Lhg==}
     dependencies:
-      '@preact/signals': 1.1.5
       '@preact/signals-core': 1.3.1
       '@preact/signals-react': 1.3.4_react@18.2.0
     transitivePeerDependencies:

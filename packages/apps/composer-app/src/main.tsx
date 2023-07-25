@@ -19,15 +19,10 @@ import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { Config, Defaults } from '@dxos/config';
-import { TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
 
 import { GithubPlugin, LocalFilesPlugin } from './plugins';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[TypedObject.name] = TypedObject;
 
 void initializeAppTelemetry({ namespace: 'composer-app', config: new Config(Defaults()) });
 

@@ -15,7 +15,7 @@
     "src"
   ],
   "dependencies": {
-    "deepsignal": "^1.3.3"
+    "deepsignal": "^1.4.0-shallow.0"
   },
   "devDependencies": {
     "@dxos/react-surface": "workspace:*",

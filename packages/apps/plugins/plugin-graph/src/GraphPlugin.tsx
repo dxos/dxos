@@ -11,7 +11,7 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
 import { GraphNode, GraphNodeAction, GraphPluginProvides } from './types';
-import { ROOT, buildGraph } from './util';
+import { ROOT, buildGraph, deepSignalGraphNode, transformGraph } from './util';
 
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
   const graph: DeepSignal<GraphNode> = deepSignal({
@@ -21,12 +21,6 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
     description: 'Root node',
     pluginChildren: {},
     pluginActions: {},
-    // get children(): GraphNode[] {
-    //   return [];
-    // },
-    // get actions(): GraphNodeAction[] {
-    //   return [];
-    // },
   });
 
   return {
@@ -34,7 +28,18 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       id: 'dxos:graph',
     },
     ready: async (plugins) => {
-      const result = buildGraph({ from: ROOT, plugins, onUpdate: (path, nodes) => set(graph, path, nodes) });
+      const result = buildGraph({
+        from: ROOT,
+        plugins,
+        onUpdate: (path, nodes) =>
+          set(
+            graph,
+            path,
+            Array.isArray(nodes)
+              ? nodes.map((node) => transformGraph(node, deepSignalGraphNode))
+              : transformGraph(nodes, deepSignalGraphNode),
+          ),
+      });
       graph.pluginChildren = deepSignal(result.pluginChildren ?? {});
       graph.pluginActions = deepSignal(result.pluginActions ?? {});
     },

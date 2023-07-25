@@ -17,6 +17,6 @@ export const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes:
     return nodes;
   }
 
-  const children = Object.values(node.pluginChildren ?? {}).flat() as GraphNode[];
+  const children = node.children ?? [];
   return resolveNodes(children, path, [...nodes, node]);
 };

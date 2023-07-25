@@ -27,9 +27,8 @@ export type GraphNode<TDatum = any> = {
   attributes?: { [key: string]: any };
   pluginChildren?: { [key: string]: GraphNode[] };
   pluginActions?: { [key: string]: GraphNodeAction[] };
-  // TODO(wittjosiah): https://github.com/luisherranz/deepsignal/issues/32
-  // readonly children?: GraphNode[];
-  // readonly actions?: GraphNodeAction[];
+  readonly children?: GraphNode[];
+  readonly actions?: GraphNodeAction[];
 };
 
 export type GraphNodeAction = {

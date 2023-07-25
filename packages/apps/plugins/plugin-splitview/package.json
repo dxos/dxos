@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "deepsignal": "^1.3.3"
+    "deepsignal": "^1.4.0-shallow.0"
   },
   "devDependencies": {
     "@braneframe/plugin-graph": "workspace:*",

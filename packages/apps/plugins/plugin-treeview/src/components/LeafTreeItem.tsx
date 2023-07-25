@@ -8,7 +8,7 @@ import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
+import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -67,7 +67,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const disabled = node.attributes?.disabled ?? false;
   const error = node.attributes?.error ?? false;
   const Icon = node.icon ?? Placeholder;
-  const allActions = getActions(node);
+  const allActions = node.actions ?? [];
   const [primaryAction, ...actions] = allActions;
   const menuActions = disabled ? actions : allActions;
 

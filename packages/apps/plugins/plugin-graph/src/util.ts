@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { deepSignal, shallow } from 'deepsignal/react';
+
 import { Plugin } from '@dxos/react-surface';
 
 import { GraphNode, GraphNodeAction, GraphProvides } from './types';
@@ -21,21 +23,6 @@ export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] =>
   (plugins as GraphPlugin[]).filter(
     (p) => typeof p.provides?.graph?.nodes === 'function' || typeof p.provides?.graph?.actions === 'function',
   );
-
-export const getActions = (node: GraphNode): GraphNodeAction[] =>
-  Object.values(node.pluginActions ?? {})
-    .flat()
-    .sort((a, b) => {
-      if (a.disposition === b.disposition) {
-        return 0;
-      }
-
-      if (a.disposition === 'toolbar') {
-        return -1;
-      }
-
-      return 1;
-    });
 
 export type BuildGraphOptions = {
   from: GraphNode;
@@ -106,4 +93,40 @@ export const buildGraph = ({ from, onUpdate, plugins = [], path = [], ignore = [
   }
 
   return from;
+};
+
+export const transformGraph = (graph: GraphNode, transform: (node: GraphNode) => GraphNode): GraphNode => {
+  const newGraph = transform(graph);
+  newGraph.pluginChildren = Object.entries(newGraph.pluginChildren ?? {}).reduce((acc, [id, nodes]) => {
+    acc[id] = nodes.map((node) => transformGraph(node, transform));
+    return acc;
+  }, {} as Record<string, GraphNode[]>);
+  return newGraph;
+};
+
+export const deepSignalGraphNode = (node: GraphNode): GraphNode => {
+  const transformed = deepSignal({
+    ...node,
+    data: node.data && shallow(node.data),
+    get children(): GraphNode[] {
+      return Object.values(transformed.pluginChildren ?? {}).flat();
+    },
+    get actions(): GraphNodeAction[] {
+      return Object.values(transformed.pluginActions ?? {})
+        .flat()
+        .sort((a, b) => {
+          if (a.disposition === b.disposition) {
+            return 0;
+          }
+
+          if (a.disposition === 'toolbar') {
+            return -1;
+          }
+
+          return 1;
+        });
+    },
+  }) as GraphNode;
+
+  return transformed;
 };

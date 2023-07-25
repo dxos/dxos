@@ -10,7 +10,7 @@ import { describe, test } from '@dxos/test';
 import { jsonify } from '@dxos/util';
 
 import { GraphNode, GraphProvides } from './types';
-import { ROOT, buildGraph } from './util';
+import { ROOT, buildGraph, transformGraph } from './util';
 
 const checkDepth = (node: GraphNode, depth = 0): number => {
   if (!node.parent) {
@@ -190,5 +190,30 @@ describe('buildGraph', () => {
       testPlugin1.meta.id,
     ]);
     expect(await nodesRecieved.wait()).to.deep.equal([newNode]);
+  });
+});
+
+describe('transformGraph', () => {
+  test('returns transformed graph', () => {
+    const graph: GraphNode = { id: 'test', label: 'test', index: '0' };
+    const transformed = transformGraph(graph, (node) => {
+      node.id = 'transformed';
+      return node;
+    });
+
+    expect(transformed).to.equal(graph);
+    expect(transformed).to.deep.equal({ ...graph, id: 'transformed' });
+  });
+
+  test('transforms children', () => {
+    const [testPlugin1] = testPlugin(1);
+    const graph = buildGraph({ from: ROOT, plugins: [testPlugin1] });
+
+    const transformed = transformGraph(graph, (node) => {
+      node.id += '-transformed';
+      return node;
+    });
+
+    expect(transformed.pluginChildren![testPlugin1.meta.id][0].id).to.equal('root-node1-transformed');
   });
 });

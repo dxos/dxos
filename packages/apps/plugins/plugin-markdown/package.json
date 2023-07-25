@@ -22,7 +22,7 @@
     "@dxos/aurora-composer": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "deepsignal": "^1.3.3",
+    "deepsignal": "^1.4.0-shallow.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
