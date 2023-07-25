@@ -15,8 +15,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-graph": "workspace:*",
-    "@braneframe/plugin-space": "workspace:*",
     "@dxos/client": "workspace:*",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/editor": "2.0.0-alpha.14",
@@ -29,6 +27,9 @@
     "yjs": "^13.5.44"
   },
   "devDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
@@ -46,6 +47,10 @@
     "vite": "^4.3.9"
   },
   "peerDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-treeview": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",

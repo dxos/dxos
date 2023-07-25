@@ -63,6 +63,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-intent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },

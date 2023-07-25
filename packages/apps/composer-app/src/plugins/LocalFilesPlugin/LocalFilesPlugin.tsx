@@ -10,22 +10,22 @@ import React from 'react';
 
 import { GraphNode, GraphNodeAction, isGraphNode } from '@braneframe/plugin-graph';
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
-import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { EventSubscriptions } from '@dxos/async';
+import { TreeViewAction, TreeViewPluginProvides } from '@braneframe/plugin-treeview';
+import { EventSubscriptions, Trigger } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';
-import { LocalEntity, LocalFile, LocalFilesPluginProvides } from './types';
+import { LOCAL_FILES_PLUGIN, LocalEntity, LocalFile, LocalFilesAction, LocalFilesPluginProvides } from './types';
 import {
   findFile,
+  getDirectoryChildren,
   handleSave,
   handleToLocalDirectory,
   handleToLocalFile,
   isLocalFile,
   legacyFileToLocalFile,
-  LOCAL_FILES_PLUGIN,
   localEntityToGraphNode,
 } from './util';
 
@@ -89,7 +89,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         }),
       );
 
-      const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
+      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos:treeview');
       if (treeViewPlugin) {
         const handleUpdate = () => {
           const current =
@@ -131,68 +131,34 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         Main: LocalFileMain,
       },
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent, invalidate) => {
           if (parent.id !== 'root') {
             return [];
           }
 
-          onFilesUpdate = emit;
+          onFilesUpdate = invalidate;
           const fileIndices = getIndices(state.files.length);
-          return state.files.map((entity, index) =>
-            localEntityToGraphNode(entity, fileIndices[index], emit, undefined, (file) => {
-              state.files = state.files.filter((f) => f !== file);
-            }),
-          );
+          return state.files.map((entity, index) => localEntityToGraphNode(entity, fileIndices[index]));
         },
-        actions: (parent, _, plugins) => {
+        actions: (parent) => {
           if (parent.id !== 'root') {
             return [];
           }
 
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
           const actionIndices = getIndices(2);
-
           const actions: GraphNodeAction[] = [
             {
               id: 'open-file-handle',
               index: actionIndices[0],
               label: ['open file label', { ns: LOCAL_FILES_PLUGIN }],
               icon: (props) => <FilePlus {...props} />,
-              invoke: async () => {
-                if ('showOpenFilePicker' in window) {
-                  const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
-                    mode: 'readwrite',
-                    types: [
-                      {
-                        description: 'Markdown',
-                        accept: { 'text/markdown': ['.md'] },
-                      },
-                    ],
-                  });
-                  const file = await handleToLocalFile(handle);
-                  state.files = [file, ...state.files];
-                  if (treeViewPlugin) {
-                    treeViewPlugin.provides.treeView.selected = [file.id];
-                  }
-
-                  return;
-                }
-
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.md,text/markdown';
-                input.onchange = async () => {
-                  const [legacyFile] = input.files ? Array.from(input.files) : [];
-                  if (legacyFile) {
-                    const file = await legacyFileToLocalFile(legacyFile);
-                    state.files = [file, ...state.files];
-                    if (treeViewPlugin) {
-                      treeViewPlugin.provides.treeView.selected = [file.id];
-                    }
-                  }
-                };
-                input.click();
-              },
+              intent: [
+                {
+                  plugin: LOCAL_FILES_PLUGIN,
+                  action: LocalFilesAction.OPEN_FILE,
+                },
+                { action: TreeViewAction.SELECT },
+              ],
             },
           ];
 
@@ -202,18 +168,107 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
               index: actionIndices[1],
               label: ['open directory label', { ns: LOCAL_FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
-              invoke: async () => {
-                const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                const directory = await handleToLocalDirectory(handle);
-                state.files = [...state.files, directory];
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [directory.id, directory.children[0]?.id];
-                }
-              },
+              intent: [
+                {
+                  plugin: LOCAL_FILES_PLUGIN,
+                  action: LocalFilesAction.OPEN_DIRECTORY,
+                },
+                { action: TreeViewAction.SELECT },
+              ],
             });
           }
 
           return actions;
+        },
+      },
+      intent: {
+        resolver: async (intent, plugins) => {
+          switch (intent.action) {
+            case LocalFilesAction.OPEN_FILE: {
+              if ('showOpenFilePicker' in window) {
+                const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
+                  mode: 'readwrite',
+                  types: [
+                    {
+                      description: 'Markdown',
+                      accept: { 'text/markdown': ['.md'] },
+                    },
+                  ],
+                });
+                const file = await handleToLocalFile(handle);
+                state.files = [file, ...state.files];
+
+                return [file.id];
+              }
+
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.md,text/markdown';
+              const result = new Trigger<string[]>();
+              input.onchange = async () => {
+                const [legacyFile] = input.files ? Array.from(input.files) : [];
+                if (legacyFile) {
+                  const file = await legacyFileToLocalFile(legacyFile);
+                  state.files = [file, ...state.files];
+                  result.wake([file.id]);
+                }
+              };
+              input.click();
+              return await result;
+            }
+
+            case LocalFilesAction.OPEN_DIRECTORY: {
+              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              const directory = await handleToLocalDirectory(handle);
+              state.files = [...state.files, directory];
+              return [directory.id, directory.children[0]?.id];
+            }
+
+            case LocalFilesAction.RECONNECT: {
+              const entity = state.files.find((entity) => entity.id === intent.data.id);
+              if (!entity) {
+                break;
+              }
+
+              if ('children' in entity) {
+                const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
+                if (permission === 'granted') {
+                  entity.children = await getDirectoryChildren(entity.handle);
+                  entity.permission = permission;
+                  onFilesUpdate?.();
+                }
+              } else {
+                const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
+                if (permission === 'granted') {
+                  const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
+                  entity.text = text;
+                  entity.permission = permission;
+                  onFilesUpdate?.();
+                }
+              }
+
+              return true;
+            }
+
+            case LocalFilesAction.SAVE: {
+              const file = findFile(state.files, intent.data.id);
+              if (file) {
+                await handleSave(file);
+                onFilesUpdate?.();
+                return true;
+              }
+              break;
+            }
+
+            case LocalFilesAction.CLOSE: {
+              if (typeof intent.data.id === 'string') {
+                state.files = state.files.filter((f) => f.id !== intent.data.id);
+                onFilesUpdate?.();
+                return true;
+              }
+              break;
+            }
+          }
         },
       },
     },

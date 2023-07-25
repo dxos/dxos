@@ -8,7 +8,7 @@ import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions } from '@braneframe/plugin-graph';
+import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
 
@@ -44,6 +44,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
 >(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
+  const { invokeAction } = useGraph();
   const [primaryAction, ...actions] = getActions(node);
   // TODO(wittjosiah): Update namespace.
   const { t } = useTranslation('composer');
@@ -150,7 +151,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                         // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
-                        void action.invoke(t, event);
+                        void invokeAction(action);
                       }}
                       classNames='gap-2'
                     >
@@ -179,11 +180,11 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.stopPropagation();
-                    void primaryAction.invoke(t, event);
+                    void invokeAction(primaryAction);
                   }
                 }}
-                onClick={(event) => {
-                  void primaryAction.invoke(t, event);
+                onClick={() => {
+                  void invokeAction(primaryAction);
                 }}
                 {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
                 {...(!sidebarOpen && { tabIndex: -1 })}
