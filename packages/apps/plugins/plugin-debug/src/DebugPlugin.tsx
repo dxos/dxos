@@ -5,7 +5,6 @@
 import { Hammer, IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { getIndices } from '@braneframe/plugin-space';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
@@ -64,7 +63,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           return [
             {
               id: nodeId,
-              index: getIndices(1)[0], // TODO(burdon): Prevent drag?
+              index: 'zzz', // TODO(burdon): Prevent drag? Dragging causes bug.
               label: 'Debug',
               icon: (props: IconProps) => <Hammer {...props} />,
               data: { id: nodeId },
@@ -78,11 +77,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           case 'main':
             if (isDebug(datum)) {
               return DebugMain;
-            } else {
-              return null;
             }
-          default:
-            return null;
         }
       },
       components: {

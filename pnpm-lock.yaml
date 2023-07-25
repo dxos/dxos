@@ -543,6 +543,7 @@ importers:
       '@braneframe/plugin-dnd': workspace:*
       '@braneframe/plugin-drawing': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
@@ -601,6 +602,7 @@ importers:
       '@braneframe/plugin-dnd': link:../plugins/plugin-dnd
       '@braneframe/plugin-drawing': link:../plugins/plugin-drawing
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-intent': link:../plugins/plugin-intent
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-space': link:../plugins/plugin-space
@@ -701,9 +703,11 @@ importers:
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-syntax-highlighter: ^15.5.0
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-space': link:../plugin-space
@@ -716,6 +720,7 @@ importers:
       '@dxos/util': link:../../../common/util
       '@faker-js/faker': 7.6.0
       lodash.get: 4.4.2
+      react-syntax-highlighter: 15.5.0_react@18.2.0
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-markdown': link:../plugin-markdown
@@ -729,6 +734,7 @@ importers:
       '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9

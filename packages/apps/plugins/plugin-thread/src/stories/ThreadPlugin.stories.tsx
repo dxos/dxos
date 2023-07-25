@@ -30,6 +30,7 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const DefaultThreadPluginStory = () => {
   const object = createThread();
+
   // TODO(burdon): Why array? Should first be space?
   return <Surface role='main' data={[object, object]} />;
 };

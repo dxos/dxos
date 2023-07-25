@@ -14,7 +14,6 @@ import { Text } from '@dxos/echo-schema';
 import { KANBAN_PLUGIN, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
-// TODO(burdon): Constructor type? `data` vs. `datum`?
 export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
 

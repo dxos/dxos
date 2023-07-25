@@ -13,6 +13,7 @@ import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { IntentPlugin } from '@braneframe/plugin-intent';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
       plugins={[
         ThemePlugin(),
         ClientPlugin(),
+        IntentPlugin(),
         DndPlugin(),
         GraphPlugin(),
         TreeViewPlugin(),

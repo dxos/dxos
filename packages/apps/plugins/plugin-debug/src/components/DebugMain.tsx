@@ -4,8 +4,13 @@
 
 import { Play, HandPalm } from '@phosphor-icons/react';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Button, DensityProvider, Input, Main, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { diagnostics } from '@dxos/client/diagnostics';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -17,15 +22,16 @@ import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
+export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
   const { t } = useTranslation(DEBUG_PANEL);
+  const { themeMode } = useThemeContext();
 
   const client = useClient();
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
     const data = await diagnostics(client, { humanize: false, truncate: true });
-    setData({ config, diagnostics: data });
+    setData({ config: config.values, diagnostics: data });
   };
   useEffect(() => {
     void handleRefresh();
@@ -39,6 +45,7 @@ export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
     return generator;
   }, [space]);
 
+  // TODO(burdon): Note shared across spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
@@ -70,7 +77,7 @@ export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
   };
 
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
+    <Main.Content classNames='flex flex-col grow fixed inset-0 min-bs-[100vh] overflow-hidden'>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
@@ -99,10 +106,10 @@ export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
       </div>
 
       {/* TODO(burdon): Highlight. */}
-      <div className='flex grow overflow-auto p-2 text-sm font-thin'>
-        <pre>
-          <code>{JSON.stringify(data, replacer, 2)}</code>
-        </pre>
+      <div className='flex grow overflow-hidden p-2'>
+        <SyntaxHighlighter className='w-full' language='json' style={themeMode === 'dark' ? styleDark : styleLight}>
+          {JSON.stringify(data, replacer, 2)}
+        </SyntaxHighlighter>
       </div>
     </Main.Content>
   );
