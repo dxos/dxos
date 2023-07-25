@@ -22,49 +22,41 @@ interface Service {
 }
 
 export type AgentOptions = {
+  config: Config;
   profile: string;
-  socket: string;
-  webSocket?: number;
+  plugins?: Plugin[];
+  protocol?: {
+    socket: string;
+    webSocket?: number;
+  };
 };
 
 /**
  * The remote agent exposes Client services via multiple transports.
  */
 export class Agent {
+  private readonly _plugins: Plugin[];
+
   private _client?: Client;
   private _clientServices?: ClientServicesProvider;
   private _services: Service[] = [];
-  private _plugins: Plugin[] = [];
 
-  // prettier-ignore
-  constructor(
-    private readonly _config: Config,
-    private readonly _options: AgentOptions
-  ) {
-    assert(this._config);
+  constructor(private readonly _options: AgentOptions) {
     assert(this._options);
-  }
-
-  // TODO(burdon): Initialize/destroy.
-
-  addPlugin(plugin: Plugin) {
-    this._plugins.push(plugin);
-    return this;
+    this._plugins = (this._options.plugins?.filter(Boolean) as Plugin[]) ?? [];
   }
 
   async start() {
+    assert(!this._clientServices);
     log('starting...');
 
-    // TODO(burdon): Check if running.
-    // await this.stop();
-
     // Create client services.
-    this._clientServices = await fromHost(this._config, { lockKey: lockFilePath(this._options.profile) });
+    this._clientServices = await fromHost(this._options.config, { lockKey: lockFilePath(this._options.profile) });
     await this._clientServices.open();
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
-    this._client = new Client({ config: this._config, services: this._clientServices });
+    this._client = new Client({ config: this._options.config, services: this._clientServices });
     await this._client.initialize();
 
     // Global hook for debuggers.
@@ -74,8 +66,8 @@ export class Agent {
     // Unix socket (accessed via CLI).
     // TODO(burdon): Configure ClientServices plugin with multiple endpoints.
     //
-    {
-      const { path } = parseAddress(this._options.socket);
+    if (this._options.protocol?.socket) {
+      const { path } = parseAddress(this._options.protocol.socket);
       mkdirSync(dirname(path), { recursive: true });
       rmSync(path, { force: true });
       const httpServer = http.createServer();
@@ -89,8 +81,8 @@ export class Agent {
     // Web socket (accessed via devtools).
     // TODO(burdon): Insecure.
     //
-    if (this._options.webSocket) {
-      const service = createServer(this._clientServices, { port: this._options.webSocket });
+    if (this._options.protocol?.webSocket) {
+      const service = createServer(this._clientServices, { port: this._options.protocol.webSocket });
       await service.open();
       this._services.push(service);
     }
