@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { log } from '@dxos/log';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { BIN_PATH, runCommand } from '../../util';
 
@@ -19,7 +19,7 @@ describe('agent', () => {
   const HOST_CONFIG_PATH = join(TEST_FOLDER, 'config-host.yml');
   const GUEST_CONFIG_PATH = join(TEST_FOLDER, 'config-guest.yml');
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     // Create config files.
     [
       [HOST_CONFIG_PATH, join(TEST_FOLDER, 'host')],
@@ -63,7 +63,7 @@ describe('agent', () => {
     });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     // Cleanup.
     rmSync(TEST_FOLDER, { recursive: true, force: true });
   });
@@ -112,6 +112,18 @@ describe('agent', () => {
   })
     .timeout(120_000)
     .tag('flaky');
+
+  test('stop command', async () => {
+    const profile1 = 'test-profile-1';
+    const profile2 = 'test-profile-2';
+    await runCommand(`agent start --profile=${profile1} --config=${HOST_CONFIG_PATH}`, __dirname);
+    await runCommand(`create halo FIRST --profile=${profile1} --config=${HOST_CONFIG_PATH}`, __dirname);
+    await runCommand(`agent start --profile=${profile2} --config=${HOST_CONFIG_PATH}`, __dirname);
+    await runCommand(`create halo SECOND --profile=${profile2} --config=${HOST_CONFIG_PATH}`, __dirname);
+    await runCommand('agent stop --all --force', __dirname);
+    const listAfterStop = await runCommand('agent list --json', __dirname);
+    expect(JSON.parse(listAfterStop)).to.equal([]);
+  }).tag('flaky');
 });
 
 type AgentDescription = {
