@@ -13,8 +13,8 @@ export default class Stop extends BaseCommand<typeof Stop> {
 
   static override flags = {
     ...BaseCommand.flags,
-    all: Flags.boolean({ char: 'a', description: 'Stop all agents.' }),
-    force: Flags.boolean({ char: 'f', description: 'Force stop.' }),
+    all: Flags.boolean({ description: 'Stop all agents.' }),
+    force: Flags.boolean({ description: 'Force stop.' }),
   };
 
   async run(): Promise<any> {
