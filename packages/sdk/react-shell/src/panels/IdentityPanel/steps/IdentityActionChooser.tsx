@@ -2,34 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, Power, UserGear } from '@phosphor-icons/react';
+import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
 import React from 'react';
-import { Event, SingleOrArray } from 'xstate';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
 
-import { IdentityEvent } from '../identityMachine';
+import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export const IdentityActionChooser = ({ send }: { send: (event: SingleOrArray<Event<IdentityEvent>>) => void }) => {
+export const IdentityActionChooser = ({ send, active }: IdentityPanelStepProps) => {
   const { t } = useTranslation('os');
   return (
     <DensityProvider density='coarse'>
-      <Button data-testid='manage-devices' onClick={() => send({ type: 'chooseDevices' })}>
-        <Plus className={mx(getSize(6), 'invisible')} />
-        <span className='grow'>{t('choose devices label')}</span>
-        <Plus className={getSize(6)} />
-      </Button>
-      <Button data-testid='manage-profile' onClick={() => {} /* send({ type: 'chooseProfile' }) */}>
-        <UserGear className={mx(getSize(6), 'invisible')} />
-        <span className='grow'>{t('choose profile label')}</span>
-        <UserGear className={getSize(6)} />
-      </Button>
-      <Button data-testid='sign-out' onClick={() => {} /* send({ type: 'chooseSignOut' }) */}>
-        <Power className={mx(getSize(6), 'invisible')} />
-        <span className='grow'>{t('choose sign out label')}</span>
-        <Power className={getSize(6)} />
-      </Button>
+      <div role='none' className='grow flex justify-center items-center'>
+        <div role='none' className='flex flex-col gap-1'>
+          <Button disabled={!active} data-testid='manage-devices' onClick={() => send({ type: 'chooseDevices' })}>
+            <Plus className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose devices label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Button>
+          <Button
+            disabled={!active}
+            data-testid='manage-profile'
+            onClick={() => {} /* send({ type: 'chooseProfile' }) */}
+          >
+            <UserGear className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose profile label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Button>
+          <Button disabled={!active} data-testid='sign-out' onClick={() => {} /* send({ type: 'chooseSignOut' }) */}>
+            <Power className={getSize(6)} />
+            <span className='grow mli-3'>{t('choose sign out label')}</span>
+            <CaretRight weight='bold' className={getSize(4)} />
+          </Button>
+        </div>
+      </div>
     </DensityProvider>
   );
 };

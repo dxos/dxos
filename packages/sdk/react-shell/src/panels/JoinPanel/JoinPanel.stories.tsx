@@ -24,7 +24,7 @@ const StorybookJoinPanel = (args: Partial<JoinPanelImplProps>) => {
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false })}>
+        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
           <JoinPanelImpl {...joinPanelProps} />
         </div>
       </ElevationProvider>

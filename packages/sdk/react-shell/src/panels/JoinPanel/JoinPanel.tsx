@@ -22,7 +22,7 @@ import {
   InvitationAccepted,
 } from './steps';
 
-const viewStyles = 'pbe-3 pli-3';
+const viewStyles = 'pbs-1 pbe-3 pli-3';
 
 export const JoinPanelImpl = ({
   titleId,

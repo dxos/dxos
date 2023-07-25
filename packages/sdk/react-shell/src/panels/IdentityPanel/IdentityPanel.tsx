@@ -2,34 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 import React, { useEffect, useMemo } from 'react';
-import { Event, SingleOrArray } from 'xstate';
 
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
-import type { Identity } from '@dxos/react-client/halo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Viewport } from '../../components';
-import { IdentityEvent, useIdentityMachine } from './identityMachine';
+import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
+import { useIdentityMachine } from './identityMachine';
 import { DeviceManager, IdentityActionChooser } from './steps';
 
-type IdentityPanelHeadingProps = {
-  titleId: string;
-  identity: Identity;
-};
-
-export type IdentityPanelImplProps = IdentityPanelHeadingProps & {
-  activeView: string;
-  send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
-  createInvitationUrl: (invitationCode: string) => string;
-};
+const viewStyles = 'pbs-1 pbe-3 pli-3';
 
 const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   const { t } = useTranslation('os');
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <div role='none' className='mbs-1 mbe-2'>
+    <div role='none' className='mbs-3 mbe-1'>
       <h2 className='sr-only' id={titleId}>
         {t('identity heading')}
       </h2>
@@ -57,11 +47,15 @@ export const IdentityPanelImpl = ({
       <IdentityHeading {...{ identity, titleId }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='identity action chooser' classNames='justify-center gap-1'>
-            <IdentityActionChooser send={send} />
+          <Viewport.View id='identity action chooser' classNames={viewStyles}>
+            <IdentityActionChooser send={send} active={activeView === 'identity action chooser'} />
           </Viewport.View>
-          <Viewport.View id='device manager'>
-            <DeviceManager createInvitationUrl={createInvitationUrl} />
+          <Viewport.View id='device manager' classNames={viewStyles}>
+            <DeviceManager
+              send={send}
+              active={activeView === 'device manager'}
+              createInvitationUrl={createInvitationUrl}
+            />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
           {/* <Viewport.View id='signing out'></Viewport.View> */}
@@ -70,10 +64,6 @@ export const IdentityPanelImpl = ({
     </DensityProvider>
   );
 };
-
-export type IdentityPanelProps = Partial<
-  Pick<IdentityPanelImplProps, 'titleId' | 'createInvitationUrl'> & { onDone?: () => void }
->;
 
 export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (code) => code }: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);

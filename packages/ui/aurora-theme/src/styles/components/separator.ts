@@ -8,7 +8,7 @@ import { mx } from '../../util';
 import { blockSeparator, inlineSeparator } from '../fragments';
 
 export type SeparatorStyleProps = {
-  orientation: 'horizontal' | 'vertical';
+  orientation?: 'horizontal' | 'vertical';
 };
 
 export const separatorRoot: ComponentFunction<SeparatorStyleProps> = ({ orientation }, ...etc) =>

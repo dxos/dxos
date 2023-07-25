@@ -32,7 +32,7 @@ const StorybookIdentityPanel = (args: Partial<IdentityPanelImplProps>) => {
   return (
     <DensityProvider density='fine'>
       <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false })}>
+        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
           <IdentityPanelImpl {...identityPanelProps} />
         </div>
       </ElevationProvider>
