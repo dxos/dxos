@@ -769,6 +769,7 @@ importers:
   packages/apps/plugins/plugin-drawing:
     specifiers:
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
       '@braneframe/plugin-theme': workspace:*
@@ -796,8 +797,6 @@ importers:
       vite: ^4.3.9
       yjs: ^13.5.44
     dependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
-      '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@tldraw/assets': 2.0.0-alpha.14
       '@tldraw/editor': 2.0.0-alpha.14_biqbaboplfbrettd7655fr4n2y
@@ -809,6 +808,9 @@ importers:
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
       '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
@@ -882,6 +884,7 @@ importers:
   packages/apps/plugins/plugin-kanban:
     specifiers:
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -911,9 +914,6 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
-      '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-theme': link:../plugin-theme
       '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
       '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
@@ -926,8 +926,12 @@ importers:
       '@dxos/util': link:../../../common/util
       lodash.get: 4.4.2
     devDependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora
@@ -1175,6 +1179,7 @@ importers:
     specifiers:
       '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-space': workspace:*
       '@braneframe/plugin-splitview': workspace:*
@@ -1199,9 +1204,6 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
-      '@braneframe/plugin-graph': link:../plugin-graph
-      '@braneframe/plugin-space': link:../plugin-space
-      '@braneframe/plugin-theme': link:../plugin-theme
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
       '@dxos/react-client': link:../../../sdk/react-client
@@ -1210,8 +1212,12 @@ importers:
       lodash.get: 4.4.2
     devDependencies:
       '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-markdown': link:../plugin-markdown
+      '@braneframe/plugin-space': link:../plugin-space
       '@braneframe/plugin-splitview': link:../plugin-splitview
+      '@braneframe/plugin-theme': link:../plugin-theme
       '@braneframe/plugin-treeview': link:../plugin-treeview
       '@braneframe/types': link:../../types
       '@dxos/aurora': link:../../../ui/aurora

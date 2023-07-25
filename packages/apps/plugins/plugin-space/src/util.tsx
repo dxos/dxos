@@ -9,6 +9,7 @@ import React from 'react';
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { GraphNode } from '@braneframe/plugin-graph';
 import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
@@ -57,6 +58,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     data: space,
     // TODO(burdon): Rename onChildMove and/or merge with onMoveNode?
     onChildrenRearrange: (child: GraphNode<TypedObject>, nextIndex) => {
+      log.info('onChildrenRearrange', { child: JSON.stringify(child.data?.meta), nextIndex }); // TODO(burdon): Remove.
       if (child.data) {
         // TODO(burdon): Decouple from object's data structure.
         child.data.meta = {

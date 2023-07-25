@@ -171,7 +171,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         return null;
       },
       intent: {
-        resolver: (intent, plugins) => {
+        resolver: (intent) => {
           switch (intent.action) {
             case MarkdownAction.CREATE: {
               return { object: new DocumentType() };

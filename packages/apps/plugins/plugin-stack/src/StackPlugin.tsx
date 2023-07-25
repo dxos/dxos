@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Stack as StackType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
