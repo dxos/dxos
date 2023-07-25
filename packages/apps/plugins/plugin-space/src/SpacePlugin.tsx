@@ -67,13 +67,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
         client.services.joinedSpace.on((spaceKey) => {
-          treeView.selected = [getSpaceId(spaceKey)];
+          treeView.active = [getSpaceId(spaceKey)];
         });
       }
 
       const dispose = effect(() => {
         const space = graphPlugin?.provides.graph.pluginChildren?.[SPACE_PLUGIN]?.find(
-          (node) => node.id === treeView.selected[0],
+          (node) => node.id === treeView.active[0],
         )?.data;
         if (
           space instanceof SpaceProxy &&
@@ -251,8 +251,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
                     hidden: true,
                   },
                 };
-                if (treeViewPlugin?.provides.treeView.selected[0] === getSpaceId(space.key)) {
-                  treeViewPlugin.provides.treeView.selected = [];
+                if (treeViewPlugin?.provides.treeView.active[0] === getSpaceId(space.key)) {
+                  treeViewPlugin.provides.treeView.active = [];
                 }
                 return true;
               }
