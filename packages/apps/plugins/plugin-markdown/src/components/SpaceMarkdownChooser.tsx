@@ -20,10 +20,10 @@ export const SpaceMarkdownChooser = ({
   // todo(thure): This assumes the best & only way to get the active space is to find it in the graph using treeView, which probably won’t scale well.
   const treeView = useTreeView();
   const { graph } = useGraph();
-  const [plugin] = treeView.selected[0]?.split('/') ?? [];
+  const [plugin] = treeView.active[0]?.split('/') ?? [];
   const nodes =
     Object.values(
-      (graph.pluginChildren ?? {})[plugin].find(({ id }) => id === treeView.selected[0])?.pluginChildren ?? {},
+      (graph.pluginChildren ?? {})[plugin].find(({ id }) => id === treeView.active[0])?.pluginChildren ?? {},
     )
       .flat()
       ?.filter((node) => {

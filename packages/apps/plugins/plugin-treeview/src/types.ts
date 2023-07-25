@@ -9,12 +9,12 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 export const TREE_VIEW_PLUGIN = 'dxos:treeview';
 
 export enum TreeViewAction {
-  SELECT = `${TREE_VIEW_PLUGIN}:select`,
+  ACTIVATE = `${TREE_VIEW_PLUGIN}:activate`,
 }
 
 // TODO(wittjosiah): Derive graph nodes from selected.
 export type TreeViewContextValue = DeepSignal<{
-  selected: string[];
+  active: string[];
 }>;
 
 export type TreeViewPluginProvides = IntentProvides & {

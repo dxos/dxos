@@ -58,7 +58,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: TreeViewAction.SELECT,
+                  action: TreeViewAction.ACTIVATE,
                 },
               ],
             },

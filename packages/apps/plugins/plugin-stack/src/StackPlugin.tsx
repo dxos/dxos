@@ -69,7 +69,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: TreeViewAction.SELECT,
+                  action: TreeViewAction.ACTIVATE,
                 },
               ],
             },
