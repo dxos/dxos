@@ -93,8 +93,8 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
       if (treeViewPlugin) {
         const handleUpdate = () => {
           const current =
-            (treeViewPlugin.provides.treeView.selected[0]?.startsWith(LOCAL_FILES_PLUGIN) &&
-              findFile(state.files, treeViewPlugin.provides.treeView.selected)) ||
+            (treeViewPlugin.provides.treeView.active[0]?.startsWith(LOCAL_FILES_PLUGIN) &&
+              findFile(state.files, treeViewPlugin.provides.treeView.active)) ||
             undefined;
 
           if (state.current !== current) {
@@ -157,7 +157,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                   plugin: LOCAL_FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_FILE,
                 },
-                { action: TreeViewAction.SELECT },
+                { action: TreeViewAction.ACTIVATE },
               ],
             },
           ];
@@ -173,7 +173,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
                   plugin: LOCAL_FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_DIRECTORY,
                 },
-                { action: TreeViewAction.SELECT },
+                { action: TreeViewAction.ACTIVATE },
               ],
             });
           }
