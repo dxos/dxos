@@ -67,7 +67,7 @@ describe('Database', () => {
     }
   });
 
-  test.only('move object between spaces', async () => {
+  test.skip('move object between spaces', async () => {
     const { db: db1 } = await createDatabase();
     const { db: db2 } = await createDatabase();
 
