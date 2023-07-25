@@ -60,6 +60,12 @@ export class ForeverDaemon implements Daemon {
 
   async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
+      // Check if there is stopped process.
+      if ((await this._getProcess(profile)).running === false) {
+        // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
+        await this.stop(profile);
+      }
+
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
