@@ -50,16 +50,25 @@ export class TestExtensionWithStreams implements TeleportExtension {
       startTimestamp: Date.now(),
     };
 
-    streamEntry.timer = setInterval(() => {
-      const chunk = randomBytes(chunkSize);
-      networkStream.write(chunk, 'binary', (err) => {
-        if (!err) {
-          streamEntry.bytesSent += chunk.length;
+    const pushChunk = () => {
+      streamEntry.timer = setTimeout(() => {
+        const chunk = randomBytes(chunkSize);
+
+        if (!networkStream.write(chunk, 'binary', (err) => {
+          if (!err) {
+            streamEntry.bytesSent += chunk.length;
+          } else {
+            streamEntry.sendErrors += 1;
+          }
+        })) {
+          networkStream.once('drain', pushChunk);
         } else {
-          streamEntry.sendErrors += 1;
+          process.nextTick(pushChunk);
         }
-      });
-    }, interval);
+      }, interval);
+    }
+
+    pushChunk();
 
     this._streams.set(streamTag, streamEntry);
 
@@ -77,7 +86,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     const stream = this._streams.get(streamTag)!;
 
-    clearInterval(stream.timer);
+    clearTimeout(stream.timer);
 
     const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
@@ -150,7 +159,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     this.closed.wake();
     for (const [streamTag, stream] of Object.entries(this._streams)) {
       log('closing stream', { streamTag });
-      clearInterval(stream.interval);
+      clearTimeout(stream.interval);
       stream.networkStream.destroy();
     }
     await this._rpc?.close();
