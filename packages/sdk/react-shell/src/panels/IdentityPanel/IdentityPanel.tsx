@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import React, { useEffect, useMemo } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
@@ -10,7 +11,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Viewport } from '../../components';
-import { IdentitySend, useIdentityMachine } from './identityMachine';
+import { IdentityEvent, useIdentityMachine } from './identityMachine';
 import { DeviceManager, IdentityActionChooser } from './steps';
 
 type IdentityPanelHeadingProps = {
@@ -18,9 +19,9 @@ type IdentityPanelHeadingProps = {
   identity: Identity;
 };
 
-type IdentityPanelImplProps = IdentityPanelHeadingProps & {
+export type IdentityPanelImplProps = IdentityPanelHeadingProps & {
   activeView: string;
-  send: IdentitySend;
+  send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   createInvitationUrl: (invitationCode: string) => string;
 };
 
@@ -28,15 +29,15 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   const { t } = useTranslation('os');
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <div role='none'>
+    <div role='none' className='mbs-1 mbe-2'>
       <h2 className='sr-only' id={titleId}>
         {t('identity heading')}
       </h2>
       <Avatar.Root size={12} variant='circle'>
-        <Avatar.Frame classNames='block mli-auto'>
+        <Avatar.Frame classNames='block mli-auto mlb-2'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>
-        <Avatar.Label classNames='block text-center font-light text-xl'>
+        <Avatar.Label classNames='block text-center font-light text-xl mlb-2'>
           {identity.profile?.displayName ?? humanize(identity.identityKey)}
         </Avatar.Label>
       </Avatar.Root>
@@ -44,16 +45,22 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   );
 };
 
-const IdentityPanelImpl = ({ identity, titleId, activeView, send, createInvitationUrl }: IdentityPanelImplProps) => {
+export const IdentityPanelImpl = ({
+  identity,
+  titleId,
+  activeView,
+  send,
+  createInvitationUrl,
+}: IdentityPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
       <IdentityHeading {...{ identity, titleId }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='choosing action'>
+          <Viewport.View id='identity action chooser' classNames='justify-center gap-1'>
             <IdentityActionChooser send={send} />
           </Viewport.View>
-          <Viewport.View id='managing devices'>
+          <Viewport.View id='device manager'>
             <DeviceManager createInvitationUrl={createInvitationUrl} />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
@@ -88,13 +95,13 @@ export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (co
   const activeView = useMemo(() => {
     switch (true) {
       case identityState.matches('choosingAction'):
-        return 'choosing action';
+        return 'identity action chooser';
       case identityState.matches('managingDevices'):
-        return 'managing devices';
+        return 'device manager';
       // case identityState.matches('managingProfile'):
-      //   return 'managing profile';
+      //   return 'profile manager';
       // case identityState.matches('signingOut'):
-      //   return 'signing out';
+      //   return 'identity exit';
       default:
         return 'never';
     }

@@ -51,7 +51,7 @@ export const os = {
   'reset label': 'Start over',
   'auth code input label': 'Enter the verification code',
   'invitation input label': 'Paste an invitation code or URL',
-  'create device invitation label': 'Invite',
+  'create device invitation label': 'Add device',
   'create space invitation label': 'Invite',
   'qr label': 'Scan to accept invitation',
   'empty invitations message': 'No pending invitations',

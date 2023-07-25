@@ -10,7 +10,7 @@ import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
 
 const noOpProps: JoinPanelImplProps = {
-  titleId: 'storybookJoinPanel',
+  titleId: 'storybookJoinPanel__title',
   send: () => {},
   activeView: 'create identity input',
   failed: new Set(),
@@ -18,8 +18,8 @@ const noOpProps: JoinPanelImplProps = {
   preventExit: true,
 };
 
-const StorybookJoinPanel = (props: Partial<JoinPanelImplProps>) => {
-  const joinPanelProps = { ...noOpProps, ...props };
+const StorybookJoinPanel = (args: Partial<JoinPanelImplProps>) => {
+  const joinPanelProps = { ...noOpProps, ...args };
   const { tx } = useThemeContext();
   return (
     <DensityProvider density='fine'>

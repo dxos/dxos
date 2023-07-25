@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PlusSquare } from '@phosphor-icons/react';
+import { Plus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, Separator, useTranslation } from '@dxos/aurora';
@@ -33,11 +33,13 @@ export const DeviceManager = ({ createInvitationUrl }: DeviceManagerProps) => {
 
   return (
     <>
+      {invitations.length < 1 && <div role='none' className='flex-1' />}
       <InvitationList
         invitations={invitations}
         onClickRemove={(invitation) => invitation.cancel()}
         createInvitationUrl={createInvitationUrl}
       />
+      <div role='none' className='flex-1' />
       <Button
         classNames='is-full flex gap-2 mbs-2'
         onClick={() => {
@@ -50,7 +52,7 @@ export const DeviceManager = ({ createInvitationUrl }: DeviceManagerProps) => {
         data-testid='devices-panel.create-invitation'
       >
         <span>{t('create device invitation label')}</span>
-        <PlusSquare className={getSize(4)} weight='bold' />
+        <Plus className={getSize(4)} weight='bold' />
       </Button>
       <Separator />
       <DeviceList devices={devices} />
