@@ -25,7 +25,12 @@ export const printAgents = (daemons: any[], flags = {}) => {
       },
       uptime: {
         header: 'uptime',
-        get: (row) => formatDistance(new Date(), new Date(row.started)),
+        get: (row) => {
+          if (!row.running) {
+            return 'stopped';
+          }
+          return formatDistance(new Date(), new Date(row.started));
+        },
       },
       logFile: {
         header: 'logFile',
