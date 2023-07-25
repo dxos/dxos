@@ -7,7 +7,6 @@ import React from 'react';
 import { AlertDialog, AlertDialogContentProps, useId } from '@dxos/aurora';
 
 import { JoinPanel, JoinPanelProps } from '../../panels';
-import { defaultSurface } from '../../styles';
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>,
@@ -20,7 +19,7 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Portal>
         <AlertDialog.Overlay>
-          <AlertDialog.Content aria-labelledby={titleId} classNames={defaultSurface}>
+          <AlertDialog.Content aria-labelledby={titleId}>
             <JoinPanel
               {...{
                 ...joinPanelProps,
