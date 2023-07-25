@@ -49,14 +49,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const MarkdownMainStandalone = ({
-    data: [model, properties],
+    data: { composer, properties },
   }: {
-    data: [ComposerModel, MarkdownProperties];
+    data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
   }) => {
     return (
       <MarkdownMain
-        model={model}
+        model={composer}
         properties={properties}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
@@ -111,7 +111,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: TreeViewAction.SELECT,
+                  action: TreeViewAction.ACTIVATE,
                 },
               ],
             },
@@ -143,15 +143,29 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations,
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])) {
-              if (datum[2] === 'embedded') {
+            if (
+              'composer' in datum &&
+              isMarkdown(datum.composer) &&
+              'properties' in datum &&
+              isMarkdownProperties(datum.properties)
+            ) {
+              if ('view' in datum && datum.view === 'embedded') {
                 return MarkdownMainEmbedded;
               } else {
                 return MarkdownMainStandalone;
               }
-            } else if (Array.isArray(datum) && isMarkdownPlaceholder(datum[0]) && isMarkdownProperties(datum[1])) {
+            } else if (
+              'composer' in datum &&
+              isMarkdownPlaceholder(datum.composer) &&
+              'properties' in datum &&
+              isMarkdownProperties(datum.properties)
+            ) {
               return MarkdownMainEmpty;
             }
             break;

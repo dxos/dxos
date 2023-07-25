@@ -58,7 +58,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   data: { spaceKey: parent.data.key.toHex() },
                 },
                 {
-                  action: TreeViewAction.SELECT,
+                  action: TreeViewAction.ACTIVATE,
                 },
               ],
             },
@@ -66,9 +66,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isThread(datum[datum.length - 1])) {
+            if ('object' in datum && isThread(datum.object)) {
               return ThreadMain;
             } else {
               return null;

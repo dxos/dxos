@@ -16,6 +16,16 @@ import translations from './translations';
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
 
+  const isDebug = (datum: unknown) =>
+    datum &&
+    typeof datum === 'object' &&
+    'node' in datum &&
+    datum.node &&
+    typeof datum.node === 'object' &&
+    'id' in datum.node &&
+    typeof datum.node.id === 'string' &&
+    nodeIds.has(datum.node.id);
+
   return {
     meta: {
       id: DEBUG_PANEL,
@@ -66,7 +76,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       component: (datum, role) => {
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && nodeIds.has(datum[datum.length - 1].id)) {
+            if (isDebug(datum)) {
               return DebugMain;
             } else {
               return null;

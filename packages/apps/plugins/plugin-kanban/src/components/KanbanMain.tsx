@@ -15,12 +15,12 @@ import { KANBAN_PLUGIN, KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [space, kanban] }) => {
+export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: kanban, // TODO(burdon): How to keep pure?
+    root: object, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
     createItem: (column) =>
