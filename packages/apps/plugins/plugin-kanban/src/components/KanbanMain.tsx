@@ -42,7 +42,7 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
             autoComplete='off'
-            value={model.root.title}
+            value={model.root.title ?? ''}
             onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>

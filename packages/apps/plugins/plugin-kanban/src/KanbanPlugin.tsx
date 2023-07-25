@@ -28,7 +28,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
     pluginActions: {
       [KANBAN_PLUGIN]: [
         {
-          id: 'delete', // TODO(burdon): Namespac@e.
+          id: 'delete', // TODO(burdon): Namespace.
           index: 'a1',
           label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
           icon: (props: IconProps) => <Trash {...props} />,
