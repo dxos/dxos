@@ -67,6 +67,9 @@
       "path": "../plugins/plugin-graph"
     },
     {
+      "path": "../plugins/plugin-intent"
+    },
+    {
       "path": "../plugins/plugin-markdown"
     },
     {

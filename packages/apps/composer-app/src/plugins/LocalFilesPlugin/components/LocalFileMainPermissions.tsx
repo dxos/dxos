@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 
-import { LocalEntity } from '../types';
-import { LOCAL_FILES_PLUGIN } from '../util';
+import { LOCAL_FILES_PLUGIN, LocalEntity } from '../types';
 
 export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalEntity> }) => {
   const { t } = useTranslation(LOCAL_FILES_PLUGIN);
+  const { invokeAction } = useGraph();
   const action = data.pluginActions?.[LOCAL_FILES_PLUGIN]?.find(({ id }) => id === 're-open');
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
@@ -25,7 +25,7 @@ export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalEntity
       >
         {t('missing file permissions')}
         {action && (
-          <Button onClick={(event) => action.invoke(t, event)}>
+          <Button onClick={() => invokeAction(action)}>
             {Array.isArray(action.label) ? t(...action.label) : action.label}
           </Button>
         )}
