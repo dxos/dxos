@@ -47,7 +47,6 @@ export class ForeverDaemon implements Daemon {
     });
 
     return result.map(({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
-      // console.log(Object.keys(_rest));
       return {
         profile: uid,
         pid: foreverPid,
@@ -135,9 +134,7 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
-    log.info('stopping', { profile, running });
-
+  async stop(profile: string, { force = false }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
     // NOTE: Kill all processes with the given profile.
@@ -145,7 +142,6 @@ export class ForeverDaemon implements Daemon {
     (await this.list()).forEach((process) => {
       if (process.profile === profile) {
         if (force) {
-          console.log('Killing process force');
           forever.stop(process.profile!);
         } else {
           forever.kill(proc.pid!, true, 'SIGINT');
@@ -158,7 +154,6 @@ export class ForeverDaemon implements Daemon {
     });
 
     removeSocketFile(profile);
-    log.info('stopped', { profile });
     return proc;
   }
 
