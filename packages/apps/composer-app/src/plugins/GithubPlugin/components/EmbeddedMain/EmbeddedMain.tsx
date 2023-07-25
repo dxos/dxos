@@ -239,7 +239,7 @@ const EmbeddedLayoutImpl = () => {
               />
             </Main.Content>
           ) : (
-            <Surface role='main' data={[textModel, document, 'embedded']} />
+            <Surface role='main' data={{ composer: textModel, properties: document, view: 'embedded' }} />
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>

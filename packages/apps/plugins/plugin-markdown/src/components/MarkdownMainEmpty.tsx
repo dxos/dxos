@@ -7,10 +7,14 @@ import React from 'react';
 import { MarkdownProperties } from '../types';
 import { StandaloneLayout } from './StandaloneLayout';
 
-export const MarkdownMainEmpty = ({ data: [model, properties] }: { data: [any, MarkdownProperties] }) => {
+export const MarkdownMainEmpty = ({
+  data: { composer, properties },
+}: {
+  data: { composer: any; properties: MarkdownProperties };
+}) => {
   return (
-    <StandaloneLayout model={model} properties={properties}>
-      <model.content />
+    <StandaloneLayout model={composer} properties={properties}>
+      <composer.content />
     </StandaloneLayout>
   );
 };

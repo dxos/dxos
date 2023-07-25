@@ -66,9 +66,13 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isKanban(datum[datum.length - 1])) {
+            if ('object' in datum && isKanban(datum.object)) {
               return KanbanMain;
             } else {
               return null;
