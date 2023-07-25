@@ -21,10 +21,11 @@ export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
   const { t } = useTranslation(DEBUG_PANEL);
 
   const client = useClient();
+  const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await diagnostics(client, { humanize: true, truncate: true });
-    setData(data);
+    const data = await diagnostics(client, { humanize: false, truncate: true });
+    setData({ config, diagnostics: data });
   };
   useEffect(() => {
     void handleRefresh();
@@ -61,7 +62,6 @@ export const DebugMain: FC<{ data: [SpaceProxy] }> = ({ data: [space] }) => {
     await handleRefresh();
   };
 
-  const config = useConfig();
   const handleOpenDevtools = () => {
     const vaultUrl = config.values?.runtime?.client?.remoteSource;
     if (vaultUrl) {
