@@ -35,7 +35,7 @@ export interface RpcPeerOptions {
  * Interface for a transport-agnostic port to send/receive binary messages.
  */
 export interface RpcPort {
-  send: (msg: Uint8Array) => MaybePromise<void>;
+  send: (msg: Uint8Array, cb?: () => void) => MaybePromise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
 

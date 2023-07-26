@@ -97,9 +97,8 @@ export class Muxer {
 
     const stream = new Duplex({
       write: (data, encoding, callback) => {
-        this._sendData(channel, data);
+        this._sendData(channel, data, callback);
         // TODO(dmaretskyi): Should we error if sending data has errored?
-        callback();
       },
       read: () => {}, // No-op. We will push data when we receive it.
     });
@@ -155,7 +154,15 @@ export class Muxer {
 
     const port: RpcPort = {
       send: (data: Uint8Array) => {
-        this._sendData(channel, data); // TODO(dmaretskyi): Error propagation?
+        return new Promise((resolve, reject) => {
+          this._sendData(channel, data, (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        });
 
         // TODO(dmaretskyi): Debugging.
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
@@ -257,8 +264,8 @@ export class Muxer {
     }
   }
 
-  private _sendCommand(cmd: Command) {
-    Promise.resolve(this._framer.port.send(codec.encode(cmd))).catch((err) => {
+  private _sendCommand(cmd: Command, callback?: (err?: Error) => void) {
+    Promise.resolve(this._framer.port.send(codec.encode(cmd), callback)).catch((err) => {
       this.destroy(err);
     });
   }
@@ -285,19 +292,20 @@ export class Muxer {
     return channel;
   }
 
-  private _sendData(channel: Channel, data: Uint8Array) {
+  private _sendData(channel: Channel, data: Uint8Array, callback: (err?: Error) => void) {
     channel.stats.bytesSent += data.length;
     this._emitStats.schedule();
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
       channel.buffer.push(data);
+      callback();
     } else {
       this._sendCommand({
         data: {
           channelId: channel.remoteId,
           data,
         },
-      });
+      }, callback);
     }
   }
 }

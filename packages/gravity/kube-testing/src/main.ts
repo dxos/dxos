@@ -73,7 +73,7 @@ const runTransport = () =>
     spec: {
       agents: 4,
       swarmsPerAgent: 5,
-      duration: 120_000,
+      duration: 240_000,
       desiredSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,
@@ -81,7 +81,7 @@ const runTransport = () =>
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
       streamLoadInterval: 5,
-      streamLoadChunkSize: 11264,
+      streamLoadChunkSize: 25600,
     },
     options: {
       staggerAgents: 1000,
