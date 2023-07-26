@@ -13,7 +13,11 @@ import { PluginDefinition } from '@dxos/react-surface';
 import compositeEnUs from './translations/en-US';
 import { translationsPlugins } from './util';
 
-export const ThemePlugin = (appName?: string): PluginDefinition => {
+export type ThemePluginOptions = {
+  appName?: string;
+};
+
+export const ThemePlugin = ({ appName }: ThemePluginOptions): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });

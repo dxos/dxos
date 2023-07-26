@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin('Labs'),
+        ThemePlugin({ appName: 'Labs' }),
         ClientPlugin(),
         IntentPlugin(),
         DndPlugin(),
