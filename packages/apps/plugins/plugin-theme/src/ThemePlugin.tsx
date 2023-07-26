@@ -17,7 +17,7 @@ export type ThemePluginOptions = {
   appName?: string;
 };
 
-export const ThemePlugin = ({ appName }: ThemePluginOptions): PluginDefinition => {
+export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
