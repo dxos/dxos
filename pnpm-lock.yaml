@@ -5294,12 +5294,14 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^3.0.1
       '@xstate/react': ^3.2.1
+      chromatic: ^6.17.0
       lodash.toarray: ^4.4.0
       qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
       url-join: ^5.0.0
       vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
       xstate: ^4.37.0
     dependencies:
       '@dxos/async': link:../../common/async
@@ -5331,9 +5333,11 @@ importers:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 3.1.0_vite@4.3.9
+      chromatic: 6.17.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/sdk/react-surface:
     specifiers:
