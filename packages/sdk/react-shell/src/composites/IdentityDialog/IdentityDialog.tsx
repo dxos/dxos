@@ -6,22 +6,24 @@ import React from 'react';
 
 import { DialogContentProps, Dialog, useId } from '@dxos/aurora';
 
-import { DevicesPanel, DevicesPanelProps } from '../../panels';
+import { IdentityPanel, IdentityPanelProps } from '../../panels';
 
-export interface DevicesDialogProps
+export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>,
-    Omit<DevicesPanelProps, 'doneActionParent'> {}
+    Omit<IdentityPanelProps, 'doneActionParent'> {
+  onDone: () => void;
+}
 
-export const DevicesDialog = ({ ...devicesDialogProps }: DevicesDialogProps) => {
+export const IdentityDialog = (props: IdentityDialogProps) => {
   const titleId = useId('spaceDialog__title');
   return (
-    <Dialog.Root defaultOpen onOpenChange={(open) => open || devicesDialogProps.onDone?.()}>
+    <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(e) => e.preventDefault()}>
-            <DevicesPanel
+            <IdentityPanel
               {...{
-                ...devicesDialogProps,
+                ...props,
                 titleId,
                 doneActionParent: <Dialog.Close asChild />,
               }}
