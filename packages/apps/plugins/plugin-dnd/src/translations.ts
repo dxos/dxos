@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DND_PLUGIN } from './types';
+
 export default [
   {
     'en-US': {
-      'dxos:dnd': {
+      [DND_PLUGIN]: {
         'plugin name': 'DXOS global drag and drop',
       },
     },

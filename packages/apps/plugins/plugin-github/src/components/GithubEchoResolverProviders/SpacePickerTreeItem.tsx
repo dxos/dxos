@@ -12,6 +12,7 @@ import { staticDisabled } from '@dxos/aurora-theme';
 import { useMulticastObservable } from '@dxos/react-client';
 import { Space, SpaceState, useQuery } from '@dxos/react-client/echo';
 
+import { GITHUB_PLUGIN } from '../../props';
 import { DocumentTreeItem } from './DocumentTreeItem';
 import { matchSpace } from './spaceResolvers';
 
@@ -30,7 +31,7 @@ export const SpacePickerTreeItem = ({
   id: string;
   selected?: boolean;
 }) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const spaceSate = useMulticastObservable(space.state);
   const disabled = spaceSate !== SpaceState.READY;
   const spaceDisplayName = getSpaceDisplayName(space);

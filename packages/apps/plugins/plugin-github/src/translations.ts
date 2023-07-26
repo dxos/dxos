@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GITHUB_PLUGIN } from './props';
+
 export default [
   {
     'en-US': {
-      'dxos:github': {
+      [GITHUB_PLUGIN]: {
         'plugin name': 'GitHub',
         'markdown actions label': 'GitHub actions',
         'unbind to file in github label': 'Disconnect from GitHub',
@@ -50,6 +52,19 @@ export default [
         'save and close label': 'Save & close',
         'export to github label': 'Export to GitHub',
         'import from github label': 'Import from GitHub',
+        'resolver tree label': 'Choose a Space',
+        'resolver tree description':
+          'To collaborate on documents in this repository, choose the Space that will store and control access to the documents.',
+        'resolver no spaces message': 'You aren’t in any spaces yet',
+        'resolver create space label': 'Create a space for this repository',
+        'bound members message_one': 'One member uses this space for this repository',
+        'bound members message_other': '{{count}} members use this space for this repository',
+        'select label': 'Select',
+        'selected label': 'Selected',
+        'open in composer label': 'Open in Composer',
+        'confirm import title': 'Overwrite this document’s content?',
+        'confirm import body':
+          'Importing will overwrite this document’s content. If you’d rather import into a new document, first create a new document and then import into it.',
       },
     },
   },

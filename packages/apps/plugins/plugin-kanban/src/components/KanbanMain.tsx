@@ -11,12 +11,12 @@ import { blockSeparator, mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 import { Text } from '@dxos/echo-schema';
 
-import type { KanbanModel } from '../props';
+import { KANBAN_PLUGIN, type KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
 // TODO(burdon): Constructor type? `data` vs. `datum`?
 export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {

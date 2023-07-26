@@ -23,6 +23,8 @@ import React, { createContext, DependencyList, useContext, useEffect, useState }
 
 import { PluginDefinition, Surface } from '@dxos/react-surface';
 
+import { DND_PLUGIN } from './types';
+
 export type DndPluginProvides = {
   dnd: DndPluginStoreValue;
 };
@@ -177,7 +179,7 @@ const DndOverlay = () => {
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
   return {
     meta: {
-      id: 'dxos.org/plugin/dnd',
+      id: DND_PLUGIN,
     },
     provides: {
       components: {

@@ -34,7 +34,7 @@ export const TreeViewContainer = () => {
   const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const themeContext = useThemeContext();
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const { sidebarOpen } = useSidebar(TREE_VIEW_PLUGIN);
   const splitViewContext = useSplitView();
 
@@ -62,7 +62,9 @@ export const TreeViewContainer = () => {
               ))}
             </Tree.Root>
             <div role='none' className='order-first shrink-0 flex items-center pli-1.5 plb-1.5 order-0'>
-              <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>{t('current app name')}</h1>
+              <h1 className={mx('grow font-system-medium text-lg pli-1.5')}>
+                {t('current app name', { ns: 'appkit' })}
+              </h1>
               {hoistedActions?.map((action) => (
                 <Tooltip.Root key={action.id}>
                   <Tooltip.Trigger asChild>
