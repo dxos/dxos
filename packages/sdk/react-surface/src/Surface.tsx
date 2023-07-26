@@ -75,8 +75,11 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
 };
 
 const findComponent = (plugins: Plugin[], name: string): FC<PropsWithChildren<any>> | undefined => {
-  const [pluginId, componentId] = name.split('/');
-  return plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
+  const nameParts = name.split('/');
+  const componentId = nameParts.at(-1) ?? '';
+  const pluginId = nameParts.slice(0, -1).join('/');
+  return plugins.find((plugin) => plugin.meta.id === pluginId || plugin.meta.shortId === pluginId)?.provides
+    .components?.[componentId];
 };
 
 export const Surface = (props: SurfaceProps) => {

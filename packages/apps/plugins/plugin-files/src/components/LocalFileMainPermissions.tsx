@@ -8,12 +8,12 @@ import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import { Button, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 
-import { LOCAL_FILES_PLUGIN, LocalEntity } from '../types';
+import { FILES_PLUGIN, LocalEntity } from '../types';
 
 export const LocalFileMainPermissions = ({ data }: { data: GraphNode<LocalEntity> }) => {
-  const { t } = useTranslation(LOCAL_FILES_PLUGIN);
+  const { t } = useTranslation(FILES_PLUGIN);
   const { invokeAction } = useGraph();
-  const action = data.pluginActions?.[LOCAL_FILES_PLUGIN]?.find(({ id }) => id === 're-open');
+  const action = data.pluginActions?.[FILES_PLUGIN]?.find(({ id }) => id === 're-open');
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
       <p

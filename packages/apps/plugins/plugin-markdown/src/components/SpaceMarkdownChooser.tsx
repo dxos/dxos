@@ -9,6 +9,7 @@ import { useGraph } from '@braneframe/plugin-graph';
 import { useTreeView } from '@braneframe/plugin-treeview';
 import { Button, Dialog, Input, useTranslation } from '@dxos/aurora';
 
+import { MARKDOWN_PLUGIN } from '../types';
 import { isMarkdown } from '../util';
 
 export const SpaceMarkdownChooser = ({
@@ -16,7 +17,7 @@ export const SpaceMarkdownChooser = ({
 }: {
   data: { onDone: (items: { id: string }[]) => void; chooser: 'one' | 'many'; omit: Set<string> };
 }) => {
-  const { t } = useTranslation('dxos:markdown');
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
   // todo(thure): This assumes the best & only way to get the active space is to find it in the graph using treeView, which probably won’t scale well.
   const treeView = useTreeView();
   const { graph } = useGraph();

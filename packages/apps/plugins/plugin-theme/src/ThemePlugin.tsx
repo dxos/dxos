@@ -25,7 +25,7 @@ export const ThemePlugin = (): PluginDefinition => {
 
   return {
     meta: {
-      id: 'dxos:theme',
+      id: 'dxos.org/plugin/theme',
     },
     ready: async (plugins) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');

@@ -8,7 +8,7 @@ import { Button, Dialog, useTranslation } from '@dxos/aurora';
 import { MarkdownComposerRef } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
-import { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const ImportDialog = ({
@@ -16,7 +16,7 @@ export const ImportDialog = ({
 }: {
   data: [string, GhIdentifier, RefObject<MarkdownComposerRef>];
 }) => {
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();
 
   const importGhIssueContent = useCallback(async () => {

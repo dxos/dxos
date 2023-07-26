@@ -16,8 +16,9 @@ import { isTypedObject } from '@dxos/client/echo';
 
 export const DRAWING_PLUGIN = 'dxos.org/plugin/drawing';
 
+const DRAWING_ACTION = `${DRAWING_PLUGIN}/action`;
 export enum DrawingAction {
-  CREATE = `${DRAWING_PLUGIN}/create`,
+  CREATE = `${DRAWING_ACTION}/create`,
 }
 
 export type DrawingPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;

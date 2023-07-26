@@ -16,7 +16,14 @@ import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';
 import translations from './translations';
-import { LOCAL_FILES_PLUGIN, LocalEntity, LocalFile, LocalFilesAction, LocalFilesPluginProvides } from './types';
+import {
+  FILES_PLUGIN,
+  FILES_PLUGIN_SHORT_ID,
+  LocalEntity,
+  LocalFile,
+  LocalFilesAction,
+  LocalFilesPluginProvides,
+} from './types';
 import {
   findFile,
   getDirectoryChildren,
@@ -28,7 +35,7 @@ import {
   localEntityToGraphNode,
 } from './util';
 
-export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
+export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
   let onFilesUpdate: ((node?: GraphNode<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
@@ -48,7 +55,8 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
   return {
     meta: {
-      id: LOCAL_FILES_PLUGIN,
+      id: FILES_PLUGIN,
+      shortId: FILES_PLUGIN_SHORT_ID,
     },
     init: async () => {
       return {
@@ -66,7 +74,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
     ready: async (plugins) => {
       window.addEventListener('keydown', handleKeyDown);
 
-      const value = await localforage.getItem<FileSystemHandle[]>(LOCAL_FILES_PLUGIN);
+      const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
       if (Array.isArray(value)) {
         await Promise.all(
           value.map(async (handle, index) => {
@@ -83,16 +91,16 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
 
       subscriptions.add(
         state.$files!.subscribe(async (files) => {
-          await localforage.setItem(LOCAL_FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
+          await localforage.setItem(FILES_PLUGIN, files.map((file) => file.handle).filter(Boolean));
           onFilesUpdate?.();
         }),
       );
 
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos:treeview');
+      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       if (treeViewPlugin) {
         const handleUpdate = () => {
           const current =
-            (treeViewPlugin.provides.treeView.active[0]?.startsWith(LOCAL_FILES_PLUGIN) &&
+            (treeViewPlugin.provides.treeView.active[0]?.startsWith(FILES_PLUGIN) &&
               findFile(state.files, treeViewPlugin.provides.treeView.active)) ||
             undefined;
 
@@ -147,11 +155,11 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
             {
               id: 'open-file-handle',
               index: actionIndices[0],
-              label: ['open file label', { ns: LOCAL_FILES_PLUGIN }],
+              label: ['open file label', { ns: FILES_PLUGIN }],
               icon: (props) => <FilePlus {...props} />,
               intent: [
                 {
-                  plugin: LOCAL_FILES_PLUGIN,
+                  plugin: FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_FILE,
                 },
                 { action: TreeViewAction.ACTIVATE },
@@ -163,11 +171,11 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
             actions.push({
               id: 'open-directory',
               index: actionIndices[1],
-              label: ['open directory label', { ns: LOCAL_FILES_PLUGIN }],
+              label: ['open directory label', { ns: FILES_PLUGIN }],
               icon: (props) => <FolderPlus {...props} />,
               intent: [
                 {
-                  plugin: LOCAL_FILES_PLUGIN,
+                  plugin: FILES_PLUGIN,
                   action: LocalFilesAction.OPEN_DIRECTORY,
                 },
                 { action: TreeViewAction.ACTIVATE },

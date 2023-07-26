@@ -12,7 +12,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
   return {
     meta: {
-      id: 'dxos:intent',
+      id: 'dxos.org/plugin/intent',
     },
     ready: async (plugins) => {
       state.sendIntent = (intent: Intent) => {

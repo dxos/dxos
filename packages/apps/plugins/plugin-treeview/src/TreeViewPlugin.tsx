@@ -36,10 +36,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           if (treeView.active.length === 0) {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: 'dxos:splitview/SplitViewMainContentEmpty' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
                 }}
               />
             );
@@ -48,9 +48,9 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           } else {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   main: { component: `${plugin}/Main`, data: { active } },
                 }}
               />

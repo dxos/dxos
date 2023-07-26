@@ -177,7 +177,7 @@ const DndOverlay = () => {
 export const DndPlugin = (): PluginDefinition<DndPluginProvides> => {
   return {
     meta: {
-      id: 'dxos:dnd',
+      id: 'dxos.org/plugin/dnd',
     },
     provides: {
       components: {

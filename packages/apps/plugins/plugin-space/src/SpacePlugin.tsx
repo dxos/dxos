@@ -22,7 +22,7 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import translations from './translations';
-import { SPACE_PLUGIN, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 
 type SpacePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
@@ -34,11 +34,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   return {
     meta: {
       id: SPACE_PLUGIN,
+      shortId: SPACE_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
-      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
-      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos:treeview');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos:graph');
+      const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+      const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
+      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
       if (!clientPlugin) {
         return;
       }
@@ -112,9 +113,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           case 'dialog':
             if (Array.isArray(datum)) {
               switch (datum[0]) {
-                case 'dxos:space/RenameSpaceDialog':
+                case 'dxos.org/plugin/space/RenameSpaceDialog':
                   return DialogRenameSpace;
-                case 'dxos:space/RestoreSpaceDialog':
+                case 'dxos.org/plugin/space/RestoreSpaceDialog':
                   return DialogRestoreSpace;
                 default:
                   return null;
@@ -136,7 +137,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           }
 
           onSpaceUpdate = emit;
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
           const spaces = clientPlugin?.provides.client.spaces.get();
           const indices = spaces?.length ? getIndices(spaces.length) : [];
           return spaces?.map((space, index) => spaceToGraphNode(space, plugins, indices[index])) ?? [];
@@ -190,7 +191,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       },
       intent: {
         resolver: async (intent, plugins) => {
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
           switch (intent.action) {
             case SpaceAction.CREATE: {
               return clientPlugin?.provides.client.createSpace(intent.data);
@@ -229,17 +230,17 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RENAME: {
-              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
+              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.dialogOpen = true;
-                splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RenameSpaceDialog', space];
+                splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RenameSpaceDialog', space];
                 return true;
               }
               break;
             }
 
             case SpaceAction.HIDE: {
-              const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos:treeview');
+              const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
               const client = clientPlugin?.provides.client;
               const identity = client?.halo.identity.get();
               if (identity && space) {
@@ -276,10 +277,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             }
 
             case SpaceAction.RESTORE: {
-              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos:splitview');
+              const splitViewPlugin = findPlugin<SplitViewProvides>(plugins, 'dxos.org/plugin/splitview');
               if (space && splitViewPlugin?.provides.splitView) {
                 splitViewPlugin.provides.splitView.dialogOpen = true;
-                splitViewPlugin.provides.splitView.dialogContent = ['dxos:space/RestoreSpaceDialog', space];
+                splitViewPlugin.provides.splitView.dialogContent = ['dxos.org/plugin/space/RestoreSpaceDialog', space];
                 return true;
               }
               break;
