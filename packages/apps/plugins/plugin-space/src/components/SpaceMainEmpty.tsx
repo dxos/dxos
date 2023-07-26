@@ -7,8 +7,10 @@ import React from 'react';
 import { useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 
+import { SPACE_PLUGIN } from '../types';
+
 export const SpaceMainEmpty = () => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <div
       role='none'

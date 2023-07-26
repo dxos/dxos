@@ -46,6 +46,9 @@
     },
     {
       "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

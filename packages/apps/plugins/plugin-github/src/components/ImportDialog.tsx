@@ -63,8 +63,8 @@ export const ImportDialog = ({
 
   return (
     <>
-      <Dialog.Title>{t('confirm import title', { ns: 'composer' })}</Dialog.Title>
-      <p className='plb-2'>{t('confirm import body', { ns: 'composer' })}</p>
+      <Dialog.Title>{t('confirm import title')}</Dialog.Title>
+      <p className='plb-2'>{t('confirm import body')}</p>
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>
           <Button>{t('cancel label', { ns: 'appkit' })}</Button>

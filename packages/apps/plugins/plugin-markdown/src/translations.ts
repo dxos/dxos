@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { MARKDOWN_PLUGIN } from './types';
+
 export default [
   {
     'en-US': {
-      'dxos:markdown': {
+      [MARKDOWN_PLUGIN]: {
         'plugin name': 'Markdown',
         'create section space document label': 'Add as a new Document in this Space',
         'choose section space document label': 'Add a Document from this Space',

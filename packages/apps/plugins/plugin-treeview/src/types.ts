@@ -5,6 +5,7 @@
 import { DeepSignal } from 'deepsignal';
 
 import { IntentProvides } from '@braneframe/plugin-intent';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
 
 export const TREE_VIEW_PLUGIN = 'dxos.org/plugin/treeview';
 
@@ -18,6 +19,7 @@ export type TreeViewContextValue = DeepSignal<{
   active: string[];
 }>;
 
-export type TreeViewPluginProvides = IntentProvides & {
-  treeView: TreeViewContextValue;
-};
+export type TreeViewPluginProvides = IntentProvides &
+  TranslationsProvides & {
+    treeView: TreeViewContextValue;
+  };
