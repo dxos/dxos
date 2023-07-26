@@ -21,13 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../core/echo/echo-signals"
-    },
-    {
       "path": "../../../sdk/config"
-    },
-    {
-      "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-surface"

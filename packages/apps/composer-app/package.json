@@ -11,11 +11,13 @@
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-dnd": "workspace:*",
+    "@braneframe/plugin-error": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
+    "@braneframe/plugin-pwa": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
@@ -29,6 +31,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-surface": "workspace:*",
+    "isomorphic-fetch": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
