@@ -18,7 +18,7 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { IdentityListItem, SpaceListItem } from '../components';
-import { DevicesPanel, JoinPanel, SpacePanel } from '../panels';
+import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 
 export default {
   title: 'Invitations',
@@ -57,7 +57,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     }
 
     case 'devices': {
-      return <DevicesPanel createInvitationUrl={createInvitationUrl} onDone={() => setPanel(undefined)} />;
+      return <IdentityPanel createInvitationUrl={createInvitationUrl} onDone={() => setPanel(undefined)} />;
     }
 
     case 'join': {

@@ -4,7 +4,7 @@
 
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import { useId, useThemeContext, ButtonProps } from '@dxos/aurora';
+import { useId, useThemeContext, ButtonProps, useElevationContext } from '@dxos/aurora';
 import { descriptionText, descriptionTextPrimary, mx } from '@dxos/aurora-theme';
 
 export interface CompoundButtonSlots {
@@ -28,15 +28,16 @@ export const CompoundButton = ({
   before,
   after,
   variant = 'default',
-  elevation,
+  elevation: propsElevation,
   slots = {},
   ...buttonProps
 }: Omit<CompoundButtonProps, 'density'>) => {
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
   const { tx } = useThemeContext();
+  const elevation = useElevationContext(propsElevation);
   const isOs = tx('themeName', 'aurora', {}) === 'dxos';
-  const styleProps = { ...buttonProps, variant };
+  const styleProps = { ...buttonProps, variant, elevation };
   const buttonClassName = tx(
     'button.root',
     'button button--compound',

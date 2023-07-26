@@ -12,9 +12,9 @@ import { CompoundButton } from '@dxos/react-appkit';
 import { PanelStepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
-export type AdditionMethodSelectorProps = JoinStepProps;
+export type AdditionMethodChooserProps = JoinStepProps;
 
-export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorProps) => {
+export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps) => {
   const disabled = !viewStateProps.active;
   const { send } = viewStateProps;
 
@@ -28,7 +28,7 @@ export const AdditionMethodSelector = (viewStateProps: AdditionMethodSelectorPro
 
   return (
     <>
-      <PanelStepHeading>{t('addition method selector title')}</PanelStepHeading>
+      <PanelStepHeading>{t('addition method chooser title')}</PanelStepHeading>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}
