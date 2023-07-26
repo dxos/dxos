@@ -204,7 +204,8 @@ const StoragePanel = () => {
           <div className='flex-1' />
           <Button
             onClick={async () => {
-              // await services?.SystemService.reset();
+              await services?.SystemService.reset();
+              location.reload();
             }}
           >
             Reset Storage
