@@ -24,7 +24,7 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
         {t('identity heading')}
       </h2>
       <Avatar.Root size={12} variant='circle'>
-        <Avatar.Frame classNames='block mli-auto mlb-2'>
+        <Avatar.Frame classNames='block mli-auto mlb-2 chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>
         <Avatar.Label classNames='block text-center font-light text-xl mlb-2'>
