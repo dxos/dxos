@@ -37,7 +37,7 @@ export class WorkerRuntime {
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>
   ) {
-    this._clientServices = new ClientServicesHost();
+    this._clientServices = new ClientServicesHost({ callbacks: { onReset: async () => { self.close(); } } });
   }
 
   get host() {

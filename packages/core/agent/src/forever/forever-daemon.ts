@@ -11,7 +11,7 @@ import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
-import { Daemon, ProcessInfo, StartOptions } from '../daemon';
+import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../defs';
 import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 
@@ -46,16 +46,19 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map(({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
-      return {
-        profile: uid,
-        pid: foreverPid,
-        started: ctime,
-        running,
-        restarts,
-        logFile,
-      };
-    });
+    return Promise.all(
+      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+        return {
+          profile: uid,
+          pid: foreverPid,
+          started: ctime,
+          running,
+          restarts,
+          logFile,
+          lockAcquired: await this.isRunning(uid),
+        };
+      }),
+    );
   }
 
   async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
@@ -163,8 +166,8 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async restart(profile: string, options?: StartOptions): Promise<ProcessInfo> {
-    await this.stop(profile);
+  async restart(profile: string, options?: StartOptions & StopOptions): Promise<ProcessInfo> {
+    await this.stop(profile, options);
     return this.start(profile, options);
   }
 

@@ -19,15 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -64,6 +55,15 @@
       "path": "../plugins/plugin-dnd"
     },
     {
+      "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-files"
+    },
+    {
+      "path": "../plugins/plugin-github"
+    },
+    {
       "path": "../plugins/plugin-graph"
     },
     {
@@ -71,6 +71,9 @@
     },
     {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-pwa"
     },
     {
       "path": "../plugins/plugin-space"
@@ -89,9 +92,6 @@
     },
     {
       "path": "../plugins/plugin-url-sync"
-    },
-    {
-      "path": "../types"
     }
   ]
 }
