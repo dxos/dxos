@@ -6,7 +6,7 @@ import React, { Context, createContext, PropsWithChildren, useContext, useEffect
 
 import { Document } from '@braneframe/types';
 import { log } from '@dxos/log';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-client';
 import { Space, SpaceState, useQuery, useSpaces, Text } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 

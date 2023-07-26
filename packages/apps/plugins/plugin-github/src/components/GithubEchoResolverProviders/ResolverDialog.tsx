@@ -4,23 +4,22 @@
 
 import React from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { Button, useTranslation } from '@dxos/aurora';
-import { ShellLayout, useClient } from '@dxos/react-client';
-import { useShell } from '@dxos/react-shell';
+import { ShellLayout } from '@dxos/react-client';
+import { Plugin } from '@dxos/react-surface';
 
 import { ResolverTree } from './ResolverTree';
 
-export const ResolverDialog = () => {
+export const ResolverDialog = ({ clientPlugin }: { clientPlugin?: Plugin<ClientPluginProvides> }) => {
   const { t } = useTranslation('composer');
-  const client = useClient();
-  const shell = useShell();
 
   const handleJoinSpace = () => {
-    void shell.setLayout(ShellLayout.JOIN_SPACE);
+    void clientPlugin?.provides.setLayout(ShellLayout.JOIN_SPACE);
   };
 
   const handleCreateSpace = () => {
-    void client.createSpace();
+    void clientPlugin?.provides.client.createSpace();
   };
 
   return (
