@@ -13,6 +13,11 @@
       "description": "List of packages to include in the bundle, anything not in this list will be marked as external",
       "default": []
     },
+    "ignorePackages": {
+      "type": "array",
+      "description": "List of packages to ignore when bundling. Only intended to avoid errors for virtual packages.",
+      "default": []
+    },
     "entryPoints": {
       "type": "array",
       "description": "List of entrypoints for esbuild to build from"
