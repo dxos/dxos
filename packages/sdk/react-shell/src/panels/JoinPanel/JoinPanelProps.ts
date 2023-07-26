@@ -30,6 +30,7 @@ export type JoinPanelImplProps = Pick<
   'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
 > &
   Pick<JoinStepProps, 'send'> & {
+    titleId: string;
     activeView: string;
     failed: Set<'Halo' | 'Space'>;
     pending: boolean;
@@ -95,7 +96,7 @@ export type InvitationView =
 
 export type JoinView =
   | 'identity selector'
-  | 'addition method selector'
+  | 'addition method chooser'
   | 'identity input'
   | 'identity added'
   | 'space invitation acceptor'

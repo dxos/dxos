@@ -29,6 +29,8 @@ export const InvitationList = ({ invitations, ...invitationProps }: InvitationLi
       </DensityProvider>
     </AccordionRoot>
   ) : (
-    <p className={mx(descriptionText, 'text-center p-2')}>{t('empty invitations message')}</p>
+    <div role='none' className='grow flex items-center p-2'>
+      <p className={mx(descriptionText, 'text-center is-full')}>{t('empty invitations message')}</p>
+    </div>
   );
 };

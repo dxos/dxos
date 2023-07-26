@@ -15,6 +15,7 @@ const VIEWS_NAME = 'ViewportViews';
 const VIEW_NAME = 'ViewportView';
 
 type ViewportContextValue = {
+  focusManaged: boolean;
   activeView: string;
   setActiveView: Dispatch<SetStateAction<string | undefined>>;
 };
@@ -27,6 +28,7 @@ const [ViewportProvider, useViewportContext] = createViewportContext<ViewportCon
 
 type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{
+    focusManaged: boolean;
     defaultActiveView: string;
     activeView: string;
     onActiveViewChange: Dispatch<SetStateAction<string>>;
@@ -38,6 +40,7 @@ const ViewportRoot = ({
   children,
   defaultActiveView,
   activeView: propsActiveView,
+  focusManaged = false,
   onActiveViewChange,
   ...props
 }: ViewportScopedProps<ViewportRootProps>) => {
@@ -47,7 +50,12 @@ const ViewportRoot = ({
     onChange: onActiveViewChange,
   });
   return (
-    <ViewportProvider activeView={activeView} setActiveView={setActiveView} scope={__viewportScope}>
+    <ViewportProvider
+      focusManaged={focusManaged}
+      activeView={activeView}
+      setActiveView={setActiveView}
+      scope={__viewportScope}
+    >
       <div role='region' aria-live='polite' {...props} className={mx('is-full overflow-hidden', classNames)}>
         {children}
       </div>
@@ -70,19 +78,21 @@ const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) =
 
 ViewportViews.displayName = VIEWS_NAME;
 
-type ViewportViewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & { id: string };
+type ViewportViewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & {
+  id: string;
+};
 
 const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportViewProps>>(
   ({ __viewportScope, classNames, children, id, ...props }, forwardedRef) => {
-    const { activeView }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
+    const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
     const isActive = id === activeView;
     const ref = useForwardedRef(forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
     useEffect(() => {
-      if (isActive && ref.current) {
+      if (!focusManaged && isActive && ref.current) {
         findFirstFocusable(ref.current)?.focus();
       }
-    }, [ref.current, isActive]);
+    }, [focusManaged, ref.current, isActive]);
     return (
       <section
         {...props}

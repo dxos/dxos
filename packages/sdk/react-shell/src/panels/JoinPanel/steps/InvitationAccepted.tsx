@@ -32,7 +32,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
     >
       <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
       <span className='grow'>{t('done label')}</span>
-      <Check className={getSize(4)} />
+      <Check weight='bold' className={getSize(4)} />
     </Button>
   );
 

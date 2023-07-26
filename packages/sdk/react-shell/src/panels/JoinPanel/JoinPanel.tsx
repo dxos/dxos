@@ -13,7 +13,7 @@ import { JoinHeading } from './JoinHeading';
 import { JoinPanelImplProps, JoinPanelProps } from './JoinPanelProps';
 import { useJoinMachine } from './joinMachine';
 import {
-  AdditionMethodSelector,
+  AdditionMethodChooser,
   IdentityInput,
   IdentityAdded,
   InvitationAuthenticator,
@@ -22,9 +22,10 @@ import {
   InvitationAccepted,
 } from './steps';
 
-const viewStyles = 'pbe-3 pli-3';
+const viewStyles = 'pbs-1 pbe-3 pli-3';
 
 export const JoinPanelImpl = ({
+  titleId,
   send,
   activeView,
   failed,
@@ -42,14 +43,13 @@ export const JoinPanelImpl = ({
   onHaloInvitationAuthenticate,
   onSpaceInvitationAuthenticate,
 }: JoinPanelImplProps) => {
-  const titleId = useId('joinPanel__title');
   return (
     <DensityProvider density='fine'>
       <JoinHeading {...{ titleId, mode, onExit, exitActionParent, preventExit }} />
-      <Viewport.Root activeView={activeView}>
+      <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View classNames={viewStyles} id='addition method selector'>
-            <AdditionMethodSelector send={send} active={activeView === 'addition method selector'} />
+          <Viewport.View classNames={viewStyles} id='addition method chooser'>
+            <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='create identity input'>
             <IdentityInput send={send} method='create identity' active={activeView === 'create identity input'} />
@@ -98,7 +98,6 @@ export const JoinPanelImpl = ({
           <Viewport.View classNames={viewStyles} id='identity added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
-              send={send}
             />
           </Viewport.View>
           <Viewport.View classNames={viewStyles} id='space invitation input'>
@@ -146,6 +145,7 @@ export const JoinPanelImpl = ({
 };
 
 export const JoinPanel = ({
+  titleId: propsTitleId,
   mode = 'default',
   initialInvitationCode,
   exitActionParent,
@@ -157,6 +157,7 @@ export const JoinPanel = ({
   const client = useClient();
   const identity = useIdentity();
   const { hasIosKeyboard } = useThemeContext();
+  const titleId = useId('joinPanel__heading', propsTitleId);
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
@@ -177,7 +178,6 @@ export const JoinPanel = ({
   }, [joinService]);
 
   useEffect(() => {
-    // TODO(thure): Add `focusManaged` flag to `Viewport.View` so there’s no race condition.
     const stateStack = joinState.configuration[0].id.split('.');
     const innermostState = stateStack[stateStack.length - 1];
     const autoFocusValue = innermostState === 'finishingJoining' ? 'successSpaceInvitation' : innermostState;
@@ -190,7 +190,7 @@ export const JoinPanel = ({
   const activeView = useMemo(() => {
     switch (true) {
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
-        return 'addition method selector';
+        return 'addition method chooser';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
         return 'create identity input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
@@ -337,6 +337,7 @@ export const JoinPanel = ({
   return (
     <JoinPanelImpl
       {...{
+        titleId,
         send: joinSend,
         activeView,
         failed,

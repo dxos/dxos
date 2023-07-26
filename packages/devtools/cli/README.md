@@ -4,10 +4,42 @@ DXOS command line interface.
 
 <!-- toc -->
 * [DX CLI](#dx-cli)
+* [Instalation](#instalation)
+* [Running an Agent](#running-an-agent)
 * [Development](#development)
 * [Usage](#usage)
-* [Table of contents](#table-of-contents)
 <!-- tocstop -->
+
+# Instalation
+```terminal
+npm install -g @dxos/cli@main
+```
+---
+# Running an Agent
+Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
+## Starting agent
+Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.
+```terminal
+dx agent start
+```
+see: [dx agent start](#dx-agent-start)
+
+## Adding Agent to your Composer Identity 
+1. Go to [Composer](https://composer.dev.dxos.org). And create a device invitation.
+![Composer add device](./public/composer-sidebar.png)
+![Composer invitation](./public/composer-add-device.png)
+
+1. Run halo join command in your terminal.
+![CLI halo join flow](./public/cli-halo-join.png)
+
+1. Proceed with invitation
+
+## Troubleshooting
+1. Make sure you are running the latest version of the shared worker in the browser. Go to the shared workers tab chrome://inspect/#workers, kill `dxos-vault` worker, then reload the Composer tab.
+2. Restart your agent with [```dx agent restart```](#dx-agent-restart). Also useful command[ ```dx agent stop --all```](#dx-agent-stop)
+#### Danger Zone
+3. Reset Storage. Warning: Agent will lose its storage, and config file will be deleted [```dx reset --force```](#dx-reset)
+---
 
 
 # Development
@@ -30,11 +62,6 @@ Or source the following script to set the `dx` alias from any directory in the r
 . $(git rev-parse --show-toplevel)/packages/devtools/cli/scripts/dev.sh
 
 dx config --json
-```
-
-## Resetting the CLI
-
-```bash
 ```
 
 ## Reporting errors

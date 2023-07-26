@@ -29,6 +29,14 @@
       window.addEventListener('message', handler);
       window.parent.postMessage({ channel: 'dxos:vault', payload: 'loaded' }, '*');
     </script>
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      }
+      const paletteMatch = window.matchMedia('(prefers-color-scheme: dark)');
+      setTheme(paletteMatch.matches)
+      paletteMatch.addEventListener('change', ({matches})=>setTheme(matches))
+    </script>
   </head>
   <body>
     <div id="root"></div>
