@@ -15,7 +15,7 @@ import { base, db } from './defs';
 
 export const subscribe = Symbol.for('dxos.echo-object.subscribe');
 
-type SignalFactory = () => { notifyRead(): void; notifyWrite(): void };
+export type SignalFactory = () => { notifyRead(): void; notifyWrite(): void };
 let createSignal: SignalFactory | undefined;
 export const registerSignalFactory = (factory: SignalFactory) => {
   createSignal = factory;
