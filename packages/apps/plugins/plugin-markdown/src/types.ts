@@ -4,10 +4,11 @@
 
 import { MarkdownComposerProps } from '@dxos/aurora-composer';
 
-export const MARKDOWN_PLUGIN = 'dxos:markdown';
+export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
+const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 export enum MarkdownAction {
-  CREATE = `${MARKDOWN_PLUGIN}/create`,
+  CREATE = `${MARKDOWN_ACTION}/create`,
 }
 
 export type MarkdownProperties = {

@@ -12,7 +12,7 @@ import { captureException } from '@dxos/sentry';
 
 export const PwaPlugin = (): PluginDefinition => ({
   meta: {
-    id: 'dxos:pwa',
+    id: 'dxos.org/plugin/pwa',
   },
   provides: {
     context: ({ children }) => {

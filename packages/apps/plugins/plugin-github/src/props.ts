@@ -7,6 +7,8 @@ import { Dispatch, SetStateAction } from 'react';
 import { Document } from '@braneframe/types';
 import { Space } from '@dxos/react-client/echo';
 
+export const GITHUB_PLUGIN = 'dxos.org/plugin/github';
+
 export type EditorViewState = 'editor' | 'preview';
 
 export type MarkdownDocumentProps = {

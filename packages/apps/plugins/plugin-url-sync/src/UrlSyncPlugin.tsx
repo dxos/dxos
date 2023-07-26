@@ -4,12 +4,12 @@
 
 import { useEffect } from 'react';
 
-import { selectedToUri, uriToSelected, useTreeView } from '@braneframe/plugin-treeview';
+import { activeToUri, uriToActive, useTreeView } from '@braneframe/plugin-treeview';
 import { PluginDefinition } from '@dxos/react-surface';
 
 export const UrlSyncPlugin = (): PluginDefinition => ({
   meta: {
-    id: 'dxos:url-sync',
+    id: 'dxos.org/plugin/url-sync',
   },
   provides: {
     components: {
@@ -20,10 +20,8 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
         useEffect(() => {
           const handleNavigation = () => {
             treeView.active =
-              // TODO(wittjosiah): Remove. This is here for backwards compatibility.
-              window.location.pathname === '/embedded'
-                ? ['dxos:github/embedded']
-                : uriToSelected(window.location.pathname);
+              // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
+              window.location.pathname === '/embedded' ? ['github/embedded'] : uriToActive(window.location.pathname);
           };
 
           if (treeView.active.length === 0 && window.location.pathname.length > 1) {
@@ -38,7 +36,7 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
 
         // Update URL when selection changes.
         useEffect(() => {
-          const selectedPath = selectedToUri(treeView.active);
+          const selectedPath = activeToUri(treeView.active);
           if (window.location.pathname !== selectedPath) {
             // TODO(wittjosiah): Better support for search params?
             history.pushState(null, '', `${selectedPath}${window.location.search}`);

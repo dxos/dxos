@@ -42,7 +42,7 @@ export const SplitView = () => {
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
           <Dialog.Overlay>
-            {dialogContent === 'dxos:splitview/ProfileSettings' ? (
+            {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
               <Dialog.Content>
                 <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                 <Surface role='dialog' data={dialogContent} />

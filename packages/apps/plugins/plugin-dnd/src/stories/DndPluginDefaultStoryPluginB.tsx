@@ -80,7 +80,7 @@ const DndPluginDefaultStoryPluginBDefault = () => {
 export const DndPluginDefaultStoryPluginB = (): PluginDefinition => {
   return {
     meta: {
-      id: 'dxos:dndPluginDefaultStoryPluginB',
+      id: 'example.com/plugin/dndPluginDefaultStoryPluginB',
     },
     provides: {
       component: (datum, role) => {

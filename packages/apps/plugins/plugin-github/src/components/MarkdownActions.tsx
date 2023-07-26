@@ -12,7 +12,7 @@ import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 
 import { useDocGhId } from '../hooks';
-import { GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN, GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const MarkdownActions = ({
@@ -22,7 +22,7 @@ export const MarkdownActions = ({
 }) => {
   const ghId = properties.meta?.keys?.find((key) => key.source === 'com.github')?.id;
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const splitView = useSplitView();
 
   const docGhId = useDocGhId(properties.meta?.keys ?? []);
@@ -43,7 +43,7 @@ export const MarkdownActions = ({
         const {
           data: { html_url: issueUrl },
         } = await updateIssueContent();
-        splitView.dialogContent = ['dxos:github/ExportDialog', ['response', issueUrl], model, docGhId];
+        splitView.dialogContent = ['dxos.org/plugin/github/ExportDialog', ['response', issueUrl], model, docGhId];
         splitView.dialogOpen = true;
       } catch (err) {
         log.error('Failed to export to Github issue');
@@ -57,7 +57,7 @@ export const MarkdownActions = ({
     if ('issueNumber' in docGhId!) {
       void exportGhIssueContent();
     } else if ('path' in docGhId!) {
-      splitView.dialogContent = ['dxos:github/ExportDialog', ['create-pr', null], model, docGhId];
+      splitView.dialogContent = ['dxos.org/plugin/github/ExportDialog', ['create-pr', null], model, docGhId];
       splitView.dialogOpen = true;
     }
   }, [exportGhIssueContent, docGhId]);
@@ -71,7 +71,7 @@ export const MarkdownActions = ({
             classNames='gap-2'
             disabled={!docGhId}
             onClick={() => {
-              splitView.dialogContent = ['dxos:github/ImportDialog', docGhId, editorRef];
+              splitView.dialogContent = ['dxos.org/plugin/github/ImportDialog', docGhId, editorRef];
               splitView.dialogOpen = true;
             }}
           >
@@ -105,7 +105,7 @@ export const MarkdownActions = ({
         <DropdownMenu.Item
           classNames='gap-2'
           onClick={() => {
-            splitView.dialogContent = ['dxos:github/BindDialog', properties];
+            splitView.dialogContent = ['dxos.org/plugin/github/BindDialog', properties];
             splitView.dialogOpen = true;
           }}
         >
