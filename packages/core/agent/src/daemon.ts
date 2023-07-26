@@ -8,10 +8,15 @@ export type ProcessInfo = {
   running?: boolean;
   started?: number;
   logFile?: string;
+  lockAcquired?: boolean;
 };
 
 export type StartOptions = {
   config?: string;
+};
+
+export type StopOptions = {
+  force?: boolean;
 };
 
 /**
@@ -26,8 +31,8 @@ export interface Daemon {
    * @param params.config Path to config file.
    */
   start: (profile: string, options?: StartOptions) => Promise<ProcessInfo>;
-  restart: (profile: string, options?: StartOptions) => Promise<ProcessInfo>;
-  stop: (profile: string, options?: { force?: boolean }) => Promise<ProcessInfo | undefined>;
+  restart: (profile: string, options?: StartOptions & StopOptions) => Promise<ProcessInfo>;
+  stop: (profile: string, options?: StopOptions) => Promise<ProcessInfo | undefined>;
 
   isRunning: (profile: string) => Promise<boolean>;
   list: () => Promise<ProcessInfo[]>;
