@@ -9,7 +9,7 @@ import { ComposerModel } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
-import { ExportViewState, GhFileIdentifier, GhIdentifier } from '../props';
+import { ExportViewState, GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const ExportDialog = ({
@@ -20,7 +20,7 @@ export const ExportDialog = ({
   const content = model.content;
 
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const [exportViewState, setExportViewState] = useState<ExportViewState>(initialExportViewState);
   const [ghResponseUrl, setGhResponseUrl] = useState<string | null>(initialResponseUrl);
   const [ghBranchValue, setGhBranchValue] = useState('');

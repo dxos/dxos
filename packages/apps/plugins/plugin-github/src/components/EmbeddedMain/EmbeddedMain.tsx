@@ -35,7 +35,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { useDocGhId } from '../../hooks';
-import { EditorViewState } from '../../props';
+import { EditorViewState, GITHUB_PLUGIN } from '../../props';
 import {
   DocumentResolverProvider,
   DocumentResolverContext,
@@ -50,11 +50,11 @@ const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
   const identity = useIdentity();
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
   const { plugins } = usePluginContext();
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -263,7 +263,7 @@ const EmbeddedLayoutImpl = () => {
           <Dialog.Root open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
             <Dialog.Overlay classNames='backdrop-blur'>
               <Dialog.Content>
-                <Surface role='dialog' data={['dxos:space/RenameSpaceDialog', space]} />
+                <Surface role='dialog' data={['dxos.org/plugin/space/RenameSpaceDialog', space]} />
               </Dialog.Content>
             </Dialog.Overlay>
           </Dialog.Root>

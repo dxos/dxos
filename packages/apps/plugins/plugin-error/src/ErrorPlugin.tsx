@@ -13,7 +13,7 @@ export const ErrorPlugin = (
   { config }: { config: Config } = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition => ({
   meta: {
-    id: 'dxos:error',
+    id: 'dxos.org/plugin/error',
   },
   provides: {
     context: ({ children }) => (

@@ -15,8 +15,9 @@ import { isTypedObject } from '@dxos/react-client/echo';
 
 export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
 
+const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 export enum ThreadAction {
-  CREATE = `${THREAD_PLUGIN}/create`,
+  CREATE = `${THREAD_ACTION}/create`,
 }
 
 export type ThreadPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;

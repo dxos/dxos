@@ -29,7 +29,14 @@ import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { stackState } from '../stores';
-import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
+import {
+  GenericStackObject,
+  STACK_PLUGIN,
+  StackModel,
+  StackProperties,
+  StackSectionModel,
+  StackSections,
+} from '../types';
 
 type StackSectionProps = {
   onRemove?: () => void;
@@ -49,7 +56,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
     { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay },
     forwardedRef,
   ) => {
-    const { t } = useTranslation('dxos:stack');
+    const { t } = useTranslation(STACK_PLUGIN);
     return (
       <DensityProvider density='fine'>
         <ListItem.Root
@@ -138,7 +145,7 @@ const StackSectionsImpl = ({
   id: string;
   onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
 }) => {
-  const { t } = useTranslation('dxos:stack');
+  const { t } = useTranslation(STACK_PLUGIN);
   const dnd = useDnd();
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
   const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
@@ -261,7 +268,7 @@ const StackSectionsImpl = ({
 };
 
 const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
-  const { t } = useTranslation('dxos:stack');
+  const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
   const splitView = useSplitView();
   const handleAdd = useCallback(
@@ -341,7 +348,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                         splitView.dialogContent = {
                           id,
                           chooser: 'many',
-                          subject: 'dxos:stack/chooser',
+                          subject: 'dxos.org/plugin/stack/chooser',
                           omit: new Set(
                             stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
                           ),

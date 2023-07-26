@@ -13,20 +13,19 @@ import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
-import { SPACE_PLUGIN, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
 
-// TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 export const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.truncate();
+    spaceKey = spaceKey.toHex();
   }
 
-  return `${SPACE_PLUGIN}/${spaceKey}`;
+  return `${SPACE_PLUGIN_SHORT_ID}/${spaceKey}`;
 };
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
@@ -39,7 +38,7 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
 };
 
 export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string): GraphNode<Space> => {
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
   if (!clientPlugin) {
     throw new Error('Client plugin not found');
   }

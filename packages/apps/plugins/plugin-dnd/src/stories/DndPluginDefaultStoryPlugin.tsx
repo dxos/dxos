@@ -95,7 +95,7 @@ const DndPluginDefaultStoryPluginDefault = () => {
 export const DndPluginDefaultStoryPlugin = (): PluginDefinition<{ dndStory: DndPluginDefaultStoryContextValue }> => {
   return {
     meta: {
-      id: 'dxos:dndStoryPluginA',
+      id: 'example.com/plugin/dndStoryPluginA',
     },
     provides: {
       context: ({ children }: PropsWithChildren) => (

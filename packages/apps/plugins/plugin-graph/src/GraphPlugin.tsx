@@ -31,7 +31,7 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
 
   return {
     meta: {
-      id: 'dxos:graph',
+      id: 'dxos.org/plugin/graph',
     },
     ready: async (plugins) => {
       const result = buildGraph({ from: ROOT, plugins, onUpdate: (path, nodes) => set(graph, path, nodes) });

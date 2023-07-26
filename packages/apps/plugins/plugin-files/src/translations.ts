@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { FILES_PLUGIN } from './types';
+
 export default [
   {
     'en-US': {
-      'dxos:local': {
+      [FILES_PLUGIN]: {
         'plugin name': 'Local Files',
         'missing file permissions': 'Permission required to view the currently selected file',
         'open file label': 'Open file',
