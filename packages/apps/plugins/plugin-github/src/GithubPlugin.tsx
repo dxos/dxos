@@ -23,7 +23,8 @@ import translations from './translations';
 
 export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
   meta: {
-    id: 'dxos:github',
+    id: 'dxos.org/plugin/github',
+    shortId: 'github',
   },
   provides: {
     translations,
@@ -32,13 +33,13 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
       switch (role) {
         case 'dialog':
           switch (true) {
-            case datum === 'dxos:splitview/ProfileSettings':
+            case datum === 'dxos.org/plugin/splitview/ProfileSettings':
               return PatInput;
-            case Array.isArray(datum) && datum[0] === 'dxos:github/BindDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/BindDialog':
               return UrlDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos:github/ExportDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/ExportDialog':
               return ExportDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos:github/ImportDialog':
+            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/ImportDialog':
               return ImportDialog;
             default:
               return null;

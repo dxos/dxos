@@ -24,7 +24,7 @@ const DefaultStackPluginStory = () => {
 
 const StackPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos:stackStoryPlugin',
+    id: 'example.com/plugin/stackStoryPlugin',
   },
   provides: {
     components: {
