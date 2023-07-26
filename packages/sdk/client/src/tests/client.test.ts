@@ -71,49 +71,47 @@ describe('Client', () => {
     await expect(client.createSpace()).to.eventually.be.rejectedWith('This device has no HALO identity available.');
   }).timeout(1_000);
 
-  test
-    .only('creates identity then resets', async () => {
-      const config = new Config({
-        version: 1,
-        runtime: {
-          client: {
-            storage: { persistent: true, path: persistentStoragePath },
-          },
+  test('creates identity then resets', async () => {
+    const config = new Config({
+      version: 1,
+      runtime: {
+        client: {
+          storage: { persistent: true, path: persistentStoragePath },
         },
-      });
-      const testBuilder = new TestBuilder(config);
-      const client = new Client({ services: testBuilder.createLocal() });
-      const displayName = 'test-user';
-      {
-        // Create identity.
-        await client.initialize();
-        expect(client.halo.identity.get()).not.to.exist;
-        const identity = await client.halo.createIdentity({ displayName });
-        expect(client.halo.identity.get()).to.deep.eq(identity);
-        await client.destroy();
-      }
+      },
+    });
+    const testBuilder = new TestBuilder(config);
+    const client = new Client({ services: testBuilder.createLocal() });
+    const displayName = 'test-user';
+    {
+      // Create identity.
+      await client.initialize();
+      expect(client.halo.identity.get()).not.to.exist;
+      const identity = await client.halo.createIdentity({ displayName });
+      expect(client.halo.identity.get()).to.deep.eq(identity);
+      await client.destroy();
+    }
 
-      {
-        // Should throw trying to create another.
-        await client.initialize();
-        expect(client.halo.identity).to.exist;
-        // TODO(burdon): Error type.
-        await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
-      }
+    {
+      // Should throw trying to create another.
+      await client.initialize();
+      expect(client.halo.identity).to.exist;
+      // TODO(burdon): Error type.
+      await expect(client.halo.createIdentity({ displayName })).to.be.rejected;
+    }
 
-      {
-        // Reset storage.
-        await client.reset();
-      }
+    {
+      // Reset storage.
+      await client.reset();
+    }
 
-      {
-        // Start again.
-        await client.initialize();
-        expect(client.halo.identity.get()).to.eq(null);
-        await client.halo.createIdentity({ displayName });
-        expect(client.halo.identity).to.exist;
-        await client.destroy();
-      }
-    })
-    .onlyEnvironments('nodejs', 'chromium', 'firefox');
+    {
+      // Start again.
+      await client.initialize();
+      expect(client.halo.identity.get()).to.eq(null);
+      await client.halo.createIdentity({ displayName });
+      expect(client.halo.identity).to.exist;
+      await client.destroy();
+    }
+  }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 });
