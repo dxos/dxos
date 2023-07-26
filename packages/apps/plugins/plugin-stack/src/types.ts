@@ -67,6 +67,7 @@ export type StackModel<T extends StackObject = GenericStackObject> = {
   sections: StackSections<T>;
 };
 
+// TODO(burdon): Why is this separate from StackModel?
 export type StackProperties = {
   title?: string;
 };

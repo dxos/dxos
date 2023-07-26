@@ -1,4 +1,4 @@
-# @dxos/bot-lab
+# @dxos/kai-bots
 
 Bot experiments incubator.
 
