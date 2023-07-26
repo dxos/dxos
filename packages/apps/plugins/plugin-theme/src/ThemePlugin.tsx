@@ -13,9 +13,9 @@ import { PluginDefinition } from '@dxos/react-surface';
 import compositeEnUs from './translations/en-US';
 import { translationsPlugins } from './util';
 
-export const ThemePlugin = (): PluginDefinition => {
+export const ThemePlugin = (appName?: string): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
-  const resources: Resource[] = [compositeEnUs];
+  const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {

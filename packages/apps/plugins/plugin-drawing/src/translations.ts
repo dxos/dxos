@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DRAWING_PLUGIN } from './props';
+
 export default [
   {
     'en-US': {
-      'dxos.org/plugin/drawing': {
+      [DRAWING_PLUGIN]: {
         'plugin name': 'Drawing',
         'drawing title placeholder': 'New drawing',
         'create drawing label': 'Create drawing',

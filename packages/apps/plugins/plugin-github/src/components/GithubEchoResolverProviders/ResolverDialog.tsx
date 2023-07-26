@@ -9,10 +9,11 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { ShellLayout } from '@dxos/react-client';
 import { Plugin } from '@dxos/react-surface';
 
+import { GITHUB_PLUGIN } from '../../props';
 import { ResolverTree } from './ResolverTree';
 
 export const ResolverDialog = ({ clientPlugin }: { clientPlugin?: Plugin<ClientPluginProvides> }) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(GITHUB_PLUGIN);
 
   const handleJoinSpace = () => {
     void clientPlugin?.provides.setLayout(ShellLayout.JOIN_SPACE);

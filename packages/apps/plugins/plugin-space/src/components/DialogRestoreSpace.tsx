@@ -12,9 +12,10 @@ import { getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/react-client/echo';
 
 import { restoreSpace } from '../backup';
+import { SPACE_PLUGIN } from '../types';
 
 export const DialogRestoreSpace = ({ data: [_, space] }: { data: [string, Space] }) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(SPACE_PLUGIN);
   const splitViewContext = useSplitView();
   return (
     <>

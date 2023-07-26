@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin(),
+        ThemePlugin('Labs'),
         ClientPlugin(),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
