@@ -9,7 +9,8 @@ import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/auror
 import { PublicKey } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
-import { IdentityPanelImpl, IdentityPanelImplProps } from './IdentityPanel';
+import { IdentityPanelImpl } from './IdentityPanel';
+import type { IdentityPanelImplProps } from './IdentityPanelProps';
 
 faker.seed(1234);
 
