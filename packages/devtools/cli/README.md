@@ -9,6 +9,37 @@ DXOS command line interface.
 * [Table of contents](#table-of-contents)
 <!-- tocstop -->
 
+# Instalation
+```terminal
+npm install -g @dxos/cli@main
+```
+---
+# Running an Agent
+Agent is a name for DXOS Client which is run by CLI in the background in the daemonized process. 
+## Starting agent
+Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.
+```terminal
+dx agent start
+```
+see: [dx agent start](#dx-agent-start)
+
+## Adding Agent to your Composer Identity 
+1. Go to [Composer](https://composer.dev.dxos.org). And create a device invitation.
+![Composer add device](./public/composer-sidebar.png)
+![Composer invitation](./public/composer-add-device.png)
+
+1. Run halo join command in your terminal.
+![CLI halo join flow](./public/cli-halo-join.png)
+
+1. Proceed with invitation
+
+## Troubleshooting
+1. Make sure you are running the latest version of the shared worker in the browser. Go to the shared workers tab chrome://inspect/#workers, kill `dxos-vault` worker, then reload the Composer tab.
+2. Restart your agent with [```dx agent restart```](#dx-agent-restart). Also useful command[ ```dx agent stop --all```](#dx-agent-stop)
+#### Danger Zone
+3. Reset Storage. Warning: Agent will lose its storage, and config file will be deleted [```dx reset --force```](#dx-reset)
+---
+
 
 # Development
 
@@ -64,52 +95,64 @@ USAGE
 ## Commands
 
 <!-- commands -->
-* [`dx agent list`](#dx-agent-list)
-* [`dx agent restart`](#dx-agent-restart)
-* [`dx agent start`](#dx-agent-start)
-* [`dx agent stop`](#dx-agent-stop)
-* [`dx app create NAME`](#dx-app-create-name)
-* [`dx app list`](#dx-app-list)
-* [`dx app open URL`](#dx-app-open-url)
-* [`dx app publish`](#dx-app-publish)
-* [`dx config`](#dx-config)
-* [`dx debug stats`](#dx-debug-stats)
-* [`dx device`](#dx-device)
-* [`dx device list`](#dx-device-list)
-* [`dx function dev`](#dx-function-dev)
-* [`dx function dev-server`](#dx-function-dev-server)
-* [`dx function exec NAME`](#dx-function-exec-name)
-* [`dx function list`](#dx-function-list)
-* [`dx function logs NAME`](#dx-function-logs-name)
-* [`dx halo`](#dx-halo)
-* [`dx halo create DISPLAYNAME`](#dx-halo-create-displayname)
-* [`dx halo credential add [CREDENTIAL]`](#dx-halo-credential-add-credential)
-* [`dx halo credential list`](#dx-halo-credential-list)
-* [`dx halo join`](#dx-halo-join)
-* [`dx halo share`](#dx-halo-share)
-* [`dx help [COMMANDS]`](#dx-help-commands)
-* [`dx kube auth`](#dx-kube-auth)
-* [`dx kube deploy`](#dx-kube-deploy)
-* [`dx plugins`](#dx-plugins)
-* [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin)
-* [`dx plugins:inspect PLUGIN...`](#dx-pluginsinspect-plugin)
-* [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin-1)
-* [`dx plugins:link PLUGIN`](#dx-pluginslink-plugin)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-1)
-* [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-2)
-* [`dx plugins update`](#dx-plugins-update)
-* [`dx reset`](#dx-reset)
-* [`dx shell`](#dx-shell)
-* [`dx space`](#dx-space)
-* [`dx space create [NAME]`](#dx-space-create-name)
-* [`dx space epoch [KEY]`](#dx-space-epoch-key)
-* [`dx space invite KEY`](#dx-space-invite-key)
-* [`dx space join`](#dx-space-join)
-* [`dx space list`](#dx-space-list)
-* [`dx space members [KEY]`](#dx-space-members-key)
-* [`dx tunnel list`](#dx-tunnel-list)
-* [`dx tunnel set`](#dx-tunnel-set)
+- [DX CLI](#dx-cli)
+- [Instalation](#instalation)
+- [Running an Agent](#running-an-agent)
+  - [Starting agent](#starting-agent)
+  - [Adding Agent to your Composer Identity](#adding-agent-to-your-composer-identity)
+  - [Troubleshooting](#troubleshooting)
+      - [Danger Zone](#danger-zone)
+- [Development](#development)
+  - [Resetting the CLI](#resetting-the-cli)
+  - [Reporting errors](#reporting-errors)
+- [Usage](#usage)
+  - [Commands](#commands)
+  - [`dx agent list`](#dx-agent-list)
+  - [`dx agent restart`](#dx-agent-restart)
+  - [`dx agent start`](#dx-agent-start)
+  - [`dx agent stop`](#dx-agent-stop)
+  - [`dx app create NAME`](#dx-app-create-name)
+  - [`dx app list`](#dx-app-list)
+  - [`dx app open URL`](#dx-app-open-url)
+  - [`dx app publish`](#dx-app-publish)
+  - [`dx config`](#dx-config)
+  - [`dx debug stats`](#dx-debug-stats)
+  - [`dx device`](#dx-device)
+  - [`dx device list`](#dx-device-list)
+  - [`dx function dev`](#dx-function-dev)
+  - [`dx function dev-server`](#dx-function-dev-server)
+  - [`dx function exec NAME`](#dx-function-exec-name)
+  - [`dx function list`](#dx-function-list)
+  - [`dx function logs NAME`](#dx-function-logs-name)
+  - [`dx halo`](#dx-halo)
+  - [`dx halo create DISPLAYNAME`](#dx-halo-create-displayname)
+  - [`dx halo credential add [CREDENTIAL]`](#dx-halo-credential-add-credential)
+  - [`dx halo credential list`](#dx-halo-credential-list)
+  - [`dx halo join`](#dx-halo-join)
+  - [`dx halo share`](#dx-halo-share)
+  - [`dx help [COMMANDS]`](#dx-help-commands)
+  - [`dx kube auth`](#dx-kube-auth)
+  - [`dx kube deploy`](#dx-kube-deploy)
+  - [`dx plugins`](#dx-plugins)
+  - [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin)
+  - [`dx plugins:inspect PLUGIN...`](#dx-pluginsinspect-plugin)
+  - [`dx plugins:install PLUGIN...`](#dx-pluginsinstall-plugin-1)
+  - [`dx plugins:link PLUGIN`](#dx-pluginslink-plugin)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-1)
+  - [`dx plugins:uninstall PLUGIN...`](#dx-pluginsuninstall-plugin-2)
+  - [`dx plugins update`](#dx-plugins-update)
+  - [`dx reset`](#dx-reset)
+  - [`dx shell`](#dx-shell)
+  - [`dx space`](#dx-space)
+  - [`dx space create [NAME]`](#dx-space-create-name)
+  - [`dx space epoch [KEY]`](#dx-space-epoch-key)
+  - [`dx space invite KEY`](#dx-space-invite-key)
+  - [`dx space join`](#dx-space-join)
+  - [`dx space list`](#dx-space-list)
+  - [`dx space members [KEY]`](#dx-space-members-key)
+  - [`dx tunnel list`](#dx-tunnel-list)
+  - [`dx tunnel set`](#dx-tunnel-set)
 
 ## `dx agent list`
 
