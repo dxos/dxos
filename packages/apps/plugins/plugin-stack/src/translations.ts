@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { STACK_PLUGIN } from './types';
+
 export default [
   {
     'en-US': {
-      'dxos:stack': {
+      [STACK_PLUGIN]: {
         'plugin name': 'DXOS Stacks',
         'create stack label': 'Create stack',
         'add section label': 'Add',

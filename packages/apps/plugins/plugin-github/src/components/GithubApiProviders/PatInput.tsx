@@ -12,7 +12,7 @@ import { GITHUB_PLUGIN } from '../../props';
 import { useOctokitContext } from './OctokitProvider';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const descriptionId = useId('link--external');
   return (
     <>

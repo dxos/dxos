@@ -23,6 +23,7 @@ import {
 import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
+import { TREE_VIEW_PLUGIN } from '../types';
 
 type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
 
@@ -56,8 +57,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 
   const { invokeAction } = useGraph();
   const { sidebarOpen, closeSidebar } = useSidebar();
-  // TODO(wittjosiah): Update namespace.
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const density = useDensityContext();
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const treeView = useTreeView();

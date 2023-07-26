@@ -12,6 +12,7 @@ import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
 import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
 
+import { TREE_VIEW_PLUGIN } from '../types';
 import { TreeView } from './TreeView';
 
 type SortableBranchTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
@@ -46,8 +47,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
 
   const { invokeAction } = useGraph();
   const [primaryAction, ...actions] = getActions(node);
-  // TODO(wittjosiah): Update namespace.
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const hasActiveDocument = false;
   const disabled = node.attributes?.disabled;
   const error = node.attributes?.error;

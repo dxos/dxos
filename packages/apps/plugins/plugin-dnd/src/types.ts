@@ -7,6 +7,8 @@ import { useSortable } from '@dnd-kit/sortable';
 
 import { ListItemRootProps } from '@dxos/aurora';
 
+export const DND_PLUGIN = 'dxos.org/plugin/dnd';
+
 export type SortableProps = Partial<{
   draggableAttributes: DraggableAttributes;
   draggableListeners: ReturnType<typeof useSortable>['listeners'];

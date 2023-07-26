@@ -7,8 +7,10 @@ import React from 'react';
 import { useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 
+import { SPLITVIEW_PLUGIN } from '../types';
+
 export const SplitViewMainContentEmpty = () => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(SPLITVIEW_PLUGIN);
   return (
     <div
       role='none'

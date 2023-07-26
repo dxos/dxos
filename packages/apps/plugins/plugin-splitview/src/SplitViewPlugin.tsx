@@ -10,6 +10,7 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { SplitViewContext } from './SplitViewContext';
 import { SplitView, SplitViewMainContentEmpty } from './components';
+import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
 
 export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
@@ -60,6 +61,7 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
         },
       },
       splitView: state,
+      translations,
     },
   };
 };

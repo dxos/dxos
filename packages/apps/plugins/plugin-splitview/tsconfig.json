@@ -37,6 +37,9 @@
     },
     {
       "path": "../plugin-intent"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

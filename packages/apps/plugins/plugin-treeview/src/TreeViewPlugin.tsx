@@ -11,6 +11,7 @@ import { PluginDefinition, Surface } from '@dxos/react-surface';
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
+import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 import { resolveNodes } from './util';
 
@@ -84,6 +85,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           }
         },
       },
+      translations,
     },
   };
 };

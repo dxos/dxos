@@ -1,8 +1,9 @@
 //
 // Copyright 2022 DXOS.org
 //
-export const appkit = {
-  'current app name': 'This app',
+
+export const appkit = (appName?: string) => ({
+  'current app name': appName ?? 'This app',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
@@ -101,4 +102,4 @@ export const appkit = {
   'new list item input placeholder': 'Enter text…',
   'reset client label': 'Reset',
   'reset client confirm label': 'Yes, confirm reset',
-};
+});

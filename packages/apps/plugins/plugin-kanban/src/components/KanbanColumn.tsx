@@ -13,13 +13,14 @@ import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
+import { KANBAN_PLUGIN } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 
 export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete column label')}</span>
@@ -29,7 +30,7 @@ const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
 };
 
 const AddItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('add item label')}</span>
@@ -40,7 +41,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 
 // TODO(burdon): Factor out container.
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', Styles.level1.bg)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
@@ -58,7 +59,7 @@ export const KanbanColumnComponent: FC<{
   onCreate?: (column: KanbanType.Column) => KanbanType.Item;
   onDelete?: () => void;
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
 
   // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
