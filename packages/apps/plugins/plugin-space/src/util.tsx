@@ -13,20 +13,19 @@ import { log } from '@dxos/log';
 import { EchoDatabase, Space, SpaceState, TypedObject } from '@dxos/react-client/echo';
 import { Plugin, findPlugin } from '@dxos/react-surface';
 
-import { SPACE_PLUGIN, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
 
 export const isSpace = (datum: unknown): datum is Space =>
   datum && typeof datum === 'object'
     ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
     : false;
 
-// TODO(wittjosiah): Specify and factor out fully qualified names + utils (e.g., subpaths, uris, etc).
 export const getSpaceId = (spaceKey: PublicKeyLike) => {
   if (spaceKey instanceof PublicKey) {
-    spaceKey = spaceKey.truncate();
+    spaceKey = spaceKey.toHex();
   }
 
-  return `${SPACE_PLUGIN}/${spaceKey}`;
+  return `${SPACE_PLUGIN_SHORT_ID}/${spaceKey}`;
 };
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
@@ -34,12 +33,12 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
   return (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
     : disabled
-    ? ['loading space title', { ns: 'composer' }]
-    : ['untitled space title', { ns: 'composer' }];
+    ? ['loading space title', { ns: SPACE_PLUGIN }]
+    : ['untitled space title', { ns: SPACE_PLUGIN }];
 };
 
 export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string): GraphNode<Space> => {
-  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
+  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
   if (!clientPlugin) {
     throw new Error('Client plugin not found');
   }
@@ -86,35 +85,35 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
         {
           id: 'rename-space',
           index: actionIndices[0],
-          label: ['rename space label', { ns: 'composer' }],
+          label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
           intent: { ...baseIntent, action: SpaceAction.RENAME },
         },
         {
           id: 'view-invitations',
           index: actionIndices[1],
-          label: ['view invitations label', { ns: 'composer' }],
+          label: ['view invitations label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PaperPlane {...props} />,
           intent: { ...baseIntent, action: SpaceAction.SHARE },
         },
         {
           id: 'hide-space',
           index: actionIndices[2],
-          label: ['hide space label', { ns: 'composer' }],
+          label: ['hide space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <EyeSlash {...props} />,
           intent: { ...baseIntent, action: SpaceAction.HIDE },
         },
         {
           id: 'backup-space',
           index: actionIndices[3],
-          label: ['download all docs in space label', { ns: 'composer' }],
+          label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Download {...props} />,
           intent: { ...baseIntent, action: SpaceAction.BACKUP },
         },
         {
           id: 'restore-space',
           index: actionIndices[4],
-          label: ['upload all docs in space label', { ns: 'composer' }],
+          label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Upload {...props} />,
           intent: { ...baseIntent, action: SpaceAction.RESTORE },
         },

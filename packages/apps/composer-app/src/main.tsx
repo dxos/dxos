@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-import { LocalFilesPlugin } from '@braneframe/plugin-files';
+import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
@@ -38,7 +38,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin(),
+        ThemePlugin('Composer'),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
         PwaPlugin(),
@@ -53,7 +53,7 @@ createRoot(document.getElementById('root')!).render(
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
-        LocalFilesPlugin(),
+        FilesPlugin(),
       ]}
     />
   </StrictMode>,

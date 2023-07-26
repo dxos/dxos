@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { KANBAN_PLUGIN } from './props';
+
 export default [
   {
     'en-US': {
-      // TODO(burdon): Make id consistent with other plugins.
-      'dxos.org/plugin/kanban': {
+      [KANBAN_PLUGIN]: {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
         'kanban title placeholder': 'New kanban',

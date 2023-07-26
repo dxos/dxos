@@ -10,11 +10,12 @@ import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
+import { SPLITVIEW_PLUGIN } from '../types';
 
 export const SplitView = () => {
   const context = useSplitView();
   const { sidebarOpen, dialogOpen, dialogContent } = context;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
@@ -42,7 +43,7 @@ export const SplitView = () => {
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
           <Dialog.Overlay>
-            {dialogContent === 'dxos:splitview/ProfileSettings' ? (
+            {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
               <Dialog.Content>
                 <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                 <Surface role='dialog' data={dialogContent} />

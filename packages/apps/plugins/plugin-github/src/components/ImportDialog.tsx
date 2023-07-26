@@ -8,7 +8,7 @@ import { Button, Dialog, useTranslation } from '@dxos/aurora';
 import { MarkdownComposerRef } from '@dxos/aurora-composer';
 import { log } from '@dxos/log';
 
-import { GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
+import { GITHUB_PLUGIN, GhFileIdentifier, GhIdentifier, GhIssueIdentifier } from '../props';
 import { useOctokitContext } from './GithubApiProviders';
 
 export const ImportDialog = ({
@@ -16,7 +16,7 @@ export const ImportDialog = ({
 }: {
   data: [string, GhIdentifier, RefObject<MarkdownComposerRef>];
 }) => {
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const { octokit } = useOctokitContext();
 
   const importGhIssueContent = useCallback(async () => {
@@ -63,8 +63,8 @@ export const ImportDialog = ({
 
   return (
     <>
-      <Dialog.Title>{t('confirm import title', { ns: 'composer' })}</Dialog.Title>
-      <p className='plb-2'>{t('confirm import body', { ns: 'composer' })}</p>
+      <Dialog.Title>{t('confirm import title')}</Dialog.Title>
+      <p className='plb-2'>{t('confirm import body')}</p>
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>
           <Button>{t('cancel label', { ns: 'appkit' })}</Button>

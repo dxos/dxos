@@ -12,7 +12,7 @@ import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { DrawingPlugin } from '@braneframe/plugin-drawing';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-import { LocalFilesPlugin } from '@braneframe/plugin-files';
+import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
@@ -49,7 +49,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin(),
+        ThemePlugin('Labs'),
         ClientPlugin(),
         IntentPlugin(),
         DndPlugin(),
@@ -65,7 +65,7 @@ createRoot(document.getElementById('root')!).render(
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
-        LocalFilesPlugin(),
+        FilesPlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
         ThreadPlugin(),

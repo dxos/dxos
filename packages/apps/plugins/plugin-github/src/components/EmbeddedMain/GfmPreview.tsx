@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@dxos/aurora';
 import { Loading } from '@dxos/react-appkit';
 
+import { GITHUB_PLUGIN } from '../../props';
 import { PatInput, useOctokitContext } from '../GithubApiProviders';
 
 const defaultOptions: Parameters<typeof DOMPurify.sanitize>[1] = {
@@ -76,7 +77,7 @@ export type GfmPreviewProps = {
 export const GfmPreview = ({ markdown, owner, repo }: GfmPreviewProps) => {
   const [html, setHtml] = useState('');
   const { octokit } = useOctokitContext();
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
 
   useEffect(() => {
     if (octokit && markdown) {

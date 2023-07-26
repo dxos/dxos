@@ -8,10 +8,11 @@ import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { Link, Input, Trans, useTranslation, useId } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
+import { GITHUB_PLUGIN } from '../../props';
 import { useOctokitContext } from './OctokitProvider';
 
 const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const descriptionId = useId('link--external');
   return (
     <>
@@ -27,7 +28,7 @@ const ExternalLink = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const PatInput = () => {
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const { pat, setPat } = useOctokitContext();
   const [patValue, setPatValue] = useState(pat);
 

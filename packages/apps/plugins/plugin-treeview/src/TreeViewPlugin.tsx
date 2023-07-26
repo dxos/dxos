@@ -11,6 +11,7 @@ import { PluginDefinition, Surface } from '@dxos/react-surface';
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
+import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 import { resolveNodes } from './util';
 
@@ -36,10 +37,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           if (treeView.active.length === 0) {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: 'dxos:splitview/SplitViewMainContentEmpty' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
                 }}
               />
             );
@@ -48,9 +49,9 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           } else {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   main: { component: `${plugin}/Main`, data: { active } },
                 }}
               />
@@ -84,6 +85,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           }
         },
       },
+      translations,
     },
   };
 };

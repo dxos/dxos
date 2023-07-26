@@ -10,9 +10,10 @@ import { Dialog, Button, useTranslation } from '@dxos/aurora';
 import { Input } from '@dxos/react-appkit';
 
 import { useGhIdFromUrl } from '../hooks/useGhIdFromUrl';
+import { GITHUB_PLUGIN } from '../props';
 
 export const UrlDialog = ({ data: [_, properties] }: { data: [string, MarkdownProperties] }) => {
-  const { t } = useTranslation('dxos:github');
+  const { t } = useTranslation(GITHUB_PLUGIN);
   const [ghUrlValue, setGhUrlValue] = useState('');
 
   const ghId = useGhIdFromUrl(ghUrlValue);

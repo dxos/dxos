@@ -27,7 +27,7 @@ export const ClientPlugin = (
 
   return {
     meta: {
-      id: 'dxos:client',
+      id: 'dxos.org/plugin/client',
     },
     init: async () => {
       await client.initialize();

@@ -10,10 +10,11 @@ import type { GraphProvides } from '@braneframe/plugin-graph';
 import { Intent, IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
-export const STACK_PLUGIN = 'dxos:stack';
+export const STACK_PLUGIN = 'dxos.org/plugin/stack';
 
+const STACK_ACTION = `${STACK_PLUGIN}/action`;
 export enum StackAction {
-  CREATE = `${STACK_PLUGIN}/create`,
+  CREATE = `${STACK_ACTION}/create`,
 }
 
 // TODO(wittjosiah): Creators/choosers likely aren't stack-specific.

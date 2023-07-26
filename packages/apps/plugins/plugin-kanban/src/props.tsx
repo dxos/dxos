@@ -25,8 +25,9 @@ import { isTypedObject } from '@dxos/client/echo';
 // TODO(burdon): Make id consistent with other plugins.
 export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
 
+const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 export enum KanbanAction {
-  CREATE = `${KANBAN_PLUGIN}/create`,
+  CREATE = `${KANBAN_ACTION}/create`,
 }
 
 export type KanbanPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
