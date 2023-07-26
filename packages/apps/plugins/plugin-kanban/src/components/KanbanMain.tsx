@@ -14,7 +14,6 @@ import { Text } from '@dxos/echo-schema';
 import { KANBAN_PLUGIN, type KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
-// TODO(burdon): Constructor type? `data` vs. `datum`?
 export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
 
@@ -42,7 +41,7 @@ export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }>
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
             autoComplete='off'
-            value={model.root.title}
+            value={model.root.title ?? ''}
             onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>

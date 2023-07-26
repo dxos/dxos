@@ -13,7 +13,7 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 // TODO(burdon): Factor out to separate package.
 
-// TODO(burdon): Copied from @dxos/bot-lab.
+// TODO(burdon): Copied from @dxos/kai-bots
 export const DX_BOT_SERVICE_PORT = 7100;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
 

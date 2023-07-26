@@ -49,8 +49,9 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin('Labs'),
+        ThemePlugin({ appName: 'Labs' }),
         ClientPlugin(),
+        IntentPlugin(),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
         PwaPlugin(),

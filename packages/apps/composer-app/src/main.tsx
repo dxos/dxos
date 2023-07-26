@@ -38,7 +38,7 @@ createRoot(document.getElementById('root')!).render(
     <PluginContextProvider
       plugins={[
         IntentPlugin(),
-        ThemePlugin('Composer'),
+        ThemePlugin({ appName: 'Composer' }),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.
         PwaPlugin(),
