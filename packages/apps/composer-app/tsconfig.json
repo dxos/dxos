@@ -55,6 +55,9 @@
       "path": "../plugins/plugin-dnd"
     },
     {
+      "path": "../plugins/plugin-error"
+    },
+    {
       "path": "../plugins/plugin-files"
     },
     {
@@ -68,6 +71,9 @@
     },
     {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-pwa"
     },
     {
       "path": "../plugins/plugin-space"
