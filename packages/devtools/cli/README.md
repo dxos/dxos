@@ -4,9 +4,10 @@ DXOS command line interface.
 
 <!-- toc -->
 * [DX CLI](#dx-cli)
+* [Instalation](#instalation)
+* [Running an Agent](#running-an-agent)
 * [Development](#development)
 * [Usage](#usage)
-* [Table of contents](#table-of-contents)
 <!-- tocstop -->
 
 # Instalation
@@ -63,11 +64,6 @@ Or source the following script to set the `dx` alias from any directory in the r
 dx config --json
 ```
 
-## Resetting the CLI
-
-```bash
-```
-
 ## Reporting errors
 
 Run the following command to create a gist of the debug stats.
@@ -95,18 +91,6 @@ USAGE
 ## Commands
 
 <!-- commands -->
-- [DX CLI](#dx-cli)
-- [Instalation](#instalation)
-- [Running an Agent](#running-an-agent)
-  - [Starting agent](#starting-agent)
-  - [Adding Agent to your Composer Identity](#adding-agent-to-your-composer-identity)
-  - [Troubleshooting](#troubleshooting)
-      - [Danger Zone](#danger-zone)
-- [Development](#development)
-  - [Resetting the CLI](#resetting-the-cli)
-  - [Reporting errors](#reporting-errors)
-- [Usage](#usage)
-  - [Commands](#commands)
   - [`dx agent list`](#dx-agent-list)
   - [`dx agent restart`](#dx-agent-restart)
   - [`dx agent start`](#dx-agent-start)
