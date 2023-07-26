@@ -48,6 +48,11 @@ export type ClientServicesHostParams = {
   connectionLog?: boolean;
   storage?: Storage;
   lockKey?: string;
+  callbacks?: ClientServicesHostCallbacks;
+};
+
+export type ClientServicesHostCallbacks = {
+  onReset?: () => Promise<void>;
 };
 
 export type InitializeOptions = {
@@ -72,6 +77,7 @@ export class ClientServicesHost {
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
+  private _callbacks?: ClientServicesHostCallbacks;
 
   _serviceContext!: ServiceContext;
   private _opening = false;
@@ -87,9 +93,11 @@ export class ClientServicesHost {
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
+    callbacks,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
     this._modelFactory = modelFactory;
+    this._callbacks = callbacks;
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -284,5 +292,6 @@ export class ClientServicesHost {
     await this._storage!.reset();
     log('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
+    await this._callbacks?.onReset?.();
   }
 }
