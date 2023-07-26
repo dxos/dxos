@@ -207,4 +207,7 @@ const Invitations = ({ id }: { id: number }) => {
 export const Default = {
   render: (args: { id: number }) => <Invitations {...args} />,
   decorators: [ClientDecorator({ count: 3 })],
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
 };

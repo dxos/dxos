@@ -20,15 +20,25 @@ module.exports = {
       strictMode: true
     }
   },
-  viteFinal: async (config) => mergeConfig(config, {
-    plugins: [
-      ConfigPlugin(),
-      ThemePlugin({
-        root: __dirname,
-        content: [
-          resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
-        ]
-      })
-    ]
-  })
+  viteFinal: async (config) => {
+    // https://github.com/storybookjs/builder-vite/issues/286
+    config.plugins = [
+      ...config.plugins.filter((plugin) => {
+        return !(
+          Array.isArray(plugin) && plugin[0].name === "vite:react-babel"
+        );
+      }),
+    ];
+    return mergeConfig(config, {
+      plugins: [
+        ConfigPlugin(),
+        ThemePlugin({
+          root: __dirname,
+          content: [
+            resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}',
+          ]
+        })
+      ]
+    })
+  }
 };
