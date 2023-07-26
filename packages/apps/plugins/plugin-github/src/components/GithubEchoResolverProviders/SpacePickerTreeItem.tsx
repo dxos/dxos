@@ -9,7 +9,7 @@ import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { Button, Tag, Tooltip, Tree, TreeItem, useTranslation } from '@dxos/aurora';
 import { staticDisabled } from '@dxos/aurora-theme';
-import { useMulticastObservable } from '@dxos/react-async';
+import { useMulticastObservable } from '@dxos/react-client';
 import { Space, SpaceState, useQuery } from '@dxos/react-client/echo';
 
 import { DocumentTreeItem } from './DocumentTreeItem';

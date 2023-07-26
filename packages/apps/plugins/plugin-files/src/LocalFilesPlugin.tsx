@@ -12,7 +12,6 @@ import { GraphNode, GraphNodeAction, isGraphNode } from '@braneframe/plugin-grap
 import { MarkdownProvides } from '@braneframe/plugin-markdown';
 import { TreeViewAction, TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { createSubscription } from '@dxos/echo-schema';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { LocalFileMain, LocalFileMainPermissions } from './components';
@@ -103,9 +102,7 @@ export const LocalFilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, M
         };
 
         subscriptions.add(state.$files!.subscribe(handleUpdate));
-        const handle = createSubscription(handleUpdate);
-        handle.update([treeViewPlugin.provides.treeView]);
-        subscriptions.add(handle.unsubscribe);
+        subscriptions.add(treeViewPlugin.provides.treeView.$active!.subscribe(handleUpdate));
       }
     },
     unload: async () => {
