@@ -13,6 +13,11 @@ export type BundleDepsPluginOptions = {
   packages: string[];
 
   /**
+   * List of packages to ignore.
+   */
+  ignore?: string[];
+
+  /**
    * Aliases. Mimics https://esbuild.github.io/api/#alias.
    */
   alias?: Record<string, string>;
@@ -63,7 +68,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         return null; // Bundle this dependency.
       }
 
-      if (!runtimeDeps.has(moduleName)) {
+      if (!runtimeDeps.has(moduleName) && !options.ignore?.includes(moduleName)) {
         return {
           errors: [
             {
