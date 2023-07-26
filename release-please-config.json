@@ -58,6 +58,16 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-files/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-github/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },

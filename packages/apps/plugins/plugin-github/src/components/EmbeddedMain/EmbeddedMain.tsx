@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { getSpaceDisplayName } from '@braneframe/plugin-space';
 import {
   Avatar,
@@ -31,8 +32,7 @@ import { useTextModel } from '@dxos/aurora-composer';
 import { descriptionText, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useShell } from '@dxos/react-shell';
-import { Surface } from '@dxos/react-surface';
+import { Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { useDocGhId } from '../../hooks';
 import { EditorViewState } from '../../props';
@@ -53,7 +53,8 @@ const EmbeddedLayoutImpl = () => {
   const { t } = useTranslation('dxos:github');
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
-  const shell = useShell();
+  const { plugins } = usePluginContext();
+  const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos:client');
 
   const handleCloseEmbed = useCallback(() => {
     window.parent.postMessage({ type: 'close-embed' }, 'https://github.com');
@@ -64,8 +65,8 @@ const EmbeddedLayoutImpl = () => {
   }, [document]);
 
   const handleInvite = useCallback(() => {
-    void shell.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key });
-  }, [shell, space]);
+    void clientPlugin?.provides.setLayout(ShellLayout.SPACE_INVITATIONS, space?.key && { spaceKey: space.key });
+  }, [clientPlugin, space]);
 
   const [editorViewState, setEditorViewState] = useState<EditorViewState>('editor');
   const isPreviewing = editorViewState === 'preview';
@@ -253,7 +254,7 @@ const EmbeddedLayoutImpl = () => {
                   'p-2 bs-72 flex flex-col shadow-none bg-transparent',
                 )}
               >
-                <ResolverDialog />
+                <ResolverDialog clientPlugin={clientPlugin} />
               </div>
             </div>
           </Dialog.Root>
@@ -270,7 +271,7 @@ const EmbeddedLayoutImpl = () => {
         <Dialog.Root open={resolverDialogOpen} onOpenChange={setResolverDialogOpen}>
           <Dialog.Overlay classNames='backdrop-blur'>
             <Dialog.Content>
-              <ResolverDialog />
+              <ResolverDialog clientPlugin={clientPlugin} />
             </Dialog.Content>
           </Dialog.Overlay>
         </Dialog.Root>
