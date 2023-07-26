@@ -4,6 +4,7 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import { rmSync } from 'node:fs';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
@@ -13,12 +14,20 @@ import { MemorySignalManagerContext } from '@dxos/messaging';
 import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
+import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
 
 chai.use(chaiAsPromised);
 
 describe('ClientServicesHost', () => {
+  const persistentStoragePath = '/tmp/dxos/client-services/service-host/storage';
+
+  afterEach(async () => {
+    // Clean up.
+    isNode() && rmSync(persistentStoragePath, { recursive: true, force: true });
+  });
+
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open();
@@ -104,7 +113,7 @@ describe('ClientServicesHost', () => {
 
   test('storage reset', async () => {
     const config = new Config({
-      runtime: { client: { storage: { persistent: true, path: '/tmp/dxos/client-services/storage' } } },
+      runtime: { client: { storage: { persistent: true, path: persistentStoragePath } } },
     });
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
