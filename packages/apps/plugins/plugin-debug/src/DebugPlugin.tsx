@@ -57,13 +57,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             return [];
           }
 
-          const nodeId = 'debug';
+          const nodeId = parent.id + '-debug';
           nodeIds.add(nodeId);
 
           return [
             {
               id: nodeId,
-              index: 'a1',
+              index: 'zzz', // TODO(burdon): Prevent drag? Dragging causes bug.
               label: 'Debug',
               icon: (props: IconProps) => <Hammer {...props} />,
               data: { id: nodeId },
@@ -77,11 +77,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           case 'main':
             if (isDebug(datum)) {
               return DebugMain;
-            } else {
-              return null;
             }
-          default:
-            return null;
         }
       },
       components: {

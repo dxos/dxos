@@ -19,6 +19,7 @@ const DefaultStackPluginStory = () => {
     sections: [],
     title: 'Stack storybook title',
   });
+
   return <Surface role='main' data={[stack, stack]} />;
 };
 

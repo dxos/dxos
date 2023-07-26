@@ -33,7 +33,7 @@ const DefaultDrawingPluginStory = () => {
 
 const DrawingPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/DrawingPluginStoryPlugin',
+    id: 'dxos.org/plugin/drawing-story',
   },
   provides: {
     components: {
