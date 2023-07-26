@@ -35,7 +35,7 @@ const DefaultKanbanPluginStory = () => {
 
 const KanbanPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/KanbanPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
+    id: 'dxos.org/plugin/kanban-story',
   },
   provides: {
     components: {
