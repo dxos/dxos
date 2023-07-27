@@ -5,9 +5,8 @@
 import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { FC, KeyboardEvent, useState } from 'react';
 
-import { Styles } from '@braneframe/plugin-theme';
 import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
 import { THREAD_PLUGIN } from '../props';
 
@@ -36,7 +35,7 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className={mx('flex flex-col w-full shadow p-2', Styles.level1.bg)}>
+    <div className={mx('flex flex-col w-full shadow p-2', groupSurface)}>
       <div>
         {/* TODO(burdon): Multi-line textarea. Or document. */}
         <Input.Root>
