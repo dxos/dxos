@@ -5,6 +5,7 @@
 import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
+import { ProtoCodec } from '@dxos/codec-protobuf';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +13,6 @@ import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
-import { ProtoCodec } from '@dxos/codec-protobuf';
 
 const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 

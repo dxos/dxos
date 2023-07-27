@@ -235,9 +235,7 @@ export class Messenger {
 
   private async _handleAcknowledgement({ payload }: { payload: Any }) {
     invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
-    this._onAckCallbacks.get(
-      Acknowledgement.decode(payload.value).messageId,
-    )?.();
+    this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
   private async _sendAcknowledgement({
