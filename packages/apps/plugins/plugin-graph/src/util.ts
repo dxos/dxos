@@ -13,8 +13,8 @@ export const ROOT: GraphNode = {
   description: 'Root node',
 };
 
-export const isGraphNode = (datum: unknown): datum is GraphNode =>
-  datum && typeof datum === 'object' ? 'id' in datum && 'label' in datum : false;
+export const isGraphNode = (data: unknown): data is GraphNode =>
+  data && typeof data === 'object' ? 'id' in data && 'label' in data : false;
 
 type GraphPlugin = Plugin<GraphProvides>;
 export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] =>

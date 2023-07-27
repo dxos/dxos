@@ -165,9 +165,9 @@ const StackSectionsImpl = ({
         setActiveId(nextActiveId);
         setActiveAddableObject(null);
       } else {
-        const chooserDatum = get(data.current, 'treeitem.data', null);
-        const validChooser = chooserDatum && stackState.choosers?.find((chooser) => chooser?.filter(chooserDatum));
-        setActiveAddableObject(validChooser && !sectionIds.has(get(chooserDatum, 'id')) ? chooserDatum : null);
+        const chooserData = get(data.current, 'treeitem.data', null);
+        const validChooser = chooserData && stackState.choosers?.find((chooser) => chooser?.filter(chooserData));
+        setActiveAddableObject(validChooser && !sectionIds.has(get(chooserData, 'id')) ? chooserData : null);
       }
     },
     [sectionIds],

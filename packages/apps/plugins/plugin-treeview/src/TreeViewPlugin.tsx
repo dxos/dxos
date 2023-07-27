@@ -62,10 +62,10 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         },
         TreeView: TreeViewContainer,
       },
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'dragoverlay':
-            if (!!datum && typeof datum === 'object' && 'id' in datum && 'label' in datum && 'index' in datum) {
+            if (!!data && typeof data === 'object' && 'id' in data && 'label' in data && 'index' in data) {
               return TreeItemDragOverlay;
             } else {
               return null;

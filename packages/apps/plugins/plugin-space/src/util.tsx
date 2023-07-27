@@ -15,9 +15,9 @@ import { Plugin, findPlugin } from '@dxos/react-surface';
 
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
 
-export const isSpace = (datum: unknown): datum is Space =>
-  datum && typeof datum === 'object'
-    ? 'key' in datum && datum.key instanceof PublicKey && 'db' in datum && datum.db instanceof EchoDatabase
+export const isSpace = (data: unknown): data is Space =>
+  data && typeof data === 'object'
+    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabase
     : false;
 
 export const getSpaceId = (spaceKey: PublicKeyLike) => {

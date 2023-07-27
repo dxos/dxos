@@ -28,8 +28,8 @@ export interface DrawingModel {
   store: TLStore;
 }
 
-export const isDrawing = (datum: unknown): datum is DrawingType => {
-  return isTypedObject(datum) && DrawingType.type.name === datum.__typename;
+export const isDrawing = (data: unknown): data is DrawingType => {
+  return isTypedObject(data) && DrawingType.type.name === data.__typename;
 };
 
 export const drawingToGraphNode = (parent: GraphNode, object: DrawingType, index: string): GraphNode => ({

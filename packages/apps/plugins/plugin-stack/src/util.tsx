@@ -13,15 +13,15 @@ import { EchoObject, Space } from '@dxos/client/echo';
 
 import { GenericStackObject, STACK_PLUGIN, StackModel, StackObject, StackProperties } from './types';
 
-export const isStack = <T extends StackObject = GenericStackObject>(datum: unknown): datum is StackModel<T> =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      typeof (datum as { [key: string]: any }).sections === 'object' &&
-      typeof (datum as { [key: string]: any }).sections?.length === 'number'
+export const isStack = <T extends StackObject = GenericStackObject>(data: unknown): data is StackModel<T> =>
+  data && typeof data === 'object'
+    ? 'id' in data &&
+      typeof data.id === 'string' &&
+      typeof (data as { [key: string]: any }).sections === 'object' &&
+      typeof (data as { [key: string]: any }).sections?.length === 'number'
     : false;
 
-export const isStackProperties = (datum: unknown): datum is StackProperties => datum instanceof EchoObject;
+export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
 export const stackToGraphNode = (parent: GraphNode<Space>, obj: Stack, index: string): GraphNode => ({
   id: obj.id,
