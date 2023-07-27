@@ -22,6 +22,7 @@ import {
   ShellLayout,
   IFrameClientServicesHost,
   useClient,
+  useShellProvider,
 } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -62,6 +63,7 @@ export const useShell = (): {
     setLayout,
   };
 };
+
 export type ShellProviderProps = PropsWithChildren<{
   space?: Space;
   deviceInvitationCode?: string | null;
@@ -85,20 +87,7 @@ export const ShellProvider = ({
   // IFrame Shell
   //
 
-  useEffect(() => {
-    if (
-      (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) &&
-      onJoinedSpace
-    ) {
-      return client.services.joinedSpace.on(onJoinedSpace);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      client.services.setSpaceProvider(() => space?.key);
-    }
-  }, [space]);
+  useShellProvider({ spaceKey: space?.key, onJoinedSpace });
 
   //
   // Component Shell
