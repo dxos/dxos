@@ -83,7 +83,7 @@ export const DndPluginDefaultStoryPluginB = (): PluginDefinition => {
       id: 'example.com/plugin/dndPluginDefaultStoryPluginB',
     },
     provides: {
-      component: (datum, role) => {
+      component: (data, role) => {
         if (role === 'dndpluginstory') {
           return DndPluginDefaultStoryPluginBDefault;
         } else {
