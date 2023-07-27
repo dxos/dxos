@@ -73,10 +73,7 @@ export class PublicKey implements Equatable {
 
     const buf = Buffer.from(hex, 'hex');
     // TODO(burdon): Test if key.
-    const key = new PublicKey(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
-    key.#hex = hex;
-
-    return key;
+    return new PublicKey(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   }
 
   /**
@@ -155,11 +152,6 @@ export class PublicKey implements Equatable {
     return key.toHex();
   }
 
-  /**
-   * Cached hex string representation of key.
-   */
-  #hex: string | null = null;
-
   constructor(private readonly _value: Uint8Array) {
     if (!(_value instanceof Uint8Array)) {
       throw new TypeError(`Expected Uint8Array, got: ${_value}`);
@@ -175,7 +167,7 @@ export class PublicKey implements Equatable {
   }
 
   toHex(): string {
-    return (this.#hex ??= this.asBuffer().toString('hex'));
+    return this.asBuffer().toString('hex');
   }
 
   truncate(length = undefined) {
