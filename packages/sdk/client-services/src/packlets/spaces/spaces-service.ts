@@ -4,8 +4,10 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { raise, todo } from '@dxos/debug';
+import { CredentialProcessor } from '@dxos/credentials';
+import { raise } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
+import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { encodeError } from '@dxos/protocols';
 import {
@@ -15,6 +17,7 @@ import {
   QuerySpacesResponse,
   Space,
   SpaceMember,
+  SpaceState,
   SpacesService,
   SubscribeMessagesRequest,
   UpdateSpaceRequest,
@@ -46,8 +49,23 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace(request: UpdateSpaceRequest) {
-    todo();
+  async updateSpace({ spaceKey, state }: UpdateSpaceRequest) {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
+
+    if (state) {
+      switch (state) {
+        case SpaceState.ACTIVE:
+          await space.activate();
+          break;
+
+        case SpaceState.INACTIVE:
+          await space.deactivate();
+          break;
+        default:
+          throw new ApiError('Invalid space state');
+      }
+    }
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -124,13 +142,13 @@ export class SpacesServiceImpl implements SpacesService {
     return new Stream(({ ctx, next }) => {
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
-      const processor = space.spaceState.registerProcessor({
-        process: async (credential) => {
+      const processor: CredentialProcessor = {
+        processCredential: async (credential) => {
           next(credential);
         },
-      });
-      ctx.onDispose(() => processor.close());
-      scheduleTask(ctx, () => processor.open());
+      };
+      ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
+      scheduleTask(ctx, () => space.spaceState.addCredentialProcessor(processor));
     });
   }
 
