@@ -93,7 +93,10 @@ export const synchronized = (
     const lock: Lock = (this[classLockSymbol] ??= new Lock());
 
     const tag = `${target.constructor.name}.${propertyName}`;
-    const release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
+
+    // TODO(dmaretskyi): Disabled due to performance concerns.
+    // const release = await warnAfterTimeout(10_000, `lock on ${tag} (taken by ${lock.tag})`, () => lock.acquire(tag));
+    const release = await lock.acquire(tag);
 
     try {
       return await method.apply(this, args);
