@@ -23,7 +23,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "lodash.get": "^4.4.2",
     "react-syntax-highlighter": "^15.5.0"
   },
@@ -36,7 +36,6 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/react-surface": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
     "@phosphor-icons/react": "^2.0.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",

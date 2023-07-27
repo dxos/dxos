@@ -86,7 +86,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "@monaco-editor/react": "^4.4.6",
     "@remix-run/router": "^1.0.2",
     "@swc-node/register": "1.5.4",

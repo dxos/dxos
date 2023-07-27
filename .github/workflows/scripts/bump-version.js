@@ -35,7 +35,7 @@ const bump = async () => {
     if (typeof file === 'object' && file.type === 'json') {
       const data = JSON.parse(await readFile(file.path, 'utf-8'));
       data.version = version;
-      await writeFile(file.path, JSON.stringify(data, null, 2), 'utf-8');
+      await writeFile(file.path, JSON.stringify(data, null, 2) + '\n', 'utf-8');
       return;
     }
 

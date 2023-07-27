@@ -39,7 +39,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "@swc-node/register": "1.5.4",
     "@swc/core": "1.3.70",
     "@types/lodash.defaultsdeep": "^4.6.6",
