@@ -6,9 +6,8 @@ import { UserCircle, X } from '@phosphor-icons/react';
 import format from 'date-fns/format';
 import React, { FC } from 'react';
 
-import { Styles } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 
 import { useSubscription } from './util';
@@ -39,8 +38,7 @@ export const ThreadBlock: FC<{
       key={block.id}
       className={mx(
         'flex flex-col overflow-hidden',
-        Styles.level1.bg,
-        Styles.level1.bg,
+        groupSurface,
         !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >
