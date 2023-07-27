@@ -33,7 +33,7 @@ export type StackSectionCreator = StackSectionAction & {
 
 // TODO(wittjosiah): Make filter serializable.
 export type StackSectionChooser = StackSectionAction & {
-  filter: (datum: unknown) => boolean;
+  filter: (data: unknown) => boolean;
 };
 
 export type StackProvides = {

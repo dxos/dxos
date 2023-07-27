@@ -15,15 +15,15 @@ import translations from './translations';
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
 
-  const isDebug = (datum: unknown) =>
-    datum &&
-    typeof datum === 'object' &&
-    'node' in datum &&
-    datum.node &&
-    typeof datum.node === 'object' &&
-    'id' in datum.node &&
-    typeof datum.node.id === 'string' &&
-    nodeIds.has(datum.node.id);
+  const isDebug = (data: unknown) =>
+    data &&
+    typeof data === 'object' &&
+    'node' in data &&
+    data.node &&
+    typeof data.node === 'object' &&
+    'id' in data.node &&
+    typeof data.node.id === 'string' &&
+    nodeIds.has(data.node.id);
 
   return {
     meta: {
@@ -72,10 +72,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           ];
         },
       },
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'main':
-            if (isDebug(datum)) {
+            if (isDebug(data)) {
               return DebugMain;
             }
         }

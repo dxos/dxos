@@ -92,27 +92,27 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     },
     provides: {
       translations,
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'main':
             switch (true) {
-              case isSpace(datum):
+              case isSpace(data):
                 return SpaceMainEmpty;
               default:
                 return null;
             }
           case 'tree--empty':
             switch (true) {
-              case datum === SPACE_PLUGIN:
+              case data === SPACE_PLUGIN:
                 return EmptyTree;
-              case isGraphNode(datum) && isSpace(datum?.data):
+              case isGraphNode(data) && isSpace(data?.data):
                 return EmptySpace;
               default:
                 return null;
             }
           case 'dialog':
-            if (Array.isArray(datum)) {
-              switch (datum[0]) {
+            if (Array.isArray(data)) {
+              switch (data[0]) {
                 case 'dxos.org/plugin/space/RenameSpaceDialog':
                   return DialogRenameSpace;
                 case 'dxos.org/plugin/space/RestoreSpaceDialog':
