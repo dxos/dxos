@@ -38,7 +38,8 @@ import {
 type MarkdownPluginProvides = GraphProvides &
   IntentProvides &
   TranslationsProvides & {
-    // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
+    // TODO(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬?
+    //  Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
     // TODO(wittjosiah): Factor out to graph plugin?
     stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
   };
