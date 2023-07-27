@@ -42,7 +42,7 @@ const createDatabaseWithFeeds = async () => {
   const dataService = new DataServiceImpl(dataServiceSubscriptions);
 
   const spaceKey = PublicKey.random();
-  dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());
+  await dataServiceSubscriptions.registerSpace(spaceKey, host.createDataServiceHost());
 
   const proxy = new DatabaseProxy(dataService, new ItemManager(modelFactory), spaceKey);
   await proxy.open(new ModelFactory().registerModel(DocumentModel));

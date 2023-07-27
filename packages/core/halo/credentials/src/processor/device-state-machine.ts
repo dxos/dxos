@@ -32,7 +32,7 @@ export class DeviceStateMachine implements CredentialProcessor {
     private readonly _params: DeviceStateMachineParams
   ) {}
 
-  async process(credential: Credential) {
+  async processCredential(credential: Credential) {
     log('processing credential...', {
       identityKey: this._params.identityKey,
       deviceKey: this._params.deviceKey,
