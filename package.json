@@ -87,7 +87,6 @@
     "@types/react": "^18.0.21",
     "@types/sharedworker": "0.0.80",
     "@types/uuid": "~8.3.3",
-    "@types/wicg-file-system-access": "^2020.9.6",
     "@types/zen-observable": "^0.8.3",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
