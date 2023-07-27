@@ -7,7 +7,7 @@ import { FC, PropsWithChildren } from 'react';
 export type PluginProvides<TProvides> = TProvides & {
   context?: FC<PropsWithChildren>;
   component?: <P extends PropsWithChildren = PropsWithChildren>(
-    datum: unknown,
+    data: unknown,
     role?: string,
     props?: Partial<P>,
   ) => FC<PropsWithChildren<{ data: any; role?: string }>> | undefined | null | false | 0;

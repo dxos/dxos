@@ -35,7 +35,7 @@ export type KanbanPluginProvides = GraphProvides & IntentProvides & Translations
 // TODO(burdon): Undo?
 // TODO(burdon): Typescript types (replace proto with annotations?)
 // TODO(burdon): Should pure components depend on ECHO? Relationship between ECHO object/array and Observable.
-// TODO(burdon): Can the plugin configure the object based on the datum? E.g., how are the models constructed?
+// TODO(burdon): Can the plugin configure the object based on the data? E.g., how are the models constructed?
 // TODO(burdon): Create models. Simple first based on actual data.
 //  Model is always a projection since the dragging state is tentative.
 
@@ -46,8 +46,8 @@ export interface KanbanModel {
   createItem(column: KanbanType.Column): KanbanType.Item;
 }
 
-export const isKanban = (datum: unknown): datum is KanbanType => {
-  return isTypedObject(datum) && KanbanType.type.name === datum.__typename;
+export const isKanban = (data: unknown): data is KanbanType => {
+  return isTypedObject(data) && KanbanType.type.name === data.__typename;
 };
 
 export type Location = {

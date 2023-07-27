@@ -60,7 +60,7 @@ The framework should design for these, but doesn't have to build them. We can bu
 
 ## Definitions
 
-- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface is a React component which accepts a data context (datum), a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. arranging them horizontally or vertically).
+- **Surface**: A way of delegating the concrete presentation of a piece of UI to external plugins. A surface is a React component which accepts a data context, a set of plugins, and other props which are used to resolve and instantiate concrete components to 'fulfill' that surface. Some surfaces render one component at a time, others can render more than one with a specific layout rule (i.e. arranging them horizontally or vertically).
 - **Component**: A regular react component. Components are free to nest as many Surfaces within them as necessary.
 - **Application**: A component which can assume it owns the whole screen.
 - **Plugin**: A unit of containment of modular functionality that can be statically compiled into an application (in later versions, loaded dynamically). Plugins provide things like components and other data to the Application.
@@ -81,7 +81,7 @@ The framework should design for these, but doesn't have to build them. We can bu
 
 - The application is just a component `<App />`.
 - A component can have any number of `<Surface />` as children inside it.
-- A Surface figures out what Component(s) to render given a set of `loaded plugins`, a `data context`, and `other control props`. It can be understood as the the developer intention to render/visualize the given `data context` (datum) using whatever appropriate component(s) as provided by Plugins and configured by the the end user and/or the developer.
+- A Surface figures out what Component(s) to render given a set of `loaded plugins`, a `data context`, and `other control props`. It can be understood as the the developer intention to render/visualize the given `data context` using whatever appropriate component(s) as provided by Plugins and configured by the the end user and/or the developer.
 - The main `<App />` component defines a single, full-screen `<Surface />` for rendering "anything". i.e.: does not opine about what it is, delegates that to plugins and initial configuration entirely.
 - The main `<App />` component also wraps the main `Surface` with an `PluginContext` provider which gives all nested components access to the list of plugins.
 
@@ -116,7 +116,7 @@ export const Plugin = {
 - Several interfaces are to be established by the first few plugins:
   - `context` - `PluginContext` uses this to construct a nesting of all contexts from all plugins for wrapping the entire application with.
   - `components` - `Surface` uses this to select components by name.
-  - `component` - `Surface` uses this when presented with a datum, and no specific desired component by name.
+  - `component` - `Surface` uses this when presented with data, and no specific desired component by name.
   - `routes` - `RoutesPlugin` defines a router via `provides.context` and collects `routes` from other plugins for display.
   - `graph` - `TreePlugin` and any others can use this interface to build up the application's main navigation tree.
 
