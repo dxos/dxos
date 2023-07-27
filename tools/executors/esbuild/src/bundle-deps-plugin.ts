@@ -35,6 +35,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
     const runtimeDeps = new Set([
       ...Object.keys(packageJson.dependencies ?? {}),
       ...Object.keys(packageJson.peerDependencies ?? {}),
+      ...Object.keys(packageJson.optionalDependencies ?? {}),
     ]);
 
     build.onResolve({ namespace: 'file', filter: /.*/ }, (args) => {
