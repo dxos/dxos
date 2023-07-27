@@ -107,7 +107,7 @@ const loadJson = async (moduleRelativePath: string) => {
 export default template.define.text({
   content: async ({ input }) => {
     const { react, monorepo, pwa, storybook, dxosUi, tailwind } = input;
-    const ownPackageJson = await loadJson('../../package.json'); // relative to dist/src
+    const ownPackageJson = await loadJson('../package.json'); // relative to dist/src
     const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
     const version = monorepo ? packageVersion : '0.1.0';
     const depVersion = monorepo ? `workspace:*` : packageVersion;

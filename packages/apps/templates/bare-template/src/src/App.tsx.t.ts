@@ -1,6 +1,8 @@
 import { text } from '@dxos/plate';
 import template from '../template.t';
 
+console.log({ text, template });
+
 export default template.define
   .slots({
     content: '<div>Your code goes here</div>',

@@ -75,5 +75,5 @@ export type FileResults<I = any, S extends FileSlots<I> = FileSlots<I>> = Effect
 
 export const results = (files: FileEffect[]): FileResults => ({
   files,
-  apply: async ({ overwrite }) => Promise.all(files.map((e) => e.apply({ overwrite }))),
+  apply: async (options) => Promise.all(files.map((e) => e.apply({ overwrite: options?.overwrite ?? false }))),
 });

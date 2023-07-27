@@ -5,5 +5,5 @@
 import { MaybePromise } from './promise';
 
 export type Effect<I = void, O = any> = {
-  apply(argument: I): MaybePromise<O>;
+  apply(argument?: I): MaybePromise<O>;
 };

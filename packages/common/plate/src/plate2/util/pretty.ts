@@ -8,8 +8,8 @@ export const pretty = (content: string, path: string) => {
   const map = {
     '.ts': 'typescript',
     '.tsx': 'typescript',
-    '.js': 'javascript',
-    '.jsx': 'javascript',
+    '.js': 'typescript',
+    '.jsx': 'typescript',
     '.md': 'markdown',
     '.json': 'json',
     '.html': 'html',

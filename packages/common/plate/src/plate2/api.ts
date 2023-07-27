@@ -55,14 +55,18 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
         relativeTo: relativeTo ? absoluteTemplateRelativeTo : path.dirname(templateFile),
         ...extraContext?.(rendered),
       }));
-      const outPath = p ?? getOutputNameFromTemplateName(path.basename(templateFile));
-      return results([
-        new FileEffect({
-          path: outPath,
-          content: typeof content === 'string' ? pretty(content, outPath) : content,
-          copyOf,
-        }),
-      ]);
+      const hasContent = (typeof content === 'string' && content.length > 0) || copyOf;
+      return results(
+        hasContent
+          ? [
+              new FileEffect({
+                path: path.resolve(outputDirectory, relativeOutputPath),
+                content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
+                copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined
+              }),
+            ]
+          : [],
+      );
     };
     template.slots = this.parentSlots!;
     return template;

@@ -6,11 +6,11 @@ export default template.define.text({
   version: 1
   package:
     modules:
-      - name: ${name}
+      - name: '${name}'
         type: dxos:type/app
         build:
           command: npm run build
-          outdir: out/${name}
+          outdir: 'out/${name}'
   runtime:
     client:
       storage:

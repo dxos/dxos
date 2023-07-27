@@ -6,14 +6,11 @@ import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 export * from './utils.t/getDxosRepoInfo';
 export * from './utils.t/nodePackage';
 
-import appTsx from './src/App.tsx.t';
-import indexHtml from './index.html.t';
 import path from 'path';
-import filenamify from 'filenamify';
-export { appTsx, indexHtml };
+import sanitize from 'sanitize-filename';
 
 export default directory({
-  src: path.resolve(__dirname, '../src'),
+  src: __filename.endsWith('.ts') ? __dirname : path.resolve(__dirname, '../../src'),
   exclude: ({ monorepo }) => ['project.json', 'tsconfig.plate.json', ...(monorepo ? ['patches/vite*'] : [])],
   inputShape: z
     .object({
@@ -27,7 +24,7 @@ export default directory({
       monorepo: z
         .boolean()
         .describe('Assume generated output is within the DXOS monorepo')
-        .default(isDxosMonorepoSync())
+        .default(isDxosMonorepoSync()),
     })
     .refine((val) => !(val.dxosUi && !(val.react && val.tailwind)), { message: 'dxosUi requires react and tailwind' })
     .refine((val) => !(val.storybook && !val.react), { message: 'storybook requires react' }),
@@ -40,14 +37,14 @@ export default directory({
     const { name, createFolder } = input;
     return {
       input,
-      outputDirectory: createFolder ? path.resolve(outputDirectory, filenamify(name)) : outputDirectory,
-      ...rest
+      outputDirectory: createFolder ? path.resolve(outputDirectory, sanitize(name)) : outputDirectory,
+      ...rest,
     };
   },
   after({ outputDirectory, input: { name } }) {
     const cwd = process.cwd();
     const relative = path.relative(cwd, outputDirectory);
-    return text`
+    console.log(text`
     Application ${chalk.green(chalk.bold(name))} created.
 
     Run the app:
@@ -58,6 +55,6 @@ export default directory({
     See also:
     - ${path.join(relative, 'README.md')}
     - https://docs.dxos.org/guide/cli/app-templates
-    `;
-  }
+    `);
+  },
 });

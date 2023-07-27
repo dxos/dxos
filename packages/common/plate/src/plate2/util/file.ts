@@ -12,6 +12,13 @@ import { Slot, Slots, Context, RenderedSlots } from './template';
 
 export type Path = string;
 
+export const ellipsis = (s: string, n = 50) =>
+  s?.length > n ? s.slice(0, n / 2 - 3) + '...' + s.slice(s.length - n / 2 - 3) : s;
+
+export const kib = (bytes: number) => (bytes < 1024 ? `${bytes}B` : `${Math.round(bytes / 1024)}KiB`);
+
+export const relative = (to: string, from: string = process.cwd()) => path.relative(from, to);
+
 export type FileSlots<
   I = any,
   TSlots extends Slots<I> = {},
@@ -35,7 +42,8 @@ export class FileEffect implements Effect<{ overwrite?: boolean }> {
     Object.assign(this, slots);
   }
 
-  async apply({ overwrite = false }) {
+  async apply(options?: { overwrite?: boolean }) {
+    const { overwrite } = { overwrite: false, ...options };
     if (!overwrite) {
       const exists = await fileExists(this.path);
       if (exists) {
@@ -54,5 +62,14 @@ export class FileEffect implements Effect<{ overwrite?: boolean }> {
       await fs.writeFile(this.path, this.content);
       return this;
     }
+  }
+
+  toString() {
+    return [
+      this.copyOf ? 'copy:' : 'file:',
+      this.content ? kib(this.content.length) : '',
+      this.copyOf ? ellipsis(relative(this.copyOf)) : '',
+      this.path ? ellipsis(relative(this.path)) : '',
+    ].join('\t');
   }
 }

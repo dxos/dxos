@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 import readDir from 'recursive-readdir';
-import { ZodObject, ZodObjectDef } from 'zod';
+import { ZodObject, ZodObjectDef, ZodType } from 'zod';
 
 import { filterIncludeExclude } from '../util/filterIncludeExclude';
 import { LoadModuleOptions, safeLoadModule } from '../util/loadModule';
@@ -22,7 +22,7 @@ import {
   TEMPLATE_FILE_IGNORE,
   results,
   isTemplateFile,
-  Options
+  Options,
 } from './util/template';
 
 export const BASENAME = 'template.t';
@@ -40,7 +40,7 @@ type Unzod<T> = { [key in keyof T]: T[key] extends ZodObjectDef ? string : T[key
 const pretty = <T extends {}>(o: T) => {
   const r: Unzod<T> = {} as Unzod<T>;
   for (const key in o) {
-    (r[key] as any) = o[key] instanceof ZodObject ? '[ZodObject]' : o[key];
+    (r[key] as any) = o[key] instanceof ZodObject || o[key] instanceof ZodType ? '[ZodObject]' : o[key];
   }
   return r;
 };
@@ -52,7 +52,7 @@ export const mergeOptions = <T extends IncludeExclude>(...array: T[]): T => {
     const { include, exclude } = b;
     const merged = {
       ...a,
-      ...b
+      ...b,
     };
     if (include?.length || a.include?.length) {
       if (typeof a.include === 'function' || typeof include === 'function') {
@@ -85,7 +85,7 @@ export type DirectoryTemplateOptions<I = any> = IncludeExclude<I> & {
 export type DirectoryTemplateContext<I> = Context<I>;
 
 export const defaultOptions: Partial<ExecuteDirectoryTemplateOptions<any>> = {
-  exclude: [/\.t\//, /node_modules/, ...TEMPLATE_FILE_IGNORE]
+  exclude: [/\.t\//, /node_modules/, ...TEMPLATE_FILE_IGNORE],
 };
 
 export type ExecuteDirectoryTemplateOptions<I> = Options<I> &
@@ -99,16 +99,16 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
 
   public define = new TemplateFactory<I>();
 
-  async apply(options: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults> {
+  async apply(options?: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults> {
     const mergedOptions = mergeOptions<ExecuteDirectoryTemplateOptions<I>>(
       {
         parallel: true,
         verbose: false,
-        outputDirectory: process.cwd()
+        outputDirectory: process.cwd(),
       },
       defaultOptions,
       this.options,
-      options
+      options ?? {},
     ) as Required<ExecuteDirectoryTemplateOptions<I>>;
     const { src, parallel, include, exclude, outputDirectory, verbose, input } = mergedOptions;
     if (!src) {
@@ -125,13 +125,13 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
     const inherited = inherits ? await inherits({ ...restOptions, input }) : undefined;
     const allFiles = await readDir(
       src,
-      filter(exclude, input).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(src, '')) : x))
+      filter(exclude, input).map((x) => (x instanceof RegExp ? (entry) => x.test(entry.replace(src, '')) : x)),
     );
     debug(`${allFiles.length} files discovered`);
     const filteredFiles = filterIncludeExclude(allFiles, {
       include: filter(include, input),
       exclude: filter(exclude, input),
-      transform: (s) => s.replace(src, '').replace(/^\//, '')
+      transform: (s) => s.replace(src, '').replace(/^\//, ''),
     });
     debug(`${filteredFiles.length}/${allFiles.length} files included`);
     const ignoredFiles = allFiles.filter((f) => filteredFiles.indexOf(f) < 0);
@@ -150,7 +150,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
         outputDirectory,
         src: path.relative(src, t),
         relativeTo: src,
-        input
+        input,
       });
     });
     const runner = runPromises({
@@ -159,7 +159,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       },
       after: (_p, i) => {
         debug(`${templateFiles[Number(i)]} done`);
-      }
+      },
     });
     const templateOutputs = await (parallel
       ? runner.inParallel(templatingPromises)
@@ -173,11 +173,11 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
         .map(
           (r) =>
             new FileEffect({
-              path: path.join(r.slice(src.length + 1).replace(/\/$/, '')),
-              copyOf: r
-            })
+              path: path.resolve(outputDirectory, r.slice(src.length + 1).replace(/\/$/, '')),
+              copyOf: r,
+            }),
         ),
-      ...templateOutputs.map((f) => f.files).flat()
+      ...templateOutputs.map((f) => f.files).flat(),
     ].filter(Boolean);
     debug(`${inherited?.files?.length} inherited results`);
     debug(`${flatOutput.length} templating results`);
@@ -188,9 +188,9 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
       : [];
     const combined = [...inheritedOutputMinusFlatOutput, ...flatOutput].filter(Boolean);
     debug(`${combined.length} combined results`);
-    debug(combined.map((r) => r.path).join('\n'));
+    debug(combined.join('\n'));
     const result = results(combined);
-    options?.after?.(mergedOptions, result)
+    mergedOptions?.after?.(mergedOptions, result);
     return result;
   }
 }
