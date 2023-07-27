@@ -51,6 +51,8 @@ export class DatabaseProxy {
   private _opening = false;
   private _open = false;
 
+  private _subscriptionOpen = false;
+
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
@@ -86,6 +88,7 @@ export class DatabaseProxy {
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
+    this._subscriptionOpen = true;
     this._entities.subscribe(
       async (msg) => {
         log('process', {
@@ -109,6 +112,7 @@ export class DatabaseProxy {
             };
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
+            this._pendingBatches.delete(msg.clientTag);
           } else {
             // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
             // TODO(dmaretskyi): Just ignore the I guess.
@@ -126,6 +130,12 @@ export class DatabaseProxy {
         if (err) {
           log.warn('Connection closed', err);
         }
+
+        this._subscriptionOpen = false;
+        for (const batch of this._pendingBatches.values()) {
+          batch.processTrigger!.throw(new Error('Service connection closed'));
+        }
+        this._pendingBatches.clear();
       },
     );
 
@@ -133,6 +143,23 @@ export class DatabaseProxy {
     await loaded.wait();
 
     this._open = true;
+  }
+
+  async close(): Promise<void> {
+    await this._ctx.dispose();
+
+    // NOTE: Must be before entities stream is closed so that confirmations can come in.
+    try {
+      await this.flush({ timeout: FLUSH_TIMEOUT });
+    } catch (err) {
+      log.error('timeout waiting for mutations to flush', {
+        timeout: FLUSH_TIMEOUT,
+        mutationTags: Array.from(this._pendingBatches.keys()),
+      });
+    }
+
+    await this._entities?.close();
+    this._entities = undefined;
   }
 
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
@@ -219,6 +246,7 @@ export class DatabaseProxy {
   }
 
   commitBatch() {
+    invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
     this._currentBatch = undefined;
@@ -244,6 +272,7 @@ export class DatabaseProxy {
           // No-op because the pipeline message will set the receipt.
         },
         (err) => {
+          log.warn('batch commit err', { err });
           batch.receiptTrigger!.throw(err);
         },
       );
@@ -296,22 +325,5 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
-  }
-
-  async close(): Promise<void> {
-    await this._ctx.dispose();
-
-    // NOTE: Must be before entities stream is closed so that confirmations can come in.
-    try {
-      await this.flush({ timeout: FLUSH_TIMEOUT });
-    } catch (err) {
-      log.error('timeout waiting for mutations to flush', {
-        timeout: FLUSH_TIMEOUT,
-        mutationTags: Array.from(this._pendingBatches.keys()),
-      });
-    }
-
-    await this._entities?.close();
-    this._entities = undefined;
   }
 }

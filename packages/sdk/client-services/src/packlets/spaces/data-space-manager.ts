@@ -86,7 +86,9 @@ export class DataSpaceManager {
       try {
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(spaceMetadata);
-        space.initializeDataPipelineAsync();
+        if (spaceMetadata.state !== SpaceState.INACTIVE) {
+          space.initializeDataPipelineAsync();
+        }
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
@@ -121,6 +123,7 @@ export class DataSpaceManager {
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
+      state: SpaceState.ACTIVE,
     };
 
     log('creating space...', { spaceKey });
@@ -217,6 +220,7 @@ export class DataSpaceManager {
 
     const dataSpace = new DataSpace({
       inner: space,
+      initialState: metadata.state === SpaceState.INACTIVE ? SpaceState.INACTIVE : SpaceState.CLOSED,
       metadataStore: this._metadataStore,
       gossip,
       presence,
@@ -226,7 +230,7 @@ export class DataSpaceManager {
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
-          this._dataServiceSubscriptions.registerSpace(
+          await this._dataServiceSubscriptions.registerSpace(
             space.key,
             dataSpace.dataPipeline.databaseHost!.createDataServiceHost(),
           );
@@ -237,11 +241,17 @@ export class DataSpaceManager {
             this.updated.emit();
           }
         },
+        beforeClose: async () => {
+          log('before space close', { space: space.key });
+          await this._dataServiceSubscriptions.unregisterSpace(space.key);
+        },
       },
       cache: metadata.cache,
     });
 
-    await dataSpace.open();
+    if (metadata.state !== SpaceState.INACTIVE) {
+      await dataSpace.open();
+    }
 
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
