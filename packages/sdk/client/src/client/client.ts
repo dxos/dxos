@@ -325,12 +325,4 @@ export class Client {
     // this._halo.identityChanged.emit(); // TODO(burdon): Triggers failure in hook.
     this._initialized = false;
   }
-
-  /**
-   * @deprecated
-   */
-  async createSerializer() {
-    const { SpaceSerializer } = await import('../echo/serializer');
-    return new SpaceSerializer(this._echo);
-  }
 }

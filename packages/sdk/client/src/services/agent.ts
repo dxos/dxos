@@ -17,7 +17,7 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
   `${protocol}://${DX_RUNTIME}/profile/${profile}/agent.sock`;
 
-export type fromAgentOptions = {
+export type FromAgentOptions = {
   profile?: string;
 };
 
@@ -26,7 +26,7 @@ export type fromAgentOptions = {
  */
 export const fromAgent = ({
   profile = process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT,
-}: fromAgentOptions = {}): ClientServicesProvider => {
+}: FromAgentOptions = {}): ClientServicesProvider => {
   return new AgentClientServiceProvider(profile);
 };
 
