@@ -17,7 +17,6 @@
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {

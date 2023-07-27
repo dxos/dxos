@@ -65,14 +65,14 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           ];
         },
       },
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in datum && isDrawing(datum.object)) {
+            if ('object' in data && isDrawing(data.object)) {
               return DrawingMain;
             } else {
               return null;
