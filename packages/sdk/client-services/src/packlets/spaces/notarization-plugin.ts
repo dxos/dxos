@@ -68,6 +68,10 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
+  get hasWriter() {
+    return !!this._writer;
+  }
+
   async open() {}
 
   async close() {
@@ -165,7 +169,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   /**
    * Called with credentials arriving from the control pipeline.
    */
-  async process(credential: Credential) {
+  async processCredential(credential: Credential) {
     if (!credential.id) {
       return;
     }

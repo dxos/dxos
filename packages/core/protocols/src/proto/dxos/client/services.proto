@@ -141,11 +141,27 @@ message SpaceMember {
 
 /// Runtime state of the space object.
 enum SpaceState {
+  ///
+  /// Persitent states.
+  ///
+
+  /// Space is inactive. No swarming or repication will be done.
+  INACTIVE = 2;
+
+  /// Space is active. Swarming and replication will be done.
+  ACTIVE = 6;
+
+
+  ///
+  /// Runtime states:
+  ///
+
+
   /// Space is closed.
   CLOSED = 1;
 
-  /// Space is inactive. Database is not available.
-  INACTIVE = 2;
+  /// Data pipeline is inactive.
+  CONTROL_ONLY = 7;
 
   /// Data pipeline is initializing.
   INITIALIZING = 4;
@@ -155,6 +171,7 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
+  
 }
 
 message Space {
@@ -225,7 +242,10 @@ message Space {
 // TODO(burdon): Create type for epoch?
 
 message UpdateSpaceRequest {
-  optional Status status = 1;
+  dxos.keys.PublicKey space_key = 1;
+
+  /// Allowed values: ACTIVE, INACTIVE.
+  optional SpaceState state = 2;
 }
 
 message QuerySpacesResponse {

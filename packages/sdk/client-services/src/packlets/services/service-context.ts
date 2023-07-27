@@ -5,7 +5,7 @@
 import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
-import { CredentialConsumer, getCredentialAssertion } from '@dxos/credentials';
+import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
   valueEncoding,
@@ -64,7 +64,7 @@ export class ServiceContext {
     (invitation: Partial<Invitation>) => InvitationProtocol
   >();
 
-  private _deviceSpaceSync?: CredentialConsumer<any>;
+  private _deviceSpaceSync?: CredentialProcessor;
 
   private readonly _instanceId = PublicKey.random().toHex();
 
@@ -141,7 +141,9 @@ export class ServiceContext {
 
   async close() {
     log('closing...');
-    await this._deviceSpaceSync?.close();
+    if (this._deviceSpaceSync && this.identityManager.identity) {
+      await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
+    }
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
@@ -210,8 +212,8 @@ export class ServiceContext {
     });
     this.initialized.wake();
 
-    this._deviceSpaceSync = identity.space.spaceState.registerProcessor({
-      process: async (credential: Credential) => {
+    this._deviceSpaceSync = {
+      processCredential: async (credential: Credential) => {
         const assertion = getCredentialAssertion(credential);
         if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
@@ -239,7 +241,7 @@ export class ServiceContext {
           log.catch(err);
         }
       },
-    });
-    await this._deviceSpaceSync.open();
+    };
+    await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 }

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { MulticastObservable } from '@dxos/async';
 import { mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
-import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
+import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { useMulticastObservable } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
@@ -16,6 +16,8 @@ import { ComplexSet, range } from '@dxos/util';
 import { DetailsTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../hooks';
+import { Button } from '@dxos/aurora';
+import { SubscribeToSpacesResponse } from '@dxos/protocols/src/proto/gen/dxos/devtools/host';
 
 // TODO(burdon): Show master/detail table with currently selected.
 const SpacesPanel = () => {
@@ -46,11 +48,8 @@ const SpacesPanel = () => {
     // TODO(burdon): List feeds and nav.
     return {
       id: metadata.key.truncate(),
+      state: SpaceState[space.state.get()] ?? 'Unknown',
       name: space.properties.name ?? metadata?.key.truncate(),
-      open: metadata.isOpen ? 'true' : 'false', // TODO(burdon): Checkbox.
-      genesisFeed: metadata?.genesisFeed.truncate(),
-      controlFeed: metadata?.controlFeed.truncate(),
-      dataFeed: metadata?.dataFeed.truncate(),
       currentEpoch:
         currentEpochNumber === appliedEpochNumber
           ? currentEpochNumber
@@ -64,23 +63,37 @@ const SpacesPanel = () => {
       startupTime:
         space?.internal.data?.metrics.open &&
         space?.internal.data?.metrics.ready &&
-        space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime(),
+        (space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime()) + 'ms',
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
+
+  const toggleActive = async () => {
+    if (!space) {
+      return;
+    }
+
+    const state = space.state.get();
+    if(state === SpaceState.INACTIVE) {
+      await space.internal.activate();
+    } else {
+      await space.internal.deactivate();
+    }
+  }
 
   return (
     <PanelContainer
       toolbar={
         <Toolbar>
           <SpaceSelector />
+          <Button onClick={toggleActive}>{space?.state.get() === SpaceState.INACTIVE ? 'Activate' : 'Deactivate'}</Button>
         </Toolbar>
       }
       className='overflow-auto'
     >
       <div className='flex flex-col flex-1 overflow-auto divide-y space-y-2'>
         {object && <DetailsTable object={object} />}
-        <PipelineTable state={pipelineState ?? {}} />
+        <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
       </div>
     </PanelContainer>
   );
@@ -144,8 +157,20 @@ const columns: TableColumn<PipelineTableRow>[] = [
   },
 ];
 
-const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
-  const epochTimeframe = state.currentEpoch?.subject.assertion.timeframe;
+const PipelineTable = ({ state, metadata }: { state: SpaceProto.PipelineState, metadata: SubscribeToSpacesResponse.SpaceInfo | undefined }) => {
+  const getType = (feedKey: PublicKey) => {
+    if(!metadata) return []
+    const res = []
+
+    if(feedKey.equals(metadata?.genesisFeed)) {
+      res.push('genesis')
+    } 
+    if (feedKey.equals(metadata?.controlFeed) || feedKey.equals(metadata?.dataFeed)) {
+      res.push('own');
+    } 
+
+    return res;
+  }
 
   const controlKeys = Array.from(
     new ComplexSet(PublicKey.hash, [
@@ -179,7 +204,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
     ...controlKeys.map(
       (feedKey): PipelineTableRow => ({
         feedKey,
-        type: 'control',
+        type: ['control', ...getType(feedKey)].join(' '),
         start: 0,
         processed: state.currentControlTimeframe?.get(feedKey),
         target: state.targetControlTimeframe?.get(feedKey),
@@ -189,7 +214,7 @@ const PipelineTable = ({ state }: { state: SpaceProto.PipelineState }) => {
     ...dataKeys.map(
       (feedKey): PipelineTableRow => ({
         feedKey,
-        type: 'data',
+        type: ['data', ...getType(feedKey)].join(' '),
         start: state.startDataTimeframe?.get(feedKey) ?? 0,
         processed: state.currentDataTimeframe?.get(feedKey),
         target: state.targetDataTimeframe?.get(feedKey),
