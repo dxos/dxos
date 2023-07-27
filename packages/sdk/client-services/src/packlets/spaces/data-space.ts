@@ -35,6 +35,11 @@ export type DataSpaceCallbacks = {
    * Called after transitioning to the ready state.
    */
   afterReady?: () => Promise<void>;
+
+  /**
+   * Called before space gets closed.
+   */
+  beforeClose?: () => Promise<void>;
 };
 
 export type DataSpaceParams = {
@@ -153,6 +158,7 @@ export class DataSpace {
   }
 
   private async _close() {
+    await this._callbacks.beforeClose?.();
     this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
     this._ctx = new Context();

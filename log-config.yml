@@ -8,6 +8,7 @@ filter:
   - info
   # - debug
   - sync:debug
+  - data-space:debug
   # - test.ts:debug
   # - database:debug
   # - notarization:debug

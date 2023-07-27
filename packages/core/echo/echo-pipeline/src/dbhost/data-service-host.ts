@@ -13,6 +13,7 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
+import { Context } from '@dxos/context';
 
 /**
  * Provides methods for DataService for a single space.
@@ -20,6 +21,8 @@ import { ComplexMap } from '@dxos/util';
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
+  private readonly _ctx = new Context();
+
   private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
     ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`,
   );
@@ -30,11 +33,22 @@ export class DataServiceHost {
     private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
+  async open() {
+
+  }
+
+  async close() {
+    await this._ctx.dispose();
+  }
+
   /**
    * Real-time subscription to data objects in a space.
    */
   subscribe(): Stream<EchoEvent> {
-    return new Stream(({ next, ctx }) => {
+    return new Stream(({ next, close, ctx }) => {
+      // This looks ridiculous..
+      ctx.onDispose(this._ctx.onDispose(close));
+
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
       next({
@@ -74,6 +88,7 @@ export class DataServiceHost {
   }
 
   async write(request: WriteRequest): Promise<MutationReceipt> {
+    invariant(!this._ctx.disposed, 'Cannot write to closed DataServiceHost');
     invariant(this._writeStream, 'Cannot write mutations in readonly mode');
 
     log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });

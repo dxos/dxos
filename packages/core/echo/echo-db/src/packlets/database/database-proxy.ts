@@ -135,6 +135,23 @@ export class DatabaseProxy {
     this._open = true;
   }
 
+  async close(): Promise<void> {
+    await this._ctx.dispose();
+
+    // NOTE: Must be before entities stream is closed so that confirmations can come in.
+    try {
+      await this.flush({ timeout: FLUSH_TIMEOUT });
+    } catch (err) {
+      log.error('timeout waiting for mutations to flush', {
+        timeout: FLUSH_TIMEOUT,
+        mutationTags: Array.from(this._pendingBatches.keys()),
+      });
+    }
+
+    await this._entities?.close();
+    this._entities = undefined;
+  }
+
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
     for (const object of batch.objects ?? []) {
       invariant(object.objectId);
@@ -244,6 +261,7 @@ export class DatabaseProxy {
           // No-op because the pipeline message will set the receipt.
         },
         (err) => {
+          log.warn('batch commit err', { err })
           batch.receiptTrigger!.throw(err);
         },
       );
@@ -296,22 +314,5 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
-  }
-
-  async close(): Promise<void> {
-    await this._ctx.dispose();
-
-    // NOTE: Must be before entities stream is closed so that confirmations can come in.
-    try {
-      await this.flush({ timeout: FLUSH_TIMEOUT });
-    } catch (err) {
-      log.error('timeout waiting for mutations to flush', {
-        timeout: FLUSH_TIMEOUT,
-        mutationTags: Array.from(this._pendingBatches.keys()),
-      });
-    }
-
-    await this._entities?.close();
-    this._entities = undefined;
   }
 }

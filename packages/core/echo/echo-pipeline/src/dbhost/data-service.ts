@@ -27,13 +27,17 @@ export class DataServiceSubscriptions {
     this._spaces.clear();
   }
 
-  registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
+  async registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
     log('Registering space', { spaceKey });
+    invariant(!this._spaces.has(spaceKey));
+    await host.open();
     this._spaces.set(spaceKey, host);
   }
 
-  unregisterSpace(spaceKey: PublicKey) {
+  async  unregisterSpace(spaceKey: PublicKey) {
     log('Unregistering space', { spaceKey });
+    const host = this._spaces.get(spaceKey);
+    await host?.close();
     this._spaces.delete(spaceKey);
   }
 

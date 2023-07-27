@@ -230,7 +230,7 @@ export class DataSpaceManager {
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
-          this._dataServiceSubscriptions.registerSpace(
+          await this._dataServiceSubscriptions.registerSpace(
             space.key,
             dataSpace.dataPipeline.databaseHost!.createDataServiceHost(),
           );
@@ -241,6 +241,10 @@ export class DataSpaceManager {
             this.updated.emit();
           }
         },
+        beforeClose: async () => {
+          log('before space close', { space: space.key });
+          await this._dataServiceSubscriptions.unregisterSpace(space.key);
+        }
       },
       cache: metadata.cache,
     });
