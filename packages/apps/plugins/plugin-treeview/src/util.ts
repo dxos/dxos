@@ -4,12 +4,12 @@
 
 import { GraphNode } from '@braneframe/plugin-graph';
 
-export const uriToSelected = (uri: string) => {
-  const [_, namespace, type, id, ...rest] = uri.split('/');
-  return [`${namespace}:${type}/${id}`, ...rest];
+export const uriToActive = (uri: string) => {
+  const [_, pluginShortId, nodeId, ...rest] = uri.split('/');
+  return pluginShortId && nodeId ? [`${pluginShortId}/${nodeId}`, ...rest] : [];
 };
 
-export const selectedToUri = (selected: string[]) => '/' + selected.join('/').replace(':', '/');
+export const activeToUri = (active: string[]) => '/' + active.join('/').split('/').map(encodeURIComponent).join('/');
 
 export const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes: GraphNode[] = []): GraphNode[] => {
   const node = graph.find((node) => node.id === id);

@@ -17,9 +17,26 @@ export const printAgents = (daemons: any[], flags = {}) => {
       pid: {
         header: 'process',
       },
+      running: {
+        header: 'running',
+      },
+      lockAcquired: {
+        header: 'lockAcquired',
+      },
+      restarts: {
+        header: 'restarts',
+      },
       uptime: {
         header: 'uptime',
-        get: (row) => formatDistance(new Date(), new Date(row.started)),
+        get: (row) => {
+          if (!row.running) {
+            return 'stopped';
+          }
+          return formatDistance(new Date(), new Date(row.started));
+        },
+      },
+      logFile: {
+        header: 'logFile',
       },
     },
     {
@@ -35,7 +52,9 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const result = await daemon.list();
-      printAgents(result);
+      if (!this.flags.json) {
+        printAgents(result);
+      }
       return result;
     });
   }

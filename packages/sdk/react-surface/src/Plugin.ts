@@ -17,6 +17,8 @@ export type PluginProvides<TProvides> = TProvides & {
 export type Plugin<TProvides = {}> = {
   meta: {
     id: string;
+    // TODO(wittjosiah): How should these be managed?
+    shortId?: string;
   };
   provides: PluginProvides<TProvides>;
 };

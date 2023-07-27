@@ -9,15 +9,25 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain } from './components';
-import { DebugContext, DebugPluginProvides } from './props';
+import { DEBUG_PANEL, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
 
+  const isDebug = (datum: unknown) =>
+    datum &&
+    typeof datum === 'object' &&
+    'node' in datum &&
+    datum.node &&
+    typeof datum.node === 'object' &&
+    'id' in datum.node &&
+    typeof datum.node.id === 'string' &&
+    nodeIds.has(datum.node.id);
+
   return {
     meta: {
-      id: 'dxos.org/plugin/debug',
+      id: DEBUG_PANEL,
     },
     provides: {
       translations,
@@ -47,13 +57,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             return [];
           }
 
-          const nodeId = 'debug';
+          const nodeId = parent.id + '-debug';
           nodeIds.add(nodeId);
 
           return [
             {
               id: nodeId,
-              index: 'a1',
+              index: 'zzz', // TODO(burdon): Prevent drag? Dragging causes bug.
               label: 'Debug',
               icon: (props: IconProps) => <Hammer {...props} />,
               data: { id: nodeId },
@@ -65,13 +75,9 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       component: (datum, role) => {
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && nodeIds.has(datum[datum.length - 1].id)) {
+            if (isDebug(datum)) {
               return DebugMain;
-            } else {
-              return null;
             }
-          default:
-            return null;
         }
       },
       components: {

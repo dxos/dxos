@@ -10,7 +10,7 @@ import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { blockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
-import { MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
 
 export const StandaloneLayout = ({
   children,
@@ -23,7 +23,7 @@ export const StandaloneLayout = ({
   // TODO(wittjosiah): ForwardRef.
   editorRef?: RefObject<MarkdownComposerRef>;
 }>) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
   const themeContext = useThemeContext();
   return (
     <Main.Content classNames='min-bs-full'>
@@ -34,7 +34,7 @@ export const StandaloneLayout = ({
             <Input.TextInput
               variant='subdued'
               disabled={properties.readOnly}
-              placeholder={t('untitled document title')}
+              placeholder={t('document title placeholder')}
               value={properties.title ?? ''}
               onChange={({ target: { value } }) => (properties.title = value)}
               classNames='flex-1 min-is-0 is-auto pis-4 plb-3.5 pointer-fine:plb-2.5'

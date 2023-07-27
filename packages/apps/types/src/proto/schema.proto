@@ -18,11 +18,6 @@ message Meta {
   repeated ForeignKey keys = 1;
 }
 
-// TODO(burdon): Temporary class used to anchor testing plugin.
-message Debug {
-  option (object) = true;
-}
-
 message Document {
   option (object) = true;
 
@@ -86,6 +81,7 @@ message Thread {
   message Message {
     string timestamp = 1;
     string text = 2;
+    string data = 3; // JSON.
   }
 
   // TODO(burdon): Meta (e.g., source).
@@ -97,6 +93,9 @@ message Thread {
     // dxos.keys.PublicKey identity_key = 2;
     string identity_key = 1;
     repeated Message messages = 2;
+
+    // TODO(wittjosiah): Make system-level prop.
+    Meta meta = 1000;
   }
 
   string title = 1;

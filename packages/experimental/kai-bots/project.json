@@ -19,6 +19,7 @@
         "entryPoints": [
           "packages/experimental/kai-bots/src/index.ts"
         ],
+        "injectGlobals": true,
         "outputPath": "packages/experimental/kai-bots/dist/lib"
       },
       "outputs": [
@@ -40,9 +41,6 @@
     "test": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ],
         "coveragePath": "coverage/packages/experimental/kai-bots",
         "outputPath": "tmp/mocha/packages/experimental/kai-bots",
         "resultsPath": "test-results/packages/experimental/kai-bots",

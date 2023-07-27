@@ -22,7 +22,6 @@ describe('space/space', () => {
     const space = await agent.createSpace();
 
     await space.open();
-
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
@@ -130,7 +129,6 @@ describe('space/space', () => {
     const space1 = await agent.createSpace();
 
     await space1.open();
-
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -152,7 +150,6 @@ describe('space/space', () => {
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
     await space2.open();
-
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();
@@ -219,7 +216,6 @@ describe('space/space', () => {
     const space1 = await agent.createSpace();
 
     await space1.open();
-
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -260,7 +256,6 @@ describe('space/space', () => {
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
     await space2.open();
-
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();

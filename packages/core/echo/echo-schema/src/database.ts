@@ -70,9 +70,10 @@ export class EchoDatabase {
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
-    log('save', { id: obj.id, type: (obj as any).__typename });
+    log('add', { id: obj.id, type: (obj as any).__typename });
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
+
     if (obj[base]._database) {
       this._backend.mutate({
         objects: [
@@ -98,7 +99,6 @@ export class EchoDatabase {
       obj[base]._beforeBind();
 
       const snapshot = obj[base]._createSnapshot();
-
       const result = this._backend.mutate({
         objects: [
           {
@@ -129,6 +129,8 @@ export class EchoDatabase {
    * Remove object.
    */
   remove<T extends EchoObject>(obj: T) {
+    log('remove', { id: obj.id, type: (obj as any).__typename });
+
     this._backend.mutate({
       objects: [
         {
@@ -141,6 +143,16 @@ export class EchoDatabase {
         },
       ],
     });
+  }
+
+  /**
+   * Clone object from other database.
+   */
+  clone<T extends EchoObject>(obj: T) {
+    log('clone', { id: obj.id, type: (obj as any).__typename });
+
+    // TODO(burdon): Keep id.
+    this.add(obj);
   }
 
   /**

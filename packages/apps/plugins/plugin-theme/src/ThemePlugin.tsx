@@ -13,9 +13,13 @@ import { PluginDefinition } from '@dxos/react-surface';
 import compositeEnUs from './translations/en-US';
 import { translationsPlugins } from './util';
 
-export const ThemePlugin = (): PluginDefinition => {
+export type ThemePluginOptions = {
+  appName?: string;
+};
+
+export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
   let modeQuery: MediaQueryList | undefined;
-  const resources: Resource[] = [compositeEnUs];
+  const resources: Resource[] = [compositeEnUs(appName)];
   const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
@@ -25,7 +29,7 @@ export const ThemePlugin = (): PluginDefinition => {
 
   return {
     meta: {
-      id: 'dxos:theme',
+      id: 'dxos.org/plugin/theme',
     },
     ready: async (plugins) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');

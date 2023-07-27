@@ -19,12 +19,13 @@ const DefaultStackPluginStory = () => {
     sections: [],
     title: 'Stack storybook title',
   });
+
   return <Surface role='main' data={[stack, stack]} />;
 };
 
 const StackPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos:stackStoryPlugin',
+    id: 'example.com/plugin/stackStoryPlugin',
   },
   provides: {
     components: {

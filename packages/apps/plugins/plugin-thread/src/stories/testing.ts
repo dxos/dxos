@@ -41,10 +41,23 @@ export const createThread = () => {
         messages: [
           {
             timestamp: sub(now, { minutes: 8 }).toISOString(),
-            text: "OK I'll work on that",
+            text: 'Here are some open source projects.',
           },
           {
-            text: 'Here are some open source projects.',
+            timestamp: sub(now, { minutes: 8 }).toISOString(),
+            data: JSON.stringify({
+              projects: [
+                {
+                  name: 'Project 1',
+                },
+                {
+                  name: 'Project 2',
+                },
+                {
+                  name: 'Project 3',
+                },
+              ],
+            }),
           },
         ],
       }),

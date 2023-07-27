@@ -45,7 +45,16 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-intent"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"

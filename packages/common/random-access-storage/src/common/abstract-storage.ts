@@ -56,7 +56,7 @@ export abstract class AbstractStorage implements Storage {
    */
   async reset() {
     try {
-      log.warn('Erasing all data...');
+      log.info('Erasing all data...');
       await this._closeFilesInPath('');
       await this._delete('');
       await this._destroy();

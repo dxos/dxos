@@ -19,28 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/text-model"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -76,16 +55,34 @@
       "path": "../plugins/plugin-debug"
     },
     {
+      "path": "../plugins/plugin-dnd"
+    },
+    {
       "path": "../plugins/plugin-drawing"
     },
     {
+      "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-files"
+    },
+    {
+      "path": "../plugins/plugin-github"
+    },
+    {
       "path": "../plugins/plugin-graph"
+    },
+    {
+      "path": "../plugins/plugin-intent"
     },
     {
       "path": "../plugins/plugin-kanban"
     },
     {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-pwa"
     },
     {
       "path": "../plugins/plugin-space"
@@ -107,9 +104,6 @@
     },
     {
       "path": "../plugins/plugin-url-sync"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

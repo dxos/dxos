@@ -39,7 +39,7 @@ export class TriggerManager {
         await space.waitUntilReady();
         for (const trigger of this._triggers) {
           // TODO(burdon): New context? Shared?
-          await this.mount(new Context(), trigger, space);
+          await this.mount(new Context(), space, trigger);
         }
       }
     });
@@ -51,31 +51,27 @@ export class TriggerManager {
     }
   }
 
-  private async mount(ctx: Context, trigger: FunctionTrigger, space: Space) {
+  private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
     const key = { name: trigger.function, spaceKey: space.key };
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
+      log('mount', { space: space.key, trigger });
       if (ctx.disposed) {
         return;
       }
 
-      // TODO(burdon): Factor out subscription/result delta.
-
-      let count = 0;
+      // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
       const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        const updatedObjects = Array.from(objectIds);
-        objectIds.clear();
-
         await this.invokeFunction(this._invokeOptions, trigger.function, {
           space: space.key,
-          objects: updatedObjects,
+          objects: Array.from(objectIds),
         });
       });
 
-      // TODO(burdon): Removed?
-      const selection = createSubscription(({ added, updated }) => {
+      let count = 0;
+      const subscription = createSubscription(({ added, updated }) => {
         for (const object of added) {
           objectIds.add(object.id);
         }
@@ -83,31 +79,29 @@ export class TriggerManager {
           objectIds.add(object.id);
         }
 
-        log.info('updated', {
+        log('updated', {
+          trigger,
           space: space.key,
           objects: objectIds.size,
-          added: added.length,
-          updated: updated.length,
           count,
         });
-        if (count++) {
-          task.schedule();
-        }
+
+        task.schedule();
+        count++;
       });
 
-      ctx.onDispose(() => selection.unsubscribe());
+      ctx.onDispose(() => subscription.unsubscribe());
 
-      const query = space.db.query({ ...trigger.subscription.props, '@type': trigger.subscription.type });
+      // TODO(burdon): DSL for query (replace props).
+      const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
       const unsubscribe = query.subscribe(({ objects }) => {
-        selection.update(objects);
+        subscription.update(objects);
       });
 
-      // Trigger first update, but don't schedule task.
-      // selection.update(query.objects);
+      // TODO(burdon): Option to trigger on first subscription.
+      // TODO(burdon): After restart not triggered.
 
-      ctx.onDispose(unsubscribe);
-
-      log.info('mounted', { space: space.key, trigger });
+      ctx.onDispose(() => unsubscribe());
     }
   }
 

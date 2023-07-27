@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DEBUG_PANEL } from './props';
+
 export default [
   {
     'en-US': {
-      'dxos.org/plugin/debug': {
+      [DEBUG_PANEL]: {
         'plugin name': 'Debug',
-        'create debug label': 'Create debug panel',
         'mutation count': 'Number of mutations',
         'mutation period': 'Mutation period',
       },

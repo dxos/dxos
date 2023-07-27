@@ -6,8 +6,8 @@ import { Context, createContext } from 'react';
 
 import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Debug as DebugType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client/echo';
+
+export const DEBUG_PANEL = 'dxos.org/plugin/debug';
 
 export type DebugContextType = {
   running: boolean;
@@ -22,11 +22,3 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 });
 
 export type DebugPluginProvides = GraphProvides & TranslationsProvides;
-
-export interface DebugModel {
-  object: DebugType;
-}
-
-export const isDebug = (datum: unknown): datum is DebugType => {
-  return isTypedObject(datum) && DebugType.type.name === datum.__typename;
-};

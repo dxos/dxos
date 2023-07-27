@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { PaperPlaneRight } from '@phosphor-icons/react';
 import React, { FC, KeyboardEvent, useState } from 'react';
 
 import { Button, Input, useTranslation } from '@dxos/aurora';
+import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
+
+import { THREAD_PLUGIN } from '../props';
 
 export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
-  const { t } = useTranslation('dxos.org/plugin/thread');
+  const { t } = useTranslation(THREAD_PLUGIN);
   const [text, setText] = useState('');
 
   const handleMessage = () => {
@@ -31,9 +35,9 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className='flex flex-col w-full shadow p-2 bg-white dark:bg-neutral-900'>
+    <div className={mx('flex flex-col w-full shadow p-2', groupSurface)}>
       <div>
-        {/* TODO(burdon): Multi-line textarea. */}
+        {/* TODO(burdon): Multi-line textarea. Or document. */}
         <Input.Root>
           <Input.Label srOnly>{t('block input label')}</Input.Label>
           <Input.TextInput
@@ -50,8 +54,8 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
       </div>
       <div className='flex flex-row-reverse'>
         <div>
-          <Button density='fine' variant='outline' onClick={handleMessage}>
-            Submit
+          <Button density='fine' variant='ghost' onClick={handleMessage}>
+            <PaperPlaneRight className={getSize(5)} />
           </Button>
         </div>
       </div>

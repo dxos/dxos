@@ -8,8 +8,10 @@ import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
 import React from 'react';
 
+import { ClientPlugin } from '@braneframe/plugin-client';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { mx } from '@dxos/aurora-theme';
+import { Config } from '@dxos/client';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
 import { ThreadPlugin } from '../ThreadPlugin';
@@ -28,13 +30,14 @@ const FullscreenDecorator = (className?: string): DecoratorFunction<ReactRendere
 
 const DefaultThreadPluginStory = () => {
   const object = createThread();
+
   // TODO(burdon): Why array? Should first be space?
   return <Surface role='main' data={[object, object]} />;
 };
 
 const ThreadPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/ThreadPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
+    id: 'dxos.org/plugin/thread-story',
   },
   provides: {
     components: {
@@ -44,7 +47,9 @@ const ThreadPluginStoryPlugin = () => ({
 });
 
 const ThreadSurfacesApp = () => (
-  <PluginContextProvider plugins={[ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]} />
+  <PluginContextProvider
+    plugins={[ClientPlugin({ config: new Config() }), ThemePlugin(), ThreadPlugin(), ThreadPluginStoryPlugin()]}
+  />
 );
 
 export default {

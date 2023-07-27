@@ -11,13 +11,12 @@ import { PluginDefinition, Surface } from '@dxos/react-surface';
 import { TreeViewContext, useTreeView } from './TreeViewContext';
 import { TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
-import { TreeViewContextValue, TreeViewProvides } from './types';
+import translations from './translations';
+import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 import { resolveNodes } from './util';
 
-export const TREE_VIEW_PLUGIN = 'dxos:treeview';
-
-export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
-  const state = deepSignal<TreeViewContextValue>({ selected: [] });
+export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
+  const state = deepSignal<TreeViewContextValue>({ active: [] });
 
   return {
     meta: {
@@ -31,32 +30,29 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
       components: {
         default: () => {
           const treeView = useTreeView();
-          const graph = useGraph();
-          const [plugin] = treeView.selected[0]?.split('/') ?? [];
-          const nodes = resolveNodes(
-            Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[],
-            treeView.selected,
-          );
+          const { graph } = useGraph();
+          const [plugin] = treeView.active[0]?.split('/') ?? [];
+          const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
 
-          if (treeView.selected.length === 0) {
+          if (treeView.active.length === 0) {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: 'dxos:splitview/SplitViewMainContentEmpty' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
                 }}
               />
             );
-          } else if (nodes.length === 0) {
+          } else if (active.length === 0) {
             return <Surface component={`${plugin}/Main`} />;
           } else {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: `${plugin}/Main`, data: nodes },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: `${plugin}/Main`, data: { active } },
                 }}
               />
             );
@@ -76,6 +72,20 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
             return null;
         }
       },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case TreeViewAction.ACTIVATE: {
+              if (Array.isArray(intent.data)) {
+                state.active = intent.data;
+                return true;
+              }
+              break;
+            }
+          }
+        },
+      },
+      translations,
     },
   };
 };

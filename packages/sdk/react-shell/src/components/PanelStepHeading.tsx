@@ -9,7 +9,7 @@ import { mx } from '@dxos/aurora-theme';
 export const PanelStepHeading = forwardRef<HTMLHeadingElement, ComponentPropsWithRef<'h2'>>(
   ({ children, className, ...props }, forwardedRef) => {
     return (
-      <h2 {...props} className={mx('font-system-normal text-sm mbe-1 mli-1 text-center', className)} ref={forwardedRef}>
+      <h2 {...props} className={mx('font-system-normal text-sm mbe-2 mli-1 text-center', className)} ref={forwardedRef}>
         {children}
       </h2>
     );

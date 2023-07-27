@@ -3,24 +3,22 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
-import { TreeViewProvides } from '@braneframe/plugin-treeview';
-import { Stack } from '@braneframe/types';
-import { UnsubscribeCallback } from '@dxos/async';
-import { Query, SpaceProxy, subscribe } from '@dxos/client/echo';
-import { findPlugin, Plugin, PluginDefinition } from '@dxos/react-surface';
+import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Stack as StackType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
+import { Plugin, PluginDefinition } from '@dxos/react-surface';
 
 import { StackMain, StackSectionOverlay } from './components';
 import { stackState } from './stores';
 import translations from './translations';
-import { StackPluginProvides, StackProvides } from './types';
-import { STACK_PLUGIN, isStack, stackToGraphNode } from './util';
+import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
+import { isStack, stackToGraphNode } from './util';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const queries = new Map<string, Query<Stack>>();
-  const subscriptions = new Map<string, UnsubscribeCallback>();
+  const adapter = new GraphNodeAdapter(StackType.filter(), stackToGraphNode);
 
   return {
     meta: {
@@ -36,58 +34,24 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       });
     },
-    // TODO(burdon): Open/close? (vs. ready/unload, initialize/destroy?)
     unload: async () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      subscriptions.clear();
+      adapter.clear();
     },
     provides: {
       graph: {
-        // TODO(burdon): Rename update (since not "event").
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
           const space = parent.data;
-          let query = queries.get(parent.id);
-          if (!query) {
-            query = space.db.query(Stack.filter());
-            queries.set(parent.id, query);
-          }
-          if (!subscriptions.has(parent.id)) {
-            subscriptions.set(
-              parent.id,
-              query.subscribe(() => emit()),
-            );
-          }
-
-          const stackIndices = getIndices(query.objects.length);
-          query.objects.forEach((stack, index) => {
-            if (!subscriptions.has(stack.id)) {
-              subscriptions.set(
-                stack.id,
-                stack[subscribe](() => {
-                  if (stack.__deleted) {
-                    subscriptions.delete(stack.id);
-                    return;
-                  }
-
-                  emit(stackToGraphNode(stack, parent, stackIndices[index]));
-                }),
-              );
-            }
-          });
-
-          return query.objects.map((stack, index) => stackToGraphNode(stack, parent, stackIndices[index]));
+          return adapter.createNodes(space, parent, emit);
         },
-        actions: (parent, _, plugins) => {
+        actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return [];
           }
 
-          const treeViewPlugin = findPlugin<TreeViewProvides>(plugins, 'dxos:treeview');
-          const space = parent.data;
           return [
             {
               id: 'create-stack',
@@ -95,27 +59,38 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               testId: 'stackPlugin.createStack',
               label: ['create stack label', { ns: STACK_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              invoke: async () => {
-                const object = space.db.add(new Stack());
-                if (treeViewPlugin) {
-                  treeViewPlugin.provides.treeView.selected = [parent.id, object.id];
-                }
-              },
+              intent: [
+                {
+                  plugin: STACK_PLUGIN,
+                  action: StackAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.ACTIVATE,
+                },
+              ],
             },
           ];
         },
       },
       translations,
       component: (datum, role) => {
+        if (!datum || typeof datum !== 'object') {
+          return null;
+        }
+
         switch (role) {
           case 'main':
-            if (Array.isArray(datum) && isStack(datum[datum.length - 1])) {
+            if ('object' in datum && isStack(datum.object)) {
               return StackMain;
             } else {
               return null;
             }
           case 'dragoverlay':
-            if (datum && typeof datum === 'object' && 'object' in datum) {
+            if ('object' in datum) {
               return StackSectionOverlay;
             } else {
               return null;
@@ -126,6 +101,15 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       components: {
         StackMain,
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case StackAction.CREATE: {
+              return { object: new StackType() };
+            }
+          }
+        },
       },
       stack: stackState,
     },

@@ -58,7 +58,27 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-error/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-files/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-github/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-intent/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -69,6 +89,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -409,11 +434,6 @@
         {
           "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/bot-lab/package.json",
           "jsonpath": "$.version"
         },
         {

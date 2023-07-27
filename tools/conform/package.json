@@ -19,12 +19,12 @@
     "@dxos/plate": "workspace:*",
     "chalk": "^4.1.0",
     "minimatch": "^5.1.0",
-    "recursive-readdir": "^2.2.2",
+    "recursive-readdir": "^2.2.3",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@types/minimatch": "^5.1.2",
-    "@types/recursive-readdir": "^2.2.0",
+    "@types/recursive-readdir": "^2.2.1",
     "@types/yargs": "~16.0.1",
     "types-package-json": "^2.0.39"
   }

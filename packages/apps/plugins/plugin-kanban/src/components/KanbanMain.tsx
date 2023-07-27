@@ -6,20 +6,19 @@ import React, { FC } from 'react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
-import { blockSeparator, mx } from '@dxos/aurora-theme';
+import { baseSurface, blockSeparator, mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 import { Text } from '@dxos/echo-schema';
 
-import type { KanbanModel } from '../props';
+import { KANBAN_PLUGIN, type KanbanModel } from '../props';
 import { KanbanBoard } from './KanbanBoard';
 
-// TODO(burdon): Constructor type? `data` vs. `datum`?
-export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [space, kanban] }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {
+  const { t } = useTranslation(KANBAN_PLUGIN);
 
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
-    root: kanban, // TODO(burdon): How to keep pure?
+    root: object, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(new KanbanType.Column()),
     // TODO(burdon): Add metadata from column in the case of projections.
     createItem: (column) =>
@@ -31,9 +30,8 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
       ),
   };
 
-  // TODO(burdon): Style/color standards for panels, borders, text, etc.
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh] overflow-hidden bg-white dark:bg-neutral-925'>
+    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>
@@ -42,7 +40,7 @@ export const KanbanMain: FC<{ data: [SpaceProxy, KanbanType] }> = ({ data: [spac
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
             autoComplete='off'
-            value={model.root.title}
+            value={model.root.title ?? ''}
             onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>

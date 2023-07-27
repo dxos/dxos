@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { THREAD_PLUGIN } from './props';
+
 export default [
   {
     'en-US': {
-      // TODO(burdon): Make id consistent with other plugins.
-      'dxos.org/plugin/thread': {
+      [THREAD_PLUGIN]: {
         'plugin name': 'Thread',
         'thread title placeholder': 'New thread',
         'thread title label': 'Title',
@@ -16,7 +17,7 @@ export default [
         'item title placeholder': 'New Item',
         'add column label': 'Add column',
         'add item label': 'Add item',
-        'delete thread label': 'Delete thread',
+        'delete thread label': 'Delete',
         'delete column label': 'Delete column',
         'delete item label': 'Delete item',
         'create thread label': 'Create thread',

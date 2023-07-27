@@ -7,7 +7,6 @@ import React from 'react';
 import { AlertDialog, AlertDialogContentProps, useId } from '@dxos/aurora';
 
 import { JoinPanel, JoinPanelProps } from '../../panels';
-import { defaultSurface } from '../../styles';
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>,
@@ -17,10 +16,13 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
 
   return (
-    <AlertDialog.Root defaultOpen>
+    <AlertDialog.Root
+      defaultOpen
+      onOpenChange={(open) => open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))}
+    >
       <AlertDialog.Portal>
         <AlertDialog.Overlay>
-          <AlertDialog.Content aria-labelledby={titleId} classNames={defaultSurface}>
+          <AlertDialog.Content aria-labelledby={titleId}>
             <JoinPanel
               {...{
                 ...joinPanelProps,

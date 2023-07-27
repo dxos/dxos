@@ -8,8 +8,6 @@ import { generatePath, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { PublicKey } from '@dxos/client';
 import { Menubar, Separator, SpaceLink, Loading } from '@dxos/react-appkit';
 import { useSpace } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
-import { IdentityPopover } from '@dxos/react-shell';
 
 import { Main } from '../components';
 
@@ -17,14 +15,13 @@ export const SpaceSettingsLayout = () => {
   const { space: spaceHex } = useParams();
   const spaceKey = PublicKey.safeFrom(spaceHex);
   const space = spaceKey && useSpace(spaceKey);
-  const identity = useIdentity();
   const navigate = useNavigate();
   return (
     <>
       <Menubar>
         <Separator className='grow' />
         {space && <SpaceLink onClickGoToSpace={() => navigate(generatePath('/spaces/:space', { space: spaceHex! }))} />}
-        {identity && <IdentityPopover {...{ identity }} />}
+        {/* todo(thure): Replace `IdentityPopover` */}
       </Menubar>
       <Main>{space ? <Outlet context={{ space }} /> : <Loading label='Loading' />}</Main>
     </>

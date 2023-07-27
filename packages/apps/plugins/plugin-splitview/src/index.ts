@@ -4,3 +4,4 @@
 
 export * from './SplitViewContext';
 export * from './SplitViewPlugin';
+export * from './types';

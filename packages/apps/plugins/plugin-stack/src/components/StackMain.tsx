@@ -10,6 +10,7 @@ import get from 'lodash.get';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
+import { useIntent } from '@braneframe/plugin-intent';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
@@ -28,7 +29,14 @@ import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { stackState } from '../stores';
-import { GenericStackObject, StackModel, StackProperties, StackSectionModel, StackSections } from '../types';
+import {
+  GenericStackObject,
+  STACK_PLUGIN,
+  StackModel,
+  StackProperties,
+  StackSectionModel,
+  StackSections,
+} from '../types';
 
 type StackSectionProps = {
   onRemove?: () => void;
@@ -48,7 +56,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
     { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay },
     forwardedRef,
   ) => {
-    const { t } = useTranslation('dxos:stack');
+    const { t } = useTranslation(STACK_PLUGIN);
     return (
       <DensityProvider density='fine'>
         <ListItem.Root
@@ -137,7 +145,7 @@ const StackSectionsImpl = ({
   id: string;
   onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
 }) => {
-  const { t } = useTranslation('dxos:stack');
+  const { t } = useTranslation(STACK_PLUGIN);
   const dnd = useDnd();
   const [sectionModels, setSectionModels] = useState(getSectionModels(sections));
   const sectionIds = useMemo(() => new Set(Array.from(sectionModels).map(({ object: { id } }) => id)), [sectionModels]);
@@ -260,7 +268,8 @@ const StackSectionsImpl = ({
 };
 
 const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
-  const { t } = useTranslation('dxos:stack');
+  const { t } = useTranslation(STACK_PLUGIN);
+  const { sendIntent } = useIntent();
   const splitView = useSplitView();
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
@@ -300,15 +309,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
                 <DropdownMenu.Arrow />
-                {stackState.creators?.map(({ id, testId, create, icon, label }) => {
+                {stackState.creators?.map(({ id, testId, intent, icon, label }) => {
                   const Icon = icon ?? Placeholder;
                   return (
                     <DropdownMenu.Item
                       key={id}
                       id={id}
                       data-testid={testId}
-                      onClick={() => {
-                        const nextSection = create();
+                      onClick={async () => {
+                        const { object: nextSection } = await sendIntent(intent);
                         handleAdd(stack.sections.length, nextSection);
                       }}
                     >
@@ -339,7 +348,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                         splitView.dialogContent = {
                           id,
                           chooser: 'many',
-                          subject: 'dxos:stack/chooser',
+                          subject: 'dxos.org/plugin/stack/chooser',
                           omit: new Set(
                             stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
                           ),
@@ -367,7 +376,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   );
 };
 
-export const StackMain = ({ data }: { data: [unknown, StackModel & StackProperties] }) => {
-  const stack = data[data.length - 1] as StackModel & StackProperties;
+export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
+  const stack = data.object as StackModel & StackProperties;
   return <StackMainImpl stack={stack} />;
 };

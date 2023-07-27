@@ -5,9 +5,9 @@
 import type { IconProps } from '@phosphor-icons/react';
 import type { getIndices } from '@tldraw/indices';
 import type { DeepSignal } from 'deepsignal';
-import type { UIEvent, FC } from 'react';
+import type { FC } from 'react';
 
-import type { TFunction } from '@dxos/aurora';
+import type { Intent } from '@braneframe/plugin-intent';
 import type { Plugin } from '@dxos/react-surface';
 
 type Index = ReturnType<typeof getIndices>[number];
@@ -23,6 +23,7 @@ export type GraphNode<TDatum = any> = {
   data?: TDatum; // nit about naming this
   parent?: GraphNode;
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
+  onMoveNode?: (source: GraphNode, target: GraphNode, child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
   pluginChildren?: { [key: string]: GraphNode[] };
   pluginActions?: { [key: string]: GraphNodeAction[] };
@@ -39,18 +40,18 @@ export type GraphNodeAction = {
   label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
   disposition?: 'menu' | 'toolbar';
-  invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
+  intent: Intent | Intent[];
 };
 
 export type GraphContextValue = {
-  roots: { [key: string]: GraphNode[] };
-  actions: { [key: string]: GraphNodeAction[] };
+  graph: DeepSignal<GraphNode>;
+  invokeAction: (action: GraphNodeAction) => Promise<void>;
 };
 
 export type GraphProvides = {
   graph: {
-    nodes?: (parent: GraphNode, emit: (node?: GraphNode) => void, plugins: Plugin[]) => GraphNode[];
-    actions?: (parent: GraphNode, emit: () => void, plugins: Plugin[]) => GraphNodeAction[];
+    nodes?: (parent: GraphNode, invalidate: (node?: GraphNode) => void, plugins: Plugin[]) => GraphNode[];
+    actions?: (parent: GraphNode, invalidate: () => void) => GraphNodeAction[];
   };
 };
 

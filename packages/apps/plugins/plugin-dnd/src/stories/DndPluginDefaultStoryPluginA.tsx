@@ -61,7 +61,7 @@ const DefaultDndPluginStoryPluginA = () => {
 export const DndPluginDefaultStoryPluginA = (): PluginDefinition => {
   return {
     meta: {
-      id: 'dxos:dndPluginDefaultStoryPluginA',
+      id: 'example.com/plugin/dndPluginDefaultStoryPluginA',
     },
     provides: {
       component: (datum, role) => {

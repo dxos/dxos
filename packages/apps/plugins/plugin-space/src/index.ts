@@ -3,6 +3,7 @@
 //
 
 export * from './helpers';
+export * from './types';
 export * from './util';
 
 export * from './SpacePlugin';

@@ -16,6 +16,7 @@ import { LogTransformer } from './log-transform-plugin';
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
+  ignorePackages: string[];
   alias: Record<string, string>;
   entryPoints: string[];
   format?: Format;
@@ -101,6 +102,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           bundleDepsPlugin({
             packages: options.bundlePackages,
             packageDir: dirname(packagePath),
+            ignore: options.ignorePackages,
             alias: options.alias,
           }),
           logTransformer.createPlugin(),

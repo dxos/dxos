@@ -4,35 +4,40 @@
 
 import { Play, HandPalm } from '@phosphor-icons/react';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
-import { Debug as DebugType } from '@braneframe/types';
-import { Button, DensityProvider, Input, Main, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { diagnostics } from '@dxos/client/diagnostics';
 import { SpaceProxy } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DebugContext } from '../props';
+import { DEBUG_PANEL, DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space, _] }) => {
-  const { t } = useTranslation('dxos.org/plugin/debug');
+export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
+  const { t } = useTranslation(DEBUG_PANEL);
+  const { themeMode } = useThemeContext();
 
   const client = useClient();
+  const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await diagnostics(client, { humanize: true, truncate: true });
-    setData(data);
+    const data = await diagnostics(client, { humanize: false, truncate: true });
+    setData({ config: config.values, diagnostics: data });
   };
   useEffect(() => {
     void handleRefresh();
   }, []);
 
-  const [mutationCount, setMutationCount] = useState('10');
-  const [mutationPeriod, setMutationPeriod] = useState('1000');
+  const [mutationInterval, setMutationInterval] = useState(String(DEFAULT_PERIOD));
 
   const generator = useMemo(() => {
     const generator = new Generator(space);
@@ -40,13 +45,14 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
     return generator;
   }, [space]);
 
+  // TODO(burdon): Note shared across spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
       stop();
       void handleRefresh();
     } else {
-      start(() => generator.updateObject(), DEFAULT_PERIOD);
+      start(() => generator.updateObject(), parseInt(mutationInterval));
     }
   };
 
@@ -55,16 +61,7 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
   };
 
   const handleUpdateObject = async () => {
-    let count = parseInt(mutationCount);
-    const period = parseInt(mutationPeriod);
-    const delta = period / count;
-    const interval = setInterval(() => {
-      console.log('ping');
-      generator.updateObject();
-      if (--count === 0) {
-        clearInterval(interval);
-      }
-    }, delta);
+    generator.updateObject();
   };
 
   const handleCreateEpoch = async () => {
@@ -72,7 +69,6 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
     await handleRefresh();
   };
 
-  const config = useConfig();
   const handleOpenDevtools = () => {
     const vaultUrl = config.values?.runtime?.client?.remoteSource;
     if (vaultUrl) {
@@ -81,22 +77,11 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
   };
 
   return (
-    <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
+    <Main.Content classNames='flex flex-col grow fixed inset-0 min-bs-[100vh] overflow-hidden'>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
-          <div className='w-[80px]'>
-            <Input.Root>
-              <Input.TextInput
-                title={t('mutation count')}
-                autoComplete='off'
-                classNames='flex-1 is-auto pis-2 text-right'
-                placeholder='Num mutations'
-                value={mutationCount}
-                onChange={({ target: { value } }) => setMutationCount(value)}
-              />
-            </Input.Root>
-          </div>
+          <Button onClick={handleUpdateObject}>Update</Button>
           <div className='w-[80px]'>
             <Input.Root>
               <Input.TextInput
@@ -104,12 +89,11 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
                 autoComplete='off'
                 classNames='flex-1 is-auto pis-2 text-right'
                 placeholder='Mutation period'
-                value={mutationPeriod}
-                onChange={({ target: { value } }) => setMutationPeriod(value)}
+                value={mutationInterval}
+                onChange={({ target: { value } }) => setMutationInterval(value)}
               />
             </Input.Root>
           </div>
-          <Button onClick={handleUpdateObject}>Update</Button>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
@@ -120,8 +104,12 @@ export const DebugMain: FC<{ data: [SpaceProxy, DebugType] }> = ({ data: [space,
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>
       </div>
-      <div className='flex grow overflow-auto p-2'>
-        <pre>{JSON.stringify(data, replacer, 2)}</pre>
+
+      {/* TODO(burdon): Highlight. */}
+      <div className='flex grow overflow-hidden px-2'>
+        <SyntaxHighlighter className='w-full' language='json' style={themeMode === 'dark' ? styleDark : styleLight}>
+          {JSON.stringify(data, replacer, 2)}
+        </SyntaxHighlighter>
       </div>
     </Main.Content>
   );

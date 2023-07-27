@@ -75,7 +75,7 @@ export class Client {
     if (
       typeof window !== 'undefined' &&
       window.location.protocol !== 'https:' &&
-      !window.location.origin.endsWith('localhost')
+      !window.location.hostname.endsWith('localhost')
     ) {
       console.warn(
         `DXOS Client will not function in a non-secure context ${window.location.origin}. Either serve with a certificate or use a tunneling service (https://docs.dxos.org/guide/kube/tunneling.html).`,

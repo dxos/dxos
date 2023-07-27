@@ -14,6 +14,21 @@ import { TypedObject } from './typed-object';
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
 describe('Database', () => {
+  test('inspect', async () => {
+    const { db } = await createDatabase();
+
+    const task = new TypedObject({
+      title: 'Main task',
+      tags: ['red', 'green'],
+      assignee: new TypedObject({ name: 'Bob' }),
+    });
+    db.add(task);
+    await db.flush();
+
+    inspect(task);
+    // console.log(task);
+  });
+
   test('adding and querying objects', async () => {
     const { db } = await createDatabase();
 
@@ -26,6 +41,70 @@ describe('Database', () => {
 
     const { objects } = db.query();
     expect(objects).toHaveLength(n);
+  });
+
+  test('remove objects', async () => {
+    const { db } = await createDatabase();
+
+    const n = 10;
+    for (const _ of Array.from({ length: n })) {
+      const obj = new TypedObject();
+      db.add(obj);
+    }
+    await db.flush();
+
+    {
+      const { objects } = db.query();
+      expect(objects).toHaveLength(n);
+    }
+
+    db.remove(db.query().objects[0]);
+    await db.flush();
+
+    {
+      const { objects } = db.query();
+      expect(objects).toHaveLength(n - 1);
+    }
+  });
+
+  test.skip('move object between spaces', async () => {
+    const { db: db1 } = await createDatabase();
+    const { db: db2 } = await createDatabase();
+
+    const n = 10;
+    for (const _ of Array.from({ length: n })) {
+      const obj = new TypedObject();
+      db1.add(obj);
+    }
+
+    await db1.flush();
+    await db2.flush();
+
+    {
+      const { objects } = db1.query();
+      expect(objects).toHaveLength(n);
+    }
+
+    {
+      const { objects } = db2.query();
+      expect(objects).toHaveLength(0);
+    }
+
+    const obj = db1.query().objects[0];
+    db2.clone(obj);
+
+    await db1.flush();
+    await db2.flush();
+
+    {
+      const { objects } = db1.query();
+      expect(objects).toHaveLength(n - 1);
+    }
+
+    {
+      const { objects } = db2.query();
+      expect(objects).toHaveLength(1);
+    }
   });
 
   test('get/set properties', async () => {
@@ -143,20 +222,5 @@ describe('Database', () => {
         '@id': task.assignee.id,
       },
     });
-  });
-
-  test('inspect', async () => {
-    const { db } = await createDatabase();
-
-    const task = new TypedObject({
-      title: 'Main task',
-      tags: ['red', 'green'],
-      assignee: new TypedObject({ name: 'Bob' }),
-    });
-    db.add(task);
-    await db.flush();
-
-    inspect(task);
-    // console.log(task);
   });
 });
