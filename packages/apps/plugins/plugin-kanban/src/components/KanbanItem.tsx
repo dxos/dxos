@@ -7,11 +7,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Styles } from '@braneframe/plugin-theme';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
 
 import { KANBAN_PLUGIN } from '../props';
 
@@ -43,11 +42,9 @@ export const KanbanItemComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow', Styles.level0.border, isDragging && 'border-dashed')}
+      className={mx('flex grow', 'border border-neutral-300 dark:border-neutral-800', isDragging && 'border-dashed')}
     >
-      <div
-        className={mx('flex items-start grow p-1', Styles.level0.bg, Styles.level0.text, isDragging && 'opacity-10')}
-      >
+      <div className={mx('flex items-start grow p-1', chromeSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />
