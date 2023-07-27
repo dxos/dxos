@@ -5,4 +5,4 @@
 export { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 export { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
-export * from './mesh-proxy';
+export { MeshProxy } from './mesh-proxy';
