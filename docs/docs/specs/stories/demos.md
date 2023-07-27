@@ -1,4 +1,11 @@
-# Explainers
+# Demos/Explainers
+
+## Process
+
+- Loom
+- Window Resizer
+
+## Vignettes
 
 ### Reset
 
@@ -10,8 +17,10 @@
   - Reload app.
 - CLI
   - `dx agent stop --all`
+  - `dx reset --verbose --dry-run` (show all files)
   - `dx reset --force`
   - `dx agent list`
+  - `export DX_PROFILE=test` (set profile or prefix command `DX_PROFILE=test dx halo`)
 
 ### Join CLI to browser HALO
 
@@ -27,13 +36,20 @@
 
 - CLI
   - `dx debug stats --json`
-  - `dx agent stop`
+  - `dx agent stop --all`
   - `dx agent start -f --ws=5001`
 - Browser
   - Open https://devtools.dxos.org?target=ws://localhost:5001
   - Open https://devtools.dxos.org
   - Open https://labs.dev.dxos.org
     - Select Debug plugin; open Devtools.
+
+### Agents
+
+- CLI
+  - `dx agent list`
+  - `export DX_PROFILE=test dx agent start`
+  - `export DX_PROFILE=test dx agent stop`
 
 ### Functions
 
