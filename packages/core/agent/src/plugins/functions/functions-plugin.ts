@@ -64,7 +64,7 @@ export class FunctionsPlugin extends AbstractPlugin {
 
     const port = this._options.port ?? DEFAULT_PORT;
     this._server.listen(port, () => {
-      log.info('functions server listening', { port });
+      log('functions server listening', { port });
     });
   }
 
