@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "types": [
       "@dxos/typings",
+      "wicg-file-system-access",
       "node"
     ]
   },

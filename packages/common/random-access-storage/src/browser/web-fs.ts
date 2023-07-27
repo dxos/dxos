@@ -4,10 +4,10 @@
 
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
-import { RandomAccessStorage } from 'random-access-storage';
+import { FileStat, RandomAccessStorage } from 'random-access-storage';
 import invariant from 'tiny-invariant';
 
-import { synchronized } from '@dxos/async';
+import { Lock, synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { Directory, File, Storage, StorageType, getFullPath, DiskInfo } from '../common';
@@ -21,7 +21,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) {}
+  constructor(public readonly path: string) { }
 
   public get size() {
     return this._files.size;
@@ -157,6 +157,10 @@ export class WebFS implements Storage {
   }
 }
 
+type ReadOperation = (file: globalThis.File) => Promise<void>;
+type WriteOperation = (file: FileSystemWritableFileStream) => Promise<void>;
+
+
 // TODO(mykola): Remove EventEmitter.
 export class WebFile extends EventEmitter implements File {
   readonly opened: boolean = true;
@@ -170,8 +174,13 @@ export class WebFile extends EventEmitter implements File {
   readonly truncatable: boolean = true;
   readonly statable: boolean = true;
 
+  private readonly _lock = new Lock();
+
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
   private readonly _destroy: () => Promise<void>;
+
+  private readonly _readQueue: ReadOperation[] = [];
+  private readonly _writeQueue: WriteOperation[] = [];
 
   constructor({ file, destroy }: { file: Promise<FileSystemFileHandle>; destroy: () => Promise<void> }) {
     super();
@@ -192,68 +201,134 @@ export class WebFile extends EventEmitter implements File {
     truncate: callbackify(this.truncate?.bind(this)),
   } as RandomAccessStorage;
 
-  @synchronized
-  async write(offset: number, data: Buffer) {
-    // TODO(mykola): Fix types.
-    const fileHandle: any = await this._fileHandle;
-    const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.write({ type: 'write', data, position: offset });
-    await writable.close();
-  }
+  private async _readOp(cb: ReadOperation) {
+    this._readQueue.push(cb);
 
-  @synchronized
-  async read(offset: number, size: number) {
-    const fileHandle: any = await this._fileHandle;
-    const file = await fileHandle.getFile();
-    if (offset + size > file.size) {
-      throw new Error('Read out of bounds');
-    }
-    // does not copy the buffer
-    return Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
-  }
-
-  @synchronized
-  async del(offset: number, size: number) {
-    if (offset < 0 || size < 0) {
+    if (this._readQueue.length > 1) { // Already processing
       return;
     }
-    const fileHandle: any = await this._fileHandle;
-    const writable = await fileHandle.createWritable({ keepExistingData: true });
-    const file = await fileHandle.getFile();
-    let leftoverSize = 0;
-    if (offset + size < file.size) {
-      // does not copy the buffer
-      const leftover = Buffer.from(await file.slice(offset + size, file.size).arrayBuffer());
-      leftoverSize = leftover.length;
-      await writable.write({ type: 'write', data: leftover, position: offset });
+
+    const release = await this._lock.acquire();
+
+    const readHandle = await (await this._fileHandle).getFile();
+    while (this._readQueue.length > 0) {
+      const cb = this._readQueue.shift()!;
+      await cb(readHandle);
     }
 
-    await writable.write({ type: 'truncate', size: offset + leftoverSize });
-    await writable.close();
+    release();
   }
 
-  @synchronized
-  async stat() {
-    const fileHandle: any = await this._fileHandle;
-    const file = await fileHandle.getFile();
-    return {
-      size: file.size,
-    };
+  private async _writeOp(cb: WriteOperation) {
+    this._writeQueue.push(cb);
+
+    if (this._writeQueue.length > 1) { // Already processing
+      return;
+    }
+
+    const release = await this._lock.acquire();
+
+    const writeHandle = await (await this._fileHandle).createWritable({ keepExistingData: true });
+    while (this._writeQueue.length > 0) {
+      const cb = this._writeQueue.shift()!;
+      await cb(writeHandle);
+    }
+    await writeHandle.close();
+
+    release();
   }
 
-  async close(): Promise<void> {}
+  write(offset: number, data: Buffer) {
+    return new Promise<void>((resolve, reject) => {
+      this._writeOp(async (writable) => {
+        try {
+          await writable.write({ type: 'write', data, position: offset });
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      }).catch(reject);
+    });
+  }
 
-  @synchronized
+  read(offset: number, size: number) {
+    return new Promise<Buffer>((resolve, reject) => {
+      this._readOp(async (file) => {
+        try {
+          if (offset + size > file.size) {
+            throw new Error('Read out of bounds');
+          }
+          // does not copy the buffer
+          const buffer = Buffer.from(await file.slice(offset, offset + size).arrayBuffer());
+          resolve(buffer);
+        } catch (err) {
+          reject(err);
+        }
+      }).catch(reject);
+    });
+  }
+
+  del(offset: number, size: number) {
+    if (offset < 0 || size < 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      this._writeOp(async (writable) => {
+        try {
+          const file = await (await this._fileHandle).getFile();
+
+          let leftoverSize = 0;
+          if (offset + size < file.size) {
+            // does not copy the buffer
+            const leftover = Buffer.from(await file.slice(offset + size, file.size).arrayBuffer());
+            leftoverSize = leftover.length;
+            await writable.write({ type: 'write', data: leftover, position: offset });
+          }
+
+          await writable.write({ type: 'truncate', size: offset });
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      }).catch(reject);
+    });
+  }
+
+  stat() {
+    return new Promise<FileStat>((resolve, reject) => {
+      this._readOp(async (file) => {
+        try {
+          resolve({
+            size: file.size,
+          });
+        } catch (err) {
+          reject(err);
+        }
+      }).catch(reject);
+    });
+  }
+
+  async close(): Promise<void> { }
+
   async destroy() {
-    this.destroyed = true;
-    return await this._destroy();
+    return await this._lock.executeSynchronized(async () => {
+      this.destroyed = true;
+
+      return await this._destroy();
+    });
   }
 
-  @synchronized
-  async truncate(offset: number) {
-    const fileHandle: any = await this._fileHandle;
-    const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.write({ type: 'truncate', size: offset });
-    await writable.close();
+  truncate(offset: number) {
+    return new Promise<void>((resolve, reject) => {
+      this._writeOp(async (writable) => {
+        try {
+          await writable.write({ type: 'truncate', size: offset });
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      }).catch(reject);
+    });
   }
 }
