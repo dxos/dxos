@@ -34,10 +34,10 @@ export class TestExtensionWithStreams implements TeleportExtension {
     return this.extensionContext?.remotePeerId;
   }
 
-  private _loadStream(streamTag: string, interval = 5, chunkSize = 2048) {
+  private async _loadStream(streamTag: string, interval = 5, chunkSize = 2048) {
     assert(!this._streams.has(streamTag), `Stream ${streamTag} already exists.`);
 
-    const networkStream = this.extensionContext!.createStream(streamTag, {
+    const networkStream = await this.extensionContext!.createStream(streamTag, {
       contentType: 'application/x-test-stream',
     });
 
@@ -54,19 +54,21 @@ export class TestExtensionWithStreams implements TeleportExtension {
       streamEntry.timer = setTimeout(() => {
         const chunk = randomBytes(chunkSize);
 
-        if (!networkStream.write(chunk, 'binary', (err) => {
-          if (!err) {
-            streamEntry.bytesSent += chunk.length;
-          } else {
-            streamEntry.sendErrors += 1;
-          }
-        })) {
+        if (
+          !networkStream.write(chunk, 'binary', (err) => {
+            if (!err) {
+              streamEntry.bytesSent += chunk.length;
+            } else {
+              streamEntry.sendErrors += 1;
+            }
+          })
+        ) {
           networkStream.once('drain', pushChunk);
         } else {
           process.nextTick(pushChunk);
         }
       }, interval);
-    }
+    };
 
     pushChunk();
 
@@ -109,7 +111,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       { TestServiceWithStreams: TestServiceWithStreams },
       { TestServiceWithStreams: TestServiceWithStreams }
     >({
-      port: context.createPort('rpc', {
+      port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
@@ -123,7 +125,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           requestTestStream: async (request) => {
             const { data: streamTag, streamLoadInterval, streamLoadChunkSize } = request;
 
-            this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
+            await this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
 
             return {
               data: streamTag,
@@ -177,7 +179,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     });
     assert(data === streamTag);
 
-    this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
+    await this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
     return streamTag;
   }
 

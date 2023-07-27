@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 
-import { DeferredTask, Event, sleep } from '@dxos/async';
+import { DeferredTask, Event, Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -77,8 +77,8 @@ export class Muxer {
   });
 
   constructor() {
-    this._framer.port.subscribe((msg) => {
-      this._handleCommand(codec.decode(msg));
+    this._framer.port.subscribe(async (msg) => {
+      await this._handleCommand(codec.decode(msg));
     });
   }
 
@@ -88,7 +88,9 @@ export class Muxer {
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
-  createStream(tag: string, opts: CreateChannelOpts = {}): Duplex {
+  async createStream(tag: string, opts: CreateChannelOpts = {}): Promise<Duplex> {
+    const trigger = new Trigger();
+
     const channel = this._getOrCreateStream({
       tag,
       contentType: opts.contentType,
@@ -114,14 +116,25 @@ export class Muxer {
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
-    this._sendCommand({
-      openChannel: {
-        id: channel.id,
-        tag: channel.tag,
-        contentType: channel.contentType,
+    this._sendCommand(
+      {
+        openChannel: {
+          id: channel.id,
+          tag: channel.tag,
+          contentType: channel.contentType,
+        },
       },
-    });
+      (err) => {
+        if (err) {
+          this._destroyChannel(channel, err);
+          trigger.throw(err);
+        } else {
+          trigger.wake();
+        }
+      },
+    );
 
+    await trigger.wait();
     return stream;
   }
 
@@ -131,7 +144,9 @@ export class Muxer {
    * The port is immediately usable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
-  createPort(tag: string, opts: CreateChannelOpts = {}): RpcPort {
+  async createPort(tag: string, opts: CreateChannelOpts = {}): Promise<RpcPort> {
+    const trigger = new Trigger();
+
     const channel = this._getOrCreateStream({
       tag,
       contentType: opts.contentType,
@@ -178,14 +193,25 @@ export class Muxer {
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
-    this._sendCommand({
-      openChannel: {
-        id: channel.id,
-        tag: channel.tag,
-        contentType: channel.contentType,
+    this._sendCommand(
+      {
+        openChannel: {
+          id: channel.id,
+          tag: channel.tag,
+          contentType: channel.contentType,
+        },
       },
-    });
+      (err) => {
+        if (err) {
+          this._destroyChannel(channel, err);
+          trigger.throw(err);
+        } else {
+          trigger.wake();
+        }
+      },
+    );
 
+    await trigger.wait();
     return port;
   }
 
@@ -227,7 +253,7 @@ export class Muxer {
     void this._ctx.dispose();
   }
 
-  private _handleCommand(cmd: Command) {
+  private async _handleCommand(cmd: Command) {
     log('Received command', { cmd });
 
     if (this._destroyed || this._destroying) {
@@ -244,12 +270,23 @@ export class Muxer {
 
       // Flush any buffered data.
       for (const data of channel.buffer) {
-        this._sendCommand({
-          data: {
-            channelId: channel.remoteId,
-            data,
+        const trigger = new Trigger();
+        this._sendCommand(
+          {
+            data: {
+              channelId: channel.remoteId!,
+              data,
+            },
           },
-        });
+          (err) => {
+            if (err) {
+              trigger.throw(err);
+            } else {
+              trigger.wake();
+            }
+          },
+        );
+        await trigger.wait();
       }
       channel.buffer = [];
     } else if (cmd.data) {
@@ -300,13 +337,24 @@ export class Muxer {
       channel.buffer.push(data);
       callback();
     } else {
-      this._sendCommand({
-        data: {
-          channelId: channel.remoteId,
-          data,
+      this._sendCommand(
+        {
+          data: {
+            channelId: channel.remoteId,
+            data,
+          },
         },
-      }, callback);
+        callback,
+      );
     }
+  }
+
+  private _destroyChannel(channel: Channel, err?: Error) {
+    if (channel.destroy) {
+      channel.destroy(err);
+    }
+    this._channelsByLocalId.delete(channel.id);
+    this._channelsByTag.delete(channel.tag);
   }
 }
 

@@ -127,7 +127,7 @@ export class ReplicatorExtension implements TeleportExtension {
           },
         },
       },
-      port: context.createPort('rpc', {
+      port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
     });
@@ -185,7 +185,7 @@ export class ReplicatorExtension implements TeleportExtension {
       return;
     }
 
-    this._replicateFeed(feedInfo, streamTag);
+    await this._replicateFeed(feedInfo, streamTag);
   }
 
   /**
@@ -201,16 +201,16 @@ export class ReplicatorExtension implements TeleportExtension {
     }
 
     const tag = `feed-${feedInfo.feedKey.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`; // Generate a unique tag for the stream.
-    this._replicateFeed(feedInfo, tag);
+    await this._replicateFeed(feedInfo, tag);
     return tag;
   }
 
-  private _replicateFeed(info: FeedInfo, streamTag: string) {
+  private async _replicateFeed(info: FeedInfo, streamTag: string) {
     log('replicate', { info, streamTag });
     assert(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
 
     const feed = this._feeds.get(info.feedKey) ?? failUndefined();
-    const networkStream = this._extensionContext!.createStream(streamTag, {
+    const networkStream = await this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore',
     });
     const replicationStream = feed.replicate(true, {
