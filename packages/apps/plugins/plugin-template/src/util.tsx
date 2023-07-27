@@ -8,14 +8,9 @@ import React from 'react';
 
 import { GraphNode } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { ComposerModel } from '@dxos/aurora-composer';
 import { Space, TypedObject } from '@dxos/client/echo';
 
 import { TEMPLATE_PLUGIN } from './types';
-
-// TODO(burdon): Better way to detect?
-export const isTemplate = (datum: unknown): datum is ComposerModel =>
-  datum && typeof datum === 'object' ? 'id' in datum && typeof datum.id === 'string' : false;
 
 // TODO(burdon): Generic "object" var name?
 export const objectToGraphNode = (parent: GraphNode<Space>, object: TypedObject, index: string): GraphNode => ({

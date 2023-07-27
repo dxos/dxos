@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Expando, TypedObject, isTypedObject } from '@dxos/client/echo';
+import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
 
 export const TEMPLATE_PLUGIN = 'dxos.org/plugin/template';
 
@@ -14,6 +14,7 @@ export enum TemplateAction {
 
 export type TemplateProvides = {};
 
+// TODO(burdon): Better way to detect?
 export const isObject = (object: unknown): object is TypedObject => {
   return isTypedObject(object) && (object as Expando).type === 'template';
 };
