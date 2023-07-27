@@ -11,6 +11,7 @@ export default [
         'tree options label': 'More options',
         'tree branch options label': 'More options',
         'tree leaf options label': 'More options',
+        'plugin error message': 'Content failed to render',
       },
     },
   },
