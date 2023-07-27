@@ -21,6 +21,8 @@ export type GetOptions = {
 
 export const DEFAULT_CHUNK_SIZE = 4096;
 
+const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
+
 export class BlobStore {
   // prettier-ignore
   constructor(
@@ -158,7 +160,7 @@ export class BlobStore {
   }
 
   private async _writeMeta(id: Uint8Array, meta: BlobMeta): Promise<void> {
-    const encoded = arrayToBuffer(schema.getCodecForType('dxos.echo.blob.BlobMeta').encode(meta));
+    const encoded = arrayToBuffer(BlobMetaCodec.encode(meta));
     const data = Buffer.alloc(encoded.length + 4);
     data.writeUInt32LE(encoded.length, 0);
     encoded.copy(data, 4);
@@ -175,7 +177,7 @@ export class BlobStore {
     }
     const data = await file.read(0, size);
     const protoSize = data.readUInt32LE(0);
-    return schema.getCodecForType('dxos.echo.blob.BlobMeta').decode(data.subarray(4, protoSize + 4));
+    return BlobMetaCodec.decode(data.subarray(4, protoSize + 4));
   }
 
   private _getMetaFile(id: Uint8Array) {
