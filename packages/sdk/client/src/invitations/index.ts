@@ -11,4 +11,4 @@ export {
 
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export * from './invitations-proxy';
+export { InvitationsProxy } from './invitations-proxy';
