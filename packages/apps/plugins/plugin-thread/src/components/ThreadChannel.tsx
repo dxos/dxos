@@ -4,10 +4,9 @@
 
 import React, { FC, useRef } from 'react';
 
-import { Styles } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
 import { Input, useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { baseSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { humanize } from '@dxos/util';
 
@@ -67,10 +66,7 @@ export const ThreadChannel: FC<{
   // TODO(burdon): Different width form factors.
   return (
     <div
-      className={mx(
-        'flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-4 p-2',
-        Styles.level0.bg,
-      )}
+      className={mx('flex flex-col h-full w-full min-w-[300px] md:max-w-[600px] overflow-hidden m-4 p-2', baseSurface)}
     >
       <div className='flex px-6 pb-4'>
         <Input.Root>
