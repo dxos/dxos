@@ -32,7 +32,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "redis": "^4.6.6",
