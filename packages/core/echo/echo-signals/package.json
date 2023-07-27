@@ -51,6 +51,10 @@
     "preact": "^10.11.0",
     "react": "^18.2.0"
   },
+  "optionalDependencies": {
+    "preact": "^10.11.0",
+    "react": "^18.2.0"
+  },
   "publishConfig": {
     "access": "public"
   }
