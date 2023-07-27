@@ -56,14 +56,14 @@ export class Identity {
     this.deviceKey = deviceKey;
 
     this._deviceStateMachine = new DeviceStateMachine({
-        identityKey: this.identityKey,
-        deviceKey: this.deviceKey,
-        onUpdate: () => this.stateUpdate.emit(),
-      });
+      identityKey: this.identityKey,
+      deviceKey: this.deviceKey,
+      onUpdate: () => this.stateUpdate.emit(),
+    });
     this._profileStateMachine = new ProfileStateMachine({
-        identityKey: this.identityKey,
-        onUpdate: () => this.stateUpdate.emit(),
-      });
+      identityKey: this.identityKey,
+      onUpdate: () => this.stateUpdate.emit(),
+    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => this.authorizedDeviceKeys,

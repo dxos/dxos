@@ -132,7 +132,7 @@ export class DatabaseProxy {
         }
 
         this._subscriptionOpen = false;
-        for(const batch of this._pendingBatches.values()) {
+        for (const batch of this._pendingBatches.values()) {
           batch.processTrigger!.throw(new Error('Service connection closed'));
         }
         this._pendingBatches.clear();
@@ -246,7 +246,7 @@ export class DatabaseProxy {
   }
 
   commitBatch() {
-    invariant(this._subscriptionOpen)
+    invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
     invariant(batch);
     this._currentBatch = undefined;
@@ -272,7 +272,7 @@ export class DatabaseProxy {
           // No-op because the pipeline message will set the receipt.
         },
         (err) => {
-          log.warn('batch commit err', { err })
+          log.warn('batch commit err', { err });
           batch.receiptTrigger!.throw(err);
         },
       );

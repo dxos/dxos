@@ -34,7 +34,7 @@ export class DataServiceSubscriptions {
     this._spaces.set(spaceKey, host);
   }
 
-  async  unregisterSpace(spaceKey: PublicKey) {
+  async unregisterSpace(spaceKey: PublicKey) {
     log('Unregistering space', { spaceKey });
     const host = this._spaces.get(spaceKey);
     await host?.close();

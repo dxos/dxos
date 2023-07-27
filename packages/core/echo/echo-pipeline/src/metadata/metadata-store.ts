@@ -10,11 +10,11 @@ import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -85,9 +85,9 @@ export class MetadataStore {
       this._metadata = EchoMetadata.decode(data);
 
       // post-processing
-      this._metadata.spaces?.forEach(space => {
-        space.state ??= SpaceState.ACTIVE; 
-      })
+      this._metadata.spaces?.forEach((space) => {
+        space.state ??= SpaceState.ACTIVE;
+      });
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();

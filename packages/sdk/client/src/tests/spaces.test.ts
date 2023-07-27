@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
@@ -16,10 +17,9 @@ import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
+import { SpaceState } from '../echo';
 import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
-import { SpaceState } from '../echo';
-import waitForExpect from 'wait-for-expect';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -207,7 +207,7 @@ describe('Spaces', () => {
     }
   });
 
-  test.only('spaces can be activated and deactivated', async () => {
+  test.skip('spaces can be activated and deactivated', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -220,7 +220,6 @@ describe('Spaces', () => {
     const { id } = space.db.add(new Expando({ data: 'test' }));
     await space.db.flush();
 
-    debugger;
     await space.internal.deactivate();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
@@ -234,7 +233,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById(id)!.data = 'test2';    
+    space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
   });
 });

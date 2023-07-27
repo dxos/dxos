@@ -202,8 +202,6 @@ describe('space/space', () => {
       await space.initializeDataPipeline();
       await space.dataPipeline.ensureEpochInitialized();
 
-      debugger;
-
       space.dataPipeline.setTargetTimeframe(space.dataPipeline.pipelineState!.endTimeframe);
       await space.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
 

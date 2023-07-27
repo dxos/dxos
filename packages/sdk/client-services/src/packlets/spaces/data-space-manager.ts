@@ -86,7 +86,7 @@ export class DataSpaceManager {
       try {
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(spaceMetadata);
-        if(spaceMetadata.state !== SpaceState.INACTIVE) {
+        if (spaceMetadata.state !== SpaceState.INACTIVE) {
           space.initializeDataPipelineAsync();
         }
       } catch (err) {
@@ -244,12 +244,12 @@ export class DataSpaceManager {
         beforeClose: async () => {
           log('before space close', { space: space.key });
           await this._dataServiceSubscriptions.unregisterSpace(space.key);
-        }
+        },
       },
       cache: metadata.cache,
     });
 
-    if(metadata.state !== SpaceState.INACTIVE) {
+    if (metadata.state !== SpaceState.INACTIVE) {
       await dataSpace.open();
     }
 

@@ -84,12 +84,12 @@ export class DataPipeline implements CredentialProcessor {
   /**
    * Current epoch. Might be still processing.
    */
-  public currentEpoch?: SpecificCredential<Epoch> = undefined;;
+  public currentEpoch?: SpecificCredential<Epoch> = undefined;
 
   /**
    * Epoch currently applied.
    */
-  public appliedEpoch?: SpecificCredential<Epoch> = undefined;;
+  public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
   private _lastProcessedEpoch = -1;
   private _epochCtx?: Context;
@@ -183,10 +183,10 @@ export class DataPipeline implements CredentialProcessor {
     } catch (err) {
       log.catch(err);
     }
-    
+
     await this.databaseHost?.close();
     await this.itemManager?.destroy();
-    
+
     this._ctx = new Context();
     this._pipeline = undefined;
     this._targetTimeframe = undefined;

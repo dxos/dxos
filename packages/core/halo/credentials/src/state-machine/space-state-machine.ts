@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { runInContextAsync } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
@@ -12,8 +14,6 @@ import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { CredentialProcessor } from '../processor/credential-processor';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
-import { runInContextAsync } from '@dxos/async';
-import { Context } from '@dxos/context';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
@@ -22,8 +22,8 @@ export interface SpaceState {
   readonly genesisCredential: Credential | undefined;
   readonly creator: MemberInfo | undefined;
 
-  addCredentialProcessor(processor: CredentialProcessor): Promise<void>
-  removeCredentialProcessor(processor: CredentialProcessor): Promise<void>
+  addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
+  removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 }
@@ -217,7 +217,7 @@ class CredentialConsumer<T extends CredentialProcessor> {
     public readonly processor: T,
     private readonly _onOpen: () => Promise<void>,
     private readonly _onClose: () => Promise<void>,
-  ) { }
+  ) {}
 
   /**
    * @internal

@@ -141,7 +141,7 @@ export class ServiceContext {
 
   async close() {
     log('closing...');
-    if(this._deviceSpaceSync && this.identityManager.identity) {
+    if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
     await this.dataSpaceManager?.close();

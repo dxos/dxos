@@ -12,13 +12,13 @@ import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TestBuilder, syncItemsLocal } from '../testing';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
@@ -244,8 +244,11 @@ describe('DataSpaceManager', () => {
       expect(space.state).to.equal(SpaceState.INACTIVE);
 
       await space.activate();
-      await asyncTimeout(space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY), 500);
+      await asyncTimeout(
+        space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
+        500,
+      );
       await testLocalDatabase(space.dataPipeline);
     });
-  })
+  });
 });

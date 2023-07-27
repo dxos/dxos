@@ -4,8 +4,10 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { raise, todo } from '@dxos/debug';
+import { CredentialProcessor } from '@dxos/credentials';
+import { raise } from '@dxos/debug';
 import { DataServiceSubscriptions, SpaceManager, SpaceNotFoundError } from '@dxos/echo-pipeline';
+import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { encodeError } from '@dxos/protocols';
 import {
@@ -28,8 +30,6 @@ import { Provider, humanize } from '@dxos/util';
 import { IdentityManager } from '../identity';
 import { DataSpace } from './data-space';
 import { DataSpaceManager } from './data-space-manager';
-import { ApiError } from '@dxos/errors';
-import { CredentialProcessor } from '@dxos/credentials';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -37,7 +37,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
-  ) { }
+  ) {}
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
@@ -63,7 +63,7 @@ export class SpacesServiceImpl implements SpacesService {
           await space.deactivate();
           break;
         default:
-          throw new ApiError(`Invalid space state`);
+          throw new ApiError('Invalid space state');
       }
     }
   }
@@ -194,7 +194,7 @@ export class SpacesServiceImpl implements SpacesService {
         },
         presence:
           this._identityManager.identity?.identityKey.equals(member.key) ||
-            space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),

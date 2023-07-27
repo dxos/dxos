@@ -5,6 +5,7 @@
 import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -13,7 +14,6 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { EchoEvent, MutationReceipt, WriteRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
-import { Context } from '@dxos/context';
 
 /**
  * Provides methods for DataService for a single space.
@@ -33,9 +33,7 @@ export class DataServiceHost {
     private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
-  async open() {
-
-  }
+  async open() {}
 
   async close() {
     await this._ctx.dispose();
