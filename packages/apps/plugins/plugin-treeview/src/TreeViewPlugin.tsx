@@ -9,7 +9,7 @@ import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import { PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { TreeViewContainer } from './components';
+import { Fallback, TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
@@ -44,7 +44,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
-                  main: { component: `${shortId}/Main`, data: { active } },
+                  main: { component: `${shortId}/Main`, fallback: Fallback, data: { active } },
                 }}
               />
             );

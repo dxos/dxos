@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
-import { ErrorProvider } from '@dxos/react-appkit';
 import {
   Client,
   ClientContext,
@@ -54,11 +53,7 @@ export const ClientPlugin = (
             return () => subscription.unsubscribe();
           }, [client, setStatus]);
 
-          return (
-            <ClientContext.Provider value={{ client, status }}>
-              <ErrorProvider config={options.config}>{children}</ErrorProvider>
-            </ClientContext.Provider>
-          );
+          return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
         },
       };
     },
