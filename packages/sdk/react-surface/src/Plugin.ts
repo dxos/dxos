@@ -31,5 +31,7 @@ export type PluginDefinition<TProvides = {}, TInitProvides = {}> = Omit<Plugin, 
 };
 
 export const findPlugin = <T>(plugins: Plugin[], id: string): Plugin<T> | undefined => {
-  return plugins.find((plugin) => plugin.meta.id === id) as Plugin<T>;
+  return plugins.find(
+    (plugin) => plugin.meta.id === id || (typeof plugin.meta.shortId === 'string' && plugin.meta.shortId === id),
+  ) as Plugin<T>;
 };

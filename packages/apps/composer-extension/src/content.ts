@@ -32,7 +32,7 @@ const getComposerIFrame = (): HTMLIFrameElement => {
     console.log('Creating composer iframe...');
     composer = document.createElement('iframe');
     composer.setAttribute('id', composerId);
-    composer.setAttribute('src', `${baseUrl.href}embedded?location=${window.location.href}`);
+    composer.setAttribute('src', `${baseUrl.href}github/embedded?location=${window.location.href}`);
     composer.setAttribute('style', composerStyles);
     composer.setAttribute('allow', 'clipboard-write *');
   }
