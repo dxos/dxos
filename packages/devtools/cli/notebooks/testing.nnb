@@ -38,7 +38,7 @@
         {
             "language": "typescript",
             "source": [
-                "export {}; declare var client: import('@dxos/client').Client;\nimport { Expando } from '@dxos/client';\n\ntry {\n  const space = client.spaces.get()[0]\n\n  const game = space.db.getObjectById('add4f8f5dd1c166b21767ec41cddab8efbad735ae571ce6603015f65f38bd14b');\n  game.fen = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\n  space.db.add(new Expando({ type: 'chess', fen: 'rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1' }))\n  // const counter: Expando = space.db.objects[1];\n  \n  // Inc counter 100 times\n  // for (let i = 0; i < 5_000; i++) {\n  //   counter.count++;\n  // }\n  \n  await space.db.flush()\n} catch (e) {\n  console.error(e)\n}"
+                "export {}; declare var client: import('@dxos/client').Client;\nimport { Expando } from '@dxos/client';\n\ntry {\n  const space = client.spaces.get()[0]\n\n  const game = space.db.getObjectById('add4f8f5dd1c166b21767ec41cddab8efbad735ae571ce6603015f65f38bd14b');\n  game.pgn = '1. f3 Nh6 2. Nh3 g6 3. Ng5';\n\n  space.db.add(new Expando({ type: 'chess', pgn: 'rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1' }))\n  // const counter: Expando = space.db.objects[1];\n  \n  // Inc counter 100 times\n  // for (let i = 0; i < 5_000; i++) {\n  //   counter.count++;\n  // }\n  \n  await space.db.flush()\n} catch (e) {\n  console.error(e)\n}"
             ],
             "outputs": []
         },

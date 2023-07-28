@@ -7,6 +7,7 @@ import '@dxosTheme';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { ChessPlugin } from '@braneframe/plugin-chess';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DebugPlugin } from '@braneframe/plugin-debug';
 import { DndPlugin } from '@braneframe/plugin-dnd';
@@ -67,10 +68,14 @@ createRoot(document.getElementById('root')!).render(
         StackPlugin(),
         GithubPlugin(),
         FilesPlugin(),
+
+        // Labs
+        DebugPlugin(),
+        TemplatePlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
         ThreadPlugin(),
-        DebugPlugin(),
+        ChessPlugin(),
         TemplatePlugin(),
       ]}
     />
