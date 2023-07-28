@@ -5,13 +5,12 @@
 import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
+import { Plus, DotsSixVertical, Minus, Placeholder } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
 import { useIntent } from '@braneframe/plugin-intent';
-import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Main,
   Input,
@@ -270,7 +269,6 @@ const StackSectionsImpl = ({
 const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
-  const splitView = useSplitView();
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
       const nextSectionModel = getSectionModel(nextSectionObject);
@@ -283,6 +281,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   return (
     <Main.Content classNames='min-bs-[100vh]'>
       <div role='none' className='mli-auto max-is-[60rem]'>
+        {/* TODO(burdon): Factor out header. */}
         <Input.Root>
           <Input.Label srOnly>{t('stack title label')}</Input.Label>
           <Input.TextInput
@@ -294,17 +293,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
           />
         </Input.Root>
         <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
+
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-          <h2 className='text-sm font-normal flex items-center gap-1'>
-            <Plus className={getSize(4)} />
-            <span>{t('add section label')}</span>
-          </h2>
           <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
             <DropdownMenu.Root modal={false}>
               <DropdownMenu.Trigger asChild>
                 <Button variant='ghost'>
-                  <span>{t('add new section label')}</span>
+                  <Plus className={getSize(5)} />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
@@ -319,47 +316,6 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                       onClick={async () => {
                         const { object: nextSection } = await sendIntent(intent);
                         handleAdd(stack.sections.length, nextSection);
-                      }}
-                    >
-                      <Icon className={getSize(4)} />
-                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                    </DropdownMenu.Item>
-                  );
-                })}
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-
-            <DropdownMenu.Root modal={false}>
-              <DropdownMenu.Trigger asChild>
-                <Button variant='ghost'>
-                  <span>{t('add existing section label')}</span>
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Arrow />
-                {stackState.choosers?.map(({ id, testId, icon, label }) => {
-                  const Icon = icon ?? Placeholder;
-                  return (
-                    <DropdownMenu.Item
-                      key={id}
-                      id={id}
-                      data-testid={testId}
-                      onClick={() => {
-                        splitView.dialogContent = {
-                          id,
-                          chooser: 'many',
-                          subject: 'dxos.org/plugin/stack/chooser',
-                          omit: new Set(
-                            stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
-                          ),
-                          onDone: (items: GenericStackObject[]) =>
-                            stack.sections.splice(
-                              stack.sections.length,
-                              0,
-                              ...items.map((item) => getSectionModel(item)),
-                            ),
-                        };
-                        splitView.dialogOpen = true;
                       }}
                     >
                       <Icon className={getSize(4)} />
