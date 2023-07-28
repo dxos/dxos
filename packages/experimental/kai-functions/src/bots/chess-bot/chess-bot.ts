@@ -33,16 +33,16 @@ export class ChessBot extends Bot {
   // TODO(burdon): Only trigger if has player credential.
   // TODO(burdon): Trivial engine: https://github.com/josefjadrny/js-chess-engine
   async onUpdate(game: Game) {
-    if (game.fen) {
+    if (game.pgn) {
       const { Chess } = await import('chess.js');
       const chess = new Chess();
-      chess.loadPgn(game.fen);
+      chess.loadPgn(game.pgn);
       if (chess.turn() === this._player) {
         const moves = chess.moves();
         if (moves.length) {
           const move = moves[Math.floor(Math.random() * moves.length)];
           chess.move(move);
-          game.fen = chess.pgn();
+          game.pgn = chess.pgn();
           log.info(`move: ${chess.history().length}\n` + chess.ascii());
         }
       }

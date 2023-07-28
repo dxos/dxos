@@ -48,6 +48,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-chess/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-debug/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-drawing/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
