@@ -1,9 +1,15 @@
-import { describe, test } from "@dxos/test";
-import { createDatabase } from "./testing";
-import { Expando } from "./typed-object";
-import { clone } from "./clone";
-import { expect } from "chai";
-import { Text } from "./text-object";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { expect } from 'chai';
+
+import { describe, test } from '@dxos/test';
+
+import { clone } from './clone';
+import { createDatabase } from './testing';
+import { Text } from './text-object';
+import { Expando } from './typed-object';
 
 describe('clone', () => {
   test('clone to a different database', async () => {
@@ -28,7 +34,7 @@ describe('clone', () => {
     expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;
-  })
+  });
 
   test('clone to the same database by changing the id', async () => {
     const { db } = await createDatabase();
@@ -47,7 +53,7 @@ describe('clone', () => {
     expect(task2.id).to.not.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
     expect([...task2.tags]).to.deep.equal([...task1.tags]);
-  })
+  });
 
   test('clone with nested objects', async () => {
     const { db: db1 } = await createDatabase();
@@ -80,7 +86,7 @@ describe('clone', () => {
     expect(task2.assignee.id).to.equal(task1.assignee.id);
     expect(task2.assignee.name).to.equal(task1.assignee.name);
     expect(db2.query({ type: 'Person' }).objects[0] === task2.assignee).to.be.true;
-  })
+  });
 
   test('clone with nested text objects', async () => {
     const { db: db1 } = await createDatabase();
@@ -109,6 +115,5 @@ describe('clone', () => {
     expect(task2.details !== task1.details).to.be.true;
     expect(task2.details.id).to.equal(task1.details.id);
     expect(task2.details.text).to.equal(task1.details.text);
-  })
-
-})
+  });
+});

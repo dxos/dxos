@@ -13,7 +13,6 @@ import { EchoSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { setMetadataOnObject } from './builder';
 import { ItemManager } from './item-manager';
-import { inspect } from 'node:util';
 
 export type EchoProcessor = (message: IEchoStream) => void;
 
