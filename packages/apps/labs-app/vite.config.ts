@@ -5,6 +5,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+// import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
@@ -16,6 +17,7 @@ const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 export default defineConfig({
   server: {
     host: true,
+    // https: true,
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -40,6 +42,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    // mkcert(), // TODO(burdon): Not working?
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),

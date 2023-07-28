@@ -3,6 +3,7 @@
 //
 
 import { Play, HandPalm } from '@phosphor-icons/react';
+import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
@@ -11,27 +12,28 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { baseSurface, fullSurface, getSize } from '@dxos/aurora-theme';
 import { diagnostics } from '@dxos/client/diagnostics';
 import { SpaceProxy } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
-import { DEBUG_PANEL, DebugContext } from '../props';
+import { DEBUG_PLUGIN, DebugContext } from '../props';
 import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
 export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
-  const { t } = useTranslation(DEBUG_PANEL);
+  const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
+  const style = themeMode === 'dark' ? styleDark : styleLight;
 
   const client = useClient();
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
     const data = await diagnostics(client, { humanize: false, truncate: true });
-    setData({ config: config.values, diagnostics: data });
+    setData(data);
   };
   useEffect(() => {
     void handleRefresh();
@@ -77,7 +79,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   };
 
   return (
-    <Main.Content classNames='flex flex-col grow fixed inset-0 min-bs-[100vh] overflow-hidden'>
+    <Main.Content classNames={[fullSurface, baseSurface]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
@@ -105,11 +107,32 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
         </DensityProvider>
       </div>
 
-      {/* TODO(burdon): Highlight. */}
       <div className='flex grow overflow-hidden px-2'>
-        <SyntaxHighlighter className='w-full' language='json' style={themeMode === 'dark' ? styleDark : styleLight}>
-          {JSON.stringify(data, replacer, 2)}
-        </SyntaxHighlighter>
+        <div className='flex flex-col w-full overflow-auto space-y-2'>
+          {config.values?.runtime?.app?.build?.timestamp && (
+            <div style={styleDark}>
+              <pre className='px-2 text-xs'>Build</pre>
+              <div className='px-2'>
+                {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
+                  addSuffix: true,
+                  includeSeconds: true,
+                })}
+              </div>
+            </div>
+          )}
+          <div style={styleDark}>
+            <pre className='p-2 text-sm'>Config</pre>
+            <SyntaxHighlighter language='json' style={style}>
+              {JSON.stringify(config.values, replacer, 2)}
+            </SyntaxHighlighter>
+          </div>
+          <div style={styleDark}>
+            <pre className='px-2 text-xs'>Diagnostics</pre>
+            <SyntaxHighlighter language='json' style={style}>
+              {JSON.stringify(data, replacer, 2)}
+            </SyntaxHighlighter>
+          </div>
+        </div>
       </div>
     </Main.Content>
   );

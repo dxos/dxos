@@ -6,10 +6,10 @@ import { Hammer, IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
 import { DebugMain } from './components';
-import { DEBUG_PANEL, DebugContext, DebugPluginProvides } from './props';
+import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
 export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
@@ -27,7 +27,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
 
   return {
     meta: {
-      id: DEBUG_PANEL,
+      id: DEBUG_PLUGIN,
     },
     provides: {
       translations,
@@ -70,6 +70,45 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               parent,
             },
           ];
+        },
+        actions: (parent) => {
+          if (parent.id !== 'root') {
+            return [];
+          }
+
+          return [
+            {
+              id: 'open-devtools',
+              index: 'z', // indices[2],
+              testId: 'spacePlugin.openDevtools',
+              label: ['open devtools label', { ns: DEBUG_PLUGIN }],
+              icon: (props) => <Hammer {...props} />,
+              intent: {
+                plugin: DEBUG_PLUGIN,
+                action: 'debug-openDevtools',
+              },
+            },
+          ];
+        },
+      },
+      intent: {
+        resolver: async (intent, plugins) => {
+          switch (intent.action) {
+            case 'debug-openDevtools': {
+              // TODO(burdon): Access config.
+              const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+              if (!clientPlugin) {
+                throw new Error('Client plugin not found');
+              }
+
+              const client = clientPlugin.provides.client;
+              const vaultUrl = client.config.values?.runtime?.client?.remoteSource;
+              if (vaultUrl) {
+                window.open(`https://devtools.dev.dxos.org/?target=vault:${vaultUrl}`);
+              }
+              return true;
+            }
+          }
         },
       },
       component: (data, role) => {
