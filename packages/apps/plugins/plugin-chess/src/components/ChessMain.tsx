@@ -8,10 +8,10 @@ import invariant from 'tiny-invariant';
 
 import { Main } from '@dxos/aurora';
 import { baseSurface, mx } from '@dxos/aurora-theme';
-import { Chessboard, ChessModel, ChessMove } from '@dxos/chess-app';
-import { SpaceProxy, TypedObject } from '@dxos/client/echo';
+import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
+import { SpaceProxy } from '@dxos/client/echo';
 
-export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; object: TypedObject } }) => {
+export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; object: Game } }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
     if (!model || object.pgn !== model?.chess.pgn()) {
@@ -19,6 +19,7 @@ export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; obj
       if (object.pgn) {
         chess.loadPgn(object.pgn);
       }
+
       setModel({ chess });
     }
   }, [object.pgn]);
@@ -26,7 +27,6 @@ export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; obj
   const handleUpdate = (move: ChessMove) => {
     invariant(model);
     if (model.chess.move(move)) {
-      // TODO(burdon): Rename pgn => pgn.
       // TODO(burdon): Add move (requires array of scalars).
       object!.pgn = model.chess.pgn();
       setModel({ ...model });

@@ -68,7 +68,7 @@ export const Chessboard: FC<ChessboardProps> = ({
         : undefined;
 
     const move = { from: source, to: target, promotion };
-    const result = new Chess(chess.pgn()).move(move);
+    const result = new Chess(chess.fen()).move(move);
     if (result) {
       onUpdate?.(move);
       return true;
@@ -80,7 +80,7 @@ export const Chessboard: FC<ChessboardProps> = ({
   // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
     <ReactChessboard
-      position={chess.pgn()}
+      position={chess.fen()}
       boardOrientation={orientation === 'w' ? 'white' : 'black'}
       arePiecesDraggable={!readonly}
       onPieceDrop={handleDrop}
