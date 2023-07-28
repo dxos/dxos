@@ -10,7 +10,8 @@ import { IntentProvides } from '@braneframe/plugin-intent';
 import { getIndices, GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
+import { Game } from '@dxos/chess-app';
+import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ChessMain } from './components';
@@ -21,7 +22,7 @@ import { objectToGraphNode } from './util';
 type ChessPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
-  const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
+  const adapter = new GraphNodeAdapter(Game.filter(), objectToGraphNode);
 
   return {
     meta: {
@@ -89,7 +90,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { object: new Expando({ type: 'chess' }) };
+              return { object: new Game() };
             }
           }
         },

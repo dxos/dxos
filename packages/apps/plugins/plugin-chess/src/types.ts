@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isTypedObject, Expando, TypedObject } from '@dxos/client/echo';
+import { Game } from '@dxos/chess-app';
+import { isTypedObject, TypedObject } from '@dxos/client/echo';
 
 export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
 
@@ -15,5 +16,5 @@ export enum ChessAction {
 export type ChessProvides = {};
 
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && (object as Expando).type === 'chess';
+  return isTypedObject(object) && object.__typename === Game.type.name;
 };
