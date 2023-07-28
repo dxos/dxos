@@ -12,7 +12,7 @@ export interface SpaceDialogProps
   extends Omit<DialogContentProps, 'children'>,
     Omit<SpacePanelProps, 'doneActionParent'> {}
 
-export const SpaceDialog = ({ ...spacePanelProps }: SpaceDialogProps) => {
+export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
   return (
     <Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
