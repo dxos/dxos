@@ -7,12 +7,14 @@ import { SingleOrArray, Event } from 'xstate';
 
 import { Space } from '@dxos/react-client/echo';
 
+type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'createInvitation'>> & { properties: { name?: string } };
+
 export type SpacePanelImplProps = {
   titleId: string;
   activeView: string;
   send: (event: SingleOrArray<Event<any>>) => void;
   createInvitationUrl: (invitationCode: string) => string;
-  space: Pick<Space, 'key'> & Partial<Pick<Space, 'createInvitation'>> & { properties: { name?: string } };
+  space: ErsatzSpace | Space;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
 };
