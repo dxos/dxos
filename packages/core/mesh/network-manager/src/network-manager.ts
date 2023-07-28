@@ -87,8 +87,10 @@ export class NetworkManager {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
-    this._signalManager = signalManager;
-    this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
+    this._signalManager = signalManager
+    
+    
+                 this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
@@ -97,7 +99,7 @@ export class NetworkManager {
 
     // TODO(burdon): Inject listener (generic pattern).
     if (log) {
-      this._connectionLog = new ConnectionLog();
+      this._connectionLog = 5;
     }
   }
 
