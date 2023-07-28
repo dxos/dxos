@@ -35,27 +35,17 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
   );
 };
 
-export const IdentityPanelImpl = ({
-  identity,
-  titleId,
-  activeView,
-  send,
-  createInvitationUrl,
-}: IdentityPanelImplProps) => {
+export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
       <IdentityHeading {...{ identity, titleId }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooser send={send} active={activeView === 'identity action chooser'} />
+            <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
           </Viewport.View>
           <Viewport.View id='device manager' classNames={viewStyles}>
-            <DeviceManager
-              send={send}
-              active={activeView === 'device manager'}
-              createInvitationUrl={createInvitationUrl}
-            />
+            <DeviceManager active={activeView === 'device manager'} {...props} />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
           {/* <Viewport.View id='signing out'></Viewport.View> */}
@@ -65,7 +55,11 @@ export const IdentityPanelImpl = ({
   );
 };
 
-export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (code) => code }: IdentityPanelProps) => {
+export const IdentityPanel = ({
+  titleId: propsTitleId,
+  createInvitationUrl = (code) => code,
+  ...props
+}: IdentityPanelProps) => {
   const titleId = useId('identityPanel__heading', propsTitleId);
   const identity = useIdentity();
   if (!identity) {
@@ -99,6 +93,7 @@ export const IdentityPanel = ({ titleId: propsTitleId, createInvitationUrl = (co
 
   return (
     <IdentityPanelImpl
+      {...props}
       identity={identity}
       activeView={activeView}
       send={identitySend}
