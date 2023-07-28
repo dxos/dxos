@@ -8,4 +8,4 @@ export type { Halo } from '@dxos/client-protocol';
 export { type Contact, type Device, DeviceKind, type Identity } from '@dxos/protocols/proto/dxos/client/services';
 export { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-export * from './halo-proxy';
+export { HaloProxy } from './halo-proxy';

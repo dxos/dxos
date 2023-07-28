@@ -16,8 +16,7 @@
   ],
   "dependencies": {
     "@dxos/config": "workspace:*",
-    "@dxos/react-appkit": "workspace:*",
-    "@sentry/react": "^7.41.0"
+    "@dxos/react-appkit": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-surface": "workspace:*",

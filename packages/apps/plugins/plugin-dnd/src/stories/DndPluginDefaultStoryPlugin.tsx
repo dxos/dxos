@@ -104,7 +104,7 @@ export const DndPluginDefaultStoryPlugin = (): PluginDefinition<{ dndStory: DndP
       components: {
         default: DndPluginDefaultStoryPluginDefault,
       },
-      component: (datum: unknown, role?: string) => {
+      component: (data: unknown, role?: string) => {
         switch (role) {
           case 'dragoverlay':
             return StoryItemDragOverlay;

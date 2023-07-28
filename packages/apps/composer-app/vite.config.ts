@@ -59,10 +59,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),

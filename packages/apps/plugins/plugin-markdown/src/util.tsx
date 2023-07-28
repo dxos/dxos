@@ -15,30 +15,30 @@ import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
-export const isMarkdown = (datum: unknown): datum is ComposerModel =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum &&
-      typeof datum.id === 'string' &&
-      (typeof (datum as { [key: string]: any }).content === 'string' ||
-        (datum as { [key: string]: any }).content instanceof YText)
+export const isMarkdown = (data: unknown): data is ComposerModel =>
+  data && typeof data === 'object'
+    ? 'id' in data &&
+      typeof data.id === 'string' &&
+      (typeof (data as { [key: string]: any }).content === 'string' ||
+        (data as { [key: string]: any }).content instanceof YText)
     : false;
 
-export const isMarkdownContent = (datum: unknown): datum is { content: ComposerModel } =>
-  !!datum &&
-  typeof datum === 'object' &&
-  (datum as { [key: string]: any }).content &&
-  isMarkdown((datum as { [key: string]: any }).content);
+export const isMarkdownContent = (data: unknown): data is { content: ComposerModel } =>
+  !!data &&
+  typeof data === 'object' &&
+  (data as { [key: string]: any }).content &&
+  isMarkdown((data as { [key: string]: any }).content);
 
-export const isMarkdownPlaceholder = (datum: unknown): datum is ComposerModel =>
-  datum && typeof datum === 'object'
-    ? 'id' in datum && typeof datum.id === 'string' && 'content' in datum && typeof datum.content === 'function'
+export const isMarkdownPlaceholder = (data: unknown): data is ComposerModel =>
+  data && typeof data === 'object'
+    ? 'id' in data && typeof data.id === 'string' && 'content' in data && typeof data.content === 'function'
     : false;
 
-export const isMarkdownProperties = (datum: unknown): datum is MarkdownProperties =>
-  datum instanceof EchoObject
+export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
+  data instanceof EchoObject
     ? true
-    : datum && typeof datum === 'object'
-    ? 'title' in datum && typeof datum.title === 'string'
+    : data && typeof data === 'object'
+    ? 'title' in data && typeof data.title === 'string'
     : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
