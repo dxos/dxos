@@ -12,7 +12,7 @@ import { SpaceProxy, TypedObject } from '@dxos/client/echo';
 
 export const ChessMain = ({ data: { space, object } }: { data: { space: SpaceProxy; object: TypedObject } }) => {
   // TODO(burdon): Model from ChessFrame.
-  const chess = useMemo(() => new Chess());
+  const chess = useMemo(() => new Chess(), []);
 
   return (
     <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
