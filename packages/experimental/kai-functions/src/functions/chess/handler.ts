@@ -21,17 +21,17 @@ export default (event: HandlerProps, context: FunctionContext) => {
 
     for (const objectId of event.objects) {
       const game = space.db.getObjectById(objectId);
-      if (game && game.fen) {
+      if (game && game.pgn) {
         const chess = new Chess();
-        // TODO(burdon): Rename pgn (isn't FEN).
-        chess.loadPgn(game.fen);
+        // TODO(burdon): Rename pgn (isn't pgn).
+        chess.loadPgn(game.pgn);
         // TODO(burdon): Only trigger if has player credential.
         if (chess.turn() === 'b') {
           const moves = chess.moves();
           if (moves.length) {
             const move = moves[Math.floor(Math.random() * moves.length)];
             chess.move(move);
-            game.fen = chess.pgn();
+            game.pgn = chess.pgn();
             console.log(`move: ${chess.history().length}\n` + chess.ascii());
           }
         }

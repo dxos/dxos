@@ -20,8 +20,8 @@ const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUT
 
 const createChess = (game: Game) => {
   const chess = new Chess();
-  if (game.fen) {
-    chess.loadPgn(game.fen);
+  if (game.pgn) {
+    chess.loadPgn(game.pgn);
   }
 
   return chess;
@@ -65,10 +65,10 @@ const Play: FC<{
   const [orientation, setOrientation] = useState<Color>('w');
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
-    if (!model || game.fen !== model?.chess.pgn()) {
+    if (!model || game.pgn !== model?.chess.pgn()) {
       setModel({ chess: createChess(game) });
     }
-  }, [game.fen]);
+  }, [game.pgn]);
 
   const handleFlip = () => {
     setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
@@ -78,7 +78,7 @@ const Play: FC<{
     invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
-      game!.fen = model.chess.pgn();
+      game!.pgn = model.chess.pgn();
       setModel({ ...model });
     }
   };
