@@ -22,6 +22,7 @@ import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
 import { StackPlugin } from '@braneframe/plugin-stack';
+import { TemplatePlugin } from '@braneframe/plugin-template';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
@@ -70,6 +71,7 @@ createRoot(document.getElementById('root')!).render(
         KanbanPlugin(),
         ThreadPlugin(),
         DebugPlugin(),
+        TemplatePlugin(),
       ]}
     />
   </StrictMode>,
