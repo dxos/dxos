@@ -663,6 +663,7 @@ importers:
 
   packages/apps/plugins/plugin-debug:
     specifiers:
+      '@braneframe/plugin-client': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
       '@braneframe/plugin-markdown': workspace:*
@@ -693,6 +694,7 @@ importers:
       react-syntax-highlighter: ^15.5.0
       vite: ^4.3.9
     dependencies:
+      '@braneframe/plugin-client': link:../plugin-client
       '@braneframe/plugin-intent': link:../plugin-intent
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client

@@ -110,8 +110,8 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
       <div className='flex grow overflow-hidden px-2'>
         <div className='flex flex-col w-full overflow-auto space-y-2'>
           {config.values?.runtime?.app?.build?.timestamp && (
-            <div style={styleDark}>
-              <pre className='px-2 text-xs'>Build</pre>
+            <div>
+              <pre className='p-2 text-sm'>Build</pre>
               <div className='px-2'>
                 {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
                   addSuffix: true,
@@ -120,14 +120,14 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
               </div>
             </div>
           )}
-          <div style={styleDark}>
+          <div>
             <pre className='p-2 text-sm'>Config</pre>
             <SyntaxHighlighter language='json' style={style}>
               {JSON.stringify(config.values, replacer, 2)}
             </SyntaxHighlighter>
           </div>
-          <div style={styleDark}>
-            <pre className='px-2 text-xs'>Diagnostics</pre>
+          <div>
+            <pre className='p-2 text-sm'>Diagnostics</pre>
             <SyntaxHighlighter language='json' style={style}>
               {JSON.stringify(data, replacer, 2)}
             </SyntaxHighlighter>

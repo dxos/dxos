@@ -19,6 +19,7 @@ export default defineConfig({
   server: {
     host: true,
     // https: true,
+    // NOTE: Relative to project root.
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -43,7 +44,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    // mkcert(), // TODO(burdon): Not working?
+    // mkcert(),
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),

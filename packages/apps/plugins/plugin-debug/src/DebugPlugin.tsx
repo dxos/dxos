@@ -5,6 +5,7 @@
 import { Hammer, IconProps } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
+import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
