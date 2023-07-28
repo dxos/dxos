@@ -12,11 +12,9 @@ import { useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { DeviceList, InvitationList } from '../../../components';
-import { IdentityPanelStepProps } from '../IdentityPanelProps';
+import { IdentityPanelImplProps, IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export type DeviceManagerProps = IdentityPanelStepProps & {
-  createInvitationUrl: (invitationCode: string) => string;
-};
+export type DeviceManagerProps = IdentityPanelStepProps & Pick<IdentityPanelImplProps, 'createInvitationUrl'>;
 
 export const DeviceManager = ({ active, send, onDone, doneActionParent, createInvitationUrl }: DeviceManagerProps) => {
   const { t } = useTranslation('os');
