@@ -182,7 +182,9 @@ describe('DataSpaceManager', () => {
       expect((await file.stat()).size !== 0).to.be.true;
       await space.createEpoch();
       expect((await file.stat()).size === 0).to.be.true;
-    }).onlyEnvironments('nodejs', 'chromium', 'firefox');
+    })
+      .onlyEnvironments('nodejs', 'chromium', 'firefox')
+      .tag('flaky');
 
     test('Loads only last epoch', async () => {
       const builder = new TestBuilder();
