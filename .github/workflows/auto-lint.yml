@@ -45,7 +45,7 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm nx run-many --target=fix --parallel 3
+        run: pnpm nx run-many --target=lint --parallel 3 --fix
 
       - name: Show changes
         run: git diff
