@@ -6,7 +6,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 
 export const uriToActive = (uri: string) => {
   const [_, pluginShortId, nodeId, ...rest] = uri.split('/');
-  return pluginShortId && nodeId ? [`${pluginShortId}/${nodeId}`, ...rest] : [];
+  return pluginShortId && nodeId ? [`${pluginShortId}/${nodeId}`, ...rest] : pluginShortId ? [pluginShortId] : [];
 };
 
 export const activeToUri = (active: string[]) => '/' + active.join('/').split('/').map(encodeURIComponent).join('/');

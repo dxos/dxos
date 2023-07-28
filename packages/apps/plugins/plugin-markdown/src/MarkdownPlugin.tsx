@@ -143,43 +143,43 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       translations,
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main':
             if (
-              'composer' in datum &&
-              isMarkdown(datum.composer) &&
-              'properties' in datum &&
-              isMarkdownProperties(datum.properties)
+              'composer' in data &&
+              isMarkdown(data.composer) &&
+              'properties' in data &&
+              isMarkdownProperties(data.properties)
             ) {
-              if ('view' in datum && datum.view === 'embedded') {
+              if ('view' in data && data.view === 'embedded') {
                 return MarkdownMainEmbedded;
               } else {
                 return MarkdownMainStandalone;
               }
             } else if (
-              'composer' in datum &&
-              isMarkdownPlaceholder(datum.composer) &&
-              'properties' in datum &&
-              isMarkdownProperties(datum.properties)
+              'composer' in data &&
+              isMarkdownPlaceholder(data.composer) &&
+              'properties' in data &&
+              isMarkdownProperties(data.properties)
             ) {
               return MarkdownMainEmpty;
             }
             break;
           case 'section':
-            if (isMarkdown(get(datum, 'object.content', {}))) {
+            if (isMarkdown(get(data, 'object.content', {}))) {
               return MarkdownSection;
             }
             break;
           // TODO(burdon): Can this be decoupled from this plugin?
           case 'dialog':
             if (
-              get(datum, 'subject') === 'dxos.org/plugin/stack/chooser' &&
-              get(datum, 'id') === 'choose-section-space-doc'
+              get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
+              get(data, 'id') === 'choose-section-space-doc'
             ) {
               return SpaceMarkdownChooser;
             }

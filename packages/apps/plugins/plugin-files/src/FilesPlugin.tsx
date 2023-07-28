@@ -121,10 +121,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     },
     provides: {
       translations,
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'main':
-            if (isGraphNode(datum) && isLocalFile(datum.data) && datum.attributes?.disabled) {
+            if (isGraphNode(data) && isLocalFile(data.data) && data.attributes?.disabled) {
               return LocalFileMainPermissions;
             }
             break;

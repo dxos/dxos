@@ -64,7 +64,7 @@ export const DndPluginDefaultStoryPluginA = (): PluginDefinition => {
       id: 'example.com/plugin/dndPluginDefaultStoryPluginA',
     },
     provides: {
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'dndpluginstory':
             return DefaultDndPluginStoryPluginA;

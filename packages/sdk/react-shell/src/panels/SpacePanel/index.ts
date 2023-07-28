@@ -3,3 +3,4 @@
 //
 
 export * from './SpacePanel';
+export * from './SpacePanelProps';

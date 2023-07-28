@@ -2,7 +2,7 @@
 
 #### Contributing
 
-This Markdown file was exported from the adjacent `Stories.ooutline` file with Omni Outliner. When submitting a PR with changes to this document, please tag a reviewer to also make changes in the source document (e.g. @thure), at least until this document becomes available in the Composer app.
+This Markdown file was exported from the adjacent `stories.ooutline` file with Omni Outliner. When submitting a PR with changes to this document, please tag a reviewer to also make changes in the source document (e.g. @thure), at least until this document becomes available in the Composer app.
 
 ## User story tree
 

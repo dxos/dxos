@@ -76,6 +76,7 @@ createRoot(document.getElementById('root')!).render(
         KanbanPlugin(),
         ThreadPlugin(),
         ChessPlugin(),
+        TemplatePlugin(),
       ]}
     />
   </StrictMode>,

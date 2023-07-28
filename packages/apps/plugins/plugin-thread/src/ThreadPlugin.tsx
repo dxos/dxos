@@ -65,14 +65,14 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           ];
         },
       },
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in datum && isThread(datum.object)) {
+            if ('object' in data && isThread(data.object)) {
               return ThreadMain;
             } else {
               return null;

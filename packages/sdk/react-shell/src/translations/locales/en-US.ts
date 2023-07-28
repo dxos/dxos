@@ -72,4 +72,5 @@ export const os = {
   'choose devices label': 'Add device',
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Sign out',
+  'empty space members message': 'No other members in this space',
 };

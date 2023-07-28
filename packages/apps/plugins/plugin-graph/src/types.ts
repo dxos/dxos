@@ -14,13 +14,13 @@ type Index = ReturnType<typeof getIndices>[number];
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type GraphNode<TDatum = any> = {
+export type GraphNode<TData = any> = {
   id: string;
   index: Index;
   label: string | [string, { ns: string; count?: number }];
   description?: string;
   icon?: FC;
-  data?: TDatum; // nit about naming this
+  data?: TData;
   parent?: GraphNode;
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
   onMoveNode?: (source: GraphNode, target: GraphNode, child: GraphNode, nextIndex: Index) => void;

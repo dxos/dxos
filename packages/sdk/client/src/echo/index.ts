@@ -8,7 +8,6 @@ export { type ItemID, DocumentModel } from '@dxos/document-model';
 export {
   TYPE_SCHEMA,
   Item,
-  ResultSet,
   Schema,
   ShowDeletedOption,
   type QueryOptions,
@@ -39,7 +38,6 @@ export { TextModel } from '@dxos/text-model';
 
 export { Properties, type PropertiesProps } from '../proto';
 
-export * from './echo-proxy';
-export * from './serializer';
-export * from './space-proxy';
-export * from './util';
+export { EchoProxy } from './echo-proxy';
+export { SpaceProxy } from './space-proxy';
+export { createDefaultModelFactory } from './util';

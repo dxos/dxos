@@ -10,8 +10,8 @@ import { GraphNode, GraphNodeAction } from '@braneframe/plugin-graph';
 
 import { FILES_PLUGIN, FILES_PLUGIN_SHORT_ID, LocalDirectory, LocalEntity, LocalFile, LocalFilesAction } from './types';
 
-export const isLocalFile = (datum: unknown): datum is LocalFile =>
-  datum && typeof datum === 'object' ? 'title' in datum : false;
+export const isLocalFile = (data: unknown): data is LocalFile =>
+  data && typeof data === 'object' ? 'title' in data : false;
 
 export const handleToLocalDirectory = async (handle: any /* FileSystemDirectoryHandle */): Promise<LocalDirectory> => {
   const permission = await handle.queryPermission({ mode: 'readwrite' });

@@ -21,7 +21,16 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
   const [plugins, setPlugins] = useState<Plugin[]>();
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const plugins = await Promise.all(definitions.map(initializePlugin));
+      const plugins = await Promise.all(
+        definitions.map(async (definition) => {
+          try {
+            return initializePlugin(definition);
+          } catch (err) {
+            console.error('Failed to initialize plugin:', definition.meta.id, err);
+            return undefined;
+          }
+        }),
+      ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
       await Promise.all(definitions.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
       setPlugins(plugins);
     });
