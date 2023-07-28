@@ -204,11 +204,14 @@ export class Muxer {
     this._destroying = true;
 
     Promise.resolve(
-      this._sendCommand({
-        destroy: {
-          error: err?.message,
+      this._sendCommand(
+        {
+          destroy: {
+            error: err?.message,
+          },
         },
-      }, SYSTEM_CHANNEL_ID),
+        SYSTEM_CHANNEL_ID,
+      ),
     )
       .then(() => {
         this._dispose();

@@ -71,7 +71,7 @@ const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
-      agents: 2,
+      agents: 4,
       swarmsPerAgent: 5,
       duration: 240_000,
       desiredSwarmTimeout: 10_000,
@@ -80,8 +80,8 @@ const runTransport = () =>
       streamsDelay: 5_000,
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
-      streamLoadInterval: 5,
-      streamLoadChunkSize: 25600,
+      streamLoadInterval: 0,
+      streamLoadChunkSize: 1024,
     },
     options: {
       staggerAgents: 1000,

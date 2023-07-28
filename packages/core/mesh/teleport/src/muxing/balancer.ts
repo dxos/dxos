@@ -34,7 +34,7 @@ export class Balancer {
   }
 
   pushChunk(msg: Uint8Array, trigger: Trigger, channelId: number) {
-    const noCalls = this._calls.size === 0
+    const noCalls = this._calls.size === 0;
 
     if (!this._channels.includes(channelId)) {
       throw new Error(`Unknown channel ${channelId}`);
