@@ -69,8 +69,7 @@ nodemon -w ./src -e ts --exec $(git rev-parse --show-toplevel)/packages/devtools
 > NOTE: The port (7001) must match the one in config.
 
 ```bash
-curl -X POST -H 'Content-Type: application/json' -w '\n' \
-  http://localhost:7001/dev/hello --data '{ "message": "Hello World!" }' 
+curl http://localhost:7001/dev/hello -X POST -H 'Content-Type: application/json' -w '\n' --data '{ "message": "Hello World!" }' 
 ```
 
 ## DXOS Resources

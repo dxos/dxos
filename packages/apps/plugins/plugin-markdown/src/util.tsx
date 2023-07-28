@@ -10,7 +10,7 @@ import { GraphNode } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Document } from '@braneframe/types';
 import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
-import { EchoObject, Space } from '@dxos/client/echo';
+import { EchoObject, Space } from '@dxos/client/echo'; // TODO(burdon): Should not expose.
 import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
