@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "dependencies": {
+    "@braneframe/plugin-chess": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
     "@braneframe/plugin-dnd": "workspace:*",
