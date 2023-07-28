@@ -13,7 +13,7 @@ RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NOD
 # NOTE: Keep playwright version in sync with the one in package.json
 RUN sudo apt-get update \
   && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 \
-  && npx playwright@1.27.1 install-deps \ 
-  && npm install -g pnpm@7.17.0
+  && npx playwright@1.36.2 install-deps \ 
+  && npm install -g pnpm@8.6.10
 
 # TODO(wittjosiah): Add CI job to publish this automatically.
