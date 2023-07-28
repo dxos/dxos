@@ -156,8 +156,8 @@ describe('FeedWrapper', () => {
     await feed1.open();
     await feed2.open();
 
-    const stream1 = feed1.replicate(true, { live: true });
-    const stream2 = feed2.replicate(false, { live: true });
+    const stream1 = feed1.replicate(true, { live: true, noise: false, encrypted: false });
+    const stream2 = feed2.replicate(false, { live: true, noise: false, encrypted: false });
 
     const [done, onClose] = latch({ count: 2 });
 
@@ -210,8 +210,8 @@ describe('FeedWrapper', () => {
     await feed1.open();
     await feed2.open();
 
-    const stream1 = feed1.replicate(true, { live: true });
-    const stream2 = feed2.replicate(false, { live: true });
+    const stream1 = feed1.replicate(true, { live: true, noise: false, encrypted: false });
+    const stream2 = feed2.replicate(false, { live: true, noise: false, encrypted: false });
 
     // Start replication.
     {

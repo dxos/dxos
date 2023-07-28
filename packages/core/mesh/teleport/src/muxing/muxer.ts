@@ -16,7 +16,7 @@ import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
 
-const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
+const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
 
 export type CleanupCb = void | (() => void);
 
@@ -62,7 +62,7 @@ export class Muxer {
 
   constructor() {
     this._framer.port.subscribe((msg) => {
-      this._handleCommand(codec.decode(msg));
+      this._handleCommand(Command.decode(msg));
     });
 
     scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
@@ -241,7 +241,7 @@ export class Muxer {
   }
 
   private _sendCommand(cmd: Command) {
-    Promise.resolve(this._framer.port.send(codec.encode(cmd))).catch((err) => {
+    Promise.resolve(this._framer.port.send(Command.encode(cmd))).catch((err) => {
       this.destroy(err);
     });
   }
