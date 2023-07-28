@@ -34,6 +34,8 @@ export type CreateChannelOpts = {
 
 const STATS_INTERVAL = 1000;
 
+const SYSTEM_CHANNEL_ID = -1;
+
 /**
  * Channel based multiplexer.
  *
@@ -46,7 +48,7 @@ const STATS_INTERVAL = 1000;
  */
 export class Muxer {
   private readonly _framer = new Framer();
-  private readonly _balancer = new Balancer(this._framer.port);
+  private readonly _balancer = new Balancer(this._framer.port, SYSTEM_CHANNEL_ID);
   public readonly stream = this._framer.stream;
 
   private readonly _channelsByLocalId = new Map<number, Channel>();
@@ -111,7 +113,7 @@ export class Muxer {
             contentType: channel.contentType,
           },
         },
-        channel.id,
+        SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
       this._destroyChannel(channel, err);
@@ -182,7 +184,7 @@ export class Muxer {
             contentType: channel.contentType,
           },
         },
-        channel.id,
+        SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
       this._destroyChannel(channel, err);
@@ -206,7 +208,7 @@ export class Muxer {
         destroy: {
           error: err?.message,
         },
-      }),
+      }, SYSTEM_CHANNEL_ID),
     )
       .then(() => {
         this._dispose();
@@ -277,10 +279,10 @@ export class Muxer {
     }
   }
 
-  private async _sendCommand(cmd: Command, channelId?: number) {
+  private async _sendCommand(cmd: Command, channelId = -1) {
     try {
       const trigger = new Trigger<void>();
-      this._balancer.registerCall(Command.encode(cmd), trigger, channelId);
+      this._balancer.pushChunk(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
       this.destroy(err);
