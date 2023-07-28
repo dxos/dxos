@@ -79,7 +79,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/vault": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "@remix-run/router": "^1.0.2",
     "@sentry/vite-plugin": "^0.7.2",
     "@storybook/addons": "^7.0.6",

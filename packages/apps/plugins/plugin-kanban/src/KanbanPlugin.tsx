@@ -65,14 +65,14 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           ];
         },
       },
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in datum && isKanban(datum.object)) {
+            if ('object' in data && isKanban(data.object)) {
               return KanbanMain;
             } else {
               return null;

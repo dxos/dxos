@@ -31,9 +31,6 @@
     },
     {
       "path": "../../../sdk/react-surface"
-    },
-    {
-      "path": "../../../ui/react-appkit"
     }
   ]
 }

@@ -17,11 +17,12 @@ import { mx } from '@dxos/aurora-theme';
 import {
   IFrameClientServicesProxy,
   type PublicKey,
-  type ShellController,
   ShellDisplay,
   ShellLayout,
   IFrameClientServicesHost,
   useClient,
+  useShellProvider,
+  LayoutRequest,
 } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -36,13 +37,13 @@ export type ShellContextProps = {
 
 export const ShellContext: Context<ShellContextProps> = createContext<ShellContextProps>({});
 
-export const useShell = (): {
-  setLayout: ShellController['setLayout'];
-} => {
+type SetLayout = (layout: ShellLayout, options?: Omit<LayoutRequest, 'layout'>) => void;
+
+export const useShell = (): { setLayout: SetLayout } => {
   const client = useClient();
   const { runtime, setDisplay } = useContext(ShellContext);
 
-  const setLayout: ShellController['setLayout'] = async (layout, options) => {
+  const setLayout: SetLayout = async (layout, options) => {
     if (runtime) {
       if (layout === ShellLayout.DEFAULT) {
         setDisplay?.(ShellDisplay.NONE);
@@ -62,6 +63,7 @@ export const useShell = (): {
     setLayout,
   };
 };
+
 export type ShellProviderProps = PropsWithChildren<{
   space?: Space;
   deviceInvitationCode?: string | null;
@@ -85,20 +87,7 @@ export const ShellProvider = ({
   // IFrame Shell
   //
 
-  useEffect(() => {
-    if (
-      (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) &&
-      onJoinedSpace
-    ) {
-      return client.services.joinedSpace.on(onJoinedSpace);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
-      client.services.setSpaceProvider(() => space?.key);
-    }
-  }, [space]);
+  useShellProvider({ spaceKey: space?.key, onJoinedSpace });
 
   //
   // Component Shell

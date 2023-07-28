@@ -26,8 +26,8 @@ export interface ThreadModel {
   root: ThreadType;
 }
 
-export const isThread = (datum: unknown): datum is ThreadType => {
-  return isTypedObject(datum) && ThreadType.type.name === datum.__typename;
+export const isThread = (data: unknown): data is ThreadType => {
+  return isTypedObject(data) && ThreadType.type.name === data.__typename;
 };
 
 export const threadToGraphNode = (parent: GraphNode, object: ThreadType, index: string): GraphNode => ({

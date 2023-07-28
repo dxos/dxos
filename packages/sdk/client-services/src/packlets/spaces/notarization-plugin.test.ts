@@ -25,7 +25,7 @@ class TestAgent extends TestPeer {
     super();
     this.feed.written.on(this._ctx, async ([credential]) => {
       log('written to feed', { credential });
-      await this.notarizationPlugin.process(credential);
+      await this.notarizationPlugin.processCredential(credential);
     });
   }
 

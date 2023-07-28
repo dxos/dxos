@@ -77,20 +77,20 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       translations,
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in datum && isStack(datum.object)) {
+            if ('object' in data && isStack(data.object)) {
               return StackMain;
             } else {
               return null;
             }
           case 'dragoverlay':
-            if ('object' in datum) {
+            if ('object' in data) {
               return StackSectionOverlay;
             } else {
               return null;

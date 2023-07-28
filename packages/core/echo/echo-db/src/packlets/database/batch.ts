@@ -28,7 +28,9 @@ export class Batch {
   }
 
   waitToBeProcessed(): Promise<void> {
+    invariant(this.receiptTrigger);
     invariant(this.processTrigger);
-    return this.processTrigger.wait();
+    // Waiting on receipt trigger to catch write errors.
+    return Promise.all([this.processTrigger.wait(), this.receiptTrigger.wait()]).then(() => {});
   }
 }

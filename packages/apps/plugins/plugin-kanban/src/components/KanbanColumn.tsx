@@ -8,10 +8,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 
-import { Styles } from '@braneframe/plugin-theme';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { chromeSurface, getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
 import { KANBAN_PLUGIN } from '../props';
 import { KanbanItemComponent } from './KanbanItem';
@@ -43,7 +42,7 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
   return (
-    <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', Styles.level1.bg)}>
+    <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', groupSurface)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -90,14 +89,13 @@ export const KanbanColumnComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex flex-col snap-center overflow-y-hidden', Styles.level0.text, isDragging && 'relative z-10')}
+      className={mx('flex flex-col snap-center overflow-y-hidden', isDragging && 'relative z-10')}
     >
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
           'flex flex-col py-2 overflow-hidden shadow rounded w-[300px] min-h-[300px]',
-          Styles.level1.bg,
-          isDragging && Styles.level2.bg,
+          isDragging ? chromeSurface : groupSurface,
         )}
       >
         <div className='flex items-center mb-2 px-2'>

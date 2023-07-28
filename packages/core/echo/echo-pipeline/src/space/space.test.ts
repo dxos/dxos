@@ -163,6 +163,52 @@ describe('space/space', () => {
     await testLocalDatabase(space2.dataPipeline);
   });
 
+  test('re-open', async () => {
+    const builder = new TestAgentBuilder();
+    afterTest(async () => await builder.close());
+    const agent = await builder.createPeer();
+    const space = await agent.createSpace();
+
+    let objectCount: number;
+    {
+      await space.open();
+      afterTest(() => space.close());
+      expect(space.isOpen).toBeTruthy();
+
+      await agent.spaceGenesis(space);
+
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+      await space.initializeDataPipeline();
+      await space.dataPipeline.ensureEpochInitialized();
+
+      assert(space.dataPipeline.databaseHost);
+      await testLocalDatabase(space.dataPipeline);
+
+      objectCount = space.dataPipeline.itemManager.entities.size;
+
+      await space.close();
+      expect(space.isOpen).toBeFalsy();
+    }
+
+    // Re-open.
+    {
+      await space.open();
+      expect(space.isOpen).toBeTruthy();
+
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+      await space.initializeDataPipeline();
+      await space.dataPipeline.ensureEpochInitialized();
+
+      space.dataPipeline.setTargetTimeframe(space.dataPipeline.pipelineState!.endTimeframe);
+      await space.dataPipeline.pipelineState!.waitUntilReachedTargetTimeframe();
+
+      assert(space.dataPipeline.databaseHost);
+      expect(space.dataPipeline.itemManager.entities.size).toEqual(objectCount);
+
+      await testLocalDatabase(space.dataPipeline);
+    }
+  });
+
   test('create epoch', async () => {
     const builder = new TestAgentBuilder();
     afterTest(async () => await builder.close());

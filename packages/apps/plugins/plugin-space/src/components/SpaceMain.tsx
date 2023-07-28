@@ -11,8 +11,8 @@ import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface } from '@dxos/react-surface';
 
-export const isDocument = (datum: unknown): datum is Document =>
-  isTypedObject(datum) && Document.type.name === datum.__typename;
+export const isDocument = (data: unknown): data is Document =>
+  isTypedObject(data) && Document.type.name === data.__typename;
 
 export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
   const [parentNode, childNode] =
