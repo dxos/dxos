@@ -21,13 +21,14 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     switch (event.key) {
       case 'Escape': {
         setText('');
         break;
       }
       case 'Enter': {
+        // TODO(burdon): Enter is added to text after message is sent.
         handleMessage();
         break;
       }
@@ -37,14 +38,14 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   return (
     <div className={mx('flex flex-col w-full shadow p-2', groupSurface)}>
       <div>
-        {/* TODO(burdon): Multi-line textarea. Or document. */}
         <Input.Root>
           <Input.Label srOnly>{t('block input label')}</Input.Label>
-          <Input.TextInput
+          <Input.TextArea
             autoFocus
             autoComplete='off'
+            rows={3}
             variant='subdued'
-            classNames='flex-1 is-auto pis-2'
+            classNames='flex-1 is-auto pis-2 border-none resize-none outline-double'
             placeholder='Enter message.'
             value={text}
             onChange={({ target: { value } }) => setText(value)}
@@ -52,12 +53,10 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
           />
         </Input.Root>
       </div>
-      <div className='flex flex-row-reverse'>
-        <div>
-          <Button density='fine' variant='ghost' onClick={handleMessage}>
-            <PaperPlaneRight className={getSize(5)} />
-          </Button>
-        </div>
+      <div className='shrink-0'>
+        <Button density='fine' variant='ghost' onClick={handleMessage}>
+          <PaperPlaneRight className={getSize(5)} />
+        </Button>
       </div>
     </div>
   );

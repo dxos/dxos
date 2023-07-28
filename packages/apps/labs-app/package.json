@@ -24,6 +24,7 @@
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/plugin-template": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@braneframe/plugin-thread": "workspace:*",
     "@braneframe/plugin-treeview": "workspace:*",
