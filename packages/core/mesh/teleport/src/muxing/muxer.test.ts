@@ -25,7 +25,11 @@ const setupPeers = () => {
     peer1.stream.unpipe(peer2.stream);
     peer2.stream.unpipe(peer1.stream);
   };
-  afterTest(unpipe);
+  afterTest(() => {
+    unpipe();
+    peer1.destroy();
+    peer2.destroy();
+  });
 
   return {
     peer1,

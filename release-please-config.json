@@ -38,7 +38,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-chess/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -53,7 +63,27 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-error/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-files/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-github/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-intent/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -64,6 +94,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -83,7 +118,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-thread/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -203,11 +248,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/observable-object/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
@@ -274,6 +314,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-schema/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-signals/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -403,11 +448,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/bot-lab/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
@@ -439,6 +479,11 @@
         {
           "type": "json",
           "path": "packages/experimental/kai-framework/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai-functions/package.json",
           "jsonpath": "$.version"
         },
         {

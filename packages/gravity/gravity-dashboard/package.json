@@ -18,7 +18,6 @@
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "d3": "^7.4.4",
-    "debug": "^4.3.3",
     "use-resize-observer": "^9.0.0"
   },
   "devDependencies": {
@@ -28,10 +27,8 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "@types/d3": "^7.1.0",
-    "@types/debug": "^4.1.7",
-    "@types/faker": "^5.5.9",
     "@types/lodash": "^4.14.182",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

@@ -4,6 +4,7 @@
 
 export type FunctionInvocation = {
   function: string;
+
   /**
    * Runtime name.
    * Example: dev, faas

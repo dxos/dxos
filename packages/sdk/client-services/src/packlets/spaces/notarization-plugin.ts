@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
@@ -68,6 +68,10 @@ export class NotarizationPlugin implements CredentialProcessor {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _processCredentialsTriggers = new ComplexMap<PublicKey, Trigger>(PublicKey.hash);
 
+  get hasWriter() {
+    return !!this._writer;
+  }
+
   async open() {}
 
   async close() {
@@ -85,7 +89,7 @@ export class NotarizationPlugin implements CredentialProcessor {
     successDelay = DEFAULT_SUCCESS_DELAY,
   }: NotarizeParams) {
     log('notarize', { credentials });
-    assert(
+    invariant(
       credentials.every((credential) => credential.id),
       'Credentials must have an id',
     );
@@ -165,7 +169,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   /**
    * Called with credentials arriving from the control pipeline.
    */
-  async process(credential: Credential) {
+  async processCredential(credential: Credential) {
     if (!credential.id) {
       return;
     }
@@ -175,7 +179,7 @@ export class NotarizationPlugin implements CredentialProcessor {
   }
 
   setWriter(writer: FeedWriter<Credential>) {
-    assert(!this._writer, 'Writer already set.');
+    invariant(!this._writer, 'Writer already set.');
     this._writer = writer;
   }
 
@@ -194,7 +198,7 @@ export class NotarizationPlugin implements CredentialProcessor {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
     for (const credential of request.credentials ?? []) {
-      assert(credential.id, 'Credential must have an id');
+      invariant(credential.id, 'Credential must have an id');
       if (this._processedCredentials.has(credential.id)) {
         continue;
       }

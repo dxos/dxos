@@ -3,28 +3,29 @@
 //
 
 import '@dxosTheme';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { ThemePlugin } from '@braneframe/plugin-theme';
-import { ObservableArray, ObservableObject } from '@dxos/observable-object';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
 
 import { StackPlugin } from '../StackPlugin';
 
 const DefaultStackPluginStory = () => {
-  const stack = new ObservableObject({
+  const stack = deepSignal({
     id: 'todo',
-    sections: new ObservableArray(),
+    sections: [],
     title: 'Stack storybook title',
   });
+
   return <Surface role='main' data={[stack, stack]} />;
 };
 
 const StackPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos:stackStoryPlugin',
+    id: 'example.com/plugin/stackStoryPlugin',
   },
   provides: {
     components: {

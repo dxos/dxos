@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { humanize } from '@dxos/util';
 
 import { PanelContainer } from '../../components';

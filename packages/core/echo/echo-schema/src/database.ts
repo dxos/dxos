@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { logObjectAccess } from '@dxos/observable-object';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';
 
@@ -71,9 +70,10 @@ export class EchoDatabase {
    * Restores the object if it was deleted.
    */
   add<T extends EchoObject>(obj: T): T {
-    log('save', { id: obj.id, type: (obj as any).__typename });
-    assert(obj.id); // TODO(burdon): Undefined when running in test.
-    assert(obj[base]);
+    log('add', { id: obj.id, type: (obj as any).__typename });
+    invariant(obj.id); // TODO(burdon): Undefined when running in test.
+    invariant(obj[base]);
+
     if (obj[base]._database) {
       this._backend.mutate({
         objects: [
@@ -90,7 +90,7 @@ export class EchoDatabase {
       return obj;
     }
 
-    assert(!obj[db]);
+    invariant(!obj[db]);
     obj[base]._database = this;
     this._objects.set(obj[base]._id, obj);
 
@@ -99,7 +99,6 @@ export class EchoDatabase {
       obj[base]._beforeBind();
 
       const snapshot = obj[base]._createSnapshot();
-
       const result = this._backend.mutate({
         objects: [
           {
@@ -114,7 +113,7 @@ export class EchoDatabase {
           },
         ],
       });
-      assert(result.objectsUpdated.length === 1);
+      invariant(result.objectsUpdated.length === 1);
 
       obj[base]._bind(result.objectsUpdated[0]);
     } finally {
@@ -130,6 +129,8 @@ export class EchoDatabase {
    * Remove object.
    */
   remove<T extends EchoObject>(obj: T) {
+    log('remove', { id: obj.id, type: (obj as any).__typename });
+
     this._backend.mutate({
       objects: [
         {
@@ -142,6 +143,16 @@ export class EchoDatabase {
         },
       ],
     });
+  }
+
+  /**
+   * Clone object from other database.
+   */
+  clone<T extends EchoObject>(obj: T) {
+    log('clone', { id: obj.id, type: (obj as any).__typename });
+
+    // TODO(burdon): Keep id.
+    this.add(obj);
   }
 
   /**
@@ -159,13 +170,6 @@ export class EchoDatabase {
   query(filter?: Filter<any>, options?: QueryOptions): Query;
   query(filter: Filter<any>, options?: QueryOptions): Query {
     return new Query(this._objects, this._updateEvent, filter, options);
-  }
-
-  /**
-   * @internal
-   */
-  _logObjectAccess(obj: EchoObject) {
-    logObjectAccess(obj);
   }
 
   private _update(changed: Item[]) {

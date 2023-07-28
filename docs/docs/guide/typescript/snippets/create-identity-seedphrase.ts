@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, generateSeedPhrase } from '@dxos/client';
+import { Client /*, generateSeedPhrase */ } from '@dxos/client';
 
 const client = new Client();
 

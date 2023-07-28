@@ -16,9 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
-    },
-    {
       "path": "../../../common/util"
     },
     {

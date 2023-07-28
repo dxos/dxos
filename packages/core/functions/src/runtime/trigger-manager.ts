@@ -5,10 +5,11 @@
 import assert from 'node:assert';
 
 import { DeferredTask } from '@dxos/async';
-import { Client, PublicKey, Space } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { createSubscription } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { createSubscription } from '@dxos/observable-object';
 import { ComplexMap } from '@dxos/util';
 
 import { FunctionTrigger } from '../function';
@@ -38,7 +39,7 @@ export class TriggerManager {
         await space.waitUntilReady();
         for (const trigger of this._triggers) {
           // TODO(burdon): New context? Shared?
-          await this.mount(new Context(), trigger, space);
+          await this.mount(new Context(), space, trigger);
         }
       }
     });
@@ -50,50 +51,57 @@ export class TriggerManager {
     }
   }
 
-  private async mount(ctx: Context, trigger: FunctionTrigger, space: Space) {
+  private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
     const key = { name: trigger.function, spaceKey: space.key };
     const exists = this._mounts.get(key);
     if (!exists) {
       this._mounts.set(key, { ctx, trigger });
+      log('mount', { space: space.key, trigger });
       if (ctx.disposed) {
         return;
       }
 
-      const updatedIds = new Set<string>();
+      // TODO(burdon): Why DeferredTask? How to pass objectIds to function?
+      const objectIds = new Set<string>();
       const task = new DeferredTask(ctx, async () => {
-        const updatedObjects = Array.from(updatedIds);
-        updatedIds.clear();
-
         await this.invokeFunction(this._invokeOptions, trigger.function, {
           space: space.key,
-          objects: updatedObjects,
+          objects: Array.from(objectIds),
         });
       });
 
-      const selection = createSubscription(({ added, updated }) => {
+      let count = 0;
+      const subscription = createSubscription(({ added, updated }) => {
         for (const object of added) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
         for (const object of updated) {
-          updatedIds.add(object.id);
+          objectIds.add(object.id);
         }
 
+        log('updated', {
+          trigger,
+          space: space.key,
+          objects: objectIds.size,
+          count,
+        });
+
         task.schedule();
+        count++;
       });
 
-      ctx.onDispose(() => selection.unsubscribe());
+      ctx.onDispose(() => subscription.unsubscribe());
 
-      const query = space.db.query({ ...trigger.subscription.props, '@type': trigger.subscription.type });
+      // TODO(burdon): DSL for query (replace props).
+      const query = space.db.query({ '@type': trigger.subscription.type, ...trigger.subscription.props });
       const unsubscribe = query.subscribe(({ objects }) => {
-        selection.update(objects);
+        subscription.update(objects);
       });
 
-      // TODO(burdon): Subscribe method option to trigger automatically (throughout codebase).
-      selection.update(query.objects);
+      // TODO(burdon): Option to trigger on first subscription.
+      // TODO(burdon): After restart not triggered.
 
-      ctx.onDispose(unsubscribe);
-
-      log('mounted', { trigger });
+      ctx.onDispose(() => unsubscribe());
     }
   }
 
@@ -124,14 +132,7 @@ export class TriggerManager {
 
       log('result', { function: functionName, result: await res.json() });
     } catch (err: any) {
-      log('error', { function: functionName, error: err.message });
+      log.error('error', { function: functionName, error: err.message });
     }
   }
 }
-
-export type MountTriggerParams = {
-  ctx: Context;
-  client: Client;
-  trigger: FunctionTrigger;
-  invokeOptions: InvokeOptions;
-};

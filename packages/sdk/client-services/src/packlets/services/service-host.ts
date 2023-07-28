@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, ClientServices, createDefaultModelFactory } from '@dxos/client-protocol';
+import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,6 +17,7 @@ import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
+import { TextModel } from '@dxos/text-model';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -30,6 +32,11 @@ import { SystemServiceImpl } from '../system';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
+// TODO(burdon): Factor out to spaces.
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
+};
+
 export type ClientServicesHostParams = {
   /**
    * Can be omitted if `initialize` is later called.
@@ -41,6 +48,11 @@ export type ClientServicesHostParams = {
   connectionLog?: boolean;
   storage?: Storage;
   lockKey?: string;
+  callbacks?: ClientServicesHostCallbacks;
+};
+
+export type ClientServicesHostCallbacks = {
+  onReset?: () => Promise<void>;
 };
 
 export type InitializeOptions = {
@@ -65,6 +77,7 @@ export class ClientServicesHost {
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
+  private _callbacks?: ClientServicesHostCallbacks;
 
   _serviceContext!: ServiceContext;
   private _opening = false;
@@ -80,9 +93,11 @@ export class ClientServicesHost {
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
+    callbacks,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
     this._modelFactory = modelFactory;
+    this._callbacks = callbacks;
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -150,10 +165,10 @@ export class ClientServicesHost {
    * Can only be called once.
    */
   initialize({ config, ...options }: InitializeOptions) {
-    assert(!this._open, 'service host is open');
+    invariant(!this._open, 'service host is open');
 
     if (config) {
-      assert(!this._config, 'config already set');
+      invariant(!this._config, 'config already set');
 
       this._config = config;
       if (!this._storage) {
@@ -170,7 +185,7 @@ export class ClientServicesHost {
     } = options;
     this._signalManager = signalManager;
 
-    assert(!this._networkManager, 'network manager already set');
+    invariant(!this._networkManager, 'network manager already set');
     this._networkManager = new NetworkManager({
       log: connectionLog,
       transportFactory,
@@ -187,10 +202,10 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
 
-    assert(this._config, 'config not set');
-    assert(this._storage, 'storage not set');
-    assert(this._signalManager, 'signal manager not set');
-    assert(this._networkManager, 'network manager not set');
+    invariant(this._config, 'config not set');
+    invariant(this._storage, 'storage not set');
+    invariant(this._signalManager, 'signal manager not set');
+    invariant(this._networkManager, 'network manager not set');
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
@@ -277,5 +292,6 @@ export class ClientServicesHost {
     await this._storage!.reset();
     log('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
+    await this._callbacks?.onReset?.();
   }
 }

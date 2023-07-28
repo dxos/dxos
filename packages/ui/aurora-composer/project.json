@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/ui/aurora-composer/src/index.ts",
         "outputPath": "packages/ui/aurora-composer/dist/types",
@@ -29,7 +29,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -55,10 +55,9 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "packages/ui/aurora-composer/.storybook",
-        "uiFramework": "@storybook/react"
+        "configDir": "packages/ui/aurora-composer/.storybook"
       }
     },
     "storybook:html": {
@@ -71,14 +70,13 @@
         "^compile",
         "prebuild"
       ],
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "inputs": [
         "^production",
         "production"
       ],
       "options": {
-        "configDir": "packages/ui/aurora-composer/.storybook/html",
-        "uiFramework": "@storybook/html"
+        "configDir": "packages/ui/aurora-composer/.storybook/html"
       }
     }
   },

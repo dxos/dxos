@@ -6,7 +6,8 @@ import React, { useEffect } from 'react';
 import { useRoutes } from 'react-router-dom';
 
 import { ManageSpacePage, RequireIdentity, useTelemetry } from '@dxos/react-appkit';
-import { useClient, useIdentity } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { SpacesLayout, SpaceLayout, SpaceSettingsLayout } from './layouts';
 import { SpacePage, SpacesPage } from './pages';

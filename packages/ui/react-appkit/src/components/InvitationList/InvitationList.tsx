@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { defaultDisabled, mx } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable } from '@dxos/client';
+import { staticDisabled, mx } from '@dxos/aurora-theme';
+import { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { Group } from '../Group';
 import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
@@ -26,7 +26,7 @@ export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove
       label={{
         level: 2,
         children: !empty ? t('invitations label') : t('empty invitations message'),
-        className: mx('text-xl', empty && defaultDisabled),
+        className: mx('text-xl', empty && staticDisabled),
       }}
       elevation='base'
     >

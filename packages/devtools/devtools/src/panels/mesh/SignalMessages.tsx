@@ -2,14 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import { format } from 'date-fns';
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
+import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Searchbar, Select } from '@dxos/react-appkit';
+import { PublicKey, useClient } from '@dxos/react-client';
+import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
 import { MasterDetailTable, Toolbar } from '../../components';
@@ -130,6 +135,21 @@ export type ViewType = (typeof views)[number]['id'];
 
 const getView = (id: ViewType): View<SignalResponse> => views.find((type) => type.id === id)!;
 
+// TODO(burdon): Factor out.
+const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: () => void }> = ({
+  connection,
+  onToggleConnection,
+}) => (
+  <Button title='Toggle connection state.' classNames='mli-2 p-0 px-2 items-center' onClick={onToggleConnection}>
+    {connection === ConnectionState.ONLINE ? (
+      <WifiHigh className={getSize(6)} />
+    ) : (
+      <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
+    )}
+    <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
+  </Button>
+);
+
 export type SignalMessagesProps = {
   messages?: SignalResponse[];
 };
@@ -140,6 +160,23 @@ export const SignalMessages = (props: SignalMessagesProps) => {
   const [search, setSearch] = useState('');
   const view = viewType ? getView(viewType) : undefined;
   const filteredMessages = getFilteredData(messages, view, search);
+
+  // TODO(burdon): Use services directly?
+  const client = useClient();
+  const { swarm: connectionState } = useNetworkStatus();
+  const handleToggleConnection = async () => {
+    switch (connectionState) {
+      case ConnectionState.OFFLINE: {
+        await client.mesh.updateConfig(ConnectionState.ONLINE);
+        break;
+      }
+
+      case ConnectionState.ONLINE: {
+        await client.mesh.updateConfig(ConnectionState.OFFLINE);
+        break;
+      }
+    }
+  };
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
@@ -152,6 +189,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
           ))}
         </Select>
         <Searchbar onSearch={setSearch} />
+        <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar>
 
       <div className='flex flex-1 overflow-hidden'>

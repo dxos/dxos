@@ -7,9 +7,8 @@ import React, { ReactNode } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
 import { Input } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
 
 import { getIcon } from '../../hooks';
 import { Intent, IntentAction } from '../../util';
@@ -22,7 +21,7 @@ export type SpaceItemProps = {
   onAction: (intent: Intent<SpaceListAction>) => void;
 };
 
-export const SpaceItem = observer(({ space, selected, children, onAction }: SpaceItemProps) => {
+export const SpaceItem = ({ space, selected, children, onAction }: SpaceItemProps) => {
   const { t } = useTranslation('kai');
   const Icon = getIcon(space.properties.icon);
 
@@ -85,4 +84,4 @@ export const SpaceItem = observer(({ space, selected, children, onAction }: Spac
       {selected && <div className='flex bg-paper-bg'>{children}</div>}
     </div>
   );
-});
+};

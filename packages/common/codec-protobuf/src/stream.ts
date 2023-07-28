@@ -2,13 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
-
-const log = debug('dxos:codec-protobuf:stream');
 
 type Callbacks<T> = {
   ctx: Context;
@@ -188,7 +186,7 @@ export class Stream<T> {
               throwUnhandledRejection(err);
             }
           } else {
-            assert(this._buffer);
+            invariant(this._buffer);
             this._buffer.push(msg);
           }
         },
@@ -229,9 +227,9 @@ export class Stream<T> {
 
   // TODO(burdon): Can this be cancelled?
   subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
-    assert(!this._messageHandler, 'Stream is already subscribed to.');
-    assert(!this._closeHandler, 'Stream is already subscribed to.');
-    assert(this._buffer); // Must be not-null.
+    invariant(!this._messageHandler, 'Stream is already subscribed to.');
+    invariant(!this._closeHandler, 'Stream is already subscribed to.');
+    invariant(this._buffer); // Must be not-null.
 
     for (const message of this._buffer) {
       try {
@@ -266,7 +264,7 @@ export class Stream<T> {
    * Registers a callback to be called when stream is ready.
    */
   onReady(onReady: () => void): void {
-    assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
+    invariant(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
 
     if (this._isReady) {

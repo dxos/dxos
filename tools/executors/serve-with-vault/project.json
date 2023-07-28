@@ -2,7 +2,7 @@
   "sourceRoot": "tools/executors/serve-with-vault/src",
   "targets": {
     "compile": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/executors/serve-with-vault/src/index.ts",
         "outputPath": "tools/executors/serve-with-vault/dist",
@@ -16,7 +16,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

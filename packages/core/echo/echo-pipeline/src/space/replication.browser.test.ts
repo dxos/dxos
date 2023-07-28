@@ -49,8 +49,8 @@ describe('replication', () => {
     });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
-    const stream1 = feed1.replicate(true, { live: true });
-    const stream2 = feed2.replicate(false, { live: true });
+    const stream1 = feed1.replicate(true, { live: true, noise: false, encrypted: false });
+    const stream2 = feed2.replicate(false, { live: true, noise: false, encrypted: false });
     stream1.pipe(stream2).pipe(stream1);
 
     await feed1.append({

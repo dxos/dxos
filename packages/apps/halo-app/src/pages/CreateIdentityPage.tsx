@@ -8,7 +8,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { Heading, SingleInputStep } from '@dxos/react-appkit';
-import { useClient, useIdentity } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 const CreateIdentityPage = () => {
   const { t } = useTranslation('appkit');

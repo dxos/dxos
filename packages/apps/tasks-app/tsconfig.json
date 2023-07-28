@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -28,12 +29,6 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

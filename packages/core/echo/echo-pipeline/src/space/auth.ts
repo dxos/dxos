@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { runInContext, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -67,9 +67,9 @@ export class AuthExtension extends RpcExtension<Services, Services> {
       try {
         const challenge = randomBytes(32);
         const { credential } = await this.rpc.AuthService.authenticate({ challenge });
-        assert(credential?.length > 0, 'invalid credential');
+        invariant(credential?.length > 0, 'invalid credential');
         const success = await this._authParams.verifier(challenge, credential);
-        assert(success, 'credential not verified');
+        invariant(success, 'credential not verified');
         runInContext(this._ctx, () => this._authParams.onAuthSuccess());
       } catch (err) {
         log('auth failed', err);

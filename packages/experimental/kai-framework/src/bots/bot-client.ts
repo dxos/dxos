@@ -3,16 +3,17 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { Client, clientServiceBundle, ClientServicesProvider, Invitation, Space } from '@dxos/client';
-import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/keys';
+import { clientServiceBundle } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
+import { Client, ClientServicesProvider, Config, PublicKey } from '@dxos/react-client';
+import { Space } from '@dxos/react-client/echo';
+import { Invitation } from '@dxos/react-client/invitations';
 import { exponentialBackoffInterval } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 // TODO(burdon): Factor out to separate package.
 
-// TODO(burdon): Copied from @dxos/bot-lab.
+// TODO(burdon): Copied from @dxos/kai-bots
 export const DX_BOT_SERVICE_PORT = 7100;
 export const DX_BOT_CONTAINER_RPC_PORT = 7400;
 

@@ -17,6 +17,7 @@ export default class Reset extends BaseCommand<typeof Reset> {
     ...BaseCommand.flags,
     force: Flags.boolean({
       description: 'Force delete.',
+      default: false,
     }),
   };
 
@@ -37,9 +38,9 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
     if (!dryRun) {
       // TODO(burdon): Problem if running manually.
-      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile));
+      await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile, { force: this.flags.force }));
 
-      this.warn('Deleting files...');
+      this.log(chalk`{red Deleting files...}`);
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
       });

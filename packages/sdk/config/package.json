@@ -28,15 +28,11 @@
     "test-build": "node ./src/testing/build.js"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
     "boolean": "^3.0.1",
-    "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
@@ -44,12 +40,11 @@
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
-    "webpack": "^5.75.0"
+    "webpack": "^5.88.2"
   },
   "publishConfig": {
     "access": "public"

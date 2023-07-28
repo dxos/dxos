@@ -7,10 +7,10 @@ import React, { FC, useCallback, useEffect } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { SpaceMember } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useMembers } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { useAppReducer, useAppRouter, useAppState } from '../../hooks';
 

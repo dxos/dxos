@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -54,9 +54,9 @@ export class MemberStateMachine {
    */
   async process(credential: Credential) {
     const assertion = getCredentialAssertion(credential);
-    assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
-    assert(assertion.spaceKey.equals(this._spaceKey));
-    assert(!this._members.has(credential.subject.id), `Duplicate SpaceMember credential: ${credential.subject.id}`);
+    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(assertion.spaceKey.equals(this._spaceKey));
+    invariant(!this._members.has(credential.subject.id), `Duplicate SpaceMember credential: ${credential.subject.id}`);
 
     const info: MemberInfo = {
       key: credential.subject.id,

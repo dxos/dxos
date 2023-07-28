@@ -9,8 +9,8 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import { Config, Defaults } from '@dxos/config';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+import { Config, Defaults } from '@dxos/react-client';
 
 import { Root, Todos } from './components';
 

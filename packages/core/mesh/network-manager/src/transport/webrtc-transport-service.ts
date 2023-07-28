@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
@@ -93,12 +93,12 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    assert(this.transports.has(proxyId));
+    invariant(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.transport.signal(signal);
   }
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
-    assert(this.transports.has(proxyId));
+    invariant(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.stream.push(payload);
   }
 

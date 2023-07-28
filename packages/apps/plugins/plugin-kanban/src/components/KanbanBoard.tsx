@@ -17,7 +17,7 @@ import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortabl
 import React, { FC, useEffect, useState } from 'react';
 
 import type { Kanban as KanbanType } from '@braneframe/types';
-import { createSubscription } from '@dxos/observable-object';
+import { createSubscription } from '@dxos/echo-schema';
 import { arrayMove } from '@dxos/util';
 
 import { findLocation } from '../props';
@@ -31,9 +31,12 @@ import { useSubscription } from './util';
 // TODO(burdon): Consistently use FC?
 export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const kanban = model.root;
+  // TODO(wittjosiah): Remove?
   useSubscription(kanban.columns);
 
+  // TODO(burdon): Remove since now uses ECHO.
   const [_, setIter] = useState([]);
+
   useEffect(() => {
     const handle = createSubscription(() => setIter([]));
     handle.update([kanban.columns]);
@@ -153,8 +156,8 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   };
 
   return (
-    <div className='flex overflow-x-scroll snap-x p-4 space-x-4'>
-      <div className='flex space-x-4'>
+    <div className='flex overflow-x-scroll'>
+      <div className='flex m-4 space-x-4 snap-x'>
         <DndContext
           sensors={[mouseSensor]}
           modifiers={[customModifier]}
@@ -182,9 +185,9 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
               <KanbanItemComponent item={draggingItem.source.item!} onDelete={() => {}} />
             </DragOverlay>
           )}
-        </DndContext>
 
-        {handleCreateColumn && <KanbanColumnComponentPlaceholder onAdd={handleCreateColumn} />}
+          {handleCreateColumn && <KanbanColumnComponentPlaceholder onAdd={handleCreateColumn} />}
+        </DndContext>
       </div>
     </div>
   );

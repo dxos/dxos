@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { useContacts } from '@dxos/react-client';
+import { useContacts } from '@dxos/react-client/halo';
 
 import { Table } from '../util';
 

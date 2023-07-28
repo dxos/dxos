@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, sleep, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
@@ -36,6 +36,11 @@ export type WaitUntilReachedTargetParams = {
  * External state accessor.
  */
 export class PipelineState {
+  /**
+   * @internal
+   */
+  _ctx = new Context();
+
   // TODO(dmaretskyi): Remove?.
   public readonly timeframeUpdate = this._timeframeClock.update;
 
@@ -51,7 +56,10 @@ export class PipelineState {
    */
   private _targetTimeframe: Timeframe | undefined;
 
-  private _reachedTargetPromise: Promise<void> | undefined;
+  /**
+   * @internal
+   */
+  _reachedTargetPromise: Promise<void> | undefined;
 
   // prettier-ignore
   constructor(
@@ -133,6 +141,7 @@ export class PipelineState {
     if (timeout) {
       return Promise.race([
         rejectOnDispose(ctx),
+        rejectOnDispose(this._ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
         }),
@@ -224,7 +233,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   get writer(): FeedWriter<FeedMessage.Payload> {
-    assert(this._writer, 'Writer not set.');
+    invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
 
@@ -247,8 +256,8 @@ export class Pipeline implements PipelineAccessor {
   }
 
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._writer, 'Writer already set.');
-    assert(feed.properties.writable, 'Feed must be writable.');
+    invariant(!this._writer, 'Writer already set.');
+    invariant(feed.properties.writable, 'Feed must be writable.');
 
     this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
       (payload: FeedMessage.Payload) => ({
@@ -274,6 +283,9 @@ export class Pipeline implements PipelineAccessor {
     this._isStopping = true;
     await this._feedSetIterator?.close();
     await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
+    await this._state._ctx.dispose();
+    this._state._ctx = new Context();
+    this._state._reachedTargetPromise = undefined;
     log('stopped');
     this._isStarted = false;
   }
@@ -283,7 +295,7 @@ export class Pipeline implements PipelineAccessor {
    */
   @synchronized
   async setCursor(timeframe: Timeframe) {
-    assert(!this._isStarted || this._isPaused, 'Invalid state.');
+    invariant(!this._isStarted || this._isPaused, 'Invalid state.');
 
     this._state._startTimeframe = timeframe;
     this._timeframeClock.setTimeframe(timeframe);
@@ -305,7 +317,7 @@ export class Pipeline implements PipelineAccessor {
    */
   @synchronized
   async pause() {
-    assert(this._isStarted, 'Pipeline is not open.');
+    invariant(this._isStarted, 'Pipeline is not open.');
     if (this._isPaused) {
       return;
     }
@@ -317,8 +329,8 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async unpause() {
-    assert(this._isStarted, 'Pipeline is not open.');
-    assert(this._isPaused, 'Pipeline is not paused.');
+    invariant(this._isStarted, 'Pipeline is not open.');
+    invariant(this._isPaused, 'Pipeline is not paused.');
 
     this._pauseTrigger.wake();
     this._isPaused = false;
@@ -329,10 +341,10 @@ export class Pipeline implements PipelineAccessor {
    * Updates the timeframe clock after the message has bee processed.
    */
   async *consume(): AsyncIterable<FeedMessageBlock> {
-    assert(!this._isOpen, 'Pipeline is already being consumed.');
+    invariant(!this._isOpen, 'Pipeline is already being consumed.');
     this._isOpen = true;
 
-    assert(this._feedSetIterator, 'Iterator not initialized.');
+    invariant(this._feedSetIterator, 'Iterator not initialized.');
     let lastFeedSetIterator = this._feedSetIterator;
     let iterable = lastFeedSetIterator[Symbol.asyncIterator]();
 
@@ -341,7 +353,7 @@ export class Pipeline implements PipelineAccessor {
 
       // Iterator might have been changed while we were waiting for the processing to complete.
       if (lastFeedSetIterator !== this._feedSetIterator) {
-        assert(this._feedSetIterator, 'Iterator not initialized.');
+        invariant(this._feedSetIterator, 'Iterator not initialized.');
         lastFeedSetIterator = this._feedSetIterator;
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }

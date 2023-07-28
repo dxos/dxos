@@ -9,7 +9,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
@@ -33,6 +34,16 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          dxos: ['@dxos/react-client'],
+          aurora: ['@dxos/react-appkit', '@dxos/aurora', '@dxos/aurora-theme'],
+          editor: ['@dxos/aurora-composer'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
@@ -48,14 +59,12 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-*/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
@@ -102,5 +111,26 @@ export default defineConfig({
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
       dryRun: process.env.DX_ENVIRONMENT !== 'production',
     }),
+    // https://www.bundle-buddy.com/rollup
+    {
+      name: 'bundle-buddy',
+      buildEnd() {
+        const deps: { source: string; target: string }[] = [];
+        for (const id of this.getModuleIds()) {
+          const m = this.getModuleInfo(id);
+          if (m != null && !m.isExternal) {
+            for (const target of m.importedIds) {
+              deps.push({ source: m.id, target });
+            }
+          }
+        }
+
+        const outDir = join(__dirname, 'out');
+        if (!existsSync(outDir)) {
+          mkdirSync(outDir);
+        }
+        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+      },
+    },
   ],
 });

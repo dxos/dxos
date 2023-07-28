@@ -5,8 +5,8 @@
 import { Box, Text, useStdout } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationEncoder, Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
+import { InvitationEncoder, Invitation, CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { clear, copyToClipboard } from '../../util';
 import { ActionStatus, StatusState } from '../util';

@@ -7,11 +7,10 @@ import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Text } from '@dxos/client';
 import { Note, NoteBoard } from '@dxos/kai-types';
 import { Grid, GridLayout, GridLensModel, Item, Location } from '@dxos/mosaic';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { useQuery, useSubscription } from '@dxos/react-client';
+import { Text, useQuery, useSubscription } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 import { NoteTile } from './NoteTile';
@@ -69,6 +68,7 @@ export const NoteFrame = () => {
 
   // Update layout on change.
   const [items, setItems] = useState<Item<Note>[]>([]);
+  // TODO(wittjosiah): Remove?
   useSubscription(() => {
     // TODO(burdon): Board is stale (undefined -- even though set below).
     if (board) {

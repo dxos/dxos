@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, logger, runExecutor } from '@nx/devkit';
 import chalk from 'chalk';
 import { resolve } from 'node:path';
 

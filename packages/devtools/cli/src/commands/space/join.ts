@@ -6,7 +6,8 @@ import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import assert from 'node:assert';
 
-import { Client, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
 import { acceptInvitation, mapMembers, printMembers } from '../../util';
@@ -55,6 +56,7 @@ export default class Join extends BaseCommand<typeof Join> {
 
       assert(invitation.spaceKey);
       const space = client.getSpace(invitation.spaceKey)!;
+      await space.waitUntilReady();
       const members = space.members.get();
       if (!json) {
         printMembers(members);

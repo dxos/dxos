@@ -93,9 +93,25 @@ declare module 'forever' {
 
   // TODO(mykola): Get full ForeverProcess type.
   export type ForeverProcess = {
+    args: string[];
+    command: string;
+    cwd: string;
+    ctime: number;
+    errFile: string;
+    file: string;
     foreverPid: number;
-    uid: string;
+    id: string;
+    isMaster: boolean;
+    logFile: string;
+    outFile: string;
+    pid: number;
+    pidFile: string;
+    restarts: number;
     running: boolean;
+    silent: boolean;
+    socket: string;
+    spawnWith: string;
+    uid: string;
   };
 
   /**
@@ -106,4 +122,6 @@ declare module 'forever' {
   export const list: (format: boolean, callback: (err: Error, processes: ForeverProcess[]) => void) => void;
 
   export const kill: (pid: number, killTree?: boolean, signal?: string, callback?: () => any) => void;
+
+  export const cleanUp: (cleanUpLogs: boolean, allowManager: boolean) => void;
 }

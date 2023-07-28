@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Counter } from './Counter';
 

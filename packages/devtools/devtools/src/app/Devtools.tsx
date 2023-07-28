@@ -6,9 +6,8 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { DensityProvider } from '@dxos/aurora';
-import { ClientServices } from '@dxos/client';
-import { appkitTranslations, Fallback, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
-import { Client, ClientContext } from '@dxos/react-client';
+import { appkitTranslations, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
+import { ClientServices, Client, ClientContext } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as telemetryNamespace } from '../hooks';
@@ -30,7 +29,8 @@ export const Devtools = ({
   context?: { client: Client; services?: ClientServices };
   namespace?: string;
 }) => {
-  const fallback = <Fallback message='Loading...' />;
+  // const fallback = <Fallback message='Loading...' />;
+  const fallback = null;
   if (!context) {
     return fallback;
   }

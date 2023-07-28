@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Button, useSidebar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { FrameDef, useFrameRegistry } from '@dxos/kai-frames';
-import { SpaceState } from '@dxos/react-client';
+import { SpaceState } from '@dxos/react-client/echo';
 
 import { AppMenu, BotManager, Surface, MetagraphPanel } from '../containers';
 import { Section, useAppRouter, useAppState, useTheme } from '../hooks';

@@ -8,8 +8,6 @@
         "bundlePackages": [
           "assert",
           "available-typed-arrays",
-          "base64-js",
-          "buffer",
           "call-bind",
           "define-properties",
           "es-abstract",
@@ -22,7 +20,6 @@
           "has-property-descriptors",
           "has-symbols",
           "has-tostringtag",
-          "ieee754",
           "inherits",
           "is-arguments",
           "is-callable",
@@ -33,8 +30,6 @@
           "object-keys",
           "path-browserify",
           "process",
-          "readable-stream",
-          "safe-buffer",
           "string_decoder",
           "util",
           "util-deprecate",
@@ -60,7 +55,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

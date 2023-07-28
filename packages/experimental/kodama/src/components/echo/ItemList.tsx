@@ -4,8 +4,8 @@
 
 import { FC } from 'react';
 
-import { Space } from '@dxos/client';
 import { todo } from '@dxos/debug';
+import { Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): To make compatable with kitchen-sink/client-test.
 // const LABEL_PROPERTY = 'name';

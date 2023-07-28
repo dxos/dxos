@@ -5,7 +5,8 @@
 import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { InvitationEncoder } from '@dxos/client/invitations';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
@@ -28,6 +29,8 @@ export default class Invite extends BaseCommand<typeof Invite> {
       if (!space) {
         throw new Error(`Invalid key: ${truncateKey(key)}`);
       }
+
+      await space.waitUntilReady();
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({

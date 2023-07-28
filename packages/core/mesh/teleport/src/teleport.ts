@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -53,17 +53,17 @@ export class Teleport {
   private _open = false;
 
   constructor({ initiator, localPeerId, remotePeerId }: TeleportParams) {
-    assert(typeof initiator === 'boolean');
-    assert(PublicKey.isPublicKey(localPeerId));
-    assert(PublicKey.isPublicKey(remotePeerId));
-    assert(typeof initiator === 'boolean');
+    invariant(typeof initiator === 'boolean');
+    invariant(PublicKey.isPublicKey(localPeerId));
+    invariant(PublicKey.isPublicKey(remotePeerId));
+    invariant(typeof initiator === 'boolean');
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
 
     this._control.onExtensionRegistered.set(async (name) => {
       log('remote extension', { name });
-      assert(!this._remoteExtensions.has(name), 'Remote extension already exists');
+      invariant(!this._remoteExtensions.has(name), 'Remote extension already exists');
       this._remoteExtensions.add(name);
 
       if (this._extensions.has(name)) {
@@ -158,8 +158,8 @@ export class Teleport {
   }
 
   private _setExtension(extensionName: string, extension: TeleportExtension) {
-    assert(!extensionName.includes('/'), 'Invalid extension name');
-    assert(!this._extensions.has(extensionName), 'Extension already exists');
+    invariant(!extensionName.includes('/'), 'Invalid extension name');
+    invariant(!this._extensions.has(extensionName), 'Extension already exists');
     this._extensions.set(extensionName, extension);
   }
 
@@ -172,11 +172,11 @@ export class Teleport {
       localPeerId: this.localPeerId,
       remotePeerId: this.remotePeerId,
       createPort: async (channelName: string, opts?: CreateChannelOpts) => {
-        assert(!channelName.includes('/'), 'Invalid channel name');
+        invariant(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createPort(`${extensionName}/${channelName}`, opts);
       },
       createStream: async (channelName: string, opts?: CreateChannelOpts) => {
-        assert(!channelName.includes('/'), 'Invalid channel name');
+        invariant(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createStream(`${extensionName}/${channelName}`, opts);
       },
       close: (err) => {

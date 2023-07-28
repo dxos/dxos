@@ -5,7 +5,7 @@
 import React, { FC, useEffect, useRef } from 'react';
 
 import { Contact } from '@dxos/kai-types';
-import { Space, useQuery } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext } from '../../hooks';

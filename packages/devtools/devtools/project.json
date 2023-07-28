@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/devtools/devtools/src/index.ts",
         "outputPath": "packages/devtools/devtools/dist/types",
@@ -19,7 +19,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "options": {
         "configDir": "packages/devtools/devtools/.storybook",
         "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
@@ -30,7 +30,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/devtools/devtools/out/devtools"
       },
@@ -51,7 +51,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -63,7 +63,7 @@
       ]
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "devtools:bundle"
       }
@@ -77,7 +77,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/devtools/devtools/.storybook",
         "uiFramework": "@storybook/react"

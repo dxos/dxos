@@ -5,8 +5,8 @@
 import { Cards as NoteIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Space } from '@dxos/client';
 import { NoteBoard } from '@dxos/kai-types';
+import { Space } from '@dxos/react-client/echo';
 
 import { FrameRuntime } from '../../registry';
 

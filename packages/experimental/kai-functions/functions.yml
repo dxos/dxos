@@ -1,12 +1,18 @@
 functions:
-  hello:
-    description: Test function.
-
   chess:
-    description: Chess bot.
+    description: "Chess bot."
 
-# TODO(dmaretskyi): Extract to separate file (dev only)?
+  chatgpt:
+    description: "Chat GPT."
+
+  hello:
+    description: "Test function."
+
 triggers:
   - function: chess
     subscription:
       type: dxos.experimental.chess.Game
+
+  - function: chatgpt
+    subscription:
+      type: braneframe.Thread.Block

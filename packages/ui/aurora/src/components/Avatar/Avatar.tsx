@@ -187,11 +187,11 @@ const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delay
   );
 });
 
+const getJdenticonHref = (value: string, size: Size) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`;
+
 const useJdenticonHref = (value: string, size: Size) => {
-  return useMemo(
-    () => `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`,
-    [value],
-  );
+  return useMemo(() => getJdenticonHref(value, size), [value]);
 };
 
 export const Avatar = {
@@ -203,7 +203,7 @@ export const Avatar = {
   Description: AvatarDescription,
 };
 
-export { useJdenticonHref, useAvatarContext };
+export { useJdenticonHref, useAvatarContext, getJdenticonHref };
 
 export type {
   AvatarStatus,

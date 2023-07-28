@@ -28,7 +28,6 @@ window.addEventListener('message', (event) => {
   }
 
   const message = event.data;
-
   if (typeof message !== 'object' || message === null || message.source !== 'dxos-client') {
     return;
   }

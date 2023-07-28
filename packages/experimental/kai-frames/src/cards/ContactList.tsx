@@ -7,10 +7,9 @@ import React, { FC } from 'react';
 
 import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
 import { Address, Contact } from '@dxos/kai-types';
 import { Input } from '@dxos/react-appkit';
-import { useQuery, observer } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 export const ContactList: FC<{ space: Space }> = ({ space }) => {
   const contacts: Contact[] = useQuery(space, Contact.filter());
@@ -24,7 +23,7 @@ export const ContactList: FC<{ space: Space }> = ({ space }) => {
   );
 };
 
-export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) => {
+export const ContactListItem: FC<{ contact: Contact }> = ({ contact }) => {
   const address = (address: Address) => `${address.city}, ${address.state} ${address.zip}`;
 
   return (
@@ -51,4 +50,4 @@ export const ContactListItem: FC<{ contact: Contact }> = observer(({ contact }) 
       </ListItem.Heading>
     </ListItem.Root>
   );
-});
+};

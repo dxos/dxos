@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/client/echo';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
 export class Task extends TypedObject {
-  static readonly type = schema.getType('example.tasks.Task');
+  static readonly type: ReturnType<typeof schema.getType> = schema.getType('example.tasks.Task');
 
   static filter(opts?: {
     title?: string;

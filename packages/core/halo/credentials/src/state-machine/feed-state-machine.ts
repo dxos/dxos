@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -48,8 +48,8 @@ export class FeedStateMachine {
    */
   async process(credential: Credential, fromFeed: PublicKey) {
     const assertion = getCredentialAssertion(credential);
-    assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
-    assert(assertion.spaceKey.equals(this._spaceKey));
+    invariant(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
+    invariant(assertion.spaceKey.equals(this._spaceKey));
 
     const info: FeedInfo = {
       key: credential.subject.id,

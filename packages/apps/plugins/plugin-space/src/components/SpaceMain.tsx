@@ -7,15 +7,23 @@ import React, { FC } from 'react';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
-import { observer } from '@dxos/observable-object/react';
-import { isTypedObject, SpaceProxy, useIdentity } from '@dxos/react-client';
+import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Surface } from '@dxos/react-surface';
 
-export const isDocument = (datum: unknown): datum is Document =>
-  isTypedObject(datum) && Document.type.name === datum.__typename;
+export const isDocument = (data: unknown): data is Document =>
+  isTypedObject(data) && Document.type.name === data.__typename;
 
-export const SpaceMain: FC<{ data: unknown }> = observer(({ data }) => {
-  const [parentNode, childNode] = Array.isArray(data) && isGraphNode(data[0]) && isGraphNode(data[1]) ? data : [];
+export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
+  const [parentNode, childNode] =
+    data &&
+    typeof data === 'object' &&
+    'active' in data &&
+    Array.isArray(data.active) &&
+    isGraphNode(data.active[0]) &&
+    isGraphNode(data.active[1])
+      ? [data.active[0], data.active[1]]
+      : [];
   const identity = useIdentity();
 
   // TODO(wittjosiah): Factor out.
@@ -26,12 +34,14 @@ export const SpaceMain: FC<{ data: unknown }> = observer(({ data }) => {
   });
 
   const transformedData = textModel
-    ? [textModel, childNode!.data]
-    : parentNode
-    ? childNode
-      ? [parentNode.data, childNode.data]
-      : [parentNode.data]
+    ? { composer: textModel, properties: childNode!.data }
+    : parentNode?.data instanceof SpaceProxy
+    ? isTypedObject(childNode?.data)
+      ? { space: parentNode.data, object: childNode!.data }
+      : childNode
+      ? { space: parentNode.data, node: childNode }
+      : { space: parentNode.data }
     : null;
 
   return <Surface data={transformedData} role='main' />;
-});
+};

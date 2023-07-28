@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import { DecoratorFunction } from '@storybook/csf';
 import { ReactRenderer } from '@storybook/react';
@@ -11,6 +10,8 @@ import React from 'react';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { mx } from '@dxos/aurora-theme';
 import { PluginContextProvider, Surface } from '@dxos/react-surface';
+
+import '@dxosTheme';
 
 import { KanbanPlugin } from '../KanbanPlugin';
 import { createKanban } from './testing';
@@ -34,7 +35,7 @@ const DefaultKanbanPluginStory = () => {
 
 const KanbanPluginStoryPlugin = () => ({
   meta: {
-    id: 'dxos.org/plugin/KanbanPluginStoryPlugin', // TODO(burdon): Consistent GUID? (see stack).
+    id: 'dxos.org/plugin/kanban-story',
   },
   provides: {
     components: {

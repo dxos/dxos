@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { WithTypeUrl } from '@dxos/codec-protobuf';
@@ -55,7 +55,7 @@ export class Presence {
   // remotePeerId -> PresenceExtension
 
   constructor(private readonly _params: PresenceParams) {
-    assert(
+    invariant(
       this._params.announceInterval < this._params.offlineTimeout,
       'Announce interval should be less than offline timeout.',
     );
@@ -109,7 +109,7 @@ export class Presence {
   }
 
   private _receiveAnnounces(message: GossipMessage) {
-    assert(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
+    invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
     const oldPeerState = this._peerStates.get(message.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
       this._peerStates.set(message.peerId, message);

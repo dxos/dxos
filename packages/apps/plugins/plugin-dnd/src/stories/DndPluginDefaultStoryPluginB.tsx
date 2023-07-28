@@ -3,15 +3,16 @@
 //
 
 import { useDroppable } from '@dnd-kit/core';
+import { deepSignal } from 'deepsignal/react';
 import React, { useContext, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { createStore } from '@dxos/observable-object';
+import { PluginDefinition } from '@dxos/react-surface';
 
 import { useDnd, useDragEnd, useDragOver } from '../DndPlugin';
 import { DndPluginStoryPluginContext, StoryItem } from './DndPluginDefaultStoryPlugin';
 
-const store = createStore<{ items: StoryItem[] }>({ items: [] });
+const state = deepSignal<{ items: StoryItem[] }>({ items: [] });
 
 const droppableId = 'dndPluginDefaultStoryPluginB';
 
@@ -33,12 +34,12 @@ const DndPluginDefaultStoryPluginBDefault = () => {
   useDragEnd(
     ({ active, over }) => {
       if (over?.id === droppableId) {
-        const inStore = store.items.findIndex(({ id }) => id === active.id) >= 0;
+        const inStore = state.items.findIndex(({ id }) => id === active.id) >= 0;
         if (!inStore) {
           const item = allItems.find(({ id }) => id === active.id);
           if (item && item.type === 'fruit') {
             dnd.overlayDropAnimation = 'into';
-            item && store.items.splice(store.items.length, 0, item);
+            item && state.items.splice(state.items.length, 0, item);
             setIter([]);
           } else {
             dnd.overlayDropAnimation = 'away';
@@ -52,7 +53,7 @@ const DndPluginDefaultStoryPluginBDefault = () => {
 
   useDragOver(({ active, over }) => {
     if (over?.id === droppableId) {
-      const inStore = store.items.findIndex(({ id }) => id === active.id) >= 0;
+      const inStore = state.items.findIndex(({ id }) => id === active.id) >= 0;
       if (!inStore) {
         const item = allItems.find(({ id }) => id === active.id);
         if (item && item.type === 'fruit') {
@@ -68,7 +69,7 @@ const DndPluginDefaultStoryPluginBDefault = () => {
       className={mx('flex-1 p-2 min-is-[300px] rounded-xl border-dashed border border-neutral-500/50 pli-4')}
       ref={setNodeRef}
     >
-      {store.items.map((item) => {
+      {state.items.map((item) => {
         return <DescribedStoryItem key={item.id} item={item} />;
       })}
       {<DescribedStoryItem item={preview ?? undefined} preview />}
@@ -76,13 +77,13 @@ const DndPluginDefaultStoryPluginBDefault = () => {
   );
 };
 
-export const DndPluginDefaultStoryPluginB = () => {
+export const DndPluginDefaultStoryPluginB = (): PluginDefinition => {
   return {
     meta: {
-      id: 'dxos:dndPluginDefaultStoryPluginB',
+      id: 'example.com/plugin/dndPluginDefaultStoryPluginB',
     },
     provides: {
-      component: (datum: unknown, role?: string) => {
+      component: (data, role) => {
         if (role === 'dndpluginstory') {
           return DndPluginDefaultStoryPluginBDefault;
         } else {

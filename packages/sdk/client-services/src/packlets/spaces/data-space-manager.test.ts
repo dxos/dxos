@@ -5,38 +5,30 @@
 import { expect } from 'chai';
 import path from 'node:path';
 
-import { latch } from '@dxos/async';
+import { asyncTimeout, latch } from '@dxos/async';
 import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus, DataServiceSubscriptions } from '@dxos/echo-pipeline';
+import { AuthStatus } from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { createSigningContext, TestBuilder, syncItemsLocal } from '../testing';
-import { DataSpaceManager } from './data-space-manager';
+import { TestBuilder, syncItemsLocal } from '../testing';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {
     const builder = new TestBuilder();
 
     const peer = builder.createPeer();
-    const identity = await createSigningContext(peer.keyring);
-    const dataSpaceManager = new DataSpaceManager(
-      peer.spaceManager,
-      peer.metadataStore,
-      new DataServiceSubscriptions(),
-      peer.keyring,
-      identity,
-      peer.feedStore,
-    );
-    await dataSpaceManager.open();
-    afterTest(() => dataSpaceManager.close());
-    const space = await dataSpaceManager.createSpace();
+    await peer.createIdentity();
+    await openAndClose(peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace();
 
     // Process all written mutations.
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
@@ -51,62 +43,44 @@ describe('DataSpaceManager', () => {
     const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
-    const identity1 = await createSigningContext(peer1.keyring);
-    const dataSpaceManager1 = new DataSpaceManager(
-      peer1.spaceManager,
-      peer1.metadataStore,
-      new DataServiceSubscriptions(),
-      peer1.keyring,
-      identity1,
-      peer1.feedStore,
-    );
-    await dataSpaceManager1.open();
-    afterTest(() => dataSpaceManager1.close());
+    await peer1.createIdentity();
 
     const peer2 = builder.createPeer();
-    const identity2 = await createSigningContext(peer2.keyring);
-    const dataSpaceManager2 = new DataSpaceManager(
-      peer2.spaceManager,
-      peer2.metadataStore,
-      new DataServiceSubscriptions(),
-      peer2.keyring,
-      identity2,
-      peer2.feedStore,
-    );
-    await dataSpaceManager2.open();
-    afterTest(() => dataSpaceManager2.close());
+    await peer2.createIdentity();
 
-    const space1 = await dataSpaceManager1.createSpace();
+    await openAndClose(peer1.dataSpaceManager, peer2.dataSpaceManager);
+
+    const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
       await createAdmissionCredentials(
-        identity1.credentialSigner,
-        identity2.identityKey,
+        peer1.identity.credentialSigner,
+        peer2.identity.identityKey,
         space1.key,
         space1.inner.genesisFeedKey,
       ),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await dataSpaceManager2.acceptSpace({
+    const space2 = await peer2.dataSpaceManager.acceptSpace({
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
-    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
 
     log('', {
       peer1: {
-        identity: identity1.identityKey,
-        device: identity1.deviceKey,
+        identity: peer1.identity.identityKey,
+        device: peer1.identity.deviceKey,
         control: space1.inner.controlFeedKey,
         data: space1.inner.dataFeedKey,
       },
       peer2: {
-        identity: identity2.identityKey,
-        device: identity2.deviceKey,
+        identity: peer2.identity.identityKey,
+        device: peer2.identity.deviceKey,
         control: space2.inner.controlFeedKey,
         data: space2.inner.dataFeedKey,
       },
@@ -129,64 +103,47 @@ describe('DataSpaceManager', () => {
 
     await syncItemsLocal(space1.dataPipeline, space2.dataPipeline);
 
-    expect(space1.inner.protocol.sessions.get(identity2.deviceKey)).to.exist;
-    expect(space1.inner.protocol.sessions.get(identity2.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
-    expect(space2.inner.protocol.sessions.get(identity1.deviceKey)).to.exist;
-    expect(space2.inner.protocol.sessions.get(identity1.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)).to.exist;
+    expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+    expect(space2.inner.protocol.sessions.get(peer1.identity.deviceKey)).to.exist;
+    expect(space2.inner.protocol.sessions.get(peer1.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
   });
 
   test('pub/sub API', async () => {
     const builder = new TestBuilder();
 
     const peer1 = builder.createPeer();
-    const identity1 = await createSigningContext(peer1.keyring);
-    const dataSpaceManager1 = new DataSpaceManager(
-      peer1.spaceManager,
-      peer1.metadataStore,
-      new DataServiceSubscriptions(),
-      peer1.keyring,
-      identity1,
-      peer1.feedStore,
-    );
-    await dataSpaceManager1.open();
-    afterTest(() => dataSpaceManager1.close());
+    await peer1.createIdentity();
 
     const peer2 = builder.createPeer();
-    const identity2 = await createSigningContext(peer2.keyring);
-    const dataSpaceManager2 = new DataSpaceManager(
-      peer2.spaceManager,
-      peer2.metadataStore,
-      new DataServiceSubscriptions(),
-      peer2.keyring,
-      identity2,
-      peer2.feedStore,
-    );
-    await dataSpaceManager2.open();
-    afterTest(() => dataSpaceManager2.close());
+    await peer2.createIdentity();
+    await peer2.dataSpaceManager.open();
 
-    const space1 = await dataSpaceManager1.createSpace();
+    await openAndClose(peer1.dataSpaceManager, peer2.dataSpaceManager);
+
+    const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
     await writeMessages(
       space1.inner.controlPipeline.writer,
       await createAdmissionCredentials(
-        identity1.credentialSigner,
-        identity2.identityKey,
+        peer1.identity.credentialSigner,
+        peer2.identity.identityKey,
         space1.key,
         space1.inner.genesisFeedKey,
       ),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await dataSpaceManager2.acceptSpace({
+    const space2 = await peer2.dataSpaceManager.acceptSpace({
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
 
     // Coincidentally, this also waits until a P2P connection is established between peers.
     // TODO(dmaretskyi): Refine this to wait for connection specifically.
-    await dataSpaceManager2.waitUntilSpaceReady(space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
 
     const [receivedMessage, inc] = latch({ count: 1 });
     space2.listen('test', (message) => {
@@ -206,18 +163,9 @@ describe('DataSpaceManager', () => {
       const peer = builder.createPeer({
         storageType: typeof window === 'undefined' ? StorageType.NODE : StorageType.WEBFS,
       });
-      const identity = await createSigningContext(peer.keyring);
-      const dataSpaceManager = new DataSpaceManager(
-        peer.spaceManager,
-        peer.metadataStore,
-        new DataServiceSubscriptions(),
-        peer.keyring,
-        identity,
-        peer.feedStore,
-      );
-      await dataSpaceManager.open();
-      afterTest(() => dataSpaceManager.close());
-      const space = await dataSpaceManager.createSpace();
+      await peer.createIdentity();
+      await openAndClose(peer.dataSpaceManager);
+      const space = await peer.dataSpaceManager.createSpace();
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
       const feedDataPath = path.join(space.inner.dataPipeline.pipelineState!.feeds[0].key.toHex(), 'data');
@@ -241,24 +189,14 @@ describe('DataSpaceManager', () => {
       afterTest(async () => builder.destroy());
 
       const peer = builder.createPeer();
-      const identity = await createSigningContext(peer.keyring);
+      await peer.createIdentity();
       const epochsNumber = 10;
-      const dataService = new DataServiceSubscriptions();
       let spaceKey: PublicKey;
       {
         // Create space and create epochs in it.s
-        const dataSpaceManager = new DataSpaceManager(
-          peer.spaceManager,
-          peer.metadataStore,
-          dataService,
-          peer.keyring,
-          identity,
-          peer.feedStore,
-        );
-        await dataSpaceManager.open();
-        afterTest(() => dataSpaceManager.close());
+        await openAndClose(peer.dataSpaceManager);
 
-        const space = await dataSpaceManager.createSpace();
+        const space = await peer.dataSpaceManager.createSpace();
         spaceKey = space.key;
         await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
@@ -267,22 +205,14 @@ describe('DataSpaceManager', () => {
           await space.createEpoch();
         }
         await space.close();
-        await dataSpaceManager.close();
+        await peer.dataSpaceManager.close();
+        peer.props.dataSpaceManager = undefined;
       }
       {
         // Load same space and check if it loads only last epoch.s
-        const dataSpaceManager = new DataSpaceManager(
-          peer.spaceManager,
-          peer.metadataStore,
-          dataService,
-          peer.keyring,
-          identity,
-          peer.feedStore,
-        );
-        await dataSpaceManager.open();
-        afterTest(() => dataSpaceManager.close());
+        await openAndClose(peer.dataSpaceManager);
 
-        const space = dataSpaceManager.spaces.get(spaceKey)!;
+        const space = peer.dataSpaceManager.spaces.get(spaceKey)!;
 
         const epochs: number[] = [];
         space.dataPipeline.onNewEpoch.on((epoch: SpecificCredential<Epoch>) => {
@@ -295,6 +225,30 @@ describe('DataSpaceManager', () => {
         await processedFirstEpoch;
         expect(epochs).to.deep.equal([epochsNumber]);
       }
+    });
+  });
+
+  describe('activation', () => {
+    test('can activate and deactivate a space', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      expect(space.state).to.equal(SpaceState.READY);
+
+      await space.deactivate();
+      expect(space.state).to.equal(SpaceState.INACTIVE);
+
+      await space.activate();
+      await asyncTimeout(
+        space.stateUpdate.waitForCondition(() => space.state === SpaceState.READY),
+        500,
+      );
+      await testLocalDatabase(space.dataPipeline);
     });
   });
 });

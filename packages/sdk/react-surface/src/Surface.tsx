@@ -4,6 +4,7 @@
 
 import React, { FC, PropsWithChildren, createContext, useContext } from 'react';
 
+import { ErrorBoundary } from './ErrorBoundary';
 import { Plugin } from './Plugin';
 import { usePluginContext } from './PluginContext';
 
@@ -13,6 +14,7 @@ export type SurfaceProps = PropsWithChildren<{
   name?: string;
   data?: any;
   component?: string | string[];
+  fallback?: ErrorBoundary['props']['fallback'];
   role?: string;
   surfaces?: Record<string, Partial<SurfaceProps>>;
   limit?: number | undefined;
@@ -29,7 +31,7 @@ const SurfaceContext = createContext<SurfaceContextValue | null>(null);
 export const useSurfaceContext = () => useContext(SurfaceContext);
 
 // If component is specified in props or context, grab a component by name.
-// Otherwise iterate through plugins where plugin.provides.component(datum) returns something.
+// Otherwise iterate through plugins where plugin.provides.component(data) returns something.
 const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
   const componentName = props.component ?? (props.name && context?.surfaces?.[props.name]?.component);
   const data = props.data ?? (props.name && context?.surfaces?.[props.name]?.data);
@@ -75,11 +77,32 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
 };
 
 const findComponent = (plugins: Plugin[], name: string): FC<PropsWithChildren<any>> | undefined => {
-  const [pluginId, componentId] = name.split('/');
-  return plugins.find((plugin) => plugin.meta.id === pluginId)?.provides.components?.[componentId];
+  const nameParts = name.split('/');
+  const componentId = nameParts.at(-1) ?? '';
+  const pluginId = nameParts.slice(0, -1).join('/');
+  return plugins.find((plugin) => plugin.meta.id === pluginId || plugin.meta.shortId === pluginId)?.provides
+    .components?.[componentId];
 };
 
 export const Surface = (props: SurfaceProps) => {
+  const context = useSurfaceContext();
+  const data = props.data ?? (props.name && context?.surfaces?.[props.name]?.data);
+  const fallback = props.fallback ?? (props.name && context?.surfaces?.[props.name]?.fallback);
+
+  return (
+    <>
+      {fallback ? (
+        <ErrorBoundary data={data} fallback={fallback}>
+          <SurfaceResolver {...props} />
+        </ErrorBoundary>
+      ) : (
+        <SurfaceResolver {...props} />
+      )}
+    </>
+  );
+};
+
+const SurfaceResolver = (props: SurfaceProps) => {
   const { plugins } = usePluginContext();
   const parent = useSurfaceContext();
   const components = resolveComponents(plugins, props, parent);
@@ -88,5 +111,6 @@ export const Surface = (props: SurfaceProps) => {
     ...props,
     ...(parent ? { parent, root: parent.root ?? parent } : {}),
   };
+
   return <SurfaceContext.Provider value={currentContext}>{components}</SurfaceContext.Provider>;
 };

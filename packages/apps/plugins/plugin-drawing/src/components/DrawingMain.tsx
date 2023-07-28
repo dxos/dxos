@@ -6,8 +6,8 @@ import { Editor, Tldraw } from '@tldraw/tldraw';
 import React, { FC, useEffect, useState } from 'react';
 
 import { Drawing as DrawingType } from '@braneframe/types';
-import { Main } from '@dxos/aurora';
-import { SpaceProxy } from '@dxos/client';
+import { Main, useThemeContext } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -17,12 +17,14 @@ export type DrawingMainOptions = {
   readonly: boolean;
 };
 
-export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) => {
-  // const space = data[0];
-  const drawing = data[data.length - 1] as DrawingType;
+// TODO(burdon): Have plugin create model?
+export const DrawingMain: FC<{ data: { object: DrawingType } }> = ({ data: { object: drawing } }) => {
   const { store } = useDrawingModel(drawing);
+  const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
-  useEffect(() => {}, [editor]);
+  useEffect(() => {
+    editor?.setDarkMode(themeMode === 'dark');
+  }, [editor, themeMode]);
 
   // TODO(burdon): Config.
   const readonly = false;
@@ -33,13 +35,21 @@ export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data }) =
   };
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
-  // TODO(burdon): Z-index obscures aurora menus (e.g., hen expanded, the sidebar icon disappears.)
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
-  // TODO(burdon): Dark mode.
   return (
     <Main.Content classNames='flex flex-col grow min-bs-[100vh]'>
-      <div className='h-screen'>
+      <div
+        className={mx(
+          'h-screen',
+          // TODO(burdon): Hack to override z-index.
+          '[&>div>span>div]:z-0',
+          // TODO(burdon): Hack to hide menu.
+          '[&>div>main>div:first-child>div:first-child>div]:invisible',
+          // TODO(burdon): Hack to hide statusbar.
+          '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
+        )}
+      >
         <Tldraw autoFocus store={store} hideUi={readonly} onUiEvent={handleUiEvent} onMount={setEditor} />
       </div>
     </Main.Content>

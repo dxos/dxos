@@ -4,8 +4,8 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { SpaceProxy } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/client';
+import { SpaceProxy } from '@dxos/client/echo';
 
 import { useInvitationStatus } from '../invitations';
 import { useSpace } from './useSpaces';
