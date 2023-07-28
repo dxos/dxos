@@ -16,7 +16,7 @@ export type DialogStyleProps = {
 const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
 
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed z-20 inset-0', dialogLayoutFragment, ...etc);
+  mx('fixed z-20 inset-inline-0 block-start-0 bs-[100dvb]', dialogLayoutFragment, ...etc);
 
 export const dialogOsOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('fixed z-40 inset-0 backdrop-blur', dialogLayoutFragment, ...etc);
