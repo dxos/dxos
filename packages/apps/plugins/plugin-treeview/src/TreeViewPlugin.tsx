@@ -32,12 +32,12 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           const { plugins } = usePluginContext();
           const treeView = useTreeView();
           const { graph } = useGraph();
-          const [shortId] = treeView.active[0]?.split('/') ?? [];
+          const [shortId, component] = treeView.active[0]?.split('/') ?? [];
           const plugin = findPlugin(plugins, shortId);
           const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
 
-          if (active.length === 0 && plugin) {
-            return <Surface component={`${plugin.meta.id}/Main`} />;
+          if (plugin && plugin.provides.components?.[component]) {
+            return <Surface component={`${plugin.meta.id}/${component}`} />;
           } else if (active.length > 0) {
             return (
               <Surface
