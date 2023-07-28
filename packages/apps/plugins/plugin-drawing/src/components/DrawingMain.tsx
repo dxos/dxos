@@ -8,7 +8,6 @@ import React, { FC, useEffect, useState } from 'react';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { Main, useThemeContext } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -18,7 +17,8 @@ export type DrawingMainOptions = {
   readonly: boolean;
 };
 
-export const DrawingMain: FC<{ data: [SpaceProxy, DrawingType] }> = ({ data: [_, drawing] }) => {
+// TODO(burdon): Have plugin create model?
+export const DrawingMain: FC<{ data: { object: DrawingType } }> = ({ data: { object: drawing } }) => {
   const { store } = useDrawingModel(drawing);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();

@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+
 /**
  * Public API for MESH services.
  */

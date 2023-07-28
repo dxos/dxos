@@ -36,6 +36,11 @@ export type WaitUntilReachedTargetParams = {
  * External state accessor.
  */
 export class PipelineState {
+  /**
+   * @internal
+   */
+  _ctx = new Context();
+
   // TODO(dmaretskyi): Remove?.
   public readonly timeframeUpdate = this._timeframeClock.update;
 
@@ -51,7 +56,10 @@ export class PipelineState {
    */
   private _targetTimeframe: Timeframe | undefined;
 
-  private _reachedTargetPromise: Promise<void> | undefined;
+  /**
+   * @internal
+   */
+  _reachedTargetPromise: Promise<void> | undefined;
 
   // prettier-ignore
   constructor(
@@ -133,6 +141,7 @@ export class PipelineState {
     if (timeout) {
       return Promise.race([
         rejectOnDispose(ctx),
+        rejectOnDispose(this._ctx),
         this._reachedTargetPromise.then(() => {
           done = true;
         }),
@@ -274,6 +283,9 @@ export class Pipeline implements PipelineAccessor {
     this._isStopping = true;
     await this._feedSetIterator?.close();
     await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
+    await this._state._ctx.dispose();
+    this._state._ctx = new Context();
+    this._state._reachedTargetPromise = undefined;
     log('stopped');
     this._isStarted = false;
   }

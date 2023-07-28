@@ -49,6 +49,9 @@
       "path": "../../ui/react-appkit"
     },
     {
+      "path": "../plugins/plugin-chess"
+    },
+    {
       "path": "../plugins/plugin-client"
     },
     {
@@ -92,6 +95,9 @@
     },
     {
       "path": "../plugins/plugin-stack"
+    },
+    {
+      "path": "../plugins/plugin-template"
     },
     {
       "path": "../plugins/plugin-theme"

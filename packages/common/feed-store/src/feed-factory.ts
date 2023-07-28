@@ -75,6 +75,7 @@ export class FeedFactory<T extends {}> {
         secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
         crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined,
         onwrite: options?.onwrite,
+        noiseKeyPair: {}, // We're not using noise.
       },
       options,
     );

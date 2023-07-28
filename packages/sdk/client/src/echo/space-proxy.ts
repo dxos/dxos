@@ -97,6 +97,8 @@ export class SpaceProxy implements Space {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
+      activate: this._activate.bind(this),
+      deactivate: this._deactivate.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -175,7 +177,7 @@ export class SpaceProxy implements Space {
   /**
    * Current state of the space.
    * The database is ready to be used in `SpaceState.READY` state.
-   * Presence is available in `SpaceState.INACTIVE` state.
+   * Presence is available in `SpaceState.CONTROL_ONLY` state.
    */
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.READY && !this._initialized) {
@@ -352,6 +354,14 @@ export class SpaceProxy implements Space {
 
   private async _createEpoch() {
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key });
+  }
+
+  private async _activate() {
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
+  }
+
+  private async _deactivate() {
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 }
 

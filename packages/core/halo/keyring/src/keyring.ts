@@ -5,6 +5,7 @@
 import invariant from 'tiny-invariant';
 
 import { Event, synchronized } from '@dxos/async';
+import { ProtoCodec } from '@dxos/codec-protobuf';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -12,6 +13,8 @@ import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
+
+const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
 /**
  * Manages keys.
@@ -70,7 +73,7 @@ export class Keyring implements Signer {
       const recordBytes = await file.read(0, size);
       await file.close();
 
-      const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
+      const record = KeyRecord.decode(recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       invariant(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
       invariant(record.privateKey, 'Corrupted keyring: Missing private key');
@@ -114,7 +117,7 @@ export class Keyring implements Signer {
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
-    await file.write(0, arrayToBuffer(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
+    await file.write(0, arrayToBuffer(KeyRecord.encode(record)));
     await file.close();
     this.keysUpdate.emit();
   }

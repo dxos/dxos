@@ -6,10 +6,10 @@ import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { GraphNode, useGraph } from '@braneframe/plugin-graph';
-import { PluginDefinition, Surface } from '@dxos/react-surface';
+import { PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { TreeViewContainer } from './components';
+import { Fallback, TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
@@ -29,12 +29,26 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
       },
       components: {
         default: () => {
+          const { plugins } = usePluginContext();
           const treeView = useTreeView();
           const { graph } = useGraph();
-          const [plugin] = treeView.active[0]?.split('/') ?? [];
+          const [shortId, component] = treeView.active[0]?.split('/') ?? [];
+          const plugin = findPlugin(plugins, shortId);
           const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
 
-          if (treeView.active.length === 0) {
+          if (plugin && plugin.provides.components?.[component]) {
+            return <Surface component={`${plugin.meta.id}/${component}`} />;
+          } else if (active.length > 0) {
+            return (
+              <Surface
+                component='dxos.org/plugin/splitview/SplitView'
+                surfaces={{
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: `${shortId}/Main`, fallback: Fallback, data: { active } },
+                }}
+              />
+            );
+          } else {
             return (
               <Surface
                 component='dxos.org/plugin/splitview/SplitView'
@@ -44,26 +58,14 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 }}
               />
             );
-          } else if (active.length === 0) {
-            return <Surface component={`${plugin}/Main`} />;
-          } else {
-            return (
-              <Surface
-                component='dxos.org/plugin/splitview/SplitView'
-                surfaces={{
-                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
-                  main: { component: `${plugin}/Main`, data: { active } },
-                }}
-              />
-            );
           }
         },
         TreeView: TreeViewContainer,
       },
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'dragoverlay':
-            if (!!datum && typeof datum === 'object' && 'id' in datum && 'label' in datum && 'index' in datum) {
+            if (!!data && typeof data === 'object' && 'id' in data && 'label' in data && 'index' in data) {
               return TreeItemDragOverlay;
             } else {
               return null;

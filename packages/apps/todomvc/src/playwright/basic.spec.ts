@@ -60,13 +60,13 @@ test.describe('Basic test', () => {
       if (browserName !== 'chromium') {
         return;
       }
+
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      const authCode = await host.shell.getAuthCode();
+
       await guest.openJoinSpace();
-      const [authCode] = await Promise.all([
-        host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode),
-      ]);
+      await guest.shell.acceptSpaceInvitation(invitationCode);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 

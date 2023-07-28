@@ -25,6 +25,8 @@ export type SwarmMessengerOptions = {
   topic: PublicKey;
 };
 
+const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
+
 /**
  * Adds offer/answer and signal interfaces.
  */
@@ -58,7 +60,7 @@ export class SwarmMessenger implements SignalMessenger {
       // Ignore not swarm messages.
       return;
     }
-    const message: SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').decode(payload.value);
+    const message: SwarmMessage = SwarmMessage.decode(payload.value);
 
     if (!this._topic.equals(message.topic)) {
       // Ignore messages from wrong topics.
@@ -125,7 +127,7 @@ export class SwarmMessenger implements SignalMessenger {
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(networkMessage),
+        value: SwarmMessage.encode(networkMessage),
       },
     });
   }

@@ -2,7 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { groupSurface } from '@dxos/aurora-theme';
-
-export const defaultSurface = groupSurface;
-export const subduedSurface = groupSurface;
+export const stepStyles = 'pbs-1 pbe-3 pli-3';

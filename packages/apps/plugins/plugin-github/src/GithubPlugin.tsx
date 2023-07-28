@@ -29,23 +29,23 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
   provides: {
     translations,
     context: (props) => <OctokitProvider {...props} />,
-    component: (datum, role) => {
+    component: (data, role) => {
       switch (role) {
         case 'dialog':
           switch (true) {
-            case datum === 'dxos.org/plugin/splitview/ProfileSettings':
+            case data === 'dxos.org/plugin/splitview/ProfileSettings':
               return PatInput;
-            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/BindDialog':
+            case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/BindDialog':
               return UrlDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/ExportDialog':
+            case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/ExportDialog':
               return ExportDialog;
-            case Array.isArray(datum) && datum[0] === 'dxos.org/plugin/github/ImportDialog':
+            case Array.isArray(data) && data[0] === 'dxos.org/plugin/github/ImportDialog':
               return ImportDialog;
             default:
               return null;
           }
         case 'menuitem':
-          return Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1]) && !datum[1].readOnly
+          return Array.isArray(data) && isMarkdown(data[0]) && isMarkdownProperties(data[1]) && !data[1].readOnly
             ? MarkdownActions
             : null;
         default:
@@ -59,7 +59,7 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
 
         return null;
       },
-      Main: EmbeddedMain,
+      embedded: EmbeddedMain,
     },
   },
 });

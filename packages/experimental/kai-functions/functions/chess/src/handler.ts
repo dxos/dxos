@@ -28,9 +28,9 @@ module.exports = async (event: any, context: any) => {
     objectIds.map(async (objectId: string) => {
       console.log('processing', JSON.stringify({ objectId }));
       const game = space.db.getObjectById(objectId);
-      console.log('state', JSON.stringify({ fen: game.fen }));
+      console.log('state', JSON.stringify({ pgn: game.pgn }));
       const chess = new Chess();
-      chess.loadPgn(game.fen);
+      chess.loadPgn(game.pgn);
       console.log('game', { turn: chess.turn() });
       // TODO(burdon): Implement credentials (and player selector).
       // TODO(burdon): If playing both sides then introduce delay.
@@ -40,7 +40,7 @@ module.exports = async (event: any, context: any) => {
         if (moves.length) {
           const move = moves[Math.floor(Math.random() * moves.length)];
           chess.move(move);
-          game.fen = chess.pgn();
+          game.pgn = chess.pgn();
           console.log(`move: ${chess.history().length}\n` + chess.ascii());
         }
       }

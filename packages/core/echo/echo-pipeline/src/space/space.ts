@@ -5,7 +5,7 @@
 import invariant from 'tiny-invariant';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
-import { CredentialConsumer, FeedInfo } from '@dxos/credentials';
+import { FeedInfo } from '@dxos/credentials';
 import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -62,9 +62,6 @@ export class Space {
   private readonly _controlPipeline: ControlPipeline;
   private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
-
-  // Processes epoch credentials.
-  private _dataPipelineCredentialConsumer?: CredentialConsumer<any> = undefined;
 
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
@@ -217,12 +214,7 @@ export class Space {
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
-
-    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(
-      this._dataPipeline.createCredentialProcessor(),
-    );
-
-    await this._dataPipelineCredentialConsumer.open();
+    await this._controlPipeline.spaceState.addCredentialProcessor(this._dataPipeline);
 
     this._isOpen = true;
     log('opened');
@@ -234,8 +226,7 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
-    await this._dataPipelineCredentialConsumer?.close();
-    this._dataPipelineCredentialConsumer = undefined;
+    await this._controlPipeline.spaceState.removeCredentialProcessor(this._dataPipeline);
 
     await this._dataPipeline.close();
 

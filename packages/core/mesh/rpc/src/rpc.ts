@@ -56,7 +56,7 @@ class PendingRpcRequest {
   ) {}
 }
 
-const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
+const RpcMessage = schema.getCodecForType('dxos.rpc.RpcMessage');
 
 enum RpcState {
   INITIAL = 'INITIAL',
@@ -236,7 +236,7 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive(msg: Uint8Array): Promise<void> {
-    const decoded = codec.decode(msg, { preserveAny: true });
+    const decoded = RpcMessage.decode(msg, { preserveAny: true });
     log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
@@ -456,7 +456,7 @@ export class RpcPeer {
 
   private async _sendMessage(message: RpcMessage) {
     log('sending message', { type: Object.keys(message)[0] });
-    await this._options.port.send(codec.encode(message, { preserveAny: true }));
+    await this._options.port.send(RpcMessage.encode(message, { preserveAny: true }));
   }
 
   private async _callHandler(req: Request): Promise<Response> {
