@@ -57,7 +57,7 @@ class TypedObjectImpl<T> extends EchoObject<DocumentModel> {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * @internal
    */
-  private _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
+  _linkCache: Map<string, EchoObject> | undefined = new Map<string, EchoObject>();
 
   // TODO(burdon): Remove undefined keys.
   // prettier-ignore
