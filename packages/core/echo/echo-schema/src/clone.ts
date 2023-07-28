@@ -3,6 +3,8 @@ import { EchoObject } from "./object";
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { base } from "./defs";
 import { ProtoCodec } from "@dxos/codec-protobuf";
+import { PublicKey } from "@dxos/keys";
+import { TypedObject } from "./typed-object";
 
 export type CloneOptions = {
   /**
@@ -19,14 +21,47 @@ export type CloneOptions = {
 /**
  * Returns new unbound clone of the object.
  */
-export const clone = <T extends EchoObject>(obj: T, { }: CloneOptions = {}): T => {
-  const baseObj = obj[base];
-  const prototype = Object.getPrototypeOf(baseObj);
-  const snapshot = getObjectSnapshot(baseObj);
+export const clone = <T extends EchoObject>(obj: T, { retainId = true, additional = [] }: CloneOptions = {}): T => {
+  if(retainId === false && additional.length > 0) {
+    throw new Error('Updating id\'s is not supported when cloning with nested objects.')
+  }
 
-  const clone: T = new prototype.constructor();
-  clone[base]._id = snapshot.objectId;
-  clone[base]._stateMachine?.reset(baseObj._modelConstructor.meta.snapshotCodec!.decode(snapshot.snapshot!.model.value));
+  const clone = cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()) as T;
+
+  const clones: EchoObject[] = [clone];
+  for(const obj of additional) {
+    if(!obj) {
+      continue;
+    }
+    clones.push(cloneInner(obj[base], retainId ? obj.id : PublicKey.random().toHex()));
+  }
+
+  // Update links.
+  // Ensures references work before the object is bound. 
+  for(const clone of clones) {
+    if(!(clone instanceof TypedObject)) {
+      continue;
+    }
+
+    for(const ref of clones) {
+      if(ref === clone) {
+        continue;
+      }
+
+      (clone as TypedObject)[base]._linkCache!.set(ref.id, ref);
+    }
+  }
+  
+  return clone;
+}
+
+const cloneInner = (obj: EchoObject, id: string): EchoObject => {
+  const prototype = Object.getPrototypeOf(obj);
+  const snapshot = getObjectSnapshot(obj);
+
+  const clone: EchoObject = new prototype.constructor();
+  clone[base]._id = id;
+  clone[base]._stateMachine?.reset(obj._modelConstructor.meta.snapshotCodec!.decode(snapshot.snapshot!.model.value));
 
   return clone;
 }

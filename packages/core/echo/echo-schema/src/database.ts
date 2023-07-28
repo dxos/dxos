@@ -25,6 +25,11 @@ export class EchoDatabase {
   private readonly _objects = new Map<string, EchoObject>();
 
   /**
+   * Objects that have been removed from the database.
+   */
+  private readonly _removed = new WeakSet<EchoObject>();
+
+  /**
    * @internal
    */
   public readonly _updateEvent = new Event<Item[]>();
@@ -74,7 +79,7 @@ export class EchoDatabase {
     invariant(obj.id); // TODO(burdon): Undefined when running in test.
     invariant(obj[base]);
 
-    if (obj[base]._database) {
+    if (this._removed.has(obj[base])) {
       this._backend.mutate({
         objects: [
           {
@@ -87,6 +92,11 @@ export class EchoDatabase {
           },
         ],
       });
+      this._removed.delete(obj[base]);
+      return obj;
+    }
+
+    if (obj[base]._database) {
       return obj;
     }
 
@@ -143,13 +153,17 @@ export class EchoDatabase {
         },
       ],
     });
+    this._removed.add(obj[base]);
   }
 
   /**
    * Clone object from other database.
+   * @deprecated
    */
   clone<T extends EchoObject>(obj: T) {
     log('clone', { id: obj.id, type: (obj as any).__typename });
+
+    console.warn('deprecated');
 
     // TODO(burdon): Keep id.
     this.add(obj);
