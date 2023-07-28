@@ -5,9 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React, { cloneElement, useMemo } from 'react';
 
-import { Button, DensityProvider, useId, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, Tooltip, useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { TooltipContent, TooltipRoot, TooltipTrigger } from '@dxos/react-appkit';
 
 import { Viewport } from '../../components';
 import { stepStyles } from '../../styles';
@@ -30,12 +29,12 @@ const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePa
       <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
         {name ?? space.key.truncate()}
       </h2>
-      <TooltipRoot>
-        <TooltipContent classNames='z-50'>{t('close label')}</TooltipContent>
-        <TooltipTrigger asChild>
+      <Tooltip.Root>
+        <Tooltip.Content classNames='z-50'>{t('close label')}</Tooltip.Content>
+        <Tooltip.Trigger asChild>
           {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-        </TooltipTrigger>
-      </TooltipRoot>
+        </Tooltip.Trigger>
+      </Tooltip.Root>
     </div>
   );
 };
