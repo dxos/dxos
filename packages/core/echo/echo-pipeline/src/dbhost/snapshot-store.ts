@@ -8,6 +8,7 @@ import { StoredSnapshotInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 
+const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 /**
  * @deprecated
  */
@@ -18,7 +19,7 @@ export class SnapshotStore {
   ) { }
 
   async saveSnapshot(snapshot: SpaceSnapshot): Promise<string> {
-    const encoded = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot);
+    const encoded = SpaceSnapshot.encode(snapshot);
     const key = await subtleCrypto.digest('SHA-256', encoded);
     const keyString = Buffer.from(key).toString('hex');
 
@@ -41,7 +42,7 @@ export class SnapshotStore {
       }
 
       const buffer = await file.read(0, size);
-      return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(buffer);
+      return SpaceSnapshot.decode(buffer);
     } finally {
       await file.close();
     }
