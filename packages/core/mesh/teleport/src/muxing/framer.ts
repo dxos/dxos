@@ -46,18 +46,16 @@ export class Framer {
   });
 
   public readonly port: RpcPort = {
-    send: (message, callback) => {
+    send: (message) => {
       // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
-      const canContinue = this._stream.push(encodeFrame(message));
-      if (!callback) {
-        return;
-      }
-
-      if (!canContinue) {
-        this._stream.once('drain', callback);
-      } else {
-        process.nextTick(callback);
-      }
+      return new Promise<void>((resolve) => {
+        const canContinue = this._stream.push(encodeFrame(message));
+        if (!canContinue) {
+          this._stream.once('drain', resolve);
+        } else {
+          process.nextTick(resolve);
+        }
+      });
     },
     subscribe: (callback) => {
       assert(!this._messageCb, 'Rpc port already has a message listener.');

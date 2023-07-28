@@ -10,6 +10,6 @@ import { MaybePromise } from '@dxos/util';
  * NOTE: Copied from @dxos/rpc to avoid dependency. Structural typing should still work.
  */
 export interface RpcPort {
-  send: (msg: Uint8Array, cb?: () => void) => MaybePromise<void>;
+  send: (msg: Uint8Array) => MaybePromise<void>;
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
