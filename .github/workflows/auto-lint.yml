@@ -1,8 +1,9 @@
 on:
   pull_request:
-    - auto_merge_enabled
-    - auto_merge_disabled
-    - synchronize
+    types:
+      - auto_merge_enabled
+      - auto_merge_disabled
+      - synchronize
 
 name: auto-lint
 
