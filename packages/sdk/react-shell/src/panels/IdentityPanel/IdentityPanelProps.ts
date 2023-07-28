@@ -9,23 +9,20 @@ import type { Identity } from '@dxos/react-client/halo';
 
 import { IdentityEvent } from './identityMachine';
 
-export type IdentityPanelHeadingProps = {
+export type IdentityPanelImplProps = {
   titleId: string;
-  identity: Identity;
-};
-
-export type IdentityPanelImplProps = IdentityPanelHeadingProps & {
   activeView: string;
   send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   createInvitationUrl: (invitationCode: string) => string;
-};
-
-export type IdentityPanelProps = Partial<
-  Pick<IdentityPanelImplProps, 'titleId' | 'createInvitationUrl'> & { onDone?: () => void }
->;
-
-export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send'> & {
-  active?: boolean;
+  identity: Identity;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
+};
+
+export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
+
+export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' | 'identity'>;
+
+export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send' | 'onDone' | 'doneActionParent'> & {
+  active?: boolean;
 };
