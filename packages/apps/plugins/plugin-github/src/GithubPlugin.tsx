@@ -59,7 +59,7 @@ export const GithubPlugin = (): PluginDefinition<TranslationsProvides> => ({
 
         return null;
       },
-      Main: EmbeddedMain,
+      embedded: EmbeddedMain,
     },
   },
 });
