@@ -7,17 +7,23 @@ import { Trigger } from '@dxos/async';
 // TODO(egorgripasov): Is BinaryPort a better name?
 import { RpcPort } from './rpc-port';
 
-type RpcCall = {
+type Chunk = {
   msg: Uint8Array;
   trigger: Trigger;
 };
 
+/**
+ * Load balancer for handling asynchronous calls from multiple channels.
+ *
+ * Manages a queue of calls from different channels and ensures that the calls
+ * are processed in a balanced manner in a round-robin fashion.
+ */
 export class Balancer {
   private _lastCallerIndex = 0;
   private _channels: number[] = [];
 
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
-  private _calls: Map<number, RpcCall[]> = new Map();
+  private _calls: Map<number, Chunk[]> = new Map();
 
   constructor(private readonly _port: RpcPort, private readonly _sysChannelId: number) {
     this._channels.push(_sysChannelId);
@@ -65,7 +71,7 @@ export class Balancer {
     return this._channels[index];
   }
 
-  private _getNextCall(): RpcCall {
+  private _getNextCall(): Chunk {
     let call;
     while (!call) {
       const channelId = this._getNextCallerId();
