@@ -26,8 +26,8 @@ export const StandaloneLayout = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const themeContext = useThemeContext();
   return (
-    <Main.Content classNames='min-bs-full'>
-      <div role='none' className={mx('mli-auto max-is-[60rem] min-bs-[100vh] flex flex-col', paperSurface)}>
+    <Main.Content classNames='min-bs-full' bounce>
+      <div role='none' className={mx('mli-auto max-is-[60rem] min-bs-[100dvh] flex flex-col', paperSurface)}>
         <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
           <Input.Root id={`input--${model.id}`}>
             <Input.Label srOnly>{t('document title label')}</Input.Label>

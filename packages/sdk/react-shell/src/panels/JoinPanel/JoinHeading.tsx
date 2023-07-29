@@ -19,13 +19,12 @@ export interface JoinSpaceHeadingProps {
   joinState?: JoinState;
   onExit?: () => void;
   exitActionParent?: Parameters<typeof cloneElement>[0];
-  preventExit?: boolean;
 }
 
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   (
-    { mode, titleId, joinState, onExit, exitActionParent, preventExit }: JoinSpaceHeadingProps,
+    { mode, titleId, joinState, onExit, exitActionParent }: JoinSpaceHeadingProps,
     ref: ForwardedRef<HTMLDivElement>,
   ) => {
     const { t } = useTranslation('os');
@@ -50,15 +49,13 @@ export const JoinHeading = forwardRef(
 
     return (
       <div role='none' className='pbs-3 pbe-1 relative' ref={ref}>
-        {!preventExit &&
-          mode !== 'halo-only' &&
-          (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
+        {mode !== 'halo-only' && (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
         <Heading
           level={1}
           className={mx(
             descriptionText,
             'font-body font-system-normal text-center text-sm grow pbe-2',
-            mode === 'halo-only' && (preventExit ? 'sr-only' : 'opacity-0'),
+            mode === 'halo-only' && 'opacity-0',
           )}
           id={titleId}
         >
