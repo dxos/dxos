@@ -180,7 +180,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   );
 
   return (
-    <Main.Content classNames='min-bs-[100vh]'>
+    <Main.Content classNames='min-bs-[100vh]' bounce>
       <div role='none' className='mli-auto max-is-[60rem]'>
         {/* TODO(burdon): Factor out header. */}
         <Input.Root>
