@@ -38,10 +38,10 @@ export const DrawingMain: FC<{ data: { object: DrawingType } }> = ({ data: { obj
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
-    <Main.Content classNames={[fullSurface, baseSurface]}>
+    <Main.Content classNames={[fullSurface, baseSurface, 'mb-8']}>
       <div
         className={mx(
-          'h-screen',
+          'h-full',
           // TODO(burdon): Hack to override z-index.
           '[&>div>span>div]:z-0',
           // TODO(burdon): Hack to hide menu.

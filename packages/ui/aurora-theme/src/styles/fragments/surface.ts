@@ -15,4 +15,4 @@ export const chromeSurface = 'bg-white dark:bg-neutral-800';
 export const paperSurface = 'bg-white dark:bg-neutral-925';
 
 // TODO(burdon): Temp for main surfaces to prevent bounce/scroll. Test with Kanban and Drawing.
-export const fullSurface = 'flex flex-col fixed inset-0 overflow-hidden overscroll-none';
+export const fullSurface = 'flex flex-col h-full fixed inset-0 overflow-hidden overscroll-none';
