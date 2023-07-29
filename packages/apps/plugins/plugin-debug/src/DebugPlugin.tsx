@@ -64,7 +64,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           return [
             {
               id: nodeId,
-              index: 'zzz', // TODO(burdon): Prevent drag? Dragging causes bug.
+              index: 'a0', // TODO(burdon): Prevent drag? Dragging causes bug.
               label: 'Debug',
               icon: (props: IconProps) => <Hammer {...props} />,
               data: { id: nodeId },

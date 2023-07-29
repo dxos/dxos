@@ -15,6 +15,8 @@ import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
+// TODO(burdon): Uncaught Error: Type with the name content has already been defined with a different constructor.
+//  Collides with diagram.
 export const isMarkdown = (data: unknown): data is ComposerModel =>
   data && typeof data === 'object'
     ? 'id' in data &&

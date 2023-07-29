@@ -46,7 +46,6 @@ type MarkdownPluginProvides = GraphProvides &
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
-
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const MarkdownMainStandalone = ({
