@@ -17,7 +17,6 @@ const noOpProps: JoinPanelImplProps = {
   activeView: 'create identity input',
   failed: new Set(),
   pending: false,
-  preventExit: true,
 };
 
 const StorybookJoinPanel = (args: Partial<JoinPanelImplProps>) => {

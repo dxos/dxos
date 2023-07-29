@@ -19,7 +19,6 @@ export interface JoinPanelProps {
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
   onExit?: () => void;
-  preventExit?: boolean;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
@@ -27,7 +26,7 @@ export interface JoinPanelProps {
 
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,
-  'mode' | 'preventExit' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
+  'mode' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
 > &
   Pick<JoinStepProps, 'send'> & {
     titleId: string;

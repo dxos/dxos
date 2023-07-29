@@ -31,7 +31,6 @@ export const JoinPanelImpl = ({
   mode,
   unredeemedCodes,
   invitationStates,
-  preventExit,
   onExit,
   onHaloDone,
   onSpaceDone,
@@ -44,7 +43,7 @@ export const JoinPanelImpl = ({
 }: JoinPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <JoinHeading {...{ titleId, mode, onExit, exitActionParent, preventExit }} />
+      {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
           <Viewport.View classNames={stepStyles} id='addition method chooser'>
@@ -151,7 +150,6 @@ export const JoinPanel = ({
   onExit,
   doneActionParent,
   onDone: propsOnDone,
-  preventExit,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -337,6 +335,7 @@ export const JoinPanel = ({
     <JoinPanelImpl
       {...{
         titleId,
+        mode,
         send: joinSend,
         activeView,
         failed,
@@ -344,7 +343,6 @@ export const JoinPanel = ({
         unredeemedCodes,
         invitationStates,
         identity,
-        preventExit,
         onExit,
         exitActionParent,
         doneActionParent,
