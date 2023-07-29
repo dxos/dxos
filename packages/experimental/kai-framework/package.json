@@ -101,7 +101,7 @@
     "vite": "^4.3.9",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-inspect": "^0.7.15",
-    "vite-plugin-mkcert": "^1.13.4",
+    "vite-plugin-mkcert": "^1.16.0",
     "vite-plugin-pwa": "^0.14.1",
     "workbox-window": "^6.5.4"
   }

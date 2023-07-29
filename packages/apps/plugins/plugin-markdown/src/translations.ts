@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [MARKDOWN_PLUGIN]: {
         'plugin name': 'Markdown',
-        'create section space document label': 'Add as a new Document in this Space',
+        'create section space document label': 'Add Document',
         'choose section space document label': 'Add a Document from this Space',
         'document title placeholder': 'New document',
         'choose markdown from space dialog title': 'Choose one or more Documents to add',

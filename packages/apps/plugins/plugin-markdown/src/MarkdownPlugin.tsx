@@ -132,6 +132,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
+        // TODO(burdon): Remove?
         choosers: [
           {
             id: 'choose-section-space-doc',
