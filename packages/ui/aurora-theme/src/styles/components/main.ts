@@ -10,6 +10,7 @@ import { baseSurface, inlineSeparator } from '../fragments';
 export type MainStyleProps = Partial<{
   isLg: boolean;
   sidebarOpen: boolean;
+  bounce: boolean;
 }>;
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
@@ -31,10 +32,11 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOp
     ...etc,
   );
 
-export const mainContent: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen }, ...etc) =>
+export const mainContent: ComponentFunction<MainStyleProps> = ({ isLg, sidebarOpen, bounce }, ...etc) =>
   mx(
     'transition-[padding-inline-start] duration-200 ease-in-out',
     isLg && sidebarOpen ? 'pis-[270px]' : 'pis-0',
+    bounce && 'fixed inset-0 z-0 overflow-auto overscroll-auto scroll-smooth',
     ...etc,
   );
 
