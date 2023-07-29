@@ -150,7 +150,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
 
         switch (role) {
-          case 'main':
+          case 'main': {
             if (
               'composer' in data &&
               isMarkdown(data.composer) &&
@@ -171,13 +171,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return MarkdownMainEmpty;
             }
             break;
-          case 'section':
+          }
+
+          case 'section': {
             if (isMarkdown(get(data, 'object.content', {}))) {
               return MarkdownSection;
             }
             break;
+          }
+
           // TODO(burdon): Can this be decoupled from this plugin?
-          case 'dialog':
+          case 'dialog': {
             if (
               get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
               get(data, 'id') === 'choose-section-space-doc'
@@ -185,6 +189,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return SpaceMarkdownChooser;
             }
             break;
+          }
         }
 
         return null;

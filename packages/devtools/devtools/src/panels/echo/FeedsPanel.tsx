@@ -3,7 +3,7 @@
 //
 
 import { Rows } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
@@ -40,26 +40,35 @@ const FeedsPanel = () => {
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
+
   const devtoolsHost = useDevtools();
   const [refreshCount, setRefreshCount] = useState(0);
-
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
 
-  const messages = useFeedMessages({ feedKey });
+  // Hack to select and refresh first feed.
+  const key = feedKey ?? feedKeys[0];
+  useEffect(() => {
+    if (key && !feedKey) {
+      handleSelect(key);
+      setTimeout(() => {
+        handleRefresh();
+      });
+    }
+  }, [key]);
+
+  const messages = useFeedMessages({ feedKey }).reverse();
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
   };
 
-  const refresh = () => {
+  const handleRefresh = () => {
     setRefreshCount(refreshCount + 1);
   };
 
   const getLabel = (key: PublicKey) => {
     const type = space?.internal.data.pipeline?.controlFeeds?.includes(key) ? 'control' : 'data';
-
     const meta = feeds.find((feed) => feed.feedKey.equals(key));
-
     if (meta) {
       return `${type} (${meta.length})`;
     } else {
@@ -75,15 +84,15 @@ const FeedsPanel = () => {
         <Toolbar>
           <SpaceSelector />
           <PublicKeySelector
-            keys={feedKeys}
             Icon={Rows}
-            defaultValue={feedKey}
             placeholder={'Select feed'}
             getLabel={getLabel}
+            keys={feedKeys}
+            value={key}
             onChange={handleSelect}
           />
 
-          <Button onClick={refresh}>Refresh</Button>
+          <Button onClick={handleRefresh}>Refresh</Button>
         </Toolbar>
       }
     >
