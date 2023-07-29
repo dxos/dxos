@@ -7,7 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Drawing as DrawingType } from '@braneframe/types';
 import { Main, useThemeContext } from '@dxos/aurora';
-import { baseSurface, fullSurface, mx } from '@dxos/aurora-theme';
+import { fullSurface, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -38,7 +38,7 @@ export const DrawingMain: FC<{ data: { object: DrawingType } }> = ({ data: { obj
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
-    <Main.Content classNames={[fullSurface, baseSurface, 'mb-8']}>
+    <Main.Content classNames={fullSurface}>
       <div
         className={mx(
           'h-full',
