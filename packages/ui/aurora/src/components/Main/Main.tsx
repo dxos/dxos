@@ -111,17 +111,21 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
 
 MainSidebar.displayName = SIDEBAR_NAME;
 
-type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean };
+type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean; bounce?: boolean };
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
-  ({ asChild, classNames, children, ...props }: MainProps, forwardedRef) => {
+  ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'main';
 
     return (
-      <Root {...props} className={tx('main.content', 'main', { isLg, sidebarOpen }, classNames)} ref={forwardedRef}>
+      <Root
+        {...props}
+        className={tx('main.content', 'main', { isLg, sidebarOpen, bounce }, classNames)}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
