@@ -7,7 +7,7 @@ import React, { PropsWithChildren, RefObject } from 'react';
 
 import { Button, DropdownMenu, ThemeContext, Main, Input, useThemeContext, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { blockSeparator, getSize, mx, osTx } from '@dxos/aurora-theme';
+import { blockSeparator, getSize, mx, osTx, paperSurface } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
@@ -27,7 +27,7 @@ export const StandaloneLayout = ({
   const themeContext = useThemeContext();
   return (
     <Main.Content classNames='min-bs-full'>
-      <div role='none' className='mli-auto max-is-[60rem] min-bs-[100vh] bg-white dark:bg-neutral-925 flex flex-col'>
+      <div role='none' className={mx('mli-auto max-is-[60rem] min-bs-[100vh] flex flex-col', paperSurface)}>
         <div role='none' className='flex items-center gap-2 pis-0 pointer-fine:pis-8 lg:pis-0 pointer-fine:lg:pis-0'>
           <Input.Root id={`input--${model.id}`}>
             <Input.Label srOnly>{t('document title label')}</Input.Label>

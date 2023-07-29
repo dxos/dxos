@@ -40,12 +40,14 @@ export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }>
             variant='subdued'
             classNames='flex-1 min-is-0 is-auto pis-6 plb-3.5 pointer-fine:plb-2.5'
             autoComplete='off'
+            placeholder={t('kanban title placeholder')}
             value={model.root.title ?? ''}
             onChange={({ target: { value } }) => (model.root.title = value)}
           />
         </Input.Root>
       </div>
       <div role='separator' className={mx(blockSeparator, 'mli-3 mbe-2 opacity-50')} />
+
       <div className='flex grow overflow-hidden'>
         <KanbanBoard model={model} />
       </div>
