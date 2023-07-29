@@ -26,6 +26,7 @@ import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 
 type SpacePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
   let onSpaceUpdate: ((node?: GraphNode<Space>) => void) | undefined;
   const subscriptions = new EventSubscriptions();
@@ -199,7 +200,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case SpaceAction.JOIN: {
               if (clientPlugin) {
-                await clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
+                clientPlugin.provides.setLayout(ShellLayout.JOIN_SPACE);
                 return true;
               }
               return;
@@ -207,14 +208,14 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
             case 'device-invitations': {
               if (clientPlugin) {
-                await clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
+                clientPlugin.provides.setLayout(ShellLayout.DEVICE_INVITATIONS);
                 return true;
               }
               return;
             }
           }
 
-          const spaceKey = PublicKey.safeFrom(intent.data.spaceKey);
+          const spaceKey = intent.data?.spaceKey && PublicKey.safeFrom(intent.data.spaceKey);
           if (!spaceKey) {
             return;
           }
@@ -223,7 +224,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           switch (intent.action) {
             case SpaceAction.SHARE: {
               if (clientPlugin) {
-                await clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
+                clientPlugin.provides.setLayout(ShellLayout.SPACE_INVITATIONS, { spaceKey });
                 return true;
               }
               break;
