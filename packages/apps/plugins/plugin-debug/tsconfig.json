@@ -54,7 +54,13 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-intent"
     },
     {
       "path": "../plugin-markdown"

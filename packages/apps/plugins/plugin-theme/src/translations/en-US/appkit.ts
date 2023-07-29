@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Options object?
 export const appkit = (appName?: string) => ({
   'current app name': appName ?? 'This app',
   'loading translations': 'Loading translations…',

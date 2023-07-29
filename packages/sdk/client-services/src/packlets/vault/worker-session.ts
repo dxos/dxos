@@ -16,8 +16,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback, MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
-import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
+import { ClientServicesHost, ClientRpcServer, ClientRpcServerParams } from '../services';
 
 export type WorkerSessionParams = {
   serviceHost: ClientServicesHost;
@@ -111,17 +110,18 @@ export class WorkerSession {
   }
 
   async open() {
-    log.info('opening..');
+    log.info('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
     if (this.lockKey) {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
+    log.info('opened');
   }
 
   async close() {
-    log.info('closing..');
+    log.info('closing...');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
@@ -129,6 +129,7 @@ export class WorkerSession {
     }
 
     await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+    log.info('closed');
   }
 
   private async _maybeOpenShell() {
