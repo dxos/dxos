@@ -53,7 +53,7 @@ export const TreeViewContainer = () => {
         <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
           <div role='none' className='flex flex-col bs-full'>
             <div role='separator' className='order-1 bs-px mli-2.5 bg-neutral-500/20' />
-            <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain'>
+            <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth'>
               {branches.map(([key, items]) => (
                 <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
                   <TreeItem.Heading classNames='pl-2'>{t('plugin name', { ns: key })}</TreeItem.Heading>
