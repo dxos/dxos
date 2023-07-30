@@ -22,6 +22,7 @@ alias gb='git branch -vv'
 
 alias nx="pnpm -w nx"
 alias pi="pnpm i"
+alias pw="pnpm watch"
 
 # Run target in local directory (e.g., `p build`).
 function p () {
