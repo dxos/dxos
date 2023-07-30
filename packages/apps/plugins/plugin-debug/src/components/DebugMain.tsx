@@ -66,6 +66,11 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
     generator.updateObject();
   };
 
+  const handleResetClient = async () => {
+    await client.reset();
+    window.location = window.location.href;
+  };
+
   const handleCreateEpoch = async () => {
     await space.internal.createEpoch();
     await handleRefresh();
@@ -101,8 +106,9 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
           </Button>
 
           <div className='grow' />
-          <Button onClick={handleOpenDevtools}>Open Devtools</Button>
           <Button onClick={handleRefresh}>Refresh</Button>
+          <Button onClick={handleOpenDevtools}>Open Devtools</Button>
+          <Button onClick={handleResetClient}>Reset client</Button>
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>
       </div>
