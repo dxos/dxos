@@ -6,31 +6,13 @@ import { Chat, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
+import { GraphNode } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Thread as ThreadType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/react-client/echo';
 
-export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
+import { THREAD_PLUGIN } from './types';
 
-const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
-export enum ThreadAction {
-  CREATE = `${THREAD_ACTION}/create`,
-}
-
-export type ThreadPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
-
-export interface ThreadModel {
-  root: ThreadType;
-}
-
-export const isThread = (data: unknown): data is ThreadType => {
-  return isTypedObject(data) && ThreadType.type.name === data.__typename;
-};
-
-export const threadToGraphNode = (parent: GraphNode, object: ThreadType, index: string): GraphNode => ({
+export const objectToGraphNode = (parent: GraphNode, object: ThreadType, index: string): GraphNode => ({
   id: object.id,
   index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
   label: object.title ?? ['thread title placeholder', { ns: THREAD_PLUGIN }],

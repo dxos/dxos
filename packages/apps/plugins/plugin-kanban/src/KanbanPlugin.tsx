@@ -12,11 +12,12 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { KanbanMain } from './components';
-import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides, kanbanToGraphNode } from './props';
 import translations from './translations';
+import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides } from './types';
+import { objectToGraphNode } from './util';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
-  const adapter = new GraphNodeAdapter(KanbanType.filter(), kanbanToGraphNode);
+  const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
 
   return {
     meta: {

@@ -8,7 +8,7 @@ import React, { FC, KeyboardEvent, useState } from 'react';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
-import { THREAD_PLUGIN } from '../props';
+import { THREAD_PLUGIN } from '../types';
 
 export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined }> = ({ onMessage }) => {
   const { t } = useTranslation(THREAD_PLUGIN);

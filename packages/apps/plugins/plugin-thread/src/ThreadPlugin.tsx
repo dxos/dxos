@@ -12,11 +12,12 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain } from './components';
-import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides, threadToGraphNode } from './props';
 import translations from './translations';
+import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
+import { objectToGraphNode } from './util';
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter(ThreadType.filter(), threadToGraphNode);
+  const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
 
   return {
     meta: {

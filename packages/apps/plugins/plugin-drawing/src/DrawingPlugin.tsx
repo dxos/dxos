@@ -13,10 +13,11 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { DrawingMain, DrawingSection } from './components';
 import translations from './translations';
-import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './types';
+import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction } from './types';
+import { objectToGraphNode } from './util';
 
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
-  const adapter = new GraphNodeAdapter(DrawingType.filter(), drawingToGraphNode);
+  const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
 
   return {
     meta: {

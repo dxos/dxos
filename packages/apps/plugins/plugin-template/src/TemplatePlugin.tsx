@@ -5,20 +5,15 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
 import { getIndices, GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TemplateMain } from './components';
 import translations from './translations';
-import { isObject, TEMPLATE_PLUGIN, TemplateAction } from './types';
+import { isObject, TEMPLATE_PLUGIN, TemplateAction, TemplatePluginProvides } from './types';
 import { objectToGraphNode } from './util';
-
-type TemplatePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);

@@ -110,7 +110,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-stack-section-doc', // TODO(burdon): "-space-" ?
+            id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSectionSpaceDocument',
             label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
@@ -120,7 +120,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
-        // TODO(burdon): Selectors/filters?
         choosers: [
           {
             id: 'choose-stack-section-doc',

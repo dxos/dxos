@@ -10,7 +10,7 @@ import { baseSurface, blockSeparator, fullSurface, mx } from '@dxos/aurora-theme
 import { SpaceProxy } from '@dxos/client/echo';
 import { Text } from '@dxos/echo-schema';
 
-import { KANBAN_PLUGIN, type KanbanModel } from '../props';
+import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 import { KanbanBoard } from './KanbanBoard';
 
 export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }> = ({ data: { space, object } }) => {

@@ -39,7 +39,7 @@ export type StackSectionChooser = StackSectionAction & {
 export type StackProvides = {
   stack: {
     creators?: StackSectionCreator[];
-    choosers?: StackSectionChooser[];
+    choosers?: StackSectionChooser[]; // TODO(burdon): Selectors?
   };
 };
 
