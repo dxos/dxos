@@ -25,9 +25,13 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
-    editor?.setDarkMode(themeMode === 'dark');
-  }, [editor, themeMode]);
+    if (editor) {
+      editor.setReadOnly(readonly);
+      editor.setDarkMode(themeMode === 'dark');
+    }
+  }, [editor, readonly, themeMode]);
 
+  // TODO(burdon): Zoom to fit.
   return (
     <div className='h-80'>
       <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
@@ -40,8 +44,11 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, 
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
-    editor?.setDarkMode(themeMode === 'dark');
-  }, [editor, themeMode]);
+    if (editor) {
+      editor.setReadOnly(readonly);
+      editor.setDarkMode(themeMode === 'dark');
+    }
+  }, [editor, readonly, themeMode]);
 
   // Tool events.
   const handleUiEvent = (name: string, data: any) => {
