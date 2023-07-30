@@ -44,8 +44,8 @@ export type StackProvides = {
 };
 
 export type StackState = DeepSignal<{
-  creators?: StackSectionCreator[];
-  choosers?: StackSectionChooser[];
+  creators: StackSectionCreator[];
+  choosers: StackSectionChooser[];
 }>;
 
 export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };

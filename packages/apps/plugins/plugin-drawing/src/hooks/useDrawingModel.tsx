@@ -17,7 +17,7 @@ import { Transaction, YEvent } from 'yjs';
 
 import { Text } from '@dxos/client/echo';
 
-import { DrawingModel } from '../props';
+import { DrawingModel } from '../types';
 
 /**
  * Constructs model from ECHO object.
@@ -25,7 +25,6 @@ import { DrawingModel } from '../props';
  */
 export const useDrawingModel = (data: Text, options = { timeout: 250 }): DrawingModel => {
   const store = useMemo(() => {
-    console.log('!!!!!!!!!!!!!!!!!!!!!!');
     return createTLStore({ shapes: defaultShapes });
   }, [data]);
 
@@ -34,7 +33,6 @@ export const useDrawingModel = (data: Text, options = { timeout: 250 }): Drawing
     // TODO(burdon): Garbage collection (gc)?
     const doc = data.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
-    console.log('============================================', doc);
 
     // Initialize the store with the yjs doc records.
     // If the yjs doc is empty, initialize the yjs doc with the default store records.

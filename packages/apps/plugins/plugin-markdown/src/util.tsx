@@ -16,11 +16,9 @@ import { Plugin } from '@dxos/react-surface';
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
-
-// TODO(burdon): This is being passed the text content?
-export const isMarkdown = (object: { [key: string]: any }): object is ComposerModel => {
-  // TODO(burdon): Extracted variable (object) required to avoid error:
-  //  Uncaught Error: Type with the name content has already been defined with a different constructor.
+//  Uncaught Error: Type with the name content has already been defined with a different constructor.
+// TODO(burdon): This is being passed the text content (not the object)?
+export const __isMarkdown = (object: { [key: string]: any }): object is ComposerModel => {
   try {
     return (
       'id' in object &&
@@ -28,10 +26,18 @@ export const isMarkdown = (object: { [key: string]: any }): object is ComposerMo
       (typeof object.content === 'string' || object.content instanceof YText)
     );
   } catch (err) {
-    console.log('isMarkdown error', err, object);
+    console.error('isMarkdown error', err, object);
     return false;
   }
 };
+
+export const isMarkdown = (data: unknown): data is ComposerModel =>
+  data && typeof data === 'object'
+    ? 'id' in data &&
+      typeof data.id === 'string' &&
+      (typeof (data as { [key: string]: any }).content === 'string' ||
+        (data as { [key: string]: any }).content instanceof YText)
+    : false;
 
 export const isMarkdownContent = (data: unknown): data is { content: ComposerModel } =>
   !!data &&

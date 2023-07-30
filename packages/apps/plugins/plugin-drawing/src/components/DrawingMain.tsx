@@ -21,7 +21,6 @@ export type DrawingMainParams = {
 };
 
 export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = true }) => {
-  console.log('DrawingSection', drawing, drawing.__typename, drawing.data);
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
@@ -30,14 +29,13 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   }, [editor, themeMode]);
 
   return (
-    <div className='h-full h-40'>
+    <div className='h-80'>
       <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
     </div>
   );
 };
 
 export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly }) => {
-  console.log('DrawingMain', drawing, drawing.__typename, drawing.data);
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();

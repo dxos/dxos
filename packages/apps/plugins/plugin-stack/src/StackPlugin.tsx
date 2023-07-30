@@ -25,19 +25,24 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       id: STACK_PLUGIN,
     },
     ready: async (plugins) => {
-      return plugins.forEach((plugin) => {
+      for (const plugin of plugins) {
+        if (plugin.meta.id === STACK_PLUGIN) {
+          continue;
+        }
+
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-          stackState.creators = (plugin as Plugin<StackProvides>).provides.stack.creators;
+          stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
-          stackState.choosers = (plugin as Plugin<StackProvides>).provides.stack.choosers;
+          stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
         }
-      });
+      }
     },
     unload: async () => {
       adapter.clear();
     },
     provides: {
+      translations,
       graph: {
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -76,7 +81,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           ];
         },
       },
-      translations,
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
           return null;
@@ -111,7 +115,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
         },
       },
-      // TODO(burdon): Review with @thure.
+      // TODO(burdon): Review with @thure (same variable used by other plugins to define the stack).
       stack: stackState,
     },
   };

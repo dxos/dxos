@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
@@ -12,8 +12,8 @@ import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { DrawingMain, DrawingSection } from './components';
-import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './props';
 import translations from './translations';
+import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './types';
 
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
   const adapter = new GraphNodeAdapter(DrawingType.filter(), drawingToGraphNode);
@@ -65,8 +65,30 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           ];
         },
       },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-drawing', // TODO(burdon): "-space-" ?
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['create stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            intent: {
+              plugin: DRAWING_PLUGIN,
+              action: DrawingAction.CREATE,
+            },
+          },
+        ],
+        choosers: [
+          {
+            id: 'choose-stack-section-drawing', // TODO(burdon): Standardize.
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['choose stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            filter: isDrawing,
+          },
+        ],
+      },
       component: (data, role) => {
-        console.log(role, (data as any).object?.__typename);
         // TODO(burdon): SurfaceResolver error if component not defined.
         // TODO(burdon): Can we assume data has an object property?
         if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {

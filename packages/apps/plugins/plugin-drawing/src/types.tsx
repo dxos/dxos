@@ -10,6 +10,7 @@ import React from 'react';
 import type { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { SpaceAction } from '@braneframe/plugin-space';
+import { StackProvides } from '@braneframe/plugin-stack';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { isTypedObject } from '@dxos/client/echo';
@@ -21,7 +22,7 @@ export enum DrawingAction {
   CREATE = `${DRAWING_ACTION}/create`,
 }
 
-export type DrawingPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type DrawingPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & StackProvides;
 
 export interface DrawingModel {
   store: TLStore;
