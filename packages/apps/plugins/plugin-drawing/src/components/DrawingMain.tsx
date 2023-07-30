@@ -21,18 +21,24 @@ export type DrawingMainParams = {
 };
 
 export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = true }) => {
-  // return (
-  //   <pre className='m-0 p-0 ring'>
-  //     <code>{JSON.stringify(drawing, undefined, 2)}</code>
-  //   </pre>
-  // );
+  console.log('DrawingSection', drawing, drawing.__typename, drawing.data);
+  const { store } = useDrawingModel(drawing.data);
+  const { themeMode } = useThemeContext();
+  const [editor, setEditor] = useState<Editor>();
+  useEffect(() => {
+    editor?.setDarkMode(themeMode === 'dark');
+  }, [editor, themeMode]);
 
-  return <DrawingMain data={{ object: drawing }} readonly={readonly} />;
+  return (
+    <div className='h-full h-40'>
+      <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
+    </div>
+  );
 };
 
 export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly }) => {
-  console.log('DrawingMain', drawing, drawing.content);
-  const { store } = useDrawingModel(drawing.content);
+  console.log('DrawingMain', drawing, drawing.__typename, drawing.data);
+  const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -43,6 +49,8 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, 
   const handleUiEvent = (name: string, data: any) => {
     // console.log('handleUiEvent', name, data);
   };
+
+  // TODO(burdon): Error if switch DIRECTLY between drawings (store changed).
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor

@@ -79,6 +79,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       adapter.clear();
     },
     provides: {
+      translations,
       graph: {
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -118,6 +119,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           ];
         },
       },
+      // TODO(burdon): Review with @thure.
       stack: {
         creators: [
           {
@@ -131,7 +133,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
-        // TODO(burdon): Remove?
         choosers: [
           {
             id: 'choose-section-space-doc',
@@ -142,12 +143,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         ],
       },
-      translations,
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
           return null;
         }
 
+        // TODO(burdon): Document.
         switch (role) {
           case 'main': {
             if (
@@ -179,6 +180,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             break;
           }
 
+          // TODO(burdon): Review with @thure.
           case 'dialog': {
             if (
               get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&

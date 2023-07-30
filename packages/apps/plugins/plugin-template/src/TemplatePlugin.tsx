@@ -31,6 +31,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
       adapter.clear();
     },
     provides: {
+      translations,
       graph: {
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -52,6 +53,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
               testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
               icon: (props) => <Plus {...props} />,
+              // TODO(burdon): Factor out helper.
               intent: [
                 {
                   plugin: TEMPLATE_PLUGIN,
@@ -69,7 +71,6 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           ];
         },
       },
-      translations,
       component: (datum, role) => {
         if (!datum || typeof datum !== 'object') {
           return null;

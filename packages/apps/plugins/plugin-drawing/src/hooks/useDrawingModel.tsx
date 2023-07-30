@@ -12,7 +12,7 @@ import {
   TLPageId,
   TLRecord,
 } from '@tldraw/tldraw';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Transaction, YEvent } from 'yjs';
 
 import { Text } from '@dxos/client/echo';
@@ -23,16 +23,18 @@ import { DrawingModel } from '../props';
  * Constructs model from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
  */
-export const useDrawingModel = (content: Text, options = { timeout: 250 }): DrawingModel => {
-  const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
+export const useDrawingModel = (data: Text, options = { timeout: 250 }): DrawingModel => {
+  const store = useMemo(() => {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!');
+    return createTLStore({ shapes: defaultShapes });
+  }, [data]);
 
   useEffect(() => {
-    const subscriptions: (() => void)[] = [];
-
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    const doc = content.doc!; // ?? new Doc({ gc: true });
+    const doc = data.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
+    console.log('============================================', doc);
 
     // Initialize the store with the yjs doc records.
     // If the yjs doc is empty, initialize the yjs doc with the default store records.
@@ -68,7 +70,7 @@ export const useDrawingModel = (content: Text, options = { timeout: 250 }): Draw
     }
 
     //
-    // Subscribe to ECHO YJS mutations (events) to update ECHO object.
+    // Subscribe to ECHO yjs mutations (events) to update ECHO object.
     //
     const handleChange = (events: YEvent<any>[], transaction: Transaction) => {
       if (transaction.local) {
@@ -106,6 +108,8 @@ export const useDrawingModel = (content: Text, options = { timeout: 250 }): Draw
     };
 
     yRecords.observeDeep(handleChange);
+
+    const subscriptions: (() => void)[] = [];
     subscriptions.push(() => yRecords.unobserveDeep(handleChange));
 
     //

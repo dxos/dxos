@@ -111,6 +111,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
         },
       },
+      // TODO(burdon): Review with @thure.
       stack: stackState,
     },
   };

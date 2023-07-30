@@ -66,6 +66,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
         },
       },
       component: (data, role) => {
+        console.log(role, (data as any).object?.__typename);
         // TODO(burdon): SurfaceResolver error if component not defined.
         // TODO(burdon): Can we assume data has an object property?
         if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {
@@ -73,10 +74,10 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
         }
 
         switch (role) {
-          case 'section':
-            return DrawingSection;
           case 'main':
             return DrawingMain;
+          case 'section':
+            return DrawingSection;
         }
       },
       components: {
@@ -86,9 +87,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case DrawingAction.CREATE: {
-              return {
-                object: new DrawingType(),
-              };
+              return { object: new DrawingType() };
             }
           }
         },

@@ -15,9 +15,10 @@ import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
-// TODO(burdon): This is being passed the text content.
+// TODO(burdon): These tests clash with Diagram.content.
+
+// TODO(burdon): This is being passed the text content?
 export const isMarkdown = (object: { [key: string]: any }): object is ComposerModel => {
-  console.log(object);
   // TODO(burdon): Extracted variable (object) required to avoid error:
   //  Uncaught Error: Type with the name content has already been defined with a different constructor.
   try {
@@ -51,6 +52,7 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
     : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
+
 export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
