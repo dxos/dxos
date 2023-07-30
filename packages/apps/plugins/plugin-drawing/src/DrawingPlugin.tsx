@@ -11,7 +11,7 @@ import { Drawing as DrawingType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { DrawingMain } from './components';
+import { DrawingMain, DrawingSection } from './components';
 import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './props';
 import translations from './translations';
 
@@ -66,19 +66,17 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        // TODO(burdon): SurfaceResolver error if component not defined.
+        // TODO(burdon): Can we assume data has an object property?
+        if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {
           return null;
         }
 
         switch (role) {
+          case 'section':
+            return DrawingSection;
           case 'main':
-            if ('object' in data && isDrawing(data.object)) {
-              return DrawingMain;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+            return DrawingMain;
         }
       },
       components: {
@@ -88,7 +86,9 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case DrawingAction.CREATE: {
-              return { object: new DrawingType() };
+              return {
+                object: new DrawingType(),
+              };
             }
           }
         },

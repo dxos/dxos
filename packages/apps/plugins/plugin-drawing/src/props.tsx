@@ -24,7 +24,6 @@ export enum DrawingAction {
 export type DrawingPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export interface DrawingModel {
-  object: DrawingType;
   store: TLStore;
 }
 

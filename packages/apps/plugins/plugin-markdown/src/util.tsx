@@ -15,15 +15,22 @@ import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
-// TODO(burdon): Uncaught Error: Type with the name content has already been defined with a different constructor.
-//  Collides with diagram.
-export const isMarkdown = (data: unknown): data is ComposerModel =>
-  data && typeof data === 'object'
-    ? 'id' in data &&
-      typeof data.id === 'string' &&
-      (typeof (data as { [key: string]: any }).content === 'string' ||
-        (data as { [key: string]: any }).content instanceof YText)
-    : false;
+// TODO(burdon): This is being passed the text content.
+export const isMarkdown = (object: { [key: string]: any }): object is ComposerModel => {
+  console.log(object);
+  // TODO(burdon): Extracted variable (object) required to avoid error:
+  //  Uncaught Error: Type with the name content has already been defined with a different constructor.
+  try {
+    return (
+      'id' in object &&
+      typeof object.id === 'string' &&
+      (typeof object.content === 'string' || object.content instanceof YText)
+    );
+  } catch (err) {
+    console.log('isMarkdown error', err, object);
+    return false;
+  }
+};
 
 export const isMarkdownContent = (data: unknown): data is { content: ComposerModel } =>
   !!data &&
@@ -51,7 +58,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 export const documentToGraphNode = (parent: GraphNode<Space>, document: Document, index: string): GraphNode => ({
   id: document.id,
   index: get(document, 'meta.index', index),
-  label: document.title ?? 'New Document', // TODO(burdon): Translation.
+  label: document.title ?? 'New document',
   icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
   data: document,
   parent,

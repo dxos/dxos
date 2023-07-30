@@ -152,7 +152,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           case 'main': {
             if (
               'composer' in data &&
-              isMarkdown(data.composer) &&
+              isMarkdown(data.composer as any) && // TODO(burdon): Type.
               'properties' in data &&
               isMarkdownProperties(data.properties)
             ) {
@@ -179,7 +179,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             break;
           }
 
-          // TODO(burdon): Can this be decoupled from this plugin?
           case 'dialog': {
             if (
               get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&

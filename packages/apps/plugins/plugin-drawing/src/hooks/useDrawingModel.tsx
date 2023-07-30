@@ -15,7 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Transaction, YEvent } from 'yjs';
 
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Text } from '@dxos/client/echo';
 
 import { DrawingModel } from '../props';
 
@@ -23,7 +23,7 @@ import { DrawingModel } from '../props';
  * Constructs model from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
  */
-export const useDrawingModel = (object: DrawingType, options = { timeout: 250 }): DrawingModel => {
+export const useDrawingModel = (content: Text, options = { timeout: 250 }): DrawingModel => {
   const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 250 })
 
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    const doc = object.content.doc!; // ?? new Doc({ gc: true });
+    const doc = content.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
 
     // Initialize the store with the yjs doc records.
@@ -167,7 +167,6 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 250 })
   }, [store]);
 
   return {
-    object,
     store,
   };
 };

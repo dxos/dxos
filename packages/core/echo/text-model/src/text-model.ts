@@ -99,6 +99,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
       case TextKind.RICH:
         return this.doc.getXmlFragment(this.field);
 
+      case TextKind.PLAIN:
       default:
         return this.doc.getText(this.field);
     }
