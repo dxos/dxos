@@ -28,7 +28,7 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
         break;
       }
       case 'Enter': {
-        // TODO(burdon): Enter is added to text after message is sent.
+        event.preventDefault();
         handleMessage();
         break;
       }
@@ -36,8 +36,8 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
   };
 
   return (
-    <div className={mx('flex flex-col w-full shadow p-2', groupSurface)}>
-      <div>
+    <div className={mx('flex w-full shadow p-2', groupSurface)}>
+      <div className='w-full'>
         <Input.Root>
           <Input.Label srOnly>{t('block input label')}</Input.Label>
           <Input.TextArea
@@ -53,7 +53,7 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
           />
         </Input.Root>
       </div>
-      <div className='shrink-0'>
+      <div className='flex flex-col-reverse py-1 shrink-0'>
         <Button density='fine' variant='ghost' onClick={handleMessage}>
           <PaperPlaneRight className={getSize(5)} />
         </Button>
