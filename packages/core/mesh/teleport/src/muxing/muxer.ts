@@ -88,7 +88,9 @@ export class Muxer {
 
     const stream = new Duplex({
       write: (data, encoding, callback) => {
-        this._sendData(channel, data, callback);
+        this._sendData(channel, data)
+          .then(() => callback())
+          .catch(callback);
         // TODO(dmaretskyi): Should we error if sending data has errored?
       },
       read: () => {}, // No-op. We will push data when we receive it.
@@ -150,17 +152,8 @@ export class Muxer {
     };
 
     const port: RpcPort = {
-      send: (data: Uint8Array) => {
-        return new Promise((resolve, reject) => {
-          this._sendData(channel, data, (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
-
+      send: async (data: Uint8Array) => {
+        await this._sendData(channel, data);
         // TODO(dmaretskyi): Debugging.
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
@@ -315,29 +308,22 @@ export class Muxer {
     return channel;
   }
 
-  private _sendData(channel: Channel, data: Uint8Array, callback: (err?: Error) => void) {
+  private async _sendData(channel: Channel, data: Uint8Array): Promise<void> {
     channel.stats.bytesSent += data.length;
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
       channel.buffer.push(data);
-      callback();
-    } else {
-      this._sendCommand(
-        {
-          data: {
-            channelId: channel.remoteId,
-            data,
-          },
-        },
-        channel.id,
-      )
-        .then(() => {
-          callback();
-        })
-        .catch((err: any) => {
-          callback(err);
-        });
+      return;
     }
+    await this._sendCommand(
+      {
+        data: {
+          channelId: channel.remoteId,
+          data,
+        },
+      },
+      channel.id,
+    );
   }
 
   private _destroyChannel(channel: Channel, err?: Error) {
