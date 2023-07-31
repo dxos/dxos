@@ -91,5 +91,3 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     },
   };
 };
-
-const Mole = () => <div>Mole</div>;
