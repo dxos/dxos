@@ -67,19 +67,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        if (!data || typeof data !== 'object' || !('object' in data && isThread(data.object))) {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in data && isThread(data.object)) {
-              return ThreadMain;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+            return ThreadMain;
         }
       },
       components: {
@@ -97,3 +91,5 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     },
   };
 };
+
+const Mole = () => <div>Mole</div>;
