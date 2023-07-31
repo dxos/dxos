@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
   content: ({ input: { react, dxosUi } }) => {
     return (
       !react &&
-      text`
+      plate`
       import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 
     ${
       dxosUi &&
-      text`
+      plate`
     // This includes css styles from @dxos/aurora-theme.
     // This must precede all other style imports in the app.
     import '@dxosTheme';`
@@ -22,7 +22,7 @@ export default template.define.text({
 
     ${
       !dxosUi &&
-      text`
+      plate`
     // Include any css files directly.
     import './index.css';`
     }

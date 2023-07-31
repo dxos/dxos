@@ -47,6 +47,29 @@ export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
   return type ? { message, type, default: defaultValue, validate } : null;
 };
 
+export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape: T): InquirableZodType => {
+  if (shape instanceof z.ZodIntersection) {
+    return z.intersection(unDefault(shape._def.left), unDefault(shape._def.right));
+  } else if (shape instanceof z.ZodEffects) {
+    const inner = shape.innerType();
+    const undefaulted = unDefault(inner);
+    return undefaulted;
+  } else {
+    const undefshape = { ...shape._def.shape() };
+    for (const i in undefshape) {
+      const val = undefshape[i];
+      undefshape[i] = val instanceof z.ZodDefault ? val?.removeDefault() : val;
+    }
+    return z.object(undefshape);
+  }
+};
+
+export type StripDefaults<T extends InquirableZodType> = T extends InquirablePrimitive
+  ? T
+  : T extends InquirableZodObject
+  ? { [k in keyof T]: T[k] extends z.ZodDefault<z.ZodTypeAny> ? z.ZodTypeAny : z.ZodTypeAny }
+  : T;
+
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
   key: string,

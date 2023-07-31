@@ -3,79 +3,84 @@
 //
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import path from 'node:path';
 
-import { executeDirectoryTemplate } from '../src';
+import extended from './extend/template.t';
+import simpleFileGroup from './file-templates/group.t';
+import simpleFile from './file-templates/simple.md.t';
+import simpleDir from './simple/template.t';
 
 chai.use(chaiAsPromised);
 
-describe('executeDirectoryTemplate', () => {
+describe('plate 2 templates', () => {
   it('exists', () => {
-    expect(executeDirectoryTemplate).to.exist;
+    expect(simpleDir).to.exist;
+    expect(extended).to.exist;
   });
 
-  it('execute a basic template', async () => {
-    const results = await executeDirectoryTemplate({
-      templateDirectory: path.resolve(__dirname, 'template'),
-      input: {
-        name: 'foo',
-      },
-      interactive: false,
-    });
-    expect(results).to.exist;
-    expect(results.files.length).to.eq(2);
-  });
+  it('file templates', async () => {
+    expect(simpleFile).to.be.a('function');
+    expect(simpleFileGroup).to.be.a('function');
 
-  it('execute inherited template', async () => {
-    const results = await executeDirectoryTemplate({
-      templateDirectory: path.resolve(__dirname, 'inherited'),
-      input: {
-        name: 'foo',
-        bar: true,
-      },
-      interactive: false,
-    });
-    expect(results).to.exist;
-    expect(results.files.length).to.eq(3);
-    const [file, ...rest] = results.files.filter((f) => f.path.endsWith('README.md'));
+    const result = await simpleFile({ input: { name: 'zanzibar' } });
+    expect(result).to.exist;
+    expect(result.files).to.be.an('array');
+    expect(result.files.length).to.eq(1);
+    const [file] = result.files;
     expect(file).to.exist;
-    expect(rest?.length).to.eq(0);
-    expect(file?.content).to.exist.and.be.a.string;
-    expect(file?.content.length).to.be.greaterThan(0);
-    expect(/content-to-be-replaced/.test(file?.content)).to.be.false;
-    expect(/replaced-content-here/.test(file?.content)).to.be.true;
+    expect(file.path).to.eq('simple.md');
+    expect(file.content).to.eq('the name was zanzibar\n');
   });
 
-  it('prepare template context', async () => {
-    const results = await executeDirectoryTemplate({
-      templateDirectory: path.resolve(__dirname, 'context'),
+  it('simple template', async () => {
+    const name = 'alice';
+    const result = await simpleDir.apply({
       input: {
-        name: 'context'
-      },
-      interactive: false
-    });
-    expect(results).to.exist;
-    const [file] = results.files;
-    expect(file).to.exist;
-    expect(/context suffix/.test(file.content)).to.be.true;
-  });
-
-  it('calls after event', async () => {
-    const results = await executeDirectoryTemplate<{ name: string }>({
-      templateDirectory: path.resolve(__dirname, 'context'),
-      input: {
-        name: 'context'
-      },
-      interactive: false,
-      events: {
-        after: ({ input, results }) => {
-          expect(results).to.exist;
-          expect(input.name).to.eq('context suffix');
-        }
+        name
       }
     });
-    expect(results).to.exist;
-    const [file] = results.files;
-    expect(file).to.exist;
+
+    expect(result).to.exist;
+    const { files } = result;
+
+    expect(files).to.exist;
+    expect(files).to.be.an('array').of.length(3, 'has three result files');
+
+    const [first, second, third] = files;
+    expect(first.path).to.exist.and.match(/atextfile\.md$/);
+    expect(first.content).to.eq('');
+    expect(first.copyOf).to.match(/atextfile\.md$/);
+
+    expect(second.path).to.exist.and.match(/one\.md$/);
+    expect(second.content).to.eq(`name: ${name}\n`);
+
+    expect(third.path).to.exist.and.match(/two\.md$/);
+    expect(third.content).to.eq(`name: ${name}, slots.prop = default prop\n`);
+  });
+
+  it('inherited template', async () => {
+    const name = 'bob';
+    const result = await extended.apply({
+      input: {
+        name
+      }
+    });
+
+    expect(result).to.exist;
+    const { files } = result;
+
+    expect(files).to.exist;
+    expect(files).to.be.an('array').of.length(3, 'has three result files');
+
+    const [atextfile, one, two] = files;
+
+    expect(atextfile.path).to.exist.and.match(/atextfile\.md$/);
+    expect(atextfile.content).to.eq('');
+    expect(atextfile.copyOf).to.match(/atextfile\.md$/);
+
+    expect(one.path).to.exist.and.match(/one\.md$/);
+    expect(one.content).to.eq(`name: prefixed ${name}\n`);
+
+    expect(two.path).to.exist.and.match(/two\.md$/);
+    expect(two.content).to.eq(`name: prefixed ${name}, slots.prop = prefixed default prop\n`);
   });
 });

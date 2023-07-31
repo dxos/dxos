@@ -34,20 +34,20 @@ export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) =>
     flatten(
       zip(
         literals.map((l) => removeLeadingTabs(l, tabs)),
-        cleanArgs,
-      ).filter(Boolean),
-    ).join(''),
+        cleanArgs
+      ).filter(Boolean)
+    ).join('')
   );
 };
 
-export const text = (literals: TemplateStringsArray, ...args: any[]) =>
+export const plate = (literals: TemplateStringsArray, ...args: any[]) =>
   terminalNewline(trim(textUntrimmed(literals, ...args)));
 
 export const ts = (literals: TemplateStringsArray, ...args: any[]) => {
-  const result = text(literals, ...args);
+  const result = plate(literals, ...args);
   try {
     return prettier.format(result, {
-      parser: 'typescript',
+      parser: 'typescript'
     });
   } catch (err: any) {
     console.warn('error formatting typescript:\n', err?.message);

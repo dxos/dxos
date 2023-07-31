@@ -1,11 +1,11 @@
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from './template.t';
 
 export default template.define.text({
   content: ({ input }) => {
     const { tailwind, dxosUi } = input;
     return tailwind && !dxosUi
-      ? text`
+      ? plate`
       /** @type {import('tailwindcss').Config} */
       module.exports = {
         content: ["./index.html", "./src/**/*.{js,ts,tsx,jsx}}"],
@@ -16,7 +16,7 @@ export default template.define.text({
       }
       `
       : tailwind && dxosUi
-      ? text`// file left intentionally blank for tailwind detection`
+      ? plate`// file left intentionally blank for tailwind detection`
       : null;
   },
 });

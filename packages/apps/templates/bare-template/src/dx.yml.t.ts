@@ -1,8 +1,8 @@
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from './template.t';
 
 export default template.define.text({
-  content: ({ input: { name } }) => text`
+  content: ({ input: { name } }) => plate`
   version: 1
   package:
     modules:

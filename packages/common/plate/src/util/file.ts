@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { Effect } from './effect';
 import { fileExists } from './fileExists';
-import { Slot, Slots, Context, RenderedSlots } from './template';
+import { Slot, Slots, Context, RenderedSlots, FileApplyResult } from './template';
 
 export type Path = string;
 
@@ -29,7 +29,7 @@ export type FileSlots<
   copyOf?: Slot<string, I, TSlots, TContext>;
 };
 
-export class FileEffect implements Effect<{ overwrite?: boolean }> {
+export class FileEffect implements Effect<{ overwrite?: boolean }, FileApplyResult> {
   public path: Path = '';
   public content = '';
   public copyOf?: string;
@@ -47,20 +47,20 @@ export class FileEffect implements Effect<{ overwrite?: boolean }> {
     if (!overwrite) {
       const exists = await fileExists(this.path);
       if (exists) {
-        return undefined;
+        return { filesWritten: 0 };
       }
     }
     if (this.copyOf) {
       await mkdirp(path.dirname(this.path));
       await fs.copyFile(this.copyOf!, this.path);
-      return this;
+      return { filesWritten: 1 };
     } else {
       if (!this.content) {
-        return undefined;
+        return { filesWritten: 0 };
       }
       await mkdirp(path.dirname(this.path));
       await fs.writeFile(this.path, this.content);
-      return this;
+      return { filesWritten: 1 };
     }
   }
 

@@ -1,10 +1,10 @@
-import { defineTemplate, text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
   content: ({ input: { react } }) =>
     react &&
-    text`
+    plate`
       import React, { Component, FC, PropsWithChildren } from 'react';
 
       type Props = PropsWithChildren<{

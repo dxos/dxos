@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { z, InquirableZodType, QuestionOptions, inquire, unDefault } from '..';
-import { logger } from '../util/logger';
+import { z } from 'zod';
+
 import { DirectoryTemplate, DirectoryTemplateOptions, ExecuteDirectoryTemplateOptions } from './DirectoryTemplate';
+import { logger } from './util/logger';
 import { FileResults } from './util/template';
+import { InquirableZodType, QuestionOptions, inquire, unDefault } from './util/zodInquire';
 
 export interface InteractiveDirectoryTemplateOptions<IShape extends InquirableZodType>
   extends DirectoryTemplateOptions<z.infer<IShape>> {
@@ -57,7 +59,7 @@ export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends D
     this.inputShape = options.inputShape;
   }
 
-  override async apply(options: ExecuteInteractiveDirectoryTemplateOptions<I>): Promise<FileResults> {
+  override async apply(options: ExecuteInteractiveDirectoryTemplateOptions<I>): Promise<FileResults<z.infer<I>>> {
     const { inputShape, inputQuestions } = this.options;
     const { interactive, input, ...rest } = options;
     let acquired = input;

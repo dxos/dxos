@@ -1,11 +1,11 @@
-import { defineTemplate, text } from '@dxos/plate';
+import { defineTemplate, plate } from '@dxos/plate';
 import config from '../config.t';
 
 export default defineTemplate(
   ({ input: { react } }) => {
     return !react
       ? null
-      : text/* javascript */ `
+      : plate/* javascript */ `
     import React, { useEffect } from 'react';
 
     import { Loading } from '@dxos/react-appkit';

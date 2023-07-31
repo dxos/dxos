@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/config.t.js",
-  "types": "dist/src/config.t.d.ts",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
   "scripts": {
     "build": "tsc && plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",
     "build-resources": "plate --printMessage=false --inheritance=false --executeFileTemplates=false --output=dist/src src",

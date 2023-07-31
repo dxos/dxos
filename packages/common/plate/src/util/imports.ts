@@ -19,28 +19,9 @@ type ImportOptions = {
 
 type PathLike = string | string[];
 
-export class Imports {
-  private imports: { [k: string]: Import } = {};
-  use(name: string, from: PathLike, options?: ImportOptions): string;
-  use(name: string[], from: PathLike, options?: ImportOptions): string[];
-  use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
-    const { aliasOf, isDefault } = { ...options };
-    const { imports } = this;
-    const flatFrom = Array.isArray(from) ? path.join(...from) : from;
-    const names = Array.isArray(name) ? name : [name];
-    names.forEach((name) => {
-      imports[name] = {
-        name,
-        dealias: aliasOf,
-        from: flatFrom,
-        isDefault: !!isDefault,
-      };
-    });
-    return Array.isArray(name) ? names : names[0];
-  }
-
-  render(relativeTo?: PathLike) {
-    const { imports } = this;
+export const imports = (defaultRelativeTo?: PathLike) => {
+  const imports: { [k: string]: Import } = {};
+  const render = (relativeTo: PathLike = defaultRelativeTo ?? '') => {
     relativeTo = Array.isArray(relativeTo) ? path.join(...relativeTo) : relativeTo;
     const relative = (p: string, relativeTo: string) => {
       const dir = path.dirname(relativeTo);
@@ -85,13 +66,32 @@ export class Imports {
     return Array.from(groups.entries())
       .map(([key, val]) => format.fromGroup(key, Array.from(val.values())))
       .join(os.EOL);
+  };
+  function use(name: string, from: PathLike, options?: ImportOptions): string;
+  function use(name: string[], from: PathLike, options?: ImportOptions): string[];
+  function use(name: string | string[], from: PathLike, options?: ImportOptions): string | string[] {
+    const { aliasOf, isDefault } = { ...options };
+    const flatFrom = Array.isArray(from) ? path.join(...from) : from;
+    const names = Array.isArray(name) ? name : [name];
+    names.forEach((name) => {
+      imports[name] = {
+        name,
+        dealias: aliasOf,
+        from: flatFrom,
+        isDefault: !!isDefault,
+      };
+    });
+    return Array.isArray(name) ? names : names[0];
   }
-
-  lazy(name: string, from: PathLike, o?: ImportOptions): () => string;
-  lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, () => string>;
-  lazy(name: string | string[], from: PathLike, o?: ImportOptions) {
+  function lazy(name: string, from: PathLike, o?: ImportOptions): () => string;
+  function lazy(names: string[], from: PathLike, o?: ImportOptions): Record<string, () => string>;
+  function lazy(name: string | string[], from: PathLike, o?: ImportOptions) {
     return Array.isArray(name)
-      ? Object.fromEntries(name.map((n) => [n, () => this.use(n, from, o)]))
-      : () => this.use(name, from, o);
+      ? Object.fromEntries(name.map((n) => [n, () => use(n, from, o)]))
+      : () => use(name, from, o);
   }
+  render.use = lazy;
+  return render;
 }
+
+export type Imports = ReturnType<typeof imports>;

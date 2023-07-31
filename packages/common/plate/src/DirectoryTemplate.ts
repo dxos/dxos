@@ -6,15 +6,15 @@ import path from 'node:path';
 import readDir from 'recursive-readdir';
 import { ZodObject, ZodObjectDef, ZodType } from 'zod';
 
-import { filterIncludeExclude } from '../util/filterIncludeExclude';
-import { LoadModuleOptions, safeLoadModule } from '../util/loadModule';
-import { runPromises } from '../util/runPromises';
 import { executeFileTemplate } from './FileTemplate';
 import { TemplateFactory } from './api';
 import { Effect } from './util/effect';
 import { FileEffect, Path } from './util/file';
+import { filterIncludeExclude } from './util/filterIncludeExclude';
+import { LoadModuleOptions, safeLoadModule } from './util/loadModule';
 import { logger } from './util/logger';
 import { MaybePromise } from './util/promise';
+import { runPromises } from './util/runPromises';
 import {
   Template,
   FileResults,
@@ -99,7 +99,7 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
 
   public define = new TemplateFactory<I>();
 
-  async apply(options?: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults> {
+  async apply(options?: ExecuteDirectoryTemplateOptions<I>): Promise<FileResults<I>> {
     const mergedOptions = mergeOptions<ExecuteDirectoryTemplateOptions<I>>(
       {
         parallel: true,
@@ -196,36 +196,3 @@ export class DirectoryTemplate<I = any> implements Effect<Context<I>, FileResult
 }
 
 export type DirectoryTemplateLoadOptions = LoadModuleOptions & { verbose?: boolean };
-
-export const loadTemplate = async <T = DirectoryTemplate>(src: string, options?: DirectoryTemplateLoadOptions) => {
-  const tsName = path.resolve(src, BASENAME + '.ts');
-  const jsName = path.resolve(src, BASENAME + '.js');
-  const { verbose } = { verbose: false, ...options };
-  try {
-    const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
-    const config = { ...module?.default };
-    return config as T;
-  } catch (err: any) {
-    if (verbose) {
-      console.warn('exception while loading template config:\n' + err.toString());
-    }
-    throw err;
-  }
-};
-
-export const executeDirectoryTemplate = async <I>(options: ExecuteDirectoryTemplateOptions<I>) => {
-  const { src, verbose } = options;
-  if (!src) {
-    throw new Error('cannot load template without an src option');
-  }
-  const template = await loadTemplate(src, { verbose });
-  if (!template) {
-    throw new Error(`failed to load template function from ${src}`);
-  }
-  try {
-    return template.apply(options);
-  } catch (err) {
-    console.error(`problem in template ${src}`);
-    throw err;
-  }
-};

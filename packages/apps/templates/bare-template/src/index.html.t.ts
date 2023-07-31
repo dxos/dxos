@@ -1,4 +1,4 @@
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from './template.t';
 
 export default template.define
@@ -9,7 +9,7 @@ export default template.define
   .text({
     content: ({ input, slots }) => {
       const { name, react } = input;
-      return text`
+      return plate`
       <!DOCTYPE html>
       <html lang="en">
         <head>

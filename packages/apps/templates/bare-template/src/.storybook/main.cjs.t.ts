@@ -1,4 +1,4 @@
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
@@ -6,7 +6,7 @@ export default template.define.text({
     const { storybook } = input;
     return (
       storybook &&
-      text`
+      plate`
         const { mergeConfig } = require('vite');
         const { resolve } = require('path');
         

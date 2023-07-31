@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { z, directory, text } from '@dxos/plate';
+import { z, directory, plate, executeDirectoryTemplate } from '@dxos/plate';
 import { isDxosMonorepoSync } from './utils.t/getDxosRepoInfo';
 
 export * from './utils.t/getDxosRepoInfo';
@@ -44,7 +44,7 @@ export default directory({
   after({ outputDirectory, input: { name } }) {
     const cwd = process.cwd();
     const relative = path.relative(cwd, outputDirectory);
-    console.log(text`
+    console.log(plate`
     Application ${chalk.green(chalk.bold(name))} created.
 
     Run the app:

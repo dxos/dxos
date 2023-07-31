@@ -4,10 +4,15 @@
 import callsite from 'callsite';
 import path from 'node:path';
 
-import { InquirableZodType } from '..';
-import { InteractiveDirectoryTemplate, InteractiveDirectoryTemplateOptions } from './InteractiveDirectoryTemplate';
+import { BASENAME, DirectoryTemplateLoadOptions } from './DirectoryTemplate';
+import {
+  InteractiveDirectoryTemplate,
+  InteractiveDirectoryTemplateOptions,
+  ExecuteInteractiveDirectoryTemplateOptions,
+} from './InteractiveDirectoryTemplate';
 import { FileSlots, FileEffect } from './util/file';
 import { imports, Imports } from './util/imports';
+import { safeLoadModule } from './util/loadModule';
 import { Optional } from './util/optional';
 import { pretty } from './util/pretty';
 import {
@@ -20,6 +25,7 @@ import {
   getOutputNameFromTemplateName,
   RenderedSlots,
 } from './util/template';
+import { InquirableZodType } from './util/zodInquire';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 
@@ -62,7 +68,7 @@ export class TemplateFactory<I = null, TSlots extends Slots<I> = {}> {
               new FileEffect({
                 path: path.resolve(outputDirectory, relativeOutputPath),
                 content: typeof content === 'string' ? pretty(content, relativeOutputPath) : content,
-                copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined
+                copyOf: copyOf ? path.resolve(relativeTo ?? '', copyOf) : undefined,
               }),
             ]
           : [],
@@ -117,4 +123,42 @@ export const directory = <I extends InquirableZodType>(options: TemplateOptions<
     src: path.isAbsolute(src) ? src : path.resolve(dir, src),
     ...rest,
   });
+};
+
+export const loadTemplate = async <T = InteractiveDirectoryTemplate<any>>(
+  src: string,
+  options?: DirectoryTemplateLoadOptions,
+) => {
+  const tsName = path.resolve(src, BASENAME + '.ts');
+  const jsName = path.resolve(src, BASENAME + '.js');
+  const { verbose } = { verbose: false, ...options };
+  try {
+    const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
+    const config = { ...module?.default };
+    return config as T;
+  } catch (err: any) {
+    if (verbose) {
+      console.warn('exception while loading template config:\n' + err.toString());
+    }
+    throw err;
+  }
+};
+
+export const executeDirectoryTemplate = async <I extends InquirableZodType>(
+  options: ExecuteInteractiveDirectoryTemplateOptions<I>,
+) => {
+  const { src, verbose } = options;
+  if (!src) {
+    throw new Error('cannot load template without an src option');
+  }
+  const template = await loadTemplate(src, { verbose });
+  if (!template) {
+    throw new Error(`failed to load template function from ${src}`);
+  }
+  try {
+    return template.apply(options);
+  } catch (err) {
+    console.error(`problem in template ${src}`);
+    throw err;
+  }
 };

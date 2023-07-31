@@ -1,10 +1,10 @@
-import { defineTemplate, text } from '@dxos/plate';
+import { defineTemplate, plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.text({
   content: ({ input: { pwa } }) =>
     pwa &&
-    text`
+    plate`
   // TODO(wittjosiah): Including 'vite-plugin-pwa/client' in tsconfig types breaks react typing.
   // Taken from https://github.com/vite-pwa/vite-plugin-pwa/blob/bc3fab15d0b73994c57435ee13d7d9ce8c18cd55/client.d.ts.
   declare module 'virtual:pwa-register/react' {

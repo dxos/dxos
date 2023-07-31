@@ -1,10 +1,10 @@
-import { text, defineTemplate } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from './template.t';
 
 export default template.define.text({
   content: ({ input }) => {
     const { name, pwa, react, dxosUi, storybook } = input;
-    return text`
+    return plate`
   # ${name}
 
   This app was created with a DXOS application template.
@@ -32,7 +32,7 @@ export default template.define.text({
 
   ${
     storybook &&
-    text`
+    plate`
   Run storybook in this project
   \`\`\`bash
   npm run storybook

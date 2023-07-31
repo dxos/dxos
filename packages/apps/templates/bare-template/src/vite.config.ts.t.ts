@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from './template.t';
 // import { uiDeps } from './package.json.t';
 
@@ -14,7 +14,7 @@ export default template.define.script({
     const VitePWA = imports.use('VitePWA', 'vite-plugin-pwa');
     const resolve = imports.use('resolve', monorepo ? 'node:path' : 'path');
 
-    const monorepoConfig = text`
+    const monorepoConfig = plate`
     optimizeDeps: {
       force: true,
       include: [
@@ -46,12 +46,12 @@ export default template.define.script({
       }
     },
     `;
-    const basicConfig = text`
+    const basicConfig = plate`
     build: {
       outDir: 'out/${name}'
     },
     `;
-    return /* javascript */ text`
+    return /* javascript */ plate`
   import { defineConfig } from 'vite';
   import { ConfigPlugin } from '@dxos/config/vite-plugin';
   import { VaultPlugin } from '@dxos/vault/vite-plugin';
@@ -72,13 +72,13 @@ export default template.define.script({
         : ''}
       ${
         dxosUi
-          ? text`${ThemePlugin}({
+          ? plate`${ThemePlugin}({
         content: [
           ${resolve}(__dirname, './index.html'),
           ${resolve}(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
           ${
             dxosUi &&
-            text`
+            plate`
           ${resolve}(__dirname, 'node_modules/@dxos/aurora/dist/**/*.mjs'),
           ${resolve}(__dirname, 'node_modules/@dxos/aurora-theme/dist/**/*.mjs'),
           ${resolve}(__dirname, 'node_modules/@dxos/react-appkit/dist/**/*.mjs')`
@@ -89,7 +89,7 @@ export default template.define.script({
       }
       ${
         pwa
-          ? text`${VitePWA}({
+          ? plate`${VitePWA}({
         registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 30000000

@@ -8,7 +8,7 @@ import process from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate } from './executeDirectoryTemplate';
+import { executeDirectoryTemplate } from './api';
 import { catFiles } from './util/catFiles';
 import { logger } from './util/logger';
 
@@ -113,13 +113,11 @@ const main = async () => {
           output = process.cwd(),
           include,
           exclude,
-          inheritance,
           sequential = false,
           verbose = false,
           quiet = false,
           overwrite,
           interactive,
-          executeFileTemplates,
           printMessage,
           ...restArgs
         } = args;
@@ -133,8 +131,8 @@ const main = async () => {
         const extraArgs = { ...restArgs };
         delete extraArgs.$0; // yargs cruft
         const result = await executeDirectoryTemplate({
+          src: template,
           outputDirectory: output,
-          templateDirectory: template,
           input: input ? await catFiles(input?.split(',')) : extraArgs,
           parallel: !sequential,
           verbose,
@@ -142,13 +140,10 @@ const main = async () => {
           include: include?.split(','),
           exclude: exclude?.split(','),
           interactive,
-          executeFileTemplates,
-          inheritance,
-          printMessage,
         });
         debug(`output folder: ${output}`);
         info(`template generated ${result.files.length} files ...`);
-        const { filesWritten } = await result.save({ dry, printMessage, printFiles: !quiet });
+        const { filesWritten } = await result.apply();
         info(`wrote ${filesWritten} files [${fmtDuration(Date.now() - tstart)}]`);
       },
     }).argv;

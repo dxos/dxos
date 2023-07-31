@@ -3,11 +3,11 @@
 //
 import path from 'node:path';
 
-import { isTemplateFile, getOutputNameFromTemplateName } from '../util/filenames';
-import { LoadModuleOptions, loadModule } from '../util/loadModule';
 import { Path } from './util/file';
+import { isTemplateFile } from './util/filenames';
+import { LoadModuleOptions, loadModule } from './util/loadModule';
 import { promise } from './util/promise';
-import { Slots, Context, Template, results, FileResults, Options } from './util/template';
+import { Slots, Template, FileResults, Options } from './util/template';
 
 export type LoadTemplateOptions = LoadModuleOptions;
 
@@ -26,10 +26,10 @@ export const loadTemplate = async <I = any>(p: string, options?: LoadTemplateOpt
 };
 
 export const executeFileTemplate = async <TInput, TSlots extends Slots<TInput> = Slots<TInput>>(
-  options: ExecuteFileTemplateOptions<TInput, TSlots>
+  options: ExecuteFileTemplateOptions<TInput, TSlots>,
 ): Promise<FileResults> => {
   const { src, relativeTo } = {
-    ...options
+    ...options,
   };
   const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, src);

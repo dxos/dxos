@@ -1,7 +1,7 @@
-import { text } from '@dxos/plate';
+import { plate } from '@dxos/plate';
 import template from '../template.t';
 
-console.log({ text, template });
+console.log({ text: plate, template });
 
 export default template.define
   .slots({
@@ -22,9 +22,9 @@ export default template.define
         '@dxos/react-appkit',
       );
 
-      const swToast = () => text`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
+      const swToast = () => plate`<${ServiceWorkerToastContainer} {...serviceWorker} />`;
 
-      const coreContent = text`
+      const coreContent = plate`
     <ErrorBoundary fallback={({ error }) => <${ResetDialog} error={error} config={config} />}>
       <${ClientProvider} config={config} ${dxosUi ? `fallback={${GenericFallback}}` : ''}>
         ${slots.content}
@@ -32,7 +32,7 @@ export default template.define
       </${ClientProvider}>
     </ErrorBoundary>`;
 
-      const themeProvider = (content: string) => text`
+      const themeProvider = (content: string) => plate`
     <${ThemeProvider} appNs='${name}' resourceExtensions={[${appkitTranslations}]} fallback={<${GenericFallback} />}>
       ${content}
     </${ThemeProvider}>
@@ -40,7 +40,7 @@ export default template.define
 
       return (
         react &&
-        text`
+        plate`
       import React from 'react';
       ${imports}
       import { ErrorBoundary } from './ErrorBoundary';
