@@ -4,18 +4,22 @@
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+// import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { resolve } from 'node:path';
+
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
     host: true,
+    // https: true,
+    // NOTE: Relative to project root.
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -40,6 +44,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    // mkcert(),
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),

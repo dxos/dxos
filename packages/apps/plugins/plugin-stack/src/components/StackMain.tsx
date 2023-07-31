@@ -3,29 +3,15 @@
 //
 
 import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { DotsSixVertical, Minus, Placeholder, Plus } from '@phosphor-icons/react';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Plus, Placeholder } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useDnd, useDragEnd, useDragOver, useDragStart, SortableProps } from '@braneframe/plugin-dnd';
+import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useIntent } from '@braneframe/plugin-intent';
-import { useSplitView } from '@braneframe/plugin-splitview';
-import {
-  Main,
-  Input,
-  List,
-  ListItem,
-  Button,
-  useTranslation,
-  DensityProvider,
-  ListScopedProps,
-  DropdownMenu,
-  ButtonGroup,
-} from '@dxos/aurora';
-import { fineButtonDimensions, blockSeparator, focusRing, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { Surface } from '@dxos/react-surface';
+import { Main, Input, List, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
+import { blockSeparator, chromeSurface, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
 
 import { stackState } from '../stores';
@@ -37,93 +23,7 @@ import {
   StackSectionModel,
   StackSections,
 } from '../types';
-
-type StackSectionProps = {
-  onRemove?: () => void;
-  section: StackSectionModel;
-};
-
-export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
-  return (
-    <List variant='ordered'>
-      <StackSectionImpl section={data} isOverlay />
-    </List>
-  );
-};
-
-const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
-  (
-    { onRemove = () => {}, section, draggableAttributes, draggableListeners, style, rearranging, isOverlay },
-    forwardedRef,
-  ) => {
-    const { t } = useTranslation(STACK_PLUGIN);
-    return (
-      <DensityProvider density='fine'>
-        <ListItem.Root
-          id={section.object.id}
-          classNames={[
-            surfaceElevation({ elevation: 'group' }),
-            'bg-white dark:bg-neutral-925 grow rounded mlb-2',
-            '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
-            isOverlay && 'hover-hover:[--controls-opacity:1]',
-            rearranging ? 'opacity-0' : section.isPreview ? 'opacity-50' : 'opacity-100',
-          ]}
-          ref={forwardedRef}
-          style={style}
-        >
-          <ListItem.Heading classNames='sr-only'>
-            {get(section, 'object.title', t('generic section heading'))}
-          </ListItem.Heading>
-          <div
-            className={mx(
-              fineButtonDimensions,
-              focusRing,
-              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
-              isOverlay && 'text-primary-600 dark:text-primary-300',
-            )}
-            {...draggableAttributes}
-            {...draggableListeners}
-          >
-            <DotsSixVertical
-              weight={isOverlay ? 'bold' : 'regular'}
-              className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
-            />
-          </div>
-          <div role='none' className='flex-1'>
-            <Surface role='section' data={section} />
-          </div>
-          <Button
-            variant='ghost'
-            classNames='self-stretch justify-start rounded-is-none focus:[--controls-opacity:1]'
-            onClick={onRemove}
-          >
-            <span className='sr-only'>{t('remove section label')}</span>
-            <Minus className={mx(getSize(4), 'transition-opacity opacity-[--controls-opacity]')} />
-          </Button>
-        </ListItem.Root>
-      </DensityProvider>
-    );
-  },
-);
-
-const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: props.section.id,
-    data: { section: props.section, dragoverlay: props.section },
-  });
-  return (
-    <StackSectionImpl
-      {...props}
-      draggableListeners={listeners}
-      draggableAttributes={attributes}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        transition,
-      }}
-      ref={setNodeRef}
-    />
-  );
-};
+import { StackSection } from './StackSection';
 
 const getSectionModels = (sections: StackSections): StackSectionModel[] =>
   Array.from(sections)
@@ -270,7 +170,6 @@ const StackSectionsImpl = ({
 const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
-  const splitView = useSplitView();
   const handleAdd = useCallback(
     (start: number, nextSectionObject: GenericStackObject) => {
       const nextSectionModel = getSectionModel(nextSectionObject);
@@ -281,8 +180,9 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   );
 
   return (
-    <Main.Content classNames='min-bs-[100vh]'>
+    <Main.Content classNames='min-bs-[100vh]' bounce>
       <div role='none' className='mli-auto max-is-[60rem]'>
+        {/* TODO(burdon): Factor out header. */}
         <Input.Root>
           <Input.Label srOnly>{t('stack title label')}</Input.Label>
           <Input.TextInput
@@ -294,17 +194,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
           />
         </Input.Root>
         <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
+
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
-          <h2 className='text-sm font-normal flex items-center gap-1'>
-            <Plus className={getSize(4)} />
-            <span>{t('add section label')}</span>
-          </h2>
-          <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), 'bg-white dark:bg-neutral-925']}>
+          <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
             <DropdownMenu.Root modal={false}>
               <DropdownMenu.Trigger asChild>
                 <Button variant='ghost'>
-                  <span>{t('add new section label')}</span>
+                  <Plus className={getSize(5)} />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
@@ -319,47 +217,6 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                       onClick={async () => {
                         const { object: nextSection } = await sendIntent(intent);
                         handleAdd(stack.sections.length, nextSection);
-                      }}
-                    >
-                      <Icon className={getSize(4)} />
-                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                    </DropdownMenu.Item>
-                  );
-                })}
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-
-            <DropdownMenu.Root modal={false}>
-              <DropdownMenu.Trigger asChild>
-                <Button variant='ghost'>
-                  <span>{t('add existing section label')}</span>
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Arrow />
-                {stackState.choosers?.map(({ id, testId, icon, label }) => {
-                  const Icon = icon ?? Placeholder;
-                  return (
-                    <DropdownMenu.Item
-                      key={id}
-                      id={id}
-                      data-testid={testId}
-                      onClick={() => {
-                        splitView.dialogContent = {
-                          id,
-                          chooser: 'many',
-                          subject: 'dxos.org/plugin/stack/chooser',
-                          omit: new Set(
-                            stack.sections.filter((section) => !!section?.object?.id).map(({ object: { id } }) => id),
-                          ),
-                          onDone: (items: GenericStackObject[]) =>
-                            stack.sections.splice(
-                              stack.sections.length,
-                              0,
-                              ...items.map((item) => getSectionModel(item)),
-                            ),
-                        };
-                        splitView.dialogOpen = true;
                       }}
                     >
                       <Icon className={getSize(4)} />

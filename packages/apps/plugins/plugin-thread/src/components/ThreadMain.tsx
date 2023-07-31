@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
+import { baseSurface, fullSurface } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 import { SpaceProxy } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -58,12 +58,7 @@ export const ThreadMain: FC<{ data: { space: SpaceProxy; object: ThreadType } }>
   };
 
   return (
-    <Main.Content
-      classNames={mx(
-        'flex flex-col grow min-bs-[100vh] h-full overflow-hidden items-center',
-        'absolute left-0 right-0', // TODO(burdon): Check.
-      )}
-    >
+    <Main.Content classNames={[fullSurface, baseSurface]}>
       <ThreadChannel identityKey={identityKey} thread={thread} onAddMessage={handleAddMessage} />
     </Main.Content>
   );
