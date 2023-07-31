@@ -37,23 +37,21 @@ export const ThreadInput: FC<{ onMessage: (text: string) => boolean | undefined 
 
   return (
     <div className={mx('flex w-full shadow p-2', groupSurface)}>
-      <div className='w-full'>
-        <Input.Root>
-          <Input.Label srOnly>{t('block input label')}</Input.Label>
-          <Input.TextArea
-            autoFocus
-            autoComplete='off'
-            rows={3}
-            variant='subdued'
-            classNames='flex-1 is-auto pis-2 border-none resize-none outline-double'
-            placeholder='Enter message.'
-            value={text}
-            onChange={({ target: { value } }) => setText(value)}
-            onKeyDown={handleKeyDown}
-          />
-        </Input.Root>
-      </div>
-      <div className='flex flex-col-reverse py-1 shrink-0'>
+      <Input.Root>
+        <Input.Label srOnly>{t('block input label')}</Input.Label>
+        <Input.TextArea
+          autoFocus
+          autoComplete='off'
+          rows={3}
+          variant='subdued'
+          classNames='resize-none border-none outline-none ml-[26px]'
+          placeholder='Enter message.'
+          value={text}
+          onChange={({ target: { value } }) => setText(value)}
+          onKeyDown={handleKeyDown}
+        />
+      </Input.Root>
+      <div className='flex w-[40px] flex-col-reverse shrink-0'>
         <Button density='fine' variant='ghost' onClick={handleMessage}>
           <PaperPlaneRight className={getSize(5)} />
         </Button>
