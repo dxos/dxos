@@ -96,6 +96,7 @@ test.describe('Basic test', () => {
       await guest.getMarkdownTextbox().focus();
       // TODO(burdon): Temporarily disable presence test in order to test replication.
       //  Figure out how to decouple tests.
+      //  https://github.com/dxos/dxos/pull/3777
       // await waitForExpect(async () => {
       //   expect(await host.getCollaboratorCursors().first().textContent()).to.equal('guest');
       //   expect(await guest.getCollaboratorCursors().first().textContent()).to.equal('host');

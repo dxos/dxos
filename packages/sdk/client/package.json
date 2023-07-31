@@ -131,6 +131,7 @@
     "tiny-invariant": "^1.3.1"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
