@@ -68,7 +68,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
 
   const handleResetClient = async () => {
     await client.reset();
-    window.location = window.location.href;
+    window.location.href = window.location.origin;
   };
 
   const handleCreateEpoch = async () => {
