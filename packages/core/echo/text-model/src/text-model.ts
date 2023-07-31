@@ -69,7 +69,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   // prettier-ignore
   constructor(
     meta: ModelMeta,
-    itemId: ItemID,
+    itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
     writeStream?: MutationWriter<TextMutation>
   ) {
@@ -99,6 +99,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
       case TextKind.RICH:
         return this.doc.getXmlFragment(this.field);
 
+      case TextKind.PLAIN:
       default:
         return this.doc.getText(this.field);
     }
@@ -109,6 +110,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     return this._textContentInner(this.content);
   }
 
+  // TODO(burdon): Called on each mutation.
   private _subscribeToDocUpdates() {
     const cb = this._handleDocUpdated.bind(this);
     const doc = this.doc; // Preserve reference to doc for unsubscribe.

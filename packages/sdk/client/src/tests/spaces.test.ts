@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { Document } from '@braneframe/types';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -235,5 +236,38 @@ describe('Spaces', () => {
 
     space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
+  });
+
+  test('text replicates between clients', async () => {
+    const testBuilder = new TestBuilder();
+
+    const host = new Client({ services: testBuilder.createLocal() });
+    const guest = new Client({ services: testBuilder.createLocal() });
+
+    await host.initialize();
+    await guest.initialize();
+
+    afterTest(() => host.destroy());
+    afterTest(() => guest.destroy());
+
+    await host.halo.createIdentity({ displayName: 'host' });
+    await guest.halo.createIdentity({ displayName: 'guest' });
+
+    const hostSpace = await host.createSpace();
+    await Promise.all(performInvitation({ host: hostSpace, guest }));
+    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+
+    const hostDocument = hostSpace.db.add(new Document());
+    await hostSpace.db.flush();
+
+    await waitForExpect(() => {
+      expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
+    });
+
+    hostDocument.content.model?.insert('Hello, world!', 0);
+
+    await waitForExpect(() => {
+      expect(guestSpace.db.getObjectById(hostDocument.id)!.content.text).to.equal('Hello, world!');
+    });
   });
 });
