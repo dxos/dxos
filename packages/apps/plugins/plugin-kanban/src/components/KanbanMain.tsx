@@ -8,7 +8,6 @@ import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
 import { baseSurface, blockSeparator, fullSurface, mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
-import { Text } from '@dxos/echo-schema';
 
 import { KANBAN_PLUGIN, type KanbanModel } from '../types';
 import { KanbanBoard } from './KanbanBoard';
@@ -24,8 +23,8 @@ export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }>
     createItem: (column) =>
       space.db.add(
         new KanbanType.Item({
-          // TODO(burdon): Make automatic?
-          title: new Text(),
+          // TODO(burdon): Make automatic? Creates additional Text object!
+          // title: new Text(),
         }),
       ),
   };

@@ -41,6 +41,7 @@ export interface StateMachine<TState, TMutation, TSnapshot> {
    * @returns Current state.
    */
   getState(): TState;
+
   /**
    * Resets the state to the given snapshot.
    * @param snapshot Snapshot to reset to.
@@ -81,7 +82,7 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
  */
 export type ModelConstructor<M extends Model> = (new (
   meta: ModelMeta,
-  itemId: ItemID,
+  itemId: ItemID, // TODO(burdon): Rename objectId.
   getState: () => StateOf<M>,
   MutationWriter?: MutationWriter<MutationOf<M>>,
 ) => M) & {

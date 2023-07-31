@@ -70,7 +70,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   // prettier-ignore
   constructor(
     meta: ModelMeta,
-    itemId: ItemID,
+    itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
     writeStream?: MutationWriter<TextMutation>
   ) {
