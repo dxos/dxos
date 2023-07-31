@@ -15,6 +15,10 @@ import { DrawingMain } from './components';
 import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './props';
 import translations from './translations';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[DrawingType.name] = DrawingType;
+
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
   const adapter = new GraphNodeAdapter(DrawingType.filter(), drawingToGraphNode);
 

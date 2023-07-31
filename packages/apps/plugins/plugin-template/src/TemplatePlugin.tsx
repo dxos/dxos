@@ -18,6 +18,10 @@ import translations from './translations';
 import { isObject, TEMPLATE_PLUGIN, TemplateAction } from './types';
 import { objectToGraphNode } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[Expando.name] = Expando;
+
 type TemplatePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {

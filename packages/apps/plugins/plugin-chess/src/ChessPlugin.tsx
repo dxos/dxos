@@ -19,6 +19,10 @@ import translations from './translations';
 import { isObject, CHESS_PLUGIN, ChessAction } from './types';
 import { objectToGraphNode } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[Game.name] = Game;
+
 type ChessPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
