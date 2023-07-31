@@ -5,6 +5,7 @@
 import invariant from 'tiny-invariant';
 import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
+import { log } from '@dxos/log';
 import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 import { ItemID, schema } from '@dxos/protocols';
 import { TextMutation, TextSnapshot, TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
@@ -69,7 +70,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   // prettier-ignore
   constructor(
     meta: ModelMeta,
-    itemId: ItemID,
+    itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
     writeStream?: MutationWriter<TextMutation>
   ) {
@@ -99,6 +100,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
       case TextKind.RICH:
         return this.doc.getXmlFragment(this.field);
 
+      case TextKind.PLAIN:
       default:
         return this.doc.getText(this.field);
     }
@@ -109,7 +111,9 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     return this._textContentInner(this.content);
   }
 
+  // TODO(burdon): Called on each mutation.
   private _subscribeToDocUpdates() {
+    log.info('_subscribeToDocUpdates', { itemId: this.itemId });
     const cb = this._handleDocUpdated.bind(this);
     const doc = this.doc; // Preserve reference to doc for unsubscribe.
     doc.on('update', cb);
@@ -119,6 +123,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   }
 
   private async _handleDocUpdated(update: Uint8Array, origin: any) {
+    log.info('_handleDocUpdated', { itemId: this.itemId, origin });
     const remote = origin && origin.docClientId && origin.docClientId !== this.doc.clientID;
     if (!remote) {
       await this.write({
