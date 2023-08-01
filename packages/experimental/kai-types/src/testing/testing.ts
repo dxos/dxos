@@ -279,7 +279,7 @@ export const createMessage = (from?: Contact, resolver?: string, recent = 14) =>
     // to: [
     //   new Message.Recipient({
     //     email: faker.internet.email(),
-    //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
+    //     name: faker.datatype.number(10) > 6 ? faker.person.fullName() : undefined
     //   })
     // ],
     from: new Message.Recipient({

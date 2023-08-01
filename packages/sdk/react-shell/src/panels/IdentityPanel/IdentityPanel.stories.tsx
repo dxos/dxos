@@ -23,7 +23,7 @@ const noOpProps: IdentityPanelImplProps = {
   identity: {
     identityKey: PublicKey.random(),
     profile: {
-      displayName: faker.name.firstName(),
+      displayName: faker.person.firstName(),
     },
   },
 };
