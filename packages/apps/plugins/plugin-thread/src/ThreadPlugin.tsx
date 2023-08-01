@@ -12,15 +12,16 @@ import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain } from './components';
-import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides, threadToGraphNode } from './props';
 import translations from './translations';
+import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
+import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[ThreadType.name] = ThreadType;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
-  const adapter = new GraphNodeAdapter(ThreadType.filter(), threadToGraphNode);
+  const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
 
   return {
     meta: {
@@ -70,19 +71,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        if (!data || typeof data !== 'object' || !('object' in data && isThread(data.object))) {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in data && isThread(data.object)) {
-              return ThreadMain;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+            return ThreadMain;
         }
       },
       components: {

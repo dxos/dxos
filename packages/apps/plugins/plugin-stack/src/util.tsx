@@ -25,8 +25,8 @@ export const isStackProperties = (data: unknown): data is StackProperties => dat
 
 export const stackToGraphNode = (parent: GraphNode<Space>, obj: Stack, index: string): GraphNode => ({
   id: obj.id,
-  index: get(obj, 'meta.index', index), // TODO(burdon): Data should not be on object?
-  label: obj.title ?? 'New Stack', // TODO(burdon): Translation.
+  index: get(obj, 'meta.index', index),
+  label: obj.title ?? 'New stack',
   icon: (props: IconProps) => <Article {...props} />,
   data: obj,
   parent,

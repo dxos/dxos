@@ -16,8 +16,8 @@ import { TEMPLATE_PLUGIN } from './types';
 // TODO(burdon): Generic "object" var name?
 export const objectToGraphNode = (parent: GraphNode<Space>, object: TypedObject, index: string): GraphNode => ({
   id: object.id,
-  index: get(object, 'meta.index', index),
-  label: object.title ?? 'New Object', // TODO(burdon): Translation.
+  index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
+  label: object.title ?? 'New object', // TODO(burdon): Translation.
   icon: (props) => <Asterisk {...props} />,
   data: object,
   parent,

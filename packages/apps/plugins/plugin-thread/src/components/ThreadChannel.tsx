@@ -10,7 +10,7 @@ import { baseSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { humanize } from '@dxos/util';
 
-import { THREAD_PLUGIN } from '../props';
+import { THREAD_PLUGIN } from '../types';
 import { ThreadBlock } from './ThreadBlock';
 import { ThreadInput } from './ThreadInput';
 

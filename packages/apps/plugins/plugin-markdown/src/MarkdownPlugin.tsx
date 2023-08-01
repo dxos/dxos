@@ -7,10 +7,7 @@ import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
 import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document as DocumentType } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
@@ -25,7 +22,7 @@ import {
   SpaceMarkdownChooser,
 } from './components';
 import translations from './translations';
-import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownProperties } from './types';
+import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
 import {
   documentToGraphNode,
   isMarkdown,
@@ -35,22 +32,8 @@ import {
   markdownPlugins,
 } from './util';
 
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
-
-type MarkdownPluginProvides = GraphProvides &
-  IntentProvides &
-  TranslationsProvides & {
-    // TODO(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬?
-    //  Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
-    // TODO(wittjosiah): Factor out to graph plugin?
-    stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
-  };
-
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
-
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const MarkdownMainStandalone = ({
@@ -84,6 +67,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       adapter.clear();
     },
     provides: {
+      translations,
       graph: {
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -100,12 +84,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           return [
             {
-              id: 'create-doc',
+              id: 'create-doc', // `${MARKDOWN_PLUGIN}/create-doc`,
               index: 'a1',
               testId: 'spacePlugin.createDocument',
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              disposition: 'toolbar',
+              disposition: 'toolbar', // TODO(burdon): Both places.
               intent: [
                 {
                   plugin: MARKDOWN_PLUGIN,
@@ -126,9 +110,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-section-space-doc',
+            id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSectionSpaceDocument',
-            label: ['create section space document label', { ns: MARKDOWN_PLUGIN }],
+            label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
             intent: {
               plugin: MARKDOWN_PLUGIN,
@@ -136,25 +120,24 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             },
           },
         ],
-        // TODO(burdon): Remove?
         choosers: [
           {
-            id: 'choose-section-space-doc',
+            id: 'choose-stack-section-doc',
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
-            label: ['choose section space document label', { ns: MARKDOWN_PLUGIN }],
+            label: ['choose stack section label', { ns: MARKDOWN_PLUGIN }],
             icon: (props: any) => <ArticleMedium {...props} />,
             filter: isMarkdownContent,
           },
         ],
       },
-      translations,
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
           return null;
         }
 
+        // TODO(burdon): Document.
         switch (role) {
-          case 'main':
+          case 'main': {
             if (
               'composer' in data &&
               isMarkdown(data.composer) &&
@@ -175,20 +158,25 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               return MarkdownMainEmpty;
             }
             break;
-          case 'section':
+          }
+
+          case 'section': {
             if (isMarkdown(get(data, 'object.content', {}))) {
               return MarkdownSection;
             }
             break;
-          // TODO(burdon): Can this be decoupled from this plugin?
-          case 'dialog':
+          }
+
+          // TODO(burdon): Review with @thure.
+          case 'dialog': {
             if (
               get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
-              get(data, 'id') === 'choose-section-space-doc'
+              get(data, 'id') === 'choose-stack-section-doc'
             ) {
               return SpaceMarkdownChooser;
             }
             break;
+          }
         }
 
         return null;

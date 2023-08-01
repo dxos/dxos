@@ -79,14 +79,17 @@ export const Chessboard: FC<ChessboardProps> = ({
 
   // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
-    <ReactChessboard
-      position={chess.fen()}
-      boardOrientation={orientation === 'w' ? 'white' : 'black'}
-      arePiecesDraggable={!readonly}
-      onPieceDrop={handleDrop}
-      customPieces={chessPieces[pieces]}
-      {...props}
-    />
+    // NOTE: Hack to force component to render (since requires inherent size).
+    <div role='none' className='is-full'>
+      <ReactChessboard
+        position={chess.fen()}
+        boardOrientation={orientation === 'w' ? 'white' : 'black'}
+        arePiecesDraggable={!readonly}
+        onPieceDrop={handleDrop}
+        customPieces={chessPieces[pieces]}
+        {...props}
+      />
+    </div>
   );
 };
 
