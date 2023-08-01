@@ -84,7 +84,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           return [
             {
-              id: 'create-doc', // `${MARKDOWN_PLUGIN}/create-doc`,
+              id: `${MARKDOWN_PLUGIN}/create`,
               index: 'a1',
               testId: 'spacePlugin.createDocument',
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
