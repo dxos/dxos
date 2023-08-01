@@ -171,11 +171,11 @@ export class Teleport {
       initiator: this.initiator,
       localPeerId: this.localPeerId,
       remotePeerId: this.remotePeerId,
-      createPort: (channelName: string, opts?: CreateChannelOpts) => {
+      createPort: async (channelName: string, opts?: CreateChannelOpts) => {
         invariant(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createPort(`${extensionName}/${channelName}`, opts);
       },
-      createStream: (channelName: string, opts?: CreateChannelOpts) => {
+      createStream: async (channelName: string, opts?: CreateChannelOpts) => {
         invariant(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createStream(`${extensionName}/${channelName}`, opts);
       },
@@ -198,8 +198,8 @@ export type ExtensionContext = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
-  createStream(tag: string, opts?: CreateChannelOpts): Duplex;
-  createPort(tag: string, opts?: CreateChannelOpts): RpcPort;
+  createStream(tag: string, opts?: CreateChannelOpts): Promise<Duplex>;
+  createPort(tag: string, opts?: CreateChannelOpts): Promise<RpcPort>;
   close(err?: Error): void;
 };
 
@@ -250,7 +250,7 @@ class ControlExtension implements TeleportExtension {
           },
         },
       },
-      port: extensionContext.createPort('rpc', {
+      port: await extensionContext.createPort('rpc', {
         contentType: 'application/x-protobuf; messagType="dxos.rpc.Message"',
       }),
     });
