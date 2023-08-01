@@ -9,7 +9,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"chpt_7b7f447ccad9f73\" --storybook-build-dir out --exit-zero-on-changes",
+    "chromatic": "chromatic --only-changed --project-token=\"chpt_7b7f447ccad9f73\" --storybook-build-dir out --exit-once-uploaded",
     "prebuild": "dxtype src/proto/TaskList.proto src/proto/gen/TaskList.ts"
   },
   "devDependencies": {

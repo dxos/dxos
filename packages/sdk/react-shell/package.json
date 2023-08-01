@@ -25,7 +25,7 @@
     "theme-extensions.js"
   ],
   "scripts": {
-    "chromatic": "chromatic --only-changed --project-token=\"chpt_83a397756fbc63f\" --storybook-build-dir out/react-shell --exit-zero-on-changes"
+    "chromatic": "chromatic --only-changed --project-token=\"chpt_83a397756fbc63f\" --storybook-build-dir out/react-shell --exit-once-uploaded"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
