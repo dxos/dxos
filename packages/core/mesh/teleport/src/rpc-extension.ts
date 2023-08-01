@@ -45,7 +45,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
       return;
     }
 
-    const port = context.createPort('rpc', {
+    const port = await context.createPort('rpc', {
       contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
     });
     this._rpc = createProtoRpcPeer({

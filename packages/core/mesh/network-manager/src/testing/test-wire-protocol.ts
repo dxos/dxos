@@ -5,13 +5,15 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestExtension } from '@dxos/teleport';
+import { TestExtension, TestExtensionWithStreams, type TestStreamStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { createTeleportProtocolFactory } from '../wire-protocol';
 
 export class TestWireProtocol {
   public readonly connections = new ComplexMap<PublicKey, TestExtension>(PublicKey.hash);
+  public readonly streamConnections = new ComplexMap<PublicKey, TestExtensionWithStreams>(PublicKey.hash);
+
   public readonly connected = new Event<PublicKey>();
   public readonly disconnected = new Event<PublicKey>();
 
@@ -28,6 +30,14 @@ export class TestWireProtocol {
     this.connections.set(teleport.remotePeerId, extension);
     teleport.addExtension('test', extension);
     this.connected.emit(teleport.remotePeerId);
+
+    const streamExtension = new TestExtensionWithStreams({
+      onClose: async () => {
+        this.streamConnections.delete(teleport.remotePeerId);
+      },
+    });
+    this.streamConnections.set(teleport.remotePeerId, streamExtension);
+    teleport.addExtension('test-stream', streamExtension);
   });
 
   async waitForConnection(peerId: PublicKey) {
@@ -46,5 +56,26 @@ export class TestWireProtocol {
   async testConnection(peerId: PublicKey, message?: string) {
     const connection = await this.waitForConnection(peerId);
     await connection.test(message);
+  }
+
+  async startStream(
+    peerId: PublicKey,
+    streamTag: string,
+    streamLoadInterval: number,
+    streamLoadChunkSize: number,
+  ): Promise<string> {
+    if (!this.streamConnections.has(peerId)) {
+      throw new Error('Connection does not exist.');
+    }
+    const connection = this.streamConnections.get(peerId)!;
+    return connection.addNewStream(streamLoadInterval, streamLoadChunkSize, streamTag);
+  }
+
+  async closeStream(peerId: PublicKey, streamTag: string): Promise<TestStreamStats> {
+    if (!this.streamConnections.has(peerId)) {
+      throw new Error('Connection does not exist.');
+    }
+    const connection = this.streamConnections.get(peerId)!;
+    return connection.closeStream(streamTag);
   }
 }
