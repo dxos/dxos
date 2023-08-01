@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxosTheme';
 import React from 'react';
 
 import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/aurora';
