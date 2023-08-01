@@ -1,5 +1,68 @@
 # Changelog
 
+## [0.1.53](https://github.com/dxos/dxos/compare/v0.1.52...v0.1.53) (2023-08-01)
+
+
+### Features
+
+* Add ability to move items to a different space ([#3712](https://github.com/dxos/dxos/issues/3712)) ([ef33b07](https://github.com/dxos/dxos/commit/ef33b075ca8418d25ea496226af51084c0664882))
+* Add Client.diagnostics() ([#3686](https://github.com/dxos/dxos/issues/3686)) ([6e28045](https://github.com/dxos/dxos/commit/6e28045c1f1c5c69404fe7c3ed4b57b1585b758c))
+* Add invariant function & log support plugin improvements ([#3696](https://github.com/dxos/dxos/issues/3696)) ([499755c](https://github.com/dxos/dxos/commit/499755c2c6c42ffed74b9d6c82f9a4804ad87dce))
+* Add sections to drawing plugin ([#3776](https://github.com/dxos/dxos/issues/3776)) ([5db05ba](https://github.com/dxos/dxos/commit/5db05ba32797a4492c997c190fe72b87967a7834))
+* Add testing invitations ([#3670](https://github.com/dxos/dxos/issues/3670)) ([038926e](https://github.com/dxos/dxos/commit/038926e9f5b831d59d692be868f9ad7873524a1e))
+* Agent based functions ([#3653](https://github.com/dxos/dxos/issues/3653)) ([706990e](https://github.com/dxos/dxos/commit/706990eb7025d70d459784b123b4999f90c624de))
+* **aurora:** `ScrollArea` ([#3779](https://github.com/dxos/dxos/issues/3779)) ([3ab34c0](https://github.com/dxos/dxos/commit/3ab34c07a2b2ed7511cea434755727b95a528516))
+* Chess plugin to demo minimal plugin template ([#3750](https://github.com/dxos/dxos/issues/3750)) ([0b45885](https://github.com/dxos/dxos/commit/0b45885ea5d9e6b7b0418e847f1e18729efff8c6))
+* Chromatic for `react-shell` ([#3739](https://github.com/dxos/dxos/issues/3739)) ([1ba2b9f](https://github.com/dxos/dxos/commit/1ba2b9f3fb0899b7b70c53f2b10d97c02fff06b5))
+* CLI agent stats and stability ([#3682](https://github.com/dxos/dxos/issues/3682)) ([a67c9cf](https://github.com/dxos/dxos/commit/a67c9cf45f28b173684e93ac287725e9efd115dc))
+* **cli:** Add `force` flag to `agent stop` command improve CLI lifecycle managment ([#3715](https://github.com/dxos/dxos/issues/3715)) ([087b51c](https://github.com/dxos/dxos/commit/087b51caa4be7275016eddd868054467244b0c8a))
+* **cli:** Add tutorial on how to run agent ([#3732](https://github.com/dxos/dxos/issues/3732)) ([82f3479](https://github.com/dxos/dxos/commit/82f34791c0eb21bf81b5e3d52e5398f557297f08))
+* **cli:** Add unit test to test agent device join flow ([#3691](https://github.com/dxos/dxos/issues/3691)) ([602887f](https://github.com/dxos/dxos/commit/602887fd7e9aa23389ae1b5ce4897aad8334c975))
+* **cli:** Improve errors output on `dx agent start` ([#3684](https://github.com/dxos/dxos/issues/3684)) ([14243d1](https://github.com/dxos/dxos/commit/14243d1122ad5d0759ccddfaca96e83dabffe97d))
+* Cloning objects ([#3759](https://github.com/dxos/dxos/issues/3759)) ([28bd859](https://github.com/dxos/dxos/commit/28bd8594f8732dd371f6dff1e2b0f35a41c68ffe))
+* Deactivating spaces ([#3688](https://github.com/dxos/dxos/issues/3688)) ([d1a4933](https://github.com/dxos/dxos/commit/d1a4933cba25b201312fee992f177cd91a552c4c))
+* Debug plugin ([#3771](https://github.com/dxos/dxos/issues/3771)) ([6a27434](https://github.com/dxos/dxos/commit/6a2743456f33acff1082abae4679ec532c1bec26))
+* **devtools:** Add stream stats ([#3656](https://github.com/dxos/dxos/issues/3656)) ([972e6e3](https://github.com/dxos/dxos/commit/972e6e307e002db7ea0e96a6d875712d4da1485a))
+* ECHO object minimal plugin template. ([#3749](https://github.com/dxos/dxos/issues/3749)) ([0b47006](https://github.com/dxos/dxos/commit/0b4700691cd4f4d2bd2feeea37c8cd75bec6749b))
+* Experimental threads plugin ([#3654](https://github.com/dxos/dxos/issues/3654)) ([d535786](https://github.com/dxos/dxos/commit/d535786e040e070554b7f1cf432e0627f029a6ca))
+* Fix CLI/agents ([#3689](https://github.com/dxos/dxos/issues/3689)) ([603ff3b](https://github.com/dxos/dxos/commit/603ff3b7ca7d8fc48d6189c6b9c9b8649e0ec7a1))
+* GPT plugin ([#3714](https://github.com/dxos/dxos/issues/3714)) ([8c41c2b](https://github.com/dxos/dxos/commit/8c41c2b411050fe13de93855cfe865ecd4c3722a))
+* introduce intents ([#3672](https://github.com/dxos/dxos/issues/3672)) ([51e543b](https://github.com/dxos/dxos/commit/51e543bb8b6e345f7139aae229ee64343c90152d))
+* introduce pwa plugin and error plugin ([#3733](https://github.com/dxos/dxos/issues/3733)) ([5cacd7c](https://github.com/dxos/dxos/commit/5cacd7cdacddd07a118273a1e2b538981080c9b0))
+* Plugin for testing ([#3659](https://github.com/dxos/dxos/issues/3659)) ([a0e314e](https://github.com/dxos/dxos/commit/a0e314e4eea7686e33ba140bc4198a693cd96a83))
+* **plugin-graph:** plugin interop ([#3602](https://github.com/dxos/dxos/issues/3602)) ([123f460](https://github.com/dxos/dxos/commit/123f460437f539fb313858f6545ccf2f418d2254))
+* **react-client:** add useShellProvider hook ([#3751](https://github.com/dxos/dxos/issues/3751)) ([01cbc6b](https://github.com/dxos/dxos/commit/01cbc6b29689e2a3e52e853e5bb98e4695245e33))
+* **react-shell:** `Viewport` ([#3690](https://github.com/dxos/dxos/issues/3690)) ([032dce6](https://github.com/dxos/dxos/commit/032dce6bbdf6f7a6f58757ee8526a4e37f1a7fb6))
+* **react-surface:** add error boundary to Surface ([#3752](https://github.com/dxos/dxos/issues/3752)) ([770f0f5](https://github.com/dxos/dxos/commit/770f0f56b7eb782dfa6afd663cd795e39b90b559))
+* Standardize graph node generation across plugins ([#3700](https://github.com/dxos/dxos/issues/3700)) ([00be1a9](https://github.com/dxos/dxos/commit/00be1a9153db4cb1714fe698a42b17db189d214a))
+* Throttle space service ([#3661](https://github.com/dxos/dxos/issues/3661)) ([d0f911b](https://github.com/dxos/dxos/commit/d0f911bec264f0911de242e9552072daa5076e9b))
+* Update labs plugins to use updated graph plugin API ([#3681](https://github.com/dxos/dxos/issues/3681)) ([d095ee3](https://github.com/dxos/dxos/commit/d095ee3927ef700b0907709d264d5f7aba582a54))
+* **vault:** Make worker close itself on reset ([#3735](https://github.com/dxos/dxos/issues/3735)) ([8b4a9a9](https://github.com/dxos/dxos/commit/8b4a9a9d324f353da9ef2d25b5259125c5e7b2d3))
+
+
+### Bug Fixes
+
+* Client tests race conditions ([#3665](https://github.com/dxos/dxos/issues/3665)) ([75474bf](https://github.com/dxos/dxos/commit/75474bf58442dd06321c45653675040a15e03a2b))
+* **cli:** Fix `agent restart` command ([#3699](https://github.com/dxos/dxos/issues/3699)) ([e7b89d1](https://github.com/dxos/dxos/commit/e7b89d14a3f9eb8cf9216f15d88e63ce02edea89))
+* **cli:** Fix `dx debug stats` command hanging ([#3664](https://github.com/dxos/dxos/issues/3664)) ([db41187](https://github.com/dxos/dxos/commit/db411872a5a28765f272c6c089de3ccab150146e))
+* **cli:** Move `agent start` failure handling in ForeverDaemon ([#3702](https://github.com/dxos/dxos/issues/3702)) ([ceb8ff5](https://github.com/dxos/dxos/commit/ceb8ff5fd03c1dae747333c7e7c47a0c001e7022))
+* Composer e2e tests ([#3778](https://github.com/dxos/dxos/issues/3778)) ([1900d90](https://github.com/dxos/dxos/commit/1900d909fd0f29c8e9aa2cbdd7822fea612d1261))
+* **composer-app:** PWA manifest ([#3662](https://github.com/dxos/dxos/issues/3662)) ([ada9e34](https://github.com/dxos/dxos/commit/ada9e34a8ac6785e97f1ca633a899dd70e598321))
+* **composer-app:** Visual polish ([#3692](https://github.com/dxos/dxos/issues/3692)) ([6fd00b0](https://github.com/dxos/dxos/commit/6fd00b069d177b7474901fa92452c9fe50b265ad))
+* **devtools-extension:** missed client imports ([#3705](https://github.com/dxos/dxos/issues/3705)) ([797c2c4](https://github.com/dxos/dxos/commit/797c2c41cf15947c3c9e68c3c25ce058a7f99a5c))
+* **devtools:** Debounce stream stats event ([#3660](https://github.com/dxos/dxos/issues/3660)) ([b051972](https://github.com/dxos/dxos/commit/b0519722e3d354b0a689cc97061f429a1b51069d))
+* **devtools:** Fix manual chunks in devtools bundle ([#3650](https://github.com/dxos/dxos/issues/3650)) ([b9267b1](https://github.com/dxos/dxos/commit/b9267b1210010c749b9ed21e6dfe7b61dea8120a))
+* Functions plugin & readme ([#3651](https://github.com/dxos/dxos/issues/3651)) ([3ecc504](https://github.com/dxos/dxos/commit/3ecc504413f79fb434107abbd9bafdca97963e06))
+* handle url for empty selection ([#3720](https://github.com/dxos/dxos/issues/3720)) ([f6a7856](https://github.com/dxos/dxos/commit/f6a7856228870e1b271ebef79b8f6a4534d3e804))
+* **labs:** Make `TypedObject`, `EchoDatabase` and `SpaceProxy` not proxied by @deepsignal/react ([#3724](https://github.com/dxos/dxos/issues/3724)) ([63b0547](https://github.com/dxos/dxos/commit/63b054771f245f8652ab456bb007978343286dec))
+* Mute duplicate crednetials warning ([#3666](https://github.com/dxos/dxos/issues/3666)) ([4544117](https://github.com/dxos/dxos/commit/45441174ec8c04452f0e3a750bb05b32807968bb))
+* **plugin-stack:** DnD polish ([#3647](https://github.com/dxos/dxos/issues/3647)) ([b52c368](https://github.com/dxos/dxos/commit/b52c36895bed4ee05467dae3d9444ce585d814c2))
+* **plugin-treeview:** handle another invalid active state ([#3762](https://github.com/dxos/dxos/issues/3762)) ([bbf12c0](https://github.com/dxos/dxos/commit/bbf12c0be99ad2616bb1062981b50667250a84c3))
+* **plugin-treeview:** handle invalid active state ([#3744](https://github.com/dxos/dxos/issues/3744)) ([5bcfb84](https://github.com/dxos/dxos/commit/5bcfb84e588538eb2d26f9d8ada5292f2921846b))
+* **react-shell,aurora:** Shell & `Main` ([#3772](https://github.com/dxos/dxos/issues/3772)) ([d824199](https://github.com/dxos/dxos/commit/d824199719c392424486d6eac53d3472c058001b))
+* **react-shell:** `JoinDialog` should call its callbacks `onOpenChange` ([#3743](https://github.com/dxos/dxos/issues/3743)) ([1be9482](https://github.com/dxos/dxos/commit/1be9482db369184d37736b8a801e1a3d573f2f98))
+* scrolling bug ([#3773](https://github.com/dxos/dxos/issues/3773)) ([285fa34](https://github.com/dxos/dxos/commit/285fa3457337be0b0d3e0379af56df6856947504))
+
 ## [0.1.52](https://github.com/dxos/dxos/compare/v0.1.51...v0.1.52) (2023-07-14)
 
 
