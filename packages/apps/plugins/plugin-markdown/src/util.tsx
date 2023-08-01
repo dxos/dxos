@@ -15,6 +15,22 @@ import { Plugin } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
+// TODO(burdon): These tests clash with Diagram.content.
+//  Uncaught Error: Type with the name content has already been defined with a different constructor.
+// TODO(burdon): This is being passed the text content (not the object)?
+export const __isMarkdown = (object: { [key: string]: any }): object is ComposerModel => {
+  try {
+    return (
+      'id' in object &&
+      typeof object.id === 'string' &&
+      (typeof object.content === 'string' || object.content instanceof YText)
+    );
+  } catch (err) {
+    console.error('isMarkdown error', err, object);
+    return false;
+  }
+};
+
 export const isMarkdown = (data: unknown): data is ComposerModel =>
   data && typeof data === 'object'
     ? 'id' in data &&
@@ -42,6 +58,7 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
     : false;
 
 type MarkdownPlugin = Plugin<MarkdownProvides>;
+
 export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
@@ -49,7 +66,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 export const documentToGraphNode = (parent: GraphNode<Space>, document: Document, index: string): GraphNode => ({
   id: document.id,
   index: get(document, 'meta.index', index),
-  label: document.title ?? 'New Document', // TODO(burdon): Translation.
+  label: document.title ?? 'New document',
   icon: (props) => (document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />),
   data: document,
   parent,

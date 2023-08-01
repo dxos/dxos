@@ -15,7 +15,7 @@ import { CHESS_PLUGIN } from './types';
 export const objectToGraphNode = (parent: GraphNode<Space>, object: TypedObject, index: string): GraphNode => ({
   id: object.id,
   index: get(object, 'meta.index', index),
-  label: object.title ?? 'New Game',
+  label: object.title ?? 'New game',
   icon: (props) => <ShieldChevron {...props} />,
   data: object,
   parent,

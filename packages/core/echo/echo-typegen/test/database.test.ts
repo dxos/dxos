@@ -122,6 +122,7 @@ describe('database', () => {
     expect(task.meta.keys).to.have.length(1);
   });
 
+  // TODO(burdon): Remove (duplication of clone.ts tests?)
   test('clone', async () => {
     test('text objects are auto-created on schema', async () => {
       const { db: database1 } = await createDatabase();
@@ -138,5 +139,5 @@ describe('database', () => {
       expect(task2.description.model!.textContent).to.eq('test');
       expect(task2 !== task1).to.be.true;
     });
-  })
+  });
 });

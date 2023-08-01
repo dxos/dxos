@@ -39,13 +39,13 @@ export type StackSectionChooser = StackSectionAction & {
 export type StackProvides = {
   stack: {
     creators?: StackSectionCreator[];
-    choosers?: StackSectionChooser[];
+    choosers?: StackSectionChooser[]; // TODO(burdon): Selectors?
   };
 };
 
 export type StackState = DeepSignal<{
-  creators?: StackSectionCreator[];
-  choosers?: StackSectionChooser[];
+  creators: StackSectionCreator[];
+  choosers: StackSectionChooser[];
 }>;
 
 export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };

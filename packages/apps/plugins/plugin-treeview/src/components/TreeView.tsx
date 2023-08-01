@@ -4,7 +4,7 @@
 
 import { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
+import { getIndexAbove, getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
 import get from 'lodash.get';
 import React, { useState } from 'react';
 
@@ -41,15 +41,22 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
             dnd.overlayDropAnimation = 'around';
             const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
             const overIndex = itemsInOrder.findIndex(({ id }) => id === overNode.id);
-            parent.onChildrenRearrange(
-              activeNode,
-              overIndex < 1
-                ? getIndexBelow(itemsInOrder[0].index)
-                : getIndexBetween(
-                    itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1].index,
-                    itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex]?.index,
-                  ),
-            );
+
+            const beforeNode = itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1];
+            const afterNode = itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex];
+            if (beforeNode?.index === afterNode?.index) {
+              const nextActiveIndex = getIndexAbove(beforeNode.index);
+              const nextAfterIndex = getIndexAbove(nextActiveIndex);
+              parent.onChildrenRearrange(activeNode, nextActiveIndex);
+              parent.onChildrenRearrange(afterNode, nextAfterIndex);
+            } else {
+              parent.onChildrenRearrange(
+                activeNode,
+                overIndex < 1
+                  ? getIndexBelow(itemsInOrder[0].index)
+                  : getIndexBetween(beforeNode.index, afterNode?.index),
+              );
+            }
           }
         } else if (overNode.parent?.onMoveNode) {
           dnd.overlayDropAnimation = 'into';

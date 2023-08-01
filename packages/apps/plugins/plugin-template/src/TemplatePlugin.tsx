@@ -5,24 +5,19 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
 import { getIndices, GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { TemplateMain } from './components';
 import translations from './translations';
-import { isObject, TEMPLATE_PLUGIN, TemplateAction } from './types';
+import { isObject, TEMPLATE_PLUGIN, TemplateAction, TemplatePluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[Expando.name] = Expando;
-
-type TemplatePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
 
 export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
   const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
@@ -35,6 +30,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
       adapter.clear();
     },
     provides: {
+      translations,
       graph: {
         nodes: (parent, emit) => {
           if (!(parent.data instanceof SpaceProxy)) {
@@ -56,6 +52,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
               testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
               icon: (props) => <Plus {...props} />,
+              // TODO(burdon): Factor out helper.
               intent: [
                 {
                   plugin: TEMPLATE_PLUGIN,
@@ -73,7 +70,6 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           ];
         },
       },
-      translations,
       component: (datum, role) => {
         if (!datum || typeof datum !== 'object') {
           return null;

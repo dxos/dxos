@@ -12,7 +12,7 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
 import { getSize, mx, paperSurface } from '@dxos/aurora-theme';
 
-import { KANBAN_PLUGIN } from '../props';
+import { KANBAN_PLUGIN } from '../types';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);

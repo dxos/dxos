@@ -13,26 +13,49 @@ import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
 
-export type DrawingMainOptions = {
-  readonly: boolean;
+export type DrawingMainParams = {
+  readonly?: boolean;
+  data: {
+    object: DrawingType;
+  };
 };
 
-// TODO(burdon): Have plugin create model?
-export const DrawingMain: FC<{ data: { object: DrawingType } }> = ({ data: { object: drawing } }) => {
-  const { store } = useDrawingModel(drawing);
+export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = true }) => {
+  const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
-    editor?.setDarkMode(themeMode === 'dark');
-  }, [editor, themeMode]);
+    if (editor) {
+      editor.setReadOnly(readonly);
+      editor.setDarkMode(themeMode === 'dark');
+    }
+  }, [editor, readonly, themeMode]);
 
-  // TODO(burdon): Config.
-  const readonly = false;
+  // TODO(burdon): Zoom to fit.
+  return (
+    <div className='h-80'>
+      <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
+    </div>
+  );
+};
+
+export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = false }) => {
+  const { store } = useDrawingModel(drawing.data);
+  const { themeMode } = useThemeContext();
+  const [editor, setEditor] = useState<Editor>();
+  useEffect(() => {
+    if (editor) {
+      editor.setReadOnly(readonly);
+      editor.setDarkMode(themeMode === 'dark');
+    }
+  }, [editor, readonly, themeMode]);
 
   // Tool events.
   const handleUiEvent = (name: string, data: any) => {
     // console.log('handleUiEvent', name, data);
   };
+
+  // TODO(burdon): Error if switch DIRECTLY between drawings (store changed).
 
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
