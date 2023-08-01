@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { test } from '@playwright/test';
+import { Page, test } from '@playwright/test';
 import { expect } from 'chai';
-import { Page } from '@playwright/test';
 
 import { setupPage } from '@dxos/test/playwright';
 
@@ -15,8 +14,6 @@ const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=
 test.describe('Smoke test', () => {
   let page: Page;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: storybookUrl('client-clientcontext--primary'),

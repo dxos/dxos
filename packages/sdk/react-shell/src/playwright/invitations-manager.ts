@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
 import type { Browser, ConsoleMessage } from '@playwright/test';
+import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';

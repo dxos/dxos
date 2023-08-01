@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { test } from '@playwright/test';
+import { type Page, test } from '@playwright/test';
 import { expect } from 'chai';
-import type { Page } from '@playwright/test';
 
 import { setupPage } from '@dxos/test/playwright';
 
@@ -15,8 +14,6 @@ const config = {
 test.describe('iframe-worker', () => {
   let page: Page;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: `${config.baseUrl}/iframe-worker.html`,
