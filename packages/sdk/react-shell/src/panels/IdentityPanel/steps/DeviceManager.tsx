@@ -44,6 +44,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
       <ScrollArea.Root classNames='grow max-bs-40'>
         <ScrollArea.Viewport>
           <InvitationList
+            send={send}
             invitations={invitations}
             onClickRemove={(invitation) => invitation.cancel()}
             createInvitationUrl={createInvitationUrl}

@@ -17,6 +17,8 @@ export type IdentityPanelImplProps = {
   identity: Identity;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
+  invitationUrl?: string;
+  authCode?: string;
 };
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;

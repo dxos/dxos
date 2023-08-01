@@ -73,4 +73,5 @@ export const os = {
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Sign out',
   'empty space members message': 'No other members in this space',
+  'back to all invitations label': 'Back to all invitations',
 };

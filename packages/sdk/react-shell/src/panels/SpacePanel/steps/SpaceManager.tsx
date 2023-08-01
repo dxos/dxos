@@ -15,7 +15,7 @@ import { SpacePanelStepProps } from '../SpacePanelProps';
 
 type SpaceManagerProps = SpacePanelStepProps;
 
-export const SpaceManager = ({ active, space, createInvitationUrl }: SpaceManagerProps) => {
+export const SpaceManager = ({ active, space, createInvitationUrl, send }: SpaceManagerProps) => {
   const { t } = useTranslation('os');
   const invitations = useSpaceInvitations(space?.key);
 
@@ -28,6 +28,7 @@ export const SpaceManager = ({ active, space, createInvitationUrl }: SpaceManage
   return (
     <>
       <InvitationList
+        send={send}
         invitations={invitations}
         onClickRemove={(invitation) => invitation.cancel()}
         createInvitationUrl={createInvitationUrl}
