@@ -28,10 +28,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/apps/todomvc",
         "outputPath": "tmp/playwright/packages/apps/todomvc",
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",

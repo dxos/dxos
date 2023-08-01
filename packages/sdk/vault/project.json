@@ -90,10 +90,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/sdk/vault",
         "outputPath": "tmp/playwright/packages/sdk/vault",
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
