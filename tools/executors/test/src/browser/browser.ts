@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { chromium, firefox, webkit } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
-import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
 import { BrowserType } from '../types';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Page } from 'playwright';
+import type { Page } from '@playwright/test';
 
 import { asyncTimeout } from '@dxos/async';
 import { setupPage, extensionId, BrowserType, getPersistentContext } from '@dxos/test/playwright';

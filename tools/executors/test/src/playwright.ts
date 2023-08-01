@@ -3,7 +3,7 @@
 //
 
 import { Browser, devices, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
-import type { BrowserContext, Page } from 'playwright';
+import type { BrowserContext, Page } from '@playwright/test';
 import { v4 } from 'uuid';
 
 import { getBrowser } from './browser';
@@ -52,16 +52,20 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     });
 
     page.on('console', async (msg) => {
-      const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
-      await lock.executeSynchronized(async () => {
-        const args = await argsPromise;
+      try {
+        const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
+        await lock.executeSynchronized(async () => {
+          const args = await argsPromise;
 
-        if (args.length > 0) {
-          console.log(...args);
-        } else {
-          console.log(msg);
-        }
-      });
+          if (args.length > 0) {
+            console.log(...args);
+          } else {
+            console.log(msg);
+          }
+        });
+      } catch (err) {
+        console.error('Failed to parse message', err);
+      }
     });
   }
 
