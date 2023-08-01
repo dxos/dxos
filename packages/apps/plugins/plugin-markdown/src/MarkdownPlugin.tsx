@@ -32,22 +32,6 @@ import {
   markdownPlugins,
 } from './util';
 
-<<<<<<< HEAD
-=======
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DocumentType.name] = DocumentType;
-
-type MarkdownPluginProvides = GraphProvides &
-  IntentProvides &
-  TranslationsProvides & {
-    // TODO(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬?
-    //  Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
-    // TODO(wittjosiah): Factor out to graph plugin?
-    stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
-  };
-
->>>>>>> origin/main
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);

@@ -28,6 +28,10 @@ export type MarkdownProvides = {
   };
 };
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[DocumentType.name] = DocumentType;
+
 // TODO(burdon): Hack to avoid circular dependency (stack stories depend on markdown plugin).
 // TODO(burdon): Review with @thure.
 // TODO(wittjosiah): Factor out to graph plugin?

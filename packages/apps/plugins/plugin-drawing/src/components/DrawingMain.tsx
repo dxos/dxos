@@ -39,7 +39,7 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   );
 };
 
-export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly }) => {
+export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = false }) => {
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
