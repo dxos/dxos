@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'chai';
-import type { Browser, ConsoleMessage } from 'playwright';
+import type { Browser, ConsoleMessage } from '@playwright/test';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';

@@ -4,7 +4,7 @@
 
 import { Args, Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 
 import { Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';

@@ -4,7 +4,7 @@
 
 import { test } from '@playwright/test';
 import { expect } from 'chai';
-import type { Page } from 'playwright';
+import type { Page } from '@playwright/test';
 
 import { setupPage } from '@dxos/test/playwright';
 

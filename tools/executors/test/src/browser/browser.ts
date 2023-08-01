@@ -3,7 +3,7 @@
 //
 
 import { mkdir } from 'node:fs/promises';
-import { chromium, firefox, webkit } from 'playwright';
+import { chromium, firefox, webkit } from '@playwright/test';
 import { v4 } from 'uuid';
 
 import { BrowserType } from '../types';

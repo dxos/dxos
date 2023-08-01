@@ -3,7 +3,7 @@
 //
 
 import { Browser, devices, LaunchOptions, PlaywrightTestConfig, Project } from '@playwright/test';
-import type { BrowserContext, Page } from 'playwright';
+import type { BrowserContext, Page } from '@playwright/test';
 import { v4 } from 'uuid';
 
 import { getBrowser } from './browser';

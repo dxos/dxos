@@ -11,7 +11,7 @@ import { AddressInfo } from 'net';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
-import { Page } from 'playwright';
+import { Page } from '@playwright/test';
 
 import { BrowserType } from '../types';
 import { Lock, trigger } from '../util';
