@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
@@ -11,16 +11,17 @@ import { Drawing as DrawingType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { DrawingMain } from './components';
-import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction, drawingToGraphNode } from './props';
+import { DrawingMain, DrawingSection } from './components';
 import translations from './translations';
+import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction } from './types';
+import { objectToGraphNode } from './util';
 
 // TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[DrawingType.name] = DrawingType;
 
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
-  const adapter = new GraphNodeAdapter(DrawingType.filter(), drawingToGraphNode);
+  const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
 
   return {
     meta: {
@@ -69,20 +70,41 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
           ];
         },
       },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-drawing', // TODO(burdon): "-space-" ?
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['create stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            intent: {
+              plugin: DRAWING_PLUGIN,
+              action: DrawingAction.CREATE,
+            },
+          },
+        ],
+        choosers: [
+          {
+            id: 'choose-stack-section-drawing', // TODO(burdon): Standardize.
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['choose stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            filter: isDrawing,
+          },
+        ],
+      },
       component: (data, role) => {
-        if (!data || typeof data !== 'object') {
+        // TODO(burdon): SurfaceResolver error if component not defined.
+        // TODO(burdon): Can we assume data has an object property?
+        if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {
           return null;
         }
 
         switch (role) {
           case 'main':
-            if ('object' in data && isDrawing(data.object)) {
-              return DrawingMain;
-            } else {
-              return null;
-            }
-          default:
-            return null;
+            return DrawingMain;
+          case 'section':
+            return DrawingSection;
         }
       },
       components: {

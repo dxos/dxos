@@ -3,36 +3,16 @@
 //
 
 import { CompassTool, Trash } from '@phosphor-icons/react';
-import { TLStore } from '@tldraw/tlschema';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { GraphNode, GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
+import type { GraphNode } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Drawing as DrawingType } from '@braneframe/types';
-import { isTypedObject } from '@dxos/client/echo';
 
-export const DRAWING_PLUGIN = 'dxos.org/plugin/drawing';
+import { DRAWING_PLUGIN } from './types';
 
-const DRAWING_ACTION = `${DRAWING_PLUGIN}/action`;
-export enum DrawingAction {
-  CREATE = `${DRAWING_ACTION}/create`,
-}
-
-export type DrawingPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
-
-export interface DrawingModel {
-  object: DrawingType;
-  store: TLStore;
-}
-
-export const isDrawing = (data: unknown): data is DrawingType => {
-  return isTypedObject(data) && DrawingType.type.name === data.__typename;
-};
-
-export const drawingToGraphNode = (parent: GraphNode, object: DrawingType, index: string): GraphNode => ({
+export const objectToGraphNode = (parent: GraphNode, object: DrawingType, index: string): GraphNode => ({
   id: object.id,
   index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
   label: object.title ?? ['drawing title placeholder', { ns: DRAWING_PLUGIN }],

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import type { ItemID } from '@dxos/protocols';
 
 import { ModelMeta, MutationWriter, MutationWriteReceipt } from './types';
@@ -22,7 +23,9 @@ export abstract class Model<TState = any, TMutation = any> {
     private readonly _itemId: ItemID,
     protected readonly _getState: () => TState,
     private readonly _mutationWriter?: MutationWriter<TMutation>,
-  ) {}
+  ) {
+    log.info('constructor', this.toJSON());
+  }
 
   toString() {
     return `Model(${JSON.stringify(this.toJSON())})`;

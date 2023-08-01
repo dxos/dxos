@@ -20,8 +20,8 @@ import type { Kanban as KanbanType } from '@braneframe/types';
 import { createSubscription } from '@dxos/echo-schema';
 import { arrayMove } from '@dxos/util';
 
-import { findLocation } from '../props';
-import type { Location, KanbanModel } from '../props';
+import type { Location, KanbanModel } from '../types';
+import { findLocation } from '../util';
 import { ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';

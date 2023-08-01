@@ -12,7 +12,7 @@ import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
 import { chromeSurface, getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
-import { KANBAN_PLUGIN } from '../props';
+import { KANBAN_PLUGIN } from '../types';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 

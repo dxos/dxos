@@ -2,12 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import { Check } from '@phosphor-icons/react';
+import React, { FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { mx } from '@dxos/aurora-theme';
+import { Button } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
@@ -16,11 +19,9 @@ import { ComplexSet, range } from '@dxos/util';
 import { DetailsTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../hooks';
-import { Button } from '@dxos/aurora';
-import { SubscribeToSpacesResponse } from '@dxos/protocols/src/proto/gen/dxos/devtools/host';
 
 // TODO(burdon): Show master/detail table with currently selected.
-const SpacesPanel = () => {
+const SpacesPanel: FC = () => {
   // TODO(dmaretskyi): We dont need SpaceInfo anymore.
   const { space } = useDevtoolsState();
   const spacesInfo = useSpacesInfo();
@@ -63,7 +64,7 @@ const SpacesPanel = () => {
       startupTime:
         space?.internal.data?.metrics.open &&
         space?.internal.data?.metrics.ready &&
-        (space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime()) + 'ms',
+        space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime() + 'ms',
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
@@ -74,19 +75,22 @@ const SpacesPanel = () => {
     }
 
     const state = space.state.get();
-    if(state === SpaceState.INACTIVE) {
+    if (state === SpaceState.INACTIVE) {
       await space.internal.activate();
     } else {
       await space.internal.deactivate();
     }
-  }
+  };
 
   return (
     <PanelContainer
       toolbar={
         <Toolbar>
           <SpaceSelector />
-          <Button onClick={toggleActive}>{space?.state.get() === SpaceState.INACTIVE ? 'Activate' : 'Deactivate'}</Button>
+          <div className='grow' />
+          <Button onClick={toggleActive}>
+            {space?.state.get() === SpaceState.INACTIVE ? 'Activate' : 'Deactivate'}
+          </Button>
         </Toolbar>
       }
       className='overflow-auto'
@@ -102,6 +106,8 @@ const SpacesPanel = () => {
 type PipelineTableRow = {
   feedKey: PublicKey;
   type: string;
+  genesis?: boolean;
+  own?: boolean;
   start?: number;
   processed?: number;
   target?: number;
@@ -122,6 +128,18 @@ const columns: TableColumn<PipelineTableRow>[] = [
     Header: 'Type',
     width: 80,
     accessor: 'type',
+  },
+  {
+    Header: 'Gen',
+    width: 40,
+    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    accessor: 'genesis',
+  },
+  {
+    Header: 'Own',
+    width: 40,
+    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    accessor: 'own',
   },
   {
     Header: 'Progress',
@@ -157,20 +175,21 @@ const columns: TableColumn<PipelineTableRow>[] = [
   },
 ];
 
-const PipelineTable = ({ state, metadata }: { state: SpaceProto.PipelineState, metadata: SubscribeToSpacesResponse.SpaceInfo | undefined }) => {
+const PipelineTable = ({
+  state,
+  metadata,
+}: {
+  state: SpaceProto.PipelineState;
+  metadata: SubscribeToSpacesResponse.SpaceInfo | undefined;
+}) => {
   const getType = (feedKey: PublicKey) => {
-    if(!metadata) return []
-    const res = []
-
-    if(feedKey.equals(metadata?.genesisFeed)) {
-      res.push('genesis')
-    } 
-    if (feedKey.equals(metadata?.controlFeed) || feedKey.equals(metadata?.dataFeed)) {
-      res.push('own');
-    } 
-
-    return res;
-  }
+    if (metadata) {
+      return {
+        genesis: feedKey.equals(metadata?.genesisFeed),
+        own: feedKey.equals(metadata?.controlFeed) || feedKey.equals(metadata?.dataFeed),
+      };
+    }
+  };
 
   const controlKeys = Array.from(
     new ComplexSet(PublicKey.hash, [
@@ -204,7 +223,8 @@ const PipelineTable = ({ state, metadata }: { state: SpaceProto.PipelineState, m
     ...controlKeys.map(
       (feedKey): PipelineTableRow => ({
         feedKey,
-        type: ['control', ...getType(feedKey)].join(' '),
+        type: 'control',
+        ...getType(feedKey),
         start: 0,
         processed: state.currentControlTimeframe?.get(feedKey),
         target: state.targetControlTimeframe?.get(feedKey),
@@ -214,7 +234,8 @@ const PipelineTable = ({ state, metadata }: { state: SpaceProto.PipelineState, m
     ...dataKeys.map(
       (feedKey): PipelineTableRow => ({
         feedKey,
-        type: ['data', ...getType(feedKey)].join(' '),
+        type: 'data',
+        ...getType(feedKey),
         start: state.startDataTimeframe?.get(feedKey) ?? 0,
         processed: state.currentDataTimeframe?.get(feedKey),
         target: state.targetDataTimeframe?.get(feedKey),
@@ -226,6 +247,7 @@ const PipelineTable = ({ state, metadata }: { state: SpaceProto.PipelineState, m
   return <Table compact columns={columns} data={data} />;
 };
 
+// TODO(burdon): Not used?
 const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
   const controlKeys = Timeframe.merge(
     state.currentControlTimeframe ?? new Timeframe(),
