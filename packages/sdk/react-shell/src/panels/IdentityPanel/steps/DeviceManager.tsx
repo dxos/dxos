@@ -5,7 +5,7 @@
 import { CaretLeft, Check, Plus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback } from 'react';
 
-import { Button, Separator, useTranslation } from '@dxos/aurora';
+import { Button, Separator, useTranslation, ScrollArea } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { useClient } from '@dxos/react-client';
 import { useDevices, useHaloInvitations } from '@dxos/react-client/halo';
@@ -40,11 +40,19 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
 
   return (
     <>
-      <InvitationList
-        invitations={invitations}
-        onClickRemove={(invitation) => invitation.cancel()}
-        createInvitationUrl={createInvitationUrl}
-      />
+      <Separator classNames='mlb-2' />
+      <ScrollArea.Root classNames='grow max-bs-40'>
+        <ScrollArea.Viewport>
+          <InvitationList
+            invitations={invitations}
+            onClickRemove={(invitation) => invitation.cancel()}
+            createInvitationUrl={createInvitationUrl}
+          />
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation='vertical'>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
       <div role='none' className='flex-1' />
       <Button
         disabled={!active}
@@ -62,8 +70,15 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
         <span className='grow'>{t('create device invitation label')}</span>
         <Plus className={getSize(4)} weight='bold' />
       </Button>
-      <Separator classNames='mlb-3' />
-      <DeviceList devices={devices} />
+      <Separator classNames='mlb-2' />
+      <ScrollArea.Root classNames='grow max-bs-40'>
+        <ScrollArea.Viewport>
+          <DeviceList devices={devices} />
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation='vertical'>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
       <div className='flex gap-2 mbs-2'>
         {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
         <Button

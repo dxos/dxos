@@ -20,8 +20,8 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
     </Button>
   );
   return (
-    <div role='none' className='grow flex flex-col gap-1 justify-around'>
-      <div className='flex flex-col gap-1'>
+    <div role='none' className='grow flex flex-col gap-1'>
+      <div className='grow justify-center flex flex-col gap-1'>
         <DensityProvider density='coarse'>
           <Button disabled={!active} data-testid='manage-devices' onClick={() => send({ type: 'chooseDevices' })}>
             <Plus className={getSize(6)} />
