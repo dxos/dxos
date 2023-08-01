@@ -133,7 +133,7 @@ const Invitations = ({ id }: { id: number }) => {
     <ButtonGroup classNames='mbe-4'>
       {/* <Tooltip content='Create Identity'> */}
       <Button
-        onClick={() => client.halo.createIdentity({ displayName: faker.name.firstName() })}
+        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       >
