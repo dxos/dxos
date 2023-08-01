@@ -22,14 +22,12 @@ test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeEach(async ({ browser, browserName }) => {
+    test.skip(browserName === 'firefox');
+    test.skip(browserName === 'webkit' && platform() !== 'darwin');
+
     host = new AppManager(browser, true);
-    guest =
-      browserName === 'chromium' || (platform() === 'darwin' && browserName === 'webkit')
-        ? new AppManager(browser, true)
-        : host;
+    guest = new AppManager(browser, true);
 
     await host.init();
     await guest.init();

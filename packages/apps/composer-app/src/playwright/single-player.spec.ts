@@ -11,8 +11,6 @@ import { AppManager } from './app-manager';
 test.describe('Single-player tests', () => {
   let host: AppManager;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser, true);
     await host.init();
