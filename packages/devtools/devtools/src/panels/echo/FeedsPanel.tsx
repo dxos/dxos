@@ -23,7 +23,6 @@ const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
     accessor: (block) => {
       const feedKey = block.feedKey;
       return feedKey.truncate();
-      // return `${feedKey.truncate()} (${humanize(feedKey)})`;
     },
   },
   {
@@ -45,6 +44,9 @@ const FeedsPanel = () => {
   const [refreshCount, setRefreshCount] = useState(0);
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
 
+  const messages = useFeedMessages({ feedKey }).reverse();
+  const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
   useEffect(() => {
@@ -55,8 +57,6 @@ const FeedsPanel = () => {
       });
     }
   }, [key]);
-
-  const messages = useFeedMessages({ feedKey }).reverse();
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
@@ -75,8 +75,6 @@ const FeedsPanel = () => {
       return type;
     }
   };
-
-  const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
   return (
     <PanelContainer

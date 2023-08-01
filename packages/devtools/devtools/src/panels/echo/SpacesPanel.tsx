@@ -87,6 +87,7 @@ const SpacesPanel: FC = () => {
       toolbar={
         <Toolbar>
           <SpaceSelector />
+          <div className='grow' />
           <Button onClick={toggleActive}>
             {space?.state.get() === SpaceState.INACTIVE ? 'Activate' : 'Deactivate'}
           </Button>
