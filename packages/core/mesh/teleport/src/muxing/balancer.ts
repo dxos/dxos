@@ -60,7 +60,6 @@ export class Balancer {
   }
 
   private _getNextCallerId() {
-    // if there is a system call, return it
     if (this._calls.has(this._sysChannelId)) {
       return this._sysChannelId;
     }
