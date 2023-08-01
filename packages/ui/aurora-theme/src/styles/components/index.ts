@@ -12,6 +12,7 @@ export * from './list';
 export * from './main';
 export * from './message';
 export * from './popover';
+export * from './scroll-area';
 export * from './separator';
 export * from './tag';
 export * from './toast';
