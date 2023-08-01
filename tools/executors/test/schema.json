@@ -28,7 +28,7 @@
     "ciEnvironments": {
       "type": "array",
       "description": "Environments to run tests in CI",
-      "default": ["nodejs", "chromium", "firefox"]
+      "default": ["nodejs", "chromium", "firefox", "webkit"]
     },
     "playwright": {
       "type": "boolean",
