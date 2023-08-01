@@ -33,7 +33,7 @@ export class TestExtension implements TeleportExtension {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
-      port: context.createPort('rpc', {
+      port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
@@ -54,7 +54,7 @@ export class TestExtension implements TeleportExtension {
           },
         },
       },
-      timeout: 1000,
+      timeout: 2000,
     });
 
     await this._rpc.open();
@@ -71,8 +71,8 @@ export class TestExtension implements TeleportExtension {
   }
 
   async test(message = 'test') {
-    await this.open.wait({ timeout: 500 });
-    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 500);
+    await this.open.wait({ timeout: 1500 });
+    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 1500);
     invariant(res.data === message);
   }
 

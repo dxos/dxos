@@ -17,6 +17,10 @@ import translations from './translations';
 import { STACK_PLUGIN, StackAction, StackPluginProvides, StackProvides } from './types';
 import { isStack, stackToGraphNode } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[StackType.name] = StackType;
+
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const adapter = new GraphNodeAdapter(StackType.filter(), stackToGraphNode);
 

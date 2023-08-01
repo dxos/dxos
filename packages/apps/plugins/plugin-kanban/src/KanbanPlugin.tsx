@@ -16,6 +16,10 @@ import translations from './translations';
 import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[KanbanType.name] = KanbanType;
+
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
 

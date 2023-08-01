@@ -16,6 +16,10 @@ import translations from './translations';
 import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[ThreadType.name] = ThreadType;
+
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
 
