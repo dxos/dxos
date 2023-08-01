@@ -787,7 +787,7 @@ importers:
       signia: ^0.1.4
       signia-react: ^0.1.4
       vite: ^4.3.9
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@braneframe/plugin-stack': link:../plugin-stack
       '@dxos/client': link:../../../sdk/client
@@ -799,7 +799,7 @@ importers:
       lodash.get: 4.4.2
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -2388,7 +2388,7 @@ importers:
       lodash.set: ^4.3.2
       minisearch: ^3.0.2
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -2401,7 +2401,7 @@ importers:
       lodash.set: 4.3.2
       minisearch: 3.3.0
       tiny-invariant: 1.3.1
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@faker-js/faker': 8.0.2
       '@types/lodash.clonedeep': 4.5.7
@@ -2567,11 +2567,11 @@ importers:
       react: ^18.2.0
     dependencies:
       '@dxos/echo-schema': link:../echo-schema
-      '@preact/signals': 1.1.5_preact@10.11.2
+      '@preact/signals': 1.1.5_preact@10.16.0
       '@preact/signals-core': 1.3.1
       '@preact/signals-react': 1.3.4_react@18.2.0
     optionalDependencies:
-      preact: 10.11.2
+      preact: 10.16.0
       react: 18.2.0
 
   packages/core/echo/echo-typegen:
@@ -2663,7 +2663,7 @@ importers:
       '@faker-js/faker': ^8.0.2
       '@types/node': ^18.11.9
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
@@ -2674,7 +2674,7 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@types/node': 18.11.9
       tiny-invariant: 1.3.1
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/document-model': link:../document-model
       '@dxos/feed-store': link:../../../common/feed-store
@@ -4310,7 +4310,7 @@ importers:
       react-dom: ^18.2.0
       use-subscription: ^1.8.0
       y-monaco: ^0.1.0
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -4335,8 +4335,8 @@ importers:
       esbuild-wasm: 0.16.17
       monaco-editor: 0.25.2
       use-subscription: 1.8.0_react@18.2.0
-      y-monaco: 0.1.4_32hbp247o7cyndrd5jnsixlimy
-      yjs: 13.5.44
+      y-monaco: 0.1.4_i7gp7jhfwxkg2cuwxlox6o4tpm
+      yjs: 13.6.7
     devDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@testing-library/dom': 8.19.0
@@ -4374,7 +4374,7 @@ importers:
       prosemirror-view: ^1.30.1
       y-prosemirror: ~1.0.20
       y-protocols: ^1.0.5
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@braneframe/types': link:../../apps/types
       '@dxos/async': link:../../common/async
@@ -4392,14 +4392,14 @@ importers:
       assert: 2.0.0
       date-fns: 2.29.3
       prosemirror-schema-basic: 1.2.1
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     devDependencies:
       '@dxos/client-services': link:../../sdk/client-services
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
 
   packages/experimental/kodama:
     specifiers:
@@ -5336,7 +5336,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
@@ -5353,7 +5353,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/text-model': link:../../core/echo/text-model
       '@faker-js/faker': 8.0.2
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@testing-library/dom': 8.19.0
@@ -5644,7 +5644,7 @@ importers:
       y-codemirror.next: ^0.3.2
       y-prosemirror: ~1.0.20
       y-protocols: ^1.0.5
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@codemirror/autocomplete': 6.4.2_lc2v3dpzp2l5pdzwtgfaudkm3e
       '@codemirror/commands': 6.2.2
@@ -5683,10 +5683,10 @@ importers:
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
-      y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-codemirror.next: 0.3.2_zlu543cx2y2gqzwkhklqerpwl4
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -9239,7 +9239,7 @@ packages:
       rollup: 2.79.1
       vite: 4.3.9
     optionalDependencies:
-      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
+      '@vitejs/plugin-react': 3.0.1_vite@4.3.9
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12852,13 +12852,13 @@ packages:
       '@preact/signals-core': 1.3.1
     dev: false
 
-  /@preact/signals/1.1.5_preact@10.11.2:
+  /@preact/signals/1.1.5_preact@10.16.0:
     resolution: {integrity: sha512-OWr9TjuNh9ol/B5rNbLANEA940MvbYDMGcSAjPaKzAHBPhnTpuFCWhBB8vSm9lfy1BxKx6DKJLSs3Cz24otdkw==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.3.1
-      preact: 10.11.2
+      preact: 10.16.0
     dev: false
 
   /@protobufjs/aspromise/1.1.2:
@@ -14673,7 +14673,7 @@ packages:
     requiresBuild: true
     dependencies:
       https-proxy-agent: 5.0.1
-      node-fetch: 2.6.7
+      node-fetch: 2.6.12
       progress: 2.0.3
       proxy-from-env: 1.1.0
       which: 2.0.2
@@ -16368,7 +16368,7 @@ packages:
       y-prosemirror: 1.0.20
     dependencies:
       '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     dev: false
 
   /@tiptap/extension-collaboration/2.0.0-beta.220_ynezejixgkllukncpjhwuvpzpq:
@@ -16380,7 +16380,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     dev: false
 
   /@tiptap/extension-document/2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q:
@@ -19790,7 +19790,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.4
-      caniuse-lite: 1.0.30001420
+      caniuse-lite: 1.0.30001518
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -19806,7 +19806,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.4
-      caniuse-lite: 1.0.30001442
+      caniuse-lite: 1.0.30001518
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -20609,7 +20609,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001442
+      caniuse-lite: 1.0.30001518
       electron-to-chromium: 1.4.283
       node-releases: 2.0.6
       update-browserslist-db: 1.0.10_browserslist@4.21.4
@@ -20922,12 +20922,8 @@ packages:
   /camelize/1.0.1:
     resolution: {integrity: sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==}
 
-  /caniuse-lite/1.0.30001420:
-    resolution: {integrity: sha512-OnyeJ9ascFA9roEj72ok2Ikp7PHJTKubtEJIQ/VK3fdsS50q4KWy+Z5X0A1/GswEItKX0ctAp8n4SYDE7wTu6A==}
-    dev: true
-
-  /caniuse-lite/1.0.30001442:
-    resolution: {integrity: sha512-239m03Pqy0hwxYPYR5JwOIxRJfLTWtle9FV8zosfV5pHg+/51uD4nxcUlM8+mWWGfwKtt8lJNHnD3cWw9VZ6ow==}
+  /caniuse-lite/1.0.30001518:
+    resolution: {integrity: sha512-rup09/e3I0BKjncL+FesTayKtPrdwKhUufQFd3riFw1hHg8JmIFoInYfB102cFcY/pPgGmdyl/iy+jgiDi2vdA==}
 
   /canvas-renderer/2.2.1:
     resolution: {integrity: sha512-RrBgVL5qCEDIXpJ6NrzyRNoTnXxYarqm/cS/W6ERhUJts5UQtt/XPEosGN3rqUkZ4fjBArlnCbsISJ+KCFnIAg==}
@@ -29758,6 +29754,13 @@ packages:
     dependencies:
       isomorphic.js: 0.2.5
 
+  /lib0/0.2.78:
+    resolution: {integrity: sha512-SV2nU43/6eaYnGH3l0lg2wg1ziB/TH3sAd2E8quXPGwrqo+aX98SNT2ZKucpUr5B8A52jD7ZMjAl+r87Fa/bLQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      isomorphic.js: 0.2.5
+
   /libbase64/1.2.1:
     resolution: {integrity: sha512-l+nePcPbIG1fNlqMzrh68MLkX/gTxk/+vdvAb388Ssi7UuUN31MI44w4Yf33mM3Cm4xDfw48mdf3rkdHszLNew==}
     dev: false
@@ -31955,6 +31958,18 @@ packages:
     engines: {node: '>=10.5.0'}
     dev: true
 
+  /node-fetch/2.6.12:
+    resolution: {integrity: sha512-C/fGU2E8ToujUivIO0H+tpQ6HWo4eEmchoPIoXtxCrVghxdKq+QOHqEZW7tuP3KlV3bC8FRMO5nMCC7Zm1VP6g==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
+    dependencies:
+      whatwg-url: 5.0.0
+    dev: true
+
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -33767,6 +33782,10 @@ packages:
 
   /preact/10.11.2:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
+    dev: false
+
+  /preact/10.16.0:
+    resolution: {integrity: sha512-XTSj3dJ4roKIC93pald6rWuB2qQJO9gO2iLLyTe87MrjQN+HklueLsmskbywEWqCHlclgz3/M4YLL2iBr9UmMA==}
     dev: false
 
   /preferred-pm/3.0.3:
@@ -41147,7 +41166,7 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
-  /y-codemirror.next/0.3.2_sjioejs7munhi7lcuvayqcsncm:
+  /y-codemirror.next/0.3.2_zlu543cx2y2gqzwkhklqerpwl4:
     resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
     peerDependencies:
       '@codemirror/state': ^6.0.0
@@ -41157,10 +41176,10 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
       lib0: 0.2.65
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
-  /y-monaco/0.1.4_32hbp247o7cyndrd5jnsixlimy:
+  /y-monaco/0.1.4_i7gp7jhfwxkg2cuwxlox6o4tpm:
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
       monaco-editor: '>=0.20.0'
@@ -41168,10 +41187,10 @@ packages:
     dependencies:
       lib0: 0.2.65
       monaco-editor: 0.25.2
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
-  /y-prosemirror/1.0.20_ihntoejlm64yg32k3unxwmpmte:
+  /y-prosemirror/1.0.20_7viujtpg6y3hjk44qafnnwb33q:
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -41185,7 +41204,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
   /y-protocols/1.0.5:
@@ -41421,10 +41440,11 @@ packages:
       - supports-color
     dev: false
 
-  /yjs/13.5.44:
-    resolution: {integrity: sha512-UL+abIh2lQonqXfaJ+en7z9eGshpY11j1zNLc2kDYs0vrTjee4gZJUXC3ZsuhP6geQt0IRU04epCGRaVPQAVCA==}
+  /yjs/13.6.7:
+    resolution: {integrity: sha512-mCZTh4kjvUS2DnaktsYN6wLH3WZCJBLqrTdkWh1bIDpA/sB/GNFaLA/dyVJj2Hc7KwONuuoC/vWe9bwBBosZLQ==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     dependencies:
-      lib0: 0.2.65
+      lib0: 0.2.78
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

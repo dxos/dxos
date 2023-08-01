@@ -56,7 +56,7 @@
     "y-codemirror.next": "^0.3.2",
     "y-prosemirror": "~1.0.20",
     "y-protocols": "^1.0.5",
-    "yjs": "^13.5.44"
+    "yjs": "^13.6.7"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
