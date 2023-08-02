@@ -3,14 +3,20 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { cloneElement, useMemo } from 'react';
+import React, { cloneElement, useEffect, useMemo } from 'react';
 
 import { Button, DensityProvider, Tooltip, useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { log } from '@dxos/log';
+import { useInvitationStatus } from '@dxos/react-client/invitations';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { Viewport } from '../../components';
+import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
+import { invitationStatusValue } from '../../util';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
+import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
 
 const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePanelHeadingProps) => {
@@ -39,27 +45,41 @@ const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePa
   );
 };
 
-export const SpacePanelImpl = ({
-  titleId,
-  activeView,
-  space,
-  createInvitationUrl,
-  send = () => {},
-  doneActionParent,
-  onDone,
-}: SpacePanelImplProps) => {
+export const SpacePanelImpl = ({ titleId, activeView, space, ...props }: SpacePanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...{ titleId, space, doneActionParent, onDone }} />
+      <SpacePanelHeading {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManager {...{ active: activeView === 'space manager', send, space, createInvitationUrl }} />
+            <SpaceManager active={activeView === 'space manager'} space={space} {...props} />
           </Viewport.View>
-          <Viewport.View {...{} /* todo(thure): Remove this unused View */} id='never' classNames={stepStyles} />
+          <Viewport.View id='space invitation manager' classNames={stepStyles}>
+            <InvitationManager
+              active={activeView === 'space invitation manager'}
+              {...props}
+              invitationUrl={props.invitationUrl}
+            />
+          </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
     </DensityProvider>
+  );
+};
+
+const SpacePanelWithInvitationImpl = ({
+  invitation,
+  ...props
+}: SpacePanelImplProps & { invitation: CancellableInvitationObservable }) => {
+  const { status, invitationCode, authCode } = useInvitationStatus(invitation);
+  const statusValue = invitationStatusValue.get(status) ?? 0;
+  const showAuthCode = statusValue === 3;
+  return (
+    <SpacePanelImpl
+      {...props}
+      invitationUrl={props.createInvitationUrl(invitationCode!)}
+      {...(showAuthCode && { authCode })}
+    />
   );
 };
 
@@ -69,14 +89,39 @@ export const SpacePanel = ({
   ...props
 }: SpacePanelProps) => {
   const titleId = useId('spacePanel__heading', propsTitleId);
-  const activeView = useMemo(() => 'space manager', []);
-  return (
-    <SpacePanelImpl
-      {...props}
-      titleId={titleId}
-      activeView={activeView}
-      createInvitationUrl={createInvitationUrl}
-      send={() => {}}
-    />
+
+  const [spaceState, spaceSend, spaceService] = useSpaceMachine({ context: { space: props.space } });
+
+  useEffect(() => {
+    const subscription = spaceService.subscribe((state) => {
+      log('[state]', state);
+    });
+
+    return subscription.unsubscribe;
+  }, [spaceService]);
+
+  const activeView = useMemo(() => {
+    switch (true) {
+      case spaceState.matches('managingSpace'):
+        return 'space manager';
+      case spaceState.matches('managingSpaceInvitation'):
+        return 'space invitation manager';
+      default:
+        return 'never';
+    }
+  }, [spaceState]);
+
+  const implProps = {
+    ...props,
+    activeView,
+    send: spaceSend,
+    titleId,
+    createInvitationUrl,
+  };
+
+  return spaceState.context.invitation ? (
+    <SpacePanelWithInvitationImpl {...implProps} invitation={spaceState.context.invitation} />
+  ) : (
+    <SpacePanelImpl {...implProps} />
   );
 };
