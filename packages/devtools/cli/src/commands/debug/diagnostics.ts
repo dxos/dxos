@@ -12,11 +12,11 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 
 /**
- * DX_PROFILE=test dx debug stats --json
+ * DX_PROFILE=test dx debug diagnostics --json
  */
-export default class Stats extends BaseCommand<typeof Stats> {
+export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
   static override enableJsonFlag = true;
-  static override description = 'Output debug stats.';
+  static override description = 'Output debug diagnostics.';
   static override flags = {
     ...BaseCommand.flags,
     humanize: Flags.boolean({
