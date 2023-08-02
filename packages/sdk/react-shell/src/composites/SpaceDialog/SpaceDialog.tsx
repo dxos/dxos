@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Dialog, DialogContentProps, useId } from '@dxos/aurora';
 
+import { ClipboardProvider } from '../../components';
 import { SpacePanel, SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
@@ -19,13 +20,15 @@ export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId}>
-            <SpacePanel
-              {...{
-                ...spacePanelProps,
-                titleId,
-                doneActionParent: <Dialog.Close asChild />,
-              }}
-            />
+            <ClipboardProvider>
+              <SpacePanel
+                {...{
+                  ...spacePanelProps,
+                  titleId,
+                  doneActionParent: <Dialog.Close asChild />,
+                }}
+              />
+            </ClipboardProvider>
           </Dialog.Content>
         </Dialog.Overlay>
       </Dialog.Portal>
