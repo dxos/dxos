@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
@@ -23,6 +23,9 @@ export interface MessengerOptions {
   signalManager: SignalManager;
   retryDelay?: number;
 }
+
+const ReliablePayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload');
+const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgement');
 
 /**
  * Reliable messenger that works trough signal network.
@@ -80,14 +83,14 @@ export class Messenger {
   }
 
   async sendMessage({ author, recipient, payload }: Message): Promise<void> {
-    assert(!this._closed, 'Closed');
+    invariant(!this._closed, 'Closed');
     const messageContext = this._ctx.derive();
 
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
       payload,
     };
-    assert(!this._onAckCallbacks.has(reliablePayload.messageId!));
+    invariant(!this._onAckCallbacks.has(reliablePayload.messageId!));
     log('send message', { messageId: reliablePayload.messageId, author, recipient });
 
     let messageReceived: () => void;
@@ -145,7 +148,7 @@ export class Messenger {
     payloadType?: string;
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
-    assert(!this._closed, 'Closed');
+    invariant(!this._closed, 'Closed');
 
     await this._signalManager.subscribeMessages(peerId);
     let listeners: Set<OnMessage> | undefined;
@@ -187,9 +190,7 @@ export class Messenger {
       recipient,
       payload: {
         type_url: 'dxos.mesh.messaging.ReliablePayload',
-        value: schema
-          .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-          .encode(reliablePayload, { preserveAny: true }),
+        value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
       },
     });
   }
@@ -208,10 +209,8 @@ export class Messenger {
   }
 
   private async _handleReliablePayload({ author, recipient, payload }: Message) {
-    assert(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
-    const reliablePayload: ReliablePayload = schema
-      .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-      .decode(payload.value, { preserveAny: true });
+    invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
 
@@ -235,10 +234,8 @@ export class Messenger {
   }
 
   private async _handleAcknowledgement({ payload }: { payload: Any }) {
-    assert(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
-    this._onAckCallbacks.get(
-      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId,
-    )?.();
+    invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
+    this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
   private async _sendAcknowledgement({
@@ -257,7 +254,7 @@ export class Messenger {
       recipient: author,
       payload: {
         type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId }),
+        value: Acknowledgement.encode({ messageId }),
       },
     });
   }

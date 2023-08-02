@@ -6,7 +6,8 @@ import express from 'express';
 import http from 'http';
 import assert from 'node:assert';
 
-import { Expando, PublicKey } from '@dxos/client';
+import { PublicKey } from '@dxos/client';
+import { Expando } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
 import { AbstractPlugin } from '../plugin';

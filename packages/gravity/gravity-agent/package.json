@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-agent",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,6 @@
     "@dxos/testutils": "0.1.13",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
-    "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
     "node-ipc": "^11.1.0",
     "util": "^0.12.4",

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
 
@@ -84,7 +84,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   // Create map of RPCs.
   const exposedRpcs: Record<string, ServiceHandler<any>> = {};
   if (exposed) {
-    assert(handlers);
+    invariant(handlers);
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
       // Get full service name with the package name without '.' at the beginning.
       const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);

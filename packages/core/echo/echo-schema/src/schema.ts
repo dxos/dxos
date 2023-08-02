@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import * as pb from 'protobufjs';
+import invariant from 'tiny-invariant';
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
@@ -108,7 +108,7 @@ export class EchoSchema {
       this._root.add(nested);
     });
     Array.from(schema._prototypes.entries()).forEach(([name, prototype]) => {
-      assert(!this._prototypes.has(name), 'Names collision');
+      invariant(!this._prototypes.has(name), 'Names collision');
       this._prototypes.set(name, prototype);
     });
   }

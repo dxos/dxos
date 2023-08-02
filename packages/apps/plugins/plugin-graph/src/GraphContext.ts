@@ -5,8 +5,10 @@
 
 import { Context, createContext, useContext } from 'react';
 
+import { raise } from '@dxos/debug';
+
 import { GraphContextValue } from './types';
 
-export const GraphContext: Context<GraphContextValue> = createContext<GraphContextValue>({ roots: {}, actions: {} });
+export const GraphContext: Context<GraphContextValue | null> = createContext<GraphContextValue | null>(null);
 
-export const useGraphContext = () => useContext(GraphContext);
+export const useGraph = (): GraphContextValue => useContext(GraphContext) ?? raise(new Error('GraphContext not found'));

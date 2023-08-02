@@ -9,12 +9,12 @@ import React, { FC, useState } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Searchbar, Select } from '@dxos/react-appkit';
-import { useClient, useNetworkStatus } from '@dxos/react-client';
+import { PublicKey, useClient } from '@dxos/react-client';
+import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
 import { MasterDetailTable, Toolbar } from '../../components';

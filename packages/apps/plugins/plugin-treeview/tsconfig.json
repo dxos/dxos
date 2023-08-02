@@ -21,7 +21,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/debug"
     },
     {
       "path": "../../../sdk/react-client"
@@ -42,7 +42,13 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-intent"
+    },
+    {
       "path": "../plugin-splitview"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

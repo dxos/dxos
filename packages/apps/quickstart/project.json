@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/quickstart/src/index.ts",
         "outputPath": "packages/apps/quickstart/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/quickstart/out/quickstart"
       },
@@ -26,7 +26,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -38,7 +38,7 @@
       ]
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "quickstart:bundle"
       }
@@ -66,7 +66,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/ui/aurora/.storybook",
         "uiFramework": "@storybook/react"

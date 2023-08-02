@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(wittjosiah): Remove. Use DXOS protocols to reduce duplicate functionality weighing down apps.
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import { Observable } from 'lib0/observable';

@@ -9,7 +9,6 @@ export * from './exceptions';
 export * from './fail';
 export * from './inspect';
 export * from './log-method';
-export * from './logging';
 export * from './raise';
 export * from './snoop';
 export * from './stack-trace';

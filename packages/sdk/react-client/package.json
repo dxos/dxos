@@ -1,53 +1,102 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.js": "./dist/lib/browser/testing/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./devtools": {
+      "browser": "./dist/lib/browser/devtools/index.mjs",
+      "import": "./dist/lib/browser/devtools/index.mjs",
+      "require": "./dist/lib/node/devtools/index.cjs",
+      "node": "./dist/lib/node/devtools/index.cjs"
+    },
+    "./echo": {
+      "browser": "./dist/lib/browser/echo/index.mjs",
+      "import": "./dist/lib/browser/echo/index.mjs",
+      "require": "./dist/lib/node/echo/index.cjs",
+      "node": "./dist/lib/node/echo/index.cjs"
+    },
+    "./halo": {
+      "browser": "./dist/lib/browser/halo/index.mjs",
+      "import": "./dist/lib/browser/halo/index.mjs",
+      "require": "./dist/lib/node/halo/index.cjs",
+      "node": "./dist/lib/node/halo/index.cjs"
+    },
+    "./invitations": {
+      "browser": "./dist/lib/browser/invitations/index.mjs",
+      "import": "./dist/lib/browser/invitations/index.mjs",
+      "require": "./dist/lib/node/invitations/index.cjs",
+      "node": "./dist/lib/node/invitations/index.cjs"
+    },
+    "./mesh": {
+      "browser": "./dist/lib/browser/mesh/index.mjs",
+      "import": "./dist/lib/browser/mesh/index.mjs",
+      "require": "./dist/lib/node/mesh/index.cjs",
+      "node": "./dist/lib/node/mesh/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "import": "./dist/lib/browser/testing/index.mjs",
+      "require": "./dist/lib/node/testing/index.cjs",
+      "node": "./dist/lib/node/testing/index.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "devtools": [
+        "dist/types/src/devtools/index.d.ts"
+      ],
+      "echo": [
+        "dist/types/src/echo/index.d.ts"
+      ],
+      "halo": [
+        "dist/types/src/halo/index.d.ts"
+      ],
+      "invitations": [
+        "dist/types/src/invitations/index.d.ts"
+      ],
+      "mesh": [
+        "dist/types/src/mesh/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/aurora": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/keys": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/observable-object": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
-    "assert": "^2.0.0",
-    "use-subscription": "^1.8.0",
-    "yjs": "^13.5.44"
+    "tiny-invariant": "^1.3.1",
+    "yjs": "^13.6.7"
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
+    "@faker-js/faker": "^8.0.2",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
-    "@types/debug": "^4.1.7",
-    "@types/level-js": "~4.0.1",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "@types/use-subscription": "^1.0.0",
-    "level-js": "^5.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -58,8 +107,8 @@
   "optionalDependencies": {
     "@dxos/aurora": "workspace:*",
     "@dxos/text-model": "workspace:*",
-    "@faker-js/faker": "^7.6.0",
-    "yjs": "^13.5.44"
+    "@faker-js/faker": "^8.0.2",
+    "yjs": "^13.6.7"
   },
   "publishConfig": {
     "access": "public"

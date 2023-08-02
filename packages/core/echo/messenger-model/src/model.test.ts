@@ -4,7 +4,8 @@
 
 import expect from 'expect';
 
-import { ModelFactory, TestBuilder } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
+import { TestBuilder } from '@dxos/model-factory/testing';
 import { describe, test } from '@dxos/test';
 
 import { MessengerModel } from './model';

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import invariant from 'tiny-invariant';
 
 // TODO(burdon): Protobuf mapping?
 export type Fraction = [num: number, denum: number];
@@ -110,7 +110,7 @@ export class FractionUtil {
    * @param n
    */
   static factors = (n: number): number[] => {
-    assert(Number.isFinite(n), `Invalid number: ${n}`);
+    invariant(Number.isFinite(n), `Invalid number: ${n}`);
 
     const factors = [1];
     if (Number.isSafeInteger(n)) {

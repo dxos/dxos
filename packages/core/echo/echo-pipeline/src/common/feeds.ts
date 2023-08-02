@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { FeedWriter } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
@@ -14,8 +14,8 @@ export const createMappedFeedWriter = <Source extends {}, Target extends {}>(
   mapper: (arg: Source) => MaybePromise<Target>,
   writer: FeedWriter<Target>,
 ): FeedWriter<Source> => {
-  assert(mapper);
-  assert(writer);
+  invariant(mapper);
+  invariant(writer);
 
   return {
     write: async (data: Source, options) => await writer.write(await mapper(data), options),

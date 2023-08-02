@@ -4,8 +4,8 @@
 
 import React, { FC } from 'react';
 
-import { Space } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { Space } from '@dxos/react-client/echo';
 
 import { Table } from '../util';
 

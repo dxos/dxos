@@ -3,13 +3,14 @@
 //
 
 import { LogConfig, LogLevel, LogOptions } from './config';
-import { LogContext, LogMetadata, LogProcessor } from './context';
+import { LogContext, LogProcessor } from './context';
+import { CallMetadata } from './meta';
 import { getConfig, DEFAULT_PROCESSORS } from './options';
 
 /**
  * Logging function.
  */
-type LogFunction = (message: string, context?: LogContext, meta?: LogMetadata) => void;
+type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) => void;
 
 /**
  * Logging methods.
@@ -20,7 +21,7 @@ interface LogMethods {
   info: LogFunction;
   warn: LogFunction;
   error: LogFunction;
-  catch: (error: Error | any, context?: LogContext, meta?: LogMetadata) => void;
+  catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
   break: () => void;
 }
 
@@ -75,7 +76,13 @@ const createLog = (): LogImp => {
   /**
    * Process the current log call.
    */
-  const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
+  const processLog = (
+    level: LogLevel,
+    message: string,
+    context: LogContext = {},
+    meta?: CallMetadata,
+    error?: Error,
+  ) => {
     log._config.processors.forEach((processor) => processor(log._config, { level, message, context, meta, error }));
   };
 

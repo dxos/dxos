@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/sdk/vault/src/index.ts",
         "outputPath": "packages/sdk/vault/dist/types",
@@ -14,7 +14,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/sdk/vault/dist/bundle"
       },
@@ -26,7 +26,7 @@
       "dependsOn": [
         "compile"
       ],
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "base": "/src/testing",
         "configFile": "packages/sdk/vault/src/testing/vite.config.ts",
@@ -90,10 +90,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/sdk/vault",
         "outputPath": "tmp/playwright/packages/sdk/vault",
         "playwrightConfigPath": "packages/sdk/vault/src/playwright/playwright.config.ts",
@@ -113,7 +109,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -125,7 +121,7 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "vault:bundle",
         "port": 3967,
@@ -133,7 +129,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "vault:bundle"
       }
@@ -143,7 +139,7 @@
         "bundle",
         "compile"
       ],
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "vault:bundle-test"
       }

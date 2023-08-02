@@ -13,6 +13,8 @@ import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 
 import { SnapshotStore } from './snapshot-store';
 
+const SpaceSnapshot = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
+
 /**
  * Snapshot manager for a specific space.
  */
@@ -28,7 +30,7 @@ export class SnapshotManager {
 
   private async _getBlob(blobId: Uint8Array): Promise<SpaceSnapshot> {
     const blob = await this._blobStore.get(blobId);
-    return schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').decode(blob);
+    return SpaceSnapshot.decode(blob);
   }
 
   @timed(10_000)
@@ -51,9 +53,7 @@ export class SnapshotManager {
   }
 
   async store(snapshot: SpaceSnapshot): Promise<string> {
-    const { id } = await this._blobStore.set(
-      schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot').encode(snapshot),
-    );
+    const { id } = await this._blobStore.set(SpaceSnapshot.encode(snapshot));
     await this._blobSync.notifyBlobAdded(id);
     return PublicKey.from(id).toHex();
   }

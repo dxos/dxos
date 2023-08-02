@@ -4,18 +4,13 @@
 
 import { Context, createContext, useContext } from 'react';
 
-export type SplitViewContextValue = {
-  sidebarOpen: boolean;
-  dialogContent: any;
-  dialogOpen: boolean;
-};
+import { raise } from '@dxos/debug';
 
-export const defaultValues: SplitViewContextValue = {
-  sidebarOpen: true,
-  dialogContent: 'never',
-  dialogOpen: false,
-};
+import { SplitViewContextValue } from './types';
 
-export const SplitViewContext: Context<SplitViewContextValue> = createContext(defaultValues);
+export const SplitViewContext: Context<SplitViewContextValue | null> = createContext<SplitViewContextValue | null>(
+  null,
+);
 
-export const useSplitView = () => useContext(SplitViewContext);
+export const useSplitView = (): SplitViewContextValue =>
+  useContext(SplitViewContext) ?? raise(new Error('SplitViewContext not found'));

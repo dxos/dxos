@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -65,10 +65,10 @@ const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
  * Reacts to new epochs to restart the pipeline.
  */
 @trackLeaks('open', 'close')
-export class DataPipeline {
+export class DataPipeline implements CredentialProcessor {
   private _ctx = new Context();
-  private _pipeline?: Pipeline;
-  private _targetTimeframe?: Timeframe;
+  private _pipeline?: Pipeline = undefined;
+  private _targetTimeframe?: Timeframe = undefined;
 
   private _lastAutomaticSnapshotTimeframe = new Timeframe();
   private _isOpen = false;
@@ -84,16 +84,17 @@ export class DataPipeline {
   /**
    * Current epoch. Might be still processing.
    */
-  public currentEpoch?: SpecificCredential<Epoch>;
+  public currentEpoch?: SpecificCredential<Epoch> = undefined;
 
   /**
    * Epoch currently applied.
    */
-  public appliedEpoch?: SpecificCredential<Epoch>;
+  public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
   private _lastProcessedEpoch = -1;
-  public onNewEpoch = new Event<Credential>();
   private _epochCtx?: Context;
+
+  public onNewEpoch = new Event<Credential>();
 
   get isOpen() {
     return this._isOpen;
@@ -112,20 +113,16 @@ export class DataPipeline {
     this._pipeline?.state.setTargetTimeframe(timeframe);
   }
 
-  createCredentialProcessor(): CredentialProcessor {
-    return {
-      process: async (credential) => {
-        if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
-          return;
-        }
+  async processCredential(credential: Credential) {
+    if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
+      return;
+    }
 
-        this.currentEpoch = credential;
-        if (this._isOpen) {
-          // process epoch
-          await this._processEpochInSeparateTask(credential);
-        }
-      },
-    };
+    this.currentEpoch = credential;
+    if (this._isOpen) {
+      // process epoch
+      await this._processEpochInSeparateTask(credential);
+    }
   }
 
   @synchronized
@@ -146,8 +143,8 @@ export class DataPipeline {
     // Create database backend.
     const feedWriter: FeedWriter<DataMessage> = {
       write: (data, options) => {
-        assert(this._pipeline, 'Pipeline is not initialized.');
-        assert(this.currentEpoch, 'Epoch is not initialized.');
+        invariant(this._pipeline, 'Pipeline is not initialized.');
+        invariant(this.currentEpoch, 'Epoch is not initialized.');
         return this._pipeline.writer.write({ data }, options);
       },
     };
@@ -189,6 +186,15 @@ export class DataPipeline {
 
     await this.databaseHost?.close();
     await this.itemManager?.destroy();
+
+    this._ctx = new Context();
+    this._pipeline = undefined;
+    this._targetTimeframe = undefined;
+    this._lastAutomaticSnapshotTimeframe = new Timeframe();
+    this.currentEpoch = undefined;
+    this.appliedEpoch = undefined;
+    this._lastProcessedEpoch = -1;
+    this._epochCtx = undefined;
   }
 
   private async _consumePipeline() {
@@ -198,7 +204,7 @@ export class DataPipeline {
       await waitForOneEpoch;
     }
 
-    assert(this._pipeline, 'Pipeline is not initialized.');
+    invariant(this._pipeline, 'Pipeline is not initialized.');
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
@@ -237,7 +243,7 @@ export class DataPipeline {
   }
 
   private _createSnapshot(): SpaceSnapshot {
-    assert(this.databaseHost, 'Database backend is not initialized.');
+    invariant(this.databaseHost, 'Database backend is not initialized.');
     return {
       spaceKey: this._params.spaceKey.asUint8Array(),
       timeframe: this._pipeline!.state.timeframe,
@@ -320,8 +326,8 @@ export class DataPipeline {
 
   @synchronized
   private async _processEpoch(ctx: Context, epoch: Epoch) {
-    assert(this._isOpen, 'Space is closed.');
-    assert(this._pipeline);
+    invariant(this._isOpen, 'Space is closed.');
+    invariant(this._pipeline);
     this._lastProcessedEpoch = epoch.number;
 
     log('Processing epoch', { epoch });
@@ -340,14 +346,14 @@ export class DataPipeline {
   }
 
   async waitUntilTimeframe(timeframe: Timeframe) {
-    assert(this._pipeline, 'Pipeline is not initialized.');
+    invariant(this._pipeline, 'Pipeline is not initialized.');
     await this._pipeline.state.waitUntilTimeframe(timeframe);
   }
 
   @synchronized
   async createEpoch(): Promise<Epoch> {
-    assert(this._pipeline);
-    assert(this.currentEpoch);
+    invariant(this._pipeline);
+    invariant(this.currentEpoch);
 
     await this._pipeline.pause();
 

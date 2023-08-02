@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Task } from '@dxos/kai-types';
-import { useQuery } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 
 import { TaskList } from '../../cards';
 import { useFrameContext } from '../../hooks';

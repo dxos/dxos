@@ -11,7 +11,6 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { Note } from '@dxos/kai-types';
 import { TileContentProps } from '@dxos/mosaic';
 import { Input } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
 
 export const colors: { id: string; color: string; border: string }[] = [
   { id: 'gray', color: 'bg-gray-200', border: 'border-gray-300' },
@@ -40,7 +39,7 @@ const Menu: FC<{ onDelete: () => void; onColorChange: (id: string) => void }> = 
   );
 };
 
-export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
+export const NoteTile = ({ item, onDelete }: TileContentProps<Note>) => {
   const note = item.data as Note;
 
   const { color, border } = colors.find(({ id }) => id === note.color) ?? colors[0];
@@ -108,4 +107,4 @@ export const NoteTile = observer(({ item, onDelete }: TileContentProps) => {
       </div>
     </div>
   );
-});
+};

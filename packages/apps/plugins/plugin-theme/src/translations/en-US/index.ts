@@ -3,7 +3,6 @@
 //
 
 import { appkit } from './appkit';
-import { composer } from './composer';
 import { os } from './os';
 
-export default { 'en-US': { appkit, composer, os } };
+export default (appName?: string) => ({ 'en-US': { appkit: appkit(appName), os } });

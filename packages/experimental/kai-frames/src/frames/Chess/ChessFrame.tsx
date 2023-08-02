@@ -3,14 +3,14 @@
 //
 
 import { ArrowUUpLeft, CaretLeft, CaretRight, PlusCircle } from '@phosphor-icons/react';
-import assert from 'assert';
 import { Chess, Color } from 'chess.js';
 import React, { FC, useEffect, useState } from 'react';
+import invariant from 'tiny-invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Game, Chessboard, ChessModel, ChessMove, ChessPanel, ChessPieces } from '@dxos/chess-app';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 
@@ -20,8 +20,8 @@ const chessPieces = [ChessPieces.RIOHACHA, ChessPieces.STANDARD, ChessPieces.FUT
 
 const createChess = (game: Game) => {
   const chess = new Chess();
-  if (game.fen) {
-    chess.loadPgn(game.fen);
+  if (game.pgn) {
+    chess.loadPgn(game.pgn);
   }
 
   return chess;
@@ -61,24 +61,24 @@ const Play: FC<{
   pieces: number;
   onClose: () => void;
   onSetPieces: (pieces: number) => void;
-}> = observer(({ game, pieces, onClose, onSetPieces }) => {
+}> = ({ game, pieces, onClose, onSetPieces }) => {
   const [orientation, setOrientation] = useState<Color>('w');
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
-    if (!model || game.fen !== model?.chess.pgn()) {
+    if (!model || game.pgn !== model?.chess.pgn()) {
       setModel({ chess: createChess(game) });
     }
-  }, [game.fen]);
+  }, [game.pgn]);
 
   const handleFlip = () => {
     setOrientation((orientation) => (orientation === 'w' ? 'b' : 'w'));
   };
 
   const handleUpdate = (move: ChessMove) => {
-    assert(model);
+    invariant(model);
     if (model.chess.move(move)) {
       // TODO(burdon): Add move (requires array of scalars).
-      game!.fen = model.chess.pgn();
+      game!.pgn = model.chess.pgn();
       setModel({ ...model });
     }
   };
@@ -121,7 +121,7 @@ const Play: FC<{
       </div>
     </div>
   );
-});
+};
 
 /**
  * Grid

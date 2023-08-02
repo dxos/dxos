@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "compile": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",
         "outputPath": "tools/executors/test/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

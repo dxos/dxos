@@ -5,7 +5,9 @@
 import assert from 'node:assert';
 
 // import { Trigger } from '@dxos/async';
-import { Invitation, Space, Client, PublicKey } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
 import { log } from '@dxos/log';
 import { Command } from '@dxos/protocols/proto/dxos/gravity';
 

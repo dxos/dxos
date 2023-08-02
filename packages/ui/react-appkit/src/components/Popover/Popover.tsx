@@ -7,7 +7,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Button as ToolbarButtonItem } from '@radix-ui/react-toolbar';
 import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
-import { defaultActive, defaultFocus, defaultHover, getSize, mx } from '@dxos/aurora-theme';
+import { openOutline, focusRing, hoverColors, getSize, mx } from '@dxos/aurora-theme';
 
 export interface PopoverSlots {
   content?: Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'>;
@@ -58,7 +58,7 @@ export const Popover = ({
         'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
         'rounded-lg p-4 shadow-xl elevated-buttons',
         'bg-white dark:bg-neutral-800',
-        defaultFocus,
+        focusRing,
         slots.content?.className,
       )}
     >
@@ -69,8 +69,8 @@ export const Popover = ({
           {...slots.close}
           className={mx(
             'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
-            defaultFocus,
-            defaultHover,
+            focusRing,
+            hoverColors,
             slots.close?.className,
           )}
           aria-label={closeLabel}
@@ -94,7 +94,7 @@ export const Popover = ({
       {...slots.trigger}
       onKeyUp={onKeyUp}
       data-keyupid='open'
-      className={mx(defaultHover, defaultFocus, defaultActive, slots.trigger?.className)}
+      className={mx(hoverColors, focusRing, openOutline, slots.trigger?.className)}
     >
       {openTrigger}
     </PopoverPrimitive.Trigger>

@@ -1,8 +1,10 @@
 //
 // Copyright 2022 DXOS.org
 //
-export const appkit = {
-  'current app name': 'This app',
+
+// TODO(burdon): Options object?
+export const appkit = (appName?: string) => ({
+  'current app name': appName ?? 'This app',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
@@ -65,7 +67,7 @@ export const appkit = {
   'success status label': 'Successfully accepted invitation',
   'back to spaces label': 'Back to spaces',
   'list title label': 'List title',
-  'list title placeholder': 'Untitled list',
+  'list title placeholder': 'New list',
   'list description label': 'List description',
   'list description placeholder': 'Add an optional description',
   'list item title label': 'List item title',
@@ -101,4 +103,4 @@ export const appkit = {
   'new list item input placeholder': 'Enter text…',
   'reset client label': 'Reset',
   'reset client confirm label': 'Yes, confirm reset',
-};
+});

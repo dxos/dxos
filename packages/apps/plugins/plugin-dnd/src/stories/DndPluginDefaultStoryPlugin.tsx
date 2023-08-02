@@ -6,12 +6,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faker } from '@faker-js/faker';
 import { DotsSixVertical } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React, { createContext, PropsWithChildren } from 'react';
 
 import { randomString } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
-import { createStore } from '@dxos/observable-object';
-import { Surface } from '@dxos/react-surface';
+import { PluginDefinition, Surface } from '@dxos/react-surface';
 
 export type StoryItem = { id: string; title: string; description: string; type: 'fruit' | 'vegetable' };
 
@@ -48,7 +48,7 @@ const defaultItems = {
 
 export const StoryItemDragOverlay = ({ data }: { data: { id: string } }) => {
   // (thure) Note that this is rendered as part of DndPlugin’s context, so it may not have access to other contexts.
-  const item = store.items.find(({ id }) => id === data.id);
+  const item = state.items.find(({ id }) => id === data.id);
   return item ? <CompactStoryItem item={item} dragOverlay /> : null;
 };
 
@@ -78,11 +78,11 @@ export const CompactStoryItem = ({
   );
 };
 
-const store = createStore<DndPluginDefaultStoryContextValue>(defaultItems);
+const state = deepSignal<DndPluginDefaultStoryContextValue>(defaultItems);
 
 export type DndPluginDefaultStoryContextValue = { items: StoryItem[] };
 
-export const DndPluginStoryPluginContext = createContext<DndPluginDefaultStoryContextValue>(store);
+export const DndPluginStoryPluginContext = createContext<DndPluginDefaultStoryContextValue>(state);
 
 const DndPluginDefaultStoryPluginDefault = () => {
   return (
@@ -92,19 +92,19 @@ const DndPluginDefaultStoryPluginDefault = () => {
   );
 };
 
-export const DndPluginDefaultStoryPlugin = () => {
+export const DndPluginDefaultStoryPlugin = (): PluginDefinition<{ dndStory: DndPluginDefaultStoryContextValue }> => {
   return {
     meta: {
-      id: 'dxos:dndStoryPluginA',
+      id: 'example.com/plugin/dndStoryPluginA',
     },
     provides: {
       context: ({ children }: PropsWithChildren) => (
-        <DndPluginStoryPluginContext.Provider value={store}>{children}</DndPluginStoryPluginContext.Provider>
+        <DndPluginStoryPluginContext.Provider value={state}>{children}</DndPluginStoryPluginContext.Provider>
       ),
       components: {
         default: DndPluginDefaultStoryPluginDefault,
       },
-      component: (datum: unknown, role?: string) => {
+      component: (data: unknown, role?: string) => {
         switch (role) {
           case 'dragoverlay':
             return StoryItemDragOverlay;
@@ -112,7 +112,7 @@ export const DndPluginDefaultStoryPlugin = () => {
             return null;
         }
       },
-      dndStory: store,
+      dndStory: state,
     },
   };
 };

@@ -5,8 +5,9 @@
 import React, { useEffect } from 'react';
 import { generatePath, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
 
-import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey } from '@dxos/client';
-import { useClient, useIdentity, useSpace, useSpaces } from '@dxos/react-client';
+import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, useClient } from '@dxos/react-client';
+import { useSpace, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { SpaceList } from './SpaceList';
 

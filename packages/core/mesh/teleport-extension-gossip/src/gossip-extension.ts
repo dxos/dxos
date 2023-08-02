@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -54,7 +54,7 @@ export class GossipExtension implements TeleportExtension {
           },
         },
       },
-      port: context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' }),
+      port: await context.createPort('rpc', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' }),
     });
     await this._rpc.open();
     this._opened.wake();
@@ -73,7 +73,7 @@ export class GossipExtension implements TeleportExtension {
       return;
     }
     await this._opened.wait();
-    assert(this._rpc, 'RPC not initialized');
+    invariant(this._rpc, 'RPC not initialized');
     await this._rpc.rpc.GossipService.announce(message);
   }
 }

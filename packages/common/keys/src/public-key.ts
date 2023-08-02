@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
+import invariant from 'tiny-invariant';
 
 import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
 
@@ -28,7 +28,7 @@ export class PublicKey implements Equatable {
    * @returns PublicKey
    */
   static from(source: PublicKeyLike): PublicKey {
-    assert(source);
+    invariant(source);
     if (source instanceof PublicKey) {
       return source;
     } else if (source instanceof Buffer) {
@@ -121,9 +121,9 @@ export class PublicKey implements Equatable {
    * @deprecated All keys should be represented as instances of PublicKey.
    */
   static bufferize(str: string): Buffer {
-    assert(typeof str === 'string', 'Invalid type');
+    invariant(typeof str === 'string', 'Invalid type');
     const buffer = Buffer.from(str, 'hex');
-    // assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
+    // invariant(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
     //   `Invalid key length: ${buffer.length}`);
     return buffer;
   }
@@ -140,7 +140,7 @@ export class PublicKey implements Equatable {
       key = Buffer.from(key.buffer, key.byteOffset, key.byteLength);
     }
 
-    assert(key instanceof Buffer, 'Invalid type');
+    invariant(key instanceof Buffer, 'Invalid type');
     return key.toString('hex');
   }
 

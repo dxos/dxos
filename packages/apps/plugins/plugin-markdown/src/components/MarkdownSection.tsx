@@ -5,7 +5,7 @@
 import React, { HTMLAttributes, useRef } from 'react';
 
 import { ComposerModel, MarkdownComposer, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { defaultFocus, mx } from '@dxos/aurora-theme';
+import { focusRing, mx } from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
@@ -21,6 +21,7 @@ export const MarkdownSection = ({
     id: document.id,
     content: document.content,
   };
+
   return (
     <MarkdownComposer
       ref={editorRef}
@@ -28,7 +29,7 @@ export const MarkdownSection = ({
       slots={{
         root: {
           role: 'none',
-          className: mx(defaultFocus, 'shrink-0 grow flex flex-col'),
+          className: mx(focusRing, 'shrink-0 grow flex flex-col'),
           'data-testid': 'composer.markdownRoot',
         } as HTMLAttributes<HTMLDivElement>,
         editor: {

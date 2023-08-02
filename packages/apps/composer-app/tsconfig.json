@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -18,31 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/observable-object"
-    },
-    {
-      "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/sentry"
-    },
-    {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/text-model"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -78,10 +55,25 @@
       "path": "../plugins/plugin-dnd"
     },
     {
+      "path": "../plugins/plugin-error"
+    },
+    {
+      "path": "../plugins/plugin-files"
+    },
+    {
+      "path": "../plugins/plugin-github"
+    },
+    {
       "path": "../plugins/plugin-graph"
     },
     {
+      "path": "../plugins/plugin-intent"
+    },
+    {
       "path": "../plugins/plugin-markdown"
+    },
+    {
+      "path": "../plugins/plugin-pwa"
     },
     {
       "path": "../plugins/plugin-space"
@@ -100,9 +92,6 @@
     },
     {
       "path": "../plugins/plugin-url-sync"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

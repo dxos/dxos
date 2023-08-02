@@ -1,17 +1,17 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import forever, { ForeverProcess } from 'forever';
-import GrowingFile from 'growing-file';
 import assert from 'node:assert';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
-import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client';
+import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
-import { Daemon, ProcessInfo } from '../daemon';
+import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { DAEMON_START_TIMEOUT } from '../defs';
 import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
 
@@ -31,10 +31,7 @@ export class ForeverDaemon implements Daemon {
 
   async isRunning(profile: string): Promise<boolean> {
     const { isLocked } = await import('@dxos/client-services');
-    return (
-      isLocked(lockFilePath(profile)) ||
-      (await this.list()).some((process) => process.profile === profile && process.running)
-    );
+    return await isLocked(lockFilePath(profile));
   }
 
   async list(): Promise<ProcessInfo[]> {
@@ -49,20 +46,34 @@ export class ForeverDaemon implements Daemon {
       });
     });
 
-    return result.map(({ uid, foreverPid, running }: ForeverProcess) => ({
-      profile: uid,
-      pid: foreverPid,
-      running,
-    }));
+    return Promise.all(
+      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+        return {
+          profile: uid,
+          pid: foreverPid,
+          started: ctime,
+          running,
+          restarts,
+          logFile,
+          lockAcquired: await this.isRunning(uid),
+        };
+      }),
+    );
   }
 
-  async start(profile: string): Promise<ProcessInfo> {
+  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
+      // Check if there is stopped process.
+      if ((await this._getProcess(profile)).running === false) {
+        // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
+        await this.stop(profile);
+      }
+
       const logDir = path.join(this._rootDir, 'profile', profile, 'logs');
       mkdirSync(logDir, { recursive: true });
       log('starting...', { profile, logDir });
 
-      const daemonLogFile = path.join(logDir, 'daemon.log');
+      const logFile = path.join(logDir, 'daemon.log');
       const outFile = path.join(logDir, 'out.log');
       const errFile = path.join(logDir, 'err.log');
 
@@ -72,39 +83,59 @@ export class ForeverDaemon implements Daemon {
       }
 
       // Run the `dx agent run` CLI command.
+      // https://github.com/foreversd/forever-monitor
       // TODO(burdon): Call local run services binary directly (not via CLI)?
       forever.startDaemon(process.argv[1], {
-        args: ['agent', 'start', '--foreground', `--profile=${profile}`],
+        args: [
+          'agent',
+          'start',
+          '--foreground',
+          `--profile=${profile}`,
+          params?.config ? `--config=${params.config}` : '',
+        ],
         uid: profile,
-        logFile: daemonLogFile, // Forever daemon process.
+        max: 0,
+        logFile, // Forever daemon process.
         outFile, // Child stdout.
         errFile, // Child stderr.
+
+        // TODO(burdon): Configure to watch config file.
+        //  https://github.com/foreversd/forever-monitor/blob/master/lib/forever-monitor/plugins/watch.js
+        // watch: true,
+        // watchIgnorePatterns (ignore all profiles except the current one).
+        // watchDirectory
       });
-      const stream = await printFile(errFile);
 
-      // Wait for socket file to appear.
-      {
-        const { path: socketFile } = parseAddress(getUnixSocket(profile));
-        await waitForCondition(() => fs.existsSync(socketFile), DAEMON_START_TIMEOUT);
+      try {
+        // Wait for socket file to appear.
+        {
+          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT);
+          await waitForCondition(() => fs.existsSync(parseAddress(getUnixSocket(profile)).path), DAEMON_START_TIMEOUT);
+        }
+
+        // Check if agent is initialized.
+        {
+          const services = fromAgent({ profile });
+          await services.open();
+
+          const trigger = new Trigger();
+          const stream = services.services.SystemService!.queryStatus();
+          stream.subscribe(({ status }) => {
+            assert(status === SystemStatus.ACTIVE);
+            trigger.wake();
+          });
+          await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
+
+          stream.close();
+          await services.close();
+        }
+        return await this._getProcess(profile);
+      } catch (err) {
+        log.warn('Failed to start daemon.');
+        const errContent = fs.readFileSync(errFile, 'utf-8');
+        log.error(errContent);
+        await this.stop(profile);
       }
-
-      // Check if agent is running.
-      {
-        const services = fromAgent({ profile });
-        await services.open();
-
-        const trigger = new Trigger();
-        const stream = services.services.SystemService!.queryStatus();
-        stream.subscribe(({ status }) => {
-          assert(status === SystemStatus.ACTIVE);
-          trigger.wake();
-        });
-        await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
-
-        stream.close();
-        await services.close();
-      }
-      stream.destroy();
     }
 
     const proc = await this._getProcess(profile);
@@ -112,49 +143,35 @@ export class ForeverDaemon implements Daemon {
     return proc;
   }
 
-  async stop(profile: string, { force = true }: { force?: boolean } = {}): Promise<ProcessInfo> {
-    if (!(await this.isRunning(profile))) {
-      return {};
-    }
-
+  async stop(profile: string, { force = false }: { force?: boolean } = {}): Promise<ProcessInfo | undefined> {
     const proc = await this._getProcess(profile);
 
-    if (force) {
-      // NOTE: Kill all processes with the given profile. This is necessary when somehow few processes are started with the same profile.
-      (await this.list()).forEach((process) => {
-        if (process.profile === profile) {
+    // NOTE: Kill all processes with the given profile.
+    // This is necessary when somehow few processes are started with the same profile.
+    (await this.list()).forEach((process) => {
+      if (process.profile === profile) {
+        if (force && process.running) {
           forever.stop(process.profile!);
+        } else {
+          forever.kill(proc.pid!, true, 'SIGINT');
         }
-      });
-    } else {
-      forever.kill(proc.pid!, true, 'SIGINT');
-    }
+      }
+    });
 
     await waitFor({
       condition: async () => !(await this.isRunning(profile)),
     });
 
     removeSocketFile(profile);
-    log.info('stopped', { profile });
     return proc;
   }
 
-  async restart(profile: string): Promise<ProcessInfo> {
-    await this.stop(profile);
-    return this.start(profile);
+  async restart(profile: string, options?: StartOptions & StopOptions): Promise<ProcessInfo> {
+    await this.stop(profile, options);
+    return this.start(profile, options);
   }
 
   async _getProcess(profile?: string): Promise<ProcessInfo> {
     return (await this.list()).find((process) => !profile || process.profile === profile) ?? {};
   }
 }
-
-const printFile = async (filename: string) => {
-  await waitFor({ condition: async () => fs.existsSync(filename) });
-  const stream = GrowingFile.open(filename);
-  stream.on('data', (data: Buffer) => {
-    log.info(data.toString());
-  });
-
-  return stream;
-};

@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/composer-app/out/composer"
       },
@@ -28,10 +28,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/apps/composer-app",
         "outputPath": "tmp/playwright/packages/apps/composer-app",
         "playwrightConfigPath": "packages/apps/composer-app/src/playwright/playwright.config.ts",
@@ -54,7 +50,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -66,14 +62,14 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "composer-app:bundle",
         "staticFilePath": "packages/apps/composer-app/out/composer"
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "composer-app:bundle"
       }

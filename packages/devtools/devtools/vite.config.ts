@@ -57,7 +57,8 @@ export default defineConfig({
       // TODO(burdon): Adjust font size.
       extensions: []
     }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

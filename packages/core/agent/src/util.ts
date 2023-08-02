@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { DX_RUNTIME, getUnixSocket } from '@dxos/client';
+import { DX_RUNTIME } from '@dxos/client-protocol';
+import { getUnixSocket } from '@dxos/client/services';
 
 export const parseAddress = (sock: string) => {
   const [protocol, path] = sock.split('://');
@@ -40,21 +41,21 @@ export const lockFilePath = (profile: string): string => {
 // TODO(burdon): Push down.
 export const waitFor = async ({
   condition,
-  timeoutError,
+  increment = 100,
   timeout = 5_000,
+  timeoutError,
 }: {
   condition: () => Promise<boolean>;
-  timeoutError?: Error;
+  increment?: number;
   timeout?: number;
+  timeoutError?: Error;
 }) => {
-  let slept = 0;
-  const inc = 100;
-
+  let total = 0;
   while (!(await condition())) {
-    await sleep(inc);
-    slept += inc;
-    if (slept >= timeout) {
-      throw timeoutError ?? new Error(`Timeout exceeded ${timeout}ms`);
+    await sleep(increment);
+    total += increment;
+    if (total >= timeout) {
+      throw timeoutError ?? new Error(`Timeout exceeded (${timeout}ms)`);
     }
   }
 };

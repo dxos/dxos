@@ -9,8 +9,8 @@ import urlJoin from 'url-join';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import type { Identity } from '@dxos/client';
-import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
+import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client/echo';
+import type { Identity } from '@dxos/react-client/halo';
 
 import { useSafeSpaceKey } from '../../hooks';
 import { HeadingWithActions } from '../HeadingWithActions';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Transform } from 'node:stream';
+import invariant from 'tiny-invariant';
 
 import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
@@ -63,7 +63,7 @@ export class MemoryTransport implements Transport {
   constructor(private readonly options: TransportOptions) {
     log('creating');
 
-    assert(!MemoryTransport._connections.has(this._instanceId), 'Duplicate memory connection');
+    invariant(!MemoryTransport._connections.has(this._instanceId), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._instanceId, this);
 
     // Initiator will send a signal, the receiver will receive the unique ID and connect the streams.
@@ -96,10 +96,7 @@ export class MemoryTransport implements Transport {
             return;
           }
 
-          assert(
-            !this._remoteConnection._remoteConnection,
-            new Error(`Remote already connected: ${this._remoteInstanceId}`),
-          );
+          invariant(!this._remoteConnection._remoteConnection, `Remote already connected: ${this._remoteInstanceId}`);
           this._remoteConnection._remoteConnection = this;
           this._remoteConnection._remoteInstanceId = this._instanceId;
 

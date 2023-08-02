@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import { build, Format, Platform } from 'esbuild';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
@@ -16,6 +16,7 @@ import { LogTransformer } from './log-transform-plugin';
 export interface EsbuildExecutorOptions {
   bundle: boolean;
   bundlePackages: string[];
+  ignorePackages: string[];
   alias: Record<string, string>;
   entryPoints: string[];
   format?: Format;
@@ -80,7 +81,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
                 }
 
                 initialOptions.banner ||= {};
-                initialOptions.banner.js = 'import "@dxos/node-std/globals"';
+                initialOptions.banner.js = 'import "@dxos/node-std/globals";';
               }
 
               onResolve({ filter: /^node:.*/ }, (args) => {
@@ -101,6 +102,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
           bundleDepsPlugin({
             packages: options.bundlePackages,
             packageDir: dirname(packagePath),
+            ignore: options.ignorePackages,
             alias: options.alias,
           }),
           logTransformer.createPlugin(),

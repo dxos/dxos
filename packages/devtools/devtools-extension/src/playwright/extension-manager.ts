@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Page } from 'playwright';
+import type { Page } from '@playwright/test';
 
 import { asyncTimeout } from '@dxos/async';
 import { setupPage, extensionId, BrowserType, getPersistentContext } from '@dxos/test/playwright';
@@ -22,7 +22,6 @@ export class ExtensionManager {
 
     const context = await getPersistentContext(this._browserName);
     this.extensionId = await asyncTimeout(extensionId(context), 2000);
-
     const { page } = await setupPage(context, {
       url: `chrome-extension://${this.extensionId}/popup.html`,
       // TODO(wittjosiah): Use data-testid.

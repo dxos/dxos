@@ -2,11 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
-import { SnapshotStore, DataPipeline, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { failUndefined } from '@dxos/debug';
+import {
+  SnapshotStore,
+  DataPipeline,
+  MetadataStore,
+  SpaceManager,
+  valueEncoding,
+  DataServiceSubscriptions,
+} from '@dxos/echo-pipeline';
 import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -15,8 +22,8 @@ import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
-import { ClientServicesHost, ServiceContext } from '../services';
-import { SigningContext } from '../spaces';
+import { ClientServicesHost, createDefaultModelFactory, ServiceContext } from '../services';
+import { DataSpaceManager, SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -97,7 +104,9 @@ export type TestPeerProps = {
   keyring?: Keyring;
   networkManager?: NetworkManager;
   spaceManager?: SpaceManager;
+  dataSpaceManager?: DataSpaceManager;
   snapshotStore?: SnapshotStore;
+  signingContext?: SigningContext;
   blobStore?: BlobStore;
 };
 
@@ -108,6 +117,10 @@ export class TestPeer {
     private readonly signalContext: MemorySignalManagerContext,
     private readonly opts: TestPeerOpts = { storageType: StorageType.RAM },
   ) {}
+
+  get props() {
+    return this._props;
+  }
 
   get storage() {
     return (this._props.storage ??= createStorage({ type: this.opts.storageType }));
@@ -157,6 +170,25 @@ export class TestPeer {
       snapshotStore: this.snapshotStore,
       blobStore: this.blobStore,
     }));
+  }
+
+  get identity() {
+    return this._props.signingContext ?? failUndefined();
+  }
+
+  get dataSpaceManager() {
+    return (this._props.dataSpaceManager ??= new DataSpaceManager(
+      this.spaceManager,
+      this.metadataStore,
+      new DataServiceSubscriptions(),
+      this.keyring,
+      this.identity,
+      this.feedStore,
+    ));
+  }
+
+  async createIdentity() {
+    this._props.signingContext ??= await createSigningContext(this.keyring);
   }
 
   async destroy() {

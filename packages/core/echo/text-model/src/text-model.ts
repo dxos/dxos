@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 import { Doc, Text, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
 import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
@@ -35,7 +35,7 @@ class TextModelStateMachine implements StateMachine<TextModelState, TextMutation
 
     if (update && clientId !== this._text.doc.clientID) {
       // Passing empty buffer make the process hang: https://github.com/yjs/yjs/issues/498
-      assert(update.length > 0, 'update buffer is empty');
+      invariant(update.length > 0, 'update buffer is empty');
       applyUpdate(this._text.doc, update, { docClientId: clientId });
     }
   }
@@ -49,7 +49,7 @@ class TextModelStateMachine implements StateMachine<TextModelState, TextMutation
   }
 
   reset(snapshot: TextSnapshot): void {
-    assert(snapshot.data);
+    invariant(snapshot.data);
     applyUpdate(this._text.doc, snapshot.data);
     this._text.kind = snapshot.kind;
     this._text.field = snapshot.field;
@@ -69,7 +69,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   // prettier-ignore
   constructor(
     meta: ModelMeta,
-    itemId: ItemID,
+    itemId: ItemID, // TODO(burdon): Rename objectId, ObjectID.
     getState: () => TextModelState,
     writeStream?: MutationWriter<TextMutation>
   ) {
@@ -99,6 +99,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
       case TextKind.RICH:
         return this.doc.getXmlFragment(this.field);
 
+      case TextKind.PLAIN:
       default:
         return this.doc.getText(this.field);
     }
@@ -109,7 +110,9 @@ export class TextModel extends Model<TextModelState, TextMutation> {
     return this._textContentInner(this.content);
   }
 
+  // TODO(burdon): Called on each mutation.
   private _subscribeToDocUpdates() {
+    // log.info('_subscribeToDocUpdates', { itemId: this.itemId });
     const cb = this._handleDocUpdated.bind(this);
     const doc = this.doc; // Preserve reference to doc for unsubscribe.
     doc.on('update', cb);
@@ -119,6 +122,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
   }
 
   private async _handleDocUpdated(update: Uint8Array, origin: any) {
+    // log.info('_handleDocUpdated', { itemId: this.itemId, origin });
     const remote = origin && origin.docClientId && origin.docClientId !== this.doc.clientID;
     if (!remote) {
       await this.write({
@@ -204,7 +208,7 @@ export class TextModel extends Model<TextModelState, TextMutation> {
    * Throws if the `Text` instance is plain text.
    */
   insertTextNode(text: string, index = 0) {
-    assert(this.kind === TextKind.RICH, 'insertTextNode only supported for rich text');
+    invariant(this.kind === TextKind.RICH, 'insertTextNode only supported for rich text');
     const paragraph = new XmlElement('paragraph');
     const yXmlText = new XmlText(text);
     paragraph.insert(0, [yXmlText]);

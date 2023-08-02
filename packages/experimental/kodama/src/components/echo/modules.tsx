@@ -5,8 +5,7 @@
 import { Box, useFocusManager } from 'ink';
 import React, { FC, ReactNode, useMemo } from 'react';
 
-import { Space } from '@dxos/client';
-import { useSpace } from '@dxos/react-client';
+import { Space, useSpace } from '@dxos/react-client/echo';
 
 import { useAppState } from '../../hooks';
 import { Join, Share } from '../invitations';

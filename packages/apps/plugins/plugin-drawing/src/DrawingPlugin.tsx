@@ -2,46 +2,119 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FrameCorners } from '@phosphor-icons/react';
+import { CompassTool, Plus } from '@phosphor-icons/react';
+import React from 'react';
 
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Drawing as DrawingType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { DrawingMain } from './components';
-import { isDrawing, DrawingPluginProvides } from './props';
+import { DrawingMain, DrawingSection } from './components';
 import translations from './translations';
+import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction } from './types';
+import { objectToGraphNode } from './util';
 
-export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => ({
-  meta: {
-    id: 'dxos.org/plugin/drawing',
-  },
-  provides: {
-    translations,
-    space: {
-      types: [
-        {
-          id: 'create-drawing',
-          testId: 'drawingPlugin.createStack',
-          label: ['create drawing label', { ns: 'dxos.org/plugin/drawing' }],
-          icon: FrameCorners,
-          Type: DrawingType,
-        },
-      ],
+export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
+  const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
+
+  return {
+    meta: {
+      id: DRAWING_PLUGIN,
     },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isDrawing(datum[datum.length - 1])) {
-            return DrawingMain;
-          } else {
-            return null;
+    unload: async () => {
+      adapter.clear();
+    },
+    provides: {
+      translations,
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
+
+          const space = parent.data;
+          return adapter.createNodes(space, parent, emit);
+        },
+        actions: (parent) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          return [
+            {
+              id: `${DRAWING_PLUGIN}/create`,
+              index: 'a1',
+              testId: 'drawingPlugin.createDrawing',
+              label: ['create drawing label', { ns: DRAWING_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              intent: [
+                {
+                  plugin: DRAWING_PLUGIN,
+                  action: DrawingAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.ACTIVATE,
+                },
+              ],
+            },
+          ];
+        },
+      },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-drawing',
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['create stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            intent: {
+              plugin: DRAWING_PLUGIN,
+              action: DrawingAction.CREATE,
+            },
+          },
+        ],
+        choosers: [
+          {
+            id: 'choose-stack-section-drawing', // TODO(burdon): Standardize.
+            testId: 'drawingPlugin.createSectionSpaceDrawing',
+            label: ['choose stack section label', { ns: DRAWING_PLUGIN }],
+            icon: (props: any) => <CompassTool {...props} />,
+            filter: isDrawing,
+          },
+        ],
+      },
+      component: (data, role) => {
+        // TODO(burdon): SurfaceResolver error if component not defined.
+        // TODO(burdon): Can we assume data has an object property?
+        if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {
           return null;
-      }
+        }
+
+        switch (role) {
+          case 'main':
+            return DrawingMain;
+          case 'section':
+            return DrawingSection;
+        }
+      },
+      components: {
+        DrawingMain,
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case DrawingAction.CREATE: {
+              return { object: new DrawingType() };
+            }
+          }
+        },
+      },
     },
-    components: {
-      DrawingMain,
-    },
-  },
-});
+  };
+};

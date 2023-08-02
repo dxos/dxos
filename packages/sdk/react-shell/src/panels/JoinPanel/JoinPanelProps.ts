@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement, Dispatch } from 'react';
+import { cloneElement, ComponentProps } from 'react';
+import { Event, SingleOrArray } from 'xstate';
 
-import type { AuthenticatingInvitationObservable, Identity } from '@dxos/client';
-import { InvitationResult } from '@dxos/react-client';
+import type { Identity } from '@dxos/react-client/halo';
+import type { Invitation } from '@dxos/react-client/invitations';
+import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
+
+import { JoinEvent } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -15,11 +19,35 @@ export interface JoinPanelProps {
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
   onExit?: () => void;
-  preventExit?: boolean;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
 }
+
+export type JoinPanelImplProps = Pick<
+  JoinPanelProps,
+  'mode' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
+> &
+  Pick<JoinStepProps, 'send'> & {
+    titleId: string;
+    activeView: string;
+    failed: Set<'Halo' | 'Space'>;
+    pending: boolean;
+    unredeemedCodes?: Partial<{
+      Halo: string;
+      Space: string;
+    }>;
+    invitationStates?: Partial<{
+      Halo: Invitation.State;
+      Space: Invitation.State;
+    }>;
+    onHaloDone?: () => void;
+    onSpaceDone?: () => void;
+    onHaloInvitationCancel?: () => Promise<void> | undefined;
+    onSpaceInvitationCancel?: () => Promise<void> | undefined;
+    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  };
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
@@ -59,8 +87,6 @@ export interface AdditionMethodAction {
 
 export type JoinAction = IdentityAction | EmptyJoinAction | AdditionMethodAction | InvitationAction;
 
-export type JoinSend = Dispatch<JoinAction>;
-
 export type InvitationView =
   | 'invitation input'
   | 'invitation rescuer'
@@ -69,13 +95,18 @@ export type InvitationView =
 
 export type JoinView =
   | 'identity selector'
-  | 'addition method selector'
+  | 'addition method chooser'
   | 'identity input'
   | 'identity added'
   | 'space invitation acceptor'
   | 'halo invitation acceptor';
 
-export interface JoinState {
+export interface JoinStepProps extends ComponentProps<'div'> {
+  send: (event: SingleOrArray<Event<JoinEvent>>) => void;
+  active?: boolean;
+}
+
+export interface JoinStateContext {
   activeView: JoinView;
   unredeemedSpaceInvitationCode?: string;
   spaceInvitation?: AuthenticatingInvitationObservable;

@@ -5,7 +5,8 @@
 import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
-import { Invitation, Space } from '@dxos/client';
+import { Space } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';

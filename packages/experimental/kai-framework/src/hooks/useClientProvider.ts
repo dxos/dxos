@@ -5,11 +5,10 @@
 import { useCallback } from 'react';
 
 import { schema as chessSchema } from '@dxos/chess-app';
-import { Client, fromIFrame, fromHost } from '@dxos/client';
-import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { schema as sandboxSchema } from '@dxos/kai-sandbox';
 import { schema } from '@dxos/kai-types';
 import { Generator } from '@dxos/kai-types/testing';
+import { Client, fromIFrame, fromHost, Config, Defaults, Dynamics, Envs, Local } from '@dxos/react-client';
 
 export const configProvider = async () => new Config(await Dynamics(), await Envs(), Local(), Defaults());
 

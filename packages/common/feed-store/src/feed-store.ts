@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, sleep } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
@@ -53,8 +53,8 @@ export class FeedStore<T extends {}> {
    */
   async openFeed(feedKey: PublicKey, { writable, sparse }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
-    assert(feedKey);
-    assert(!this._closed, 'Feed store is closed');
+    invariant(feedKey);
+    invariant(!this._closed, 'Feed store is closed');
 
     let feed = this.getFeed(feedKey);
     if (feed) {
@@ -70,7 +70,7 @@ export class FeedStore<T extends {}> {
       }
     }
 
-    const core = this._factory.createFeed(feedKey, { writable, sparse });
+    const core = await this._factory.createFeed(feedKey, { writable, sparse });
     feed = new FeedWrapper<T>(core, feedKey);
     this._feeds.set(feed.key, feed);
 
@@ -90,7 +90,7 @@ export class FeedStore<T extends {}> {
     await Promise.all(
       Array.from(this._feeds.values()).map(async (feed) => {
         await feed.close();
-        assert(feed.closed);
+        invariant(feed.closed);
         // TODO(burdon): SpaceProxy still being initialized.
         //  SpaceProxy.initialize => Database.createItem => ... => FeedWrapper.append
         //  Uncaught Error: Closed [random-access-storage/index.js:181:38]

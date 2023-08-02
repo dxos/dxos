@@ -4,14 +4,22 @@
 
 import { useState } from 'react';
 
-import { Client, ClientServices, DEFAULT_CLIENT_ORIGIN, fromIFrame, fromHost, fromSocket } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientContextProps } from '@dxos/react-client';
+import {
+  Config,
+  Defaults,
+  Dynamics,
+  Client,
+  ClientServices,
+  DEFAULT_CLIENT_ORIGIN,
+  fromIFrame,
+  fromHost,
+  fromSocket,
+  ClientContextProps,
+} from '@dxos/react-client';
 
 const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
 
-// TODO(burdon): Document (rename?)
 export const useRemoteClient = () => {
   const [client, setClient] = useState<ClientContextProps>();
   useAsyncEffect(async () => {
@@ -37,7 +45,7 @@ const createClientContext = async (): Promise<ClientContextProps> => {
       : {};
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-    const servicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
+    const servicesProvider = await (remoteSource ? fromIFrame(config) : fromHost(config));
     const client = new Client({ config, services: servicesProvider });
     await client.initialize();
 
@@ -65,9 +73,10 @@ const createClientContext = async (): Promise<ClientContextProps> => {
     },
   };
 
+  // Configure vault.
   const searchParams = new URLSearchParams(window.location.search);
   const target = searchParams.get('target') ?? DEFAULT_TARGET;
-  const [protocol, ..._rest] = target.split(':');
+  const [protocol] = target.split(':');
   if (!(protocol in targetResolvers)) {
     throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
   }

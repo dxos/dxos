@@ -3,13 +3,14 @@
 //
 
 import CRC32 from 'crc-32';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EchoMetadata, SpaceMetadata, IdentityRecord, SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
@@ -26,6 +27,8 @@ const emptyEchoMetadata = (): EchoMetadata => ({
   created: new Date(),
   updated: new Date(),
 });
+
+const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
@@ -79,7 +82,12 @@ export class MetadataStore {
         throw new DataCorruptionError('Metadata checksum is invalid.');
       }
 
-      this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
+      this._metadata = EchoMetadata.decode(data);
+
+      // post-processing
+      this._metadata.spaces?.forEach((space) => {
+        space.state ??= SpaceState.ACTIVE;
+      });
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
@@ -101,7 +109,7 @@ export class MetadataStore {
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {
-      const encoded = arrayToBuffer(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
+      const encoded = arrayToBuffer(EchoMetadata.encode(data));
       const checksum = CRC32.buf(encoded);
 
       const result = Buffer.alloc(8 + encoded.length);
@@ -126,7 +134,7 @@ export class MetadataStore {
     }
 
     const space = this.spaces.find((space) => space.key === spaceKey);
-    assert(space, 'Space not found');
+    invariant(space, 'Space not found');
     return space;
   }
 
@@ -144,14 +152,14 @@ export class MetadataStore {
   }
 
   async setIdentityRecord(record: IdentityRecord) {
-    assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
+    invariant(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
     await this._save();
   }
 
   async addSpace(record: SpaceMetadata) {
-    assert(
+    invariant(
       !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
       'Cannot overwrite existing space in metadata',
     );
@@ -179,6 +187,11 @@ export class MetadataStore {
     const space = this._getSpace(spaceKey);
     space.controlFeedKey = controlFeedKey;
     space.dataFeedKey = dataFeedKey;
+    await this._save();
+  }
+
+  async setSpaceState(spaceKey: PublicKey, state: SpaceState) {
+    this._getSpace(spaceKey).state = state;
     await this._save();
   }
 }

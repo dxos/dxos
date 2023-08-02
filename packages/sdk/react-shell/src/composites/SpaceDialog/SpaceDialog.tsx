@@ -4,25 +4,23 @@
 
 import React from 'react';
 
-import { Dialog, DialogContentProps, ThemeContext, useId, useThemeContext } from '@dxos/aurora';
-import { osTx } from '@dxos/aurora-theme';
+import { Dialog, DialogContentProps, useId } from '@dxos/aurora';
 
+import { ClipboardProvider } from '../../components';
 import { SpacePanel, SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
   extends Omit<DialogContentProps, 'children'>,
     Omit<SpacePanelProps, 'doneActionParent'> {}
 
-export const SpaceDialog = ({ ...spacePanelProps }: SpaceDialogProps) => {
+export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
-  const themeContextValue = useThemeContext();
-
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
-        <Dialog.Portal>
-          <Dialog.Overlay>
-            <Dialog.Content>
+    <Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
+      <Dialog.Portal>
+        <Dialog.Overlay>
+          <Dialog.Content aria-labelledby={titleId}>
+            <ClipboardProvider>
               <SpacePanel
                 {...{
                   ...spacePanelProps,
@@ -30,10 +28,10 @@ export const SpaceDialog = ({ ...spacePanelProps }: SpaceDialogProps) => {
                   doneActionParent: <Dialog.Close asChild />,
                 }}
               />
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </ThemeContext.Provider>
+            </ClipboardProvider>
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };

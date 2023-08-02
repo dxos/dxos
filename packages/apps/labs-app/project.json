@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/labs-app/src/index.ts",
         "outputPath": "packages/apps/labs-app/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/labs-app/out/labs"
       },
@@ -25,36 +25,8 @@
         "{options.outputPath}"
       ]
     },
-    "e2e": {
-      "executor": "@dxos/test:run",
-      "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
-        "coveragePath": "coverage/packages/apps/labs-app",
-        "outputPath": "tmp/playwright/packages/apps/labs-app",
-        "playwrightConfigPath": "packages/apps/labs-app/src/playwright/playwright.config.ts",
-        "resultsPath": "test-results/packages/apps/labs-app",
-        "serve": "labs-app:serve-with-vault",
-        "serveOptions": {
-          "serveTarget": "preview"
-        },
-        "testPatterns": [
-          "packages/apps/labs-app/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/apps/labs-app/src/**/*"
-        ]
-      },
-      "outputs": [
-        "{options.coveragePath}",
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ]
-    },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -66,14 +38,14 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "labs-app:bundle",
         "staticFilePath": "packages/apps/labs-app/out/labs"
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "labs-app:bundle"
       }

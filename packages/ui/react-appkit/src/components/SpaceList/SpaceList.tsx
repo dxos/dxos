@@ -6,8 +6,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { useTranslation } from '@dxos/aurora';
-import { group, defaultHover, defaultFocus, defaultDisabled, mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
+import { group, hoverColors, focusRing, staticDisabled, mx } from '@dxos/aurora-theme';
+import { Space } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';
@@ -34,8 +34,8 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             className={mx(
               group({ elevation: 'group' }),
               'rounded p-2 flex items-stretch gap-2 mbe-2',
-              defaultHover,
-              defaultFocus,
+              hoverColors,
+              focusRing,
             )}
           >
             <Heading level={2} className='grow flex items-center mbe-0'>
@@ -56,11 +56,11 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
       label={{
         level: 2,
         children: t('empty spaces label'),
-        className: mx('text-xl', defaultDisabled),
+        className: mx('text-xl', staticDisabled),
       }}
       elevation='base'
     >
-      <p className={defaultDisabled}>{t('empty spaces message')}</p>
+      <p className={staticDisabled}>{t('empty spaces message')}</p>
     </Group>
   );
 };

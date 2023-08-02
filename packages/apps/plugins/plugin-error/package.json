@@ -1,0 +1,34 @@
+{
+  "name": "@braneframe/plugin-error",
+  "version": "0.1.54",
+  "description": "DXOS Surface plugin for providing an error boundary.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/config": "workspace:*",
+    "@dxos/react-appkit": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/react-surface": "workspace:*",
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0",
+    "vite": "^4.3.9"
+  },
+  "peerDependencies": {
+    "@dxos/react-surface": "workspace:*",
+    "react": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

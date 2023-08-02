@@ -2,17 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
+import { test, Page } from '@playwright/test';
 import { expect } from 'chai';
-import { Page } from 'playwright';
 
 import { setupPage } from '@dxos/test/playwright';
 
 test.describe('Smoke test', () => {
   let page: Page;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, {
       url: 'http://localhost:3967',
