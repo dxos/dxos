@@ -1,5 +1,5 @@
 # Class `IFrameClientServicesProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/iframe-service-proxy.d.ts:19]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/iframe-service-proxy.d.ts:19]()</sub>
 
 
 Proxy to host client service via iframe.
@@ -22,7 +22,7 @@ Arguments:
 Type: <code>Event&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
 
 ### [contextUpdate]()
-Type: <code>undefined | Event&lt;AppContextRequest&gt;</code>
+Type: <code>undefined | Event&lt;[AppContextRequest](/api/@dxos/react-client/interfaces/AppContextRequest)&gt;</code>
 
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
@@ -64,7 +64,7 @@ Arguments:
 
 `layout`: <code>[ShellLayout](/api/@dxos/react-client/enums#ShellLayout)</code>
 
-`options`: <code>Omit&lt;LayoutRequest, "layout"&gt;</code>
+`options`: <code>Omit&lt;[LayoutRequest](/api/@dxos/react-client/interfaces/LayoutRequest), "layout"&gt;</code>
 
 ### [setSpaceProvider(provider)]()
 

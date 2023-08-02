@@ -77,7 +77,7 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`other`: <code>PublicKeyLike</code>
+`other`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
 ### [getInsecureHash(modulo)]()
 
@@ -157,9 +157,9 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`left`: <code>PublicKeyLike</code>
+`left`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
-`right`: <code>PublicKeyLike</code>
+`right`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
 ### [from(source)]()
 
@@ -172,7 +172,7 @@ Returns: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 Arguments: 
 
-`source`: <code>PublicKeyLike</code>
+`source`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
 ### [fromHex(hex)]()
 
@@ -244,7 +244,7 @@ Returns: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey
 
 Arguments: 
 
-`source`: <code>PublicKeyLike</code>
+`source`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
 ### [stringify(key)]()
 
