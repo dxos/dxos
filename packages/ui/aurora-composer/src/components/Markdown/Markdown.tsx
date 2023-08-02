@@ -194,14 +194,13 @@ export const MarkdownComposer = forwardRef<MarkdownComposerRef, MarkdownComposer
       // NOTE: This repaints the editor.
       // If the new state is derived from the old state, it will likely not be visible other than the cursor resetting.
       // Ideally this should not be hit except when changing between text objects.
+      view?.destroy();
       setView(new EditorView({ state, parent }));
 
       return () => {
-        if (view) {
-          view.destroy();
-          setView(undefined);
-          setState(undefined);
-        }
+        view?.destroy();
+        setView(undefined);
+        setState(undefined);
       };
     }, [parent, content, provider?.awareness, themeMode]);
 
