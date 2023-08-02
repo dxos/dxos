@@ -50,7 +50,7 @@ importers:
       '@nx/vite': 16.5.4
       '@nx/web': 16.5.4
       '@nx/workspace': 16.5.4
-      '@playwright/test': ^1.32.2
+      '@playwright/test': ^1.36.2
       '@rushstack/eslint-patch': ^1.1.4
       '@storybook/addon-essentials': ^7.0.6
       '@storybook/addon-interactions': ^7.0.6
@@ -107,7 +107,6 @@ importers:
       nx-cloud: ^16.1.1
       nyc: ^15.1.0
       pkg-up: ^3.1.0
-      playwright: ^1.32.2
       prettier: ^2.8.8
       raf: ^3.4.1
       react: ^18.2.0
@@ -158,7 +157,7 @@ importers:
       '@nx/vite': 16.5.4_xxzhsuqrsbs6wyvhvm37cpe46m_3dw4w4asrgslkotzjeholo4g7a
       '@nx/web': 16.5.4_wcxuhe4tvwpsd3renjlc7ah6mu
       '@nx/workspace': 16.5.4_fadq7qjtdssl5ciytqq3qdvfum
-      '@playwright/test': 1.32.2
+      '@playwright/test': 1.36.2
       '@rushstack/eslint-patch': 1.2.0
       '@storybook/addon-essentials': 7.0.7_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-interactions': 7.0.7_biqbaboplfbrettd7655fr4n2y
@@ -214,7 +213,6 @@ importers:
       nx-cloud: 16.1.1
       nyc: 15.1.0
       pkg-up: 3.1.0
-      playwright: 1.32.2
       prettier: 2.8.8
       raf: 3.4.1
       react: 18.2.0
@@ -229,7 +227,7 @@ importers:
       typescript: 5.0.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       vite: 4.3.9_@types+node@18.11.9
-      vitest: 0.31.2_orebkcr2aitqltuktwc7vs66n4
+      vitest: 0.31.2_jsdom@20.0.1
       wait-for-expect: 3.0.2
 
   docs:
@@ -791,7 +789,7 @@ importers:
       signia: ^0.1.4
       signia-react: ^0.1.4
       vite: ^4.3.9
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@braneframe/plugin-stack': link:../plugin-stack
       '@dxos/async': link:../../../common/async
@@ -805,7 +803,7 @@ importers:
       react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -2394,7 +2392,7 @@ importers:
       lodash.set: ^4.3.2
       minisearch: ^3.0.2
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -2407,7 +2405,7 @@ importers:
       lodash.set: 4.3.2
       minisearch: 3.3.0
       tiny-invariant: 1.3.1
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@faker-js/faker': 8.0.2
       '@types/lodash.clonedeep': 4.5.7
@@ -2669,7 +2667,7 @@ importers:
       '@faker-js/faker': ^8.0.2
       '@types/node': ^18.11.9
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
@@ -2680,7 +2678,7 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@types/node': 18.11.9
       tiny-invariant: 1.3.1
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/document-model': link:../document-model
       '@dxos/feed-store': link:../../../common/feed-store
@@ -4316,7 +4314,7 @@ importers:
       react-dom: ^18.2.0
       use-subscription: ^1.8.0
       y-monaco: ^0.1.0
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -4341,8 +4339,8 @@ importers:
       esbuild-wasm: 0.16.17
       monaco-editor: 0.25.2
       use-subscription: 1.8.0_react@18.2.0
-      y-monaco: 0.1.4_32hbp247o7cyndrd5jnsixlimy
-      yjs: 13.5.44
+      y-monaco: 0.1.4_i7gp7jhfwxkg2cuwxlox6o4tpm
+      yjs: 13.6.7
     devDependencies:
       '@dxos/aurora': link:../../ui/aurora
       '@testing-library/dom': 8.19.0
@@ -4380,7 +4378,7 @@ importers:
       prosemirror-view: ^1.30.1
       y-prosemirror: ~1.0.20
       y-protocols: ^1.0.5
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@braneframe/types': link:../../apps/types
       '@dxos/async': link:../../common/async
@@ -4398,14 +4396,14 @@ importers:
       assert: 2.0.0
       date-fns: 2.29.3
       prosemirror-schema-basic: 1.2.1
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     devDependencies:
       '@dxos/client-services': link:../../sdk/client-services
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
 
   packages/experimental/kodama:
     specifiers:
@@ -5342,7 +5340,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       tiny-invariant: ^1.3.1
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
@@ -5359,7 +5357,7 @@ importers:
       '@dxos/aurora': link:../../ui/aurora
       '@dxos/text-model': link:../../core/echo/text-model
       '@faker-js/faker': 8.0.2
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@testing-library/dom': 8.19.0
@@ -5650,7 +5648,7 @@ importers:
       y-codemirror.next: ^0.3.2
       y-prosemirror: ~1.0.20
       y-protocols: ^1.0.5
-      yjs: ^13.5.44
+      yjs: ^13.6.7
     dependencies:
       '@codemirror/autocomplete': 6.4.2
       '@codemirror/commands': 6.2.2
@@ -5689,10 +5687,10 @@ importers:
       prosemirror-model: 1.19.0
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
-      y-codemirror.next: 0.3.2_sjioejs7munhi7lcuvayqcsncm
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-codemirror.next: 0.3.2_zlu543cx2y2gqzwkhklqerpwl4
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
     devDependencies:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -12759,13 +12757,13 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
-  /@playwright/test/1.32.2:
-    resolution: {integrity: sha512-nhaTSDpEdTTttdkDE8Z6K3icuG1DVRxrl98Qq0Lfc63SS9a2sjc9+x8ezysh7MzCKz6Y+nArml3/mmt+gqRmQQ==}
-    engines: {node: '>=14'}
+  /@playwright/test/1.36.2:
+    resolution: {integrity: sha512-2rVZeyPRjxfPH6J0oGJqE8YxiM1IBRyM8hyrXYK7eSiAqmbNhxwcLa7dZ7fy9Kj26V7FYia5fh9XJRq4Dqme+g==}
+    engines: {node: '>=16'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.9
-      playwright-core: 1.32.2
+      playwright-core: 1.36.2
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
@@ -16337,7 +16335,7 @@ packages:
       y-prosemirror: 1.0.20
     dependencies:
       '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     dev: false
 
   /@tiptap/extension-collaboration/2.0.0-beta.220_ynezejixgkllukncpjhwuvpzpq:
@@ -16349,7 +16347,7 @@ packages:
     dependencies:
       '@tiptap/core': 2.0.0-beta.220_@tiptap+pm@2.0.0-beta.220
       '@tiptap/pm': 2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q
-      y-prosemirror: 1.0.20_ihntoejlm64yg32k3unxwmpmte
+      y-prosemirror: 1.0.20_7viujtpg6y3hjk44qafnnwb33q
     dev: false
 
   /@tiptap/extension-document/2.0.0-beta.220_7w7m52asdh3tod4ocz57yex63q:
@@ -29704,6 +29702,13 @@ packages:
     dependencies:
       isomorphic.js: 0.2.5
 
+  /lib0/0.2.78:
+    resolution: {integrity: sha512-SV2nU43/6eaYnGH3l0lg2wg1ziB/TH3sAd2E8quXPGwrqo+aX98SNT2ZKucpUr5B8A52jD7ZMjAl+r87Fa/bLQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      isomorphic.js: 0.2.5
+
   /libbase64/1.2.1:
     resolution: {integrity: sha512-l+nePcPbIG1fNlqMzrh68MLkX/gTxk/+vdvAb388Ssi7UuUN31MI44w4Yf33mM3Cm4xDfw48mdf3rkdHszLNew==}
     dev: false
@@ -33464,19 +33469,10 @@ packages:
     engines: {node: '>= 0.4.0'}
     dev: false
 
-  /playwright-core/1.32.2:
-    resolution: {integrity: sha512-zD7aonO+07kOTthsrCR3YCVnDcqSHIJpdFUtZEMOb6//1Rc7/6mZDRdw+nlzcQiQltOOsiqI3rrSyn/SlyjnJQ==}
-    engines: {node: '>=14'}
+  /playwright-core/1.36.2:
+    resolution: {integrity: sha512-sQYZt31dwkqxOrP7xy2ggDfEzUxM1lodjhsQ3NMMv5uGTRDsLxU0e4xf4wwMkF2gplIxf17QMBCodSFgm6bFVQ==}
+    engines: {node: '>=16'}
     hasBin: true
-    dev: true
-
-  /playwright/1.32.2:
-    resolution: {integrity: sha512-jHVnXJke0PXpuPszKtk9y1zZSlzO5+2a+aockT/AND0oeXx46FiJEFrafthurglLygVZA+1gEbtUM1C7qtTV+Q==}
-    engines: {node: '>=14'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.32.2
     dev: true
 
   /pluralize/7.0.0:
@@ -39432,7 +39428,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.31.2_orebkcr2aitqltuktwc7vs66n4:
+  /vitest/0.31.2_jsdom@20.0.1:
     resolution: {integrity: sha512-O0qKHDbI+zXxwq1WOeqFjxP5v1mDqqM6gllPuOUJkK2YFyQ2nEo8CELR4Mg68ryTSSh527ysBmEN69bDvL2LkQ==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -39482,7 +39478,6 @@ packages:
       magic-string: 0.30.0
       pathe: 1.1.0
       picocolors: 1.0.0
-      playwright: 1.32.2
       std-env: 3.3.3
       strip-literal: 1.0.1
       tinybench: 2.5.0
@@ -41090,7 +41085,7 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
-  /y-codemirror.next/0.3.2_sjioejs7munhi7lcuvayqcsncm:
+  /y-codemirror.next/0.3.2_zlu543cx2y2gqzwkhklqerpwl4:
     resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
     peerDependencies:
       '@codemirror/state': ^6.0.0
@@ -41100,10 +41095,10 @@ packages:
       '@codemirror/state': 6.2.0
       '@codemirror/view': 6.9.2
       lib0: 0.2.65
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
-  /y-monaco/0.1.4_32hbp247o7cyndrd5jnsixlimy:
+  /y-monaco/0.1.4_i7gp7jhfwxkg2cuwxlox6o4tpm:
     resolution: {integrity: sha512-RzAvjKJ2yt3VjlKK55U8STJyd1gz5/Qm6pjt7SAVb+k+g+KaSeTuSBGt+lURN+dzzSNs73ZkIAerW3JM0mzBSw==}
     peerDependencies:
       monaco-editor: '>=0.20.0'
@@ -41111,10 +41106,10 @@ packages:
     dependencies:
       lib0: 0.2.65
       monaco-editor: 0.25.2
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
-  /y-prosemirror/1.0.20_ihntoejlm64yg32k3unxwmpmte:
+  /y-prosemirror/1.0.20_7viujtpg6y3hjk44qafnnwb33q:
     resolution: {integrity: sha512-LVMtu3qWo0emeYiP+0jgNcvZkqhzE/otOoro+87q0iVKxy/sMKuiJZnokfJdR4cn9qKx0Un5fIxXqbAlR2bFkA==}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -41128,7 +41123,7 @@ packages:
       prosemirror-state: 1.4.2
       prosemirror-view: 1.30.1
       y-protocols: 1.0.5
-      yjs: 13.5.44
+      yjs: 13.6.7
     dev: false
 
   /y-protocols/1.0.5:
@@ -41364,10 +41359,11 @@ packages:
       - supports-color
     dev: false
 
-  /yjs/13.5.44:
-    resolution: {integrity: sha512-UL+abIh2lQonqXfaJ+en7z9eGshpY11j1zNLc2kDYs0vrTjee4gZJUXC3ZsuhP6geQt0IRU04epCGRaVPQAVCA==}
+  /yjs/13.6.7:
+    resolution: {integrity: sha512-mCZTh4kjvUS2DnaktsYN6wLH3WZCJBLqrTdkWh1bIDpA/sB/GNFaLA/dyVJj2Hc7KwONuuoC/vWe9bwBBosZLQ==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     dependencies:
-      lib0: 0.2.65
+      lib0: 0.2.78
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

@@ -14,7 +14,6 @@ import { fullSurface, mx } from '@dxos/aurora-theme';
 import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
-import { log } from 'console';
 
 export type DrawingMainParams = {
   readonly?: boolean;
