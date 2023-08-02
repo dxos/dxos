@@ -1,5 +1,5 @@
 # Class `ClientServicesProxy`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/proxies/service-proxy.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/service-proxy.d.ts:7]()</sub>
 
 
 Implements services that are not local to the app.
