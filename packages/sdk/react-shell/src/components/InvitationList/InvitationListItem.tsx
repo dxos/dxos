@@ -37,7 +37,7 @@ export const InvitationListItem = ({
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
 
   return (
-    <ListItem.Root id={invitationCode} classNames='flex gap-2 items-center overflow-hidden'>
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 items-center'>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>

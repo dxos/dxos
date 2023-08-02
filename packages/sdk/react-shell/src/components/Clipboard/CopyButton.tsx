@@ -14,7 +14,7 @@ export type CopyButtonProps = Pick<ButtonProps, 'disabled' | 'classNames'> & {
   value: string;
 };
 
-const inactiveLabelStyles = 'invisible bs-px -mbe-px';
+const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
 
 export const CopyButton = ({ value, classNames, disabled }: CopyButtonProps) => {
   const { t } = useTranslation('os');
@@ -27,11 +27,11 @@ export const CopyButton = ({ value, classNames, disabled }: CopyButtonProps) => 
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
-      <div role='none' className={mx('flex gap-1', isCopied && inactiveLabelStyles)}>
+      <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy invitation code label')}</span>
         <Copy className={getSize(4)} weight='bold' />
       </div>
-      <div role='none' className={mx('flex gap-1', !isCopied && inactiveLabelStyles)}>
+      <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
         <span className='pli-1'>{t('copy invitation code success label')}</span>
         <Check className={getSize(4)} weight='bold' />
       </div>

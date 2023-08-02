@@ -10,7 +10,7 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
-import { ClipboardProvider, Viewport } from '../../components';
+import { Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { invitationStatusValue } from '../../util';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
@@ -42,28 +42,26 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
 export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <ClipboardProvider>
-        <IdentityHeading {...{ identity, titleId }} />
-        <Viewport.Root activeView={activeView}>
-          <Viewport.Views>
-            <Viewport.View id='identity action chooser' classNames={viewStyles}>
-              <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
-            </Viewport.View>
-            <Viewport.View id='device manager' classNames={viewStyles}>
-              <DeviceManager active={activeView === 'device manager'} {...props} />
-            </Viewport.View>
-            <Viewport.View id='device invitation manager' classNames={viewStyles}>
-              <InvitationManager
-                active={activeView === 'device invitation manager'}
-                {...props}
-                invitationUrl={props.invitationUrl}
-              />
-            </Viewport.View>
-            {/* <Viewport.View id='managing profile'></Viewport.View> */}
-            {/* <Viewport.View id='signing out'></Viewport.View> */}
-          </Viewport.Views>
-        </Viewport.Root>
-      </ClipboardProvider>
+      <IdentityHeading {...{ identity, titleId }} />
+      <Viewport.Root activeView={activeView}>
+        <Viewport.Views>
+          <Viewport.View id='identity action chooser' classNames={viewStyles}>
+            <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
+          </Viewport.View>
+          <Viewport.View id='device manager' classNames={viewStyles}>
+            <DeviceManager active={activeView === 'device manager'} {...props} />
+          </Viewport.View>
+          <Viewport.View id='device invitation manager' classNames={viewStyles}>
+            <InvitationManager
+              active={activeView === 'device invitation manager'}
+              {...props}
+              invitationUrl={props.invitationUrl}
+            />
+          </Viewport.View>
+          {/* <Viewport.View id='managing profile'></Viewport.View> */}
+          {/* <Viewport.View id='signing out'></Viewport.View> */}
+        </Viewport.Views>
+      </Viewport.Root>
     </DensityProvider>
   );
 };

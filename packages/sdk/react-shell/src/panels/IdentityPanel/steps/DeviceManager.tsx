@@ -40,9 +40,9 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
 
   return (
     <>
-      <Separator classNames='mlb-2' />
-      <ScrollArea.Root classNames='grow max-bs-40'>
-        <ScrollArea.Viewport>
+      <Separator classNames='mbs-2 mbe-px' />
+      <ScrollArea.Root classNames='grow max-bs-32'>
+        <ScrollArea.Viewport classNames='p-2 -mli-2'>
           <InvitationList
             send={send}
             invitations={invitations}
@@ -57,7 +57,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
       <div role='none' className='flex-1' />
       <Button
         disabled={!active}
-        classNames='is-full flex gap-2 mbs-2'
+        classNames='is-full flex gap-2 mbs-px'
         onClick={() => {
           const invitation = client.halo.createInvitation();
           // TODO(wittjosiah): Don't depend on NODE_ENV.
@@ -71,16 +71,16 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
         <span className='grow'>{t('create device invitation label')}</span>
         <Plus className={getSize(4)} weight='bold' />
       </Button>
-      <Separator classNames='mlb-2' />
+      <Separator classNames='mbs-2 mbe-px' />
       <ScrollArea.Root classNames='grow max-bs-40'>
-        <ScrollArea.Viewport>
+        <ScrollArea.Viewport classNames='p-2 -mli-2'>
           <DeviceList devices={devices} />
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar orientation='vertical'>
           <ScrollArea.Thumb />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
-      <div className='flex gap-2 mbs-2'>
+      <div className='flex gap-2 mbs-px'>
         {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
         <Button
           disabled={!active}

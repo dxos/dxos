@@ -6,6 +6,7 @@ import React from 'react';
 
 import { DialogContentProps, Dialog, useId } from '@dxos/aurora';
 
+import { ClipboardProvider } from '../../components';
 import { IdentityPanel, IdentityPanelProps } from '../../panels';
 
 export interface IdentityDialogProps
@@ -21,13 +22,15 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(e) => e.preventDefault()}>
-            <IdentityPanel
-              {...{
-                ...props,
-                titleId,
-                doneActionParent: <Dialog.Close asChild />,
-              }}
-            />
+            <ClipboardProvider>
+              <IdentityPanel
+                {...{
+                  ...props,
+                  titleId,
+                  doneActionParent: <Dialog.Close asChild />,
+                }}
+              />
+            </ClipboardProvider>
           </Dialog.Content>
         </Dialog.Overlay>
       </Dialog.Portal>
