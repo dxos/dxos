@@ -25,6 +25,10 @@ export interface DrawingModel {
   store: TLStore;
 }
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[DrawingType.name] = DrawingType;
+
 export const isDrawing = (data: unknown): data is DrawingType => {
   return isTypedObject(data) && DrawingType.type.name === data.__typename;
 };
