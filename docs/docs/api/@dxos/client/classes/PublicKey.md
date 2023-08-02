@@ -77,7 +77,7 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`other`: <code>PublicKeyLike</code>
+`other`: <code>[PublicKeyLike](/api/@dxos/client/types/PublicKeyLike)</code>
 
 ### [getInsecureHash(modulo)]()
 
@@ -157,9 +157,9 @@ Returns: <code>boolean</code>
 
 Arguments: 
 
-`left`: <code>PublicKeyLike</code>
+`left`: <code>[PublicKeyLike](/api/@dxos/client/types/PublicKeyLike)</code>
 
-`right`: <code>PublicKeyLike</code>
+`right`: <code>[PublicKeyLike](/api/@dxos/client/types/PublicKeyLike)</code>
 
 ### [from(source)]()
 
@@ -172,7 +172,7 @@ Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`source`: <code>PublicKeyLike</code>
+`source`: <code>[PublicKeyLike](/api/@dxos/client/types/PublicKeyLike)</code>
 
 ### [fromHex(hex)]()
 
@@ -244,7 +244,7 @@ Returns: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)</cod
 
 Arguments: 
 
-`source`: <code>PublicKeyLike</code>
+`source`: <code>[PublicKeyLike](/api/@dxos/client/types/PublicKeyLike)</code>
 
 ### [stringify(key)]()
 
@@ -254,4 +254,4 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`key`: <code>Uint8Array | ArrayBuffer | Buffer</code>
+`key`: <code>Buffer | Uint8Array | ArrayBuffer</code>

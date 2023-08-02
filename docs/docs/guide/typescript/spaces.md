@@ -47,7 +47,8 @@ const client = new Client();
 See [ECHO Spaces](../platform/#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/invite-to-space.ts#L5-
-import { Client, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { InvitationEncoder } from '@dxos/client/invitations';
 
 const client = new Client();
 
@@ -74,7 +75,8 @@ const client = new Client();
 See [ECHO Spaces](../platform/#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/join-space.ts#L5-
-import { Client, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { InvitationEncoder } from '@dxos/client/invitations';
 
 const client = new Client();
 

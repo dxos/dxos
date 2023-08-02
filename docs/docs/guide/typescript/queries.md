@@ -41,7 +41,8 @@ It's possible to receive strongly typed results from a `query`.
 Pass a type argument to `query<T>` which descends from [`TypedObject`](/api/@dxos/client/classes/TypedObject):
 
 ```ts{5,17} file=./snippets/read-items-typed.ts#L5-
-import { Client, TypedObject } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { TypedObject } from '@dxos/client/echo';
 
 const client = new Client();
 
@@ -112,14 +113,14 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/client/echo';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
 export class Task extends TypedObject {
-  static readonly type = schema.getType('example.tasks.Task');
+  static readonly type: ReturnType<typeof schema.getType> = schema.getType('example.tasks.Task');
 
   static filter(opts?: {
     title?: string;
