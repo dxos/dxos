@@ -11,6 +11,8 @@ import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
 import { selectSpace, hostInvitation } from '../../util';
+import { asyncTimeout } from '@dxos/async';
+import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
 
 export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
@@ -30,7 +32,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
         throw new Error(`Invalid key: ${truncateKey(key)}`);
       }
 
-      await space.waitUntilReady();
+      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({

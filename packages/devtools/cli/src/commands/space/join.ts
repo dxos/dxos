@@ -6,10 +6,12 @@ import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import assert from 'node:assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
+import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
 import { acceptInvitation, mapMembers, printMembers } from '../../util';
 
 export default class Join extends BaseCommand<typeof Join> {
@@ -56,7 +58,8 @@ export default class Join extends BaseCommand<typeof Join> {
 
       assert(invitation.spaceKey);
       const space = client.getSpace(invitation.spaceKey)!;
-      await space.waitUntilReady();
+      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+
       const members = space.members.get();
       if (!json) {
         printMembers(members);
