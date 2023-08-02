@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.53](https://github.com/dxos/dxos/compare/v0.1.52...v0.1.53) (2023-07-18)
+
+
+### Features
+
+* Agent based functions ([#3653](https://github.com/dxos/dxos/issues/3653)) ([706990e](https://github.com/dxos/dxos/commit/706990eb7025d70d459784b123b4999f90c624de))
+* **devtools:** Add stream stats ([#3656](https://github.com/dxos/dxos/issues/3656)) ([972e6e3](https://github.com/dxos/dxos/commit/972e6e307e002db7ea0e96a6d875712d4da1485a))
+* Experimental threads plugin ([#3654](https://github.com/dxos/dxos/issues/3654)) ([d535786](https://github.com/dxos/dxos/commit/d535786e040e070554b7f1cf432e0627f029a6ca))
+* Plugin for testing ([#3659](https://github.com/dxos/dxos/issues/3659)) ([a0e314e](https://github.com/dxos/dxos/commit/a0e314e4eea7686e33ba140bc4198a693cd96a83))
+* Throttle space service ([#3661](https://github.com/dxos/dxos/issues/3661)) ([d0f911b](https://github.com/dxos/dxos/commit/d0f911bec264f0911de242e9552072daa5076e9b))
+
+
+### Bug Fixes
+
+* Client tests race conditions ([#3665](https://github.com/dxos/dxos/issues/3665)) ([75474bf](https://github.com/dxos/dxos/commit/75474bf58442dd06321c45653675040a15e03a2b))
+* **cli:** Fix `dx debug stats` command hanging ([#3664](https://github.com/dxos/dxos/issues/3664)) ([db41187](https://github.com/dxos/dxos/commit/db411872a5a28765f272c6c089de3ccab150146e))
+* **composer-app:** PWA manifest ([#3662](https://github.com/dxos/dxos/issues/3662)) ([ada9e34](https://github.com/dxos/dxos/commit/ada9e34a8ac6785e97f1ca633a899dd70e598321))
+* **devtools:** Debounce stream stats event ([#3660](https://github.com/dxos/dxos/issues/3660)) ([b051972](https://github.com/dxos/dxos/commit/b0519722e3d354b0a689cc97061f429a1b51069d))
+* **devtools:** Fix manual chunks in devtools bundle ([#3650](https://github.com/dxos/dxos/issues/3650)) ([b9267b1](https://github.com/dxos/dxos/commit/b9267b1210010c749b9ed21e6dfe7b61dea8120a))
+* Functions plugin & readme ([#3651](https://github.com/dxos/dxos/issues/3651)) ([3ecc504](https://github.com/dxos/dxos/commit/3ecc504413f79fb434107abbd9bafdca97963e06))
+* Mute duplicate crednetials warning ([#3666](https://github.com/dxos/dxos/issues/3666)) ([4544117](https://github.com/dxos/dxos/commit/45441174ec8c04452f0e3a750bb05b32807968bb))
+
 ## [0.1.52](https://github.com/dxos/dxos/compare/v0.1.51...v0.1.52) (2023-07-14)
 
 

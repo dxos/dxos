@@ -10,6 +10,7 @@ import React, { PropsWithChildren, ReactNode, useState } from 'react';
 import { Client, PublicKey } from '@dxos/client';
 import { EchoSchema, SpaceProxy, Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { registerSignalFactory } from '@dxos/echo-signals';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientProvider } from '../client';
@@ -24,7 +25,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
       fallback={() => <p>Loading</p>}
       services={services}
       onInitialized={async (client) => {
-        await client.halo.createIdentity({ displayName: faker.name.firstName() });
+        await client.halo.createIdentity({ displayName: faker.person.firstName() });
         schema && client.addSchema(schema);
         await performInvitation({ host: rootSpace as SpaceProxy, guest: client });
       }}
@@ -36,6 +37,7 @@ const ChildClient = ({ rootSpace, schema, children }: PropsWithChildren<{ rootSp
 
 export type PeersInSpaceProps = {
   count?: number;
+  registerSignalFactory?: boolean;
   schema?: EchoSchema;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
   children: (id: number, spaceKey: PublicKey) => ReactNode;
@@ -55,7 +57,7 @@ export const PeersInSpace = ({ count = 1, schema, onCreateSpace, children }: Pee
         fallback={() => <p>Loading</p>}
         services={services}
         onInitialized={async (client) => {
-          await client.halo.createIdentity({ displayName: faker.name.firstName() });
+          await client.halo.createIdentity({ displayName: faker.person.firstName() });
           schema && client.addSchema(schema);
           const space = await client.createSpace({ name: faker.animal.bird() });
           await onCreateSpace?.(space);
@@ -92,10 +94,11 @@ export const ClientSpaceDecorator =
   };
 
 export const setupPeersInSpace = async (options: Omit<PeersInSpaceProps, 'children'> = {}) => {
-  const { count = 1, schema, onCreateSpace } = options;
+  const { count = 1, registerSignalFactory: register = true, schema, onCreateSpace } = options;
+  register && registerSignalFactory();
   const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
-  await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.name.firstName() })));
+  await Promise.all(clients.map((client) => client.halo.createIdentity({ displayName: faker.person.firstName() })));
   schema && clients.map((client) => client.addSchema(schema));
   const space = await clients[0].createSpace({ name: faker.animal.bird() });
   await onCreateSpace?.(space);

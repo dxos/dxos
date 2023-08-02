@@ -7,22 +7,29 @@ import React, { FC } from 'react';
 import { Select } from '@dxos/react-appkit';
 import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
+import { log } from 'console';
 
 export type PublicKeySelectorProps = {
-  keys: PublicKey[];
-  defaultValue?: PublicKey;
-  placeholder?: string;
   Icon?: FC;
+  placeholder?: string;
   getLabel?: (key: PublicKey) => string;
+  keys: PublicKey[];
+  value?: PublicKey;
   onChange?: (value: PublicKey) => any;
 };
 
-export const PublicKeySelector = (props: PublicKeySelectorProps) => {
-  const { placeholder, keys, defaultValue, Icon, onChange, getLabel = humanize } = props;
+export const PublicKeySelector = ({
+  Icon,
+  placeholder,
+  getLabel = humanize,
+  keys,
+  value,
+  onChange,
+}: PublicKeySelectorProps) => {
   return (
     <Select
       placeholder={placeholder}
-      value={defaultValue?.toHex()}
+      value={value?.toHex()}
       onValueChange={(id) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}

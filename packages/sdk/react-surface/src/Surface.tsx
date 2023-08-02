@@ -31,7 +31,7 @@ const SurfaceContext = createContext<SurfaceContextValue | null>(null);
 export const useSurfaceContext = () => useContext(SurfaceContext);
 
 // If component is specified in props or context, grab a component by name.
-// Otherwise iterate through plugins where plugin.provides.component(data) returns something.
+// Otherwise, iterate through plugins where `plugin.provides.component(data)` returns something.
 const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: SurfaceContextValue | null) => {
   const componentName = props.component ?? (props.name && context?.surfaces?.[props.name]?.component);
   const data = props.data ?? (props.name && context?.surfaces?.[props.name]?.data);

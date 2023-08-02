@@ -28,10 +28,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/e2e/rpc-tunnel-e2e",
         "outputPath": "tmp/playwright/packages/e2e/rpc-tunnel-e2e",
         "playwrightConfigPath": "packages/e2e/rpc-tunnel-e2e/src/playwright/playwright.config.ts",

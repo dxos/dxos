@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { ConsoleMessage, Page } from 'playwright';
+import type { ConsoleMessage, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 import { ShellManager as NaturalShellManager } from '@dxos/react-shell/testing';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DRAWING_PLUGIN } from './props';
+import { DRAWING_PLUGIN } from './types';
 
 export default [
   {
@@ -12,6 +12,8 @@ export default [
         'drawing title placeholder': 'New drawing',
         'create drawing label': 'Create drawing',
         'delete drawing label': 'Delete',
+        'create stack section label': 'Create drawing',
+        'choose stack section label': 'Select drawing from this Space',
       },
     },
   },

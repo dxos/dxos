@@ -39,8 +39,10 @@ export class GraphNodeAdapter<T extends TypedObject> {
       return query;
     });
 
-    // Subscribe to all objects.
+    // TODO(burdon): Provided by graph?
     const stackIndices = getIndices(query.objects.length);
+
+    // Subscribe to all objects.
     return query.objects.map((object, index) => {
       defaultMap(this._subscriptions, object.id, () =>
         object[subscribe](() => {

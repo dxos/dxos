@@ -9,13 +9,14 @@ export default [
     'en-US': {
       [MARKDOWN_PLUGIN]: {
         'plugin name': 'Markdown',
-        'create section space document label': 'Add Document',
-        'choose section space document label': 'Add a Document from this Space',
+        'create stack section label': 'Create document',
+        'choose stack section label': 'Select document from this Space',
         'document title placeholder': 'New document',
-        'choose markdown from space dialog title': 'Choose one or more Documents to add',
+        'choose markdown from space dialog title': 'Choose one or more documents to add',
+        // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)
         'empty choose markdown from space message': 'None available; try creating a new one instead?',
         'chooser done label': 'Add selected',
-        'create document label': 'Create new document',
+        'create document label': 'Create document',
         'delete document label': 'Delete',
       },
     },

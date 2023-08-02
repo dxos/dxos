@@ -21,6 +21,7 @@ export const MarkdownSection = ({
     id: document.id,
     content: document.content,
   };
+
   return (
     <MarkdownComposer
       ref={editorRef}

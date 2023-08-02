@@ -63,7 +63,7 @@ describe('Muxer', () => {
 
     for (const peer of [peer1, peer2]) {
       const client = createRpc(
-        peer.createPort('example.extension/rpc', {
+        await peer.createPort('example.extension/rpc', {
           contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
         }),
         async ({ data }) => ({ data }),
@@ -97,7 +97,7 @@ describe('Muxer', () => {
     for (const peer of [peer1, peer2]) {
       {
         const client = createRpc(
-          peer.createPort('example.extension/rpc1', {
+          await peer.createPort('example.extension/rpc1', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc1' }),
@@ -111,7 +111,7 @@ describe('Muxer', () => {
       }
       {
         const client = createRpc(
-          peer.createPort('example.extension/rpc2', {
+          await peer.createPort('example.extension/rpc2', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc2' }),
@@ -131,14 +131,14 @@ describe('Muxer', () => {
   test('node.js streams', async () => {
     const { peer1, peer2 } = setupPeers();
 
-    const stream2 = peer2.createStream('example.extension/stream1', {
+    const stream2 = await peer2.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
     // Buffer data before remote peer opens.
     stream2.write('hello');
 
-    const stream1 = peer1.createStream('example.extension/stream1', {
+    const stream1 = await peer1.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
@@ -168,11 +168,11 @@ describe('Muxer', () => {
   test('destroying muxers destroys open streams', async () => {
     const { peer1, peer2 } = setupPeers();
 
-    const stream1 = peer1.createStream('example.extension/stream1', {
+    const stream1 = await peer1.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
-    const stream2 = peer2.createStream('example.extension/stream1', {
+    const stream2 = await peer2.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
 
