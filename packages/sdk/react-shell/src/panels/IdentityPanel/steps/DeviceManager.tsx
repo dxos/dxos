@@ -41,7 +41,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
   return (
     <>
       <Separator classNames='mbs-2 mbe-px' />
-      <ScrollArea.Root classNames='grow max-bs-32'>
+      <ScrollArea.Root classNames='max-bs-28'>
         <ScrollArea.Viewport classNames='p-2 -mli-2'>
           <InvitationList
             send={send}
@@ -54,7 +54,6 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
           <ScrollArea.Thumb />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
-      <div role='none' className='flex-1' />
       <Button
         disabled={!active}
         classNames='is-full flex gap-2 mbs-px'
@@ -72,7 +71,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
         <Plus className={getSize(4)} weight='bold' />
       </Button>
       <Separator classNames='mbs-2 mbe-px' />
-      <ScrollArea.Root classNames='grow max-bs-40'>
+      <ScrollArea.Root classNames='grow shrink basis-36'>
         <ScrollArea.Viewport classNames='p-2 -mli-2'>
           <DeviceList devices={devices} />
         </ScrollArea.Viewport>
@@ -80,7 +79,8 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
           <ScrollArea.Thumb />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
-      <div className='flex gap-2 mbs-px'>
+      <Separator classNames='mbe-2 mbs-px' />
+      <div className='flex gap-2'>
         {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
         <Button
           disabled={!active}

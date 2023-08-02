@@ -75,4 +75,6 @@ export const os = {
   'empty space members message': 'No other members in this space',
   'back to all invitations label': 'Back to all invitations',
   'invitation heading': 'Invitation',
+  'invitation list heading': 'Invitations',
+  'device list heading': 'Devices',
 };

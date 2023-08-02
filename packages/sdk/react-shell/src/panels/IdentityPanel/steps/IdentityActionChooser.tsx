@@ -5,7 +5,7 @@
 import { CaretLeft, CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
-import { Button, DensityProvider, Separator, useTranslation } from '@dxos/aurora';
+import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
@@ -21,9 +21,14 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
   );
   return (
     <div role='none' className='grow flex flex-col gap-1'>
-      <div className='grow justify-center flex flex-col gap-1'>
-        <DensityProvider density='coarse'>
-          <Button disabled={!active} data-testid='manage-devices' onClick={() => send({ type: 'chooseDevices' })}>
+      <DensityProvider density='coarse'>
+        <div className='grow justify-center flex flex-col gap-1'>
+          <Button
+            disabled={!active}
+            data-testid='manage-devices'
+            onClick={() => send({ type: 'chooseDevices' })}
+            classNames='plb-4'
+          >
             <Plus className={getSize(6)} />
             <span className='grow mli-3'>{t('choose devices label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
@@ -32,19 +37,24 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
             disabled={!active}
             data-testid='manage-profile'
             onClick={() => {} /* send({ type: 'chooseProfile' }) */}
+            classNames='plb-4'
           >
             <UserGear className={getSize(6)} />
             <span className='grow mli-3'>{t('choose profile label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
-          <Button disabled={!active} data-testid='sign-out' onClick={() => {} /* send({ type: 'chooseSignOut' }) */}>
+          <Button
+            disabled={!active}
+            data-testid='sign-out'
+            onClick={() => {} /* send({ type: 'chooseSignOut' }) */}
+            classNames='plb-4'
+          >
             <Power className={getSize(6)} />
             <span className='grow mli-3'>{t('choose sign out label')}</span>
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
-        </DensityProvider>
-      </div>
-      <Separator classNames='mlb-2' />
+        </div>
+      </DensityProvider>
       {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
     </div>
   );
