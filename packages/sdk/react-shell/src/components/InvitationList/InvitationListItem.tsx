@@ -37,38 +37,39 @@ export const InvitationListItem = ({
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
 
   return (
-    <ListItem.Root id={invitationCode}>
-      <ListItem.Heading classNames='flex gap-2 items-center'>
-        <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} />
-        {showShare && invitationUrl ? (
-          <>
-            <Button
-              classNames='grow flex gap-1'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
-              data-testid='show-qrcode'
-            >
-              <span>{t('open share panel label')}</span>
-              <QrCode className={getSize(4)} weight='bold' />
-            </Button>
-            <CopyButton value={invitationUrl} />
-          </>
-        ) : showAuthCode ? (
-          <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
-        ) : (
-          <span role='none' className='grow' />
-        )}
-        {isCancellable ? (
-          <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
-            <span className='sr-only'>{t('cancel invitation label')}</span>
-            <ProhibitInset className={getSize(4)} weight='bold' />
-          </Button>
-        ) : (
-          <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
-            <span className='sr-only'>{t('remove invitation label')}</span>
-            <X className={getSize(4)} weight='bold' />
-          </Button>
-        )}
+    <ListItem.Root id={invitationCode} classNames='flex gap-2 items-center overflow-hidden'>
+      <ListItem.Heading classNames='sr-only'>
+        {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>
+      <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} />
+      {showShare && invitationUrl ? (
+        <>
+          <Button
+            classNames='grow gap-1'
+            onClick={() => send({ type: 'selectInvitation', invitation })}
+            data-testid='show-qrcode'
+          >
+            <span>{t('open share panel label')}</span>
+            <QrCode className={getSize(4)} weight='bold' />
+          </Button>
+          <CopyButton value={invitationUrl} />
+        </>
+      ) : showAuthCode ? (
+        <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+      ) : (
+        <span role='none' className='grow' />
+      )}
+      {isCancellable ? (
+        <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
+          <span className='sr-only'>{t('cancel invitation label')}</span>
+          <ProhibitInset className={getSize(4)} weight='bold' />
+        </Button>
+      ) : (
+        <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
+          <span className='sr-only'>{t('remove invitation label')}</span>
+          <X className={getSize(4)} weight='bold' />
+        </Button>
+      )}
     </ListItem.Root>
   );
 };

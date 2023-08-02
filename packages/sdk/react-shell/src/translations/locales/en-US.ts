@@ -6,7 +6,7 @@ export const os = {
   'manage profile label': 'Manage identity',
   'identity offline description': 'Offline',
   'sidebar label': 'DXOS sidebar',
-  'copy invitation code label': 'Copy',
+  'copy invitation code label': 'Copy URL',
   'copy invitation code success label': 'Copied',
   'open share panel label': 'Share',
   'joining space heading': 'Joining space',
@@ -74,4 +74,5 @@ export const os = {
   'choose sign out label': 'Sign out',
   'empty space members message': 'No other members in this space',
   'back to all invitations label': 'Back to all invitations',
+  'invitation heading': 'Invitation',
 };

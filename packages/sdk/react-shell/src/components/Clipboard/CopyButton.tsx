@@ -5,24 +5,25 @@
 import { Check, Copy } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { Button, ButtonProps, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { useClipboardContext } from './ClipboardProvider';
 
-export type CopyButtonProps = {
+export type CopyButtonProps = Pick<ButtonProps, 'disabled' | 'classNames'> & {
   value: string;
 };
 
 const inactiveLabelStyles = 'invisible bs-px -mbe-px';
 
-export const CopyButton = ({ value }: CopyButtonProps) => {
+export const CopyButton = ({ value, classNames, disabled }: CopyButtonProps) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboardContext();
   const isCopied = textValue === value;
   return (
     <Button
-      classNames='inline-flex flex-col justify-center'
+      disabled={disabled}
+      classNames={['inline-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >

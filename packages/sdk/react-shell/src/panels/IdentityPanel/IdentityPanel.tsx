@@ -7,10 +7,12 @@ import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from
 import { log } from '@dxos/log';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
-import { Viewport } from '../../components';
+import { ClipboardProvider, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
+import { invitationStatusValue } from '../../util';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { DeviceManager, IdentityActionChooser } from './steps';
@@ -40,29 +42,45 @@ const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
 export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <IdentityHeading {...{ identity, titleId }} />
-      <Viewport.Root activeView={activeView}>
-        <Viewport.Views>
-          <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
-          </Viewport.View>
-          <Viewport.View id='device manager' classNames={viewStyles}>
-            <DeviceManager active={activeView === 'device manager'} {...props} />
-          </Viewport.View>
-          <Viewport.View id='device invitation manager' classNames={viewStyles}>
-            {props.invitationUrl ? (
+      <ClipboardProvider>
+        <IdentityHeading {...{ identity, titleId }} />
+        <Viewport.Root activeView={activeView}>
+          <Viewport.Views>
+            <Viewport.View id='identity action chooser' classNames={viewStyles}>
+              <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
+            </Viewport.View>
+            <Viewport.View id='device manager' classNames={viewStyles}>
+              <DeviceManager active={activeView === 'device manager'} {...props} />
+            </Viewport.View>
+            <Viewport.View id='device invitation manager' classNames={viewStyles}>
               <InvitationManager
                 active={activeView === 'device invitation manager'}
                 {...props}
-                invitationUrl={props.invitationUrl!}
+                invitationUrl={props.invitationUrl}
               />
-            ) : null}
-          </Viewport.View>
-          {/* <Viewport.View id='managing profile'></Viewport.View> */}
-          {/* <Viewport.View id='signing out'></Viewport.View> */}
-        </Viewport.Views>
-      </Viewport.Root>
+            </Viewport.View>
+            {/* <Viewport.View id='managing profile'></Viewport.View> */}
+            {/* <Viewport.View id='signing out'></Viewport.View> */}
+          </Viewport.Views>
+        </Viewport.Root>
+      </ClipboardProvider>
     </DensityProvider>
+  );
+};
+
+const IdentityPanelWithInvitationImpl = ({
+  invitation,
+  ...props
+}: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
+  const { status, invitationCode, authCode } = useInvitationStatus(invitation);
+  const statusValue = invitationStatusValue.get(status) ?? 0;
+  const showAuthCode = statusValue === 3;
+  return (
+    <IdentityPanelImpl
+      {...props}
+      invitationUrl={props.createInvitationUrl(invitationCode!)}
+      {...(showAuthCode && { authCode })}
+    />
   );
 };
 
@@ -104,20 +122,18 @@ export const IdentityPanel = ({
     }
   }, [identityState]);
 
-  const { invitationCode, authCode } = useInvitationStatus(identityState.context.invitation);
+  const implProps = {
+    ...props,
+    identity,
+    activeView,
+    send: identitySend,
+    titleId,
+    createInvitationUrl,
+  };
 
-  return (
-    <IdentityPanelImpl
-      {...props}
-      identity={identity}
-      activeView={activeView}
-      send={identitySend}
-      titleId={titleId}
-      createInvitationUrl={createInvitationUrl}
-      {...(invitationCode && {
-        invitationUrl: createInvitationUrl(invitationCode),
-        authCode,
-      })}
-    />
+  return identityState.context.invitation ? (
+    <IdentityPanelWithInvitationImpl {...implProps} invitation={identityState.context.invitation} />
+  ) : (
+    <IdentityPanelImpl {...implProps} />
   );
 };

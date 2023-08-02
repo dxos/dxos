@@ -8,7 +8,7 @@ import React, { cloneElement, useMemo } from 'react';
 import { Button, DensityProvider, Tooltip, useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { Viewport } from '../../components';
+import { ClipboardProvider, Viewport } from '../../components';
 import { stepStyles } from '../../styles';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
 import { SpaceManager } from './steps';
@@ -50,15 +50,17 @@ export const SpacePanelImpl = ({
 }: SpacePanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...{ titleId, space, doneActionParent, onDone }} />
-      <Viewport.Root activeView={activeView}>
-        <Viewport.Views>
-          <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManager {...{ active: activeView === 'space manager', send, space, createInvitationUrl }} />
-          </Viewport.View>
-          <Viewport.View {...{} /* todo(thure): Remove this unused View */} id='never' classNames={stepStyles} />
-        </Viewport.Views>
-      </Viewport.Root>
+      <ClipboardProvider>
+        <SpacePanelHeading {...{ titleId, space, doneActionParent, onDone }} />
+        <Viewport.Root activeView={activeView}>
+          <Viewport.Views>
+            <Viewport.View id='space manager' classNames={stepStyles}>
+              <SpaceManager {...{ active: activeView === 'space manager', send, space, createInvitationUrl }} />
+            </Viewport.View>
+            <Viewport.View {...{} /* todo(thure): Remove this unused View */} id='never' classNames={stepStyles} />
+          </Viewport.Views>
+        </Viewport.Root>
+      </ClipboardProvider>
     </DensityProvider>
   );
 };
