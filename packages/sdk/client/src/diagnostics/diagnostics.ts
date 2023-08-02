@@ -55,8 +55,8 @@ export type Diagnostics = {
 
 export type Platform = {
   type: 'browser' | 'node';
-  version?: string;
   platform: string;
+  runtime?: string;
 };
 
 export type DiagnosticOptions = {
@@ -210,10 +210,10 @@ const getPlatform = async (): Promise<Platform> => {
   }
 
   // https://nodejs.org/api/os.html
-  const { platform, release } = await require('node:os');
+  const { machine, platform, release } = await require('node:os');
   return {
     type: 'node',
-    platform: `${platform()} ${release()}`,
-    version: process.version,
+    platform: `${platform()} ${release()} ${machine()}`,
+    runtime: process.version,
   };
 };
