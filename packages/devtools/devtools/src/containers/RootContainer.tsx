@@ -23,9 +23,9 @@ const Footer = () => {
   if (!services) {
     return null;
   }
-  const fileDownload = useFileDownload();
 
   const client = useClient();
+  const fileDownload = useFileDownload();
   const downloadDiagnostics = async () => {
     const diagnostics = await client.diagnostics();
     fileDownload(new Blob([JSON.stringify(diagnostics, undefined, 2)], { type: 'text/plain' }), 'diagnostics.json');
