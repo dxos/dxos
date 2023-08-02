@@ -76,5 +76,8 @@ export const os = {
   'back to all invitations label': 'Back to all invitations',
   'invitation heading': 'Invitation',
   'invitation list heading': 'Invitations',
+  'device invitation list heading': 'Pending device invitations',
+  'space invitation list heading': 'Pending invitations',
   'device list heading': 'Devices',
+  'space member list heading': 'Members in this space',
 };

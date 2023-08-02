@@ -48,7 +48,7 @@ const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePa
 export const SpacePanelImpl = ({ titleId, activeView, space, ...props }: SpacePanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...{ titleId, space }} />
+      <SpacePanelHeading {...props} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>

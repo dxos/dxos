@@ -3,8 +3,7 @@
 //
 import React from 'react';
 
-import { List, useTranslation } from '@dxos/aurora';
-import { descriptionText, mx } from '@dxos/aurora-theme';
+import { List } from '@dxos/aurora';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { InvitationListItem, InvitationListItemProps } from './InvitationListItem';
@@ -17,19 +16,12 @@ export interface InvitationListProps
 }
 
 export const InvitationList = ({ invitations, send, ...invitationProps }: InvitationListProps) => {
-  const { t } = useTranslation('os');
-  return invitations.length ? (
-    <>
-      <List classNames='flex flex-col gap-2'>
-        {invitations.map((invitation) => {
-          const value = invitation.get().invitationId;
-          return <InvitationListItem key={value} send={send} invitation={invitation} {...invitationProps} />;
-        })}
-      </List>
-    </>
-  ) : (
-    <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center is-full')}>{t('empty invitations message')}</p>
-    </div>
+  return (
+    <List classNames='flex flex-col gap-2'>
+      {invitations.map((invitation) => {
+        const value = invitation.get().invitationId;
+        return <InvitationListItem key={value} send={send} invitation={invitation} {...invitationProps} />;
+      })}
+    </List>
   );
 };

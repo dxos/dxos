@@ -42,7 +42,7 @@ export const InvitationManager = ({
   return (
     <>
       <div role='none' className='grow flex items-center justify-center'>
-        <div role='none' className='grow max-is-[12.5rem] mli-auto flex flex-col gap-2'>
+        <div role='none' className='grow max-is-[12rem] mli-auto flex flex-col gap-2'>
           <div role='none' className='aspect-square is-full bs-auto relative'>
             <QRCodeSVG
               bgColor='transparent'
