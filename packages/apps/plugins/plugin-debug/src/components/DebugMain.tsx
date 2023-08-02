@@ -126,15 +126,8 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
             </div>
           )}
           <div>
-            <pre className='p-2 text-sm'>Diagnostics</pre>
             <SyntaxHighlighter language='json' style={style}>
               {JSON.stringify(data, replacer, 2)}
-            </SyntaxHighlighter>
-          </div>
-          <div>
-            <pre className='p-2 text-sm'>Config</pre>
-            <SyntaxHighlighter language='json' style={style}>
-              {JSON.stringify(config.values, replacer, 2)}
             </SyntaxHighlighter>
           </div>
         </div>

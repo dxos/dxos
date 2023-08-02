@@ -4,6 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import rev from 'git-rev-sync';
+import defaultsDeep from 'lodash.defaultsDeep';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -36,15 +37,21 @@ export default class Stats extends BaseCommand<typeof Stats> {
         5_000,
       );
 
-      return {
-        cli: {
-          version: this.config.version,
-          branch: rev.branch(),
-          hash: rev.long(),
-          commit: rev.date().toISOString(),
+      return defaultsDeep({}, data, {
+        client: {
+          config: {
+            runtime: {
+              app: {
+                build: {
+                  timestamp: rev.date().toISOString(),
+                  hash: rev.long(),
+                  branch: rev.branch(),
+                },
+              },
+            },
+          },
         },
-        diagnostics: data,
-      };
+      });
     });
   }
 }

@@ -17,11 +17,27 @@ import {
   SpaceMember,
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { Config } from '@dxos/protocols/proto/dxos/config';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
 import { Client } from '../client';
+
+export type Diagnostics = {
+  created: string;
+  client: {
+    version: string;
+    config: Config;
+  };
+  platform: Platform;
+  identity: Identity;
+  devices: Device[];
+  spaces: SpaceStats[];
+  feeds: Partial<SubscribeToFeedsResponse.Feed>[];
+  config: ConfigProto;
+  storageVersion: number;
+};
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
@@ -39,20 +55,6 @@ export type SpaceStats = {
   };
 };
 
-export type Diagnostics = {
-  created: string;
-  client: {
-    version: string;
-  };
-  platform: Platform;
-  identity: Identity;
-  devices: Device[];
-  spaces: SpaceStats[];
-  feeds: Partial<SubscribeToFeedsResponse.Feed>[];
-  config: ConfigProto;
-  storageVersion: number;
-};
-
 export type Platform = {
   type: 'browser' | 'node';
   platform: string;
@@ -64,15 +66,16 @@ export type DiagnosticOptions = {
   humanize?: boolean;
 };
 
-// TODO(burdon): Move method to Monitor class.
+// TODO(burdon): Factor out (move into Monitor class).
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<Diagnostics>> => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<Diagnostics> = {
     created: new Date().toISOString(),
+    platform: await getPlatform(),
     client: {
       version: client.version,
+      config: client.config.values,
     },
-    platform: await getPlatform(),
   };
 
   const identity = client.halo.identity.get();
