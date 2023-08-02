@@ -5,6 +5,12 @@ Defined in:
    file://./../../dxos/config.proto
 
 ## Properties
+### [agent]()
+Type: <code>[Agent](/api/@dxos/config/interfaces/Agent)</code>
+
+Options:
+  - proto3_optional = true
+
 ### [app]()
 Type: <code>[App](/api/@dxos/config/interfaces/App)</code>
 
