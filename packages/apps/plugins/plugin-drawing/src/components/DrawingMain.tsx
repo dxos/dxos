@@ -14,6 +14,7 @@ import { fullSurface, mx } from '@dxos/aurora-theme';
 import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
+import { log } from 'console';
 
 export type DrawingMainParams = {
   readonly?: boolean;
@@ -37,11 +38,12 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   // TODO(burdon): Update height within range.
   const { ref: containerRef, width } = useResizeDetector();
   const [height, _setHeight] = useState<number>(300);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     editor?.updateViewportScreenBounds();
   }, [editor, width]);
   useEffect(() => {
-    const update = debounce<boolean>((animate = false) => {
+    const update = (animate = false) => {
       const bounds = editor?.allShapesCommonBounds;
       if (bounds && width && bounds.width && bounds.height) {
         const zoom = Math.min(1, Math.min(width / bounds.width, height / bounds.height) * 0.8);
@@ -53,16 +55,18 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
         editor.stopCameraAnimation();
         const { width: pw, height: ph } = editor.viewportPageBounds;
         editor.animateCamera(pw / 2 - center.x, ph / 2 - center.y, zoom, animate ? { duration: 250 } : undefined);
+        setReady(true);
       }
-    }, 100);
+    };
 
     update(false);
-    const subscription = store.listen(() => update(true), { scope: 'document' });
+    const f = debounce<boolean>(update, 100);
+    const subscription = store.listen(() => f(true), { scope: 'document' });
     return () => subscription();
   }, [editor, width]);
 
   return (
-    <div ref={containerRef} style={{ height }}>
+    <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
       <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
     </div>
   );
