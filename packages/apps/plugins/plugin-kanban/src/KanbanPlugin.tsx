@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -15,10 +15,6 @@ import { KanbanMain } from './components';
 import translations from './translations';
 import { isKanban, KANBAN_PLUGIN, KanbanAction, KanbanPluginProvides } from './types';
 import { objectToGraphNode } from './util';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[KanbanType.name] = KanbanType;
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   const adapter = new GraphNodeAdapter(KanbanType.filter(), objectToGraphNode);
@@ -48,9 +44,9 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
           return [
             {
-              id: `${KANBAN_PLUGIN}/create-kanban`, // TODO(burdon): Namespace?
-              index: getIndices(1)[0],
-              testId: 'kanbanPlugin.createKanban', // TODO(burdon): Namespace?
+              id: `${KANBAN_PLUGIN}/create`,
+              index: 'a1',
+              testId: 'kanbanPlugin.createKanban',
               label: ['create kanban label', { ns: KANBAN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
               intent: [

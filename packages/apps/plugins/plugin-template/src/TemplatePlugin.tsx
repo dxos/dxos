@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getIndices, GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { SpaceProxy, Expando, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
@@ -47,8 +47,8 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
           return [
             {
-              id: `${TEMPLATE_PLUGIN}/create-object`, // TODO(burdon): Uniformly "create-object".
-              index: getIndices(1)[0],
+              id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
+              index: 'a1',
               testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
               label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
               icon: (props) => <Plus {...props} />,

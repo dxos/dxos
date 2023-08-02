@@ -5,7 +5,7 @@
 import { CompassTool, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/client/echo';
@@ -15,10 +15,6 @@ import { DrawingMain, DrawingSection } from './components';
 import translations from './translations';
 import { isDrawing, DRAWING_PLUGIN, DrawingPluginProvides, DrawingAction } from './types';
 import { objectToGraphNode } from './util';
-
-// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
-// https://github.com/luisherranz/deepsignal/issues/36
-(globalThis as any)[DrawingType.name] = DrawingType;
 
 export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
   const adapter = new GraphNodeAdapter(DrawingType.filter(), objectToGraphNode);
@@ -48,8 +44,8 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
 
           return [
             {
-              id: `${DRAWING_PLUGIN}/create-drawing`,
-              index: getIndices(1)[0],
+              id: `${DRAWING_PLUGIN}/create`,
+              index: 'a1',
               testId: 'drawingPlugin.createDrawing',
               label: ['create drawing label', { ns: DRAWING_PLUGIN }],
               icon: (props) => <Plus {...props} />,
@@ -73,7 +69,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
       stack: {
         creators: [
           {
-            id: 'create-stack-section-drawing', // TODO(burdon): "-space-" ?
+            id: 'create-stack-section-drawing',
             testId: 'drawingPlugin.createSectionSpaceDrawing',
             label: ['create stack section label', { ns: DRAWING_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,

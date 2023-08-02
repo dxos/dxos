@@ -42,6 +42,10 @@ export interface KanbanModel {
   createItem(column: KanbanType.Column): KanbanType.Item;
 }
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[KanbanType.name] = KanbanType;
+
 export const isKanban = (data: unknown): data is KanbanType => {
   return isTypedObject(data) && KanbanType.type.name === data.__typename;
 };
