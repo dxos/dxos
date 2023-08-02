@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { GraphNodeAdapter, SpaceAction, getIndices } from '@braneframe/plugin-space';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
 import { SpaceProxy } from '@dxos/react-client/echo';
@@ -48,9 +48,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
           return [
             {
-              id: `${THREAD_PLUGIN}/create-thread`, // TODO(burdon): Namespace?
-              index: getIndices(1)[0],
-              testId: 'threadPlugin.createThread', // TODO(burdon): Namespace?
+              id: `${THREAD_PLUGIN}/create`,
+              index: 'a1',
+              testId: 'threadPlugin.createThread',
               label: ['create thread label', { ns: THREAD_PLUGIN }],
               icon: (props) => <Plus {...props} />,
               intent: [
