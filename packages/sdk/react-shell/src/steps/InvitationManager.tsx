@@ -48,10 +48,12 @@ export const InvitationManager = ({
               bgColor='transparent'
               fgColor='currentColor'
               value={invitationUrl ?? 'never'}
-              className='is-full bs-full'
+              className={mx('is-full bs-full', authCode && 'invisible')}
               aria-labelledby={qrLabel}
             />
-            <p className='absolute text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+            <p className='absolute inset-inline-0 block-start-2 text-2xl text-center text-success-500 dark:text-success-300 font-mono'>
+              {authCode}
+            </p>
           </div>
           <span id={qrLabel} className='sr-only'>
             {t('qr label')}
