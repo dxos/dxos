@@ -3,8 +3,8 @@
 //
 
 import { AbstractValueEncoding, Crypto } from 'hypercore';
-import assert from 'node:assert';
 import { callbackify } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { Codec, EncodingOptions } from '@dxos/codec-protobuf';
 import { Signer, verifySignature } from '@dxos/crypto';
@@ -24,8 +24,8 @@ export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions):
  */
 // TODO(burdon): Create test without adding deps.
 export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
-  assert(signer);
-  assert(publicKey);
+  invariant(signer);
+  invariant(publicKey);
 
   return {
     sign: (message, secretKey, cb) => {

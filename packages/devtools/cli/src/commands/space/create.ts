@@ -14,14 +14,7 @@ export default class Create extends BaseCommand<typeof Create> {
   static override args = { name: Args.string() };
 
   async run(): Promise<any> {
-    const { faker } = await import('@faker-js/faker');
-
-    let { name } = this.args;
-    if (!name) {
-      // TODO(burdon): Move to v7: https://v6.fakerjs.dev/migration-guide-v5
-      name = `${faker.commerce.productName().toLowerCase().replace(/\s/g, '-')}`;
-    }
-
+    const { name } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await client.createSpace();
       await space.waitUntilReady();

@@ -7,15 +7,14 @@ import React, { FC } from 'react';
 
 import { List, ListItem } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { base, Space } from '@dxos/client';
 import { Project, Task } from '@dxos/kai-types';
 import { Input } from '@dxos/react-appkit';
-import { observer } from '@dxos/react-client';
+import { base, Space } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
 
 // TODO(burdon): Reconcile with other cards.
-export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ space, object }) => {
+export const ProjectCard: FC<{ space: Space; object: Project }> = ({ space, object }) => {
   // TODO(burdon): Pass in Task1, Task2.
   const handleDrag = (active: number, over: number) => {
     const task = object.tasks[active];
@@ -82,4 +81,4 @@ export const ProjectCard: FC<{ space: Space; object: Project }> = observer(({ sp
       )}
     </div>
   );
-});
+};

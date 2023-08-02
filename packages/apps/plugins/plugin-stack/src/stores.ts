@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createStore } from '@dxos/observable-object';
+import { deepSignal } from 'deepsignal/react';
 
-import { StackSectionChooser, StackSectionCreator } from './props';
+import { StackState } from './types';
 
-export const stackSectionCreators = createStore<StackSectionCreator[]>([]);
-export const stackSectionChoosers = createStore<StackSectionChooser[]>([]);
+// TODO(burdon): REMOVE GLOBAL VARIABLE!
+export const stackState: StackState = deepSignal({
+  creators: [],
+  choosers: [],
+});

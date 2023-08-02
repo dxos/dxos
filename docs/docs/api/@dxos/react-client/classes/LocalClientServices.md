@@ -1,5 +1,5 @@
 # Class `LocalClientServices`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/local-client-services.d.ts:7]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/local-client-services.d.ts:7]()</sub>
 
 
 Starts a local instance of the service host.

@@ -4,30 +4,27 @@
 
 import { useEffect } from 'react';
 
-import { selectedToUri, uriToSelected, useTreeView } from '@braneframe/plugin-treeview';
-import { observer } from '@dxos/observable-object/react';
+import { activeToUri, uriToActive, useTreeView } from '@braneframe/plugin-treeview';
 import { PluginDefinition } from '@dxos/react-surface';
 
 export const UrlSyncPlugin = (): PluginDefinition => ({
   meta: {
-    id: 'dxos:url-sync',
+    id: 'dxos.org/plugin/url-sync',
   },
   provides: {
     components: {
-      default: observer(() => {
+      default: () => {
         const treeView = useTreeView();
 
         // Update selection based on browser navigation.
         useEffect(() => {
           const handleNavigation = () => {
-            treeView.selected =
-              // TODO(wittjosiah): Remove. This is here for backwards compatibility.
-              window.location.pathname === '/embedded'
-                ? ['dxos:github/embedded']
-                : uriToSelected(window.location.pathname);
+            treeView.active =
+              // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
+              window.location.pathname === '/embedded' ? ['github/embedded'] : uriToActive(window.location.pathname);
           };
 
-          if (treeView.selected.length === 0 && window.location.pathname.length > 1) {
+          if (treeView.active.length === 0 && window.location.pathname.length > 1) {
             handleNavigation();
           }
 
@@ -39,15 +36,15 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
 
         // Update URL when selection changes.
         useEffect(() => {
-          const selectedPath = selectedToUri(treeView.selected);
+          const selectedPath = activeToUri(treeView.active);
           if (window.location.pathname !== selectedPath) {
             // TODO(wittjosiah): Better support for search params?
             history.pushState(null, '', `${selectedPath}${window.location.search}`);
           }
-        }, [treeView.selected]);
+        }, [treeView.active]);
 
         return null;
-      }),
+      },
     },
   },
 });

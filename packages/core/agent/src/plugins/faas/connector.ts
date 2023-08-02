@@ -5,10 +5,10 @@
 import assert from 'node:assert';
 
 import { DeferredTask } from '@dxos/async';
-import { Space, SpaceState } from '@dxos/client';
+import { Space, SpaceState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { createSubscription } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { createSubscription } from '@dxos/observable-object';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { AbstractPlugin } from '../plugin';

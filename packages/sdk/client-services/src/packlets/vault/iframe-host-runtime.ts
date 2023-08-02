@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { PROXY_CONNECTION_TIMEOUT } from '@dxos/client-protocol';
+import { PROXY_CONNECTION_TIMEOUT, ShellRuntime } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -13,7 +13,7 @@ import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
-import { ShellRuntime, ShellRuntimeImpl } from './shell-runtime';
+import { ShellRuntimeImpl } from './shell-runtime';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 

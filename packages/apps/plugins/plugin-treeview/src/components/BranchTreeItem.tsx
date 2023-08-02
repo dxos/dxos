@@ -8,12 +8,11 @@ import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode } from '@braneframe/plugin-graph';
+import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, defaultFocus, getSize } from '@dxos/aurora-theme';
-import { ObservableObject, subscribe } from '@dxos/observable-object';
-import { useSubscription } from '@dxos/observable-object/react';
+import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
 
+import { TREE_VIEW_PLUGIN } from '../types';
 import { TreeView } from './TreeView';
 
 type SortableBranchTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
@@ -46,9 +45,9 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
 >(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
-  const [primaryAction, ...actions] = node.actions ?? [];
-  // TODO(wittjosiah): Update namespace.
-  const { t } = useTranslation('composer');
+  const { invokeAction } = useGraph();
+  const [primaryAction, ...actions] = getActions(node);
+  const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const hasActiveDocument = false;
   const disabled = node.attributes?.disabled;
   const error = node.attributes?.error;
@@ -64,16 +63,6 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
     // todo(thure): Open if child within becomes active
   }, []);
 
-  // TODO(thure): This replaces `observer` since we need to `forwardRef`.
-  const [_, setIter] = useState([]);
-  if (subscribe in node) {
-    useEffect(() => {
-      return (node as ObservableObject)[subscribe](() => setIter([])) as () => void;
-    }, [node]);
-  } else {
-    useSubscription(() => setIter([]), [node]);
-  }
-
   const OpenTriggerIcon = open ? CaretDown : CaretRight;
 
   return (
@@ -81,7 +70,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1 rounded', defaultFocus, rearranging && 'invisible']}
+      classNames={['mbe-1 rounded', focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -90,7 +79,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
       <div role='none' className='flex mis-1 items-start'>
         <TreeItem.OpenTrigger
           disabled={disabled}
-          classNames={['grow flex', disabled && defaultDisabled]}
+          classNames={['grow flex', disabled && staticDisabled]}
           {...(disabled && { 'aria-disabled': true })}
           {...(!sidebarOpen && { tabIndex: -1 })}
         >
@@ -102,10 +91,10 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           <TreeItem.Heading
             data-testid='spacePlugin.spaceTreeItemHeading'
             classNames={[
-              'grow text-start break-words pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
+              'grow min-is-0 truncate text-start pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
               error && 'text-error-700 dark:text-error-300',
               !disabled && 'cursor-pointer',
-              disabled && defaultDisabled,
+              disabled && staticDisabled,
             ]}
             {...(disabled && { 'aria-disabled': true })}
           >
@@ -162,7 +151,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                         // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
-                        void action.invoke(t, event);
+                        void invokeAction(action);
                       }}
                       classNames='gap-2'
                     >
@@ -191,11 +180,11 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.stopPropagation();
-                    void primaryAction.invoke(t, event);
+                    void invokeAction(primaryAction);
                   }
                 }}
-                onClick={(event) => {
-                  void primaryAction.invoke(t, event);
+                onClick={() => {
+                  void invokeAction(primaryAction);
                 }}
                 {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
                 {...(!sidebarOpen && { tabIndex: -1 })}
@@ -214,7 +203,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={node.children} parent={node} />
+        <TreeView items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]} parent={node} />
       </TreeItem.Body>
     </TreeItem.Root>
   );

@@ -4,13 +4,13 @@
 
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
+import { PublicKey } from '@dxos/client';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
-  PublicKey,
-} from '@dxos/client';
+} from '@dxos/client/invitations';
 import { log } from '@dxos/log';
 
 export type InvitationResult = {

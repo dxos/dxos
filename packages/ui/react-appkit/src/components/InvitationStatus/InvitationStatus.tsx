@@ -6,7 +6,7 @@ import React, { ComponentProps, useMemo } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { strongShimmer, getSize, mx } from '@dxos/aurora-theme';
-import { Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/react-client/invitations';
 
 const pip = mx('rounded-full flex-none', getSize(2));
 const stripe = mx('rounded-full grow', getSize(2));

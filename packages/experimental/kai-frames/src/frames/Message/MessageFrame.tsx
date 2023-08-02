@@ -8,7 +8,7 @@ import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Contact, Message, Organization } from '@dxos/kai-types';
-import { observer, Space, useQuery } from '@dxos/react-client';
+import { Space, useQuery } from '@dxos/react-client/echo';
 
 import { ContactCard } from '../../cards';
 import { useFrameRouter, useFrameContext, useFrameRegistry } from '../../hooks';
@@ -109,7 +109,7 @@ export const MessageFrame = () => {
   );
 };
 
-const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, message }) => {
+const MessagePanel: FC<{ space: Space; message: Message }> = ({ space, message }) => {
   const router = useFrameRouter();
   const frameRegistry = useFrameRegistry();
 
@@ -172,7 +172,7 @@ const MessagePanel: FC<{ space: Space; message: Message }> = observer(({ space, 
       </div>
     </div>
   );
-});
+};
 
 // TODO(burdon): Factor out.
 const Row: FC<{ children?: ReactNode; gutter?: ReactNode; className?: string; wide?: boolean }> = ({

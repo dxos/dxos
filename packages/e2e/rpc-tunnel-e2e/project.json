@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/e2e/rpc-tunnel-e2e/out"
       },
@@ -28,10 +28,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/e2e/rpc-tunnel-e2e",
         "outputPath": "tmp/playwright/packages/e2e/rpc-tunnel-e2e",
         "playwrightConfigPath": "packages/e2e/rpc-tunnel-e2e/src/playwright/playwright.config.ts",
@@ -51,7 +47,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -63,7 +59,7 @@
       ]
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "rpc-tunnel-e2e:bundle"
       }

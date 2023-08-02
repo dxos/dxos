@@ -14,14 +14,17 @@ import {
   dropdownMenuTheme,
   inputTheme,
   inputOsTheme,
+  linkTheme,
   listTheme,
   listOsTheme,
   mainTheme,
   messageTheme,
+  popoverTheme,
+  scrollAreaTheme,
+  separatorTheme,
   toastTheme,
   tooltipTheme,
   tagTheme,
-  linkTheme,
 } from './components';
 
 export const theme: Theme<Record<string, any>> = {
@@ -36,6 +39,9 @@ export const theme: Theme<Record<string, any>> = {
   list: listTheme,
   main: mainTheme,
   message: messageTheme,
+  popover: popoverTheme,
+  scrollArea: scrollAreaTheme,
+  separator: separatorTheme,
   tag: tagTheme,
   toast: toastTheme,
   tooltip: tooltipTheme,

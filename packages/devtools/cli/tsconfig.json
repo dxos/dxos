@@ -45,13 +45,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/observable-object"
     },
     {
       "path": "../../common/plate"
@@ -85,9 +79,6 @@
     },
     {
       "path": "../../sdk/client-protocol"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

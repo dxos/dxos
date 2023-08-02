@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -20,6 +21,8 @@ import { ComplexMap } from '@dxos/util';
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
+  private readonly _ctx = new Context();
+
   private readonly _clientTagMap = new ComplexMap<[feedKey: PublicKey, seq: number], string>(
     ([feedKey, seq]) => `${feedKey.toHex()}:${seq}`,
   );
@@ -30,11 +33,20 @@ export class DataServiceHost {
     private readonly _writeStream?: FeedWriter<DataMessage>,
   ) {}
 
+  async open() {}
+
+  async close() {
+    await this._ctx.dispose();
+  }
+
   /**
    * Real-time subscription to data objects in a space.
    */
   subscribe(): Stream<EchoEvent> {
-    return new Stream(({ next, ctx }) => {
+    return new Stream(({ next, close, ctx }) => {
+      // This looks ridiculous..
+      ctx.onDispose(this._ctx.onDispose(close));
+
       // send current state
       const objects = Array.from(this._itemManager.entities.values()).map((entity) => entity.createSnapshot());
       next({
@@ -47,7 +59,7 @@ export class DataServiceHost {
 
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
-        assert(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
+        invariant(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
         log('message', { batch, meta });
 
         const clientTag = this._clientTagMap.get([message.meta.feedKey, message.meta.seq]);
@@ -74,7 +86,8 @@ export class DataServiceHost {
   }
 
   async write(request: WriteRequest): Promise<MutationReceipt> {
-    assert(this._writeStream, 'Cannot write mutations in readonly mode');
+    invariant(!this._ctx.disposed, 'Cannot write to closed DataServiceHost');
+    invariant(this._writeStream, 'Cannot write mutations in readonly mode');
 
     log('write', { clientTag: request.clientTag, objectCount: request.batch.objects?.length ?? 0 });
 

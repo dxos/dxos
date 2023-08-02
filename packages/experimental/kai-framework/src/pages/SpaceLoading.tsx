@@ -6,7 +6,7 @@ import { Database, Shield, Users } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { useMulticastObservable } from '@dxos/react-async';
-import { Space, useMembers, SpaceMember } from '@dxos/react-client';
+import { Space, useMembers, SpaceMember } from '@dxos/react-client/echo';
 
 export const SpaceLoading = ({ space }: { space: Space }) => {
   const members = useMembers(space.key);

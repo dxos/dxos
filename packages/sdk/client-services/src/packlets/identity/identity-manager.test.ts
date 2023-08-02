@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 
-import { createDefaultModelFactory } from '@dxos/client-protocol';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -15,6 +14,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { describe, test, afterTest } from '@dxos/test';
 
+import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {

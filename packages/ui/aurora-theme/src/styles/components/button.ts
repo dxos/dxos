@@ -6,14 +6,14 @@ import type { Density, Elevation, ComponentFunction, ComponentFragment, Theme } 
 
 import { mx } from '../../util';
 import {
-  defaultHover,
-  buttonCoarse,
-  buttonFine,
-  defaultActive,
-  defaultDisabled,
-  osActive,
-  defaultFocus,
-  osFocus,
+  hoverColors,
+  coarseButtonDimensions,
+  fineButtonDimensions,
+  openOutline,
+  staticDisabled,
+  osOpenColors,
+  focusRing,
+  osFocusRing,
   contentElevation,
 } from '../fragments';
 
@@ -44,10 +44,10 @@ export type OsButtonStyleProps = Partial<{
 const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
   return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
-    props.density === 'fine' ? buttonFine : buttonCoarse,
+    props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
     // Register all radix states
     'group',
-    props.disabled && defaultDisabled,
+    props.disabled && staticDisabled,
   ];
 };
 
@@ -60,15 +60,15 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
       !props.inGroup &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
       contentElevation({ elevation: props.elevation }),
-    !props.disabled && defaultHover,
+    !props.disabled && hoverColors,
     resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
     resolvedVariant === 'default' && defaultAppButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
     resolvedVariant === 'primary' && primaryAppButtonColors,
     resolvedVariant === 'outline' &&
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
-    !props.disabled && defaultFocus,
-    defaultActive,
+    !props.disabled && focusRing,
+    openOutline,
     ...sharedButtonStyles(props),
     ...etc,
   );
@@ -79,11 +79,11 @@ export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...et
   return mx(
     'font-system-medium text-xs shadow-none',
     !props.inGroup && 'rounded',
-    !props.disabled && defaultHover,
+    !props.disabled && hoverColors,
     resolvedVariant === 'default' && defaultOsButtonColors,
     !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    !props.disabled && osFocus,
-    ...osActive({ side: props.sideInset ?? 'be' }),
+    !props.disabled && osFocusRing,
+    ...osOpenColors({ side: props.sideInset ?? 'be' }),
     ...sharedButtonStyles(props),
     ...etc,
   );

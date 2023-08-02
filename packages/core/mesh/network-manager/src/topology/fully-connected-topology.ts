@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { PublicKey } from '@dxos/keys';
 
@@ -16,12 +16,12 @@ export class FullyConnectedTopology implements Topology {
   }
 
   init(controller: SwarmController): void {
-    assert(!this._controller, 'Already initialized');
+    invariant(!this._controller, 'Already initialized');
     this._controller = controller;
   }
 
   update(): void {
-    assert(this._controller, 'Not initialized');
+    invariant(this._controller, 'Not initialized');
     const { candidates: discovered } = this._controller.getState();
     for (const peer of discovered) {
       // TODO(burdon): Back-off.

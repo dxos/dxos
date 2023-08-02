@@ -13,7 +13,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
     projectType: 'application',
     targets: {
       build: {
-        executor: '@nrwl/js:tsc',
+        executor: '@nx/js:tsc',
         options: {
           main: `packages/apps/${name}/src/index.ts`,
           outputPath: `packages/apps/${name}/dist`,
@@ -23,14 +23,14 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
         outputs: ['{options.outputPath}'],
       },
       bundle: {
-        executor: '@nrwl/vite:build',
+        executor: '@nx/vite:build',
         options: {
           outputPath: `packages/apps/${name}/out/${name}`,
         },
         outputs: ['{options.outputPath}'],
       },
       lint: {
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           format: 'unix',
           lintFilePatterns: [`${outputDirectoryRelativeToMonorepoRoot}/**/*.{ts,js}?(x)`],
@@ -38,7 +38,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
         outputs: ['{options.outputFile}'],
       },
       serve: {
-        executor: '@nrwl/vite:dev-server',
+        executor: '@nx/vite:dev-server',
         options: {
           buildTarget: `${name}:bundle`,
         },
@@ -66,7 +66,7 @@ export default defineTemplate<typeof config>(async ({ input, outputDirectory }) 
                   quiet: true,
                 },
               },
-              executor: '@nrwl/storybook:storybook',
+              executor: '@nx/storybook:storybook',
               options: {
                 config: {
                   configFolder: 'packages/ui/aurora/.storybook',

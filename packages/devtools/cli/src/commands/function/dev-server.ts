@@ -27,7 +27,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
   static override flags = {
     ...BaseCommand.flags,
-    require: Flags.string({ multiple: true, aliases: ['r'] }),
+    require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
     manifest: Flags.string({ default: 'functions.yml' }),
   };
 
@@ -57,7 +57,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
       await triggers.start();
 
-      this.log(`Running: ${server.endpoint} (ctrl-c to exit)`);
+      this.log(`Function dev-server: ${server.endpoint} (ctrl-c to exit)`);
       process.on('SIGINT', async () => {
         await triggers.start();
         await server.stop();
@@ -65,7 +65,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       if (this.flags.verbose) {
-        this.log(chalk`{green Plugin: ${endpoint}\n${server.functions.map((name) => `- ${name}`).join('\n')}}`);
+        this.log(
+          chalk`{green Function endpoints: ${endpoint}\n${server.functions.map((name) => `- ${name}`).join('\n')}}`,
+        );
       }
 
       // Wait until exit (via SIGINT).

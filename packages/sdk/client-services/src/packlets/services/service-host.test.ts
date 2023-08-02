@@ -2,19 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import { rmSync } from 'node:fs';
 
-import { latch, Trigger } from '@dxos/async';
+import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
+import { Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
+import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
 
+chai.use(chaiAsPromised);
+
 describe('ClientServicesHost', () => {
+  const persistentStoragePath = '/tmp/dxos/client-services/service-host/storage';
+
+  afterEach(async () => {
+    // Clean up.
+    isNode() && rmSync(persistentStoragePath, { recursive: true, force: true });
+  });
+
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open();
@@ -97,4 +110,39 @@ describe('ClientServicesHost', () => {
       kind: 'pass',
     });
   });
+
+  test('storage reset', async () => {
+    const config = new Config({
+      runtime: { client: { storage: { persistent: true, path: persistentStoragePath } } },
+    });
+    {
+      const host = createServiceHost(config, new MemorySignalManagerContext());
+      await host.open();
+
+      await host.services.IdentityService?.createIdentity({});
+
+      expect(host._serviceContext.storage.size).to.exist;
+
+      await asyncTimeout(host.reset(), 1000);
+      await host.close();
+    }
+
+    {
+      const host = createServiceHost(config, new MemorySignalManagerContext());
+      await host.open();
+      const trigger = new Trigger<Identity>();
+
+      const stream = host.services.IdentityService?.queryIdentity();
+      await stream?.waitUntilReady();
+
+      stream?.subscribe((identity) => {
+        if (identity.identity) {
+          trigger.wake(identity.identity);
+        }
+      });
+      await expect(asyncTimeout(trigger.wait(), 200)).to.be.rejectedWith();
+      stream?.close();
+      await host.close();
+    }
+  }).onlyEnvironments('nodejs', 'chromium', 'firefox');
 });

@@ -3,10 +3,11 @@
 //
 
 import { Args, Flags, ux } from '@oclif/core';
+import { chromium } from '@playwright/test';
 import chalk from 'chalk';
-import { chromium } from 'playwright';
 
-import { Client, Invitation, InvitationEncoder } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base-command';

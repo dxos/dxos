@@ -24,6 +24,19 @@ lockfileWarning();
 
 function readPackage(packageJson, context) {
   switch (packageJson.name) {
+    // Align on single version of buffer polyfill.
+    case '@sammacbeth/random-access-idb-mutable-file':
+    case 'abstract-leveldown':
+    case 'bl':
+    case 'crc':
+    case 'level-codec':
+    case 'level-js':
+    case 'random-access-idb-mutable-file':
+    case 'unbzip2-stream': {
+      packageJson.dependencies['buffer'] = '^6.0.3'
+      break;
+    }
+
     // Package has an unneccessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0'
@@ -31,12 +44,12 @@ function readPackage(packageJson, context) {
     }
 
     // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-    case '@nrwl/nx-cloud': {
+    case '@nx/nx-cloud': {
       packageJson.dependencies['dotenv'] = '*'
       break;
     }
 
-    case '@nrwl/vite': {
+    case '@nx/vite': {
       // We don't use vitest.
       delete packageJson.peerDependencies['vitest']
       break;
@@ -58,6 +71,13 @@ function readPackage(packageJson, context) {
     // web-ext > addons-linter > addons-scanner-utils.
     case 'addons-scanner-utils': {
       delete packageJson.peerDependencies['node-fetch']
+      break;
+    }
+
+    // We don't use Preact within the monorepo.
+    case 'deepsignal': {
+      delete packageJson.peerDependencies['preact'];
+      delete packageJson.dependencies['@preact/signals'];
       break;
     }
 
@@ -146,6 +166,12 @@ function readPackage(packageJson, context) {
     // Ensure vuepress uses compatible vite version.
     case '@vitejs/plugin-vue': {
       packageJson.peerDependencies['vite'] = '^4.3.0'
+      break;
+    }
+
+    // Ensure zen-push is using the same version of zen-observable.
+    case 'zen-push': {
+      packageJson.dependencies['zen-observable'] = '^0.10.0'
       break;
     }
   }

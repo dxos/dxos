@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-app-2",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "private": true,
   "description": "tasks-app-2",
   "homepage": "https://dxos.org",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
-    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
+    "build-skip": "NODE_OPTIONS=\"--max-old-space-size=4096\" tsc --noEmit && vite build",
     "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",

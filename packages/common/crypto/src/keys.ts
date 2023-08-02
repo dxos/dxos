@@ -3,7 +3,7 @@
 //
 
 import crypto from 'hypercore-crypto';
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
 
@@ -19,7 +19,7 @@ export const zeroKey = () => new Uint8Array(32); // TODO(burdon): Remove?
 
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {
-    assert(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.');
+    invariant(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.');
     return crypto.keyPair(seed.slice(0, 32));
   }
 
@@ -49,8 +49,8 @@ export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
  * @returns {Buffer} signature
  */
 export const sign = (message: Buffer, secretKey: Buffer): Buffer => {
-  assert(Buffer.isBuffer(message));
-  assert(Buffer.isBuffer(secretKey) && secretKey.length === SECRET_KEY_LENGTH);
+  invariant(Buffer.isBuffer(message));
+  invariant(Buffer.isBuffer(secretKey) && secretKey.length === SECRET_KEY_LENGTH);
 
   return crypto.sign(message, secretKey);
 };
@@ -63,9 +63,9 @@ export const sign = (message: Buffer, secretKey: Buffer): Buffer => {
  * @return {boolean}
  */
 export const verify = (message: Buffer, signature: Buffer, publicKey: Buffer): boolean => {
-  assert(Buffer.isBuffer(message));
-  assert(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
-  assert(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);
+  invariant(Buffer.isBuffer(message));
+  invariant(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
+  invariant(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);
 
   return crypto.verify(message, signature, publicKey);
 };

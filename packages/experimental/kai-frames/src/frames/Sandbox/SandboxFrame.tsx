@@ -7,17 +7,16 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
-import { Text } from '@dxos/echo-schema';
 import { compile, Editor, Frame, FrameContainer } from '@dxos/kai-sandbox';
 import { Toolbar } from '@dxos/mosaic';
-import { useQuery, observer } from '@dxos/react-client';
+import { useQuery, Text } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 import { sampleCode } from './sample';
 
 // TODO(burdon): Move EmbeddedFrame here.
 
-export const SandboxFrame = observer(() => {
+export const SandboxFrame = () => {
   const { space } = useFrameContext();
   const frames = useQuery(space, Frame.filter());
   const timeout = useRef<ReturnType<typeof setTimeout>>();
@@ -78,6 +77,6 @@ export const SandboxFrame = observer(() => {
       <div className='flex-1 overflow-hidden'>{selected?.compiled && <FrameContainer frame={selected} />}</div>
     </div>
   );
-});
+};
 
 export default SandboxFrame;

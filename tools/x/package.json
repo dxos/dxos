@@ -1,6 +1,6 @@
 {
   "name": "@dxos/x",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -23,7 +23,6 @@
     "color-hash": "^1.0.3",
     "columnify": "^1.6.0",
     "console-table-printer": "^2.11.0",
-    "debug": "^4.3.3",
     "enquirer": "^2.3.6",
     "ink": "^3.2.0",
     "ink-spinner": "~4.0.3",

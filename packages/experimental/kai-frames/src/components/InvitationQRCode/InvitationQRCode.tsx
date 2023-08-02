@@ -6,8 +6,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import React, { FC, useEffect } from 'react';
 import urlJoin from 'url-join';
 
-import { Invitation, Space } from '@dxos/client';
-import { useSpaceInvitation } from '@dxos/react-client';
+import { Space, useSpaceInvitation } from '@dxos/react-client/echo';
+import { Invitation } from '@dxos/react-client/invitations';
 
 // TODO(burdon): Factor out.
 const createInvitationUrl = (invitationCode: string) => {

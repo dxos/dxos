@@ -17,7 +17,8 @@ import {
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
-import { PublicKey, useClientServices, useDevtools, useStream } from '@dxos/react-client';
+import { PublicKey, useClientServices } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { BitField } from '@dxos/util';
 
 import { BitfieldDisplay, JsonView, PanelContainer, Toolbar } from '../../components';
@@ -203,7 +204,8 @@ const StoragePanel = () => {
           <div className='flex-1' />
           <Button
             onClick={async () => {
-              // await services?.SystemService.reset();
+              await services?.SystemService.reset();
+              location.reload();
             }}
           >
             Reset Storage

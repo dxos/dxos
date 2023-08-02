@@ -4,12 +4,11 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ShellRuntime } from '@dxos/client-services';
 import { log } from '@dxos/log';
-import { LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
-import { useClient, useSpace, useSpaces } from '@dxos/react-client';
+import { LayoutRequest, ShellDisplay, ShellLayout, ShellRuntime, useClient } from '@dxos/react-client';
+import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
-import { DevicesDialog } from '../DevicesDialog';
+import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';
 import { SpaceDialog } from '../SpaceDialog';
 
@@ -21,7 +20,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   });
 
   const client = useClient();
-  const spaces = useSpaces();
+  const spaces = useSpaces({ all: true });
   const space = useSpace(spaceKey);
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
 
     case ShellLayout.DEVICE_INVITATIONS:
       return (
-        <DevicesDialog
+        <IdentityDialog
           createInvitationUrl={(invitationCode) => `${origin}?deviceInvitationCode=${invitationCode}`}
           onDone={async () => {
             await runtime.setAppContext({ display: ShellDisplay.NONE });

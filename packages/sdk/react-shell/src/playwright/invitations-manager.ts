@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Browser, ConsoleMessage } from '@playwright/test';
 import { expect } from 'chai';
-import type { Browser, ConsoleMessage } from 'playwright';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/react-client/invitations';
+import { ConnectionState } from '@dxos/react-client/mesh';
 import { setupPage } from '@dxos/test/playwright';
 
 import { ShellManager } from '../testing';
@@ -94,6 +95,7 @@ export class InvitationsManager extends ShellManager {
 
       case 'devices':
         await peer.getByTestId('invitations.open-devices').click();
+        await peer.getByTestId('manage-devices').click();
         break;
 
       case 'spaces':

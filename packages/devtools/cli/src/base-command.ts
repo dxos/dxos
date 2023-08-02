@@ -13,8 +13,16 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { Daemon, ForeverDaemon } from '@dxos/agent';
-import { Client, fromAgent, Config, DX_DATA, DX_RUNTIME } from '@dxos/client';
-import { DX_CONFIG, ENV_DX_CONFIG, ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { Client, Config } from '@dxos/client';
+import {
+  DX_CONFIG,
+  DX_DATA,
+  DX_RUNTIME,
+  ENV_DX_CONFIG,
+  ENV_DX_PROFILE,
+  ENV_DX_PROFILE_DEFAULT,
+} from '@dxos/client-protocol';
+import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -34,6 +42,8 @@ import {
   TelemetryContext,
   TunnelRpcPeer,
 } from './util';
+
+const DEFAULT_CONFIG = 'config/config-default.yml';
 
 // TODO(wittjosiah): Factor out.
 const exists = async (...args: string[]): Promise<boolean> => {
@@ -55,12 +65,18 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 /**
  * Custom base command.
  * https://oclif.io/docs/base_class#docsNav
- * Ref: https://github.com/salesforcecli/sf-plugins-core/blob/main/src/sfCommand.ts
+ * https://github.com/salesforcecli/sf-plugins-core/blob/main/src/sfCommand.ts
  */
 export abstract class BaseCommand<T extends typeof Command = any> extends Command {
   public static override enableJsonFlag = true;
 
   static override flags = {
+    // Even though oclif should support this out of the box there seems to be a bug.
+    json: Flags.boolean({
+      description: 'Output as JSON.',
+      default: false,
+    }),
+
     'dry-run': Flags.boolean({
       description: 'Dry run.',
       default: false,
@@ -193,7 +209,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     if (TELEMETRY_API_KEY) {
       mode === 'disabled' && (await disableTelemetry(DX_DATA));
-
       Telemetry.init({
         apiKey: TELEMETRY_API_KEY,
         batchSize: 20,
@@ -219,7 +234,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!configExists) {
       const defaultConfigPath = join(
         dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
-        'config/config-default.yml',
+        DEFAULT_CONFIG,
       );
 
       const yamlConfig = yaml.load(await readFile(defaultConfigPath, 'utf-8')) as ConfigProto;
@@ -272,8 +287,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
     super.error(err, options as any);
-    Sentry.captureException(err);
+  }
+
+  override async catch(err: Error, options?: any) {
+    // Will only submit if API key exists (i.e., prod).
+    super.error(err, options as any);
     this._failing = true;
+    throw err;
   }
 
   /**
@@ -281,7 +301,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override async finally() {
     const endTime = new Date();
-
     Telemetry.event({
       installationId: this._telemetryContext?.installationId,
       name: 'cli.command.run',
@@ -299,7 +318,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
           this.log(`Starting agent (${this.flags.profile})`);
-          await daemon.start(this.flags.profile);
+          await daemon.start(this.flags.profile, { config: this.flags.config });
         }
       });
     }
@@ -311,7 +330,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     assert(this._clientConfig);
     if (!this._client) {
-      assert(this._clientConfig);
       if (this.flags['no-agent']) {
         this._client = new Client({ config: this._clientConfig });
       } else {
@@ -348,7 +366,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Convenience function to wrap starting the agent.
    */
   async execWithDaemon<T>(callback: (daemon: Daemon) => Promise<T | undefined>): Promise<T | undefined> {
-    const daemon = new ForeverDaemon(`${DX_RUNTIME}`);
+    const daemon = new ForeverDaemon(DX_RUNTIME);
     await daemon.connect();
     const value = await callback(daemon);
     await daemon.disconnect();

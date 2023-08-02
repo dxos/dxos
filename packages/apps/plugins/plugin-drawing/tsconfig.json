@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {
@@ -36,13 +39,25 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-intent"
+    },
+    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-splitview"
     },
     {
+      "path": "../plugin-stack"
+    },
+    {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-treeview"
     }
   ]
 }

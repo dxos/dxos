@@ -12,6 +12,6 @@ describe('model tests', () => {
   test('update model', () => {
     const game = new Game();
     const chess = new Chess();
-    game.fen = chess.fen();
+    game.pgn = chess.pgn();
   });
 });

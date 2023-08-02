@@ -4,7 +4,7 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 
-import { IFrameClientServicesHost, IFrameClientServicesProxy, ShellLayout } from '@dxos/client';
+import { ShellLayout, IFrameClientServicesHost, IFrameClientServicesProxy } from '@dxos/client/services';
 
 import { useClient } from '../client';
 

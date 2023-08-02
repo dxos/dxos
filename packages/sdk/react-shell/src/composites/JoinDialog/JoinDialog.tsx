@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { AlertDialog, ThemeContext, AlertDialogContentProps, useId, useThemeContext } from '@dxos/aurora';
-import { osTx } from '@dxos/aurora-theme';
+import { AlertDialog, AlertDialogContentProps, useId, useVisualViewport } from '@dxos/aurora';
 
 import { JoinPanel, JoinPanelProps } from '../../panels';
 
@@ -15,26 +14,27 @@ export interface JoinDialogProps
 
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
-  const themeContextValue = useThemeContext();
-
+  // todo(thure): This doesn’t work within an iframe on iOS Safari.
+  const { height } = useVisualViewport();
   return (
-    <ThemeContext.Provider value={{ ...themeContextValue, tx: osTx }}>
-      <AlertDialog.Root defaultOpen>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay>
-            <AlertDialog.Content>
-              <JoinPanel
-                {...{
-                  ...joinPanelProps,
-                  titleId,
-                  exitActionParent: <AlertDialog.Cancel asChild />,
-                  doneActionParent: <AlertDialog.Action asChild />,
-                }}
-              />
-            </AlertDialog.Content>
-          </AlertDialog.Overlay>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
-    </ThemeContext.Provider>
+    <AlertDialog.Root
+      defaultOpen
+      onOpenChange={(open) => open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))}
+    >
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay classNames='backdrop-blur' {...(height && { style: { blockSize: `${height}px` } })}>
+          <AlertDialog.Content aria-labelledby={titleId}>
+            <JoinPanel
+              {...{
+                ...joinPanelProps,
+                titleId,
+                exitActionParent: <AlertDialog.Cancel asChild />,
+                doneActionParent: <AlertDialog.Action asChild />,
+              }}
+            />
+          </AlertDialog.Content>
+        </AlertDialog.Overlay>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 };

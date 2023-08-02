@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,8 +42,6 @@
     "@dxos/timeframe": "workspace:*"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
-    "debug": "^4.3.3",
     "glob": "~7.1.6"
   },
   "publishConfig": {

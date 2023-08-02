@@ -79,7 +79,7 @@ const Test = () => {
           </CardHeader>
           <CardContent gutter>{faker.lorem.sentences(2)}</CardContent>
           <CardContent gutter>{faker.internet.email()}</CardContent>
-          <CardContent gutter>{faker.phone.phoneNumber()}</CardContent>
+          <CardContent gutter>{faker.phone.number()}</CardContent>
         </Card>
 
         <Card>

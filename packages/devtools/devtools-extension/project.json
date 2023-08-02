@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/devtools/devtools-extension/out/devtools-extension"
       },
@@ -40,7 +40,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

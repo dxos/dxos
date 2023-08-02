@@ -4,10 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { TypedObject } from '@dxos/echo-schema';
 import { Table, Toolbar } from '@dxos/mosaic';
 import { Searchbar, Select } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { TypedObject, useQuery } from '@dxos/react-client/echo';
 
 import { useFrameContext } from '../../hooks';
 import { ColumnType, getColumnType, schemaTypes } from './util';

@@ -59,6 +59,9 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional SpaceCache cache = 9;
+
+  /// ACTIVE, INACTIVE, etc.
+  optional SpaceState state = 10;
 }
 
 /// Information needed to bootstrap an Identity.

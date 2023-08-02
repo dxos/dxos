@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 import { execTool, getBin } from './node-util';
 import { BrowserType } from './types';

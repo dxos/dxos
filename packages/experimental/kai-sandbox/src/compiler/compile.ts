@@ -7,7 +7,7 @@ import { initialize, build, BuildResult } from 'esbuild-wasm';
 // @ts-ignore
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 
-import { sha256 } from '@dxos/crypto';
+import { subtleCrypto } from '@dxos/crypto';
 
 import { Frame, Artifact } from '../proto/gen/schema';
 
@@ -47,7 +47,7 @@ export const compile = async (frame: Frame) => {
   });
 
   frame.compiled = {
-    sourceHash: Buffer.from(sha256(source), 'hex'),
+    sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
     bundle: output.outputFiles![0].text,
     imports: analyzeImports(output),
   };

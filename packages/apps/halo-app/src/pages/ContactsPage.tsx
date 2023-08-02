@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useTranslation, Button } from '@dxos/aurora';
-import { getSize, defaultDisabled, mx } from '@dxos/aurora-theme';
+import { getSize, staticDisabled, mx } from '@dxos/aurora-theme';
 import { HeadingWithActions, Group } from '@dxos/react-appkit';
 
 const ContactsPage = () => {
@@ -28,7 +28,7 @@ const ContactsPage = () => {
         label={{
           level: 2,
           children: t('empty contacts message'),
-          className: mx('text-xl', defaultDisabled),
+          className: mx('text-xl', staticDisabled),
         }}
         elevation='base'
       />

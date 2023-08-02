@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { base, db, Expando, Text } from '@dxos/echo-schema';
+import { base, clone, db, Expando, Text } from '@dxos/echo-schema';
 import { createDatabase } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
@@ -12,7 +12,7 @@ import { Contact, Container, Task } from './proto';
 
 describe('database', () => {
   test('creating objects', async () => {
-    const {db:database} = await createDatabase();
+    const { db: database } = await createDatabase();
 
     const task = new Task({ title: 'test' });
     expect(task.title).to.eq('test');
@@ -30,7 +30,7 @@ describe('database', () => {
   });
 
   test('enums', async () => {
-    const {db:database} = await createDatabase();
+    const { db: database } = await createDatabase();
 
     {
       const container = new Container({ records: [{ type: Container.Record.Type.WORK }] });
@@ -47,7 +47,7 @@ describe('database', () => {
 
   describe('dxos.schema.Text', () => {
     test('text objects are auto-created on schema', async () => {
-      const {db:database} = await createDatabase();
+      const { db: database } = await createDatabase();
 
       const task = new Task();
       expect(task.description).to.be.instanceOf(Text);
@@ -62,7 +62,7 @@ describe('database', () => {
   });
 
   test('dxos.schema.Expando', async () => {
-    const {db:database} = await createDatabase();
+    const { db: database } = await createDatabase();
 
     {
       const container = new Container();
@@ -84,7 +84,7 @@ describe('database', () => {
 
   // TODO(burdon): Test cannot update random properties.
   test('dxos.schema.TextObject', async () => {
-    const {db:database} = await createDatabase();
+    const { db: database } = await createDatabase();
 
     {
       const container = new Container();
@@ -122,4 +122,22 @@ describe('database', () => {
     expect(task.meta.keys).to.have.length(1);
   });
 
+  // TODO(burdon): Remove (duplication of clone.ts tests?)
+  test('clone', async () => {
+    test('text objects are auto-created on schema', async () => {
+      const { db: database1 } = await createDatabase();
+      const { db: database2 } = await createDatabase();
+
+      const task1 = new Task();
+      task1.description.model!.insert('test', 0);
+      database1.add(task1);
+      await database1.flush();
+
+      const task2 = database2.add(clone(task1, { additional: [task1.description] }));
+      await database2.flush();
+      expect(task2.description).to.be.instanceOf(Text);
+      expect(task2.description.model!.textContent).to.eq('test');
+      expect(task2 !== task1).to.be.true;
+    });
+  });
 });

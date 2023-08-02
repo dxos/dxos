@@ -203,7 +203,7 @@ export const tags = ['inbox', 'active', 'scheduled', 'complete'];
 
 export const createOrganization = () => {
   return new Organization({
-    name: faker.company.companyName(),
+    name: faker.company.name(),
     website: faker.internet.url(),
     description: faker.lorem.sentences(2),
   });
@@ -226,10 +226,10 @@ export const createTask = (assignee?: Contact) => {
 
 export const createContact = () => {
   return new Contact({
-    name: faker.name.findName(),
+    name: faker.person.fullName(),
     email: faker.datatype.boolean() ? faker.internet.email() : undefined,
     username: faker.datatype.number(10) > 2 ? '@' + faker.internet.userName() : undefined,
-    phone: faker.datatype.boolean() ? faker.phone.phoneNumber() : undefined,
+    phone: faker.datatype.boolean() ? faker.phone.number() : undefined,
     address: faker.datatype.boolean()
       ? {
           city: faker.address.city(),
@@ -279,12 +279,12 @@ export const createMessage = (from?: Contact, resolver?: string, recent = 14) =>
     // to: [
     //   new Message.Recipient({
     //     email: faker.internet.email(),
-    //     name: faker.datatype.number(10) > 6 ? faker.name.findName() : undefined
+    //     name: faker.datatype.number(10) > 6 ? faker.person.fullName() : undefined
     //   })
     // ],
     from: new Message.Recipient({
       email: from?.email ?? faker.internet.email(),
-      name: from?.name ?? faker.name.findName(),
+      name: from?.name ?? faker.person.fullName(),
       contact: from,
     }),
     subject: faker.lorem.sentence(),

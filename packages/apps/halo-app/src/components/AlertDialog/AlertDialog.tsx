@@ -6,7 +6,7 @@ import { Transition } from '@headlessui/react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import React, { cloneElement, ComponentProps, Fragment, ReactHTMLElement, ReactNode, useEffect, useState } from 'react';
 
-import { defaultDescription, defaultFocus, mx } from '@dxos/aurora-theme';
+import { descriptionText, focusRing, mx } from '@dxos/aurora-theme';
 import { Input, InputProps } from '@dxos/react-appkit';
 
 export interface AlertDialogSlots {
@@ -89,7 +89,7 @@ export const AlertDialog = ({
             'w-[95vw] max-w-md rounded-xl p-4 md:w-full',
             'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
             'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
-            defaultFocus,
+            focusRing,
             slots.content?.className,
           )}
         >
@@ -99,7 +99,7 @@ export const AlertDialog = ({
             className={mx(
               'text-2xl font-system-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
-              defaultFocus,
+              focusRing,
               slots.title?.className,
             )}
           >
@@ -108,7 +108,7 @@ export const AlertDialog = ({
           {description && (
             <AlertDialogPrimitive.Description
               {...slots.description}
-              className={mx('my-2', defaultDescription, slots.description?.className)}
+              className={mx('my-2', descriptionText, slots.description?.className)}
             >
               {description}
             </AlertDialogPrimitive.Description>

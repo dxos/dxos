@@ -12,26 +12,26 @@ import {
   TLPageId,
   TLRecord,
 } from '@tldraw/tldraw';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Transaction, YEvent } from 'yjs';
 
-import { Drawing as DrawingType } from '@braneframe/types';
+import { Text } from '@dxos/client/echo';
 
-import { DrawingModel } from '../props';
+import { DrawingModel } from '../types';
 
 /**
  * Constructs model from ECHO object.
  * Derived from tldraw example: https://github.com/tldraw/tldraw/blob/main/apps/examples/src/yjs/useYjsStore.ts
  */
-export const useDrawingModel = (object: DrawingType, options = { timeout: 250 }): DrawingModel => {
-  const [store] = useState(() => createTLStore({ shapes: defaultShapes }));
+export const useDrawingModel = (data: Text, options = { timeout: 250 }): DrawingModel => {
+  const store = useMemo(() => {
+    return createTLStore({ shapes: defaultShapes });
+  }, [data]);
 
   useEffect(() => {
-    const subscriptions: (() => void)[] = [];
-
     // TODO(burdon): Schema document type.
     // TODO(burdon): Garbage collection (gc)?
-    const doc = object.content.doc!; // ?? new Doc({ gc: true });
+    const doc = data.doc!; // ?? new Doc({ gc: true });
     const yRecords = doc.getMap<TLRecord>('content');
 
     // Initialize the store with the yjs doc records.
@@ -68,7 +68,7 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 250 })
     }
 
     //
-    // Subscribe to ECHO YJS mutations (events) to update ECHO object.
+    // Subscribe to ECHO yjs mutations (events) to update ECHO object.
     //
     const handleChange = (events: YEvent<any>[], transaction: Transaction) => {
       if (transaction.local) {
@@ -106,6 +106,8 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 250 })
     };
 
     yRecords.observeDeep(handleChange);
+
+    const subscriptions: (() => void)[] = [];
     subscriptions.push(() => yRecords.unobserveDeep(handleChange));
 
     //
@@ -167,7 +169,6 @@ export const useDrawingModel = (object: DrawingType, options = { timeout: 250 })
   }, [store]);
 
   return {
-    object,
     store,
   };
 };

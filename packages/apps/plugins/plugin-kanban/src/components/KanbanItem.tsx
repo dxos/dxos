@@ -10,10 +10,12 @@ import React, { FC } from 'react';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize, mx, paperSurface } from '@dxos/aurora-theme';
+
+import { KANBAN_PLUGIN } from '../types';
 
 const DeleteItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete item label')}</span>
@@ -28,7 +30,7 @@ export const KanbanItemComponent: FC<{
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
     id: item.id,
     data: { type: 'item', column },
@@ -40,9 +42,9 @@ export const KanbanItemComponent: FC<{
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(tx), transition }}
-      className={mx('flex grow border border-neutral-100 dark:border-neutral-800', isDragging && 'border-dashed')}
+      className={mx('flex grow', isDragging && 'border border-neutral-300 dark:border-neutral-800 border-dashed')}
     >
-      <div className={mx('flex items-start grow p-1 bg-white dark:bg-neutral-925', isDragging && 'opacity-10')}>
+      <div className={mx('flex items-start grow p-1', paperSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />

@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Menubar, SpacesLink } from '@dxos/react-appkit';
-import { useSpace } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { TaskList } from '../containers/TaskList';
 

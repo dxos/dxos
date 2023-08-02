@@ -7,9 +7,10 @@ import { useCallback } from 'react';
 import { assign, createMachine, InterpreterFrom, StateFrom } from 'xstate';
 import type { StateNodeConfig, Subscribable, Subscription } from 'xstate';
 
-import type { Identity, AuthenticatingInvitationObservable, Client } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client';
 import { log } from '@dxos/log';
+import type { Client } from '@dxos/react-client';
+import { Identity } from '@dxos/react-client/halo';
+import { AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { JoinPanelMode } from './JoinPanelProps';
 
@@ -279,8 +280,14 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
         ],
       },
       choosingIdentity: {
-        initial: 'choosingAuthMethod',
+        initial: 'unknownAuthMethod',
         states: {
+          unknownAuthMethod: {
+            always: [
+              { cond: 'hasHaloUnredeemedCode', target: 'acceptingHaloInvitation', actions: 'log' },
+              { target: 'choosingAuthMethod', actions: 'log' },
+            ],
+          },
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
@@ -311,7 +318,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
-      noHaloInvitation: ({ halo }, _event) => !halo.invitation && !halo.unredeemedCode,
+      hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },
     actions: {

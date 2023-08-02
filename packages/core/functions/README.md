@@ -35,7 +35,7 @@ export default (event: any, context: FunctionContext) => {
 };
 ```
 
-## Running functions with dev agent
+## Running functions with the dev server:
 
 Configure the agent to run functions on a given port:
 
@@ -50,7 +50,7 @@ runtime:
 Start functions in dev mode (from the related package):
 
 ```bash
-dx function dev -r ts-node/register
+dx function dev-server -r ts-node/register --verbose
 ```
 
 > NOTE: `-r ts-node/register` configures native TypesScript support.
@@ -59,9 +59,9 @@ Install `nodemon` to support live reloading:
 
 ```bash
 npm i -g nodemon
-export DXOS_ROOT=$(git rev-parse --show-toplevel)
 
-nodemon -w ./src -e ts --exec $DXOS_ROOT/packages/devtools/cli/bin/dev function dev -r ts-node/register
+nodemon -w ./src -e ts --exec $(git rev-parse --show-toplevel)/packages/devtools/cli/bin/dev \
+  function dev-server -r ts-node/register --verbose
 ```
 
 ## Invoking functions
@@ -69,8 +69,7 @@ nodemon -w ./src -e ts --exec $DXOS_ROOT/packages/devtools/cli/bin/dev function 
 > NOTE: The port (7001) must match the one in config.
 
 ```bash
-curl -X POST -H 'Content-Type: application/json' -w '\n' \
-  http://localhost:7001/dev/hello --data '{ "message": "Hello World!" }' 
+curl http://localhost:7001/dev/hello -X POST -H 'Content-Type: application/json' -w '\n' --data '{ "message": "Hello World!" }' 
 ```
 
 ## DXOS Resources

@@ -4,27 +4,32 @@
 
 import type { IconProps } from '@phosphor-icons/react';
 import type { getIndices } from '@tldraw/indices';
-import type { UIEvent, FC } from 'react';
+import type { DeepSignal } from 'deepsignal';
+import type { FC } from 'react';
 
-import type { TFunction } from '@dxos/aurora';
+import type { Intent } from '@braneframe/plugin-intent';
 import type { Plugin } from '@dxos/react-surface';
 
 type Index = ReturnType<typeof getIndices>[number];
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type GraphNode<TDatum = any> = {
+export type GraphNode<TData = any> = {
   id: string;
   index: Index;
   label: string | [string, { ns: string; count?: number }];
   description?: string;
   icon?: FC;
-  data?: TDatum; // nit about naming this
+  data?: TData;
   parent?: GraphNode;
-  children?: GraphNode[];
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
-  actions?: GraphNodeAction[];
+  onMoveNode?: (source: GraphNode, target: GraphNode, child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
+  pluginChildren?: { [key: string]: GraphNode[] };
+  pluginActions?: { [key: string]: GraphNodeAction[] };
+  // TODO(wittjosiah): https://github.com/luisherranz/deepsignal/issues/32
+  // readonly children?: GraphNode[];
+  // readonly actions?: GraphNodeAction[];
 };
 
 export type GraphNodeAction = {
@@ -34,21 +39,22 @@ export type GraphNodeAction = {
   // todo(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures
   label: string | [string, { ns: string; count?: number }];
   icon?: FC<IconProps>;
-  invoke: (t: TFunction, event: UIEvent) => MaybePromise<void>;
+  disposition?: 'menu' | 'toolbar';
+  intent: Intent | Intent[];
 };
 
 export type GraphContextValue = {
-  roots: { [key: string]: GraphNode[] };
-  actions: { [key: string]: GraphNodeAction[] };
+  graph: DeepSignal<GraphNode>;
+  invokeAction: (action: GraphNodeAction) => Promise<void>;
 };
 
 export type GraphProvides = {
   graph: {
-    nodes?: (plugins: Plugin[]) => GraphNode[];
-    actions?: (plugins: Plugin[]) => GraphNodeAction[];
+    nodes?: (parent: GraphNode, invalidate: (node?: GraphNode) => void, plugins: Plugin[]) => GraphNode[];
+    actions?: (parent: GraphNode, invalidate: () => void) => GraphNodeAction[];
   };
 };
 
 export type GraphPluginProvides = {
-  graph: GraphContextValue;
+  graph: DeepSignal<GraphNode>;
 };

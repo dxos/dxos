@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { ConsoleMessage, Page } from 'playwright';
+import type { ConsoleMessage, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 import { ShellManager as NaturalShellManager } from '@dxos/react-shell/testing';
@@ -62,6 +62,7 @@ export class ShellManager extends NaturalShellManager {
   async createSpaceInvitation(): Promise<string> {
     await this.openCurrentSpace();
     this._invitationCode = new Trigger<string>();
+    this._authCode = new Trigger<string>();
     await this.shell.getByTestId('spaces-panel.create-invitation').click();
     return await this._invitationCode.wait();
   }
@@ -71,7 +72,6 @@ export class ShellManager extends NaturalShellManager {
   }
 
   async getAuthCode(): Promise<string> {
-    this._authCode = new Trigger<string>();
     return await this._authCode.wait();
   }
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, Page } from 'playwright';
+import type { Browser, Page } from '@playwright/test';
 
 import { setupPage } from '@dxos/test/playwright';
 import { ShellManager } from '@dxos/vault/testing';
@@ -11,7 +11,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
 
-  private _inIframe: boolean | undefined = undefined;
+  private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
 
   constructor(private readonly _browser: Browser, inIframe?: boolean) {

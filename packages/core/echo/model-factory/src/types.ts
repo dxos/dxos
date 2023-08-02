@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import type { Codec } from '@dxos/codec-protobuf';
 import type { WriteReceipt } from '@dxos/feed-store';
@@ -41,6 +41,7 @@ export interface StateMachine<TState, TMutation, TSnapshot> {
    * @returns Current state.
    */
   getState(): TState;
+
   /**
    * Resets the state to the given snapshot.
    * @param snapshot Snapshot to reset to.
@@ -81,7 +82,7 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
  */
 export type ModelConstructor<M extends Model> = (new (
   meta: ModelMeta,
-  itemId: ItemID,
+  itemId: ItemID, // TODO(burdon): Rename objectId.
   getState: () => StateOf<M>,
   MutationWriter?: MutationWriter<MutationOf<M>>,
 ) => M) & {
@@ -93,7 +94,7 @@ export type ModelConstructor<M extends Model> = (new (
  */
 // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function validateModelClass(model: any): asserts model is ModelConstructor<any> {
-  assert(typeof model === 'function');
+  invariant(typeof model === 'function');
 
   // TODO(burdon): Convert to assert (too verbose).
   if (!model.meta) {

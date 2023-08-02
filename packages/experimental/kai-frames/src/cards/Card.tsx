@@ -5,9 +5,8 @@
 import React, { FC, ReactNode } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client';
-import { TypedObject } from '@dxos/echo-schema';
 import { Address } from '@dxos/kai-types';
+import { Space, TypedObject } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out Sections.
 

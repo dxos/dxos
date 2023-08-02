@@ -87,16 +87,18 @@ describe('SpacesService', () => {
     test('updates when new space is added', async () => {
       await serviceContext.createIdentity();
       const query = spacesService.querySpaces();
-      let result = new Trigger<Space[] | undefined>();
+      const result = new Trigger<Space[] | undefined>();
       query.subscribe(({ spaces }) => {
         result.wake(spaces);
       });
       afterTest(() => query.close());
       expect(await result.wait()).to.be.length(0);
 
-      result = new Trigger<Space[] | undefined>();
+      result.reset();
       const space = await spacesService.createSpace();
-      expect(await result.wait()).to.deep.equal([space]);
+      const spaces = await result.wait();
+      expect(spaces).to.be.length(1);
+      expect(spaces?.[0].spaceKey.equals(space.spaceKey)).to.be.true;
     });
 
     test.skip('updates when space is updated', async () => {});

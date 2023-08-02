@@ -4,18 +4,22 @@
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+// import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { ThemePlugin } from '@dxos/aurora-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { resolve } from 'node:path';
+
 const { osThemeExtension } = require('@dxos/react-shell/theme-extensions');
 
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
     host: true,
+    // https: true,
+    // NOTE: Relative to project root.
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -40,6 +44,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    // mkcert(),
     ConfigPlugin({
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'DX_VAULT'],
     }),
@@ -48,18 +53,21 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-chess/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-debug/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-drawing/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-kanban/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-markdown/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-splitview/dist/lib/**/*.mjs'),
-        resolve(__dirname, './node_modules/@braneframe/plugin-testing/dist/lib/**/*.mjs'),
+        resolve(__dirname, './node_modules/@braneframe/plugin-template/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-theme/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-thread/dist/lib/**/*.mjs'),
         resolve(__dirname, './node_modules/@braneframe/plugin-treeview/dist/lib/**/*.mjs'),
       ],
       extensions: [osThemeExtension],
     }),
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
     VitePWA({
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,

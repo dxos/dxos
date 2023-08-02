@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Space } from '@dxos/client';
 import { SpacesPage as BaseSpacesPage } from '@dxos/react-appkit';
+import { Space } from '@dxos/react-client/echo';
 
 import { TaskList } from '../proto';
 

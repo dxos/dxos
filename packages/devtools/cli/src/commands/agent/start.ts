@@ -4,8 +4,9 @@
 
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
+import { rmSync } from 'node:fs';
 
-import { AgentOptions, Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin } from '@dxos/agent';
+import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
 import { DX_RUNTIME } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -49,34 +50,36 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
-    const options: AgentOptions = {
+    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    {
+      // Clear out old socket file.
+      const { path } = parseAddress(socket);
+      rmSync(path, { force: true });
+    }
+
+    const agent = new Agent({
+      config: this.clientConfig,
       profile: this.flags.profile,
-      socket: `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`,
-      webSocket: this.flags['web-socket'],
-    };
+      protocol: {
+        socket,
+        webSocket: this.flags['web-socket'],
+      },
+      plugins: [
+        // Epoch monitoring.
+        // TODO(burdon): Config.
+        this.flags.monitor && new EpochMonitor(),
 
-    const agent = new Agent(this.clientConfig, options);
+        // ECHO API.
+        // TODO(burdon): Config.
+        this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
 
-    // ECHO API.
-    // TODO(burdon): Config.
-    if (this.flags['echo-proxy']) {
-      agent.addPlugin(new EchoProxyServer({ port: this.flags['echo-proxy'] }));
-    }
-
-    // Epoch monitoring.
-    // TODO(burdon): Config.
-    if (this.flags.monitor) {
-      agent.addPlugin(new EpochMonitor());
-    }
-
-    // Functions.
-    if (this.clientConfig.values.runtime?.agent?.functions) {
-      agent.addPlugin(
-        new FunctionsPlugin({
-          port: this.clientConfig.values.runtime?.agent?.functions?.port,
-        }),
-      );
-    }
+        // Functions.
+        this.clientConfig.values.runtime?.agent?.functions &&
+          new FunctionsPlugin({
+            port: this.clientConfig.values.runtime?.agent?.functions?.port,
+          }),
+      ],
+    });
 
     await agent.start();
     this.log('Agent started... (ctrl-c to exit)');
@@ -100,12 +103,9 @@ export default class Start extends BaseCommand<typeof Start> {
         return;
       }
 
-      try {
-        await daemon.start(this.flags.profile);
+      const process = await daemon.start(this.flags.profile, { config: this.flags.config });
+      if (process) {
         this.log('Agent started.');
-      } catch (err) {
-        this.log(chalk`{red Failed to start daemon}: ${err}`);
-        await daemon.stop(this.flags.profile);
       }
     });
   }

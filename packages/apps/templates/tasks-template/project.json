@@ -27,7 +27,7 @@
         "^build",
         "^build-tsc"
       ],
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/templates/tasks-template/src/index.ts",
         "outputPath": "packages/apps/templates/tasks-template/dist",
@@ -47,7 +47,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [

@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "lib": [
       "DOM",
       "ESNext"
@@ -28,6 +29,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
@@ -41,6 +45,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
     },
     {
       "path": "../client-services"

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
@@ -98,7 +98,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._ctx.disposed, 'Closed');
+    invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.add({ topic, peerId });
 
@@ -134,7 +134,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    assert(!this._ctx.disposed, 'Closed');
+    invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.delete({ topic, peerId });
 
@@ -154,8 +154,8 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
-    assert(recipient);
-    assert(!this._ctx.disposed, 'Closed');
+    invariant(recipient);
+    invariant(!this._ctx.disposed, 'Closed');
     if (!this._context.connections.has(recipient)) {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
