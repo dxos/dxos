@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Page } from '@playwright/test';
 import fs from 'fs';
 import http from 'http';
 import get from 'lodash.get';
@@ -11,7 +12,6 @@ import { AddressInfo } from 'net';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
-import { Page } from 'playwright';
 
 import { BrowserType } from '../types';
 import { Lock, trigger } from '../util';

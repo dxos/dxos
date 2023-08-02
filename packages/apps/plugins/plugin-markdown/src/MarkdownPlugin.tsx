@@ -32,6 +32,10 @@ import {
   markdownPlugins,
 } from './util';
 
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[DocumentType.name] = DocumentType;
+
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);

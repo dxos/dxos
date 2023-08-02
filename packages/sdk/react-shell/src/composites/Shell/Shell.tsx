@@ -20,7 +20,7 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
   });
 
   const client = useClient();
-  const spaces = useSpaces();
+  const spaces = useSpaces({ all: true });
   const space = useSpace(spaceKey);
 
   useEffect(() => {

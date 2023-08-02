@@ -6,9 +6,13 @@ import React, { useEffect, useMemo } from 'react';
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useInvitationStatus } from '@dxos/react-client/invitations';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
 import { Viewport } from '../../components';
+import { InvitationManager } from '../../steps';
+import { invitationStatusValue } from '../../util';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { DeviceManager, IdentityActionChooser } from './steps';
@@ -47,11 +51,34 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
           <Viewport.View id='device manager' classNames={viewStyles}>
             <DeviceManager active={activeView === 'device manager'} {...props} />
           </Viewport.View>
+          <Viewport.View id='device invitation manager' classNames={viewStyles}>
+            <InvitationManager
+              active={activeView === 'device invitation manager'}
+              {...props}
+              invitationUrl={props.invitationUrl}
+            />
+          </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
           {/* <Viewport.View id='signing out'></Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
     </DensityProvider>
+  );
+};
+
+const IdentityPanelWithInvitationImpl = ({
+  invitation,
+  ...props
+}: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
+  const { status, invitationCode, authCode } = useInvitationStatus(invitation);
+  const statusValue = invitationStatusValue.get(status) ?? 0;
+  const showAuthCode = statusValue === 3;
+  return (
+    <IdentityPanelImpl
+      {...props}
+      invitationUrl={props.createInvitationUrl(invitationCode!)}
+      {...(showAuthCode && { authCode })}
+    />
   );
 };
 
@@ -66,7 +93,7 @@ export const IdentityPanel = ({
     console.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine(identity);
+  const [identityState, identitySend, identityService] = useIdentityMachine({ context: { identity } });
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
@@ -82,6 +109,8 @@ export const IdentityPanel = ({
         return 'identity action chooser';
       case identityState.matches('managingDevices'):
         return 'device manager';
+      case identityState.matches('managingDeviceInvitation'):
+        return 'device invitation manager';
       // case identityState.matches('managingProfile'):
       //   return 'profile manager';
       // case identityState.matches('signingOut'):
@@ -91,14 +120,18 @@ export const IdentityPanel = ({
     }
   }, [identityState]);
 
-  return (
-    <IdentityPanelImpl
-      {...props}
-      identity={identity}
-      activeView={activeView}
-      send={identitySend}
-      titleId={titleId}
-      createInvitationUrl={createInvitationUrl}
-    />
+  const implProps = {
+    ...props,
+    identity,
+    activeView,
+    send: identitySend,
+    titleId,
+    createInvitationUrl,
+  };
+
+  return identityState.context.invitation ? (
+    <IdentityPanelWithInvitationImpl {...implProps} invitation={identityState.context.invitation} />
+  ) : (
+    <IdentityPanelImpl {...implProps} />
   );
 };

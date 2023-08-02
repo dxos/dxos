@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai-sandbox",
-  "version": "0.1.52",
+  "version": "0.1.53",
   "private": true,
   "description": "Frame sandbox",
   "homepage": "https://dxos.org",
@@ -40,7 +40,7 @@
     "monaco-editor": "^0.25.0",
     "use-subscription": "^1.8.0",
     "y-monaco": "^0.1.0",
-    "yjs": "^13.5.44"
+    "yjs": "^13.6.7"
   },
   "devDependencies": {
     "@dxos/aurora": "workspace:*",

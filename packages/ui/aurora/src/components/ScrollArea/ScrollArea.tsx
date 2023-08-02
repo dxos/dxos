@@ -100,5 +100,5 @@ export type {
   ScrollAreaViewportProps,
   ScrollAreaScrollbarProps,
   ScrollAreaThumbProps,
-  ScrollAreaCorner,
+  ScrollAreaCornerProps,
 };

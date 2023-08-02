@@ -56,10 +56,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/experimental/kai",
         "outputPath": "tmp/playwright/packages/experimental/kai",
         "playwrightConfigPath": "packages/experimental/kai/src/playwright/playwright.config.ts",
