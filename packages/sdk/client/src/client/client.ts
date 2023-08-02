@@ -24,7 +24,7 @@ import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, MaybePromise } from '@dxos/util';
 
-import type { ClientStats, DiagnosticOptions, Monitor } from '../diagnostics';
+import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
 import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
@@ -207,9 +207,9 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<ClientStats>> {
-    const { diagnostics } = await import('../diagnostics');
-    return diagnostics(this, opts);
+  async diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<Diagnostics>> {
+    const { createDiagnostics } = await import('../diagnostics');
+    return createDiagnostics(this, opts);
   }
 
   /**

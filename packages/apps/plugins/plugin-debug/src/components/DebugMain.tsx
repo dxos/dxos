@@ -13,7 +13,6 @@ import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { baseSurface, fullSurface, getSize } from '@dxos/aurora-theme';
-import { diagnostics } from '@dxos/client/diagnostics';
 import { SpaceProxy } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
@@ -32,7 +31,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await diagnostics(client, { humanize: false, truncate: true });
+    const data = await client.diagnostics({ humanize: false, truncate: true });
     setData(data);
   };
   useEffect(() => {
@@ -127,15 +126,15 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
             </div>
           )}
           <div>
-            <pre className='p-2 text-sm'>Config</pre>
-            <SyntaxHighlighter language='json' style={style}>
-              {JSON.stringify(config.values, replacer, 2)}
-            </SyntaxHighlighter>
-          </div>
-          <div>
             <pre className='p-2 text-sm'>Diagnostics</pre>
             <SyntaxHighlighter language='json' style={style}>
               {JSON.stringify(data, replacer, 2)}
+            </SyntaxHighlighter>
+          </div>
+          <div>
+            <pre className='p-2 text-sm'>Config</pre>
+            <SyntaxHighlighter language='json' style={style}>
+              {JSON.stringify(config.values, replacer, 2)}
             </SyntaxHighlighter>
           </div>
         </div>

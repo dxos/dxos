@@ -13,7 +13,7 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
   Identity,
-  Space as SpaceType,
+  Space as SpaceProto,
   SpaceMember,
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -34,12 +34,17 @@ export type SpaceStats = {
   };
   members?: SpaceMember[];
   epochs?: { number: number; timeframe: Timeframe }[];
-  metrics?: SpaceType.Metrics & {
+  metrics?: SpaceProto.Metrics & {
     startupTime?: number;
   };
 };
 
-export type ClientStats = {
+export type Diagnostics = {
+  created: string;
+  client: {
+    version: string;
+  };
+  platform: Platform;
   identity: Identity;
   devices: Device[];
   spaces: SpaceStats[];
@@ -48,15 +53,27 @@ export type ClientStats = {
   storageVersion: number;
 };
 
+export type Platform = {
+  type: 'browser' | 'node';
+  version?: string;
+  platform: string;
+};
+
 export type DiagnosticOptions = {
   truncate?: boolean;
   humanize?: boolean;
 };
 
 // TODO(burdon): Move method to Monitor class.
-export const diagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<ClientStats>> => {
+export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<Diagnostics>> => {
   const host = client.services.services.DevtoolsHost!;
-  const data: Partial<ClientStats> = {};
+  const data: Partial<Diagnostics> = {
+    created: new Date().toISOString(),
+    client: {
+      version: client.version,
+    },
+    platform: await getPlatform(),
+  };
 
   const identity = client.halo.identity.get();
   if (identity) {
@@ -180,6 +197,23 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
 
   await done.wait();
   stream.close();
-
   return epochs;
+};
+
+const getPlatform = async (): Promise<Platform> => {
+  if (typeof window !== 'undefined') {
+    const { userAgent } = window.navigator;
+    return {
+      type: 'browser',
+      platform: userAgent,
+    };
+  }
+
+  // https://nodejs.org/api/os.html
+  const { platform, release } = await require('node:os');
+  return {
+    type: 'node',
+    platform: `${platform()} ${release()}`,
+    version: process.version,
+  };
 };

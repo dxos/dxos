@@ -6,9 +6,7 @@ import { Flags } from '@oclif/core';
 import rev from 'git-rev-sync';
 
 import { asyncTimeout } from '@dxos/async';
-import { Client, PublicKey } from '@dxos/client';
-import { diagnostics } from '@dxos/client/diagnostics';
-import { SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
@@ -34,12 +32,11 @@ export default class Stats extends BaseCommand<typeof Stats> {
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       const data = await asyncTimeout(
-        diagnostics(client, { humanize: this.flags.humanize, truncate: this.flags.truncate }),
+        client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate }),
         5_000,
       );
 
       return {
-        timestamp: new Date().toISOString(),
         cli: {
           version: this.config.version,
           branch: rev.branch(),

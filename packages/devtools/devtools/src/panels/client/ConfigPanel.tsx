@@ -12,14 +12,13 @@ import { JsonView, PanelContainer } from '../../components';
 
 const ConfigPanel = () => {
   const services = useClientServices();
-  if (!services) {
-    return null;
-  }
-
   const [config, setConfig] = useState<Config>({});
   useAsyncEffect(async () => {
-    setConfig(await services.SystemService.getConfig());
-  }, []);
+    if (services) {
+      const config = await services.SystemService.getConfig();
+      setConfig(config);
+    }
+  }, [services]);
 
   return (
     <PanelContainer>
