@@ -786,6 +786,7 @@ importers:
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
       signia: ^0.1.4
       signia-react: ^0.1.4
       vite: ^4.3.9
@@ -799,6 +800,7 @@ importers:
       '@tldraw/tldraw': 2.0.0-alpha.14_5uumaiclxbdbzaqafclbf6maf4
       '@tldraw/tlschema': 2.0.0-alpha.14_react@18.2.0
       lodash.get: 4.4.2
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       signia: 0.1.4
       signia-react: 0.1.4_react@18.2.0
       yjs: 13.5.44

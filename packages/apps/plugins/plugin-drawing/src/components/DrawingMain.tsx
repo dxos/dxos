@@ -4,6 +4,7 @@
 
 import { Editor, Tldraw } from '@tldraw/tldraw';
 import React, { FC, useEffect, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { Drawing as DrawingType } from '@braneframe/types';
 import { Main, useThemeContext } from '@dxos/aurora';
@@ -12,6 +13,7 @@ import { fullSurface, mx } from '@dxos/aurora-theme';
 import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
+import { log } from 'console';
 
 export type DrawingMainParams = {
   readonly?: boolean;
@@ -31,9 +33,27 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
     }
   }, [editor, readonly, themeMode]);
 
-  // TODO(burdon): Zoom to fit.
+  // Zoom to fit.
+  // TODO(burdon): Update height within range.
+  const { ref: containerRef, width } = useResizeDetector();
+  const [height, _setHeight] = useState<number>(300);
+  useEffect(() => {
+    const bounds = editor?.allShapesCommonBounds;
+    if (bounds && width && bounds.width && bounds.height) {
+      const zoom = Math.min(width / bounds.width, height / bounds.height) * 0.8;
+      const center = {
+        x: bounds.x + bounds.width / 2,
+        y: bounds.y + bounds.height / 2,
+      };
+
+      editor.updateViewportScreenBounds(true);
+      editor.setCamera(0, 0, zoom);
+      editor.centerOnPoint(center.x, center.y);
+    }
+  }, [editor, width]);
+
   return (
-    <div className='h-80'>
+    <div ref={containerRef} style={{ height }}>
       <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
     </div>
   );
