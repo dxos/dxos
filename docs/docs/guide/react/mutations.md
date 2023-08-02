@@ -16,13 +16,9 @@ In the example below, clicking a task sets `completed = true` on line 20.
 ```tsx{19,23,24} file=./snippets/mutations.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  Expando,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const App = () => {
   useIdentity();
@@ -80,12 +76,9 @@ In the example below, clicking a task sets `completed = true` on line 20 the sam
 ```tsx{20,24,25} file=./snippets/mutations-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Task } from './schema';
 
