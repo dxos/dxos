@@ -46,15 +46,7 @@ export default class Stats extends BaseCommand<typeof Stats> {
           hash: rev.long(),
           commit: rev.date().toISOString(),
         },
-        diagnostics: {
-          ...data,
-
-          // Convert to string.
-          feeds: data.feeds?.map((feed: SubscribeToFeedsResponse.Feed) => ({
-            ...feed,
-            downloaded: PublicKey.from(feed.downloaded).toString(),
-          })),
-        },
+        diagnostics: data,
       };
     });
   }

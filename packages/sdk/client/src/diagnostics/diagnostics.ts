@@ -10,7 +10,13 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { Device, Identity, SpaceMember, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Device,
+  Identity,
+  Space as SpaceType,
+  SpaceMember,
+  SpacesService,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
@@ -28,13 +34,16 @@ export type SpaceStats = {
   };
   members?: SpaceMember[];
   epochs?: { number: number; timeframe: Timeframe }[];
+  metrics?: SpaceType.Metrics & {
+    startupTime?: number;
+  };
 };
 
 export type ClientStats = {
   identity: Identity;
   devices: Device[];
   spaces: SpaceStats[];
-  feeds: SubscribeToFeedsResponse.Feed[];
+  feeds: Partial<SubscribeToFeedsResponse.Feed>[];
   config: ConfigProto;
   storageVersion: number;
 };
@@ -69,6 +78,7 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
               await space.waitUntilReady();
               const result = space?.db.query();
               Object.assign(stats, {
+                metrics: space.internal.data.metrics,
                 epochs: await getEpochs(client.services!.services.SpacesService!, space),
                 members: space?.members.get(),
                 properties: {
@@ -78,6 +88,12 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
                   items: result?.objects.length,
                 },
               });
+
+              // TODO(burdon): Factor out.
+              if (stats.metrics) {
+                const { open, ready } = stats.metrics ?? {};
+                stats.metrics.startupTime = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+              }
             }
 
             return stats;
@@ -97,7 +113,12 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
     const trigger = new Trigger();
     const stream = host.subscribeToFeeds({});
     stream?.subscribe((msg) => {
-      data.feeds = msg.feeds;
+      data.feeds = msg.feeds?.map(({ feedKey, bytes, length }) => ({
+        feedKey,
+        bytes,
+        length,
+      }));
+
       trigger.wake();
     });
 
