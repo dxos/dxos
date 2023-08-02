@@ -80,4 +80,5 @@ export const os = {
   'space invitation list heading': 'Pending invitations',
   'device list heading': 'Devices',
   'space member list heading': 'Members in this space',
+  'space panel heading': 'Space settings',
 };

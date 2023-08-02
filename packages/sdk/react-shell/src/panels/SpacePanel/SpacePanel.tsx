@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
-import React, { cloneElement, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { Button, DensityProvider, Tooltip, useId, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { DensityProvider, useId } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
@@ -19,29 +18,13 @@ import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './
 import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
 
-const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePanelHeadingProps) => {
-  const { t } = useTranslation('os');
+const SpacePanelHeading = ({ titleId, space }: SpacePanelHeadingProps) => {
   const name = space.properties.name;
-
-  const doneButton = (
-    <Button variant='ghost' onClick={() => onDone?.()} data-testid='show-all-spaces'>
-      <X className={getSize(4)} weight='bold' />
-    </Button>
-  );
-
+  // TODO(wittjosiah): Label this as the space panel.
   return (
-    <div role='none' className={mx('flex items-center p-2 gap-2')}>
-      {/* TODO(wittjosiah): Label this as the space panel. */}
-      <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
-        {name ?? space.key.truncate()}
-      </h2>
-      <Tooltip.Root>
-        <Tooltip.Content classNames='z-50'>{t('close label')}</Tooltip.Content>
-        <Tooltip.Trigger asChild>
-          {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-        </Tooltip.Trigger>
-      </Tooltip.Root>
-    </div>
+    <h2 id={titleId} className={mx('font-medium text-center', !name && 'font-mono')}>
+      {name ?? space.key.truncate()}
+    </h2>
   );
 };
 
