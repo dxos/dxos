@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-stack": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/editor": "2.0.0-alpha.14",

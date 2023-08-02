@@ -7,13 +7,13 @@ import React, { FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Drawing as DrawingType } from '@braneframe/types';
+import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
 import { fullSurface, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
 import { useDrawingModel } from '../hooks';
-import { log } from 'console';
 
 export type DrawingMainParams = {
   readonly?: boolean;
@@ -38,18 +38,27 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   const { ref: containerRef, width } = useResizeDetector();
   const [height, _setHeight] = useState<number>(300);
   useEffect(() => {
-    const bounds = editor?.allShapesCommonBounds;
-    if (bounds && width && bounds.width && bounds.height) {
-      const zoom = Math.min(width / bounds.width, height / bounds.height) * 0.8;
-      const center = {
-        x: bounds.x + bounds.width / 2,
-        y: bounds.y + bounds.height / 2,
-      };
+    editor?.updateViewportScreenBounds();
+  }, [editor, width]);
+  useEffect(() => {
+    const update = debounce<boolean>((animate = false) => {
+      const bounds = editor?.allShapesCommonBounds;
+      if (bounds && width && bounds.width && bounds.height) {
+        const zoom = Math.min(1, Math.min(width / bounds.width, height / bounds.height) * 0.8);
+        const center = {
+          x: bounds.x + bounds.width / 2,
+          y: bounds.y + bounds.height / 2,
+        };
 
-      editor.updateViewportScreenBounds(true);
-      editor.setCamera(0, 0, zoom);
-      editor.centerOnPoint(center.x, center.y);
-    }
+        editor.stopCameraAnimation();
+        const { width: pw, height: ph } = editor.viewportPageBounds;
+        editor.animateCamera(pw / 2 - center.x, ph / 2 - center.y, zoom, animate ? { duration: 250 } : undefined);
+      }
+    }, 100);
+
+    update(false);
+    const subscription = store.listen(() => update(true), { scope: 'document' });
+    return () => subscription();
   }, [editor, width]);
 
   return (
