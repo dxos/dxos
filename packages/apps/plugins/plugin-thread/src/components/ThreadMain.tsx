@@ -7,9 +7,10 @@ import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
-import { PublicKey, SpaceProxy } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { baseSurface, fullSurface } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/react-client';
+import { SpaceProxy } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { ThreadChannel } from './ThreadChannel';
 
@@ -19,7 +20,7 @@ import { ThreadChannel } from './ThreadChannel';
 // - Lightweight threads for document comments, inline AI, etc.
 //    (Similar reusable components everywhere; same data structure).
 
-export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, thread] }) => {
+export const ThreadMain: FC<{ data: { space: SpaceProxy; object: ThreadType } }> = ({ data: { object: thread } }) => {
   const identity = useIdentity(); // TODO(burdon): Requires context for storybook?
   const identityKey = identity!.identityKey;
   // const identityKey = PublicKey.random().toHex();
@@ -57,12 +58,7 @@ export const ThreadMain: FC<{ data: [SpaceProxy, ThreadType] }> = ({ data: [_, t
   };
 
   return (
-    <Main.Content
-      classNames={mx(
-        'flex flex-col grow min-bs-[100vh] h-full overflow-hidden items-center',
-        'absolute left-0 right-0', // TODO(burdon): Check.
-      )}
-    >
+    <Main.Content classNames={[fullSurface, baseSurface]}>
       <ThreadChannel identityKey={identityKey} thread={thread} onAddMessage={handleAddMessage} />
     </Main.Content>
   );

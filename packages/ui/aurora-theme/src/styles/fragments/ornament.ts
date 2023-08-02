@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export const defaultInlineSeparator = 'border-is border-neutral-200 dark:border-neutral-800';
-export const defaultBlockSeparator = 'border-bs border-neutral-200 dark:border-neutral-800';
+export const inlineSeparator = 'border-ie border-neutral-200 dark:border-neutral-800';
+export const blockSeparator = 'border-be border-neutral-200 dark:border-neutral-800';

@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, ArticleMedium } from '@phosphor-icons/react';
+import { ArticleMedium, Plus } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React from 'react';
 
-import { SpaceProvides } from '@braneframe/plugin-space';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
-import { Document } from '@braneframe/types';
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
+import { Document as DocumentType } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { createStore } from '@dxos/observable-object';
-import { observer } from '@dxos/observable-object/react';
+import { SpaceProxy } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import {
@@ -22,102 +22,177 @@ import {
   SpaceMarkdownChooser,
 } from './components';
 import translations from './translations';
-import { MarkdownProperties } from './types';
-import { isMarkdown, isMarkdownContent, isMarkdownPlaceholder, isMarkdownProperties, markdownPlugins } from './util';
+import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
+import {
+  documentToGraphNode,
+  isMarkdown,
+  isMarkdownContent,
+  isMarkdownPlaceholder,
+  isMarkdownProperties,
+  markdownPlugins,
+} from './util';
 
-type MarkdownPluginProvides = SpaceProvides &
-  TranslationsProvides & {
-    // todo(thure): Refactor this to be DRY, but avoid circular dependencies. Do we need a package like `plugin-types` 😬? Alternatively, StackPlugin stories could exit its package, but we have no such precedent.
-    stack: { creators: Record<string, any>[]; choosers: Record<string, any>[] };
-  };
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[DocumentType.name] = DocumentType;
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
-  const store = createStore<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
-  const MarkdownMainStandalone = observer(
-    ({ data: [model, properties] }: { data: [ComposerModel, MarkdownProperties]; role?: string }) => {
-      return (
-        <MarkdownMain
-          model={model}
-          properties={properties}
-          layout='standalone'
-          onChange={(text) => store.onChange.forEach((onChange) => onChange(text))}
-        />
-      );
-    },
-  );
+  const MarkdownMainStandalone = ({
+    data: { composer, properties },
+  }: {
+    data: { composer: ComposerModel; properties: MarkdownProperties };
+    role?: string;
+  }) => {
+    return (
+      <MarkdownMain
+        model={composer}
+        properties={properties}
+        layout='standalone'
+        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+      />
+    );
+  };
 
   return {
     meta: {
-      id: 'dxos:markdown',
+      id: MARKDOWN_PLUGIN,
     },
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
         if (plugin.provides.markdown.onChange) {
-          store.onChange.push(plugin.provides.markdown.onChange);
+          state.onChange.push(plugin.provides.markdown.onChange);
         }
       });
     },
+    unload: async () => {
+      adapter.clear();
+    },
     provides: {
-      space: {
-        types: [
-          {
-            id: 'create-doc',
-            testId: 'spacePlugin.createDocument',
-            label: ['create document label', { ns: 'composer' }],
-            icon: Plus,
-            Type: Document,
-          },
-        ],
+      translations,
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          const space = parent.data;
+          return adapter.createNodes(space, parent, emit);
+        },
+        actions: (parent) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          return [
+            {
+              id: `${MARKDOWN_PLUGIN}/create`,
+              index: 'a1',
+              testId: 'spacePlugin.createDocument',
+              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              disposition: 'toolbar', // TODO(burdon): Both places.
+              intent: [
+                {
+                  plugin: MARKDOWN_PLUGIN,
+                  action: MarkdownAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.ACTIVATE,
+                },
+              ],
+            },
+          ];
+        },
       },
       stack: {
         creators: [
           {
-            id: 'create-section-space-doc',
+            id: 'create-stack-section-doc',
             testId: 'markdownPlugin.createSectionSpaceDocument',
-            label: ['create section space document label', { ns: 'dxos:markdown' }],
-            icon: ArticleMedium,
-            create: () => new Document(),
+            label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
+            icon: (props: any) => <ArticleMedium {...props} />,
+            intent: {
+              plugin: MARKDOWN_PLUGIN,
+              action: MarkdownAction.CREATE,
+            },
           },
         ],
         choosers: [
           {
-            id: 'choose-section-space-doc',
+            id: 'choose-stack-section-doc',
             testId: 'markdownPlugin.chooseSectionSpaceDocument',
-            label: ['choose section space document label', { ns: 'dxos:markdown' }],
-            icon: ArticleMedium,
+            label: ['choose stack section label', { ns: MARKDOWN_PLUGIN }],
+            icon: (props: any) => <ArticleMedium {...props} />,
             filter: isMarkdownContent,
           },
         ],
       },
-      translations,
-      component: (datum, role) => {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
+          return null;
+        }
+
+        // TODO(burdon): Document.
         switch (role) {
-          case 'main':
-            if (Array.isArray(datum) && isMarkdown(datum[0]) && isMarkdownProperties(datum[1])) {
-              if (datum[2] === 'embedded') {
+          case 'main': {
+            if (
+              'composer' in data &&
+              isMarkdown(data.composer) &&
+              'properties' in data &&
+              isMarkdownProperties(data.properties)
+            ) {
+              if ('view' in data && data.view === 'embedded') {
                 return MarkdownMainEmbedded;
               } else {
                 return MarkdownMainStandalone;
               }
-            } else if (Array.isArray(datum) && isMarkdownPlaceholder(datum[0]) && isMarkdownProperties(datum[1])) {
+            } else if (
+              'composer' in data &&
+              isMarkdownPlaceholder(data.composer) &&
+              'properties' in data &&
+              isMarkdownProperties(data.properties)
+            ) {
               return MarkdownMainEmpty;
             }
             break;
-          case 'section':
-            if (isMarkdown(get(datum, 'object.content', {}))) {
+          }
+
+          case 'section': {
+            if (isMarkdown(get(data, 'object.content', {}))) {
               return MarkdownSection;
             }
             break;
-          // TODO(burdon): Can this be decoupled from this plugin?
-          case 'dialog':
-            if (get(datum, 'subject') === 'dxos:stack/chooser' && get(datum, 'id') === 'choose-section-space-doc') {
+          }
+
+          // TODO(burdon): Review with @thure.
+          case 'dialog': {
+            if (
+              get(data, 'subject') === 'dxos.org/plugin/stack/chooser' &&
+              get(data, 'id') === 'choose-stack-section-doc'
+            ) {
               return SpaceMarkdownChooser;
             }
             break;
+          }
         }
 
         return null;
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case MarkdownAction.CREATE: {
+              return { object: new DocumentType() };
+            }
+          }
+        },
       },
     },
   };

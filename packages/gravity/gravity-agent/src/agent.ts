@@ -5,7 +5,8 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Client, ClientServicesProvider, PublicKey, fromHost } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
+import { ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Config, ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';

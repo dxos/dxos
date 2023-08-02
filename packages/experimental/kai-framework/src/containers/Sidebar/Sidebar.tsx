@@ -3,15 +3,16 @@
 //
 
 import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import assert from 'assert';
 import React, { useEffect, useState, Suspense } from 'react';
+import invariant from 'tiny-invariant';
 
 import { Button, DensityProvider, Main, ClassNameValue, useSidebar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { TypedObject } from '@dxos/client';
 import { searchMeta } from '@dxos/kai-frames';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { observer, useClient, useNetworkStatus, useSpaces } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
+import { TypedObject, useSpaces } from '@dxos/react-client/echo';
+import { useNetworkStatus } from '@dxos/react-client/mesh';
 
 import { SpaceListAction } from '../../components';
 import { FrameRegistryDialog } from '../../containers';
@@ -40,8 +41,7 @@ export type SidebarProps = {
 };
 
 // TODO(burdon): Convert into Frame.
-// TODO(burdon): Remove observer?
-export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
+export const Sidebar = ({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out app state/nav.
   const { space, frame, objectId } = useAppRouter(); // TODO(burdon): Factor out.
   const { showDeletedObjects } = useAppState();
@@ -102,13 +102,13 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
       }
 
       case ObjectActionType.DELETE: {
-        assert(object);
+        invariant(object);
         space?.db.remove(object);
         break;
       }
 
       case ObjectActionType.RESTORE: {
-        assert(object);
+        invariant(object);
         space?.db.add(object);
         break;
       }
@@ -118,7 +118,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
   // TODO(burdon): Factor out intention handlers?
   const handleSpaceAction = (intent: Intent<SpaceListAction>) => {
     const space = spaces.find(({ key }) => key.equals(intent.data.spaceKey));
-    assert(space);
+    invariant(space);
 
     switch (intent.action) {
       case IntentAction.SPACE_SELECT: {
@@ -311,7 +311,7 @@ export const Sidebar = observer(({ className, onNavigate }: SidebarProps) => {
       </DensityProvider>
     </Main.Sidebar>
   );
-});
+};
 
 Sidebar.displayName = SIDEBAR_NAME;
 

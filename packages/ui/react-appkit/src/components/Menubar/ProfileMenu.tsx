@@ -5,7 +5,7 @@
 import React, { PropsWithChildren } from 'react';
 
 import { Avatar, useJdenticonHref } from '@dxos/aurora';
-import { Identity as IdentityType } from '@dxos/client';
+import { Identity as IdentityType } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Popover } from '../Popover';

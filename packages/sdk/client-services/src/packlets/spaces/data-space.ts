@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
-import { CredentialConsumer } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { MetadataStore, Space, createMappedFeedWriter, DataPipeline } from '@dxos/echo-pipeline';
 import { CancelledError, SystemError } from '@dxos/errors';
@@ -36,9 +35,15 @@ export type DataSpaceCallbacks = {
    * Called after transitioning to the ready state.
    */
   afterReady?: () => Promise<void>;
+
+  /**
+   * Called before space gets closed.
+   */
+  beforeClose?: () => Promise<void>;
 };
 
 export type DataSpaceParams = {
+  initialState: SpaceState;
   inner: Space;
   metadataStore: MetadataStore;
   gossip: Gossip;
@@ -52,7 +57,7 @@ export type DataSpaceParams = {
 
 @trackLeaks('open', 'close')
 export class DataSpace {
-  private readonly _ctx = new Context();
+  private _ctx = new Context();
   private readonly _inner: Space;
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
@@ -60,7 +65,7 @@ export class DataSpace {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _metadataStore: MetadataStore;
   private readonly _signingContext: SigningContext;
-  private readonly _notarizationPluginConsumer: CredentialConsumer<NotarizationPlugin>;
+  private readonly _notarizationPlugin = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache;
 
@@ -94,8 +99,9 @@ export class DataSpace {
       authTimeout: AUTH_TIMEOUT,
     });
 
-    this._notarizationPluginConsumer = this._inner.spaceState.registerProcessor(new NotarizationPlugin());
     this._cache = params.cache;
+
+    this._state = params.initialState;
   }
 
   get key() {
@@ -124,30 +130,44 @@ export class DataSpace {
   }
 
   get notarizationPlugin() {
-    return this._notarizationPluginConsumer.processor;
+    return this._notarizationPlugin;
   }
 
   get cache() {
     return this._cache;
   }
 
+  @synchronized
   async open() {
-    await this.notarizationPlugin.open();
-    await this._notarizationPluginConsumer.open();
+    await this._open();
+  }
+
+  private async _open() {
+    await this._notarizationPlugin.open();
+    await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
     await this._inner.open();
-    this._state = SpaceState.INACTIVE;
+    this._state = SpaceState.CONTROL_ONLY;
+    this.stateUpdate.emit();
+    this.metrics = {};
     this.metrics.open = new Date();
   }
 
+  @synchronized
   async close() {
+    await this._close();
+  }
+
+  private async _close() {
+    await this._callbacks.beforeClose?.();
     this._state = SpaceState.CLOSED;
     await this._ctx.dispose();
+    this._ctx = new Context();
 
     await this.authVerifier.close();
 
     await this._inner.close();
-    await this._notarizationPluginConsumer.close();
-    await this.notarizationPlugin.close();
+    await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
+    await this._notarizationPlugin.close();
 
     await this._presence.destroy();
   }
@@ -185,7 +205,7 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
-    if (this._state !== SpaceState.INACTIVE) {
+    if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
     this._state = SpaceState.INITIALIZING;
@@ -201,14 +221,16 @@ export class DataSpace {
     log('Writable feeds created');
     this.stateUpdate.emit();
 
-    this.notarizationPlugin.setWriter(
-      createMappedFeedWriter<Credential, FeedMessage.Payload>(
-        (credential) => ({
-          credential: { credential },
-        }),
-        this._inner.controlPipeline.writer,
-      ),
-    );
+    if (!this.notarizationPlugin.hasWriter) {
+      this.notarizationPlugin.setWriter(
+        createMappedFeedWriter<Credential, FeedMessage.Payload>(
+          (credential) => ({
+            credential: { credential },
+          }),
+          this._inner.controlPipeline.writer,
+        ),
+      );
+    }
 
     await this._inner.initializeDataPipeline();
 
@@ -308,5 +330,29 @@ export class DataSpace {
         await feed.clear(0, indexBeforeEpoch + 1);
       }
     }
+  }
+
+  @synchronized
+  async activate() {
+    if (this._state !== SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+
+    await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
+    await this._open();
+    this.initializeDataPipelineAsync();
+  }
+
+  @synchronized
+  async deactivate() {
+    if (this._state === SpaceState.INACTIVE) {
+      throw new SystemError('Invalid operation');
+    }
+
+    // de-register from data service
+    await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
+    await this._close();
+    this._state = SpaceState.INACTIVE;
+    this.stateUpdate.emit();
   }
 }

@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import invariant from 'tiny-invariant';
 import * as varint from 'varint';
 
 import { RpcPort } from './rpc-port';
@@ -18,12 +18,13 @@ export class Framer {
   private _messageCb?: (msg: Uint8Array) => void;
   private _subscribeCb?: () => void;
   private _buffer?: Buffer; // The rest of the bytes from the previous write call.
+  private _responseQueue: (() => void)[] = [];
 
   private readonly _stream = new Duplex({
     objectMode: false,
     read: () => {},
     write: (chunk, encoding, callback) => {
-      assert(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
+      invariant(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
 
       if (this._buffer && this._buffer.length > 0) {
         this._buffer = Buffer.concat([this._buffer, chunk]);
@@ -48,10 +49,17 @@ export class Framer {
   public readonly port: RpcPort = {
     send: (message) => {
       // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
-      this._stream.push(encodeFrame(message));
+      return new Promise<void>((resolve) => {
+        const canContinue = this._stream.push(encodeFrame(message));
+        if (!canContinue) {
+          this._responseQueue.push(resolve);
+        } else {
+          process.nextTick(resolve);
+        }
+      });
     },
     subscribe: (callback) => {
-      assert(!this._messageCb, 'Rpc port already has a message listener.');
+      invariant(!this._messageCb, 'Rpc port already has a message listener.');
       this._messageCb = callback;
       this._subscribeCb?.();
       return () => {
@@ -62,6 +70,16 @@ export class Framer {
 
   get stream(): Duplex {
     return this._stream;
+  }
+
+  constructor() {
+    this.stream.on('drain', this._processResponseQueue.bind(this));
+  }
+
+  private _processResponseQueue() {
+    const responseQueue = this._responseQueue;
+    this._responseQueue = [];
+    responseQueue.forEach((cb) => cb());
   }
 
   /**
@@ -91,6 +109,7 @@ export class Framer {
 
   destroy() {
     // TODO(dmaretskyi): Call stream.end() instead?
+    this._stream.removeAllListeners('drain');
     this._stream.destroy();
   }
 }

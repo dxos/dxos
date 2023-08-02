@@ -14,12 +14,9 @@ The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-sp
 ```tsx{14} file=./snippets/use-query.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 export const App = () => {
   useIdentity();
@@ -110,14 +107,14 @@ If you're using one of the DXOS [application templates](../cli/app-templates), t
 The output is a typescript file that looks roughly like this:
 
 ```ts file=./snippets/schema.ts#L5-
-import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client';
+import { TypedObject, TypeFilter, EchoSchema } from '@dxos/react-client/echo';
 
 export const schema = EchoSchema.fromJson(
   '{ "protobuf generated json here": true }'
 );
 
 export class Task extends TypedObject {
-  static readonly type = schema.getType('example.tasks.Task');
+  static readonly type: ReturnType<typeof schema.getType> = schema.getType('example.tasks.Task');
 
   static filter(opts?: {
     title?: string;
@@ -145,12 +142,9 @@ To use the type declarations, simply import the relevant type like `Task` from t
 ```tsx{11,16} file=./snippets/use-query-typed.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  ClientProvider,
-  useIdentity,
-  useQuery,
-  useSpaces
-} from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 
 import { Task } from './schema';
 

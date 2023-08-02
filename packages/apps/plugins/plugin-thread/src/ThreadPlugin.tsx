@@ -3,46 +3,95 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
+import React from 'react';
 
+import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Thread as ThreadType } from '@braneframe/types';
+import { SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import { ThreadMain } from './components';
-import { isThread, ThreadPluginProvides } from './props';
 import translations from './translations';
+import { isThread, THREAD_PLUGIN, ThreadAction, ThreadPluginProvides } from './types';
+import { objectToGraphNode } from './util';
 
-export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => ({
-  meta: {
-    // TODO(burdon): Make id consistent with other plugins.
-    id: 'dxos.org/plugin/thread',
-  },
-  provides: {
-    translations,
-    space: {
-      types: [
-        {
-          id: 'create-thread',
-          testId: 'threadPlugin.createStack',
-          label: ['create thread label', { ns: 'dxos.org/plugin/thread' }],
-          icon: Plus,
-          Type: ThreadType,
-        },
-      ],
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[ThreadType.name] = ThreadType;
+
+export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+  const adapter = new GraphNodeAdapter(ThreadType.filter(), objectToGraphNode);
+
+  return {
+    meta: {
+      id: THREAD_PLUGIN,
     },
-    component: (datum, role) => {
-      switch (role) {
-        case 'main':
-          if (Array.isArray(datum) && isThread(datum[datum.length - 1])) {
-            return ThreadMain;
-          } else {
-            return null;
+    unload: async () => {
+      adapter.clear();
+    },
+    provides: {
+      translations,
+      graph: {
+        nodes: (parent, emit) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
           }
-        default:
+
+          const space = parent.data;
+          return adapter.createNodes(space, parent, emit);
+        },
+        actions: (parent) => {
+          if (!(parent.data instanceof SpaceProxy)) {
+            return [];
+          }
+
+          return [
+            {
+              id: `${THREAD_PLUGIN}/create`,
+              index: 'a1',
+              testId: 'threadPlugin.createThread',
+              label: ['create thread label', { ns: THREAD_PLUGIN }],
+              icon: (props) => <Plus {...props} />,
+              intent: [
+                {
+                  plugin: THREAD_PLUGIN,
+                  action: ThreadAction.CREATE,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { spaceKey: parent.data.key.toHex() },
+                },
+                {
+                  action: TreeViewAction.ACTIVATE,
+                },
+              ],
+            },
+          ];
+        },
+      },
+      component: (data, role) => {
+        if (!data || typeof data !== 'object' || !('object' in data && isThread(data.object))) {
           return null;
-      }
+        }
+
+        switch (role) {
+          case 'main':
+            return ThreadMain;
+        }
+      },
+      components: {
+        ThreadMain,
+      },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case ThreadAction.CREATE: {
+              return { object: new ThreadType() };
+            }
+          }
+        },
+      },
     },
-    components: {
-      ThreadMain,
-    },
-  },
-});
+  };
+};

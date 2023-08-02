@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, scheduleTask } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
@@ -99,7 +99,7 @@ export class Item<M extends Model = Model> {
 
   @logInfo
   get modelType(): string {
-    assert(this._modelMeta);
+    invariant(this._modelMeta);
     return this._modelMeta.type;
   }
 
@@ -117,7 +117,7 @@ export class Item<M extends Model = Model> {
   }
 
   get state(): StateOf<M> {
-    assert(this._stateMachine);
+    invariant(this._stateMachine);
     return this._stateMachine.getState();
   }
 
@@ -136,7 +136,7 @@ export class Item<M extends Model = Model> {
    * Only possible if the modelContructor wasn't passed during StateManager's creation.
    */
   initialize(modelConstructor: ModelConstructor<M>) {
-    assert(!this._modelMeta, 'Already iniitalized.');
+    invariant(!this._modelMeta, 'Already iniitalized.');
 
     this._modelMeta = modelConstructor.meta;
     log('initialize');
@@ -182,14 +182,14 @@ export class Item<M extends Model = Model> {
       }
     }
 
-    assert(!!model === !!entry.decodedModelMutation);
+    invariant(!!model === !!entry.decodedModelMutation);
     if (model && this.initialized) {
       this._stateMachine!.process(entry.decodedModelMutation);
     }
   }
 
   private _decodeMutation(mutation: EchoObject.Mutation): MutationInQueue<MutationOf<M>> {
-    assert(this.modelMeta);
+    invariant(this.modelMeta);
     return {
       mutation,
       decodedModelMutation: !mutation.model ? undefined : this.modelMeta.mutationCodec.decode(mutation.model.value),
@@ -200,7 +200,7 @@ export class Item<M extends Model = Model> {
    * Re-creates the state machine based on the current snapshot and enqueued mutations.
    */
   private _resetState() {
-    assert(this._modelMeta, 'Model not initialized.');
+    invariant(this._modelMeta, 'Model not initialized.');
     log('Reset state machine');
 
     this._parent = this._initialState.snapshot?.parentId ?? null;
@@ -212,7 +212,7 @@ export class Item<M extends Model = Model> {
         this._stateMachine = this._modelMeta.stateMachine();
       }
 
-      assert(this._modelMeta.snapshotCodec);
+      invariant(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot.model.value);
       this._stateMachine.reset(decoded);
     } else {
@@ -315,8 +315,8 @@ export class Item<M extends Model = Model> {
    * Reset the state to existing snapshot.
    */
   resetToSnapshot(snapshot: EchoObject) {
-    assert(snapshot.genesis);
-    assert(snapshot.objectId === this._id);
+    invariant(snapshot.genesis);
+    invariant(snapshot.objectId === this._id);
 
     // We don't reset if this snapshot is a response to the initial optimistic genesis message.
     const needsReset =

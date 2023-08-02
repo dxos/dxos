@@ -4,7 +4,8 @@
 
 import path from 'node:path';
 
-import { Client, Expando, Text } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Expando, Text } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 

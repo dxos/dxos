@@ -2,12 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { execTool, getBin, resolveFiles } from './node-util';
 import { formatArgs, mochaComment } from './util';
+
+const LOG_TRANSFORM_CONFIG = {
+  symbols: [
+    {
+      function: 'log',
+      package: '@dxos/log',
+      param_index: 2,
+      include_args: false,
+      include_call_site: true,
+    },
+    {
+      function: 'invariant',
+      package: '@dxos/log',
+      param_index: 2,
+      include_args: true,
+      include_call_site: false,
+    },
+  ],
+};
 
 export type NodeOptions = {
   testPatterns: string[];
@@ -49,7 +68,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 
       // Patch in ts-node will read this.
       // https://github.com/TypeStrong/ts-node/issues/1937
-      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), {}]]),
+      SWC_PLUGINS: JSON.stringify([[require.resolve('@dxos/swc-log-plugin'), LOG_TRANSFORM_CONFIG]]),
     },
   });
 

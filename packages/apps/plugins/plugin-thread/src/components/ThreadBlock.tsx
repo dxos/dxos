@@ -7,8 +7,8 @@ import format from 'date-fns/format';
 import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
-import { getSize, mx } from '@dxos/aurora-theme';
-import { PublicKey } from '@dxos/client';
+import { getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/react-client';
 
 import { useSubscription } from './util';
 
@@ -37,16 +37,16 @@ export const ThreadBlock: FC<{
     <div
       key={block.id}
       className={mx(
-        'flex flex-col',
-        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) &&
-          'rounded shadow bg-white dark:bg-neutral-900',
+        'flex flex-col overflow-hidden',
+        groupSurface,
+        !PublicKey.equals(identityKey, PublicKey.from(block.identityKey)) && 'rounded shadow',
       )}
     >
       <div className='flex __divide-x'>
         <div className='flex shrink-0 w-[40px] h-[40px] items-center justify-center'>
           <UserCircle weight='duotone' className={mx(getSize(7), classes)} />
         </div>
-        <div className='flex flex-col w-full'>
+        <div className='flex flex-col w-full overflow-hidden'>
           <div className='flex text-sm px-2 py-1 space-x-1 __rounded-tl __rounded-tr truncate'>
             <span className={mx('flex grow whitespace-nowrap truncate font-thin text-zinc-500')}>{displayName}</span>
             {date && (
@@ -57,10 +57,16 @@ export const ThreadBlock: FC<{
             )}
           </div>
 
-          <div className='__divide-y pb-1'>
+          <div className='overflow-hidden __divide-y pb-1'>
             {block.messages.map((message, i) => (
-              <div key={i} className='flex px-2 py-1 group'>
-                <div className='grow overflow-hidden break-all mr-2 text-sm'>{message.text}</div>
+              <div key={i} className='flex overflow-hidden px-2 py-1 group'>
+                {message.text && <div className='grow overflow-hidden break-words mr-2 text-sm'>{message.text}</div>}
+                {message.data && (
+                  // TODO(burdon): Colorize (reuse codemirror or hljs?)
+                  <pre className='overflow-x-auto mr-2 py-2 text-sm font-thin'>
+                    <code>{JSON.stringify(safeParseJson(message.data), undefined, 2)}</code>
+                  </pre>
+                )}
                 {onDeleteMessage && (
                   <button className='invisible group-hover:visible' onClick={() => onDeleteMessage(block.id, i)}>
                     <X />
@@ -73,4 +79,13 @@ export const ThreadBlock: FC<{
       </div>
     </div>
   );
+};
+
+// TODO(burdon): Move to util.
+export const safeParseJson = (data: string) => {
+  try {
+    return JSON.parse(data);
+  } catch (err) {
+    return data;
+  }
 };

@@ -8,7 +8,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button, DropdownMenu, DensityProvider } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Message } from '@dxos/kai-types';
-import { ShellLayout, useQuery } from '@dxos/react-client';
+import { ShellLayout } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 import { useShell } from '@dxos/react-shell';
 
 import { useAppReducer, useAppRouter, useAppState } from '../../hooks';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
 import { inspect } from 'node:util';
+import invariant from 'tiny-invariant';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
@@ -52,8 +52,8 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions,
   ) {
     super();
-    assert(_selector);
-    assert(options);
+    invariant(_selector);
+    invariant(options);
   }
 
   [inspect.custom]() {
@@ -84,8 +84,8 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   }
 
   async addFeed(feed: FeedWrapper<T>) {
-    assert(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
-    assert(feed.properties.opened);
+    invariant(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
+    invariant(feed.properties.opened);
     log('feed added', { feedKey: feed.key });
 
     // Create queue and listen for updates.
@@ -158,7 +158,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           log('popping', queue.toJSON());
           try {
             const message = await queue.pop();
-            assert(message === blocks[idx]);
+            invariant(message === blocks[idx]);
             return message;
           } catch (err) {
             // TODO(burdon): Same queue closed twice.

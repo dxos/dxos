@@ -4,9 +4,8 @@
 import React from 'react';
 
 import { Tag, useTranslation } from '@dxos/aurora';
-import { defaultDisabled, group, mx } from '@dxos/aurora-theme';
-import type { Identity } from '@dxos/client';
-import { useIdentity } from '@dxos/react-client';
+import { staticDisabled, group, mx } from '@dxos/aurora-theme';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { humanize } from '@dxos/util';
 
 import { Avatar } from '../Avatar';
@@ -50,7 +49,7 @@ export const ProfileList = ({ identities }: ProfileListProps) => {
       label={{
         level: 2,
         children: t('empty members message'),
-        className: mx('text-xl', defaultDisabled),
+        className: mx('text-xl', staticDisabled),
       }}
       elevation='base'
     />

@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MulticastObservable } from '@dxos/async';
-import { DatabaseRouter } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { MulticastObservable } from '@dxos/async';
+import type { DatabaseRouter } from '@dxos/echo-schema';
+import type { PublicKey } from '@dxos/keys';
+import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { AuthenticatingInvitationObservable } from './invitations';
-import { Space } from './space';
+import type { AuthenticatingInvitationObservable } from './invitations';
+import type { Space } from './space';
 
 /**
  * TODO(burdon): Public API (move comments here).

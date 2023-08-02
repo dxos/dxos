@@ -3,13 +3,13 @@
 //
 
 import { Rows } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
@@ -23,7 +23,6 @@ const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
     accessor: (block) => {
       const feedKey = block.feedKey;
       return feedKey.truncate();
-      // return `${feedKey.truncate()} (${humanize(feedKey)})`;
     },
   },
   {
@@ -40,26 +39,36 @@ const FeedsPanel = () => {
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
+
   const devtoolsHost = useDevtools();
   const [refreshCount, setRefreshCount] = useState(0);
-
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
 
-  const messages = useFeedMessages({ feedKey });
+  const messages = useFeedMessages({ feedKey }).reverse();
+  const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+
+  // Hack to select and refresh first feed.
+  const key = feedKey ?? feedKeys[0];
+  useEffect(() => {
+    if (key && !feedKey) {
+      handleSelect(key);
+      setTimeout(() => {
+        handleRefresh();
+      });
+    }
+  }, [key]);
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
   };
 
-  const refresh = () => {
+  const handleRefresh = () => {
     setRefreshCount(refreshCount + 1);
   };
 
   const getLabel = (key: PublicKey) => {
     const type = space?.internal.data.pipeline?.controlFeeds?.includes(key) ? 'control' : 'data';
-
     const meta = feeds.find((feed) => feed.feedKey.equals(key));
-
     if (meta) {
       return `${type} (${meta.length})`;
     } else {
@@ -67,23 +76,21 @@ const FeedsPanel = () => {
     }
   };
 
-  const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
-
   return (
     <PanelContainer
       toolbar={
         <Toolbar>
           <SpaceSelector />
           <PublicKeySelector
-            keys={feedKeys}
             Icon={Rows}
-            defaultValue={feedKey}
             placeholder={'Select feed'}
             getLabel={getLabel}
+            keys={feedKeys}
+            value={key}
             onChange={handleSelect}
           />
 
-          <Button onClick={refresh}>Refresh</Button>
+          <Button onClick={handleRefresh}>Refresh</Button>
         </Toolbar>
       }
     >

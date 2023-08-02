@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -32,14 +32,13 @@
     "@dxos/signal": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@faker-js/faker": "^7.3.0",
+    "@faker-js/faker": "^8.0.2",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
     "redis": "^4.6.6",
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {
-    "@types/faker": "^5.5.9",
     "@types/node": "^18.11.9",
     "@types/seedrandom": "^3.0.5",
     "chart.js": "^3.9.1",

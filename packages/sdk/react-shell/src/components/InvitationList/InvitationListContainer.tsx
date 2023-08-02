@@ -3,9 +3,9 @@
 //
 import React, { useCallback } from 'react';
 
-import type { CancellableInvitationObservable } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
-import { useSpace, useSpaceInvitations } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { useSpace, useSpaceInvitations } from '@dxos/react-client/echo';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { InvitationList } from './InvitationList';
 import { SharedInvitationListProps } from './InvitationListProps';
@@ -14,7 +14,7 @@ export interface InvitationListContainerProps extends SharedInvitationListProps 
   spaceKey: PublicKey;
 }
 
-export const InvitationListContainer = ({ spaceKey, createInvitationUrl }: InvitationListContainerProps) => {
+export const InvitationListContainer = ({ spaceKey, createInvitationUrl, send }: InvitationListContainerProps) => {
   const space = useSpace(spaceKey);
   const invitations = useSpaceInvitations(spaceKey);
   const onClickRemove = useCallback(
@@ -23,5 +23,5 @@ export const InvitationListContainer = ({ spaceKey, createInvitationUrl }: Invit
     },
     [space],
   );
-  return <InvitationList invitations={invitations} {...{ onClickRemove, createInvitationUrl }} />;
+  return <InvitationList invitations={invitations} {...{ onClickRemove, createInvitationUrl, send }} />;
 };

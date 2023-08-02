@@ -5,11 +5,11 @@
 import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { DocumentModel, TypedObject, TextModel, PublicKey } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
 import { TreeViewItem, Searchbar } from '@dxos/react-appkit';
-import { useQuery } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
+import { DocumentModel, TypedObject, TextModel, useQuery } from '@dxos/react-client/echo';
 
 import { JsonView, MasterDetailTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';

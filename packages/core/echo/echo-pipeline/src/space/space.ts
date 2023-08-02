@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
-import { CredentialConsumer, FeedInfo } from '@dxos/credentials';
+import { FeedInfo } from '@dxos/credentials';
 import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
@@ -63,15 +63,12 @@ export class Space {
   private readonly _dataPipeline: DataPipeline;
   private readonly _snapshotManager: SnapshotManager;
 
-  // Processes epoch credentials.
-  private _dataPipelineCredentialConsumer?: CredentialConsumer<any> = undefined;
-
   private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
   constructor(params: SpaceParams) {
-    assert(params.spaceKey && params.feedProvider);
+    invariant(params.spaceKey && params.feedProvider);
     this._key = params.spaceKey;
     this._genesisFeedKey = params.genesisFeed.key;
     this._feedProvider = params.feedProvider;
@@ -181,14 +178,14 @@ export class Space {
   }
 
   setControlFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._controlFeed, 'Control feed already set.');
+    invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
     this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
   setDataFeed(feed: FeedWrapper<FeedMessage>) {
-    assert(!this._dataFeed, 'Data feed already set.');
+    invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     this._dataPipeline.pipeline?.setWriteFeed(feed);
     return this;
@@ -217,12 +214,7 @@ export class Space {
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
-
-    this._dataPipelineCredentialConsumer = this._controlPipeline.spaceState.registerProcessor(
-      this._dataPipeline.createCredentialProcessor(),
-    );
-
-    await this._dataPipelineCredentialConsumer.open();
+    await this._controlPipeline.spaceState.addCredentialProcessor(this._dataPipeline);
 
     this._isOpen = true;
     log('opened');
@@ -234,8 +226,7 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
-    await this._dataPipelineCredentialConsumer?.close();
-    this._dataPipelineCredentialConsumer = undefined;
+    await this._controlPipeline.spaceState.removeCredentialProcessor(this._dataPipeline);
 
     await this._dataPipeline.close();
 
@@ -250,7 +241,7 @@ export class Space {
   @synchronized
   async initializeDataPipeline() {
     log('initializeDataPipeline');
-    assert(this._isOpen, 'Space must be open to initialize data pipeline.');
+    invariant(this._isOpen, 'Space must be open to initialize data pipeline.');
     await this._dataPipeline.open();
   }
 }

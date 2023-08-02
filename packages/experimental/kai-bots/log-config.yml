@@ -1,6 +1,0 @@
-formatter:
-  column: 100
-
-filter:
-  - info
-  - kai-bots:debug

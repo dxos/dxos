@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/todomvc/src/index.ts",
         "outputPath": "packages/apps/todomvc/dist",
@@ -17,7 +17,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/todomvc/out/todomvc"
       },
@@ -28,10 +28,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/apps/todomvc",
         "outputPath": "tmp/playwright/packages/apps/todomvc",
         "playwrightConfigPath": "packages/apps/todomvc/src/playwright/playwright.config.ts",
@@ -54,7 +50,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -75,14 +71,14 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "todomvc:bundle",
         "staticFilePath": "packages/apps/todomvc/out/todomvc"
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "todomvc:bundle"
       }

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -51,6 +51,8 @@ export class DatabaseProxy {
   private _opening = false;
   private _open = false;
 
+  private _subscriptionOpen = false;
+
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
@@ -67,7 +69,7 @@ export class DatabaseProxy {
   }
 
   async open(modelFactory: ModelFactory): Promise<void> {
-    assert(!this._opening);
+    invariant(!this._opening);
     this._opening = true;
 
     this._itemManager._debugLabel = 'proxy';
@@ -82,10 +84,11 @@ export class DatabaseProxy {
 
     const loaded = new Trigger();
 
-    assert(!this._entities);
+    invariant(!this._entities);
     this._entities = this._service.subscribe({
       spaceKey: this._spaceKey,
     });
+    this._subscriptionOpen = true;
     this._entities.subscribe(
       async (msg) => {
         log('process', {
@@ -101,14 +104,15 @@ export class DatabaseProxy {
         if (msg.clientTag) {
           const batch = this._pendingBatches.get(msg.clientTag);
           if (batch) {
-            assert(msg.feedKey !== undefined);
-            assert(msg.seq !== undefined);
+            invariant(msg.feedKey !== undefined);
+            invariant(msg.seq !== undefined);
             batch.receipt = {
               feedKey: msg.feedKey,
               seq: msg.seq,
             };
             batch.receiptTrigger!.wake(batch.receipt);
             batch.processTrigger!.wake();
+            this._pendingBatches.delete(msg.clientTag);
           } else {
             // TODO(dmaretskyi): Mutations created by other tabs will also have the tag.
             // TODO(dmaretskyi): Just ignore the I guess.
@@ -126,6 +130,12 @@ export class DatabaseProxy {
         if (err) {
           log.warn('Connection closed', err);
         }
+
+        this._subscriptionOpen = false;
+        for (const batch of this._pendingBatches.values()) {
+          batch.processTrigger!.throw(new Error('Service connection closed'));
+        }
+        this._pendingBatches.clear();
       },
     );
 
@@ -135,14 +145,31 @@ export class DatabaseProxy {
     this._open = true;
   }
 
+  async close(): Promise<void> {
+    await this._ctx.dispose();
+
+    // NOTE: Must be before entities stream is closed so that confirmations can come in.
+    try {
+      await this.flush({ timeout: FLUSH_TIMEOUT });
+    } catch (err) {
+      log.error('timeout waiting for mutations to flush', {
+        timeout: FLUSH_TIMEOUT,
+        mutationTags: Array.from(this._pendingBatches.keys()),
+      });
+    }
+
+    await this._entities?.close();
+    this._entities = undefined;
+  }
+
   private _processMessage(batch: EchoObjectBatch, objectsUpdated: Item<any>[] = []) {
     for (const object of batch.objects ?? []) {
-      assert(object.objectId);
+      invariant(object.objectId);
 
       let entity: Item<any> | undefined;
       if (object.genesis && !this._itemManager.entities.has(object.objectId)) {
         log('construct', { object });
-        assert(object.genesis.modelType);
+        invariant(object.genesis.modelType);
         entity = this._itemManager.constructItem({
           itemId: object.objectId,
           modelType: object.genesis.modelType,
@@ -169,12 +196,12 @@ export class DatabaseProxy {
   }
 
   private _processOptimistic(objectMutation: EchoObject): Item<any> | undefined {
-    assert(objectMutation.objectId);
+    invariant(objectMutation.objectId);
 
     let entity: Item<any> | undefined;
     if (objectMutation.genesis && !this._itemManager.entities.has(objectMutation.objectId)) {
       log('construct optimistic', { object: objectMutation });
-      assert(objectMutation.genesis.modelType);
+      invariant(objectMutation.genesis.modelType);
       entity = this._itemManager.constructItem({
         itemId: objectMutation.objectId,
         modelType: objectMutation.genesis.modelType,
@@ -219,14 +246,15 @@ export class DatabaseProxy {
   }
 
   commitBatch() {
+    invariant(this._subscriptionOpen);
     const batch = this._currentBatch;
-    assert(batch);
+    invariant(batch);
     this._currentBatch = undefined;
 
-    assert(!batch.committing);
-    assert(!batch.processTrigger);
-    assert(batch.clientTag);
-    assert(!this._pendingBatches.has(batch.clientTag));
+    invariant(!batch.committing);
+    invariant(!batch.processTrigger);
+    invariant(batch.clientTag);
+    invariant(!this._pendingBatches.has(batch.clientTag));
 
     batch.processTrigger = new Trigger();
     batch.receiptTrigger = new Trigger();
@@ -244,6 +272,7 @@ export class DatabaseProxy {
           // No-op because the pipeline message will set the receipt.
         },
         (err) => {
+          log.warn('batch commit err', { err });
           batch.receiptTrigger!.throw(err);
         },
       );
@@ -252,7 +281,7 @@ export class DatabaseProxy {
   // TODO(dmaretskyi): Revert batch.
 
   mutate(batchInput: EchoObjectBatch): MutateResult {
-    assert(this._itemManager, 'Not open');
+    invariant(this._itemManager, 'Not open');
     if (this._ctx.disposed) {
       throw new Error('Database is closed');
     }
@@ -296,22 +325,5 @@ export class DatabaseProxy {
     } else {
       await promise;
     }
-  }
-
-  async close(): Promise<void> {
-    await this._ctx.dispose();
-
-    // NOTE: Must be before entities stream is closed so that confirmations can come in.
-    try {
-      await this.flush({ timeout: FLUSH_TIMEOUT });
-    } catch (err) {
-      log.error('timeout waiting for mutations to flush', {
-        timeout: FLUSH_TIMEOUT,
-        mutationTags: Array.from(this._pendingBatches.keys()),
-      });
-    }
-
-    await this._entities?.close();
-    this._entities = undefined;
   }
 }

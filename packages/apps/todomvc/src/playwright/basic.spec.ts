@@ -21,8 +21,6 @@ test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  // TODO(wittjosiah): Currently not running in Firefox.
-  //   https://bugzilla.mozilla.org/show_bug.cgi?id=1247687
   test.beforeAll(async ({ browser, browserName }) => {
     host = new AppManager(browser);
 
@@ -60,13 +58,13 @@ test.describe('Basic test', () => {
       if (browserName !== 'chromium') {
         return;
       }
+
       await guest.shell.createIdentity('guest');
       const invitationCode = await host.shell.createSpaceInvitation();
+      const authCode = await host.shell.getAuthCode();
+
       await guest.openJoinSpace();
-      const [authCode] = await Promise.all([
-        host.shell.getAuthCode(),
-        guest.shell.acceptSpaceInvitation(invitationCode),
-      ]);
+      await guest.shell.acceptSpaceInvitation(invitationCode);
       await guest.shell.authenticate(authCode);
       await host.shell.closeShell();
 

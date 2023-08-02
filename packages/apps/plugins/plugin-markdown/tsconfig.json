@@ -21,10 +21,13 @@
   ],
   "references": [
     {
-      "path": "../../../common/observable-object"
+      "path": "../../../common/async"
     },
     {
       "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-surface"
@@ -42,7 +45,19 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-intent"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"

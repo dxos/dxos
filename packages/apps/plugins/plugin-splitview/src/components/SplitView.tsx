@@ -7,15 +7,15 @@ import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
 import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
-import { observer } from '@dxos/observable-object/react';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
+import { SPLITVIEW_PLUGIN } from '../types';
 
-export const SplitView = observer(() => {
+export const SplitView = () => {
   const context = useSplitView();
   const { sidebarOpen, dialogOpen, dialogContent } = context;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
@@ -25,7 +25,7 @@ export const SplitView = observer(() => {
       <div
         role='none'
         className={mx(
-          'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-2 pointer-fine:p-1.5 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
+          'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-4 pointer-fine:p-1.5 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
           sidebarOpen && 'opacity-0 pointer-events-none',
         )}
       >
@@ -41,7 +41,7 @@ export const SplitView = observer(() => {
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
           <Dialog.Overlay>
-            {dialogContent === 'dxos:splitview/ProfileSettings' ? (
+            {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
               <Dialog.Content>
                 <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
                 <Surface role='dialog' data={dialogContent} />
@@ -61,4 +61,4 @@ export const SplitView = observer(() => {
       </Dialog.Root>
     </Main.Root>
   );
-});
+};

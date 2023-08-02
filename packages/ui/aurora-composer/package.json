@@ -1,6 +1,6 @@
 {
   "name": "@dxos/aurora-composer",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -56,11 +56,9 @@
     "y-codemirror.next": "^0.3.2",
     "y-prosemirror": "~1.0.20",
     "y-protocols": "^1.0.5",
-    "yjs": "^13.5.44"
+    "yjs": "^13.6.7"
   },
   "devDependencies": {
-    "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",
@@ -72,7 +70,6 @@
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

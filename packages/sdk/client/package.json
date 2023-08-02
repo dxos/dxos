@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,18 +14,81 @@
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
     },
+    "./devtools": {
+      "browser": "./dist/lib/browser/devtools/index.mjs",
+      "import": "./dist/lib/browser/devtools/index.mjs",
+      "require": "./dist/lib/node/devtools/index.cjs",
+      "node": "./dist/lib/node/devtools/index.cjs"
+    },
+    "./diagnostics": {
+      "browser": "./dist/lib/browser/diagnostics/index.mjs",
+      "import": "./dist/lib/browser/diagnostics/index.mjs",
+      "require": "./dist/lib/node/diagnostics/index.cjs",
+      "node": "./dist/lib/node/diagnostics/index.cjs"
+    },
+    "./echo": {
+      "browser": "./dist/lib/browser/echo/index.mjs",
+      "import": "./dist/lib/browser/echo/index.mjs",
+      "require": "./dist/lib/node/echo/index.cjs",
+      "node": "./dist/lib/node/echo/index.cjs"
+    },
+    "./halo": {
+      "browser": "./dist/lib/browser/halo/index.mjs",
+      "import": "./dist/lib/browser/halo/index.mjs",
+      "require": "./dist/lib/node/halo/index.cjs",
+      "node": "./dist/lib/node/halo/index.cjs"
+    },
+    "./invitations": {
+      "browser": "./dist/lib/browser/invitations/index.mjs",
+      "import": "./dist/lib/browser/invitations/index.mjs",
+      "require": "./dist/lib/node/invitations/index.cjs",
+      "node": "./dist/lib/node/invitations/index.cjs"
+    },
+    "./mesh": {
+      "browser": "./dist/lib/browser/mesh/index.mjs",
+      "import": "./dist/lib/browser/mesh/index.mjs",
+      "require": "./dist/lib/node/mesh/index.cjs",
+      "node": "./dist/lib/node/mesh/index.cjs"
+    },
+    "./services": {
+      "browser": "./dist/lib/browser/services/index.mjs",
+      "import": "./dist/lib/browser/services/index.mjs",
+      "require": "./dist/lib/node/services/index.cjs",
+      "node": "./dist/lib/node/services/index.cjs"
+    },
     "./testing": {
-      "browser": "./dist/lib/browser/packlets/testing/index.mjs",
-      "import": "./dist/lib/browser/packlets/testing/index.mjs",
-      "require": "./dist/lib/node/packlets/testing/index.cjs",
-      "node": "./dist/lib/node/packlets/testing/index.cjs"
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "import": "./dist/lib/browser/testing/index.mjs",
+      "require": "./dist/lib/node/testing/index.cjs",
+      "node": "./dist/lib/node/testing/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "devtools": [
+        "dist/types/src/devtools/index.d.ts"
+      ],
+      "diagnostics": [
+        "dist/types/src/diagnostics/index.d.ts"
+      ],
+      "echo": [
+        "dist/types/src/echo/index.d.ts"
+      ],
+      "halo": [
+        "dist/types/src/halo/index.d.ts"
+      ],
+      "invitations": [
+        "dist/types/src/invitations/index.d.ts"
+      ],
+      "mesh": [
+        "dist/types/src/mesh/index.d.ts"
+      ],
+      "services": [
+        "dist/types/src/services/index.d.ts"
+      ],
       "testing": [
-        "dist/types/src/packlets/testing/index.d.ts"
+        "dist/types/src/testing/index.d.ts"
       ]
     }
   },
@@ -34,7 +97,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "dxtype src/packlets/proto/schema.proto src/packlets/proto/gen/schema.ts"
+    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -48,7 +111,6 @@
     "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -64,12 +126,14 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "debug": "^4.3.3",
     "lodash.isequal": "^4.5.0",
-    "lodash.isequalwith": "^4.4.0"
+    "lodash.isequalwith": "^4.4.0",
+    "tiny-invariant": "^1.3.1"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/echo-typegen": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

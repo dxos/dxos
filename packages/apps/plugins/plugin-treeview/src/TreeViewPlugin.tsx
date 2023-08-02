@@ -2,70 +2,70 @@
 // Copyright 2023 DXOS.org
 //
 
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { useGraphContext } from '@braneframe/plugin-graph';
-import { createStore } from '@dxos/observable-object';
-import { observer } from '@dxos/react-client';
-import { PluginDefinition, Surface } from '@dxos/react-surface';
+import { GraphNode, useGraph } from '@braneframe/plugin-graph';
+import { PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { TreeViewContainer } from './components';
+import { Fallback, TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
-import { TreeViewContextValue, TreeViewProvides } from './types';
+import translations from './translations';
+import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
 import { resolveNodes } from './util';
 
-export const TREE_VIEW_PLUGIN = 'dxos:treeview';
-
-export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
-  const store = createStore<TreeViewContextValue>({ selected: [] });
+export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
+  const state = deepSignal<TreeViewContextValue>({ active: [] });
 
   return {
     meta: {
       id: TREE_VIEW_PLUGIN,
     },
     provides: {
-      treeView: store,
+      treeView: state,
       context: ({ children }) => {
-        return <TreeViewContext.Provider value={store}>{children}</TreeViewContext.Provider>;
+        return <TreeViewContext.Provider value={state}>{children}</TreeViewContext.Provider>;
       },
       components: {
-        default: observer(() => {
+        default: () => {
+          const { plugins } = usePluginContext();
           const treeView = useTreeView();
-          const graph = useGraphContext();
-          const [plugin] = treeView.selected[0]?.split('/') ?? [];
-          const nodes = resolveNodes(graph.roots[plugin] ?? [], treeView.selected);
+          const { graph } = useGraph();
+          const [shortId, component] = treeView.active[0]?.split('/') ?? [];
+          const plugin = findPlugin(plugins, shortId);
+          const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
 
-          if (treeView.selected.length === 0) {
+          if (plugin && plugin.provides.components?.[component]) {
+            return <Surface component={`${plugin.meta.id}/${component}`} />;
+          } else if (active.length > 0) {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: 'dxos:splitview/SplitViewMainContentEmpty' },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: `${shortId}/Main`, fallback: Fallback, data: { active } },
                 }}
               />
             );
-          } else if (nodes.length === 0) {
-            return <Surface component={`${plugin}/Main`} />;
           } else {
             return (
               <Surface
-                component='dxos:splitview/SplitView'
+                component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
-                  sidebar: { component: 'dxos:treeview/TreeView' },
-                  main: { component: `${plugin}/Main`, data: nodes },
+                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+                  main: { component: 'dxos.org/plugin/splitview/SplitViewMainContentEmpty' },
                 }}
               />
             );
           }
-        }),
+        },
         TreeView: TreeViewContainer,
       },
-      component: (datum, role) => {
+      component: (data, role) => {
         switch (role) {
           case 'dragoverlay':
-            if (!!datum && typeof datum === 'object' && 'id' in datum && 'label' in datum && 'index' in datum) {
+            if (!!data && typeof data === 'object' && 'id' in data && 'label' in data && 'index' in data) {
               return TreeItemDragOverlay;
             } else {
               return null;
@@ -74,6 +74,20 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewProvides> => {
             return null;
         }
       },
+      intent: {
+        resolver: (intent) => {
+          switch (intent.action) {
+            case TreeViewAction.ACTIVATE: {
+              if (Array.isArray(intent.data)) {
+                state.active = intent.data;
+                return true;
+              }
+              break;
+            }
+          }
+        },
+      },
+      translations,
     },
   };
 };

@@ -11,6 +11,8 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ComplexSet } from '@dxos/util';
 
+const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
+
 export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>
   async (nonce) => {
@@ -22,7 +24,7 @@ export const createAuthProvider =
       nonce,
     });
 
-    return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);
+    return Credential.encode(credential);
   };
 
 export type TrustedKeySetAuthVerifierParams = {
@@ -53,7 +55,7 @@ export class TrustedKeySetAuthVerifier {
 
   get verifier(): AuthVerifier {
     return async (nonce, auth) => {
-      const credential = schema.getCodecForType('dxos.halo.credentials.Credential').decode(auth);
+      const credential = Credential.decode(auth);
       log('authenticating...', { credential });
 
       const result = await verifyCredential(credential);

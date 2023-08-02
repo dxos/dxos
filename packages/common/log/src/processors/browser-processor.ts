@@ -53,11 +53,11 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   let link = '';
   if (entry.meta) {
-    const filename = getRelativeFilename(entry.meta.file);
+    const filename = getRelativeFilename(entry.meta.F);
     const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
     // TODO(burdon): Line numbers not working for app link, even with colons.
     //   https://stackoverflow.com/a/54459820/2804332
-    link = `${filepath}#L${entry.meta.line}`;
+    link = `${filepath}#L${entry.meta.L}`;
   }
 
   let args = [];
@@ -83,8 +83,8 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   const level = levels[entry.level] ?? console.log;
-  if (typeof entry.meta?.callSite === 'function') {
-    entry.meta.callSite(level, args);
+  if (typeof entry.meta?.C === 'function') {
+    entry.meta.C(level, args);
   } else {
     level(...args);
   }
@@ -100,7 +100,7 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   let path = '';
   if (entry.meta) {
-    path = `${getRelativeFilename(entry.meta.file)}:${entry.meta.line}`;
+    path = `${getRelativeFilename(entry.meta.F)}:${entry.meta.L}`;
   }
 
   let args = [];
@@ -122,8 +122,8 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   const level = levels[entry.level] ?? console.log;
-  if (typeof entry.meta?.callSite === 'function') {
-    entry.meta.callSite(level, args);
+  if (typeof entry.meta?.C === 'function') {
+    entry.meta.C(level, args);
   } else {
     level(...args);
   }

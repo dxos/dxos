@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { composeContext } from './Context';
-import { Plugin, PluginDefinition } from './Plugin';
+import { Plugin, PluginDefinition, PluginProvides } from './Plugin';
 
 export type PluginContextValue = {
   plugins: Plugin[];
@@ -21,7 +21,16 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
   const [plugins, setPlugins] = useState<Plugin[]>();
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const plugins = await Promise.all(definitions.map(initializePlugin));
+      const plugins = await Promise.all(
+        definitions.map(async (definition) => {
+          try {
+            return initializePlugin(definition);
+          } catch (err) {
+            console.error('Failed to initialize plugin:', definition.meta.id, err);
+            return undefined;
+          }
+        }),
+      ).then((plugins) => plugins.filter((plugin): plugin is Plugin => Boolean(plugin)));
       await Promise.all(definitions.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
       setPlugins(plugins);
     });
@@ -46,7 +55,7 @@ export const PluginContextProvider = ({ plugins: definitions }: { plugins: Plugi
   );
 };
 
-const initializePlugin = async (pluginDefinition: PluginDefinition): Promise<Plugin> => {
+export const initializePlugin = async <T, U>(pluginDefinition: PluginDefinition<T, U>): Promise<Plugin<T & U>> => {
   const provides = await pluginDefinition.init?.();
   return {
     ...pluginDefinition,
@@ -54,7 +63,7 @@ const initializePlugin = async (pluginDefinition: PluginDefinition): Promise<Plu
     provides: {
       ...pluginDefinition.provides,
       ...provides,
-    },
+    } as PluginProvides<T & U>,
   };
 };
 

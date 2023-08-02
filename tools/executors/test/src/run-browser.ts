@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import chalk from 'chalk';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';

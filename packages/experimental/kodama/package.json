@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kodama",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "private": true,
   "description": "Interactive DXOS shell.",
   "homepage": "https://dxos.org",
@@ -26,12 +26,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "chalk": "^4.1.0",

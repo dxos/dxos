@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { group, getSize, mx } from '@dxos/aurora-theme';
-import { Invitation, CancellableInvitationObservable } from '@dxos/client';
-import { useInvitationStatus } from '@dxos/react-client';
+import { Invitation, CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
 
 import { Avatar } from '../Avatar';
 import { HeadingWithActions } from '../HeadingWithActions';

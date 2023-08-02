@@ -37,7 +37,8 @@ To insert an object into an ECHO space, simply construct it and call the `add` m
 Without strong types, the generic `Expando` class can be used:
 
 ```tsx file=./snippets/create-objects.ts#L5-
-import { Client, Expando } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Expando } from '@dxos/client/echo';
 
 const client = new Client();
 

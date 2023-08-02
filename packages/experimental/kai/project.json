@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/experimental/kai/src/index.ts",
         "outputPath": "packages/experimental/kai/dist/types",
@@ -14,7 +14,7 @@
       ]
     },
     "bundle": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "inputs": [
         {
           "env": "CONFIG_DYNAMIC"
@@ -56,10 +56,6 @@
     "e2e": {
       "executor": "@dxos/test:run",
       "options": {
-        "ciEnvironments": [
-          "chromium",
-          "webkit"
-        ],
         "coveragePath": "coverage/packages/experimental/kai",
         "outputPath": "tmp/playwright/packages/experimental/kai",
         "playwrightConfigPath": "packages/experimental/kai/src/playwright/playwright.config.ts",
@@ -82,7 +78,7 @@
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "format": "unix",
         "lintFilePatterns": [
@@ -94,14 +90,14 @@
       ]
     },
     "preview": {
-      "executor": "@nrwl/web:file-server",
+      "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "kai:bundle",
         "staticFilePath": "packages/experimental/kai/out/kai"
       }
     },
     "serve": {
-      "executor": "@nrwl/vite:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "kai:bundle"
       }
@@ -115,7 +111,7 @@
           "quiet": true
         }
       },
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "packages/experimental/kai/.storybook",
         "uiFramework": "@storybook/react"

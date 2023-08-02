@@ -6,7 +6,8 @@ next: ./tutorial
 
 # Quick Start Guide
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. 
+This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -17,15 +17,15 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "compress-json": "^2.1.2",
-    "debug": "^4.3.3",
     "lodash.merge": "^4.6.2",
-    "protobufjs": "^7.2.2"
+    "protobufjs": "^7.2.2",
+    "tiny-invariant": "^1.3.1"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
     "@types/lodash.merge": "^4.6.6"
   },
   "publishConfig": {

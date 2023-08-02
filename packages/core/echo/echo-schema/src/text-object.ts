@@ -7,6 +7,8 @@ import { TextModel, type YText, type YXmlFragment, type Doc } from '@dxos/text-m
 
 import { EchoObject } from './object';
 
+// TODO(burdon): This can be used as a general YJS document (e.g., by the drawing-plugin).
+//  So rethink how we expose this.
 export class Text extends EchoObject<TextModel> {
   // TODO(burdon): Change to object.
   constructor(text?: string, kind?: TextKind, field?: string) {
@@ -39,7 +41,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   get doc(): Doc | undefined {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model?.doc;
   }
 
@@ -48,7 +50,7 @@ export class Text extends EchoObject<TextModel> {
   }
 
   get model(): TextModel | undefined {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model;
   }
 
@@ -56,7 +58,7 @@ export class Text extends EchoObject<TextModel> {
    * Returns the text content of the object.
    */
   get text(): string {
-    this._database?._logObjectAccess(this);
+    this._signal?.notifyRead();
     return this._model.textContent;
   }
 
@@ -69,10 +71,15 @@ export class Text extends EchoObject<TextModel> {
   }
 
   protected override _afterBind() {
+    // log.info('_afterBind', { id: this.id });
     this._model.initialize();
   }
 
   override _itemUpdate(): void {
+    // log.info('_itemUpdate', { id: this.id });
+    // TODO(wittjosiah): This stops yjs updates from working.
+    // super._itemUpdate();
     this._model.initialize();
+    this._signal?.notifyWrite();
   }
 }

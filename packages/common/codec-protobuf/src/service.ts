@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
 import pb from 'protobufjs';
+import invariant from 'tiny-invariant';
 
 import { getAsyncValue } from '@dxos/util';
 
@@ -61,9 +61,9 @@ export class Service {
   ) {
     for (const method of service.methodsArray) {
       method.resolve();
-      assert(method.resolvedRequestType);
-      assert(method.resolvedResponseType);
-      assert(!method.requestStream, 'Streaming RPC requests are not supported.');
+      invariant(method.resolvedRequestType);
+      invariant(method.resolvedResponseType);
+      invariant(!method.requestStream, 'Streaming RPC requests are not supported.');
 
       // TODO(dmaretskyi): What about primitive types.
       const requestCodec = schema.tryGetCodecForType(method.resolvedRequestType.fullName);
@@ -114,8 +114,8 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
    */
   async call(methodName: string, request: Any): Promise<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
-    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
-    assert(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
+    invariant(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
+    invariant(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
     const mappedMethodName = mapRpcMethodName(methodName);
 
@@ -135,8 +135,8 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
    */
   callStream(methodName: string, request: Any): Stream<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
-    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
-    assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
+    invariant(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
+    invariant(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
     const mappedMethodName = mapRpcMethodName(methodName);
     const handlerPromise = this._getHandler(mappedMethodName);
@@ -157,17 +157,17 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   private async _getHandler(method: string): Promise<(request: unknown) => unknown> {
     const service: S = await getAsyncValue(this._serviceProvider);
     const handler = service[method as keyof S];
-    assert(handler, `Handler is missing: ${method}`);
+    invariant(handler, `Handler is missing: ${method}`);
     return (handler as any).bind(service);
   }
 
   private _getMethodInfo(methodName: string) {
     const method = this._serviceDefinition.methods[methodName];
-    assert(!!method, `Method not found: ${methodName}`);
+    invariant(!!method, `Method not found: ${methodName}`);
 
     method.resolve();
-    assert(method.resolvedRequestType);
-    assert(method.resolvedResponseType);
+    invariant(method.resolvedRequestType);
+    invariant(method.resolvedResponseType);
 
     const requestCodec = this._schema.tryGetCodecForType(method.resolvedRequestType.fullName);
     const responseCodec = this._schema.tryGetCodecForType(method.resolvedResponseType.fullName);

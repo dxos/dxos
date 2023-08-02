@@ -1,26 +1,13 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "outDir": "dist/types"
   },
   "include": [
+    "config",
     "src"
   ],
   "references": [
-    {
-      "path": "../../apps/types"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
-    },
     {
       "path": "../../common/log"
     },
@@ -28,10 +15,7 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/protocols"
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../sdk/client"
@@ -40,16 +24,7 @@
       "path": "../../sdk/client-services"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/errors"
-    },
-    {
-      "path": "../chess-app"
-    },
-    {
-      "path": "../kai-types"
+      "path": "../kai-functions"
     }
   ]
 }

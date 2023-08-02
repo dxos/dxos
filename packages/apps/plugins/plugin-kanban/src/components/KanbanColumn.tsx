@@ -10,15 +10,16 @@ import React, { FC } from 'react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { chromeSurface, getSize, groupSurface, mx } from '@dxos/aurora-theme';
 
+import { KANBAN_PLUGIN } from '../types';
 import { KanbanItemComponent } from './KanbanItem';
 import { useSubscription } from './util';
 
 export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('delete column label')}</span>
@@ -28,7 +29,7 @@ const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
 };
 
 const AddItem = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
     <Button variant='ghost' onClick={onClick} classNames='plb-0 pli-0.5 -mlb-1'>
       <span className='sr-only'>{t('add item label')}</span>
@@ -39,9 +40,9 @@ const AddItem = ({ onClick }: { onClick: () => void }) => {
 
 // TODO(burdon): Factor out container.
 export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ onAdd }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
   return (
-    <div className='flex flex-col justify-center shadow rounded w-80 h-80 bg-neutral-50 dark:bg-neutral-900'>
+    <div className={mx('flex flex-col justify-center shadow rounded w-[300px] h-[300px]', groupSurface)}>
       <Button variant='ghost' onClick={onAdd} classNames='plb-0 pli-0.5 -mlb-1'>
         <span className='sr-only'>{t('add column label')}</span>
         <Plus className={getSize(6)} />
@@ -57,8 +58,9 @@ export const KanbanColumnComponent: FC<{
   onCreate?: (column: KanbanType.Column) => KanbanType.Item;
   onDelete?: () => void;
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
-  const { t } = useTranslation('dxos.org/plugin/kanban');
+  const { t } = useTranslation(KANBAN_PLUGIN);
 
+  // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
   const items = itemMapper?.(column.id!, column.items!) ?? column.items!;
 
@@ -92,8 +94,8 @@ export const KanbanColumnComponent: FC<{
       {/* TODO(burdon): Width approx mobile phone width. */}
       <div
         className={mx(
-          'flex flex-col py-2 overflow-hidden shadow rounded w-80 min-h-[320px] bg-neutral-50 dark:bg-neutral-900',
-          isDragging && 'bg-neutral-100 dark:bg-neutral-800',
+          'flex flex-col py-2 overflow-hidden shadow rounded w-[300px] min-h-[300px]',
+          isDragging ? chromeSurface : groupSurface,
         )}
       >
         <div className='flex items-center mb-2 px-2'>

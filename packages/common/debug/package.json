@@ -1,6 +1,6 @@
 {
   "name": "@dxos/debug",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "description": "Debug utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,11 +16,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "debug": "^4.3.3"
-  },
-  "devDependencies": {
-    "@types/debug": "^4.1.7"
+    "@dxos/node-std": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

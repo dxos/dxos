@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
@@ -23,12 +23,14 @@ export class Batch {
   }
 
   getReceipt(): Promise<MutationReceipt> {
-    assert(this.receiptTrigger);
+    invariant(this.receiptTrigger);
     return this.receiptTrigger.wait();
   }
 
   waitToBeProcessed(): Promise<void> {
-    assert(this.processTrigger);
-    return this.processTrigger.wait();
+    invariant(this.receiptTrigger);
+    invariant(this.processTrigger);
+    // Waiting on receipt trigger to catch write errors.
+    return Promise.all([this.processTrigger.wait(), this.receiptTrigger.wait()]).then(() => {});
   }
 }

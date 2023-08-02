@@ -3,12 +3,12 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { ComponentProps, useMemo, useRef, useState } from 'react';
+import { ComponentProps, useMemo } from 'react';
 import * as awarenessProtocol from 'y-protocols/awareness';
 
-import { Identity, Space, Text } from '@dxos/client';
-import { useSubscription } from '@dxos/react-client';
-import type { Doc, YText, YXmlFragment } from '@dxos/text-model';
+import { Space, Text } from '@dxos/react-client/echo';
+import { Identity } from '@dxos/react-client/halo';
+import type { YText, YXmlFragment } from '@dxos/text-model';
 
 import { SpaceAwarenessProvider } from './yjs';
 
@@ -46,17 +46,6 @@ export type UseTextModelOptions = {
 // TODO(wittjosiah): Factor out to common package? @dxos/react-client?
 // TODO(burdon): Decouple space (make Composer less dependent on entire stack)?
 export const useTextModel = ({ identity, space, text }: UseTextModelOptions): ComposerModel | undefined => {
-  const prevDocRef = useRef<Doc | undefined>(text?.doc);
-  const [, setState] = useState([]);
-  const forceUpdate = () => setState([]);
-
-  useSubscription(() => {
-    if (prevDocRef.current !== text?.doc) {
-      prevDocRef.current = text?.doc;
-      forceUpdate();
-    }
-  }, [text]);
-
   const provider = useMemo(() => {
     if (!space || !text?.doc) {
       return undefined;

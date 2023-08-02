@@ -10,7 +10,10 @@ export default class Config extends BaseCommand<typeof Config> {
 
   async run(): Promise<any> {
     const { config: configFile } = this.flags;
-    this.log(`Config file: ${configFile}\n${JSON.stringify(this.clientConfig?.values, undefined, 2)}`);
+    if (this.flags.verbose) {
+      this.log(`Config file: ${configFile}\n${JSON.stringify(this.clientConfig?.values, undefined, 2)}`);
+    }
+
     return this.clientConfig?.values;
   }
 }

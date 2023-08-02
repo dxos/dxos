@@ -51,7 +51,8 @@ export default defineConfig({
       extensions: [osThemeExtension, consoleThemeExtension],
     }),
 
-    ReactPlugin(),
+    // https://github.com/preactjs/signals/issues/269
+    ReactPlugin({ jsxRuntime: 'classic' }),
 
     /**
      * Bundle fonts.
