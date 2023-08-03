@@ -5,9 +5,12 @@
 import { Args, Flags } from '@oclif/core';
 
 import { Client } from '@dxos/client';
+import { Expando } from '@dxos/client/echo';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace } from '../../util';
+import { Random, selectSpace } from '../../util';
+
+const random = new Random();
 
 // TODO(burdon): Testing plugin (vs. debug)?
 export default class Generate extends BaseCommand<typeof Generate> {
@@ -20,9 +23,11 @@ export default class Generate extends BaseCommand<typeof Generate> {
     ...BaseCommand.flags,
     objects: Flags.integer({
       description: 'Number of objects.',
+      default: 0,
     }),
     mutations: Flags.integer({
       description: 'Number of mutations.',
+      default: 0,
     }),
   };
 
@@ -39,9 +44,23 @@ export default class Generate extends BaseCommand<typeof Generate> {
         this.error('Invalid key');
       }
 
-      // TODO(burdon): Generate N documents.
-      // TODO(burdon): Generate N mutations (see debug plugin).
       await space.waitUntilReady();
+
+      // TODO(burdon): Command to list objects.
+      for (let i = 0; i < this.flags.objects; i++) {
+        console.log('Generating object...');
+        // TODO(burdon): @type is undefined.
+        // TODO(burdon): @model is dxos:model/document.
+        space?.db.add(new Expando({ type: 'test', title: random.word() }));
+      }
+
+      const { objects } = space?.db.query({ type: 'test' });
+      if (objects.length) {
+        for (let i = 0; i < this.flags.mutations; i++) {
+          const object = random.element(objects);
+          object.title = random.word();
+        }
+      }
     });
   }
 }
