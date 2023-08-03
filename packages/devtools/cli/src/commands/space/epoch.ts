@@ -18,7 +18,7 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
     ...ux.table.flags(),
   };
 
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override args = { key: Args.string({ description: 'Space key head in hex.', required: true }) };
 
   async run(): Promise<any> {
     let { key } = this.args;
@@ -38,7 +38,6 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
       }
 
       await space.waitUntilReady();
-
       await space.internal.createEpoch();
     });
   }
