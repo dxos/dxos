@@ -27,12 +27,8 @@ export default class Share extends BaseCommand<typeof Share> {
         this.error('Invalid key');
       }
 
-<<<<<<< HEAD:packages/devtools/cli/src/commands/space/invite.ts
-      await space.waitUntilReady();
-=======
       await waitForSpace(space, (err) => this.error(err));
 
->>>>>>> origin/main:packages/devtools/cli/src/commands/space/share.ts
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({
         observable,

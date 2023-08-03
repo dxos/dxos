@@ -9,11 +9,6 @@ import { BaseCommand } from '../../base-command';
 export default class Shell extends BaseCommand<typeof Shell> {
   static override description = 'Interactive shell.';
 
-  // BaseCommand handler is also called.
-  override async catch() {
-    void this.run();
-  }
-
   async run(): Promise<void> {
     while (true) {
       // https://github.com/oclif/cli-ux

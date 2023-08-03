@@ -7,7 +7,7 @@ import { Args, ux } from '@oclif/core';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace } from '../../util';
+import { selectSpace, waitForSpace } from '../../util';
 
 export default class Epoch extends BaseCommand<typeof Epoch> {
   static override enableJsonFlag = true;
@@ -31,7 +31,7 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
         this.error('Invalid key');
       }
 
-      await space.waitUntilReady();
+      await waitForSpace(space, (err) => this.error(err));
       await space.internal.createEpoch();
     });
   }

@@ -12,7 +12,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Daemon, ForeverDaemon } from '@dxos/agent';
+import { AgentWaitTimeoutError, Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import {
   DX_CONFIG,
@@ -30,6 +30,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -108,7 +109,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Auto-start agent.',
+      description: 'Run command without agent.',
       default: false,
     }),
 
@@ -286,14 +287,28 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
-    super.error(err, options as any);
-  }
-
-  override async catch(err: Error, options?: any) {
     // Will only submit if API key exists (i.e., prod).
-    super.error(err, options as any);
+    Sentry.captureException(err);
+
     this._failing = true;
-    throw err;
+
+    if (this.flags.verbose) {
+      // NOTE: Default method displays stack trace. And exits the process.
+      super.error(err, options as any);
+      return;
+    }
+
+    // Convert known errors to human readable messages.
+    if (err instanceof SpaceWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error: Hit timeout waiting for space to be ready. Space is still replicating.}`);
+    } else if (err instanceof AgentWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error: Agent is stale, you can restart it with \n'dx agent restart --force'}`);
+    } else {
+      // Handle unknown errors with default method.
+      super.error(err, options as any);
+      return;
+    }
+    this.exit();
   }
 
   /**
