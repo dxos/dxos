@@ -176,6 +176,7 @@ enum SpaceState {
   ERROR = 5;
 }
 
+// TODO(burdon): Rename SpaceInfo?
 message Space {
   message Metrics {
     optional google.protobuf.Timestamp open = 1;
