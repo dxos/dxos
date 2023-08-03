@@ -12,23 +12,21 @@ import { mapMembers, printMembers } from '../../util';
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
   static override description = 'List space members.';
+  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
   static override flags = {
     ...BaseCommand.flags,
     ...ux.table.flags(),
   };
 
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
-
   async run(): Promise<any> {
-    const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const space = await this.getSpace(client, key);
+      const space = await this.getSpace(client, this.args.key);
       const members = space.members.get();
-      if (!this.flags.json) {
+      if (this.flags.json) {
+        return mapMembers(members);
+      } else {
         printMembers(members, this.flags);
       }
-
-      return mapMembers(members);
     });
   }
 }

@@ -64,7 +64,7 @@ export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateK
 
 export const printSpaces = (spaces: Space[], flags: any = {}) => {
   ux.table(
-    mapSpaces(spaces, { verbose: flags.verbose, truncateKeys: true }),
+    mapSpaces(spaces, { ...flags, truncateKeys: true }),
     {
       key: {
         header: 'key',
@@ -87,7 +87,7 @@ export const printSpaces = (spaces: Space[], flags: any = {}) => {
       },
     },
     {
-      extended: flags.verbose,
+      ...flags,
     },
   );
 };

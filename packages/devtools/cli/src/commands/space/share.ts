@@ -7,6 +7,7 @@ import chalk from 'chalk';
 
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
 import { hostInvitation } from '../../util';
@@ -21,7 +22,7 @@ export default class Share extends BaseCommand<typeof Share> {
       const space = await this.getSpace(client, key);
 
       // TODO(burdon): Timeout error not propagated.
-      const observable = space!.createInvitation(); // ({ timeout: 5000 });
+      const observable = space!.createInvitation({ authMethod: Invitation.AuthMethod.NONE, timeout: 5000 });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {

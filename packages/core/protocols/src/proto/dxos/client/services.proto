@@ -284,7 +284,7 @@ service SpacesService {
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
-  /// Broadcast an emphemeral message to the space swarm.
+  /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
   /// Subscribe to messages from the space swarm.
   rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
@@ -320,7 +320,7 @@ message Invitation {
   }
 
   enum AuthMethod {
-    /// No authnetication is required. Guest should not call `Authenticate`.
+    /// No authentication is required. Guest should not call `Authenticate`.
     NONE = 0;
 
     /// Guest should call `Authenticate` with the shared secret.

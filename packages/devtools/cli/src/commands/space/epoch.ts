@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, ux } from '@oclif/core';
+import { Args } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
@@ -11,11 +11,6 @@ import { BaseCommand } from '../../base-command';
 export default class Epoch extends BaseCommand<typeof Epoch> {
   static override enableJsonFlag = true;
   static override description = 'Create new epoch.';
-  static override flags = {
-    ...BaseCommand.flags,
-    ...ux.table.flags(),
-  };
-
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {

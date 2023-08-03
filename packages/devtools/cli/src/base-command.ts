@@ -311,6 +311,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       super.error(err, options as any);
       return;
     }
+
     this.exit();
   }
 
