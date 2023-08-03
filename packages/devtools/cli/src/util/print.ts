@@ -123,6 +123,7 @@ export const printSpaces = (spaces: Space[], flags: any = {}) => {
       },
       progress: {
         header: 'progress',
+        // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
         // get: (spaceInfo) => {
         //   let progressValue = +spaceInfo.progress;
         //   const subscription = spaces[0].pipeline.subscribe({
