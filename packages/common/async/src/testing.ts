@@ -14,12 +14,17 @@ import { Trigger } from './trigger';
  * @param [timeout] How long to wait, in milliseconds (0 = no timeout).
  * @param [interval=10] How frequently to check, in milliseconds.
  */
-export const waitForCondition = <FunctionType extends (...args: any) => any>(
-  condition: FunctionType,
+export const waitForCondition = <FunctionType extends (...args: any) => any>({
+  condition,
   timeout = 0,
   interval = 10,
-  error?: Error,
-) => {
+  error,
+}: {
+  condition: FunctionType;
+  timeout?: number;
+  interval?: number;
+  error?: Error;
+}) => {
   const stopTime = timeout ? Date.now() + timeout : 0;
   const trigger = new Trigger<ReturnType<FunctionType>>();
   const waiter = async () => {

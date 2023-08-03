@@ -44,7 +44,7 @@ describe('Halo', () => {
       afterTest(() => client.destroy());
       await client.initialize();
 
-      await waitForCondition(() => !!client.halo.identity);
+      await waitForCondition({ condition: () => !!client.halo.identity });
       expect(client.halo.identity).exist;
       // TODO(burdon): Not working.
       // expect(client.halo.identity!.displayName).to.eq('test-user');

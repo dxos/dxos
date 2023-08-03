@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, parseAddress, removeSocketFile } from '../util';
 
 /**
@@ -109,12 +110,18 @@ export class ForeverDaemon implements Daemon {
       try {
         // Wait for socket file to appear.
         {
-          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT, CHECK_INTERVAL);
-          await waitForCondition(
-            () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
-            DAEMON_START_TIMEOUT,
-            CHECK_INTERVAL,
-          );
+          await waitForCondition({
+            condition: async () => await this.isRunning(profile),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
+          await waitForCondition({
+            condition: () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
         }
 
         // Check if agent is initialized.
@@ -162,7 +169,12 @@ export class ForeverDaemon implements Daemon {
         }
       });
 
-    await waitForCondition(async () => !(await this.isRunning(profile)), DAEMON_STOP_TIMEOUT, CHECK_INTERVAL);
+    await waitForCondition({
+      condition: async () => !(await this.isRunning(profile)),
+      timeout: DAEMON_STOP_TIMEOUT,
+      interval: CHECK_INTERVAL,
+      error: new AgentWaitTimeoutError(),
+    });
 
     removeSocketFile(profile);
     return proc;
