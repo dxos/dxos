@@ -7,6 +7,7 @@ import { Space } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
+import { SpaceWaitTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
 
 export const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
@@ -45,7 +46,7 @@ export const selectSpace = async (spaces: Space[]) => {
 
 export const waitForSpace = async (space: Space, exceptionHandler?: (err: Error) => void) => {
   try {
-    await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new Error('Timeout waiting for space to be ready.'));
+    await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new SpaceWaitTimeoutError());
   } catch (err: any) {
     if (exceptionHandler) {
       exceptionHandler(err);
