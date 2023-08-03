@@ -13,6 +13,7 @@ import { Random, selectSpace } from '../../util';
 const random = new Random();
 
 // TODO(burdon): Testing plugin (vs. debug)?
+// TODO(burdon): Disable unless NODE_ENV=development?
 export default class Generate extends BaseCommand<typeof Generate> {
   static override enableJsonFlag = true;
   static override description = 'Generate test data.';
