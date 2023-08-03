@@ -4,11 +4,10 @@
 
 import { Args } from '@oclif/core';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
+import { waitForSpace } from '../../util';
 
 export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
@@ -19,7 +18,7 @@ export default class Create extends BaseCommand<typeof Create> {
     const { name } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await client.createSpace();
-      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+      await waitForSpace(space, (err) => this.error(err));
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),

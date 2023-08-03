@@ -23,14 +23,17 @@ export default class Reset extends BaseCommand<typeof Reset> {
 
   async run(): Promise<any> {
     const profile = this.flags.profile;
-
     const paths = [
-      path.join(DX_CACHE, profile),
-      path.join(DX_DATA, profile),
-      path.join(DX_STATE, profile),
-      path.join(DX_RUNTIME, profile),
-      this.clientConfig?.get('runtime.client.storage.path'),
-    ].filter(Boolean) as string[];
+      ...new Set<string>(
+        [
+          path.join(DX_CACHE, profile),
+          path.join(DX_DATA, profile),
+          path.join(DX_STATE, profile),
+          path.join(DX_RUNTIME, profile),
+          this.clientConfig?.get('runtime.client.storage.path'), // TODO(burdon): Duplicate of DX_RUNTIME?
+        ].filter(Boolean) as string[],
+      ),
+    ];
 
     const dryRun =
       this.flags['dry-run'] ||
@@ -39,8 +42,11 @@ export default class Reset extends BaseCommand<typeof Reset> {
     if (!dryRun) {
       // TODO(burdon): Problem if running manually.
       await this.execWithDaemon(async (daemon) => daemon.stop(this.flags.profile, { force: this.flags.force }));
+      if (this.flags.verbose) {
+        this.log(chalk`{red Deleting files...}`);
+        paths.forEach((path) => this.log(`- ${path}`));
+      }
 
-      this.log(chalk`{red Deleting files...}`);
       paths.forEach((path) => {
         fs.rmSync(path, { recursive: true, force: true });
       });

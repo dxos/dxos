@@ -1,22 +1,20 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { Args, ux } from '@oclif/core';
+import { Args } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { selectSpace, waitForSpace } from '../../util';
 
-export default class Epoch extends BaseCommand<typeof Epoch> {
+export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
-  static override description = 'Create new epoch.';
-  static override flags = {
-    ...BaseCommand.flags,
-    ...ux.table.flags(),
-  };
+  static override description = 'Query database.';
 
+  // TODO(burdon): Implement basic predicates.
+  // TODO(burdon): Standardize and factor out selector.
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
@@ -33,7 +31,21 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
 
       await waitForSpace(space, (err) => this.error(err));
 
-      await space.internal.createEpoch();
+      const { objects } = space?.db.query({ type: 'test' });
+      if (this.flags.json) {
+        if (this.flags.verbose) {
+          return { objects };
+        } else {
+          return { objects: objects.length };
+        }
+      } else {
+        this.log('Objects:', objects.length);
+        if (this.flags.verbose) {
+          for (const object of objects) {
+            this.log(`- ${object.id}`);
+          }
+        }
+      }
     });
   }
 }

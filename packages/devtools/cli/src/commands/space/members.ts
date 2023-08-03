@@ -3,14 +3,11 @@
 //
 
 import { Args, ux } from '@oclif/core';
-import assert from 'node:assert';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
-import { mapMembers, printMembers, selectSpace } from '../../util';
+import { mapMembers, printMembers, selectSpace, waitForSpace } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
@@ -24,22 +21,17 @@ export default class Members extends BaseCommand<typeof Members> {
 
   async run(): Promise<any> {
     let { key } = this.args;
-
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }
-
-      assert(key);
-
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.log('Invalid key');
-        return;
+        this.error('Invalid key');
       }
 
-      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+      await waitForSpace(space, (err) => this.error(err));
 
       const members = space.members.get();
       if (!this.flags.json) {
