@@ -148,15 +148,15 @@ export class ForeverDaemon implements Daemon {
 
     // NOTE: Kill all processes with the given profile.
     // This is necessary when somehow few processes are started with the same profile.
-    (await this.list()).forEach((process) => {
-      if (process.profile === profile) {
+    (await this.list())
+      .filter((process) => process.profile === profile)
+      .forEach((process) => {
         if (force && process.running) {
           forever.stop(process.profile!);
         } else {
           forever.kill(proc.pid!, true, 'SIGINT');
         }
-      }
-    });
+      });
 
     await waitFor({
       condition: async () => !(await this.isRunning(profile)),
