@@ -41,11 +41,40 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
-  return spaces.map((space) => ({
-    key: maybeTruncateKey(space.key, truncateKeys),
-    name: space.properties.name,
-  }));
+type SpaceInfo = {
+  key: string;
+  name: string;
+  epochStashedMutations: number;
+  lastEpoch: number;
+  appliedEpoch: number;
+  currentDataMutations: number;
+  totalDataMutations: number;
+  progress: string;
+};
+
+export const mapSpaces = (spaces: Space[], truncateKeys = false): SpaceInfo[] => {
+  return spaces.map((space) => {
+    const pipeline = space.internal.data.pipeline;
+    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
+    const lastEpoch = pipeline?.currentEpoch?.subject.assertion.number;
+    const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
+    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+
+    return {
+      key: maybeTruncateKey(space.key, truncateKeys),
+      name: space.properties.name,
+      epochStashedMutations: startDataMutations,
+      lastEpoch,
+      appliedEpoch,
+      currentDataMutations,
+      totalDataMutations,
+      progress: (
+        Math.min(Math.abs((currentDataMutations - startDataMutations) / (totalDataMutations - startDataMutations)), 1) *
+        100
+      ).toFixed(0),
+    };
+  });
 };
 
 export const printSpaces = (spaces: Space[], flags = {}) => {
@@ -57,6 +86,34 @@ export const printSpaces = (spaces: Space[], flags = {}) => {
       },
       name: {
         header: 'name',
+      },
+      totalDataMutations: {
+        header: 'Total data mutations',
+      },
+      currentDataMutations: {
+        header: 'Processed data mutations',
+      },
+      epochStashedMutations: {
+        header: 'Stashed by Epoch',
+      },
+      lastEpoch: {
+        header: 'Last Epoch',
+      },
+      appliedEpoch: {
+        header: 'Applied Epoch',
+      },
+      progress: {
+        header: 'Progress',
+        // get: (spaceInfo) => {
+        //   let progressValue = +spaceInfo.progress;
+        //   const subscription = spaces[0].pipeline.subscribe({
+        //     next: (value) => {
+        //       console.log('update', value);
+        //       progressValue += 1;
+        //     },
+        //   });
+        //   return progressValue;
+        // },
       },
     },
     {
