@@ -49,7 +49,6 @@ export default class Generate extends BaseCommand<typeof Generate> {
 
       // TODO(burdon): Command to list objects.
       for (let i = 0; i < this.flags.objects; i++) {
-        console.log('Generating object...');
         // TODO(burdon): @type is undefined.
         // TODO(burdon): @model is dxos:model/document.
         space?.db.add(new Expando({ type: 'test', title: random.word() }));

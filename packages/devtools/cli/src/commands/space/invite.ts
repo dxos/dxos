@@ -14,7 +14,7 @@ import { selectSpace, hostInvitation } from '../../util';
 
 export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
-  static override args = { key: Args.string({ required: true }) };
+  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
     let { key } = this.args;
@@ -25,7 +25,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
         key = await selectSpace(spaces);
       }
 
-      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
         throw new Error(`Invalid key: ${truncateKey(key)}`);
       }

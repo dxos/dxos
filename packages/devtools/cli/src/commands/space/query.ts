@@ -7,18 +7,22 @@ import { Args } from '@oclif/core';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { selectSpace } from '../../util';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
 
   // TODO(burdon): Implement basic predicates.
-  static override args = { key: Args.string({ description: 'Space key head in hex.', required: true }) };
+  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
-    const { key } = this.args;
+    let { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
+      if (!key) {
+        key = await selectSpace(spaces);
+      }
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
         this.error('Invalid key');
