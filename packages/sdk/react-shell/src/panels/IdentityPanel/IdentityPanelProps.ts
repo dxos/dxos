@@ -6,6 +6,7 @@ import { cloneElement } from 'react';
 import { Event, SingleOrArray } from 'xstate';
 
 import type { Identity } from '@dxos/react-client/halo';
+import { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { IdentityEvent } from './identityMachine';
 
@@ -18,8 +19,7 @@ export type IdentityPanelImplProps = {
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   invitationUrl?: string;
-  authCode?: string;
-};
+} & Partial<InvitationStatus>;
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 

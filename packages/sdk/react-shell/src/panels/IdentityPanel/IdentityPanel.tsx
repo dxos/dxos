@@ -12,7 +12,6 @@ import { humanize } from '@dxos/util';
 
 import { Viewport, PanelHeading } from '../../components';
 import { InvitationManager } from '../../steps';
-import { invitationStatusValue } from '../../util';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
 import { DeviceManager, IdentityActionChooser } from './steps';
@@ -61,7 +60,7 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
             <InvitationManager
               active={activeView === 'device invitation manager'}
               {...props}
-              invitationUrl={props.invitationUrl}
+              invitationUrl={props.createInvitationUrl(props.invitationCode!)}
             />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
@@ -76,16 +75,8 @@ const IdentityPanelWithInvitationImpl = ({
   invitation,
   ...props
 }: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
-  const { status, invitationCode, authCode } = useInvitationStatus(invitation);
-  const statusValue = invitationStatusValue.get(status) ?? 0;
-  const showAuthCode = statusValue === 3;
-  return (
-    <IdentityPanelImpl
-      {...props}
-      invitationUrl={props.createInvitationUrl(invitationCode!)}
-      {...(showAuthCode && { authCode })}
-    />
-  );
+  const invitationStatus = useInvitationStatus(invitation);
+  return <IdentityPanelImpl {...props} {...invitationStatus} />;
 };
 
 export const IdentityPanel = ({
