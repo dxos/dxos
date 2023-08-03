@@ -36,19 +36,14 @@ export default class Join extends BaseCommand<typeof Join> {
         encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
       }
 
-      let invitation = InvitationEncoder.decode(encoded!);
-      const observable = client.acceptInvitation(invitation);
-
       ux.log('');
       ux.action.start('Waiting for peer to connect');
       const done = new Trigger();
       // TODO(burdon): Error code if joining same space (don't throw!)
-      invitation = await acceptInvitation({
-        observable,
+      const invitation = await acceptInvitation({
+        observable: client.acceptInvitation(InvitationEncoder.decode(encoded!)),
         callbacks: {
-          onConnecting: async () => {
-            ux.action.stop();
-          },
+          onConnecting: async () => ux.action.stop(),
           onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
           onSuccess: async () => {
             done.wake();
@@ -56,16 +51,16 @@ export default class Join extends BaseCommand<typeof Join> {
         },
       });
 
-      // invitation = await invitationSuccess;
       await done.wait();
       // TODO(burdon): Race condition.
       await sleep(1000);
       const space = client.getSpace(invitation.spaceKey!)!;
+
       ux.log();
       ux.log(chalk`{green Joined}: ${space.key.truncate()}`);
 
       return {
-        key: space.key.truncate(),
+        key: space.key,
       };
     });
   }
