@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout, sleep } from './timeout';
-import { trigger } from './trigger';
+import { Trigger } from './trigger';
 
 /**
  * NOTE: THIS SHOULD ONLY BE USED IN TESTS.
@@ -14,9 +14,14 @@ import { trigger } from './trigger';
  * @param [timeout] How long to wait, in milliseconds (0 = no timeout).
  * @param [interval=10] How frequently to check, in milliseconds.
  */
-export const waitForCondition = (condition: Function, timeout = 0, interval = 10) => {
+export const waitForCondition = <FunctionType extends (...args: any) => any>(
+  condition: FunctionType,
+  timeout = 0,
+  interval = 10,
+  error?: Error,
+) => {
   const stopTime = timeout ? Date.now() + timeout : 0;
-  const [provider, resolver] = trigger<any>();
+  const trigger = new Trigger<ReturnType<FunctionType>>();
   const waiter = async () => {
     // eslint-disable-next-line no-unmodified-loop-condition
     while (!stopTime || Date.now() < stopTime) {
@@ -24,7 +29,7 @@ export const waitForCondition = (condition: Function, timeout = 0, interval = 10
         // eslint-disable-next-line no-await-in-loop
         const value = await condition();
         if (value) {
-          resolver(value);
+          trigger.wake(value);
           break;
         }
       } catch (err) {
@@ -38,5 +43,5 @@ export const waitForCondition = (condition: Function, timeout = 0, interval = 10
 
   setTimeout(waiter, 0);
 
-  return timeout ? asyncTimeout(provider(), timeout, new Error('Timeout')) : provider();
+  return timeout ? asyncTimeout(trigger.wait(), timeout, error ?? new Error('Timeout')) : trigger.wait();
 };
