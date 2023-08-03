@@ -55,7 +55,7 @@ export default class Join extends BaseCommand<typeof Join> {
       ux.action.start('Waiting for peer to finish invitation');
       await invitationSuccess;
       ux.action.stop();
-      this.log(chalk`{green Peer connected.}`);
+      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }

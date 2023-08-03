@@ -5,14 +5,14 @@
 import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace, hostInvitation } from '../../util';
-import { asyncTimeout } from '@dxos/async';
 import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
+import { selectSpace, hostInvitation } from '../../util';
 
 export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
@@ -50,6 +50,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
       ux.action.start('Waiting for peer to connect...');
       await invitationSuccess;
       ux.action.stop();
+      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }
