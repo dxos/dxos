@@ -9,27 +9,19 @@ import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace, hostInvitation, waitForSpace } from '../../util';
+import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
-    let { key } = this.args;
+    const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.spaces.get();
-      if (!key) {
-        key = await selectSpace(spaces);
-      }
-      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
-      if (!space) {
-        this.error('Invalid key');
-      }
+      const space = await this.getSpace(client, key);
 
-      await waitForSpace(space, (err) => this.error(err));
-
-      const observable = space.createInvitation();
+      // TODO(burdon): Timeout error not propagated.
+      const observable = space!.createInvitation(); // ({ timeout: 5000 });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
@@ -41,10 +33,10 @@ export default class Share extends BaseCommand<typeof Share> {
         },
       });
 
-      ux.action.start('Waiting for peer to connect...');
+      // TODO(burdon): Display joined peer?
+      ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
       ux.action.stop();
-      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }

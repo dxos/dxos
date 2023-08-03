@@ -41,26 +41,50 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
-  return spaces.map((space) => ({
-    key: maybeTruncateKey(space.key, truncateKeys),
-    name: space.properties.name,
-  }));
+export const mapSpaces = (spaces: Space[], options = { truncateKeys: false }) => {
+  return spaces.map((space) => {
+    // TODO(burdon): Factor out.
+    // TODO(burdon): Agent needs to restart before `ready` is available.
+    const { open, ready } = space.internal.data.metrics ?? {};
+    const startup = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+
+    return {
+      key: maybeTruncateKey(space.key, options.truncateKeys),
+      open: space.isOpen,
+      name: space.properties.name,
+      members: space.members.get().length,
+      objects: space.db.query().objects.length,
+      startup,
+    };
+  });
 };
 
-export const printSpaces = (spaces: Space[], flags = {}) => {
+export const printSpaces = (spaces: Space[], flags: any = {}) => {
   ux.table(
-    mapSpaces(spaces, true),
+    mapSpaces(spaces, { truncateKeys: true }),
     {
       key: {
         header: 'key',
       },
+      open: {
+        header: 'open',
+      },
       name: {
         header: 'name',
       },
+      members: {
+        header: 'members',
+      },
+      objects: {
+        header: 'objects',
+      },
+      startup: {
+        header: 'startup',
+        extended: true,
+      },
     },
     {
-      ...flags,
+      extended: flags.verbose,
     },
   );
 };

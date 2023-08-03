@@ -22,6 +22,7 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
+import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -42,6 +43,8 @@ import {
   SupervisorRpcPeer,
   TelemetryContext,
   TunnelRpcPeer,
+  selectSpace,
+  waitForSpace,
 } from './util';
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
@@ -357,6 +360,38 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     return this._client;
+  }
+
+  // TODO(burdon): Move to util (out of base command?)
+
+  /**
+   * Get spaces and optionally wait until ready.
+   */
+  async getSpaces(client: Client, wait = true): Promise<Space[]> {
+    const spaces = client.spaces.get();
+    if (wait) {
+      await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.error(err))));
+    }
+
+    return spaces;
+  }
+
+  /**
+   * Get or select space.
+   */
+  async getSpace(client: Client, key?: string): Promise<Space> {
+    const spaces = await this.getSpaces(client);
+    if (!key) {
+      key = await selectSpace(spaces);
+    }
+
+    const space = spaces.find((space) => space.key.toHex().startsWith(key!));
+    if (!space) {
+      this.error(`Invalid key: ${key}`);
+    } else {
+      await waitForSpace(space, (err) => this.error(err));
+      return space;
+    }
   }
 
   /**

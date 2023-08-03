@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args } from '@oclif/core';
+import { Args, ux } from '@oclif/core';
+import chalk from 'chalk';
 
 import { Client } from '@dxos/client';
 
@@ -21,11 +22,11 @@ export default class Create extends BaseCommand<typeof Create> {
       await waitForSpace(space, (err) => this.error(err));
       space.properties.name = name;
       const data = {
-        key: space.key.toHex(),
+        key: space.key,
         name: space.properties.name,
       };
 
-      this.log(`Created: ${data.key}`);
+      ux.log(chalk`{green Created}: ${data.key.truncate()}`);
       return data;
     }, true);
   }
