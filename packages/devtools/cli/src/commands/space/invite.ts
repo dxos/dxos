@@ -5,10 +5,12 @@
 import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
+import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
 import { selectSpace, hostInvitation } from '../../util';
 
 export default class Invite extends BaseCommand<typeof Invite> {
@@ -27,7 +29,8 @@ export default class Invite extends BaseCommand<typeof Invite> {
         this.error('Invalid key');
       }
 
-      await space.waitUntilReady();
+      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({
         observable,
@@ -43,6 +46,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
       ux.action.start('Waiting for peer to connect...');
       await invitationSuccess;
       ux.action.stop();
+      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }

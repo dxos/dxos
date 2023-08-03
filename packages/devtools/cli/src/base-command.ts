@@ -108,7 +108,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Auto-start agent.',
+      description: 'Run command without agent.',
       default: false,
     }),
 
