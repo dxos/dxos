@@ -21,7 +21,8 @@ export default class Halo extends BaseCommand<typeof Halo> {
         return {};
       } else {
         const { identityKey, profile } = identity;
-        this.logToStderr('Identity key:', identityKey.toHex());
+        this.log('Identity key:', identityKey.toHex());
+        this.log('Profile name:', profile?.displayName);
         return {
           identityKey: identityKey.toHex(),
           profile,
