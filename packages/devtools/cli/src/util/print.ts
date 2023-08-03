@@ -41,10 +41,11 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], options = { truncateKeys: false }) => {
+export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateKeys: false }) => {
   return spaces.map((space) => {
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
+    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     const { open, ready } = space.internal.data.metrics ?? {};
     const startup = open && ready && new Date(ready).getTime() - new Date(open).getTime();
 
@@ -61,7 +62,7 @@ export const mapSpaces = (spaces: Space[], options = { truncateKeys: false }) =>
 
 export const printSpaces = (spaces: Space[], flags: any = {}) => {
   ux.table(
-    mapSpaces(spaces, { truncateKeys: true }),
+    mapSpaces(spaces, { verbose: flags.verbose, truncateKeys: true }),
     {
       key: {
         header: 'key',
