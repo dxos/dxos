@@ -25,6 +25,7 @@ export default class List extends BaseCommand<typeof List> {
         printSpaces(spaces, this.flags);
       }
 
+      // TODO(burdon): Show number of objects, members, feeds, mutations, etc.
       return mapSpaces(spaces);
     });
   }

@@ -26,7 +26,6 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
       if (!key) {
         key = await selectSpace(spaces);
       }
-
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
         this.error('Invalid key');

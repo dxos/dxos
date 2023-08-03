@@ -14,6 +14,7 @@ export default class Query extends BaseCommand<typeof Query> {
   static override description = 'Query database.';
 
   // TODO(burdon): Implement basic predicates.
+  // TODO(burdon): Standardize and factor out selector.
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
