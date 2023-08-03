@@ -213,10 +213,18 @@ const getPlatform = async (): Promise<Platform> => {
   }
 
   // https://nodejs.org/api/os.html
-  const { machine, platform, release } = await require('node:os');
-  return {
-    type: 'node',
-    platform: `${platform()} ${release()} ${machine()}`,
-    runtime: process.version,
-  };
+  try {
+    const { machine, platform, release } = await require('node:os');
+    return {
+      type: 'node',
+      platform: `${platform()} ${release()} ${machine()}`,
+      runtime: process.version,
+    };
+  } catch (err) {
+    // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"
+    return {
+      type: 'node',
+      platform: '',
+    };
+  }
 };
