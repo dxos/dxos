@@ -57,7 +57,7 @@ export const InvitationInput = ({
   const exitButton = (
     <Button
       disabled={disabled}
-      {...(onExit ? { onClick: onExit } : { onClick: onDone })}
+      {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
       classNames='gap-2 pli-4'
       data-testid='join-exit'
     >

@@ -9,22 +9,16 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Avatar } from '@dxos/react-appkit';
 import type { Identity } from '@dxos/react-client/halo';
-import { InvitationResult } from '@dxos/react-client/invitations';
 
 import { PanelStepHeading } from '../../../components';
 import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
 
-export interface IdentityAddedProps extends JoinStepProps, DoneProps {
+export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;
   addedIdentity?: Identity;
 }
 
-export interface DoneProps extends JoinStepProps {
-  doneActionParent?: Parameters<typeof cloneElement>[0];
-  onDone?: (result: InvitationResult | null) => void;
-}
-
-const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
+const Done = ({ onDone, doneActionParent, active }: JoinStepProps) => {
   const disabled = !active;
   const { t } = useTranslation('os');
 

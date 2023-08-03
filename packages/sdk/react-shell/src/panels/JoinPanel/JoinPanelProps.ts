@@ -13,8 +13,9 @@ import { JoinSend } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
-export type JoinStepProps = Omit<StepProps, 'send'> & {
+export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   send: JoinSend;
+  onDone?: (result: InvitationResult | null) => void;
 };
 
 export interface JoinPanelProps {
