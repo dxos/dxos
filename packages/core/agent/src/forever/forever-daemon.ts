@@ -146,6 +146,7 @@ export class ForeverDaemon implements Daemon {
         const errContent = fs.readFileSync(errFile, 'utf-8');
         log.error(errContent);
         await this.stop(profile);
+        throw err;
       }
     }
 
