@@ -5,9 +5,11 @@
 import { Args, ux } from '@oclif/core';
 import assert from 'node:assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
 import { selectSpace } from '../../util';
 
 export default class Epoch extends BaseCommand<typeof Epoch> {
@@ -37,7 +39,7 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
         return;
       }
 
-      await space.waitUntilReady();
+      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
 
       await space.internal.createEpoch();
     });

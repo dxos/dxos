@@ -5,9 +5,11 @@
 import { Args, ux } from '@oclif/core';
 import assert from 'node:assert';
 
+import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
 import { mapMembers, printMembers, selectSpace } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {
@@ -37,7 +39,7 @@ export default class Members extends BaseCommand<typeof Members> {
         return;
       }
 
-      await space.waitUntilReady();
+      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
 
       const members = space.members.get();
       if (!this.flags.json) {

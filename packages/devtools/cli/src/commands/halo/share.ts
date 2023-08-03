@@ -47,6 +47,7 @@ export default class Share extends BaseCommand<typeof Share> {
       ux.action.start('Waiting for peer to connect...');
       await invitationSuccess;
       ux.action.stop();
+      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }
