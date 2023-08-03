@@ -9,6 +9,7 @@ import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
+  DiagnosticsPanel,
   FeedsPanel,
   IdentityPanel,
   ItemsPanel,
@@ -37,6 +38,10 @@ export const useRoutes = () => {
         {
           path: '/client',
           children: [
+            {
+              path: '/client/diagnostics',
+              element: <DiagnosticsPanel />,
+            },
             {
               path: '/client/config',
               element: <ConfigPanel />,

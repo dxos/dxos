@@ -129,6 +129,7 @@ message Runtime {
       optional string commit_hash = 2;
       /// Version from package.json.
       optional string version = 3;
+      optional string branch = 4;
     }
 
     optional string org = 1;
