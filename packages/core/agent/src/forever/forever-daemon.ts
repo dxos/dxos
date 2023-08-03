@@ -12,8 +12,8 @@ import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { DAEMON_START_TIMEOUT } from '../defs';
-import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { lockFilePath, parseAddress, removeSocketFile } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -109,8 +109,12 @@ export class ForeverDaemon implements Daemon {
       try {
         // Wait for socket file to appear.
         {
-          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT);
-          await waitForCondition(() => fs.existsSync(parseAddress(getUnixSocket(profile)).path), DAEMON_START_TIMEOUT);
+          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT, CHECK_INTERVAL);
+          await waitForCondition(
+            () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
+            DAEMON_START_TIMEOUT,
+            CHECK_INTERVAL,
+          );
         }
 
         // Check if agent is initialized.
@@ -158,9 +162,7 @@ export class ForeverDaemon implements Daemon {
         }
       });
 
-    await waitFor({
-      condition: async () => !(await this.isRunning(profile)),
-    });
+    await waitForCondition(async () => !(await this.isRunning(profile)), DAEMON_STOP_TIMEOUT, CHECK_INTERVAL);
 
     removeSocketFile(profile);
     return proc;
