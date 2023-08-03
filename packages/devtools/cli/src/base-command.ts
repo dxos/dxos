@@ -30,6 +30,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -286,14 +287,24 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
+    // NOTE: Default method displays stack trace. And exits the process.
     super.error(err, options as any);
   }
 
-  override async catch(err: Error, options?: any) {
+  override catch(err: string | Error, options?: any): never {
     // Will only submit if API key exists (i.e., prod).
-    super.error(err, options as any);
+    Sentry.captureException(err);
+
     this._failing = true;
-    throw err;
+
+    // Convert known errors to human readable messages.
+    if (err instanceof SpaceWaitTimeoutError) {
+      this.warn(chalk`{red Hit timeout waiting for space to be ready. Space is still replicating.}`);
+    } else {
+      // Handle unknown errors with default method.
+      this.error(err, options as any);
+    }
+    process.exit(1);
   }
 
   /**
@@ -386,7 +397,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -404,7 +415,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -422,7 +433,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();

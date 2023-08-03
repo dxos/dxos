@@ -28,10 +28,10 @@ export default class Members extends BaseCommand<typeof Members> {
       }
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.error('Invalid key');
+        this.catch('Invalid key');
       }
 
-      await waitForSpace(space);
+      await waitForSpace(space, (err) => this.catch(err));
 
       const members = space.members.get();
       if (!this.flags.json) {

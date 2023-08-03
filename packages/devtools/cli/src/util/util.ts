@@ -25,7 +25,7 @@ export const safeParseInt = (value: string | undefined, defaultValue?: number): 
 //
 
 export const selectSpace = async (spaces: Space[]) => {
-  await Promise.all(spaces.map((space) => waitForSpace(space)));
+  await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.catch(err))));
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([
@@ -43,5 +43,14 @@ export const selectSpace = async (spaces: Space[]) => {
   return key;
 };
 
-export const waitForSpace = async (space: Space) =>
-  asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new Error('Timeout waiting for space to be ready.'));
+export const waitForSpace = async (space: Space, exceptionHandler?: (err: Error) => void) => {
+  try {
+    await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new Error('Timeout waiting for space to be ready.'));
+  } catch (err: any) {
+    if (exceptionHandler) {
+      exceptionHandler(err);
+    } else {
+      throw err;
+    }
+  }
+};

@@ -24,10 +24,10 @@ export default class Share extends BaseCommand<typeof Share> {
       }
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.error('Invalid key');
+        this.catch('Invalid key');
       }
 
-      await waitForSpace(space);
+      await waitForSpace(space, (err) => this.catch(err));
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({

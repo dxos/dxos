@@ -28,10 +28,10 @@ export default class Epoch extends BaseCommand<typeof Epoch> {
       }
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.error('Invalid key');
+        this.catch('Invalid key');
       }
 
-      await waitForSpace(space);
+      await waitForSpace(space, (err) => this.catch(err));
 
       await space.internal.createEpoch();
     });
