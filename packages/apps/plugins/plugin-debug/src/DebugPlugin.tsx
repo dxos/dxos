@@ -54,7 +54,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          // TODO(burdon): Needs trigger when settings updated.
+          // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
           console.log('###', !!localStorage.getItem(DebugPanelKey));
           if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
             return [];
