@@ -2,6 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+/**
+ * (thure): This step is not used in the device invitation singleton scenario. It is kept for posterity, but it can be
+ * removed if it accumulates technical debt.
+ */
+
 import { CaretLeft, Check, Plus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback } from 'react';
 
@@ -53,6 +58,7 @@ export const DeviceManager = ({ active, send, onDone, doneActionParent, createIn
             disabled={!active}
             classNames='is-full flex gap-2 mlb-2'
             onClick={() => {
+              invitations.forEach((invitation) => invitation.cancel());
               const invitation = client.halo.createInvitation();
               // TODO(wittjosiah): Don't depend on NODE_ENV.
               if (process.env.NODE_ENV !== 'production') {

@@ -3,15 +3,28 @@
 //
 
 import { CaretLeft, CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
-import React, { cloneElement } from 'react';
+import React, { cloneElement, useCallback } from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
+import { useClient } from '@dxos/react-client';
+import { useHaloInvitations } from '@dxos/react-client/halo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }: IdentityPanelStepProps) => {
   const { t } = useTranslation('os');
+  const client = useClient();
+  const invitations = useHaloInvitations();
+
+  const onInvitationEvent = useCallback((invitation: Invitation) => {
+    const invitationCode = InvitationEncoder.encode(invitation);
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    }
+  }, []);
+
   const doneButton = (
     <Button density='fine' onClick={onDone} disabled={!active} classNames='pli-4' data-testid='identity-panel-done'>
       <CaretLeft weight='bold' className={mx(getSize(4), 'invisible')} />
@@ -26,7 +39,14 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
           <Button
             disabled={!active}
             data-testid='manage-devices'
-            onClick={() => send({ type: 'chooseDevices' })}
+            onClick={() => {
+              const invitation = client.halo.createInvitation();
+              // TODO(wittjosiah): Don't depend on NODE_ENV.
+              if (process.env.NODE_ENV !== 'production') {
+                invitation.subscribe(onInvitationEvent);
+              }
+              send({ type: 'selectInvitation', invitation });
+            }}
             classNames='plb-4'
           >
             <Plus className={getSize(6)} />
@@ -34,7 +54,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
           <Button
-            disabled={!active}
+            disabled
             data-testid='manage-profile'
             onClick={() => {} /* send({ type: 'chooseProfile' }) */}
             classNames='plb-4'
@@ -44,7 +64,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
           <Button
-            disabled={!active}
+            disabled
             data-testid='sign-out'
             onClick={() => {} /* send({ type: 'chooseSignOut' }) */}
             classNames='plb-4'
