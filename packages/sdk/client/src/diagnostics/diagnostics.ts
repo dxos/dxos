@@ -10,12 +10,34 @@ import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { Device, Identity, SpaceMember, SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Device,
+  Identity,
+  Space as SpaceProto,
+  SpaceMember,
+  SpacesService,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { Config } from '@dxos/protocols/proto/dxos/config';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
 
 import { Client } from '../client';
+
+export type Diagnostics = {
+  created: string;
+  client: {
+    version: string;
+    config: Config;
+  };
+  platform: Platform;
+  identity: Identity;
+  devices: Device[];
+  spaces: SpaceStats[];
+  feeds: Partial<SubscribeToFeedsResponse.Feed>[];
+  config: ConfigProto;
+  storageVersion: number;
+};
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
@@ -28,15 +50,15 @@ export type SpaceStats = {
   };
   members?: SpaceMember[];
   epochs?: { number: number; timeframe: Timeframe }[];
+  metrics?: SpaceProto.Metrics & {
+    startupTime?: number;
+  };
 };
 
-export type ClientStats = {
-  identity: Identity;
-  devices: Device[];
-  spaces: SpaceStats[];
-  feeds: SubscribeToFeedsResponse.Feed[];
-  config: ConfigProto;
-  storageVersion: number;
+export type Platform = {
+  type: 'browser' | 'node';
+  platform: string;
+  runtime?: string;
 };
 
 export type DiagnosticOptions = {
@@ -44,10 +66,17 @@ export type DiagnosticOptions = {
   humanize?: boolean;
 };
 
-// TODO(burdon): Move method to Monitor class.
-export const diagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<ClientStats>> => {
+// TODO(burdon): Factor out (move into Monitor class).
+export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<Diagnostics>> => {
   const host = client.services.services.DevtoolsHost!;
-  const data: Partial<ClientStats> = {};
+  const data: Partial<Diagnostics> = {
+    created: new Date().toISOString(),
+    platform: await getPlatform(),
+    client: {
+      version: client.version,
+      config: client.config.values,
+    },
+  };
 
   const identity = client.halo.identity.get();
   if (identity) {
@@ -69,6 +98,7 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
               await space.waitUntilReady();
               const result = space?.db.query();
               Object.assign(stats, {
+                metrics: space.internal.data.metrics,
                 epochs: await getEpochs(client.services!.services.SpacesService!, space),
                 members: space?.members.get(),
                 properties: {
@@ -78,6 +108,12 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
                   items: result?.objects.length,
                 },
               });
+
+              // TODO(burdon): Factor out.
+              if (stats.metrics) {
+                const { open, ready } = stats.metrics ?? {};
+                stats.metrics.startupTime = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+              }
             }
 
             return stats;
@@ -97,7 +133,12 @@ export const diagnostics = async (client: Client, options: DiagnosticOptions): P
     const trigger = new Trigger();
     const stream = host.subscribeToFeeds({});
     stream?.subscribe((msg) => {
-      data.feeds = msg.feeds;
+      data.feeds = msg.feeds?.map(({ feedKey, bytes, length }) => ({
+        feedKey,
+        bytes,
+        length,
+      }));
+
       trigger.wake();
     });
 
@@ -159,6 +200,31 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
 
   await done.wait();
   stream.close();
-
   return epochs;
+};
+
+const getPlatform = async (): Promise<Platform> => {
+  if (typeof window !== 'undefined') {
+    const { userAgent } = window.navigator;
+    return {
+      type: 'browser',
+      platform: userAgent,
+    };
+  }
+
+  // https://nodejs.org/api/os.html
+  try {
+    const { machine, platform, release } = await require('node:os');
+    return {
+      type: 'node',
+      platform: `${platform()} ${release()} ${machine()}`,
+      runtime: process.version,
+    };
+  } catch (err) {
+    // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"
+    return {
+      type: 'node',
+      platform: '',
+    };
+  }
 };
