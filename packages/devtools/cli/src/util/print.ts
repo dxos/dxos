@@ -45,9 +45,11 @@ export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateK
   return spaces.map((space) => {
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
-    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     const { open, ready } = space.internal.data.metrics ?? {};
     const startup = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+
+    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
+    // const host = client.services.services.DevtoolsHost!;
 
     return {
       key: maybeTruncateKey(space.key, options.truncateKeys),
