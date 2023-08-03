@@ -50,6 +50,12 @@ export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateK
 
     // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     // const host = client.services.services.DevtoolsHost!;
+    const pipeline = space.internal.data.pipeline;
+    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
+    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
+    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
 
     return {
       key: maybeTruncateKey(space.key, options.truncateKeys),
@@ -58,6 +64,17 @@ export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateK
       members: space.members.get().length,
       objects: space.db.query().objects.length,
       startup,
+      epoch,
+      // appliedEpoch,
+
+      startDataMutations,
+      currentDataMutations,
+      totalDataMutations, // TODO(burdon): Shows up lower than current.
+      // TODO(burdon): Negative.
+      progress: (
+        Math.min(Math.abs((currentDataMutations - startDataMutations) / (totalDataMutations - startDataMutations)), 1) *
+        100
+      ).toFixed(0),
     };
   });
 };
@@ -84,6 +101,38 @@ export const printSpaces = (spaces: Space[], flags: any = {}) => {
       startup: {
         header: 'startup',
         extended: true,
+      },
+      epoch: {
+        header: 'epoch',
+      },
+      // appliedEpoch: {
+      //   header: 'Applied Epoch',
+      // },
+
+      startDataMutations: {
+        header: 'stashed', // TODO(burdon): Stashed?
+        extended: true,
+      },
+      currentDataMutations: {
+        header: 'processed',
+        extended: true,
+      },
+      totalDataMutations: {
+        header: 'total',
+        extended: true,
+      },
+      progress: {
+        header: 'progress',
+        // get: (spaceInfo) => {
+        //   let progressValue = +spaceInfo.progress;
+        //   const subscription = spaces[0].pipeline.subscribe({
+        //     next: (value) => {
+        //       console.log('update', value);
+        //       progressValue += 1;
+        //     },
+        //   });
+        //   return progressValue;
+        // },
       },
     },
     {
