@@ -38,16 +38,14 @@ export default class Join extends BaseCommand<typeof Join> {
         const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
         encoded = searchParams.get('deviceInvitationCode') ?? encoded;
       }
-      const invitation = InvitationEncoder.decode(encoded!);
 
+      const invitation = InvitationEncoder.decode(encoded!);
       const observable = client.halo.acceptInvitation(invitation);
       ux.action.start('Waiting for peer to connect');
       const invitationSuccess = acceptInvitation({
         observable,
         callbacks: {
-          onConnecting: async () => {
-            ux.action.stop();
-          },
+          onConnecting: async () => ux.action.stop(),
           onReadyForAuth: () => ux.prompt('Invitation code'),
         },
       });
