@@ -4,7 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import rev from 'git-rev-sync';
-import defaultsDeep from 'lodash.defaultsDeep';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
