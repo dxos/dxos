@@ -6,7 +6,16 @@ import { Duplex } from 'node:stream';
 import invariant from 'tiny-invariant';
 import * as varint from 'varint';
 
+import { log } from '@dxos/log';
+
 import { RpcPort } from './rpc-port';
+
+const MAX_CHUNK_SIZE = 8192; // 1KB
+
+type Chunk = {
+  msg: Buffer;
+  callback?: () => void;
+};
 
 /**
  * Framer that turns a stream of binary messages into a framed RpcPort.
@@ -18,7 +27,9 @@ export class Framer {
   private _messageCb?: (msg: Uint8Array) => void;
   private _subscribeCb?: () => void;
   private _buffer?: Buffer; // The rest of the bytes from the previous write call.
-  private _responseQueue: (() => void)[] = [];
+
+  // TODO(egorgripasov): Will cause a memory leak if streams do not appreciate the backpressure.
+  private _chunkQueue: Chunk[] = [];
 
   private readonly _stream = new Duplex({
     objectMode: false,
@@ -50,11 +61,19 @@ export class Framer {
     send: (message) => {
       // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
       return new Promise<void>((resolve) => {
-        const canContinue = this._stream.push(encodeFrame(message));
-        if (!canContinue) {
-          this._responseQueue.push(resolve);
-        } else {
-          process.nextTick(resolve);
+        const isEmpty = this._chunkQueue.length === 0;
+        const data = encodeFrame(message);
+
+        const chunks = [];
+        for (let i = 0; i < data.length; i += MAX_CHUNK_SIZE) {
+          chunks.push(data.slice(i, i + MAX_CHUNK_SIZE));
+        }
+        chunks.forEach((chunk, index) => {
+          const callback = index === chunks.length - 1 ? resolve : undefined;
+          this._chunkQueue.push({ msg: chunk, callback });
+        });
+        if (isEmpty) {
+          this._processChunkQueue().catch(log.catch);
         }
       });
     },
@@ -68,18 +87,31 @@ export class Framer {
     },
   };
 
+  private async _processChunkQueue() {
+    if (this._chunkQueue.length === 0) {
+      return;
+    }
+
+    const chunk = this._chunkQueue.shift()!;
+    await this._sendData(chunk.msg);
+    chunk.callback?.();
+
+    await this._processChunkQueue();
+  }
+
+  private async _sendData(data: Buffer) {
+    return new Promise<void>((resolve) => {
+      const canContinue = this._stream.push(data);
+      if (!canContinue) {
+        this._stream.once('drain', resolve);
+      } else {
+        process.nextTick(resolve);
+      }
+    });
+  }
+
   get stream(): Duplex {
     return this._stream;
-  }
-
-  constructor() {
-    this.stream.on('drain', this._processResponseQueue.bind(this));
-  }
-
-  private _processResponseQueue() {
-    const responseQueue = this._responseQueue;
-    this._responseQueue = [];
-    responseQueue.forEach((cb) => cb());
   }
 
   /**

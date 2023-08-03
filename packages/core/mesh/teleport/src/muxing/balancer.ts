@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
 
 // TODO(egorgripasov): Is BinaryPort a better name?
 import { RpcPort } from './rpc-port';
@@ -49,9 +50,7 @@ export class Balancer {
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      process.nextTick(async () => {
-        await this._processCalls();
-      });
+      this._processCalls().catch(log.catch);
     }
   }
 
