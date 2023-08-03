@@ -8,7 +8,7 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Halo extends BaseCommand<typeof Halo> {
+export default class Info extends BaseCommand<typeof Info> {
   static override enableJsonFlag = true;
   static override description = 'Show HALO profile.';
 
