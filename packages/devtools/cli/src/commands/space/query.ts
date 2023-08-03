@@ -12,6 +12,7 @@ export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
 
+  // TODO(burdon): Implement basic predicates.
   static override args = { key: Args.string({ description: 'Space key head in hex.', required: true }) };
 
   async run(): Promise<any> {
@@ -27,11 +28,17 @@ export default class Query extends BaseCommand<typeof Query> {
 
       const { objects } = space?.db.query({ type: 'test' });
       if (this.flags.json) {
-        return { objects };
+        if (this.flags.verbose) {
+          return { objects };
+        } else {
+          return { objects: objects.length };
+        }
       } else {
         this.log('Objects:', objects.length);
-        for (const object of objects) {
-          this.log(`- ${object.id}`);
+        if (this.flags.verbose) {
+          for (const object of objects) {
+            this.log(`- ${object.id}`);
+          }
         }
       }
     });
