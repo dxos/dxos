@@ -25,7 +25,7 @@ export const safeParseInt = (value: string | undefined, defaultValue?: number): 
 //
 
 export const selectSpace = async (spaces: Space[]) => {
-  await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.catch(err))));
+  await Promise.all(spaces.map((space) => waitForSpace(space)));
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([
