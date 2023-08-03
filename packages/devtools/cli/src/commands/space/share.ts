@@ -11,7 +11,7 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { BaseCommand } from '../../base-command';
 import { selectSpace, hostInvitation, waitForSpace } from '../../util';
 
-export default class Invite extends BaseCommand<typeof Invite> {
+export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
