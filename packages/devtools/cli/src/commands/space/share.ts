@@ -5,34 +5,29 @@
 import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
-import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
-import { selectSpace, hostInvitation } from '../../util';
+import { selectSpace, hostInvitation, waitForSpace } from '../../util';
 
-export default class Invite extends BaseCommand<typeof Invite> {
+export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
-  static override args = { key: Args.string({ required: true }) };
+  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
 
   async run(): Promise<any> {
     let { key } = this.args;
-
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
       if (!key) {
         key = await selectSpace(spaces);
       }
-
-      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        throw new Error(`Invalid key: ${truncateKey(key)}`);
+        this.error('Invalid key');
       }
 
-      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+      await waitForSpace(space, (err) => this.error(err));
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({
@@ -40,7 +35,6 @@ export default class Invite extends BaseCommand<typeof Invite> {
         callbacks: {
           onConnecting: async () => {
             const invitationCode = InvitationEncoder.encode(observable.get());
-
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
             this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
           },

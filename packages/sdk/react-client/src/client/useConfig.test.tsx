@@ -27,7 +27,9 @@ describe('Config hook', () => {
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
+    await act(async () => {
+      await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
+    });
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
@@ -46,7 +48,9 @@ describe('Config hook', () => {
     await client.initialize();
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
-    await act(() => waitForCondition(() => client.status.get() === SystemStatus.ACTIVE));
+    await act(async () => {
+      await waitForCondition({ condition: () => client.status.get() === SystemStatus.ACTIVE });
+    });
     expect(result.current.get('runtime.client.storage')).toEqual(config.get('runtime.client.storage'));
   });
 });
