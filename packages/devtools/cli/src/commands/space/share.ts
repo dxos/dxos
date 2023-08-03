@@ -17,6 +17,9 @@ export default class Share extends BaseCommand<typeof Share> {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
   static override flags = {
     ...BaseCommand.flags,
+    multiple: Flags.boolean({
+      description: 'Multiple use.',
+    }),
     'no-code': Flags.boolean({
       description: 'Skip auth code.',
     }),
@@ -32,8 +35,9 @@ export default class Share extends BaseCommand<typeof Share> {
       const space = await this.getSpace(client, key);
 
       // TODO(burdon): Timeout error not propagated.
+      const type = this.flags.multiple ? Invitation.Type.MULTIUSE : undefined;
       const authMethod = this.flags['no-code'] ? Invitation.AuthMethod.NONE : undefined;
-      const observable = space!.createInvitation({ authMethod, timeout: this.flags.timeout });
+      const observable = space!.createInvitation({ type, authMethod, timeout: this.flags.timeout });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
