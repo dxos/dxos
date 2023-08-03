@@ -7,7 +7,7 @@ import { Args } from '@oclif/core';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace } from '../../util';
+import { selectSpace, waitForSpace } from '../../util';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
@@ -29,7 +29,7 @@ export default class Query extends BaseCommand<typeof Query> {
         this.error('Invalid key');
       }
 
-      await space.waitUntilReady();
+      await waitForSpace(space);
 
       const { objects } = space?.db.query({ type: 'test' });
       if (this.flags.json) {
