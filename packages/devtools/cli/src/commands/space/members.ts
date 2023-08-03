@@ -4,12 +4,10 @@
 
 import { Args, ux } from '@oclif/core';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
-import { mapMembers, printMembers, selectSpace } from '../../util';
+import { mapMembers, printMembers, selectSpace, waitForSpace } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
@@ -33,7 +31,7 @@ export default class Members extends BaseCommand<typeof Members> {
         this.error('Invalid key');
       }
 
-      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+      await waitForSpace(space);
 
       const members = space.members.get();
       if (!this.flags.json) {

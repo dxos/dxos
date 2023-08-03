@@ -8,7 +8,7 @@ import { Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 
 import { BaseCommand } from '../../base-command';
-import { Random, selectSpace } from '../../util';
+import { Random, selectSpace, waitForSpace } from '../../util';
 
 const random = new Random();
 
@@ -49,7 +49,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
         this.error('Invalid key');
       }
 
-      await space.waitUntilReady();
+      await waitForSpace(space);
 
       // TODO(burdon): Command to list objects.
       for (let i = 0; i < this.flags.objects; i++) {

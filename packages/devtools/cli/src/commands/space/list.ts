@@ -4,12 +4,10 @@
 
 import { ux } from '@oclif/core';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
-import { mapSpaces, printSpaces } from '../../util';
+import { mapSpaces, printSpaces, waitForSpace } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -22,9 +20,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
-      await Promise.all(
-        spaces.map((space) => asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError())),
-      );
+      await Promise.all(spaces.map((space) => waitForSpace(space)));
       if (!this.flags.json) {
         printSpaces(spaces, this.flags);
       }

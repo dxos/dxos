@@ -5,13 +5,11 @@
 import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../../timeouts';
-import { selectSpace, hostInvitation } from '../../util';
+import { selectSpace, hostInvitation, waitForSpace } from '../../util';
 
 export default class Invite extends BaseCommand<typeof Invite> {
   static override description = 'Create space invitation.';
@@ -29,7 +27,7 @@ export default class Invite extends BaseCommand<typeof Invite> {
         this.error('Invalid key');
       }
 
-      await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError());
+      await waitForSpace(space);
 
       const observable = space.createInvitation();
       const invitationSuccess = hostInvitation({

@@ -7,7 +7,7 @@ import { Space } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
-import { SPACE_WAIT_TIMEOUT, spaceWaitError } from '../timeouts';
+import { SPACE_WAIT_TIMEOUT } from '../timeouts';
 
 export const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
@@ -25,7 +25,7 @@ export const safeParseInt = (value: string | undefined, defaultValue?: number): 
 //
 
 export const selectSpace = async (spaces: Space[]) => {
-  await Promise.all(spaces.map((space) => asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, spaceWaitError())));
+  await Promise.all(spaces.map((space) => waitForSpace(space)));
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([
@@ -42,3 +42,6 @@ export const selectSpace = async (spaces: Space[]) => {
 
   return key;
 };
+
+export const waitForSpace = async (space: Space) =>
+  asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new Error('Timeout waiting for space to be ready.'));
