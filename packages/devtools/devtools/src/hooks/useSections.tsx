@@ -3,6 +3,7 @@
 //
 
 import {
+  ChartLine,
   CreditCard,
   Database,
   Gear,
@@ -36,6 +37,11 @@ export const useSections = (): SectionItem[] => {
       title: 'Client',
       Icon: Users,
       items: [
+        {
+          id: '/client/diagnostics',
+          title: 'Diagnostics',
+          Icon: ChartLine,
+        },
         {
           id: '/client/config',
           title: 'Config',
