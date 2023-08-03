@@ -68,7 +68,7 @@ export const os = {
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
   'devices heading': 'Devices',
-  'identity heading': 'Options for your active identity',
+  'identity heading': 'Profile settings',
   'choose devices label': 'Add device',
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Sign out',

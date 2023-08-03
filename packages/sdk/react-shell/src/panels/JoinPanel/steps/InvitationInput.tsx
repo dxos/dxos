@@ -3,7 +3,7 @@
 //
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ComponentPropsWithoutRef, useEffect, useState } from 'react';
+import React, { cloneElement, ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
 import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
 import { PanelStepHeading } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
 
-export interface InvitationInputProps extends JoinStepProps {
+export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
   unredeemedCode?: string;
 }
@@ -29,7 +29,16 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InvitationInput = ({ Kind, active, send, unredeemedCode }: InvitationInputProps) => {
+export const InvitationInput = ({
+  Kind,
+  active,
+  send,
+  unredeemedCode,
+  onExit,
+  exitActionParent,
+  onDone,
+  doneActionParent,
+}: InvitationInputProps) => {
   const disabled = !active;
   const { t } = useTranslation('os');
 
@@ -44,6 +53,17 @@ export const InvitationInput = ({ Kind, active, send, unredeemedCode }: Invitati
       type: `set${Kind}InvitationCode`,
       code: invitationCodeFromUrl(inputValue),
     });
+
+  const exitButton = (
+    <Button
+      disabled={disabled}
+      {...(onExit ? { onClick: onExit } : { onClick: onDone })}
+      classNames='gap-2 pli-4'
+      data-testid='join-exit'
+    >
+      <span>{t('cancel label')}</span>
+    </Button>
+  );
 
   return (
     <>
@@ -73,15 +93,23 @@ export const InvitationInput = ({ Kind, active, send, unredeemedCode }: Invitati
           <span className='grow'>{t('continue label')}</span>
           <CaretRight weight='bold' className={getSize(4)} />
         </Button>
-        <Button
-          disabled={disabled || Kind === 'Space'}
-          onClick={() => send({ type: 'deselectAuthMethod' })}
-          classNames='flex items-center gap-2 pis-2 pie-4'
-          data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
-        >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('back label')}</span>
-        </Button>
+        {Kind === 'Halo' ? (
+          <Button
+            disabled={disabled}
+            onClick={() => send({ type: 'deselectAuthMethod' })}
+            classNames='gap-2 pis-2 pie-4'
+            data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
+          >
+            <CaretLeft weight='bold' className={getSize(4)} />
+            <span>{t('back label')}</span>
+          </Button>
+        ) : exitActionParent ? (
+          cloneElement(exitActionParent, {}, exitButton)
+        ) : doneActionParent ? (
+          cloneElement(doneActionParent, {}, exitButton)
+        ) : (
+          exitButton
+        )}
       </div>
     </>
   );

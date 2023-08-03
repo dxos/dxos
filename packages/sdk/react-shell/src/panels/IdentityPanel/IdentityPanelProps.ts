@@ -23,7 +23,7 @@ export type IdentityPanelImplProps = {
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 
-export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' | 'identity'>;
+export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' | 'identity'> & { title: string };
 
 export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send' | 'onDone' | 'doneActionParent'> & {
   active?: boolean;
