@@ -46,10 +46,10 @@ export default class Generate extends BaseCommand<typeof Generate> {
 
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.catch('Invalid key');
+        this.error('Invalid key');
       }
 
-      await waitForSpace(space, (err) => this.catch(err));
+      await waitForSpace(space, (err) => this.error(err));
 
       // TODO(burdon): Command to list objects.
       for (let i = 0; i < this.flags.objects; i++) {

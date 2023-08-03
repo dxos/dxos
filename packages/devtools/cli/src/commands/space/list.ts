@@ -20,7 +20,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       const spaces = client.spaces.get();
-      await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.catch(err))));
+      await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.error(err))));
       if (!this.flags.json) {
         printSpaces(spaces, this.flags);
       }

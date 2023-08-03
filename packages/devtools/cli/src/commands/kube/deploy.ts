@@ -59,7 +59,7 @@ export default class Deploy extends BaseCommand<typeof Deploy> {
         printKubes([kube]);
       });
     } catch (err: any) {
-      this.catch(err, { exit: 1 });
+      this.error(err);
     }
   }
 }

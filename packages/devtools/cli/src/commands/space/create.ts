@@ -18,7 +18,7 @@ export default class Create extends BaseCommand<typeof Create> {
     const { name } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await client.createSpace();
-      await waitForSpace(space, (err) => this.catch(err));
+      await waitForSpace(space, (err) => this.error(err));
       space.properties.name = name;
       const data = {
         key: space.key.toHex(),

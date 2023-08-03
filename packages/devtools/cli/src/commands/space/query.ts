@@ -26,10 +26,10 @@ export default class Query extends BaseCommand<typeof Query> {
       }
       const space = spaces.find((space) => space.key.toHex().startsWith(key!));
       if (!space) {
-        this.catch('Invalid key');
+        this.error('Invalid key');
       }
 
-      await waitForSpace(space, (err) => this.catch(err));
+      await waitForSpace(space, (err) => this.error(err));
 
       const { objects } = space?.db.query({ type: 'test' });
       if (this.flags.json) {

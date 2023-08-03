@@ -287,24 +287,26 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
-    // NOTE: Default method displays stack trace. And exits the process.
-    super.error(err, options as any);
-  }
-
-  override catch(err: string | Error, options?: any): never {
     // Will only submit if API key exists (i.e., prod).
     Sentry.captureException(err);
 
     this._failing = true;
+
+    if (this.flags.verbose) {
+      // NOTE: Default method displays stack trace. And exits the process.
+      super.error(err, options as any);
+      return;
+    }
 
     // Convert known errors to human readable messages.
     if (err instanceof SpaceWaitTimeoutError) {
       this.warn(chalk`{red Hit timeout waiting for space to be ready. Space is still replicating.}`);
     } else {
       // Handle unknown errors with default method.
-      this.error(err, options as any);
+      super.error(err, options as any);
+      return;
     }
-    process.exit(1);
+    this.exit();
   }
 
   /**
@@ -397,7 +399,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.catch(err);
+      this.error(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -415,7 +417,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.catch(err);
+      this.error(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -433,7 +435,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.catch(err);
+      this.error(err);
     } finally {
       if (rpc) {
         await rpc.close();
