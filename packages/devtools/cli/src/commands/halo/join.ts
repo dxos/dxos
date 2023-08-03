@@ -15,7 +15,6 @@ import { acceptInvitation } from '../../util';
 export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;
   static override description = 'Join HALO (device) invitation.';
-
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
