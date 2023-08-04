@@ -14,7 +14,7 @@ import { Viewport, PanelHeading } from '../../components';
 import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { DeviceManager, IdentityActionChooser } from './steps';
+import { IdentityActionChooser } from './steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
@@ -52,9 +52,6 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
             <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
-          </Viewport.View>
-          <Viewport.View id='device manager' classNames={viewStyles}>
-            <DeviceManager active={activeView === 'device manager'} {...props} />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
             <InvitationManager

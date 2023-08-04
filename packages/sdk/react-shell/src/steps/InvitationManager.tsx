@@ -6,11 +6,11 @@ import { CaretLeft, Check, X } from '@phosphor-icons/react';
 import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { Button, useId, useTranslation } from '@dxos/aurora';
+import { useId, useTranslation } from '@dxos/aurora';
 import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { CopyButton, Viewport, ViewportViewProps } from '../components';
+import { CopyButton, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -62,17 +62,16 @@ export const InvitationManager = ({
   const statusValue = invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = toEmoji(id ?? '');
-  const doneButton = (
-    <Button
+  const doneAction = (
+    <PanelAction
+      aria-label={t('done label')}
       onClick={onDone}
       disabled={!active}
-      classNames='order-1 gap-2 pis-2 pie-4'
+      classNames='order-1'
       data-testid='identity-panel-done'
     >
-      <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-      <span className='grow'>{t('done label')}</span>
-      <Check weight='bold' className={getSize(4)} />
-    </Button>
+      <Check weight='light' className={getSize(6)} />
+    </PanelAction>
   );
   const activeView = useMemo(() => {
     switch (true) {
@@ -122,21 +121,20 @@ export const InvitationManager = ({
         </Viewport.Views>
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
-      <div className='flex gap-2 mbs-4'>
-        {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-        <Button
+      <CopyButton
+        disabled={!active || activeView === 'showing final'}
+        value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
+      />
+      <PanelActions classNames='mbs-4'>
+        {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
+        <PanelAction
+          aria-label={t('back label')}
           disabled={!active}
           onClick={() => send({ type: 'deselectInvitation' })}
-          classNames='grow gap-2 pis-2 pie-4'
         >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('back label')}</span>
-        </Button>
-        <CopyButton
-          disabled={!active || activeView === 'showing final'}
-          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-        />
-      </div>
+          <CaretLeft weight='light' className={getSize(6)} />
+        </PanelAction>
+      </PanelActions>
     </>
   );
 };
