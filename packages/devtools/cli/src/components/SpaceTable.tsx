@@ -13,36 +13,46 @@ import { mapSpaces } from '../util';
 /**
  * Spaces list table.
  */
-export const SpaceTable: FC<{ client: Client; period?: number }> = ({ client, period = 1000 }) => {
+export const SpaceTable: FC<{ client: Client; interval?: number }> = ({ client, interval = 1000 }) => {
   const { exit } = useApp();
   useInput((input) => {
-    if (input === 'q') {
-      exit();
+    switch (input) {
+      case 'r': {
+        handleRefresh();
+        break;
+      }
+      case 'q': {
+        exit();
+        break;
+      }
     }
   });
 
   const [data, setData] = useState<{ key: string }[]>([]);
   useEffect(() => {
-    const timer = setInterval(() => {
-      const spaces = client.spaces.get();
-      const data = mapSpaces(spaces, { truncateKeys: true });
-      setData(
-        data.map(({ key, open, objects }) => ({
-          key,
-          open,
-          objects,
-        })),
-      );
-    }, period);
-
+    const timer = setInterval(() => handleRefresh(), Math.min(100, interval));
     return () => clearInterval(timer);
   }, [client]);
+
+  const handleRefresh = () => {
+    const spaces = client.spaces.get();
+    const data = mapSpaces(spaces, { truncateKeys: true });
+    setData(
+      data.map(({ key, open, objects }) => ({
+        key,
+        open,
+        objects,
+      })),
+    );
+  };
 
   // https://github.com/vadimdemedes/ink
   return (
     <Box flexDirection='column'>
-      <Text>[q] to quit</Text>
       {data.length > 0 && <Table data={data} />}
+      <Box flexDirection='column'>
+        <Text> [q] to quit; [r] to refresh</Text>
+      </Box>
     </Box>
   );
 };
