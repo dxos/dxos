@@ -3,6 +3,7 @@
 //
 
 import { ux } from '@oclif/core';
+import { Table } from '@oclif/core/lib/cli-ux';
 
 import { Space, SpaceMember } from '@dxos/client/echo';
 import { Device, Credential } from '@dxos/client/halo';
@@ -41,7 +42,12 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateKeys: false }) => {
+type MapSpacesOptions = {
+  verbose?: boolean;
+  truncateKeys?: boolean;
+};
+
+export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) => {
   return spaces.map((space) => {
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
@@ -79,7 +85,7 @@ export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateK
   });
 };
 
-export const printSpaces = (spaces: Space[], flags: any = {}) => {
+export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.table.Options = {}) => {
   ux.table(
     mapSpaces(spaces, { ...flags, truncateKeys: true }),
     {
