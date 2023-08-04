@@ -24,6 +24,8 @@ const identity = client.halo.identity.get(); // null by default
 // create an ephemeral space consistent across all windows on this device
 const space = await client.createSpace({ ephemeral: true });
 
+// TODO: how to name spaces for easy retrieval?
+
 // create an ephemeral space for the current window only
 const space = await client.createSpace({ ephemeral: true, replication: false });
 
