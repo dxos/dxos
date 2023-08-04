@@ -5,8 +5,12 @@ This gives developers a default place to store ephemeral runtime state with API 
 # Requirements
 
 1. Ephemeral spaces can be created without an identity
-2. The contents of an ephemeral space replicate to all windows of the same identity by default
-3. Developers can create as many of these ephemeral spaces as they need
+2. Ephemeral spaces are not persisted across application restarts
+3. The contents of an ephemeral space replicate to all windows of the same identity by default
+4. Users can create ephemeral spaces for the current window only
+5. Developers can create as many of these ephemeral spaces as they need
+
+## Typescript API
 
 ```ts
 import { Client } from '@dxos/client';
@@ -29,6 +33,8 @@ const isEphemeral = space.isEphemeral;
 // sense if replicating across windows
 const isReplicating = space.isReplicating;
 ```
+
+## React API
 
 ```tsx
 import { useSpace } from '@dxos/client';
