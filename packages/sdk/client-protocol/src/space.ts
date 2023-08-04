@@ -14,11 +14,7 @@ import { CancellableInvitationObservable } from './invitations';
 
 export interface SpaceInternal {
   get db(): DatabaseProxy;
-
   get data(): SpaceData;
-
-  // TODO(dmaretskyi): Return epoch info.
-  createEpoch(): Promise<void>;
 
   /**
    * Activates the space enabling the use of the database and starts replication with peers.
@@ -32,6 +28,9 @@ export interface SpaceInternal {
    * The setting is persisted on the local device.
    */
   deactivate(): Promise<void>;
+
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).

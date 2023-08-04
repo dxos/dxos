@@ -2,49 +2,61 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Args } from '@oclif/core';
+import { ux, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
-import { selectSpace, hostInvitation, waitForSpace } from '../../util';
+import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override flags = {
+    ...BaseCommand.flags,
+    multiple: Flags.boolean({
+      description: 'Multiple use.',
+    }),
+    'no-auth': Flags.boolean({
+      description: 'Skip authentication challenge.',
+    }),
+    timeout: Flags.integer({
+      description: 'Timeout in milliseconds.',
+      default: 5_000,
+    }),
+  };
 
   async run(): Promise<any> {
-    let { key } = this.args;
+    const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.spaces.get();
-      if (!key) {
-        key = await selectSpace(spaces);
-      }
-      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
-      if (!space) {
-        this.error('Invalid key');
-      }
+      const space = await this.getSpace(client, key);
 
-      await waitForSpace(space, (err) => this.error(err));
-
-      const observable = space.createInvitation();
+      // TODO(burdon): Timeout error not propagated.
+      const type = this.flags.multiple ? Invitation.Type.MULTIUSE : undefined;
+      const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
+      const observable = space!.createInvitation({ type, authMethod, timeout: this.flags.timeout });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
           onConnecting: async () => {
             const invitationCode = InvitationEncoder.encode(observable.get());
             this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
-            this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+            if (authMethod !== Invitation.AuthMethod.NONE) {
+              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+            } else {
+              this.log('');
+            }
           },
         },
       });
 
-      ux.action.start('Waiting for peer to connect...');
+      // TODO(burdon): Display joined peer?
+      ux.action.start('Waiting for peer to connect');
       await invitationSuccess;
       ux.action.stop();
-      this.log(chalk`{green Invitation completed.}`);
     });
   }
 }
