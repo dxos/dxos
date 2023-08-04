@@ -5396,9 +5396,9 @@ importers:
       '@xstate/react': ^3.2.1
       chromatic: ^6.17.0
       lodash.toarray: ^4.4.0
-      qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-qr-rounded: ^1.0.0
       url-join: ^5.0.0
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
@@ -5421,7 +5421,7 @@ importers:
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
       lodash.toarray: 4.4.0
-      qrcode.react: 3.1.0_react@18.2.0
+      react-qr-rounded: 1.0.0_react@18.2.0
       url-join: 5.0.0
       xstate: 4.37.1
     devDependencies:
@@ -34242,6 +34242,10 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     dev: true
 
+  /qrcode-generator/1.4.4:
+    resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
+    dev: false
+
   /qrcode-terminal/0.12.0:
     resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
     hasBin: true
@@ -34827,6 +34831,15 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       uncontrollable: 7.2.1_react@18.2.0
       warning: 4.0.3
+    dev: false
+
+  /react-qr-rounded/1.0.0_react@18.2.0:
+    resolution: {integrity: sha512-6ZW/yUwXXqdFzFu1zVyR2fZy2vyfX2ymFDEQEd2fjZqgC01voQlDfZzC5UmGur95kOfW7wh0gNUPKANeicM9hw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      qrcode-generator: 1.4.4
+      react: 18.2.0
     dev: false
 
   /react-reconciler/0.23.0_react@18.2.0:

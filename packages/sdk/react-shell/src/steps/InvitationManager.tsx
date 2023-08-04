@@ -3,8 +3,8 @@
 //
 
 import { CaretLeft, Check, X } from '@phosphor-icons/react';
-import { QRCodeSVG } from 'qrcode.react';
 import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'react';
+import { QR } from 'react-qr-rounded';
 
 import { Button, useId, useTranslation } from '@dxos/aurora';
 import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
@@ -90,13 +90,16 @@ export const InvitationManager = ({
       <Viewport.Root activeView={activeView} classNames='grow'>
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
-            <QRCodeSVG
-              bgColor='transparent'
-              fgColor='currentColor'
-              value={invitationUrl ?? 'never'}
+            <QR
+              rounding={100}
+              backgroundColor='transparent'
+              color='currentColor'
               className={mx('is-full bs-full', showAuthCode && 'invisible')}
               aria-labelledby={qrLabel}
-            />
+              errorCorrectionLevel='M'
+            >
+              {invitationUrl ?? 'never'}
+            </QR>
             <span id={qrLabel} className='sr-only'>
               {t('qr label')}
             </span>
