@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-const notAvailable = () => {
+export const randomBytes = () => {
   throw new Error('Not available on this platform');
 };
-
-export const randomBytes = () => notAvailable();

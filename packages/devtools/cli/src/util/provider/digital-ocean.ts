@@ -122,17 +122,17 @@ export class DigitalOceanProvider implements MachineryProvider {
     };
 
     const result = await this._session.droplets.create(createParameters);
-    const droplet = await waitForCondition(
-      async () => {
+    const droplet = await waitForCondition({
+      condition: async () => {
         const { droplet } = await this._session.droplets.getById(result.droplet.id);
         if (droplet?.networks.v4.find((net: any) => net.type === 'public').ip_address) {
           return droplet;
         }
         return undefined;
       },
-      0,
-      1000,
-    );
+      timeout: 0,
+      interval: 1000,
+    });
 
     const ipAddress = droplet.networks.v4.find((net: any) => net.type === 'public').ip_address;
 

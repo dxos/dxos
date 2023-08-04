@@ -20,12 +20,16 @@ export default class Stop extends BaseCommand<typeof Stop> {
   async run(): Promise<any> {
     return await this.execWithDaemon(async (daemon) => {
       const stop = async (profile: string) => {
-        if (this.flags.force) {
-          this.log(chalk`Force stopping agent {yellow ${profile}}`);
-        }
-        const process = await daemon.stop(profile, { force: this.flags.force });
-        if (process) {
-          this.log('Agent stopped');
+        try {
+          if (this.flags.force) {
+            this.log(chalk`Force stopping agent {yellow ${profile}}`);
+          }
+          const process = await daemon.stop(profile, { force: this.flags.force });
+          if (process) {
+            this.log('Agent stopped');
+          }
+        } catch (err: any) {
+          this.error(err);
         }
       };
 

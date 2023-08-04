@@ -4,14 +4,19 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
 
 import "dxos/config.proto";
-import "dxos/halo/credentials.proto";
-import "dxos/mesh/teleport/gossip.proto";
-import "dxos/keys.proto";
 import "dxos/echo/metadata.proto";
+import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+import "dxos/mesh/signal.proto";
+import "dxos/mesh/teleport/gossip.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -151,11 +156,9 @@ enum SpaceState {
   /// Space is active. Swarming and replication will be done.
   ACTIVE = 6;
 
-
   ///
   /// Runtime states:
   ///
-
 
   /// Space is closed.
   CLOSED = 1;
@@ -171,9 +174,9 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
-  
 }
 
+// TODO(burdon): Rename SpaceInfo?
 message Space {
   message Metrics {
     optional google.protobuf.Timestamp open = 1;
@@ -194,37 +197,37 @@ message Space {
     repeated dxos.keys.PublicKey data_feeds = 19;
 
     /// Last processed epoch. Might now have been applied yet.
-    optional dxos.halo.Credential current_epoch = 20;
+    optional dxos.halo.credentials.Credential current_epoch = 20;
 
     /// Epoch that is currently applied.
-    optional dxos.halo.Credential applied_epoch = 21;
+    optional dxos.halo.credentials.Credential applied_epoch = 21;
 
     /// Mutations already processed.
-    optional timeframe.TimeframeVector current_control_timeframe = 10;
+    optional dxos.echo.timeframe.TimeframeVector current_control_timeframe = 10;
 
     /// Minimum timeframe to consider the state to be up-to-date.
-    optional timeframe.TimeframeVector target_control_timeframe = 11;
+    optional dxos.echo.timeframe.TimeframeVector target_control_timeframe = 11;
 
     /// All mutations stored in feeds.
-    optional timeframe.TimeframeVector total_control_timeframe = 14;
+    optional dxos.echo.timeframe.TimeframeVector total_control_timeframe = 14;
 
     /// All mutations known to exist on the network.
-    optional timeframe.TimeframeVector known_control_timeframe = 15;
+    optional dxos.echo.timeframe.TimeframeVector known_control_timeframe = 15;
 
     /// Start timeframe of the pipeline.
-    optional timeframe.TimeframeVector start_data_timeframe = 100;
+    optional dxos.echo.timeframe.TimeframeVector start_data_timeframe = 100;
 
     /// Mutations already processed.
-    optional timeframe.TimeframeVector current_data_timeframe = 12;
+    optional dxos.echo.timeframe.TimeframeVector current_data_timeframe = 12;
 
     /// Minimum timeframe to consider the state to be up-to-date.
-    optional timeframe.TimeframeVector target_data_timeframe = 13;
+    optional dxos.echo.timeframe.TimeframeVector target_data_timeframe = 13;
 
     /// All mutations stored in feeds.
-    optional timeframe.TimeframeVector total_data_timeframe = 16;
+    optional dxos.echo.timeframe.TimeframeVector total_data_timeframe = 16;
 
     /// All mutations known to exist on the network.
-    optional timeframe.TimeframeVector known_data_timeframe = 17;
+    optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -281,7 +284,7 @@ service SpacesService {
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
-  /// Broadcast an emphemeral message to the space swarm.
+  /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
   /// Subscribe to messages from the space swarm.
   rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
@@ -317,7 +320,7 @@ message Invitation {
   }
 
   enum AuthMethod {
-    /// No authnetication is required. Guest should not call `Authenticate`.
+    /// No authentication is required. Guest should not call `Authenticate`.
     NONE = 0;
 
     /// Guest should call `Authenticate` with the shared secret.
@@ -420,6 +423,7 @@ enum ConnectionState {
 message NetworkStatus {
   message Signal {
     string server = 1;
+    // TODO(burdon): Where is this defined?
     dxos.mesh.signal.SignalState state = 2;
   }
 
@@ -444,7 +448,6 @@ service NetworkService {
 // NOTE: Keep aligned with LogLevel in @dxos/log.
 enum LogLevel {
   TRACE = 5;
-
   DEBUG = 10;
   INFO = 11;
   WARN = 12;
@@ -480,7 +483,7 @@ message LogEntry {
   string message = 2;
   optional google.protobuf.Struct context = 3;
   optional Meta meta = 4;
-  optional Error error = 5;
+  optional dxos.error.Error error = 5;
   google.protobuf.Timestamp timestamp = 6;
 }
 

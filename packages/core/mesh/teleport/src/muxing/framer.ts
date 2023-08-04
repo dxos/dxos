@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { RpcPort } from './rpc-port';
 
-const MAX_CHUNK_SIZE = 8192; // 1KB
+const MAX_CHUNK_SIZE = 8192;
 
 type Chunk = {
   msg: Buffer;

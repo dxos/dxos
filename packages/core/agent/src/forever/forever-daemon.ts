@@ -12,8 +12,9 @@ import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { DAEMON_START_TIMEOUT } from '../defs';
-import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { AgentWaitTimeoutError } from '../errors';
+import { lockFilePath, parseAddress, removeSocketFile } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -109,8 +110,18 @@ export class ForeverDaemon implements Daemon {
       try {
         // Wait for socket file to appear.
         {
-          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT);
-          await waitForCondition(() => fs.existsSync(parseAddress(getUnixSocket(profile)).path), DAEMON_START_TIMEOUT);
+          await waitForCondition({
+            condition: async () => await this.isRunning(profile),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
+          await waitForCondition({
+            condition: () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
         }
 
         // Check if agent is initialized.
@@ -135,6 +146,7 @@ export class ForeverDaemon implements Daemon {
         const errContent = fs.readFileSync(errFile, 'utf-8');
         log.error(errContent);
         await this.stop(profile);
+        throw err;
       }
     }
 
@@ -158,8 +170,11 @@ export class ForeverDaemon implements Daemon {
         }
       });
 
-    await waitFor({
+    await waitForCondition({
       condition: async () => !(await this.isRunning(profile)),
+      timeout: DAEMON_STOP_TIMEOUT,
+      interval: CHECK_INTERVAL,
+      error: new AgentWaitTimeoutError(),
     });
 
     removeSocketFile(profile);

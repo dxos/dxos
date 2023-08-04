@@ -11,11 +11,10 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
-      const listResponse = await tunnel.rpc.listTunnels();
-      if (!listResponse.tunnels) {
-        throw new Error();
+      const response = await tunnel.rpc.listTunnels();
+      if (response.tunnels) {
+        printTunnels(response.tunnels, this.flags);
       }
-      printTunnels(listResponse.tunnels!, this.flags);
     });
   }
 }
