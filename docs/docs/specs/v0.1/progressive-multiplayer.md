@@ -1,24 +1,25 @@
 # Progressive Multiplayer Store
 
-This spec describes a new API for ECHO which does not require users to deal with identity choices before using ECHO locally. Until a new device or user needs to join the swarm, the API feels like using any regular ephemeral state container such as redux or signals, but supports persistence and credible exit out of box.
+A new API for ECHO which does not require users to deal with identity choices before using ECHO locally. Until a new device or user needs to join the swarm, the API feels like using any regular ephemeral state container such as redux or signals, but supports persistence and credible exit out of box.
 
 ## Scenarios
 
-1. Developers can use a reactive state container without requiring users to log in or create an identity.
-2. Users can close and open their application and see state persisted
-3. Developers can upgrade the state container to a multi-device or multi-player state at any time by creating an identity or using an invitation hook in react.
-4. Users can inspect and manipulate their data via HALO (when those features become available)
-5. Users can reset their personal space by creating a new one to replace it
+1. Instant, Reactive state container
 
-## Requirements
+    Developers can use a reactive state container without requiring users to log in or create an identity. The container is valid immediately (synchronously) when created just like redux.
 
-1. There is only one personal space per identity
-2. The contents of this space replicate to all devices of the identity
-3. HALO must be able to inspect and manipulate the personal space
-4. The personal space must be able to be reset by the user
-5. HALO must be able to export and import data from the personal space to facilitate resetting and credible exit
+2. Persistence
 
-## API
+    Users can close and open their application and see state persisted.
+
+3. Progressive multiplayer
+
+    Developers can upgrade the state container (without data loss) to a multi-device or multi-player state at any time by creating an identity or using an invitation hook in react.
+
+## Glossary
+Null identity - the default identity created by the client when no identity is explicitly created by the user.
+
+## TypeScript API
 
 ```ts
 
@@ -31,32 +32,59 @@ await client.initialize();
 // no explicit create identity step required
 // await client.halo.createIdentity();
 
-// get the personal space
-const space = client.spaces.getPersonalSpace();
+// by default identity.get() returns null
+const identity = client.halo.identity.get();
+// > null
 
-// sense if a space is the personal space
-const isPersonalSpace = space.isPersonalSpace;
+// creating a space works without identity
+const space = client.createSpace();
 
 // before an explicit identity is created, sharing features throw
 
-// throws: An identity is required before creating invitations. Call `client.halo.createIdentity()` first.
 const invitation = space.createInvitation(); 
+// > throws: An identity is required before creating invitations. Call `client.halo.createIdentity()` first.
 
-// throws: An identity is required before creating invitations. Call `client.halo.createIdentity()` first.
 const deviceInvitation = client.halo.createInvitation();
+// > throws: An identity is required before creating invitations. Call `client.halo.createIdentity()` first.
 
 ```
 
+## React API
+
 ```tsx
-import { useSpace } from '@dxos/client';
+
+import { useSpaces, useShell } from '@dxos/react-client';
 
 const Component = () => {
-  // called with no arguments, useSpace returns the personal space
-  // calling useIdentity before this step is no longer required
-  const space = useSpace();
 
-  return <></>;
+  // calling useIdentity before this step is no longer required
+  const spaces = useSpaces();
+
+  // there will always be at least one space (personal space)
+  const [space] = spaces;
+
+  // using an identity will create one by default via shell panels
+  const identity = useIdentity();
+
+  // prevent automatic identity creation and read current identity
+  const identity2 = useIdentity({ login: false }); // null by default
+  
+  // grab a shell to invoke invite flows. requires ClientProvider (with ShellProvider inside)
+  const shell = useShell();
+
+  const action = async () => {
+    // invite a new user to the space with shell panel flow
+    // if an identity doesn't exist, the shell will create one
+    const newMembers = await shell.inviteMembers(space);
+
+    // invite another device with shell panel flow
+    const newDevice = await shell.inviteDevice();
+
+    // invoke the equivalent of HaloButton
+    shell.open();
+  }
+
+  return <a onClick={action}></a>;
 }
 
 ```
-
