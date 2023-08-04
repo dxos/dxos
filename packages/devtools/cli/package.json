@@ -61,6 +61,7 @@
     "git-rev-sync": "^3.0.2",
     "ink": "^3.2.0",
     "ink-table": "~3.0.0",
+    "inquirer": "^8.2.0",
     "ipfs-http-client": "~56.0.1",
     "isomorphic-ws": "^4.0.1",
     "js-yaml": "^4.1.0",
