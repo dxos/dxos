@@ -23,7 +23,7 @@ export class Balancer {
   private _channels: number[] = [];
 
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
-  private _calls: Map<number, Chunk[]> = new Map();
+  private readonly _calls: Map<number, Chunk[]> = new Map();
 
   constructor(private readonly _port: RpcPort, private readonly _sysChannelId: number) {
     this._channels.push(_sysChannelId);
