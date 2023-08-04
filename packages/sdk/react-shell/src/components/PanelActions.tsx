@@ -31,7 +31,7 @@ type PanelActionProps = ButtonProps & { 'aria-label': string };
 const PanelAction = (props: PanelActionProps) => {
   return (
     <Tooltip.Root delayDuration={1500}>
-      <Tooltip.Content side='bottom'>
+      <Tooltip.Content side='bottom' sideOffset={12}>
         {props['aria-label']}
         <Tooltip.Arrow />
       </Tooltip.Content>

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, Check, UserPlus } from '@phosphor-icons/react';
+import { Check, UserPlus } from '@phosphor-icons/react';
 import React, { cloneElement, useCallback } from 'react';
 
 import { Button, ScrollArea, useTranslation } from '@dxos/aurora';
@@ -10,7 +10,7 @@ import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { InvitationList, SpaceMemberListContainer } from '../../../components';
+import { InvitationList, PanelAction, PanelActions, SpaceMemberListContainer } from '../../../components';
 import { SpacePanelStepProps } from '../SpacePanelProps';
 
 type SpaceManagerProps = SpacePanelStepProps;
@@ -34,11 +34,15 @@ export const SpaceManager = ({
   }, []);
 
   const doneButton = (
-    <Button onClick={onDone} disabled={!active} classNames='mbs-2 pli-2 order-1' data-testid='identity-panel-done'>
-      <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-      <span className='grow'>{t('done label')}</span>
-      <Check weight='bold' className={getSize(4)} />
-    </Button>
+    <PanelAction
+      aria-label={t('done label')}
+      onClick={onDone}
+      disabled={!active}
+      classNames='order-1'
+      data-testid='identity-panel-done'
+    >
+      <Check weight='light' className={getSize(6)} />
+    </PanelAction>
   );
 
   return (
@@ -77,7 +81,7 @@ export const SpaceManager = ({
           <ScrollArea.Thumb />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
-      {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+      <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}</PanelActions>
     </>
   );
 };

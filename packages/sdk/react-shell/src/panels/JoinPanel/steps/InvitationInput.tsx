@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, SignOut } from '@phosphor-icons/react';
 import React, { cloneElement, ComponentPropsWithoutRef, useEffect, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 
-import { PanelStepHeading } from '../../../components';
+import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
 import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
@@ -54,15 +54,15 @@ export const InvitationInput = ({
       code: invitationCodeFromUrl(inputValue),
     });
 
-  const exitButton = (
-    <Button
+  const exitAction = (
+    <PanelAction
+      aria-label={t('cancel label')}
       disabled={disabled}
       {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
-      classNames='gap-2 pli-4'
       data-testid='join-exit'
     >
-      <span>{t('cancel label')}</span>
-    </Button>
+      <SignOut mirrored weight='light' className={getSize(6)} />
+    </PanelAction>
   );
 
   return (
@@ -82,35 +82,33 @@ export const InvitationInput = ({
         }}
       />
       <div role='none' className='grow' />
-      <div className='flex gap-2'>
-        <Button
+      <PanelActions>
+        <PanelAction
+          aria-label={t('continue label')}
           disabled={disabled}
-          classNames='grow flex items-center gap-2 pli-2 order-2'
+          classNames='order-2'
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-          <span className='grow'>{t('continue label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
-        </Button>
+          <CaretRight weight='light' className={getSize(6)} />
+        </PanelAction>
         {Kind === 'Halo' ? (
-          <Button
+          <PanelAction
+            aria-label={t('back label')}
             disabled={disabled}
             onClick={() => send({ type: 'deselectAuthMethod' })}
-            classNames='gap-2 pis-2 pie-4'
             data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
           >
-            <CaretLeft weight='bold' className={getSize(4)} />
-            <span>{t('back label')}</span>
-          </Button>
+            <CaretLeft weight='light' className={getSize(6)} />
+          </PanelAction>
         ) : exitActionParent ? (
-          cloneElement(exitActionParent, {}, exitButton)
+          cloneElement(exitActionParent, {}, exitAction)
         ) : doneActionParent ? (
-          cloneElement(doneActionParent, {}, exitButton)
+          cloneElement(doneActionParent, {}, exitAction)
         ) : (
-          exitButton
+          exitAction
         )}
-      </div>
+      </PanelActions>
     </>
   );
 };
