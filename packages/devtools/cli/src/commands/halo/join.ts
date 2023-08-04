@@ -5,6 +5,7 @@
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
+import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
@@ -14,21 +15,22 @@ import { acceptInvitation } from '../../util';
 export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;
   static override description = 'Join HALO (device) invitation.';
-
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
       description: 'Invitation code',
     }),
+    secret: Flags.string({
+      description: 'Invitation secret',
+    }),
   };
 
   async run(): Promise<any> {
-    let { invitation: encoded } = this.flags;
+    let { invitation: encoded, secret } = this.flags;
 
     return await this.execWithClient(async (client: Client) => {
       if (client.halo.identity.get()) {
-        this.log(chalk`{red Profile already initialized.}`);
-        return {};
+        this.error(chalk`{red Profile already initialized.}`);
       }
 
       if (!encoded) {
@@ -39,21 +41,28 @@ export default class Join extends BaseCommand<typeof Join> {
         encoded = searchParams.get('deviceInvitationCode') ?? encoded;
       }
 
-      const invitation = InvitationEncoder.decode(encoded!);
-      const observable = client.halo.acceptInvitation(invitation);
+      ux.log('');
       ux.action.start('Waiting for peer to connect');
-      const invitationSuccess = acceptInvitation({
-        observable,
+      const done = new Trigger();
+      const invitation = await acceptInvitation({
+        observable: client.halo.acceptInvitation(InvitationEncoder.decode(encoded!)),
         callbacks: {
           onConnecting: async () => ux.action.stop(),
-          onReadyForAuth: () => ux.prompt('Invitation code'),
+          onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+          onSuccess: async () => {
+            done.wake();
+          },
         },
       });
 
-      ux.action.start('Waiting for peer to finish invitation');
-      await invitationSuccess;
-      ux.action.stop();
-      this.log(chalk`{green Invitation completed.}`);
+      await done.wait();
+
+      ux.log();
+      ux.log(chalk`{green Joined}: ${invitation.identityKey!.truncate()}`);
+
+      return {
+        identityKey: invitation.identityKey,
+      };
     });
   }
 }

@@ -41,22 +41,99 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
-  return spaces.map((space) => ({
-    key: maybeTruncateKey(space.key, truncateKeys),
-    name: space.properties.name,
-  }));
+export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateKeys: false }) => {
+  return spaces.map((space) => {
+    // TODO(burdon): Factor out.
+    // TODO(burdon): Agent needs to restart before `ready` is available.
+    const { open, ready } = space.internal.data.metrics ?? {};
+    const startup = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+
+    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
+    // const host = client.services.services.DevtoolsHost!;
+    const pipeline = space.internal.data.pipeline;
+    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
+    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
+    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+
+    return {
+      key: maybeTruncateKey(space.key, options.truncateKeys),
+      open: space.isOpen,
+      name: space.properties.name,
+      members: space.members.get().length,
+      objects: space.db.query().objects.length,
+      startup,
+      epoch,
+      // appliedEpoch,
+
+      startDataMutations,
+      currentDataMutations,
+      totalDataMutations, // TODO(burdon): Shows up lower than current.
+      // TODO(burdon): Negative.
+      progress: (
+        Math.min(Math.abs((currentDataMutations - startDataMutations) / (totalDataMutations - startDataMutations)), 1) *
+        100
+      ).toFixed(0),
+    };
+  });
 };
 
-export const printSpaces = (spaces: Space[], flags = {}) => {
+export const printSpaces = (spaces: Space[], flags: any = {}) => {
   ux.table(
-    mapSpaces(spaces, true),
+    mapSpaces(spaces, { ...flags, truncateKeys: true }),
     {
       key: {
         header: 'key',
       },
+      open: {
+        header: 'open',
+      },
       name: {
         header: 'name',
+      },
+      members: {
+        header: 'members',
+      },
+      objects: {
+        header: 'objects',
+      },
+      startup: {
+        header: 'startup',
+        extended: true,
+      },
+      epoch: {
+        header: 'epoch',
+      },
+      // appliedEpoch: {
+      //   header: 'Applied Epoch',
+      // },
+
+      startDataMutations: {
+        header: 'stashed', // TODO(burdon): Stashed?
+        extended: true,
+      },
+      currentDataMutations: {
+        header: 'processed',
+        extended: true,
+      },
+      totalDataMutations: {
+        header: 'total',
+        extended: true,
+      },
+      progress: {
+        header: 'progress',
+        // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
+        // get: (spaceInfo) => {
+        //   let progressValue = +spaceInfo.progress;
+        //   const subscription = spaces[0].pipeline.subscribe({
+        //     next: (value) => {
+        //       console.log('update', value);
+        //       progressValue += 1;
+        //     },
+        //   });
+        //   return progressValue;
+        // },
       },
     },
     {

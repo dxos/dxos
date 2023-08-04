@@ -32,34 +32,26 @@ export default class Deploy extends BaseCommand<typeof Deploy> {
 
   async run(): Promise<any> {
     const { hostname, provider: providerName, dev, accessToken } = this.flags;
+    return await this.execWithClient(async (client: Client) => {
+      if (!client.halo.identity) {
+        this.error('Halo profile should be initialized first.');
+      }
 
-    try {
-      return await this.execWithClient(async (client: Client) => {
-        if (!client.halo.identity) {
-          throw new Error('Halo profile should be initialized first.');
-        }
-        // TODO(egorgripasov): HALO <-> KUBE integration.
-        let provider: MachineryProvider;
-        switch (providerName) {
-          case DEFAULT_PROVIDER: {
-            provider = new DigitalOceanProvider(this.clientConfig!);
-            break;
-          }
-          default: {
-            throw new Error(`Unknown provider: ${providerName}`);
-          }
+      // TODO(egorgripasov): HALO <-> KUBE integration.
+      let provider: MachineryProvider;
+      switch (providerName) {
+        case DEFAULT_PROVIDER: {
+          provider = new DigitalOceanProvider(this.clientConfig!);
+          break;
         }
 
-        const kube = await provider.deploy({
-          hostname,
-          dev,
-          accessToken,
-        });
+        default: {
+          this.error(`Unknown provider: ${providerName}`);
+        }
+      }
 
-        printKubes([kube]);
-      });
-    } catch (err: any) {
-      this.error(err);
-    }
+      const kube = await provider.deploy({ hostname, dev, accessToken });
+      printKubes([kube]);
+    });
   }
 }

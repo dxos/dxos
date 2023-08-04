@@ -7,14 +7,14 @@ import React, { FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { Button } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexSet, range } from '@dxos/util';
+import { ComplexSet } from '@dxos/util';
 
 import { DetailsTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
@@ -55,11 +55,13 @@ const SpacesPanel: FC = () => {
         currentEpochNumber === appliedEpochNumber
           ? currentEpochNumber
           : `${currentEpochNumber} (${appliedEpochNumber})`,
+      epochStashedMutations: pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0,
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
       mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
       controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
       dataProgress: `${(
-        Math.min((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages), 1) * 100
+        Math.min(Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages)), 1) *
+        100
       ).toFixed(0)}%`,
       startupTime:
         space?.internal.data?.metrics.open &&
@@ -245,75 +247,6 @@ const PipelineTable = ({
   ];
 
   return <Table compact columns={columns} data={data} />;
-};
-
-// TODO(burdon): Not used?
-const PipelineOverview = ({ state }: { state: SpaceProto.PipelineState }) => {
-  const controlKeys = Timeframe.merge(
-    state.currentControlTimeframe ?? new Timeframe(),
-    state.targetControlTimeframe ?? new Timeframe(),
-    state.totalControlTimeframe ?? new Timeframe(),
-    state.knownControlTimeframe ?? new Timeframe(),
-  )
-    .frames()
-    .map(([key]) => key);
-
-  const dataKeys = Timeframe.merge(
-    state.currentDataTimeframe ?? new Timeframe(),
-    state.targetDataTimeframe ?? new Timeframe(),
-    state.totalDataTimeframe ?? new Timeframe(),
-    state.knownDataTimeframe ?? new Timeframe(),
-  )
-    .frames()
-    .map(([key]) => key);
-
-  return (
-    <div>
-      <div>
-        <h4>Control feeds</h4>
-        {controlKeys.map((feedKey) => (
-          <FeedView
-            key={feedKey.toHex()}
-            feedKey={feedKey}
-            processed={state.currentControlTimeframe?.get(feedKey)}
-            target={state.targetControlTimeframe?.get(feedKey)}
-          />
-        ))}
-      </div>
-      <div>
-        <h4>Data feeds</h4>
-        {dataKeys.map((feedKey) => (
-          <FeedView
-            key={feedKey.toHex()}
-            feedKey={feedKey}
-            processed={state.currentDataTimeframe?.get(feedKey)}
-            target={state.targetDataTimeframe?.get(feedKey)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-type FeedViewProps = {
-  feedKey: PublicKey;
-  processed?: number;
-  target?: number;
-  total?: number;
-  known?: number;
-};
-
-const FeedView = ({ feedKey, processed = 0, target = 0 }: FeedViewProps) => {
-  const total = Math.max(processed);
-  return (
-    <div className='flex flex-row overflow-auto gap-0.5'>
-      <div>{feedKey.truncate()}</div>
-      {range(total).map((i) => {
-        const color = i <= processed ? 'bg-green-400' : i <= target ? 'bg-orange-400' : 'bg-gray-400';
-        return <div key={i} className={mx('w-[3px] h-[20px]', color)}></div>;
-      })}
-    </div>
-  );
 };
 
 export default SpacesPanel;

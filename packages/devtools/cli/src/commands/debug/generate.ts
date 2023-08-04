@@ -39,7 +39,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     let { key } = this.args;
     const { mutationsPerEpoch } = this.flags;
     return await this.execWithClient(async (client: Client) => {
-      const spaces = client.spaces.get();
+      const spaces = await this.getSpaces(client);
       if (!key) {
         key = await selectSpace(spaces);
       }
