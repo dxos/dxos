@@ -41,7 +41,12 @@ export const printDevices = (devices: Device[], flags = {}) => {
 // Spaces
 //
 
-export const mapSpaces = (spaces: Space[], options = { verbose: false, truncateKeys: false }) => {
+type MapSpacesOptions = {
+  verbose?: boolean;
+  truncateKeys?: boolean;
+};
+
+export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) => {
   return spaces.map((space) => {
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.

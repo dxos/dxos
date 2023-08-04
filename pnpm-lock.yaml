@@ -3203,6 +3203,8 @@ importers:
       get-folder-size: ^2.0.1
       git-rev-sync: ^3.0.2
       globby: ^11.1.0
+      ink: ^3.2.0
+      ink-table: ~3.0.0
       inquirer: ^8.2.0
       ipfs-http-client: ~56.0.1
       isomorphic-ws: ^4.0.1
@@ -3251,6 +3253,8 @@ importers:
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
       git-rev-sync: 3.0.2
+      ink: 3.2.0_react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
       inquirer: 8.2.4
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.9
@@ -27206,6 +27210,45 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.0.21
+      ansi-escapes: 4.3.2
+      auto-bind: 4.0.0
+      chalk: 4.1.2
+      cli-boxes: 2.2.1
+      cli-cursor: 3.1.0
+      cli-truncate: 2.1.0
+      code-excerpt: 3.0.0
+      indent-string: 4.0.0
+      is-ci: 2.0.0
+      lodash: 4.17.21
+      patch-console: 1.0.0
+      react: 18.2.0
+      react-devtools-core: 4.26.1
+      react-reconciler: 0.26.2_react@18.2.0
+      scheduler: 0.20.2
+      signal-exit: 3.0.7
+      slice-ansi: 3.0.0
+      stack-utils: 2.0.5
+      string-width: 4.2.3
+      type-fest: 0.12.0
+      widest-line: 3.1.0
+      wrap-ansi: 6.2.0
+      ws: 7.5.9
+      yoga-layout-prebuilt: 1.10.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
+  /ink/3.2.0_react@18.2.0:
+    resolution: {integrity: sha512-firNp1q3xxTzoItj/eOOSZQnYSlyrWks5llCTVX37nJ59K3eXbQ8PtzCguqo8YI19EELo5QxaKnJd4VxzhU8tg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@types/react': '>=16.8.0'
+      react: ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
       ansi-escapes: 4.3.2
       auto-bind: 4.0.0
       chalk: 4.1.2
