@@ -40,7 +40,7 @@ const isReplicating = space.isReplicating;
 import { useSpace } from '@dxos/client';
 
 const Component = () => {
-  // graph a known ephemeral space
+  // use a known ephemeral space
   const space = useSpace('app');
 
   // sense if a space is ephemeral
