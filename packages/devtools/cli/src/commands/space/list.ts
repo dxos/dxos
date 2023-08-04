@@ -30,6 +30,11 @@ export default class List extends BaseCommand<typeof List> {
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
     const tableUpdate = new Event().debounce(1000);
+    tableUpdate.on(ctx, async () => {
+      console.clear();
+      printSpaces(spaces, this.flags);
+    });
+
     const subscribeToSpaceUpdate = (space: Space) =>
       space.pipeline.subscribe({
         next: () => {
@@ -59,10 +64,6 @@ export default class List extends BaseCommand<typeof List> {
         },
       }),
     );
-    tableUpdate.on(ctx, async () => {
-      console.clear();
-      printSpaces(spaces, this.flags);
-    });
   }
 
   async run(): Promise<any> {
@@ -72,6 +73,8 @@ export default class List extends BaseCommand<typeof List> {
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
+        this.flags.live && console.clear();
+
         printSpaces(spaces, this.flags);
 
         if (this.flags.live) {
