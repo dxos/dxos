@@ -27,6 +27,10 @@ export default class Generate extends BaseCommand<typeof Generate> {
       description: 'Interval between mutations (ms).',
       default: 0,
     }),
+    jitter: Flags.integer({
+      description: 'Inverval variance (ms).',
+      default: 0,
+    }),
     objects: Flags.integer({
       description: 'Number of objects.',
       default: 0,
@@ -42,12 +46,20 @@ export default class Generate extends BaseCommand<typeof Generate> {
   };
 
   async run(): Promise<any> {
+    const pause = async () => {
+      if (this.flags.interval) {
+        const period = this.flags.interval + this.flags.jitter ? random.number({ min: 0, max: this.flags.jitter }) : 0;
+        await sleep(period);
+      }
+    };
+
     const type = 'test';
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
         space?.db.add(new Expando({ type, title: random.word() }));
         await space.db.flush();
+        await pause();
       }
 
       const { objects } = space?.db.query({ type });
@@ -56,9 +68,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
           const object = random.element(objects);
           object.title = random.word();
           await space.db.flush();
-          if (this.flags.interval) {
-            await sleep(this.flags.interval);
-          }
+          await pause();
 
           // TODO(burdon): Remove: trigger via agent.
           if (this.flags.epoch && i % this.flags.epoch === 0 && i > 0) {

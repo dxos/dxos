@@ -32,7 +32,7 @@ export const App: FC<{ client: Client; interval?: number }> = ({ client, interva
   return (
     <Box flexDirection='column'>
       <SystemTable />
-      <SpaceTable client={client} interval={interval} />
+      {false && <SpaceTable client={client} interval={interval} />}
       <Text>[q]uit; [r]efresh</Text>
     </Box>
   );

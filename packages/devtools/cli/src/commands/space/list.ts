@@ -20,9 +20,27 @@ export default class List extends BaseCommand<typeof List> {
     ...ux.table.flags(),
     live: Flags.boolean({
       description: 'Live update.',
-      default: false,
     }),
   };
+
+  async run(): Promise<any> {
+    return await this.execWithClient(async (client: Client) => {
+      const spaces = await this.getSpaces(client, !this.flags.live);
+
+      if (this.flags.json) {
+        return mapSpaces(spaces);
+      } else {
+        printSpaces(spaces, this.flags);
+
+        if (this.flags.live) {
+          // TODO(burdon): Use https://www.npmjs.com/package/ansi-escapes to reset screen.
+          console.clear();
+          await this._startLiveUpdate(client);
+          await new Promise((resolve, reject) => {});
+        }
+      }
+    });
+  }
 
   async _startLiveUpdate(client: Client) {
     const ctx = new Context();
@@ -42,9 +60,8 @@ export default class List extends BaseCommand<typeof List> {
         },
       });
 
-    let spaces = await this.getSpaces(client, false);
-
     // Monitor space updates.
+    let spaces = await this.getSpaces(client, false);
     spaces.forEach((space) => {
       subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
     });
@@ -64,24 +81,5 @@ export default class List extends BaseCommand<typeof List> {
         },
       }),
     );
-  }
-
-  async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client, false);
-
-      if (this.flags.json) {
-        return mapSpaces(spaces);
-      } else {
-        this.flags.live && console.clear();
-
-        printSpaces(spaces, this.flags);
-
-        if (this.flags.live) {
-          await this._startLiveUpdate(client);
-          await new Promise((resolve, reject) => {});
-        }
-      }
-    });
   }
 }

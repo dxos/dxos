@@ -117,8 +117,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }),
 
     timeout: Flags.integer({
-      description: 'Timeout in seconds.',
-      default: 30,
+      description: 'Timeout (ms).',
+      default: 60_000,
       aliases: ['t'],
     }),
   };
@@ -303,9 +303,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Convert known errors to human readable messages.
     if (err instanceof SpaceWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error: Hit timeout waiting for space to be ready. Space is still replicating.}`);
+      this.logToStderr(chalk`{red Error: Timeout waiting for space to be ready (still replicating?)}`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error: Agent is stale, you can restart it with \n'dx agent restart --force'}`);
+      this.logToStderr(chalk`{red Error: Agent is stale; restart with \n'dx agent restart --force'}`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -371,7 +371,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getSpaces(client: Client, wait = true): Promise<Space[]> {
     const spaces = client.spaces.get();
     if (wait) {
-      await Promise.all(spaces.map((space) => waitForSpace(space, (err) => this.error(err))));
+      await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
     }
 
     return spaces;
@@ -390,7 +390,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!space) {
       this.error(`Invalid key: ${key}`);
     } else {
-      await waitForSpace(space, (err) => this.error(err));
+      await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
       return space;
     }
   }
