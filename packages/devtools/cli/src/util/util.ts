@@ -43,9 +43,13 @@ export const selectSpace = async (spaces: Space[]) => {
   return key;
 };
 
-export const waitForSpace = async (space: Space, exceptionHandler?: (err: Error) => void) => {
+export const waitForSpace = async (
+  space: Space,
+  timeout = SPACE_WAIT_TIMEOUT,
+  exceptionHandler?: (err: Error) => void,
+) => {
   try {
-    await asyncTimeout(space.waitUntilReady(), SPACE_WAIT_TIMEOUT, new SpaceWaitTimeoutError());
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
   } catch (err: any) {
     if (exceptionHandler) {
       exceptionHandler(err);

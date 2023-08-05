@@ -2,4 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export const SPACE_WAIT_TIMEOUT = 2000;
+// TODO(burdon): Global CLI flag.
+export const SPACE_WAIT_TIMEOUT = 60_000;

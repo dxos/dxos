@@ -17,6 +17,7 @@ import {
   LoggingPanel,
   MembersPanel,
   SignalPanel,
+  SpaceInfoPanel,
   SpacesPanel,
   StoragePanel,
   SwarmPanel,
@@ -79,6 +80,10 @@ export const useRoutes = () => {
             {
               path: '/echo/spaces',
               element: <SpacesPanel />,
+            },
+            {
+              path: '/echo/space',
+              element: <SpaceInfoPanel />,
             },
             {
               path: '/echo/feeds',
