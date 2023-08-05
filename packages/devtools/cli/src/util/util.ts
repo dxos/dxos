@@ -49,7 +49,7 @@ export const waitForSpace = async (
   exceptionHandler?: (err: Error) => void,
 ) => {
   try {
-    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError());
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
   } catch (err: any) {
     if (exceptionHandler) {
       exceptionHandler(err);

@@ -121,6 +121,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       default: 60_000,
       aliases: ['t'],
     }),
+
+    'no-wait': Flags.boolean({
+      description: 'Do not wait for space to be ready.',
+    }),
   };
 
   private readonly _stdin?: string;
@@ -303,9 +307,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Convert known errors to human readable messages.
     if (err instanceof SpaceWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error: Timeout waiting for space to be ready (still replicating?)}`);
+      this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error: Agent is stale; restart with \n'dx agent restart --force'}`);
+      this.logToStderr(chalk`{red Error}: Agent is stale (restart with \n'dx agent restart --force')`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -363,14 +367,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     return this._client;
   }
 
-  // TODO(burdon): Move to util (out of base command?)
-
   /**
    * Get spaces and optionally wait until ready.
    */
   async getSpaces(client: Client, wait = true): Promise<Space[]> {
     const spaces = client.spaces.get();
-    if (wait) {
+    if (wait && !this.flags['no-wait']) {
       await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
     }
 

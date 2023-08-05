@@ -13,6 +13,7 @@ import {
   IdentificationBadge,
   Key,
   PaperPlane,
+  Planet,
   Queue,
   Receipt,
   Users,
@@ -89,7 +90,12 @@ export const useSections = (): SectionItem[] => {
         {
           id: '/echo/spaces',
           title: 'Spaces',
-          Icon: HardDrive,
+          Icon: Graph,
+        },
+        {
+          id: '/echo/space',
+          title: 'Space',
+          Icon: Planet,
         },
         {
           id: '/echo/feeds',
