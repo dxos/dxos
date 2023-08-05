@@ -7,7 +7,7 @@ import React, { FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -132,13 +132,13 @@ const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'Gen',
     width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
     accessor: 'genesis',
   },
   {
     Header: 'Own',
     width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
     accessor: 'own',
   },
   {
