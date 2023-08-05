@@ -9,46 +9,31 @@ import { Button, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Avatar } from '@dxos/react-appkit';
 import type { Identity } from '@dxos/react-client/halo';
-import { InvitationResult } from '@dxos/react-client/invitations';
 
-import { PanelStepHeading } from '../../../components';
+import { PanelAction, PanelStepHeading } from '../../../components';
 import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
 
-export interface IdentityAddedProps extends JoinStepProps, DoneProps {
+export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;
   addedIdentity?: Identity;
 }
 
-export interface DoneProps extends JoinStepProps {
-  doneActionParent?: Parameters<typeof cloneElement>[0];
-  onDone?: (result: InvitationResult | null) => void;
-}
-
-const Done = ({ onDone, doneActionParent, active }: DoneProps) => {
+export const IdentityAdded = (props: IdentityAddedProps) => {
+  const { mode, addedIdentity, active, send, onDone, doneActionParent } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
 
-  const doneButton = (
-    <Button
+  const doneAction = (
+    <PanelAction
+      aria-label={t('done label')}
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
-      classNames='grow flex items-center gap-2 pli-2'
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
-      <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-      <span className='grow'>{t('done label')}</span>
-      <Check className={getSize(4)} />
-    </Button>
+      <Check weight='light' className={getSize(6)} />
+    </PanelAction>
   );
-
-  return doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton;
-};
-
-export const IdentityAdded = (props: IdentityAddedProps) => {
-  const { mode, addedIdentity, active, send } = props;
-  const disabled = !active;
-  const { t } = useTranslation('os');
 
   return (
     <>
@@ -67,7 +52,11 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
         />
       </div>
       {mode === 'halo-only' ? (
-        <Done {...props} />
+        doneActionParent ? (
+          cloneElement(doneActionParent, {}, doneAction)
+        ) : (
+          doneAction
+        )
       ) : (
         <div className='flex gap-2'>
           <Button

@@ -21,7 +21,7 @@ export type TransportTestSpec = {
   streamLoadInterval: number;
   streamLoadChunkSize: number;
 
-  desiredSwarmTimeout: number;
+  targetSwarmTimeout: number;
   fullSwarmTimeout: number;
   iterationDelay: number;
   streamsDelay: number;
@@ -54,7 +54,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     const { config, spec, agents } = env.params;
     const { agentIdx, swarmTopicIds, signalUrl } = config;
 
-    const numOfAgents = Object.keys(agents).length;
+    const numAgents = Object.keys(agents).length;
 
     log.info('run', {
       agentIdx,
@@ -90,13 +90,13 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       await cancelWithContext(context, swarm.join());
 
       log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      await sleep(spec.desiredSwarmTimeout);
+      await sleep(spec.targetSwarmTimeout);
       log.info('number of connections within duration', {
         agentIdx,
         swarmIdx,
         swarmTopic: swarm.topic,
         connections: swarm.protocol.connections.size,
-        numOfAgents,
+        numAgents,
       });
 
       /**
@@ -118,7 +118,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           swarmIdx,
           swarmTopic: swarm.topic,
           connections: swarm.protocol.connections.size,
-          numOfAgents,
+          numAgents,
         });
       });
     };
@@ -180,7 +180,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       log.info('testRun iteration', { iterationId: testCounter });
 
       // Join all swarms.
-      // How many connections established within the desired duration.
+      // How many connections established within the target duration.
       {
         log.info('joining all swarms', { agentIdx });
 
@@ -200,14 +200,14 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         log.info('starting streams', { agentIdx });
 
         // TODO(egorgripasov): Multiply by iterration number.
-        const desiredStreems = (numOfAgents - 1) * spec.swarmsPerAgent;
+        const targetStreems = (numAgents - 1) * spec.swarmsPerAgent;
         let actualStreams = 0;
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           log.info('starting stream', { agentIdx, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-            await swarm.protocol.startStream(
+            await swarm.protocol.openStream(
               PublicKey.from(agentId),
               streamTag,
               spec.streamLoadInterval,
@@ -216,11 +216,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             actualStreams++;
             log.info('test stream started', { agentIdx, swarmIdx });
           } catch (error) {
-            log.info('test stream failed', { agentIdx, swarmIdx, error });
+            log.error('test stream failed', { agentIdx, swarmIdx, error });
           }
         });
 
-        log.info('streams started', { testCounter, agentIdx, desiredStreems, actualStreams });
+        log.info('streams started', { testCounter, agentIdx, targetStreems, actualStreams });
         await env.syncBarrier(`streams are started at ${testCounter}`);
       }
 
@@ -230,7 +230,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       {
         log.info('start testing connections', { agentIdx, testCounter });
 
-        const desiredConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
+        const targetConnections = (numAgents - 1) * spec.swarmsPerAgent;
         let actualConnections = 0;
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
@@ -244,7 +244,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           }
         });
 
-        log.info('test connections done', { testCounter, agentIdx, desiredConnections, actualConnections });
+        log.info('test connections done', { testCounter, agentIdx, targetConnections, actualConnections });
         await env.syncBarrier(`connections are tested on ${testCounter}`);
       }
 

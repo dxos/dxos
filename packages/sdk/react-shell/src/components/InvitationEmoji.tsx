@@ -6,7 +6,7 @@ import React, { ComponentPropsWithoutRef } from 'react';
 
 import { getSize, mx } from '@dxos/aurora-theme';
 
-import { toEmoji } from '../../util';
+import { toEmoji } from '../util';
 
 export type InvitationEmojiProps = {
   invitationId?: string;

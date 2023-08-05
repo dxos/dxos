@@ -5,13 +5,13 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
-import { PanelStepHeading } from '../../../components';
+import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
@@ -57,27 +57,26 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
         data-testid='identity-input'
       />
       <div role='none' className='grow' />
-      <div className='flex gap-2'>
-        <Button
+      <PanelActions>
+        <PanelAction
+          aria-label={t('continue label')}
           disabled={disabled}
-          classNames='grow flex items-center gap-2 pli-2 order-2'
+          classNames='order-2'
           onClick={handleNext}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-          <span className='grow'>{t('continue label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
-        </Button>
-        <Button
+          <CaretRight weight='light' className={getSize(6)} />
+        </PanelAction>
+        <PanelAction
+          aria-label={t('back label')}
           disabled={disabled}
           onClick={() => send({ type: 'deselectAuthMethod' })}
           classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('back label')}</span>
-        </Button>
-      </div>
+          <CaretLeft weight='light' className={getSize(6)} />
+        </PanelAction>
+      </PanelActions>
     </>
   );
 };

@@ -3169,7 +3169,6 @@ importers:
       '@dxos/bare-template': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-protocol': workspace:*
-      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
@@ -3183,7 +3182,6 @@ importers:
       '@dxos/tasks-template': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
-      '@dxos/websocket-rpc': workspace:*
       '@oclif/core': ^2.9.4
       '@oclif/plugin-help': ^5.2.14
       '@oclif/plugin-plugins': ^3.1.8
@@ -3202,20 +3200,18 @@ importers:
       fs-extra: ^8.1.0
       get-folder-size: ^2.0.1
       git-rev-sync: ^3.0.2
-      globby: ^11.1.0
+      ink: ^3.2.0
+      ink-table: ~3.0.0
       inquirer: ^8.2.0
       ipfs-http-client: ~56.0.1
       isomorphic-ws: ^4.0.1
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
       node-fetch: ^2.6.0
-      nodemon: ^2.0.22
       oclif: ^3.7.0
       pkg-up: ^3.1.0
       react: ^18.2.0
       shx: ^0.3.3
-      tempy: ^1.0.1
-      tiny-invariant: ^1.3.1
       typescript: ^5.0.4
       uuid: ^8.3.2
       ws: ^7.4.4
@@ -3225,7 +3221,6 @@ importers:
       '@dxos/bare-template': link:../../apps/templates/bare-template
       '@dxos/client': link:../../sdk/client
       '@dxos/client-protocol': link:../../sdk/client-protocol
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
@@ -3239,7 +3234,6 @@ importers:
       '@dxos/tasks-template': link:../../apps/templates/tasks-template
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
-      '@dxos/websocket-rpc': link:../../core/mesh/websocket-rpc
       '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-help': 5.2.14_d2gyhxeuxd6tnmgqdyixls47tq
       '@oclif/plugin-plugins': 3.1.8_d2gyhxeuxd6tnmgqdyixls47tq
@@ -3251,6 +3245,8 @@ importers:
       fs-extra: 8.1.0
       get-folder-size: 2.0.1
       git-rev-sync: 3.0.2
+      ink: 3.2.0_react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
       inquirer: 8.2.4
       ipfs-http-client: 56.0.3_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.9
@@ -3260,8 +3256,6 @@ importers:
       oclif: 3.7.0_d2gyhxeuxd6tnmgqdyixls47tq
       pkg-up: 3.1.0
       react: 18.2.0
-      tempy: 1.0.1
-      tiny-invariant: 1.3.1
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       ws: 7.5.9
     devDependencies:
@@ -3272,8 +3266,6 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
-      globby: 11.1.0
-      nodemon: 2.0.22
       shx: 0.3.4
       typescript: 5.0.4
 
@@ -5396,9 +5388,9 @@ importers:
       '@xstate/react': ^3.2.1
       chromatic: ^6.17.0
       lodash.toarray: ^4.4.0
-      qrcode.react: ^3.1.0
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-qr-rounded: ^1.0.0
       url-join: ^5.0.0
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
@@ -5421,7 +5413,7 @@ importers:
       '@react-hook/async': 3.1.1_react@18.2.0
       '@xstate/react': 3.2.1_wfa3tvauabcbgnf4xzc27ilhy4
       lodash.toarray: 4.4.0
-      qrcode.react: 3.1.0_react@18.2.0
+      react-qr-rounded: 1.0.0_react@18.2.0
       url-join: 5.0.0
       xstate: 4.37.1
     devDependencies:
@@ -22246,6 +22238,7 @@ packages:
   /crypto-random-string/2.0.0:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
     engines: {node: '>=8'}
+    dev: true
 
   /crypto-random-string/4.0.0:
     resolution: {integrity: sha512-x8dy3RnvYdlUcPOjkEHqozhiwzKNSq7GcPuXFbnyMOCHxX8V3OgIg/pYuabl2sbUPfIJaeAQB7PMOK8DFIdoRA==}
@@ -23075,20 +23068,6 @@ packages:
       is-path-cwd: 2.2.0
       is-path-inside: 3.0.3
       p-map: 3.0.0
-      rimraf: 3.0.2
-      slash: 3.0.0
-    dev: false
-
-  /del/6.1.1:
-    resolution: {integrity: sha512-ua8BhapfP0JUJKC/zV9yHHDW/rDoDxP4Zhn3AkA6/xT6gY7jYXJiaeyBZznYVujhZZET+UgcbZiQ7sN3WqcImg==}
-    engines: {node: '>=10'}
-    dependencies:
-      globby: 11.1.0
-      graceful-fs: 4.2.10
-      is-glob: 4.0.3
-      is-path-cwd: 2.2.0
-      is-path-inside: 3.0.3
-      p-map: 4.0.0
       rimraf: 3.0.2
       slash: 3.0.0
     dev: false
@@ -27206,6 +27185,45 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.0.21
+      ansi-escapes: 4.3.2
+      auto-bind: 4.0.0
+      chalk: 4.1.2
+      cli-boxes: 2.2.1
+      cli-cursor: 3.1.0
+      cli-truncate: 2.1.0
+      code-excerpt: 3.0.0
+      indent-string: 4.0.0
+      is-ci: 2.0.0
+      lodash: 4.17.21
+      patch-console: 1.0.0
+      react: 18.2.0
+      react-devtools-core: 4.26.1
+      react-reconciler: 0.26.2_react@18.2.0
+      scheduler: 0.20.2
+      signal-exit: 3.0.7
+      slice-ansi: 3.0.0
+      stack-utils: 2.0.5
+      string-width: 4.2.3
+      type-fest: 0.12.0
+      widest-line: 3.1.0
+      wrap-ansi: 6.2.0
+      ws: 7.5.9
+      yoga-layout-prebuilt: 1.10.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
+  /ink/3.2.0_react@18.2.0:
+    resolution: {integrity: sha512-firNp1q3xxTzoItj/eOOSZQnYSlyrWks5llCTVX37nJ59K3eXbQ8PtzCguqo8YI19EELo5QxaKnJd4VxzhU8tg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@types/react': '>=16.8.0'
+      react: ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
       ansi-escapes: 4.3.2
       auto-bind: 4.0.0
       chalk: 4.1.2
@@ -34242,6 +34260,10 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     dev: true
 
+  /qrcode-generator/1.4.4:
+    resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
+    dev: false
+
   /qrcode-terminal/0.12.0:
     resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
     hasBin: true
@@ -34827,6 +34849,15 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       uncontrollable: 7.2.1_react@18.2.0
       warning: 4.0.3
+    dev: false
+
+  /react-qr-rounded/1.0.0_react@18.2.0:
+    resolution: {integrity: sha512-6ZW/yUwXXqdFzFu1zVyR2fZy2vyfX2ymFDEQEd2fjZqgC01voQlDfZzC5UmGur95kOfW7wh0gNUPKANeicM9hw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      qrcode-generator: 1.4.4
+      react: 18.2.0
     dev: false
 
   /react-reconciler/0.23.0_react@18.2.0:
@@ -37745,6 +37776,7 @@ packages:
   /temp-dir/2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
     engines: {node: '>=8'}
+    dev: true
 
   /temp/0.8.4:
     resolution: {integrity: sha512-s0ZZzd0BzYv5tLSptZooSjK8oj6C+c19p7Vqta9+6NPOf7r+fxq0cJe6/oN4LTC79sy5NY8ucOJNgwsKCSbfqg==}
@@ -37762,17 +37794,6 @@ packages:
       type-fest: 0.16.0
       unique-string: 2.0.0
     dev: true
-
-  /tempy/1.0.1:
-    resolution: {integrity: sha512-biM9brNqxSc04Ee71hzFbryD11nX7VPhQQY32AdDmjFvodsRFz/3ufeoTZ6uYkRFfGo188tENcASNs3vTdsM0w==}
-    engines: {node: '>=10'}
-    dependencies:
-      del: 6.1.1
-      is-stream: 2.0.1
-      temp-dir: 2.0.0
-      type-fest: 0.16.0
-      unique-string: 2.0.0
-    dev: false
 
   /terminal-link/2.1.1:
     resolution: {integrity: sha512-un0FmiRUQNr5PJqy9kP7c40F5BOfpGlYTrxonDChEZB7pzZxRNp/bt+ymiy9/npwXya9KH99nJ/GXFIiUkYGFQ==}
@@ -38393,6 +38414,7 @@ packages:
   /type-fest/0.16.0:
     resolution: {integrity: sha512-eaBzG6MxNzEn9kiwvtre90cXaNLkmadMWa1zQMs3XORCXNbsH/OewwbxC5ia9dCxIxnTAsSxXJaa/p5y8DlvJg==}
     engines: {node: '>=10'}
+    dev: true
 
   /type-fest/0.20.2:
     resolution: {integrity: sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==}
@@ -38659,6 +38681,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       crypto-random-string: 2.0.0
+    dev: true
 
   /unique-string/3.0.0:
     resolution: {integrity: sha512-VGXBUVwxKMBUznyffQweQABPRRW1vHZAbadFZud4pLFAqRGvv/96vafgjWFqzourzr8YonlQiPgH0YCJfawoGQ==}

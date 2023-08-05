@@ -12,7 +12,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Daemon, ForeverDaemon } from '@dxos/agent';
+import { AgentWaitTimeoutError, Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import {
   DX_CONFIG,
@@ -22,6 +22,7 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
+import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
@@ -30,6 +31,7 @@ import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
+import { SpaceWaitTimeoutError } from './errors';
 import {
   IPDATA_API_KEY,
   SENTRY_DESTINATION,
@@ -41,6 +43,8 @@ import {
   SupervisorRpcPeer,
   TelemetryContext,
   TunnelRpcPeer,
+  selectSpace,
+  waitForSpace,
 } from './util';
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
@@ -108,14 +112,18 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
-      description: 'Auto-start agent.',
+      description: 'Run command without agent.',
       default: false,
     }),
 
     timeout: Flags.integer({
-      description: 'Timeout in seconds.',
-      default: 30,
+      description: 'Timeout (ms).',
+      default: 60_000,
       aliases: ['t'],
+    }),
+
+    'no-wait': Flags.boolean({
+      description: 'Do not wait for space to be ready.',
     }),
   };
 
@@ -286,14 +294,29 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   override error(err: string | Error, options?: any): never;
   override error(err: string | Error, options?: any): void {
-    super.error(err, options as any);
-  }
-
-  override async catch(err: Error, options?: any) {
     // Will only submit if API key exists (i.e., prod).
-    super.error(err, options as any);
+    Sentry.captureException(err);
+
     this._failing = true;
-    throw err;
+
+    if (this.flags.verbose) {
+      // NOTE: Default method displays stack trace. And exits the process.
+      super.error(err, options as any);
+      return;
+    }
+
+    // Convert known errors to human readable messages.
+    if (err instanceof SpaceWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
+    } else if (err instanceof AgentWaitTimeoutError) {
+      this.logToStderr(chalk`{red Error}: Agent is stale (restart with \n'dx agent restart --force')`);
+    } else {
+      // Handle unknown errors with default method.
+      super.error(err, options as any);
+      return;
+    }
+
+    this.exit();
   }
 
   /**
@@ -342,6 +365,36 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     return this._client;
+  }
+
+  /**
+   * Get spaces and optionally wait until ready.
+   */
+  async getSpaces(client: Client, wait = true): Promise<Space[]> {
+    const spaces = client.spaces.get();
+    if (wait && !this.flags['no-wait']) {
+      await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
+    }
+
+    return spaces;
+  }
+
+  /**
+   * Get or select space.
+   */
+  async getSpace(client: Client, key?: string): Promise<Space> {
+    const spaces = await this.getSpaces(client);
+    if (!key) {
+      key = await selectSpace(spaces);
+    }
+
+    const space = spaces.find((space) => space.key.toHex().startsWith(key!));
+    if (!space) {
+      this.error(`Invalid key: ${key}`);
+    } else {
+      await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+      return space;
+    }
   }
 
   /**
