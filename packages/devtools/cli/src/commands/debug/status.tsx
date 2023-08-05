@@ -11,6 +11,8 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 import { App } from '../../components/App';
 
+// TODO(burdon): Experimental (make JIT to remove react dependency).
+//  https://oclif.io/docs/jit_plugins
 export default class Status extends BaseCommand<typeof Status> {
   static override enableJsonFlag = true;
   static override description = 'Display status.';
