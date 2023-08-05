@@ -4,11 +4,12 @@
 
 import { Args, Flags } from '@oclif/core';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
 
 import { BaseCommand } from '../../base-command';
-import { Random, selectSpace, waitForSpace } from '../../util';
+import { Random } from '../../util';
 
 const random = new Random();
 
@@ -22,6 +23,10 @@ export default class Generate extends BaseCommand<typeof Generate> {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
   static override flags = {
     ...BaseCommand.flags,
+    interval: Flags.integer({
+      description: 'Interval between mutations (ms).',
+      default: 0,
+    }),
     objects: Flags.integer({
       description: 'Number of objects.',
       default: 0,
@@ -30,43 +35,33 @@ export default class Generate extends BaseCommand<typeof Generate> {
       description: 'Number of mutations.',
       default: 0,
     }),
-    mutationsPerEpoch: Flags.integer({
+    // TODO(burdon): Remove: trigger via agent.
+    epoch: Flags.integer({
       description: 'Number of mutations per epoch.',
     }),
   };
 
   async run(): Promise<any> {
-    let { key } = this.args;
-    const { mutationsPerEpoch } = this.flags;
+    const type = 'test';
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client);
-      if (!key) {
-        key = await selectSpace(spaces);
-      }
-
-      const space = spaces.find((space) => space.key.toHex().startsWith(key!));
-      if (!space) {
-        this.error('Invalid key');
-      }
-
-      await waitForSpace(space, (err) => this.error(err));
-
-      // TODO(burdon): Command to list objects.
+      const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
-        // TODO(burdon): @type is undefined.
-        // TODO(burdon): @model is dxos:model/document.
-        space?.db.add(new Expando({ type: 'test', title: random.word() }));
+        space?.db.add(new Expando({ type, title: random.word() }));
         await space.db.flush();
       }
 
-      const { objects } = space?.db.query({ type: 'test' });
+      const { objects } = space?.db.query({ type });
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
           const object = random.element(objects);
           object.title = random.word();
           await space.db.flush();
+          if (this.flags.interval) {
+            await sleep(this.flags.interval);
+          }
 
-          if (mutationsPerEpoch && i % mutationsPerEpoch === 0 && i > 0) {
+          // TODO(burdon): Remove: trigger via agent.
+          if (this.flags.epoch && i % this.flags.epoch === 0 && i > 0) {
             await space.internal.createEpoch();
             await space.db.flush();
           }

@@ -9,7 +9,7 @@ import React from 'react';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { SpaceTable } from '../../components';
+import { App } from '../../components/App';
 
 export default class Status extends BaseCommand<typeof Status> {
   static override enableJsonFlag = true;
@@ -24,7 +24,7 @@ export default class Status extends BaseCommand<typeof Status> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const { waitUntilExit } = render(<SpaceTable client={client} interval={this.flags.interval} />);
+      const { waitUntilExit } = render(<App client={client} interval={this.flags.interval} />);
       await waitUntilExit();
     });
   }
