@@ -22,9 +22,6 @@ const SpacesPanel: FC = () => {
   const setState = useDevtoolsDispatch();
 
   const handleSelect = (spaceKey: PublicKey) => {
-    const space = spaces.find((space) => space.key.equals(spaceKey));
-    console.log(space?.internal.data?.metrics);
-
     setState((state) => ({
       ...state,
       space: spaces.find((space) => space.key.equals(spaceKey))!,
@@ -77,6 +74,7 @@ const SpacesPanel: FC = () => {
       align: 'right',
       Cell: ({ value }: any) => <div className='font-mono'>{value?.toLocaleString()}</div>,
       accessor: (space) => {
+        // TODO(burdon): Factor out.
         const { open, ready } = space.internal.data.metrics ?? {};
         return open && ready && new Date(ready).getTime() - new Date(open).getTime();
       },
