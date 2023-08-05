@@ -29,8 +29,9 @@ export default class Set extends BaseCommand<typeof Set> {
   async run(): Promise<any> {
     const { app, enabled, disabled } = this.flags;
     if (!!enabled === !!disabled) {
-      throw new Error('Specify either --enabled or --disabled.');
+      this.error('Specify either --enabled or --disabled.');
     }
+
     return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {
       const tunnelResponse = await tunnel.rpc.tunnel({ name: app, enabled: enabled && !disabled });
       assert(tunnelResponse, 'Unable to set tunnel.');
