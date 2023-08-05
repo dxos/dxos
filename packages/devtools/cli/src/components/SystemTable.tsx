@@ -9,7 +9,7 @@ import React, { useEffect, FC, useState } from 'react';
 type Status = {
   // arch: string;
   // version: string;
-  uptime: string;
+  // uptime: string;
 
   rss: string;
   heap_total: string;
@@ -48,7 +48,7 @@ export const SystemTable: FC<{ interval?: number }> = ({ interval = 1000 }) => {
       {
         // arch: os.arch(),
         // version: process.version,
-        uptime: os.uptime().toLocaleString().padStart(10, ' '),
+        // uptime: os.uptime().toLocaleString().padStart(10, ' '),
 
         rss: size(rss),
         heap_total: size(heapTotal),
