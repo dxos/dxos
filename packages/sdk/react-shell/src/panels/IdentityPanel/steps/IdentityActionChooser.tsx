@@ -37,7 +37,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
         <div className='grow justify-center flex flex-col gap-1'>
           <Button
             disabled={!active}
-            data-testid='manage-devices'
+            data-testid='devices-panel.create-invitation'
             onClick={() => {
               invitations.forEach((invitation) => invitation.cancel());
               const invitation = client.halo.createInvitation();
