@@ -5,10 +5,10 @@
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, useState } from 'react';
 
-import { Input, Button, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Input, useTranslation } from '@dxos/aurora';
+import { getSize } from '@dxos/aurora-theme';
 
-import { PanelStepHeading } from '../../../components';
+import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -72,28 +72,26 @@ export const InvitationAuthenticator = ({
         )}
       </Input.Root>
       <div role='none' className='grow' />
-      <div className='flex gap-2'>
-        <Button
+      <PanelActions>
+        <PanelAction
+          aria-label={t('next label')}
           disabled={disabled}
-          classNames='grow flex items-center gap-2 pli-2 order-2'
+          classNames='order-2'
           onClick={() => onInvitationAuthenticate?.(authCode)}
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
-          <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
-          <span className='grow'>{t('next label')}</span>
-          <CaretRight weight='bold' className={getSize(4)} />
-        </Button>
-        <Button
+          <CaretRight weight='light' className={getSize(6)} />
+        </PanelAction>
+        <PanelAction
+          aria-label={t('cancel label')}
           disabled={disabled}
-          classNames='flex items-center gap-2 pis-2 pie-4'
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
-          <CaretLeft weight='bold' className={getSize(4)} />
-          <span>{t('cancel label')}</span>
-        </Button>
-      </div>
+          <CaretLeft weight='light' className={getSize(6)} />
+        </PanelAction>
+      </PanelActions>
     </>
   );
 };
