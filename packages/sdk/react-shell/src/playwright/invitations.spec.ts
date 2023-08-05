@@ -109,7 +109,8 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
-    test('invitation cancelled by host', async () => {
+    // todo(thure): This is skipped because the UI no longer affords cancelling device invitations, consider removing.
+    test.skip('invitation cancelled by host', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -162,7 +163,8 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    test('multiple concurrent invitations', async () => {
+    // todo(thure): This is skipped because the UI no longer affords concurrent device invitations, consider removing.
+    test.skip('multiple concurrent invitations', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       await manager.openPanel(1, 'identity');

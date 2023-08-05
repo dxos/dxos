@@ -1,15 +1,15 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { ProhibitInset, QrCode, X } from '@phosphor-icons/react';
+import { ProhibitInset, X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, ListItem, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { chromeSurface, getSize } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
 
 import { invitationStatusValue } from '../../util';
-import { CopyButton } from '../Clipboard';
+import { CopyButtonIconOnly } from '../Clipboard';
 import { SharedInvitationListProps } from './InvitationListProps';
 import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 
@@ -37,7 +37,7 @@ export const InvitationListItem = ({
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
 
   return (
-    <ListItem.Root id={invitationCode} classNames='flex gap-2 items-center'>
+    <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>
@@ -45,14 +45,14 @@ export const InvitationListItem = ({
       {showShare && invitationUrl ? (
         <>
           <Button
-            classNames='grow gap-1'
+            variant='ghost'
+            classNames='grow justify-start'
             onClick={() => send({ type: 'selectInvitation', invitation })}
             data-testid='show-qrcode'
           >
             <span>{t('open share panel label')}</span>
-            <QrCode className={getSize(4)} weight='bold' />
           </Button>
-          <CopyButton value={invitationUrl} />
+          <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>

@@ -95,7 +95,6 @@ export class InvitationsManager extends ShellManager {
 
       case 'devices':
         await peer.getByTestId('invitations.open-devices').click();
-        await peer.getByTestId('manage-devices').click();
         break;
 
       case 'spaces':
