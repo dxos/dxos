@@ -56,7 +56,6 @@ export class Teleport {
     invariant(typeof initiator === 'boolean');
     invariant(PublicKey.isPublicKey(localPeerId));
     invariant(PublicKey.isPublicKey(remotePeerId));
-    invariant(typeof initiator === 'boolean');
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;

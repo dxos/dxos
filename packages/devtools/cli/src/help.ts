@@ -20,8 +20,17 @@ export default class CustomHelp extends Help {
       console.log(BANNER);
     }
 
+    const warnings = [];
     if (process.env.NODE_ENV === 'development') {
-      console.log(chalk`{yellow.bold Warning: development mode (${rev.branch()} #${rev.short()})}\n`);
+      warnings.push(chalk`{blue NODE_ENV}: {red ${process.env.NODE_ENV}} (${rev.branch()} #${rev.short()})`);
+    }
+
+    if (process.env.DX_PROFILE) {
+      warnings.push(this.log(chalk`{blue DX_PROFILE}: {green ${process.env.DX_PROFILE}}`));
+    }
+
+    if (warnings.length) {
+      this.log(warnings.join('\n'));
     }
 
     await super.showHelp(args);
