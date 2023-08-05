@@ -34,7 +34,7 @@ export default class Deploy extends BaseCommand<typeof Deploy> {
     const { hostname, provider: providerName, dev, accessToken } = this.flags;
     return await this.execWithClient(async (client: Client) => {
       if (!client.halo.identity) {
-        this.error('Halo profile should be initialized first.');
+        this.error('Client identity not initialized.');
       }
 
       // TODO(egorgripasov): HALO <-> KUBE integration.

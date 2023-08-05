@@ -14,6 +14,7 @@ export default class Set extends BaseCommand<typeof Set> {
 
   static override flags = {
     ...BaseCommand.flags,
+    // TODO(burdon): Auto-generate?
     app: Flags.string({
       description: 'Application name',
       required: true,
@@ -28,6 +29,7 @@ export default class Set extends BaseCommand<typeof Set> {
 
   async run(): Promise<any> {
     const { app, enabled, disabled } = this.flags;
+    // TODO(burdon): Change to `dx tunnel start/stop`.
     if (!!enabled === !!disabled) {
       this.error('Specify either --enabled or --disabled.');
     }
