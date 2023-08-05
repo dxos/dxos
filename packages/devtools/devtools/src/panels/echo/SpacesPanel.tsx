@@ -10,6 +10,7 @@ import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { Table, TableColumn } from '@dxos/mosaic';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
@@ -22,6 +23,9 @@ const SpacesPanel: FC = () => {
   const setState = useDevtoolsDispatch();
 
   const handleSelect = (spaceKey: PublicKey) => {
+    const space = spaces.find((space) => space.key.equals(spaceKey));
+    console.log(space?.internal.data?.metrics);
+
     setState((state) => ({
       ...state,
       space: spaces.find((space) => space.key.equals(spaceKey))!,
@@ -58,6 +62,44 @@ const SpacesPanel: FC = () => {
       accessor: 'key',
     },
     {
+      Header: 'State',
+      width: 40,
+      Cell: ({ value }: any) => <div className='font-mono'>{SpaceState[value]}</div>,
+      accessor: (space) => space.state.get(),
+    },
+    {
+      id: 'open',
+      width: 80,
+      Cell: ({
+        value,
+        row: {
+          values: { key },
+        },
+      }: any) => (
+        <div className='flex gap-4 items-center'>
+          {value ? (
+            <Check className={mx('text-green-500', getSize(5))} />
+          ) : (
+            <X className={mx('text-red-500', getSize(5))} />
+          )}
+          <Button variant='ghost' onClick={() => handleToggleOpen(key)}>
+            {value ? 'Close' : 'Open'}
+          </Button>
+        </div>
+      ),
+      accessor: 'isOpen',
+    },
+    {
+      Header: 'Startup (ms)',
+      width: 60,
+      align: 'right',
+      Cell: ({ value }: any) => <div className='font-mono'>{value?.toLocaleString()}</div>,
+      accessor: (space) => {
+        const { open, ready } = space.internal.data.metrics ?? {};
+        return open && ready && new Date(ready).getTime() - new Date(open).getTime();
+      },
+    },
+    {
       Header: 'Name',
       width: 120,
       Cell: ({
@@ -67,40 +109,6 @@ const SpacesPanel: FC = () => {
         },
       }: any) => <div className='font-mono'>{value ?? humanize(key)}</div>,
       accessor: (space) => space.properties.name,
-    },
-    {
-      Header: 'Startup (ms)',
-      width: 80,
-      align: 'right',
-      Cell: ({ value }: any) => <div className='font-mono'>{value?.toLocaleString()}</div>,
-      accessor: (space) => {
-        // TODO(burdon): Factor out.
-        const { open, ready } = space.internal.data.metrics ?? {};
-        return open && ready && new Date(ready).getTime() - new Date(open).getTime();
-      },
-    },
-    {
-      Header: 'Open',
-      width: 40,
-      Cell: ({ value }: any) =>
-        value ? (
-          <Check className={mx('text-green-500', getSize(5))} />
-        ) : (
-          <X className={mx('text-red-500', getSize(5))} />
-        ),
-      accessor: 'isOpen',
-    },
-    {
-      id: 'action',
-      Header: '',
-      width: 40,
-      Cell: ({
-        value,
-        row: {
-          values: { key },
-        },
-      }: any) => <Button onClick={() => handleToggleOpen(key)}>{value ? 'Close' : 'Open'}</Button>,
-      accessor: (space) => space.isOpen,
     },
   ];
 
