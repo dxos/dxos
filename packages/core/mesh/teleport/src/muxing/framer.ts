@@ -30,6 +30,7 @@ export class Framer {
 
   // TODO(egorgripasov): Will cause a memory leak if streams do not appreciate the backpressure.
   private _chunkQueue: Chunk[] = [];
+  private _responseQueue: (() => void)[] = [];
 
   private readonly _stream = new Duplex({
     objectMode: false,
@@ -87,6 +88,16 @@ export class Framer {
     },
   };
 
+  constructor() {
+    this.stream.on('drain', this._processResponseQueue.bind(this));
+  }
+
+  private _processResponseQueue() {
+    const responseQueue = this._responseQueue;
+    this._responseQueue = [];
+    responseQueue.forEach((cb) => cb());
+  }
+
   private async _processChunkQueue() {
     if (this._chunkQueue.length === 0) {
       return;
@@ -103,7 +114,7 @@ export class Framer {
     return new Promise<void>((resolve) => {
       const canContinue = this._stream.push(data);
       if (!canContinue) {
-        this._stream.once('drain', resolve);
+        this._responseQueue.push(resolve);
       } else {
         process.nextTick(resolve);
       }
