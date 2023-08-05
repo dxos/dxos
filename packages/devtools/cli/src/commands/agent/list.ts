@@ -52,8 +52,8 @@ export const printAgents = (daemons: any[], flags = {}) => {
       running: {
         header: 'running',
       },
-      lockAcquired: {
-        header: 'lockAcquired',
+      locked: {
+        header: 'locked',
       },
       restarts: {
         header: 'restarts',
@@ -69,6 +69,7 @@ export const printAgents = (daemons: any[], flags = {}) => {
       },
       logFile: {
         header: 'logFile',
+        extended: true,
       },
     },
     {
