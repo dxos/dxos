@@ -96,7 +96,7 @@ const SpacesPanel: FC = () => {
       Cell: ({ value }: any) => <div className='font-mono'>{value?.toLocaleString()}</div>,
       accessor: (space) => {
         const { open, ready } = space.internal.data.metrics ?? {};
-        return open && ready && new Date(ready).getTime() - new Date(open).getTime();
+        return open && ready && ready.getTime() - open.getTime();
       },
     },
     {

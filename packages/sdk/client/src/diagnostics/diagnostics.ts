@@ -112,7 +112,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
               // TODO(burdon): Factor out.
               if (stats.metrics) {
                 const { open, ready } = stats.metrics ?? {};
-                stats.metrics.startupTime = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+                stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
               }
             }
 
