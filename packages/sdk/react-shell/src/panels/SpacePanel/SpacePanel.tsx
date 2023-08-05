@@ -12,7 +12,6 @@ import type { CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { PanelHeading, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
-import { invitationStatusValue } from '../../util';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
@@ -61,14 +60,12 @@ const SpacePanelWithInvitationImpl = ({
   invitation,
   ...props
 }: SpacePanelImplProps & { invitation: CancellableInvitationObservable }) => {
-  const { status, invitationCode, authCode } = useInvitationStatus(invitation);
-  const statusValue = invitationStatusValue.get(status) ?? 0;
-  const showAuthCode = statusValue === 3;
+  const invitationStatus = useInvitationStatus(invitation);
   return (
     <SpacePanelImpl
       {...props}
-      invitationUrl={props.createInvitationUrl(invitationCode!)}
-      {...(showAuthCode && { authCode })}
+      {...invitationStatus}
+      invitationUrl={props.createInvitationUrl(invitationStatus.invitationCode!)}
     />
   );
 };

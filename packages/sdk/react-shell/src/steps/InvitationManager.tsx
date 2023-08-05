@@ -10,7 +10,7 @@ import { useId, useTranslation } from '@dxos/aurora';
 import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { CopyButton, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
+import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -121,10 +121,6 @@ export const InvitationManager = ({
         </Viewport.Views>
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
-      <CopyButton
-        disabled={!active || activeView === 'showing final'}
-        value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-      />
       <PanelActions classNames='mbs-4'>
         {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
         <PanelAction
@@ -134,6 +130,15 @@ export const InvitationManager = ({
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction>
+        <CopyButtonIconOnly
+          variant='ghost'
+          disabled={!active || activeView === 'showing final'}
+          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
+          iconProps={{
+            weight: 'light',
+            className: getSize(6),
+          }}
+        />
       </PanelActions>
     </>
   );

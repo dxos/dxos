@@ -57,8 +57,9 @@ export const SpaceManager = ({
             createInvitationUrl={createInvitationUrl}
           />
           <Button
+            variant='outline'
             disabled={!active}
-            classNames='is-full flex gap-2 mbs-2'
+            classNames='is-full flex gap-2 plb-3 mbs-2'
             onClick={(e) => {
               const testing = e.altKey && e.shiftKey;
               const invitation = space.createInvitation?.(

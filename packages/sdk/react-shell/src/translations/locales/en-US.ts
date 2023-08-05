@@ -8,7 +8,7 @@ export const os = {
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy URL',
   'copy invitation code success label': 'Copied',
-  'open share panel label': 'Share',
+  'open share panel label': 'View QR code',
   'joining space heading': 'Joining space',
   'join space heading': 'Join a space',
   'halo heading': 'Initialize device identity',
