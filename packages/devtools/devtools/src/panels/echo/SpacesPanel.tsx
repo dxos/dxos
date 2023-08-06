@@ -90,6 +90,13 @@ const SpacesPanel: FC = () => {
       accessor: 'isOpen',
     },
     {
+      Header: 'Objects',
+      width: 60,
+      align: 'right',
+      Cell: ({ value }: any) => <div className='font-mono'>{value?.toLocaleString()}</div>,
+      accessor: (space) => space.db.query().objects.length,
+    },
+    {
       Header: 'Startup (ms)',
       width: 60,
       align: 'right',

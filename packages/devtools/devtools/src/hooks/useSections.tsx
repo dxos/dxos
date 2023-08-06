@@ -34,15 +34,15 @@ export type SectionItem = {
 export const useSections = (): SectionItem[] => {
   return [
     {
+      id: '/diagnostics',
+      title: 'Diagnostics',
+      Icon: ChartLine,
+    },
+    {
       id: '/client',
       title: 'Client',
       Icon: Users,
       items: [
-        {
-          id: '/client/diagnostics',
-          title: 'Diagnostics',
-          Icon: ChartLine,
-        },
         {
           id: '/client/config',
           title: 'Config',
