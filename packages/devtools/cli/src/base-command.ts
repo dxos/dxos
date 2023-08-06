@@ -309,7 +309,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (err instanceof SpaceWaitTimeoutError) {
       this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: Agent is stale (restart with \n'dx agent restart --force')`);
+      this.logToStderr(chalk`{red Error}: Agent is stale (to restart: 'dx agent restart --force')`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
