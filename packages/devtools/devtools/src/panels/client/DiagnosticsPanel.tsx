@@ -19,8 +19,13 @@ const DiagnosticsPanel = () => {
     void handleRefresh();
   }, []);
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
-    setData(data);
+    try {
+      setData({ status: 'Pending...' });
+      const data = await client.diagnostics({ humanize: false, truncate: true });
+      setData(data);
+    } catch (err: any) {
+      setData({ status: err.message });
+    }
   };
 
   const fileDownload = useFileDownload();

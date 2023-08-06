@@ -29,13 +29,12 @@ export const sleep = (ms: number) => {
 /**
  * Wait for promise or throw error.
  */
-// prettier-ignore
 export const asyncTimeout = <T>(
   promise: Promise<T> | (() => Promise<T>),
   timeout: number,
-  err?: Error | string
+  err?: Error | string,
 ): Promise<T> => {
-  const throwable = (err === undefined || typeof err === 'string') ? new TimeoutError(timeout, err) : err;
+  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
 
   let timeoutId: NodeJS.Timeout;
