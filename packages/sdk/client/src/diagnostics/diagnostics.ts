@@ -92,9 +92,10 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       stream?.subscribe(async (msg) => {
         data.spaces = await Promise.all(
           msg.spaces!.map(async (info) => {
+            log('processing...', info);
             const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
             const stats: SpaceStats = { type, info };
-            if (type === 'echo') {
+            if (type === 'echo' && info.isOpen) {
               const space = client.getSpace(info.key);
               invariant(space);
               await space.waitUntilReady();
@@ -125,7 +126,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
         trigger.wake();
       });
 
-      console.log('waiting...');
+      log('waiting...');
       await trigger.wait();
     }
   }
