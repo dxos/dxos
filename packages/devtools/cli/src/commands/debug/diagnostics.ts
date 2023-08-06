@@ -42,15 +42,13 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
       const data = await client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate });
 
       return defaultsDeep({}, data, {
-        client: {
-          config: {
-            runtime: {
-              app: {
-                build: {
-                  timestamp: rev.date().toISOString(),
-                  hash: rev.long(),
-                  branch: rev.branch(),
-                },
+        config: {
+          runtime: {
+            app: {
+              build: {
+                timestamp: rev.date().toISOString(),
+                hash: rev.long(),
+                branch: rev.branch(),
               },
             },
           },

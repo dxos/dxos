@@ -27,14 +27,14 @@ export type Diagnostics = {
   created: string;
   client: {
     version: string;
-    config: ConfigProto;
+    storageVersion: number;
   };
+  config: ConfigProto;
   platform: Platform;
   identity: Identity;
   devices: Device[];
   spaces: SpaceStats[];
   feeds: Partial<SubscribeToFeedsResponse.Feed>[];
-  storageVersion: number;
 };
 
 export type SpaceStats = {
@@ -70,13 +70,13 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
   const data: Partial<Diagnostics> = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
-    storageVersion: STORAGE_VERSION,
     client: {
       version: client.version,
-      // TODO(burdon): Are these the same?
-      config: client.config.values,
-      // config: await client.services.services.SystemService?.getConfig(),
+      storageVersion: STORAGE_VERSION,
     },
+    // TODO(burdon): Are these the same?
+    config: client.config.values,
+    // config: await client.services.services.SystemService?.getConfig(),
   };
 
   const identity = client.halo.identity.get();
