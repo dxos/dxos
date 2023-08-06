@@ -15,10 +15,8 @@ import * as Telemetry from '@dxos/telemetry';
 import { BaseCommand } from '../../base-command';
 
 export default class Start extends BaseCommand<typeof Start> {
-  private readonly _ctx = new Context();
   static override enableJsonFlag = true;
   static override description = 'Starts the agent.';
-
   static override flags = {
     ...BaseCommand.flags,
     foreground: Flags.boolean({
@@ -26,10 +24,10 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Run in foreground.',
       default: false,
     }),
-    'web-socket': Flags.integer({
+    ws: Flags.integer({
       description: 'Expose web socket port.',
       helpValue: 'port',
-      aliases: ['ws'],
+      aliases: ['web-socket'],
     }),
     echo: Flags.integer({
       description: 'Expose ECHO REST API.',
@@ -40,9 +38,11 @@ export default class Start extends BaseCommand<typeof Start> {
     }),
   };
 
+  private readonly _ctx = new Context();
+
   async run(): Promise<any> {
     if (this.flags.foreground) {
-      // NOTE: Called by the agent's forever daemon.
+      // NOTE: This is invoked by the agent's forever daemon.
       await this._runInForeground();
     } else {
       await this._runAsDaemon();
@@ -62,7 +62,7 @@ export default class Start extends BaseCommand<typeof Start> {
       profile: this.flags.profile,
       protocol: {
         socket,
-        webSocket: this.flags['web-socket'],
+        webSocket: this.flags.ws,
       },
       plugins: [
         // Epoch monitoring.
@@ -92,7 +92,7 @@ export default class Start extends BaseCommand<typeof Start> {
     this._sendTelemetry();
 
     if (this.flags['web-socket']) {
-      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
+      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
     }
   }
 
@@ -126,6 +126,7 @@ export default class Start extends BaseCommand<typeof Start> {
         },
       });
     };
+
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
   }

@@ -17,7 +17,6 @@ import {
   SpaceMember,
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Config } from '@dxos/protocols/proto/dxos/config';
 import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
 import { humanize } from '@dxos/util';
@@ -28,27 +27,30 @@ export type Diagnostics = {
   created: string;
   client: {
     version: string;
-    config: Config;
+    storageVersion: number;
   };
+  config: ConfigProto;
   platform: Platform;
   identity: Identity;
   devices: Device[];
   spaces: SpaceStats[];
   feeds: Partial<SubscribeToFeedsResponse.Feed>[];
-  config: ConfigProto;
-  storageVersion: number;
 };
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
-  info: SubscribeToSpacesResponse.SpaceInfo;
   properties?: {
     name: string;
   };
+  info: SubscribeToSpacesResponse.SpaceInfo;
   db?: {
     items: number;
   };
   members?: SpaceMember[];
+  keys?: {
+    control: PublicKey[];
+    data: PublicKey[];
+  };
   epochs?: { number: number; timeframe: Timeframe }[];
   metrics?: SpaceProto.Metrics & {
     startupTime?: number;
@@ -67,18 +69,23 @@ export type DiagnosticOptions = {
 };
 
 // TODO(burdon): Factor out (move into Monitor class).
-export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Partial<Diagnostics>> => {
+export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const host = client.services.services.DevtoolsHost!;
   const data: Partial<Diagnostics> = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
     client: {
       version: client.version,
-      config: client.config.values,
+      storageVersion: STORAGE_VERSION,
     },
+
+    // TODO(burdon): Are these the same?
+    // config: await client.services.services.SystemService?.getConfig(),
+    config: client.config.values,
   };
 
   const identity = client.halo.identity.get();
+  log('diagnostics', { identity });
   if (identity) {
     data.identity = identity;
     data.devices = client.halo.devices.get();
@@ -90,29 +97,37 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       stream?.subscribe(async (msg) => {
         data.spaces = await Promise.all(
           msg.spaces!.map(async (info) => {
+            log('processing...', info);
             const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
             const stats: SpaceStats = { type, info };
-            if (type === 'echo') {
+
+            // TODO(burdon): Process HALO pipeline also.
+            if (type === 'echo' && info.isOpen) {
               const space = client.getSpace(info.key);
               invariant(space);
               await space.waitUntilReady();
-              const result = space?.db.query();
+              const { objects } = space.db.query();
+
               Object.assign(stats, {
+                properties: {
+                  name: space.properties.name,
+                },
                 metrics: space.internal.data.metrics,
                 epochs: await getEpochs(client.services!.services.SpacesService!, space),
                 members: space?.members.get(),
-                properties: {
-                  name: space?.properties.name,
-                },
                 db: {
-                  items: result?.objects.length,
+                  items: objects.length,
+                },
+                keys: {
+                  control: space.internal.data.pipeline?.controlFeeds,
+                  data: space.internal.data.pipeline?.dataFeeds,
                 },
               });
 
               // TODO(burdon): Factor out.
               if (stats.metrics) {
                 const { open, ready } = stats.metrics ?? {};
-                stats.metrics.startupTime = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+                stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
               }
             }
 
@@ -123,13 +138,14 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
         trigger.wake();
       });
 
+      log('waiting...');
       await trigger.wait();
     }
   }
 
   // Feeds.
   // TODO(burdon): Map feeds to spaces?
-  {
+  if (identity) {
     const trigger = new Trigger();
     const stream = host.subscribeToFeeds({});
     stream?.subscribe((msg) => {
@@ -161,13 +177,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     );
   }
 
-  // Config.
-  data.config = await client.services.services.SystemService?.getConfig();
-
-  // Storage version.
-  data.storageVersion = STORAGE_VERSION;
-
-  return data;
+  return data as Diagnostics;
 };
 
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {

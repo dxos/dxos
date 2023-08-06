@@ -12,21 +12,28 @@ import { useClient } from '@dxos/react-client';
 
 import { JsonView, PanelContainer, Toolbar } from '../../components';
 
-const ConfigPanel = () => {
+const DiagnosticsPanel = () => {
   const client = useClient();
-  const fileDownload = useFileDownload();
-
   const [data, setData] = useState({});
   useEffect(() => {
     void handleRefresh();
   }, []);
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
-    setData(data);
+    try {
+      setData({ status: 'Pending...' });
+      const data = await client.diagnostics({ humanize: false, truncate: true });
+      setData(data);
+    } catch (err: any) {
+      setData({ status: err.message });
+    }
   };
 
+  const fileDownload = useFileDownload();
   const handleDownload = async () => {
-    fileDownload(new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }), 'diagnostics.json');
+    fileDownload(
+      new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}.json`,
+    );
   };
 
   return (
@@ -46,4 +53,4 @@ const ConfigPanel = () => {
   );
 };
 
-export default ConfigPanel;
+export default DiagnosticsPanel;

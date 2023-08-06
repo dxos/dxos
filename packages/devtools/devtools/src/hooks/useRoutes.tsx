@@ -37,12 +37,12 @@ export const useRoutes = () => {
       element: <RootContainer />,
       children: [
         {
+          path: '/diagnostics',
+          element: <DiagnosticsPanel />,
+        },
+        {
           path: '/client',
           children: [
-            {
-              path: '/client/diagnostics',
-              element: <DiagnosticsPanel />,
-            },
             {
               path: '/client/config',
               element: <ConfigPanel />,

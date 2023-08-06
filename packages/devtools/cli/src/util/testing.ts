@@ -19,5 +19,6 @@ export const runCommand = async (command: string, cwd: string) => {
   if (stderr) {
     throw new Error(stderr);
   }
+
   return stdout;
 };

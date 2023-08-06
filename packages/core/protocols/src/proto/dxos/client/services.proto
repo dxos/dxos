@@ -193,6 +193,8 @@ message Space {
     optional dxos.keys.PublicKey control_feed_key = 1;
     optional dxos.keys.PublicKey data_feed_key = 2;
 
+    /// Remote feeds.
+    /// TODO(burdon): Normalize _key suffix.
     repeated dxos.keys.PublicKey control_feeds = 18;
     repeated dxos.keys.PublicKey data_feeds = 19;
 

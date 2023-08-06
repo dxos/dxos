@@ -10,7 +10,8 @@ import { Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
 import { BaseCommand } from '../../base-command';
-import { mapSpaces, printSpaces } from '../../util';
+import { mapSpaces } from '../../util';
+import { printSpaces } from './util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

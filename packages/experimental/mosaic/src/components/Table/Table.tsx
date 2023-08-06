@@ -9,7 +9,7 @@ import { mx } from '@dxos/aurora-theme';
 
 // TODO(burdon): Think about re-exports.
 export type TableCellProps<T extends object = {}> = CellProps<T>;
-export type TableColumn<T extends object = {}> = Column<T>;
+export type TableColumn<T extends object = {}> = Column<T> & { align?: 'left' | 'right' };
 
 // https://github.com/TanStack/table/blob/v7/examples/full-width-resizable-table/src/App.js
 
@@ -17,13 +17,12 @@ export type TableColumn<T extends object = {}> = Column<T>;
 // TODO(burdon): Object to represent properties (e.g., width, bindings) for table.
 // TODO(burdon): Re-export Column.
 
-const getStyles = (props: any, align = 'left') => [
+const getStyles = (props: any, justify = 'left') => [
   props,
   {
     style: {
       display: 'flex',
-      alignItems: 'start',
-      justifyContent: align === 'right' ? 'flex-end' : 'flex-start', // TODO(burdon): items-center row.
+      justifyContent: justify === 'right' ? 'flex-end' : 'flex-start', // TODO(burdon): items-center row.
     },
   },
 ];
