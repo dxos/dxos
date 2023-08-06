@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 import invariant from 'tiny-invariant';
 
-import { asyncTimeout, Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   ClientServicesProvider,
@@ -207,9 +207,9 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<Diagnostics>> {
+  async diagnostics(opts: DiagnosticOptions = {}): Promise<Diagnostics> {
     const { createDiagnostics } = await import('../diagnostics');
-    return asyncTimeout(() => createDiagnostics(this, opts), 10_000); // TODO(burdon): Timeout.
+    return createDiagnostics(this, opts);
   }
 
   /**

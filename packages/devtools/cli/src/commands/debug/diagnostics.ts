@@ -32,10 +32,14 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const data = await asyncTimeout(
-        client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate }),
-        5_000,
-      );
+      // TOOD(burdon): asyncTimeout doesn't return.
+      // const data = await asyncTimeout(async () => {
+      //   const data = await client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate });
+      //   console.log('>>>', data);
+      //   return data;
+      // }, this.flags.timeout);
+
+      const data = await client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate });
 
       return defaultsDeep({}, data, {
         client: {

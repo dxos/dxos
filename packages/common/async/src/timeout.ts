@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { log } from 'node:console';
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
@@ -29,15 +30,13 @@ export const sleep = (ms: number) => {
 /**
  * Wait for promise or throw error.
  */
-export const asyncTimeout = <T>(
+export const asyncTimeout = async <T>(
   promise: Promise<T> | (() => Promise<T>),
   timeout: number,
   err?: Error | string,
 ): Promise<T> => {
-  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
-  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
-
   let timeoutId: NodeJS.Timeout;
+  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
     timeoutId = setTimeout(() => {
       reject(throwable);
@@ -50,7 +49,8 @@ export const asyncTimeout = <T>(
     }
   });
 
-  return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
+  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
+  return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
 };
