@@ -207,7 +207,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Partial<Diagnostics>> {
+  async diagnostics(opts: DiagnosticOptions = {}): Promise<Diagnostics> {
     const { createDiagnostics } = await import('../diagnostics');
     return createDiagnostics(this, opts);
   }

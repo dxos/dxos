@@ -56,7 +56,7 @@ export class ForeverDaemon implements Daemon {
           running,
           restarts,
           logFile,
-          lockAcquired: await this.isRunning(uid),
+          locked: await this.isRunning(uid), // TODO(burdon): Different from "running"?
         };
       }),
     );

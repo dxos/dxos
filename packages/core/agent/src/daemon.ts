@@ -8,7 +8,7 @@ export type ProcessInfo = {
   running?: boolean;
   started?: number;
   logFile?: string;
-  lockAcquired?: boolean;
+  locked?: boolean;
 };
 
 export type StartOptions = {

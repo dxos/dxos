@@ -26,11 +26,12 @@ export default class CustomHelp extends Help {
     }
 
     if (process.env.DX_PROFILE) {
-      warnings.push(this.log(chalk`{blue DX_PROFILE}: {green ${process.env.DX_PROFILE}}`));
+      warnings.push(chalk`{blue DX_PROFILE}: {green ${process.env.DX_PROFILE}}`);
     }
 
     if (warnings.length) {
       this.log(warnings.join('\n'));
+      this.log();
     }
 
     await super.showHelp(args);
