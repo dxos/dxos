@@ -6,17 +6,20 @@ import { Flags } from '@oclif/core';
 import rev from 'git-rev-sync';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-/**
- * DX_PROFILE=test dx debug diagnostics --json
- */
 export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
   static override enableJsonFlag = true;
-  static override description = 'Output debug diagnostics.';
+  static override description = 'Create diagnostics report.';
+  static override examples = [
+    {
+      description: 'Upload diagnostics to GitHub.',
+      command: 'dx debug diagnostics --json --truncate | gh gist create --filename diagnostics.json',
+    },
+  ];
+
   static override flags = {
     ...BaseCommand.flags,
     humanize: Flags.boolean({

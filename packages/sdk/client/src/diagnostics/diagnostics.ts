@@ -39,14 +39,18 @@ export type Diagnostics = {
 
 export type SpaceStats = {
   type: 'echo' | 'halo';
-  info: SubscribeToSpacesResponse.SpaceInfo;
   properties?: {
     name: string;
   };
+  info: SubscribeToSpacesResponse.SpaceInfo;
   db?: {
     items: number;
   };
   members?: SpaceMember[];
+  keys?: {
+    control: PublicKey[];
+    data: PublicKey[];
+  };
   epochs?: { number: number; timeframe: Timeframe }[];
   metrics?: SpaceProto.Metrics & {
     startupTime?: number;
@@ -74,9 +78,10 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       version: client.version,
       storageVersion: STORAGE_VERSION,
     },
+
     // TODO(burdon): Are these the same?
-    config: client.config.values,
     // config: await client.services.services.SystemService?.getConfig(),
+    config: client.config.values,
   };
 
   const identity = client.halo.identity.get();
@@ -95,20 +100,27 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
             log('processing...', info);
             const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
             const stats: SpaceStats = { type, info };
+
+            // TODO(burdon): Process HALO pipeline also.
             if (type === 'echo' && info.isOpen) {
               const space = client.getSpace(info.key);
               invariant(space);
               await space.waitUntilReady();
-              const result = space?.db.query();
+              const { objects } = space.db.query();
+
               Object.assign(stats, {
+                properties: {
+                  name: space.properties.name,
+                },
                 metrics: space.internal.data.metrics,
                 epochs: await getEpochs(client.services!.services.SpacesService!, space),
                 members: space?.members.get(),
-                properties: {
-                  name: space?.properties.name,
-                },
                 db: {
-                  items: result?.objects.length,
+                  items: objects.length,
+                },
+                keys: {
+                  control: space.internal.data.pipeline?.controlFeeds,
+                  data: space.internal.data.pipeline?.dataFeeds,
                 },
               });
 
