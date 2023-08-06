@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from 'node:console';
 import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
