@@ -15,7 +15,7 @@ export default class Open extends BaseCommand<typeof Open> {
   async run(): Promise<any> {
     const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const space = await this.getSpace(client, key);
+      const space = await this.getSpace(client, key, false);
       await space.internal.activate();
     });
   }
