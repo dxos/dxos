@@ -16,21 +16,24 @@ export type AgentParams<S, C> = {
   agentIdx: number;
   agentId: string;
   outDir: string;
+  runtime: AgentRuntimeParams,
   config: C;
 
   // environment: {
   testId: string;
   spec: S;
-  agents: Record<string, C>;
+  agents: Record<string, AgentRunOptions<C>>;
   // }
 };
 
+export type AgentRuntimeParams = {
+  // defaults to node.
+  platform?: Platform
+}
+
 export type AgentRunOptions<C> = {
   config: C;
-  runtime?: {
-    // defaults to node.
-    platform?: Platform
-  }
+  runtime?: AgentRuntimeParams
 }
 
 export type PlanResults = {

@@ -87,7 +87,6 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     count: agentsArray.length,
   });
 
-  const children: ChildProcess[] = [];
   const planResults: PlanResults = {
     agents: {},
   };
@@ -98,17 +97,19 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     // Start agents
     //
 
-    for (const [agentIdx, [agentId, agentConfig]] of Object.entries(agents).entries()) {
+    for (const [agentIdx, [agentId, agentRunOptions]] of Object.entries(agents).entries()) {
       log.debug('runPlanner starting agent', { agentIdx });
       const agentParams: AgentParams<S, C> = {
         agentIdx,
         agentId,
         spec,
         agents,
+        runtime: agentRunOptions.runtime ?? {},
         testId,
         outDir: join(outDir, agentId),
-        config: agentConfig,
+        config: agentRunOptions.config,
       };
+      agentParams.runtime.platform ??= 'nodejs';
 
       if (options.staggerAgents !== undefined && options.staggerAgents > 0) {
         await sleep(options.staggerAgents);
@@ -116,34 +117,9 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
       fs.mkdirSync(agentParams.outDir, { recursive: true });
 
-      const execArgv = process.execArgv;
-
-      if (options.profile) {
-        execArgv.push(
-          '--cpu-prof', //
-          '--cpu-prof-dir',
-          agentParams.outDir,
-          '--cpu-prof-name',
-          'agent.cpuprofile',
-        );
-      }
-
-      const childProcess = fork(process.argv[1], {
-        execArgv: options.debug
-          ? [
-              '--inspect=:' + (DEBUG_PORT_START + agentIdx), //
-              ...execArgv,
-            ]
-          : execArgv,
-        env: {
-          ...process.env,
-          GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-        },
-      });
-      children.push(childProcess);
+      const promise = agentParams.runtime.platform === 'nodejs' ? runNode(agentParams, options) : runBrowser(agentParams, options);
       promises.push(
-        Event.wrap<number>(childProcess, 'exit')
-          .waitForCount(1)
+        promise
           .then((exitCode) => {
             planResults.agents[agentId] = {
               exitCode,
@@ -215,3 +191,36 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 };
 
 const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;
+
+
+const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
+  const execArgv = process.execArgv;
+
+  if (options.profile) {
+    execArgv.push(
+      '--cpu-prof', //
+      '--cpu-prof-dir',
+      agentParams.outDir,
+      '--cpu-prof-name',
+      'agent.cpuprofile',
+    );
+  }
+
+  const childProcess = fork(process.argv[1], {
+    execArgv: options.debug
+      ? [
+        '--inspect=:' + (DEBUG_PORT_START + agentParams.agentIdx), //
+        ...execArgv,
+      ]
+      : execArgv,
+    env: {
+      ...process.env,
+      GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+    },
+  });
+  return Event.wrap<number>(childProcess, 'exit').waitForCount(1)
+}
+
+const runBrowser = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
+  return Promise.resolve(0)
+}
