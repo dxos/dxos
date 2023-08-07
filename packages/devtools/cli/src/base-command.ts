@@ -370,7 +370,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get spaces and optionally wait until ready.
    */
-  async getSpaces(client: Client, wait = true): Promise<Space[]> {
+  async getSpaces(client: Client, wait = false): Promise<Space[]> {
     const spaces = client.spaces.get();
     if (wait && !this.flags['no-wait']) {
       await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
