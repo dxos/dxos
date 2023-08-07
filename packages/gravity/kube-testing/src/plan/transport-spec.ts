@@ -11,7 +11,7 @@ import { range } from '@dxos/util';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
+import { AgentRunOptions, PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type TransportTestSpec = {
   agents: number;
@@ -39,14 +39,16 @@ export type TransportAgentConfig = {
 export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportAgentConfig> {
   signalBuilder = new SignalTestBuilder();
 
-  async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<AgentRunOptions<TransportAgentConfig>[]> {
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
     return range(spec.agents).map((agentIdx) => ({
-      agentIdx,
-      signalUrl: signal.url(),
-      swarmTopicIds,
+      config: {
+        agentIdx,
+        signalUrl: signal.url(),
+        swarmTopicIds,
+      }
     }));
   }
 

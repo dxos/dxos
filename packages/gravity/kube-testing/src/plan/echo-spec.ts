@@ -23,7 +23,7 @@ import { randomInt, range } from '@dxos/util';
 import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
+import { AgentRunOptions, PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type EchoTestSpec = {
   agents: number;
@@ -66,16 +66,18 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   client!: Client;
   space!: Space;
 
-  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<EchoAgentConfig[]> {
+  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<AgentRunOptions<EchoAgentConfig>[]> {
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
     const invitationTopic = PublicKey.random().toHex();
     return range(spec.agents).map((agentIdx) => ({
-      agentIdx,
-      signalUrl: signal.url(),
-      invitationTopic,
-      creator: agentIdx === 0,
-      ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
+      config: {
+        agentIdx,
+        signalUrl: signal.url(),
+        invitationTopic,
+        creator: agentIdx === 0,
+        ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
+      }
     }));
   }
 
