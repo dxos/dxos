@@ -2,15 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Trigger, Event } from '@dxos/async';
 
-// TODO(egorgripasov): Is BinaryPort a better name?
-import { RpcPort } from './rpc-port';
+import { Framer } from './framer';
+
+const MAX_CHUNK_SIZE = 8192;
 
 type Chunk = {
-  msg: Uint8Array;
-  trigger: Trigger;
+  msg: Buffer;
+  trigger?: Trigger;
 };
+
+type ChannelBuffer = {
+  buffer: Buffer;
+  msgLength: number;
+}
 
 /**
  * Load balancer for handling asynchronous calls from multiple channels.
@@ -22,11 +28,50 @@ export class Balancer {
   private _lastCallerIndex = 0;
   private _channels: number[] = [];
 
+  private readonly _framer = new Framer();
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
   private readonly _calls: Map<number, Chunk[]> = new Map();
+  private readonly _channelBuffers = new Map<number, ChannelBuffer>();
 
-  constructor(private readonly _port: RpcPort, private readonly _sysChannelId: number) {
+  public incomingData = new Event<Uint8Array>();
+  public readonly stream = this._framer.stream;
+
+  constructor(private readonly _sysChannelId: number) {
     this._channels.push(_sysChannelId);
+
+    // Handle incoming messages.
+    this._framer.port.subscribe(async (msg) => {
+      // Buffer contains this in order:
+      // - channel id
+      // - data length - optional
+      // - data
+      const message = Buffer.from(msg.buffer, msg.byteOffset, msg.byteLength);
+      const channelId = message.readInt32LE(0);
+
+      if (!this._channelBuffers.has(channelId)) {
+        const dataLength = message.readInt32LE(4);
+        // Rest of the message is data.
+        const data = message.slice(8);
+        if (data.length < dataLength) {
+          this._channelBuffers.set(channelId, {
+            buffer: data,
+            msgLength: dataLength,
+          });
+        } else {
+          this.incomingData.emit(data);
+        }
+      } else {
+        const channelBuffer = this._channelBuffers.get(channelId)!;
+        const data = message.slice(4);
+        channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, data]);
+        if (channelBuffer.buffer.length < channelBuffer.msgLength) {
+          return;
+        }
+        const msg = channelBuffer.buffer;
+        this._channelBuffers.delete(channelId);
+        this.incomingData.emit(msg);
+      }
+    });
   }
 
   addChannel(channel: number) {
@@ -45,7 +90,33 @@ export class Balancer {
     }
 
     const channelCalls = this._calls.get(channelId)!;
-    channelCalls.push({ msg, trigger });
+
+    const data = Buffer.from(msg.buffer, msg.byteOffset, msg.byteLength);
+    const chunks = [];
+    for (let i = 0; i < data.length; i += MAX_CHUNK_SIZE) {
+      chunks.push(data.slice(i, i + MAX_CHUNK_SIZE));
+    }
+
+    chunks.forEach((chunk, index) => {
+      const chunkTrigger = index === chunks.length - 1 ? trigger : undefined;
+
+      // New buffer, which contains this in order:
+      // - channel id
+      // - data length - optional
+      // - data
+      let buffer;
+      if (index === 0) {
+        buffer = Buffer.alloc(4 + 4 + chunk.length);
+        buffer.writeInt32LE(channelId, 0);
+        buffer.writeInt32LE(data.length, 4);
+        chunk.copy(buffer, 8);
+      } else {
+        buffer = Buffer.alloc(4 + chunk.length);
+        buffer.writeInt32LE(channelId, 0);
+        chunk.copy(buffer, 4);
+      }
+      channelCalls.push({ msg: buffer, trigger: chunkTrigger });
+    });
 
     // Start processing calls if this is the first call.
     if (noCalls) {
@@ -56,6 +127,7 @@ export class Balancer {
   }
 
   destroy() {
+    this._framer.destroy();
     this._calls.clear();
   }
 
@@ -95,10 +167,10 @@ export class Balancer {
     const call = this._getNextCall();
 
     try {
-      await this._port.send(call.msg);
-      call.trigger.wake();
+      await this._framer.port.send(call.msg);
+      call.trigger?.wake();
     } catch (err: any) {
-      call.trigger.throw(err);
+      call.trigger?.throw(err);
     }
 
     await this._processCalls();

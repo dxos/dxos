@@ -14,7 +14,6 @@ import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
-import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
 
 const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
@@ -47,26 +46,23 @@ const SYSTEM_CHANNEL_ID = -1;
  * A higher level API (could be build on top of this muxer) for channel discovery is required.
  */
 export class Muxer {
-  private readonly _framer = new Framer();
-  private readonly _balancer = new Balancer(this._framer.port, SYSTEM_CHANNEL_ID);
-  public readonly stream = this._framer.stream;
-
+  private readonly _balancer = new Balancer(SYSTEM_CHANNEL_ID);
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
+  private readonly _ctx = new Context();
 
   private _nextId = 0;
   private _destroyed = false;
   private _destroying = false;
 
   public close = new Event<Error | undefined>();
-
   public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
 
-  private readonly _ctx = new Context();
+  public readonly stream = this._balancer.stream;
 
   constructor() {
     // Add a channel for control messages.
-    this._framer.port.subscribe(async (msg) => {
+    this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
 
@@ -220,7 +216,6 @@ export class Muxer {
 
     this._destroyed = true;
     this._balancer.destroy();
-    this._framer.destroy();
 
     for (const channel of this._channelsByTag.values()) {
       channel.destroy?.(err);
