@@ -47,8 +47,8 @@ export default class List extends BaseCommand<typeof List> {
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
-    const tableUpdate = new Event().debounce(1000);
-    tableUpdate.on(ctx, async () => {
+    const update = new Event().debounce(1000);
+    update.on(ctx, async () => {
       console.clear();
       printSpaces(spaces, this.flags);
     });
@@ -56,7 +56,7 @@ export default class List extends BaseCommand<typeof List> {
     const subscribeToSpaceUpdate = (space: Space) =>
       space.pipeline.subscribe({
         next: () => {
-          tableUpdate.emit();
+          update.emit();
         },
       });
 
