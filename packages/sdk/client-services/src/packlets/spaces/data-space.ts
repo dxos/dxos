@@ -190,7 +190,7 @@ export class DataSpace {
         await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError) {
-          log('Data pipeline initialization cancelled', err);
+          log('data pipeline initialization cancelled', err);
           return;
         }
 
@@ -205,7 +205,6 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
-    console.log('>>>>', this._state);
     if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
@@ -219,7 +218,7 @@ export class DataSpace {
     this.metrics.controlPipelineReady = new Date();
 
     await this._createWritableFeeds();
-    log('Writable feeds created');
+    log('writable feeds created');
     this.stateUpdate.emit();
 
     if (!this.notarizationPlugin.hasWriter) {
@@ -334,7 +333,6 @@ export class DataSpace {
 
   @synchronized
   async activate() {
-    console.log('>>>>', this._state);
     if (this._state !== SpaceState.INACTIVE) {
       return;
     }
@@ -346,7 +344,6 @@ export class DataSpace {
 
   @synchronized
   async deactivate() {
-    console.log('>>>>', this._state);
     if (this._state === SpaceState.INACTIVE) {
       return;
     }
