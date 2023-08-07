@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Series } from 'danfojs-node';
+import type { Series } from 'danfojs-node';
 
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
@@ -21,6 +21,7 @@ const seriesToJson = (s: Series) => {
 };
 
 const getStats = (series: number[], additionalMetrics: Record<string, number> = {}) => {
+  const { Series } = require('danfojs-node')
   const stats = new Series(series).describe() as Series;
 
   const values: number[] = [];
@@ -96,6 +97,8 @@ export const analyzeMessages = async (results: PlanResults) => {
 };
 
 export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: PlanResults) => {
+  const { Series } = require('danfojs-node')
+ 
   const start = Date.now();
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}

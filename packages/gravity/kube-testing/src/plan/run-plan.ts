@@ -8,12 +8,23 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
-import { Event, sleep } from '@dxos/async';
+import { Event, Trigger, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { LogLevel, createFileProcessor, log } from '@dxos/log';
+import { LogLevel, createFileProcessor, invariant, log } from '@dxos/log';
 
 import { AgentEnv } from './agent-env';
-import { AgentParams, PlanResults, TestPlan } from './spec-base';
+import { AgentParams, PlanResults, Platform, TestPlan } from './spec-base';
+import { mkdir, readFile } from 'node:fs/promises';
+import { v4 } from 'uuid';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
+import {
+  NodeGlobalsPolyfillPlugin,
+  FixMemdownPlugin,
+  FixGracefulFsPlugin,
+  NodeModulesPlugin,
+} from '@dxos/esbuild-plugins';
+import type { BrowserType } from 'playwright';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;
@@ -43,6 +54,12 @@ export type RunPlanParams<S, C> = {
   spec: S;
   options: PlanOptions;
 };
+
+
+// fixup env in browser
+if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
+  process.env = (globalThis as any).dxgravity_env;
+}
 
 // TODO(mykola): Introduce Executor class.
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
@@ -83,6 +100,14 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
   });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
 
+  if (Object.values(agents).some((agent) => agent.runtime?.platform !== 'nodejs' && agent.runtime?.platform !== undefined)) {
+    const begin = Date.now();
+    await buildBrowserBundle(join(outDir, 'browser.js'))
+    log.info('browser bundle built', {
+      time: Date.now() - begin,
+    });
+  }
+
   log.info('starting agents', {
     count: agentsArray.length,
   });
@@ -107,6 +132,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         runtime: agentRunOptions.runtime ?? {},
         testId,
         outDir: join(outDir, agentId),
+        planRunDir: outDir,
         config: agentRunOptions.config,
       };
       agentParams.runtime.platform ??= 'nodejs';
@@ -221,6 +247,152 @@ const runNode = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Pr
   return Event.wrap<number>(childProcess, 'exit').waitForCount(1)
 }
 
-const runBrowser = <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
-  return Promise.resolve(0)
+const runBrowser = async <S, C>(agentParams: AgentParams<S, C>, options: PlanOptions): Promise<number> => {
+  invariant(agentParams.runtime.platform);
+  const { page } = await getNewBrowserContext(agentParams.runtime.platform, { headless: false });
+
+
+  const doneTrigger = new Trigger<number>();
+
+  const apis: EposedApis = {
+    dxgravity_done: (code) => {
+      doneTrigger.wake(code);
+    },
+  }
+  for (const [name, fn] of Object.entries(apis)) {
+    await page.exposeFunction(name, fn);
+  }
+
+  const server = await servePage({
+    '/index.html': {
+      contentType: 'text/html',
+      data: `
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser-Mocha</title>
+</head>
+<body>
+  <h1>TESTING TESTING.</h1>
+  <script>
+    window.dxgravity_env = ${JSON.stringify({
+        ...process.env,
+        GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+      })}
+  </script>
+  <script src="index.js"></script>
+</body>
+</html>
+`
+    },
+    '/index.js': {
+      contentType: 'text/javascript',
+      data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8')
+    }
+  });
+
+  const port = (server.address() as AddressInfo).port;
+  await page.goto(`http://localhost:${port}`);
+
+  return doneTrigger.wait();
+}
+
+const getBrowser = (browserType: Platform): BrowserType => {
+  const { chromium, firefox, webkit } = require('playwright');
+  switch (browserType) {
+    case 'chromium':
+      return chromium;
+    case 'firefox':
+      return firefox;
+    case 'webkit':
+      return webkit;
+    default:
+      throw new Error(`Unsupported browser: ${browserType}`);
+  }
+};
+
+const getNewBrowserContext = async (browserType: Platform, options: BrowserOptions) => {
+  const userDataDir = `/tmp/browser-mocha/${v4()}`;
+  await mkdir(userDataDir, { recursive: true });
+
+  const browserRunner = getBrowser(browserType);
+  const context = await browserRunner.launchPersistentContext(userDataDir, {
+    headless: options.headless,
+    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
+  });
+  const page = await context.newPage();
+
+  return {
+    browserType,
+    context,
+    page,
+  };
+};
+
+type BrowserOptions = {
+  headless: boolean;
+  browserArgs?: string[];
+};
+
+type WebResource = {
+  contentType: string;
+  data: string;
+}
+
+const servePage = async (resources: Record<string, WebResource>, port = 5176) => {
+  const server = createServer((req, res) => {
+    const fileName = req.url === '/' ? '/index.html' : req.url!;
+    if (!resources[fileName]) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': resources[fileName].contentType });
+    res.end(resources[fileName].data);
+  });
+
+  let retries = 0;
+  server.on('error', (err) => {
+    if (err.message.includes('EADDRINUSE') && retries < 100) {
+      retries++;
+      server.close();
+      server.listen(port++, () => {
+        trigger();
+      });
+    } else {
+      throw err;
+    }
+  });
+
+  let trigger: () => void;
+  const serverReady = new Promise<void>((resolve) => {
+    trigger = resolve;
+  });
+
+  server.listen(port++, () => {
+    trigger();
+  });
+  await serverReady;
+  return server;
+};
+
+type EposedApis = {
+  dxgravity_done: (code: number) => void
+}
+
+const buildBrowserBundle = async (outfile: string) => {
+  const { build } = require('esbuild');
+  await build({
+    entryPoints: [process.argv[1]],
+    write: true,
+    bundle: true,
+    platform: 'browser',
+    format: 'iife',
+    sourcemap: 'inline',
+    outfile: outfile,
+    plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()],
+  });
 }

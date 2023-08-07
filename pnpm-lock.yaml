@@ -1887,6 +1887,7 @@ importers:
     specifiers:
       assert: ^2.0.0
       crypto-browserify: ^3.12.0
+      debug: ^4.3.4
       domain-browser: ^4.22.0
       esbuild: ^0.16.14
       events: ^3.3.0
@@ -1897,6 +1898,7 @@ importers:
     dependencies:
       assert: 2.0.0
       crypto-browserify: 3.12.0
+      debug: 4.3.4
       domain-browser: 4.22.0
       esbuild: 0.16.14
       events: 3.3.0
@@ -4977,6 +4979,7 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': workspace:^0.1.54
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -4993,16 +4996,22 @@ importers:
       chart.js: ^3.9.1
       chartjs-node-canvas: ^4.1.6
       danfojs-node: ^1.1.2
+      debug: ^4.3.4
+      esbuild: ^0.16.14
+      playwright: ^1.36.2
+      plotly.js-dist-min: ^2.25.1
       redis: ^4.6.6
       seedrandom: ^3.0.5
       ts-node: 10.9.1
       typescript: ^5.0.4
+      uuid: ^8.3.2
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': link:../../common/esbuild-plugins
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -5016,8 +5025,13 @@ importers:
       '@faker-js/faker': 8.0.2
       chartjs-node-canvas: 4.1.6_chart.js@3.9.1
       danfojs-node: 1.1.2_seedrandom@3.0.5
+      debug: 4.3.4
+      esbuild: 0.16.17
+      playwright: 1.36.2
+      plotly.js-dist-min: 2.25.1
       redis: 4.6.6
       seedrandom: 3.0.5
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
       '@types/node': 18.11.9
       '@types/seedrandom': 3.0.5
@@ -33503,7 +33517,19 @@ packages:
     resolution: {integrity: sha512-sQYZt31dwkqxOrP7xy2ggDfEzUxM1lodjhsQ3NMMv5uGTRDsLxU0e4xf4wwMkF2gplIxf17QMBCodSFgm6bFVQ==}
     engines: {node: '>=16'}
     hasBin: true
-    dev: true
+
+  /playwright/1.36.2:
+    resolution: {integrity: sha512-4Fmlq3KWsl85Bl4InJw1NC21aeQV0iSZuFvTDcy1F8zVmXmgQRe89GxF8zMSRt/KIS+2tUolak7EXVl9aC+JdA==}
+    engines: {node: '>=16'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.36.2
+    dev: false
+
+  /plotly.js-dist-min/2.25.1:
+    resolution: {integrity: sha512-Pn8L0SPEwHnrfN/MtJlQw3mxNCfuN7fZKxAw4tqWtJ6DU5agheGaZQUiqc4Zf16HqA/gQPVrb+svskebvxvfdQ==}
+    dev: false
 
   /pluralize/7.0.0:
     resolution: {integrity: sha512-ARhBOdzS3e41FbkW/XWrTEtukqqLoK5+Z/4UeDaLuSW+39JPeFgs4gCGqsrJHVZX0fUrx//4OF0K1CUGwlIFow==}

@@ -9,7 +9,7 @@ import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { Client, Config, Invitation, Space, Text, LocalClientServices } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
@@ -24,6 +24,9 @@ import { SerializedLogEntry, getReader } from '../analysys';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { AgentRunOptions, PlanResults, TestParams, TestPlan } from './spec-base';
+import { Space, Text } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
+import { LocalClientServices } from '@dxos/client/services';
 
 export type EchoTestSpec = {
   agents: number;

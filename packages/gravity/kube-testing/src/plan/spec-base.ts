@@ -16,6 +16,7 @@ export type AgentParams<S, C> = {
   agentIdx: number;
   agentId: string;
   outDir: string;
+  planRunDir: string;
   runtime: AgentRuntimeParams,
   config: C;
 

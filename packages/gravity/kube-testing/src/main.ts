@@ -16,8 +16,8 @@ const runEmpty = () =>
   runPlan({
     plan: new EmptyTestPlan(),
     spec: {
-      agents: 10,
-      platform: 'browser',
+      agents: 2,
+      platform: 'chromium',
     },
     options: {
       staggerAgents: 5,
