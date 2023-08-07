@@ -8,7 +8,6 @@ import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
@@ -21,6 +20,7 @@ import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/proto
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from '../client';
+import { getPlatform, Platform } from './platform';
 import { jsonStringify, JsonStringifyOptions } from './util';
 
 export type Diagnostics = {
@@ -37,17 +37,10 @@ export type Diagnostics = {
   feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
 };
 
-export type Platform = {
-  type: 'browser' | 'node';
-  platform: string;
-  runtime?: string;
-};
-
 // TODO(burdon): Normalize for ECHO/HALO.
 export type SpaceStats = {
   type: 'echo' | 'halo';
   info: SubscribeToSpacesResponse.SpaceInfo;
-
   properties?: {
     name: string;
   };
@@ -67,7 +60,6 @@ export type SpaceStats = {
 
 export type DiagnosticOptions = JsonStringifyOptions;
 
-// TODO(burdon): Factor out (move into Monitor class).
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const data: Diagnostics = {
     created: new Date().toISOString(),
@@ -100,6 +92,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       });
 
       await done.wait();
+      stream.close();
     }
 
     // Feeds.
@@ -112,12 +105,14 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       });
 
       await done.wait();
+      stream.close();
     }
   }
 
   return jsonStringify(data, options) as Diagnostics;
 };
 
+// TODO(burdon): Normalize for ECHO/HALO.
 const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.SpaceInfo): Promise<SpaceStats> => {
   const identity = client.halo.identity.get();
   const type = info.key.equals(identity!.spaceKey!) ? 'halo' : 'echo';
@@ -128,15 +123,15 @@ const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.Spa
     const space = client.getSpace(info.key);
     invariant(space);
     await space.waitUntilReady();
-    const { objects } = space.db.query();
 
+    // TODO(burdon): Other stats from internal.data.
     Object.assign(stats, {
       properties: {
         name: space.properties.name,
       },
       metrics: space.internal.data.metrics,
       db: {
-        objects: objects.length,
+        objects: space.db.objects.length,
       },
       epochs: await getEpochs(client.services!.services.SpacesService!, space),
       members: space?.members.get(),
@@ -158,59 +153,27 @@ const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.Spa
 
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
   const epochs: SpaceStats['epochs'] = [];
-  await space.waitUntilReady();
-
-  const done = new Trigger();
-  // TODO(burdon): Other stats from internal.data.
-  const currentEpoch = space.internal.data.pipeline!.currentEpoch!;
-  if (!currentEpoch) {
-    log.warn('Invalid current epoch.');
-    setTimeout(() => done.wake(), 1000);
-  }
-
-  // TODO(burdon): Hangs.
-  const stream = service.queryCredentials({ spaceKey: space.key });
-  stream.subscribe(async (credential) => {
-    switch (credential.subject.assertion['@type']) {
-      case 'dxos.halo.credentials.Epoch': {
-        // TODO(burdon): Epoch number is not monotonic.
-        const { number, timeframe } = credential.subject.assertion;
-        epochs.push({ number, timeframe });
-        if (currentEpoch.id && credential.id?.equals(currentEpoch.id)) {
-          done.wake();
+  const currentEpoch = space.internal.data.pipeline!.currentEpoch;
+  if (currentEpoch) {
+    const done = new Trigger();
+    const stream = service.queryCredentials({ spaceKey: space.key });
+    stream.subscribe(async (credential) => {
+      switch (credential.subject.assertion['@type']) {
+        case 'dxos.halo.credentials.Epoch': {
+          // TODO(burdon): Epoch number is not monotonic?
+          const { number, timeframe } = credential.subject.assertion;
+          epochs.push({ number, timeframe });
+          if (currentEpoch.id && credential.id!.equals(currentEpoch.id)) {
+            done.wake();
+          }
+          break;
         }
-        break;
       }
-    }
-  });
+    });
 
-  await done.wait();
-  stream.close();
+    await done.wait();
+    stream.close();
+  }
+
   return epochs;
-};
-
-const getPlatform = async (): Promise<Platform> => {
-  if (typeof window !== 'undefined') {
-    const { userAgent } = window.navigator;
-    return {
-      type: 'browser',
-      platform: userAgent,
-    };
-  }
-
-  // https://nodejs.org/api/os.html
-  try {
-    const { machine, platform, release } = await require('node:os');
-    return {
-      type: 'node',
-      platform: `${platform()} ${release()} ${machine()}`,
-      runtime: process.version,
-    };
-  } catch (err) {
-    // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"
-    return {
-      type: 'node',
-      platform: '',
-    };
-  }
 };

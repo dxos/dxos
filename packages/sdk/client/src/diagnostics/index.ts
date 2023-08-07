@@ -4,4 +4,5 @@
 
 export * from './diagnostics';
 export * from './monitor';
+export * from './platform';
 export * from './util';
