@@ -52,7 +52,6 @@ const SpaceInfoPanel: FC = () => {
     const { open, ready } = space?.internal.data?.metrics ?? {};
     const startupTime = open && ready && ready.getTime() - open.getTime();
 
-    // TODO(burdon): List feeds and nav.
     return {
       id: metadata.key.truncate(),
       name: space.properties.name ?? humanize(metadata?.key),
@@ -72,15 +71,11 @@ const SpaceInfoPanel: FC = () => {
   }, [metadata, pipelineState, space]);
 
   const toggleActive = async () => {
-    if (!space) {
-      return;
-    }
-
-    const state = space.state.get();
+    const state = space!.state.get();
     if (state === SpaceState.INACTIVE) {
-      await space.internal.activate();
+      await space!.internal.open();
     } else {
-      await space.internal.deactivate();
+      await space!.internal.close();
     }
   };
 

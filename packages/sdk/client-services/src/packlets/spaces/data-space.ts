@@ -205,11 +205,12 @@ export class DataSpace {
   }
 
   async initializeDataPipeline() {
+    console.log('>>>>', this._state);
     if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
-    this._state = SpaceState.INITIALIZING;
 
+    this._state = SpaceState.INITIALIZING;
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
@@ -323,7 +324,6 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-
     for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
       const indexBeforeEpoch = epoch.timeframe.get(feed.key);
       if (indexBeforeEpoch) {
@@ -334,8 +334,9 @@ export class DataSpace {
 
   @synchronized
   async activate() {
+    console.log('>>>>', this._state);
     if (this._state !== SpaceState.INACTIVE) {
-      throw new SystemError('Invalid operation');
+      return;
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
@@ -345,11 +346,12 @@ export class DataSpace {
 
   @synchronized
   async deactivate() {
+    console.log('>>>>', this._state);
     if (this._state === SpaceState.INACTIVE) {
-      throw new SystemError('Invalid operation');
+      return;
     }
 
-    // de-register from data service
+    // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
     await this._close();
     this._state = SpaceState.INACTIVE;
