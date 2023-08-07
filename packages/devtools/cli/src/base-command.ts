@@ -370,10 +370,19 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get spaces and optionally wait until ready.
    */
-  async getSpaces(client: Client, wait = false): Promise<Space[]> {
+
+  // TODO(burdon): Should we wait for spaces? Does this open the space? Should commands tolerate them being closed?
+
+  async getSpaces(client: Client, wait = true): Promise<Space[]> {
     const spaces = client.spaces.get();
     if (wait && !this.flags['no-wait']) {
-      await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
+      await Promise.all(
+        spaces.map(async (space) => {
+          // if (space.isOpen) {
+          await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+          // }
+        }),
+      );
     }
 
     return spaces;
