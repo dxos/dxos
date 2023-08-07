@@ -8,6 +8,23 @@ import { EchoTestPlan } from './plan/echo-spec';
 import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 import { TransportTestPlan } from './plan/transport-spec';
+import { EmptyTestPlan } from './plan/empty-spec';
+
+
+// eslint-disable-next-line unused-imports/no-unused-vars
+const runEmpty = () =>
+  runPlan({
+    plan: new EmptyTestPlan(),
+    spec: {
+      agents: 10,
+      platform: 'browser',
+    },
+    options: {
+      staggerAgents: 5,
+      randomSeed: PublicKey.random().toHex(),
+    },
+  });
+
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const runSignal = () =>
@@ -93,4 +110,5 @@ const runTransport = () =>
   });
 
 // void runEcho();
-void runTransport();
+// void runTransport();
+void runEmpty();
