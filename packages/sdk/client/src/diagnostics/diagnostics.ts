@@ -16,7 +16,7 @@ import {
   SpaceMember,
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SubscribeToFeedsResponse, SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from '../client';
