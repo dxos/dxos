@@ -29,7 +29,9 @@ export type Diagnostics = {
   config: ConfigProto;
   client: {
     version: string;
-    storage: number;
+    storage: {
+      version: number;
+    };
   };
   identity?: Identity;
   devices?: Device[];
@@ -66,7 +68,9 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     platform: await getPlatform(),
     client: {
       version: client.version,
-      storage: STORAGE_VERSION,
+      storage: {
+        version: STORAGE_VERSION,
+      },
     },
 
     // TODO(burdon): Are these the same?
