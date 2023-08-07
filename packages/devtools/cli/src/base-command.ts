@@ -309,7 +309,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (err instanceof SpaceWaitTimeoutError) {
       this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: Agent is stale (restart with \n'dx agent restart --force')`);
+      this.logToStderr(chalk`{red Error}: Agent is stale (to restart: 'dx agent restart --force')`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -382,8 +382,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get or select space.
    */
-  async getSpace(client: Client, key?: string): Promise<Space> {
-    const spaces = await this.getSpaces(client);
+  async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+    const spaces = await this.getSpaces(client, wait);
     if (!key) {
       key = await selectSpace(spaces);
     }
@@ -392,7 +392,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!space) {
       this.error(`Invalid key: ${key}`);
     } else {
-      await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+      if (wait && !this.flags['no-wait']) {
+        await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+      }
+
       return space;
     }
   }

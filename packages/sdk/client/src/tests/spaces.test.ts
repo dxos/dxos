@@ -221,13 +221,13 @@ describe('Spaces', () => {
     const { id } = space.db.add(new Expando({ data: 'test' }));
     await space.db.flush();
 
-    await space.internal.deactivate();
+    await space.internal.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space.internal.activate();
+    await space.internal.open();
     await space.waitUntilReady();
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.READY);

@@ -23,9 +23,6 @@ const SpacesPanel: FC = () => {
   const setState = useDevtoolsDispatch();
 
   const handleSelect = (spaceKey: PublicKey) => {
-    const space = spaces.find((space) => space.key.equals(spaceKey));
-    console.log(space?.internal.data?.metrics);
-
     setState((state) => ({
       ...state,
       space: spaces.find((space) => space.key.equals(spaceKey))!,
@@ -36,9 +33,9 @@ const SpacesPanel: FC = () => {
   const handleToggleOpen = async (spaceKey: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(spaceKey))!;
     if (space.isOpen) {
-      await space.internal.deactivate();
+      await space.internal.close();
     } else {
-      await space.internal.activate();
+      await space.internal.open();
     }
   };
 

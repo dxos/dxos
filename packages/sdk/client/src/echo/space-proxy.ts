@@ -97,8 +97,8 @@ export class SpaceProxy implements Space {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
-      activate: this._activate.bind(this),
-      deactivate: this._deactivate.bind(this),
+      open: this._activate.bind(this),
+      close: this._deactivate.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;

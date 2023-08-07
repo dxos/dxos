@@ -21,6 +21,8 @@ const HOME = typeof process !== 'undefined' ? process?.env?.HOME ?? '' : '';
 // https://wiki.archlinux.org/title/XDG_Base_Directory
 // Each `/dx` directory should contain `/profile/<DX_PROFILE>` subdirectories.
 
+// TODO(burdon): Add 'profile' to each path?
+
 // XDG_CONFIG_HOME (Analogous to /etc.)
 export const DX_CONFIG = `${HOME}/.config/dx`;
 
