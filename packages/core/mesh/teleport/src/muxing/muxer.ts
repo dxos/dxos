@@ -33,7 +33,7 @@ export type CreateChannelOpts = {
 
 const STATS_INTERVAL = 1000;
 
-const SYSTEM_CHANNEL_ID = -1;
+const SYSTEM_CHANNEL_ID = 0;
 
 /**
  * Channel based multiplexer.
@@ -51,7 +51,7 @@ export class Muxer {
   private readonly _channelsByTag = new Map<string, Channel>();
   private readonly _ctx = new Context();
 
-  private _nextId = 0;
+  private _nextId = 1;
   private _destroyed = false;
   private _destroying = false;
 

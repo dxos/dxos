@@ -54,7 +54,7 @@ export class Framer {
         if (!canContinue) {
           this._responseQueue.push(resolve);
         } else {
-          process.nextTick(resolve);
+          resolve();
         }
       });
     },

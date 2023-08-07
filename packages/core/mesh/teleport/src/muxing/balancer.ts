@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as varint from 'varint';
+
 import { Trigger, Event } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { Framer } from './framer';
 
@@ -41,28 +44,19 @@ export class Balancer {
 
     // Handle incoming messages.
     this._framer.port.subscribe(async (msg) => {
-      // Buffer contains this in order:
-      // - channel id
-      // - data length - optional
-      // - data
       const message = Buffer.from(msg.buffer, msg.byteOffset, msg.byteLength);
-      const channelId = message.readInt32LE(0);
-
+      const { channelId, dataLength, data } = decodeChunk(message, (channelId) => !this._channelBuffers.has(channelId));
       if (!this._channelBuffers.has(channelId)) {
-        const dataLength = message.readInt32LE(4);
-        // Rest of the message is data.
-        const data = message.slice(8);
-        if (data.length < dataLength) {
+        if (data.length < dataLength!) {
           this._channelBuffers.set(channelId, {
             buffer: data,
-            msgLength: dataLength,
+            msgLength: dataLength!,
           });
         } else {
           this.incomingData.emit(data);
         }
       } else {
         const channelBuffer = this._channelBuffers.get(channelId)!;
-        const data = message.slice(4);
         channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, data]);
         if (channelBuffer.buffer.length < channelBuffer.msgLength) {
           return;
@@ -100,35 +94,19 @@ export class Balancer {
     chunks.forEach((chunk, index) => {
       const chunkTrigger = index === chunks.length - 1 ? trigger : undefined;
 
-      // New buffer, which contains this in order:
-      // - channel id
-      // - data length - optional
-      // - data
-      let buffer;
-      if (index === 0) {
-        buffer = Buffer.alloc(4 + 4 + chunk.length);
-        buffer.writeInt32LE(channelId, 0);
-        buffer.writeInt32LE(data.length, 4);
-        chunk.copy(buffer, 8);
-      } else {
-        buffer = Buffer.alloc(4 + chunk.length);
-        buffer.writeInt32LE(channelId, 0);
-        chunk.copy(buffer, 4);
-      }
-      channelCalls.push({ msg: buffer, trigger: chunkTrigger });
+      const msg = encodeChunk(chunk, channelId, index === 0 ? data.length : undefined);
+      channelCalls.push({ msg, trigger: chunkTrigger });
     });
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      process.nextTick(async () => {
-        await this._processCalls();
-      });
+      this._processCalls().catch(err => log.catch(err));
     }
   }
 
   destroy() {
-    this._framer.destroy();
     this._calls.clear();
+    this._framer.destroy();
   }
 
   private _getNextCallerId() {
@@ -176,3 +154,31 @@ export class Balancer {
     await this._processCalls();
   }
 }
+
+export const encodeChunk = (chunk: Buffer, channelId: number, dataLength?: number): Buffer => {
+  const channelTagLength = varint.encodingLength(channelId);
+  const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
+  const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
+  varint.encode(channelId, message);
+  if (dataLength) {
+    varint.encode(dataLength, message, channelTagLength);
+  }
+  message.set(chunk, channelTagLength + dataLengthLength);
+  return message;
+};
+
+export const decodeChunk = (buffer: Buffer, predicate: (channelId: number) => boolean): { channelId: number; dataLength?: number; data: Buffer } => {
+  const channelId = varint.decode(buffer);
+  let dataLength;
+  let offset = varint.decode.bytes;
+
+  const withLength = predicate(channelId);
+  if (withLength) {
+    dataLength = varint.decode(buffer, offset);
+    offset += varint.decode.bytes;
+  }
+
+  const data = buffer.slice(offset);
+
+  return { channelId, dataLength, data };
+};
