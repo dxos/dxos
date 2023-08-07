@@ -75,6 +75,7 @@ export interface Space {
 
   // TODO(wittjosiah): Gather into messaging abstraction?
   postMessage: (channel: string, message: any) => Promise<void>;
+
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
