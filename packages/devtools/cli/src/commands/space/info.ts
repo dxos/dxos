@@ -16,8 +16,8 @@ export default class Info extends BaseCommand<typeof Info> {
   async run(): Promise<any> {
     const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const space = await this.getSpace(client, key);
-      await space.waitUntilReady();
+      const space = await this.getSpace(client, key, false);
+      // await space.waitUntilReady();
       // TODO(burdon): Factor out info (from diagnostics).
       const data = space.internal.data.metrics;
       if (this.flags.json) {
