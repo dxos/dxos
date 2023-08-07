@@ -9,12 +9,16 @@ import { randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { Client, Config, Invitation, Space, Text, LocalClientServices } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { Space, Text } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
+import { LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { Space as EchoSpace } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
@@ -231,15 +235,28 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         invitation.subscribe((event) => {
           switch (event.state) {
             case Invitation.State.SUCCESS:
-              resolve(this.client.getSpace(event.spaceKey!)!);
+              this.client.spaces.subscribe({
+                next: (spaces) => {
+                  const space = spaces.find((space) => space.key === event.spaceKey);
+                  if (space) {
+                    resolve(space);
+                  }
+                },
+              });
           }
         });
       });
     }
+
+    invariant(
+      this.space,
+      `Space is not defined for agent:${env.params.config.agentIdx} creator:${env.params.config.creator}`,
+    );
     await this.space.waitUntilReady();
   }
 
-  getSpaceBackend = () => this.services.host._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+  getSpaceBackend = (): EchoSpace =>
+    this.services.host?._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 
