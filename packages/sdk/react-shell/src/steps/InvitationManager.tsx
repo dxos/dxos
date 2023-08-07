@@ -67,7 +67,7 @@ export const InvitationManager = ({
       aria-label={t('done label')}
       onClick={onDone}
       disabled={!active}
-      classNames='order-1'
+      classNames='order-2'
       data-testid='identity-panel-done'
     >
       <Check weight='light' className={getSize(6)} />
@@ -122,6 +122,16 @@ export const InvitationManager = ({
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
       <PanelActions classNames='mbs-4'>
+        <CopyButtonIconOnly
+          variant='ghost'
+          classNames='order-1 p-4'
+          disabled={!active || activeView === 'showing final'}
+          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
+          iconProps={{
+            weight: 'light',
+            className: getSize(6),
+          }}
+        />
         {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
         <PanelAction
           aria-label={t('back label')}
@@ -130,15 +140,6 @@ export const InvitationManager = ({
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction>
-        <CopyButtonIconOnly
-          variant='ghost'
-          disabled={!active || activeView === 'showing final'}
-          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-          iconProps={{
-            weight: 'light',
-            className: getSize(6),
-          }}
-        />
       </PanelActions>
     </>
   );
