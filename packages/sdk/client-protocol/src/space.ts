@@ -20,14 +20,14 @@ export interface SpaceInternal {
    * Activates the space enabling the use of the database and starts replication with peers.
    * The setting is persisted on the local device.
    */
-  activate(): Promise<void>;
+  open(): Promise<void>;
 
   /**
    * Deactivates the space stopping replication with other peers.
    * The space will not auto-open on the next app launch.
    * The setting is persisted on the local device.
    */
-  deactivate(): Promise<void>;
+  close(): Promise<void>;
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
@@ -75,6 +75,7 @@ export interface Space {
 
   // TODO(wittjosiah): Gather into messaging abstraction?
   postMessage: (channel: string, message: any) => Promise<void>;
+
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   createInvitation(options?: Partial<Invitation>): CancellableInvitationObservable;
