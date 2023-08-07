@@ -1,12 +1,10 @@
 //
+// Copyright 2023 DXOS.org
+//
 
 /**
  * Generic composable reducer interface.
  */
-//
-// Copyright 2023 DXOS.org
-//
-
 export interface Reducer<T, S> {
   /**
    * Get initial state.
