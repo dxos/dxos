@@ -26,8 +26,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client, !this.flags.live);
-
+      const spaces = await this.getSpaces(client);
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
@@ -62,7 +61,7 @@ export default class List extends BaseCommand<typeof List> {
       });
 
     // Monitor space updates.
-    let spaces = await this.getSpaces(client, false);
+    let spaces = await this.getSpaces(client);
     spaces.forEach((space) => {
       subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
     });
@@ -72,7 +71,7 @@ export default class List extends BaseCommand<typeof List> {
       'client',
       client.spaces.subscribe({
         next: async () => {
-          spaces = await this.getSpaces(client, false);
+          spaces = await this.getSpaces(client);
           // Monitor space updates for new spaces.
           spaces
             .filter((space) => !subscriptions.has(space.key.toHex()))

@@ -22,6 +22,7 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       },
       open: {
         header: 'open',
+        minWidth: 6,
       },
       name: {
         header: 'name',
@@ -32,10 +33,6 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       objects: {
         header: 'objects',
       },
-      startup: {
-        header: 'startup',
-        extended: true,
-      },
       epoch: {
         header: 'epoch',
       },
@@ -43,6 +40,10 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       //   header: 'Applied Epoch',
       // },
 
+      startup: {
+        header: 'startup',
+        extended: true,
+      },
       startDataMutations: {
         header: 'stashed', // TODO(burdon): Stashed?
         extended: true,
@@ -57,6 +58,7 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       },
       progress: {
         header: 'progress',
+        extended: true,
         // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
         // get: (spaceInfo) => {
         //   let progressValue = +spaceInfo.progress;
