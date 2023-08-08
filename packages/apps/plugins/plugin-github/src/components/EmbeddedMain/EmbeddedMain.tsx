@@ -29,7 +29,7 @@ import {
   useJdenticonHref,
 } from '@dxos/aurora';
 import { useTextModel } from '@dxos/aurora-composer';
-import { descriptionText, getSize, mx, osTx } from '@dxos/aurora-theme';
+import { auroraTx, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { ShellLayout } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
@@ -244,10 +244,10 @@ const EmbeddedLayoutImpl = () => {
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>
-            <div role='none' className={osTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
+            <div role='none' className={auroraTx('dialog.overlay', 'dialog--resolver__overlay', {}, 'static bs-full')}>
               <div
                 role='none'
-                className={osTx(
+                className={auroraTx(
                   'dialog.content',
                   'dialog--resolver__content',
                   {},
