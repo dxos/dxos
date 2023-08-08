@@ -45,7 +45,17 @@ message QueryStatusRequest {
 message QueryStatusResponse {
   SystemStatus status = 1;
 
-  optional int32 pipeline = 10;
+  optional Metrics metrics = 10;
+}
+
+message Metrics {
+  message Value {
+    string key = 1;
+    int32 int_value = 10;
+  }
+
+  google.protobuf.Timestamp timestamp = 1;
+  repeated Value values = 10;
 }
 
 //

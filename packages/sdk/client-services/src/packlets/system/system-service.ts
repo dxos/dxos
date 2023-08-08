@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
+  Metrics,
   SystemService,
   SystemStatus,
   UpdateStatusRequest,
@@ -48,7 +49,18 @@ export class SystemServiceImpl implements SystemService {
   queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        next({ status: this._getCurrentStatus(), pipeline: tracer.get('echo.pipeline.consume')?.length });
+        // TODO(burdon): ???
+        const metrics: Metrics = {
+          timestamp: new Date(),
+          values: [
+            {
+              key: 'echo.pipeline.consume',
+              intValue: tracer.get('echo.pipeline.consume')?.length ?? 0,
+            },
+          ],
+        };
+
+        next({ status: this._getCurrentStatus(), metrics });
       };
 
       update();

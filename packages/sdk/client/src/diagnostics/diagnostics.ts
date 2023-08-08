@@ -13,6 +13,7 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
   Identity,
+  Metrics,
   Space as SpaceProto,
   SpaceMember,
   SpacesService,
@@ -35,9 +36,7 @@ export type Diagnostics = {
   devices: Device[];
   spaces: SpaceStats[];
   feeds: Partial<SubscribeToFeedsResponse.Feed>[];
-
-  // TODO(burdon): ???
-  pipeline?: number;
+  metrics?: Metrics;
 };
 
 export type SpaceStats = {
@@ -87,18 +86,13 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     config: client.config.values,
   };
 
-  // TODO(burdon): Util to call stream once.
-  // TODO(burdon): Get metrics from agent (new service).
+  // Trace metrics.
   {
-    // data.pipeline = tracer.get('echo.pipeline.consume')?.length;
     invariant(client.services.services.SystemService, 'SystemService is not available.');
-    const stream = client.services.services.SystemService.queryStatus({ interval: 3_000 });
-    const trigger = new Trigger();
-    stream?.subscribe(async (msg) => {
-      console.log('::::', msg);
-      trigger.wake();
-    });
-    await trigger.wait();
+    const stream = client.services.services.SystemService.queryStatus({});
+    const trigger = new Trigger<Metrics>();
+    stream?.subscribe(async (msg) => trigger.wake(msg.metrics!));
+    data.metrics = await trigger.wait();
   }
 
   const identity = client.halo.identity.get();
