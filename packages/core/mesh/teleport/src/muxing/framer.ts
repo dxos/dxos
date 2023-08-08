@@ -4,9 +4,10 @@
 
 import { Duplex } from 'node:stream';
 import invariant from 'tiny-invariant';
-import * as varint from 'varint';
 
 import { RpcPort } from './rpc-port';
+
+const FRAME_LENGTH_SIZE = 2;
 
 /**
  * Framer that turns a stream of binary messages into a framed RpcPort.
@@ -118,35 +119,30 @@ export class Framer {
  * Attempts to read a frame from the input buffer.
  */
 export const decodeFrame = (buffer: Buffer, offset: number): { payload: Buffer; bytesConsumed: number } | undefined => {
-  try {
-    const frameLength = varint.decode(buffer, offset);
-    const tagLength = varint.decode.bytes;
-
-    if (buffer.length < offset + tagLength + frameLength) {
-      // Not enough bytes to read the frame.
-      return undefined;
-    }
-
-    const payload = buffer.subarray(offset + tagLength, offset + tagLength + frameLength);
-
-    return {
-      payload,
-      bytesConsumed: tagLength + frameLength,
-    };
-  } catch (err) {
-    if (err instanceof RangeError) {
-      // Not enough bytes to read the tag.
-      return undefined;
-    } else {
-      throw err;
-    }
+  if (buffer.length < offset + FRAME_LENGTH_SIZE) {
+    // Not enough bytes to read the frame length.
+    return undefined;
   }
+
+  const frameLength = buffer.readUInt16BE(offset);
+  const bytesConsumed = FRAME_LENGTH_SIZE + frameLength;
+
+  if (buffer.length < offset + bytesConsumed) {
+    // Not enough bytes to read the frame.
+    return undefined;
+  }
+
+  const payload = buffer.subarray(offset + FRAME_LENGTH_SIZE, offset + bytesConsumed);
+
+  return {
+    payload,
+    bytesConsumed,
+  };
 };
 
 export const encodeFrame = (payload: Uint8Array): Buffer => {
-  const tagLength = varint.encodingLength(payload.length);
-  const frame = Buffer.allocUnsafe(tagLength + payload.length);
-  varint.encode(payload.length, frame);
-  frame.set(payload, tagLength);
+  const frame = Buffer.allocUnsafe(FRAME_LENGTH_SIZE + payload.length);
+  frame.writeUInt16BE(payload.length, 0);
+  frame.set(payload, FRAME_LENGTH_SIZE);
   return frame;
 };

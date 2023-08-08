@@ -51,7 +51,7 @@ const pipe = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream): (() => void
 
 describe('Framer', () => {
   test('varints', () => {
-    const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
+    const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 60];
     for (const value of values) {
       const encoded = varint.encode(value, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
       const length = varint.encode.bytes;
@@ -64,7 +64,7 @@ describe('Framer', () => {
   });
 
   test('frame encoding', () => {
-    const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
+    const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 60];
     for (const size of sizes) {
       const payload = randomBytes(size);
       const frame = encodeFrame(payload);
