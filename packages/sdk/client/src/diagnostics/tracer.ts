@@ -9,7 +9,7 @@ import { defaultMap } from '@dxos/util';
  */
 export type Event = {
   id: string;
-  timestamp?: number;
+  timestamp: number;
   duration?: number;
   value?: any;
 };
@@ -22,7 +22,7 @@ export type Event = {
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 
-  get(id: string, filter?: Record<string, any>) {
+  get(id: string, filter?: Record<string, any>): Event[] | undefined {
     const events = this._events.get(id);
     if (filter) {
       return events?.filter((event) => Object.entries(filter).every(([key, value]) => event?.value[key] === value));
