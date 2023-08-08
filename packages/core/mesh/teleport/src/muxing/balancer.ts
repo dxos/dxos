@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { Framer } from './framer';
 
-const MAX_CHUNK_SIZE = 4096;
+const MAX_CHUNK_SIZE = 8192;
 
 type Chunk = {
   msg: Buffer;
