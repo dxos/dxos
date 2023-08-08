@@ -17,6 +17,7 @@ export type Event = {
 /**
  * Event sink.
  */
+// TODO(burdon): Factor out.
 // TODO(burdon): Global singleton.
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();

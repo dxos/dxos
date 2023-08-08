@@ -49,7 +49,7 @@ describe('Tracer', () => {
     expect(events).to.have.length(n / objectIds.length);
   });
 
-  test.only('numerical values', async () => {
+  test('numerical values', async () => {
     const tracer = new Tracer();
     const key = 'test';
 
