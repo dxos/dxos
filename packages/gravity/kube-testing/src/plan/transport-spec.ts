@@ -6,7 +6,7 @@ import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
+import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
 import { range } from '@dxos/util';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
@@ -155,7 +155,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     /**
      * Iterate over all swarms and all agents.
      */
-    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: any, agentId: string) => Promise<void>) => {
+    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>) => {
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
@@ -204,7 +204,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         let actualStreams = 0;
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          log.info('starting stream', { agentIdx, swarmIdx });
+          log.info('starting stream', { from: agentIdx, to: env.params.agents[agentId].agentIdx, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
             await swarm.protocol.openStream(

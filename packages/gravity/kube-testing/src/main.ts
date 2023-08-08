@@ -71,17 +71,17 @@ const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
-      agents: 4,
-      swarmsPerAgent: 5,
-      duration: 240_000,
+      agents: 2,
+      swarmsPerAgent: 1,
+      duration: 120_000,
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,
-      streamsDelay: 5_000,
+      streamsDelay: 60_000,
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
       streamLoadInterval: 1,
-      streamLoadChunkSize: 50000,
+      streamLoadChunkSize: 100_000,
     },
     options: {
       staggerAgents: 1000,
@@ -93,4 +93,4 @@ const runTransport = () =>
   });
 
 // void runEcho();
-void runEcho();
+void runTransport();
