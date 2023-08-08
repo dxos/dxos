@@ -45,11 +45,11 @@ const runEcho = () =>
   runPlan({
     plan: new EchoTestPlan(),
     spec: {
-      agents: 2,
+      agents: 3,
       duration: 300_000,
       iterationDelay: 300,
 
-      epochPeriod: 8,
+      epochPeriod: 10,
       measureNewAgentSyncTime: true,
 
       insertionSize: 512,
