@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { defaultMap } from '@dxos/util';
+import { defaultMap } from './map';
 
 /**
  * Tracer events form a graph.
@@ -17,8 +17,6 @@ export type Event = {
 /**
  * Event sink.
  */
-// TODO(burdon): Factor out (move to @dxos/log?)
-// TODO(burdon): Global singleton (e.g., `trace()`).
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 
@@ -56,3 +54,7 @@ export class Tracer {
     };
   }
 }
+
+// TODO(burdon): Factor out (move to @dxos/log?)
+// TODO(burdon): Global singleton (e.g., `trace()`).
+export const tracer = new Tracer();

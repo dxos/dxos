@@ -6,6 +6,13 @@
 // TODO(burdon): Consider mathjs for variance, standard deviations, etc.
 // https://www.npmjs.com/package/mathjs
 
+import { defaultMap } from './map';
+
+export type Accessor<T, V> = string | ((value: T) => V);
+
+export const accessBy = <T, V>(value: T, accessor: Accessor<T, V>) =>
+  typeof accessor === 'function' ? accessor(value) : (value as Record<any, any>)[accessor];
+
 export const median = (values: number[]) => {
   const mid = Math.floor(values.length / 2);
   if (values.length % 2 === 1) {
@@ -18,12 +25,12 @@ export const median = (values: number[]) => {
 /**
  * Returns an array of unique values.
  */
-export const numericalValues = (values: any[], accessor: (value: any) => number) => {
+export const numericalValues = (values: any[], accessor: Accessor<any, number>) => {
   const result: NumericalValues = { total: 0, count: 0 };
 
   const sorted: number[] = values
     .map((value) => {
-      const v = accessor(value);
+      const v = accessBy(accessor, value);
       if (v === undefined || isNaN(v)) {
         return undefined;
       }
@@ -55,13 +62,24 @@ export const numericalValues = (values: any[], accessor: (value: any) => number)
 /**
  * Returns an array of unique values.
  */
-export const reduceUniqueValues = (values: any[], accessor: (value: any) => any) => {
-  const objects = values.reduce((values, value) => {
-    values.add(accessor(value));
+export const reduceSet = <T, V>(values: T[], accessor: Accessor<T, V>): Set<V> => {
+  return values.reduce((values, value) => {
+    const v = accessBy(accessor, value);
+    values.add(v);
     return values;
-  }, new Set());
+  }, new Set<V>());
+};
 
-  return Array.from(objects.values());
+/**
+ * Returns an object containing values grouped by the given key accessor.
+ */
+// TODO(burdon): Accessors as function or property.
+export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, V>): Map<K, T[]> => {
+  return values.reduce((values, value) => {
+    const key = accessBy(accessor, value);
+    defaultMap(values, key, []).push(value);
+    return values;
+  }, new Map<K, T[]>());
 };
 
 export type NumericalValues = {

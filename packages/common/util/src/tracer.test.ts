@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createBucketReducer, median, numericalValues, reduceSeries, reduceUniqueValues } from './reducers';
+import { createBucketReducer, median, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
 import { Tracer } from './tracer';
 
 describe('Tracer', () => {
@@ -32,7 +32,7 @@ describe('Tracer', () => {
     expect(total).to.equal(n);
   });
 
-  test('filter', async () => {
+  test.only('filter and group', async () => {
     const tracer = new Tracer();
     const key = 'test';
 
@@ -42,13 +42,18 @@ describe('Tracer', () => {
       tracer.emit(key, { id: objectIds[i % objectIds.length] });
     }
 
-    const uniqueObjectIds = reduceUniqueValues(tracer.get('test')!, (event) => event.value.id);
+    const values = tracer.get('test')!;
+    const uniqueObjectIds = reduceSet(values, (event) => event.value.id);
     expect(uniqueObjectIds).to.deep.equal(objectIds);
+
+    const groups = reduceGroupBy(values, (event) => event.value.id);
+    expect(Array.from(groups.keys())).to.deep.equal(objectIds);
 
     const events = tracer.get('test', { id: uniqueObjectIds[0] });
     expect(events).to.have.length(n / objectIds.length);
   });
 
+  // TODO(burdon): Move test to reducer.
   test('median', () => {
     expect(median([1, 2, 3])).to.equal(2);
     expect(median([1, 2, 3, 4])).to.equal((2 + 3) / 2);
