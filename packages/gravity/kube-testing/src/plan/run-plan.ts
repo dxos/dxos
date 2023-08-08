@@ -163,7 +163,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   let stats: any;
   try {
-    stats = await await plan.finish(
+    stats = await plan.finish(
       {
         spec,
         outDir,
