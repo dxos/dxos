@@ -7,7 +7,7 @@ import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'reac
 import { QR } from 'react-qr-rounded';
 
 import { useId, useTranslation } from '@dxos/aurora';
-import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
+import { chromeSurface, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
@@ -104,9 +104,11 @@ export const InvitationManager = ({
             </span>
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code' emoji={emoji}>
-            <p className='text-[6rem] leading-[6rem] break-all text-center text-success-500 dark:text-success-300 font-mono'>
-              {authCode}
-            </p>
+            <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
+              <p className={mx(descriptionText, 'text-center')}>{t('auth code message')}</p>
+              <div role='none' className='bs-14' />
+              <p className='text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+            </div>
           </InvitationManagerView>
           <InvitationManagerView
             id='showing final'
