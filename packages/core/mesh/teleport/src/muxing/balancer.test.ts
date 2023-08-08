@@ -25,26 +25,26 @@ describe('Balancer', () => {
 
   it('should correctly encode and decode a chunk without dataLength', () => {
     const channelId = 1;
-    const data = Uint8Array.from([0x11, 0x22, 0x33]);
+    const chunk = Uint8Array.from([0x11, 0x22, 0x33]);
 
-    const encoded = encodeChunk(data, channelId);
+    const encoded = encodeChunk({ chunk, channelId });
     const decoded = decodeChunk(encoded, () => false);
 
     expect(decoded.channelId).to.equal(channelId);
     expect(decoded.dataLength).to.equal(undefined);
-    expect(decoded.chunk).to.deep.equal(Buffer.from(data));
+    expect(decoded.chunk).to.deep.equal(chunk);
   });
 
   it('should correctly encode and decode a chunk with dataLength', () => {
     const channelId = 2;
-    const data = Uint8Array.from([0x44, 0x55, 0x66]);
-    const dataLength = data.length;
+    const chunk = Uint8Array.from([0x44, 0x55, 0x66]);
+    const dataLength = chunk.length;
 
-    const encoded = encodeChunk(data, channelId, dataLength);
+    const encoded = encodeChunk({ chunk, channelId, dataLength });
     const decoded = decodeChunk(encoded, (channelId) => channelId === 2);
 
     expect(decoded.channelId).to.equal(channelId);
     expect(decoded.dataLength).to.equal(dataLength);
-    expect(decoded.chunk).to.deep.equal(Buffer.from(data));
+    expect(decoded.chunk).to.deep.equal(chunk);
   });
 });

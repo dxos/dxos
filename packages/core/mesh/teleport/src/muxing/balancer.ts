@@ -21,6 +21,12 @@ type ChannelBuffer = {
   msgLength: number;
 };
 
+type SubChunk = {
+  chunk: Uint8Array;
+  channelId: number;
+  dataLength?: number;
+};
+
 /**
  * Load balancer for handling asynchronous calls from multiple channels.
  *
@@ -48,7 +54,7 @@ export class Balancer {
       if (!this._channelBuffers.has(channelId)) {
         if (chunk.length < dataLength!) {
           this._channelBuffers.set(channelId, {
-            buffer: chunk,
+            buffer: Buffer.from(chunk),
             msgLength: dataLength!,
           });
         } else {
@@ -90,7 +96,11 @@ export class Balancer {
     }
 
     chunks.forEach((chunk, index) => {
-      const msg = encodeChunk(chunk, channelId, index === 0 ? data.length : undefined);
+      const msg = encodeChunk({
+        chunk,
+        channelId,
+        dataLength: index === 0 ? data.length : undefined,
+      });
       channelCalls.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
     });
 
@@ -151,7 +161,7 @@ export class Balancer {
   }
 }
 
-export const encodeChunk = (chunk: Uint8Array, channelId: number, dataLength?: number): Buffer => {
+export const encodeChunk = ({ channelId, dataLength, chunk }: SubChunk): Buffer => {
   const channelTagLength = varint.encodingLength(channelId);
   const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
   const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
@@ -163,10 +173,7 @@ export const encodeChunk = (chunk: Uint8Array, channelId: number, dataLength?: n
   return message;
 };
 
-export const decodeChunk = (
-  data: Uint8Array,
-  withLength: (channelId: number) => boolean,
-): { channelId: number; dataLength?: number; chunk: Buffer } => {
+export const decodeChunk = (data: Uint8Array, withLength: (channelId: number) => boolean): SubChunk => {
   const channelId = varint.decode(data);
   let dataLength: number | undefined;
   let offset = varint.decode.bytes;
@@ -176,7 +183,7 @@ export const decodeChunk = (
     offset += varint.decode.bytes;
   }
 
-  const chunk = Buffer.from(data.subarray(offset));
+  const chunk = data.subarray(offset);
 
   return { channelId, dataLength, chunk };
 };
