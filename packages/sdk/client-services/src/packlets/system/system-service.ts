@@ -6,12 +6,13 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
-  SystemStatus,
-  SystemStatusResponse,
   SystemService,
-  UpdateSystemStatusRequest,
+  SystemStatus,
+  UpdateStatusRequest,
+  QueryStatusRequest,
+  QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { MaybePromise } from '@dxos/util';
+import { MaybePromise, tracer } from '@dxos/util';
 
 export type SystemServiceOptions = {
   config?: Config;
@@ -21,9 +22,6 @@ export type SystemServiceOptions = {
   onReset: () => MaybePromise<void>;
 };
 
-/**
- *
- */
 export class SystemServiceImpl implements SystemService {
   private readonly _config?: SystemServiceOptions['config'];
   private readonly _statusUpdate: SystemServiceOptions['statusUpdate'];
@@ -43,22 +41,21 @@ export class SystemServiceImpl implements SystemService {
     return this._config?.values ?? {};
   }
 
-  async updateStatus({ status }: UpdateSystemStatusRequest) {
+  async updateStatus({ status }: UpdateStatusRequest) {
     await this._onUpdateStatus(status);
   }
 
-  queryStatus(): Stream<SystemStatusResponse> {
+  queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        next({ status: this._getCurrentStatus() });
+        next({ status: this._getCurrentStatus(), pipeline: tracer.get('echo.pipeline.consume')?.length });
       };
 
       update();
       const unsubscribe = this._statusUpdate.on(() => update());
-      const interval = setInterval(update, 3000);
-
+      const i = setInterval(update, interval);
       return () => {
-        clearInterval(interval);
+        clearInterval(i);
         unsubscribe();
       };
     });

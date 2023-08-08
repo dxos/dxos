@@ -130,7 +130,7 @@ export class ForeverDaemon implements Daemon {
           await services.open();
 
           const trigger = new Trigger();
-          const stream = services.services.SystemService!.queryStatus();
+          const stream = services.services.SystemService!.queryStatus({});
           stream.subscribe(({ status }) => {
             assert(status === SystemStatus.ACTIVE);
             trigger.wake();

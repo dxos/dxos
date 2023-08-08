@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, tracer } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
@@ -350,6 +350,7 @@ export class Pipeline implements PipelineAccessor {
 
     while (!this._isStopping) {
       await this._pauseTrigger.wait();
+      tracer.emit('echo.pipeline.consume');
 
       // Iterator might have been changed while we were waiting for the processing to complete.
       if (lastFeedSetIterator !== this._feedSetIterator) {
@@ -381,7 +382,6 @@ export class Pipeline implements PipelineAccessor {
     const seq = timeframe.get(feed.key) ?? 0;
 
     feed.undownload({ callback: () => log('Undownloaded') });
-
     feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
       log('failed to download feed', { err });
     });

@@ -35,6 +35,9 @@ export type Diagnostics = {
   devices: Device[];
   spaces: SpaceStats[];
   feeds: Partial<SubscribeToFeedsResponse.Feed>[];
+
+  // TODO(burdon): ???
+  pipeline?: number;
 };
 
 export type SpaceStats = {
@@ -84,6 +87,20 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     config: client.config.values,
   };
 
+  // TODO(burdon): Util to call stream once.
+  // TODO(burdon): Get metrics from agent (new service).
+  {
+    // data.pipeline = tracer.get('echo.pipeline.consume')?.length;
+    invariant(client.services.services.SystemService, 'SystemService is not available.');
+    const stream = client.services.services.SystemService.queryStatus({ interval: 3_000 });
+    const trigger = new Trigger();
+    stream?.subscribe(async (msg) => {
+      console.log('::::', msg);
+      trigger.wake();
+    });
+    await trigger.wait();
+  }
+
   const identity = client.halo.identity.get();
   log('diagnostics', { identity });
   if (identity) {
@@ -113,7 +130,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
                   name: space.properties.name,
                 },
                 metrics: space.internal.data.metrics,
-                epochs: await getEpochs(client.services!.services.SpacesService!, space),
+                epochs: await getEpochs(client.services.services.SpacesService!, space),
                 members: space?.members.get(),
                 db: {
                   items: objects.length,
