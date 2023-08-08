@@ -44,20 +44,19 @@ export class Balancer {
 
     // Handle incoming messages.
     this._framer.port.subscribe(async (msg) => {
-      const message = Buffer.from(msg.buffer, msg.byteOffset, msg.byteLength);
-      const { channelId, dataLength, data } = decodeChunk(message, (channelId) => !this._channelBuffers.has(channelId));
+      const { channelId, dataLength, chunk } = decodeChunk(msg, (channelId) => !this._channelBuffers.has(channelId));
       if (!this._channelBuffers.has(channelId)) {
-        if (data.length < dataLength!) {
+        if (chunk.length < dataLength!) {
           this._channelBuffers.set(channelId, {
-            buffer: data,
+            buffer: chunk,
             msgLength: dataLength!,
           });
         } else {
-          this.incomingData.emit(data);
+          this.incomingData.emit(chunk);
         }
       } else {
         const channelBuffer = this._channelBuffers.get(channelId)!;
-        channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, data]);
+        channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, chunk]);
         if (channelBuffer.buffer.length < channelBuffer.msgLength) {
           return;
         }
@@ -165,19 +164,19 @@ export const encodeChunk = (chunk: Uint8Array, channelId: number, dataLength?: n
 };
 
 export const decodeChunk = (
-  buffer: Buffer,
+  data: Uint8Array,
   withLength: (channelId: number) => boolean,
-): { channelId: number; dataLength?: number; data: Buffer } => {
-  const channelId = varint.decode(buffer);
-  let dataLength;
+): { channelId: number; dataLength?: number; chunk: Buffer } => {
+  const channelId = varint.decode(data);
+  let dataLength: number | undefined;
   let offset = varint.decode.bytes;
 
   if (withLength(channelId)) {
-    dataLength = varint.decode(buffer, offset);
+    dataLength = varint.decode(data, offset);
     offset += varint.decode.bytes;
   }
 
-  const data = buffer.slice(offset);
+  const chunk = Buffer.from(data.subarray(offset));
 
-  return { channelId, dataLength, data };
+  return { channelId, dataLength, chunk };
 };

@@ -32,7 +32,7 @@ describe('Balancer', () => {
 
     expect(decoded.channelId).to.equal(channelId);
     expect(decoded.dataLength).to.equal(undefined);
-    expect(decoded.data).to.deep.equal(Buffer.from(data));
+    expect(decoded.chunk).to.deep.equal(Buffer.from(data));
   });
 
   it('should correctly encode and decode a chunk with dataLength', () => {
@@ -45,6 +45,6 @@ describe('Balancer', () => {
 
     expect(decoded.channelId).to.equal(channelId);
     expect(decoded.dataLength).to.equal(dataLength);
-    expect(decoded.data).to.deep.equal(Buffer.from(data));
+    expect(decoded.chunk).to.deep.equal(Buffer.from(data));
   });
 });
