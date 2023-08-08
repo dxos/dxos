@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createBucketReducer, numericalValues, reduceSeries, reduceUniqueValues } from './reducers';
+import { createBucketReducer, median, numericalValues, reduceSeries, reduceUniqueValues } from './reducers';
 import { Tracer } from './tracer';
 
 describe('Tracer', () => {
@@ -49,7 +49,12 @@ describe('Tracer', () => {
     expect(events).to.have.length(n / objectIds.length);
   });
 
-  test('numerical values', async () => {
+  test('median', () => {
+    expect(median([1, 2, 3])).to.equal(2);
+    expect(median([1, 2, 3, 4])).to.equal((2 + 3) / 2);
+  });
+
+  test.only('numerical values', async () => {
     const tracer = new Tracer();
     const key = 'test';
 

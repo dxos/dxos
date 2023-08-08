@@ -29,7 +29,7 @@ export type NumericalValues = {
 export const numericalValues = (values: any[], accessor: (value: any) => number) => {
   const result: NumericalValues = { total: 0, count: 0 };
 
-  const sorted = values
+  const sorted: number[] = values
     .map((value) => {
       const v = accessor(value);
       if (v === undefined || isNaN(v)) {
@@ -47,17 +47,26 @@ export const numericalValues = (values: any[], accessor: (value: any) => number)
       return v;
     })
     .filter((value) => value !== undefined)
-    .sort((a, b) => a! - b!);
+    .sort((a, b) => a! - b!) as number[];
 
   if (sorted.length) {
     Object.assign(result, {
       count: sorted.length,
       mean: result.total / sorted.length,
-      median: sorted[Math.floor(sorted.length / 2)],
+      median: median(sorted),
     });
   }
 
   return result;
+};
+
+export const median = (values: number[]) => {
+  const mid = Math.floor(values.length / 2);
+  if (values.length % 2 === 1) {
+    return values[mid];
+  } else {
+    return (values[mid - 1] + values[mid]) / 2;
+  }
 };
 
 /**
