@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Factor out.
+// TODO(burdon): Consider mathjs for variance, standard deviations, etc.
+// https://www.npmjs.com/package/mathjs
+
 export const median = (values: number[]) => {
   const mid = Math.floor(values.length / 2);
   if (values.length % 2 === 1) {
