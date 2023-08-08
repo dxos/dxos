@@ -89,7 +89,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
     const ref = useForwardedRef(forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
     useEffect(() => {
-      if (!focusManaged && isActive && ref.current) {
+      if (!focusManaged && isActive && document.body.hasAttribute('data-is-keyboard') && ref.current) {
         findFirstFocusable(ref.current)?.focus();
       }
     }, [focusManaged, ref.current, isActive]);

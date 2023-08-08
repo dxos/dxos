@@ -85,6 +85,10 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
 
+const handleOpenAutoFocus = (e: Event) => {
+  !document.body.hasAttribute('data-is-keyboard') && e.preventDefault();
+};
+
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ({ classNames, children, swipeToDismiss, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -99,6 +103,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     return (
       <Root
         {...(!isLg && { forceMount: true, tabIndex: -1 })}
+        onOpenAutoFocus={handleOpenAutoFocus}
         {...props}
         className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
         ref={ref}
