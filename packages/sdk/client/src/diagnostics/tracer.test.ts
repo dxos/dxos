@@ -54,7 +54,7 @@ describe('Tracer', () => {
     expect(median([1, 2, 3, 4])).to.equal((2 + 3) / 2);
   });
 
-  test.only('numerical values', async () => {
+  test('numerical values', async () => {
     const tracer = new Tracer();
     const key = 'test';
 
