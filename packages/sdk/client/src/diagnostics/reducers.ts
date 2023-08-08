@@ -2,25 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-/**
- * Returns an array of unique values.
- */
-export const reduceUniqueValues = (values: any[], accessor: (value: any) => any) => {
-  const objects = values.reduce((values, value) => {
-    values.add(accessor(value));
-    return values;
-  }, new Set());
-
-  return Array.from(objects.values());
-};
-
-export type NumericalValues = {
-  min?: number;
-  max?: number;
-  mean?: number;
-  median?: number;
-  total: number;
-  count: number;
+export const median = (values: number[]) => {
+  const mid = Math.floor(values.length / 2);
+  if (values.length % 2 === 1) {
+    return values[mid];
+  } else {
+    return (values[mid - 1] + values[mid]) / 2;
+  }
 };
 
 /**
@@ -60,13 +48,25 @@ export const numericalValues = (values: any[], accessor: (value: any) => number)
   return result;
 };
 
-export const median = (values: number[]) => {
-  const mid = Math.floor(values.length / 2);
-  if (values.length % 2 === 1) {
-    return values[mid];
-  } else {
-    return (values[mid - 1] + values[mid]) / 2;
-  }
+/**
+ * Returns an array of unique values.
+ */
+export const reduceUniqueValues = (values: any[], accessor: (value: any) => any) => {
+  const objects = values.reduce((values, value) => {
+    values.add(accessor(value));
+    return values;
+  }, new Set());
+
+  return Array.from(objects.values());
+};
+
+export type NumericalValues = {
+  min?: number;
+  max?: number;
+  mean?: number;
+  median?: number;
+  total: number;
+  count: number;
 };
 
 /**
