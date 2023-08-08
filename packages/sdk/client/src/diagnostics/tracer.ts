@@ -17,10 +17,15 @@ export type Event = {
 /**
  * Event sink.
  */
-// TODO(burdon): Factor out.
-// TODO(burdon): Global singleton.
+// TODO(burdon): Factor out (move to @dxos/log?)
+// TODO(burdon): Global singleton (e.g., `trace()`).
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
+
+  // TODO(burdon): Start/stop methods for recording data? By id?
+  //  Alternatively, enable subscriptions to track/compute series.
+
+  // TODO(burdon): Hierarchical traces?
 
   get(id: string, filter?: Record<string, any>): Event[] | undefined {
     const events = this._events.get(id);
