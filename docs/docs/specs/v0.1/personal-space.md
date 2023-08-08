@@ -10,6 +10,17 @@ The user's "home" space which roams with them across all devices. This gives dev
 
 ```ts
 
+const client = new Client();
+
+const defaultSpace            = client.spaces.default;
+const nonEphemeralSpacesOnly  = client.spaces.query();
+const includesEphemeralSpaces = client.spaces.query({ ephemeral: true });
+const newEphemeralSpace       = client.spaces.create({ ephemeral: true }); // Cannot be shared.
+
+```
+
+```ts
+
 import { Client } from '@dxos/client';
 
 const client = new Client();
