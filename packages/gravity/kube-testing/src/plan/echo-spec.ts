@@ -123,7 +123,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     }
 
     let iter = 0;
-    const lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
+    let lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
     let lastTime = Date.now();
     const ctx = new Context();
     scheduleTaskInterval(
@@ -149,6 +149,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           // compute throughput
           const mutationsSinceLastIter =
             this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
+          lastTimeframe = this.getSpaceBackend().dataPipeline.pipelineState?.timeframe ?? new Timeframe();
           const timeSinceLastIter = Date.now() - lastTime;
           lastTime = Date.now();
           const mutationsPerSec = Math.round(mutationsSinceLastIter / (timeSinceLastIter / 1000));
