@@ -36,7 +36,7 @@ export class Tracer {
   }
 
   // TODO(burdon): Start/stop timer.
-  emit(id: string, value: any) {
+  emit(id: string, value?: any) {
     const event: Event = { id, timestamp: Date.now() };
     if (value !== undefined) {
       event.value = value;
@@ -46,7 +46,7 @@ export class Tracer {
 
     return {
       done: () => {
-        event.duration = Date.now() - event.timestamp;
+        event.duration = Date.now() - event.timestamp!;
       },
     };
   }

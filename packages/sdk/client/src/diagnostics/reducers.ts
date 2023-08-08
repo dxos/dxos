@@ -5,7 +5,7 @@
 /**
  * Returns an array of unique values.
  */
-export const reduceUniqueValues = (values: any, accessor: (value: any) => any) => {
+export const reduceUniqueValues = (values: any[], accessor: (value: any) => any) => {
   const objects = values.reduce((values, value) => {
     values.add(accessor(value));
     return values;
@@ -14,13 +14,20 @@ export const reduceUniqueValues = (values: any, accessor: (value: any) => any) =
   return Array.from(objects.values());
 };
 
+export type NumericalValues = {
+  min?: number;
+  max?: number;
+  mean?: number;
+  median?: number;
+  total: number;
+  count: number;
+};
+
 /**
  * Returns an array of unique values.
  */
-export const numericalValues = (values: any, accessor: (value: any) => number) => {
-  let total = 0;
-  let min;
-  let max;
+export const numericalValues = (values: any[], accessor: (value: any) => number) => {
+  const result: NumericalValues = { total: 0, count: 0 };
 
   const sorted = values
     .map((value) => {
@@ -29,21 +36,28 @@ export const numericalValues = (values: any, accessor: (value: any) => number) =
         return undefined;
       }
 
-      total += v;
-      if (min === undefined || v < min) {
-        min = v;
+      result.total += v;
+      if (result.min === undefined || v < result.min) {
+        result.min = v;
       }
-      if (max === undefined || v > max) {
-        max = v;
+      if (result.max === undefined || v > result.max) {
+        result.max = v;
       }
 
       return v;
     })
     .filter((value) => value !== undefined)
-    .sort((a, b) => a - b);
+    .sort((a, b) => a! - b!);
 
-  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : undefined;
-  return { min, max, mean: total / values.length, median, total, count: values.length };
+  if (sorted.length) {
+    Object.assign(result, {
+      count: sorted.length,
+      mean: result.total / sorted.length,
+      median: sorted[Math.floor(sorted.length / 2)],
+    });
+  }
+
+  return result;
 };
 
 /**
@@ -91,8 +105,7 @@ export const createGroupReducer = <T, S>(
 export type TimeRecord = { timestamp: Date | number | string };
 export type TimeBucket = { start: number; period: number; count: number };
 
-export const getDate = (value: Date | number | string): Date =>
-  typeof value instanceof Date ? value : new Date(value);
+export const getDate = (value: Date | number | string): Date => (value instanceof Date ? value : new Date(value));
 
 /**
  * Reducer to group by time period.

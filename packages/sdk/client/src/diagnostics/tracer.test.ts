@@ -21,7 +21,7 @@ describe('Tracer', () => {
       await sleep(Math.random() * 10);
     }
 
-    const events = tracer.get('test');
+    const events = tracer.get('test')!;
     expect(events).to.have.length(n);
 
     const buckets = reduceSeries(createBucketReducer(10), events);
@@ -42,7 +42,7 @@ describe('Tracer', () => {
       tracer.emit(key, { id: objectIds[i % objectIds.length] });
     }
 
-    const uniqueObjectIds = reduceUniqueValues(tracer.get('test'), (event) => event.value.id);
+    const uniqueObjectIds = reduceUniqueValues(tracer.get('test')!, (event) => event.value.id);
     expect(uniqueObjectIds).to.deep.equal(objectIds);
 
     const events = tracer.get('test', { id: uniqueObjectIds[0] });
@@ -57,17 +57,17 @@ describe('Tracer', () => {
     for (let i = 0; i < n; i++) {
       const event = tracer.emit(key);
       await sleep(Math.random() * 10);
-      event.done(key);
+      event.done();
     }
 
-    const events = tracer.get('test');
+    const events = tracer.get('test')!;
     expect(events).to.have.length(n);
 
     const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration);
     expect(mean).to.be.greaterThan(0);
     expect(mean).to.be.lessThan(10);
-    expect(Math.round(total)).to.eq(Math.round(mean * count));
-    expect(median).to.be.greaterThan(min);
-    expect(median).to.be.lessThan(max);
+    expect(Math.round(total)).to.eq(Math.round(mean! * count));
+    expect(median).to.be.greaterThan(min!);
+    expect(median).to.be.lessThan(max!);
   });
 });
