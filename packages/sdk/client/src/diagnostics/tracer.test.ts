@@ -2,61 +2,72 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
+import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
-import { defaultMap } from '@dxos/util';
 
-/**
- * Tracer events form a graph.
- */
-export type Event = {
-  id: string;
-  timestamp?: number;
-  period?: Event[];
-  value?: number;
-};
-
-export class Log {}
-
-export class Tracer {
-  private readonly _events = new Map<string, Event[]>();
-
-  constructor(private readonly _parent?: Tracer) {}
-
-  branch(id: string): Tracer {
-    this.emit(id);
-    return new Tracer(this);
-  }
-
-  // TODO(burdon): Hierarchical events.
-  emit(id: string) {
-    if (this._parent) {
-      this._parent.emit(id);
-    } else {
-      defaultMap(this._events, id, []).push({ id, timestamp: Date.now() });
-    }
-  }
-}
-
-// TODO(burdon): Map reduce across graph.
+import { createBucketReducer, numericalValues, reduceSeries, reduceUniqueValues } from './reducers';
+import { Tracer } from './tracer';
 
 describe('Tracer', () => {
-  test.only('simple time series', () => {
-    // TODO(burdon): Tie to context?
-    const root = new Tracer();
+  test('simple time-series', async () => {
+    const tracer = new Tracer();
+    const key = 'test';
 
-    root.emit('foo');
-    root.emit('foo');
-
-    {
-      const sub = root.branch('bar'); // foo.bar
-      sub.emit('processing'); // foo.bar.processing
-      sub.emit('closed'); // foo.bar.closed
+    const n = 20;
+    for (let i = 0; i < n; i++) {
+      tracer.emit(key);
+      await sleep(Math.random() * 10);
     }
 
-    console.log(root);
+    const events = tracer.get('test');
+    expect(events).to.have.length(n);
 
-    // foo
-    // foo
-    // bar: [ processing, closed ]
+    const buckets = reduceSeries(createBucketReducer(10), events);
+    expect(buckets.length).to.be.greaterThan(0);
+    expect(buckets.length).to.be.lessThan(n);
+
+    const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
+    expect(total).to.equal(n);
+  });
+
+  test('filter', async () => {
+    const tracer = new Tracer();
+    const key = 'test';
+
+    const n = 30;
+    const objectIds = ['a', 'b', 'c'];
+    for (let i = 0; i < n; i++) {
+      tracer.emit(key, { id: objectIds[i % objectIds.length] });
+    }
+
+    const uniqueObjectIds = reduceUniqueValues(tracer.get('test'), (event) => event.value.id);
+    expect(uniqueObjectIds).to.deep.equal(objectIds);
+
+    const events = tracer.get('test', { id: uniqueObjectIds[0] });
+    expect(events).to.have.length(n / objectIds.length);
+  });
+
+  test.only('numerical values', async () => {
+    const tracer = new Tracer();
+    const key = 'test';
+
+    const n = 20;
+    for (let i = 0; i < n; i++) {
+      const event = tracer.emit(key);
+      await sleep(Math.random() * 10);
+      event.done(key);
+    }
+
+    const events = tracer.get('test');
+    expect(events).to.have.length(n);
+
+    const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration);
+    expect(mean).to.be.greaterThan(0);
+    expect(mean).to.be.lessThan(10);
+    expect(Math.round(total)).to.eq(Math.round(mean * count));
+    expect(median).to.be.greaterThan(min);
+    expect(median).to.be.lessThan(max);
   });
 });
