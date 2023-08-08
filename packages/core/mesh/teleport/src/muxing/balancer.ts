@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { Framer } from './framer';
 
-const MAX_CHUNK_SIZE = 8192;
+const MAX_CHUNK_SIZE = 4096;
 
 type Chunk = {
   msg: Buffer;
@@ -19,7 +19,7 @@ type Chunk = {
 type ChannelBuffer = {
   buffer: Buffer;
   msgLength: number;
-}
+};
 
 /**
  * Load balancer for handling asynchronous calls from multiple channels.
@@ -72,7 +72,7 @@ export class Balancer {
     this._channels.push(channel);
   }
 
-  pushChunk(msg: Uint8Array, trigger: Trigger, channelId: number) {
+  pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
     const noCalls = this._calls.size === 0;
 
     if (!this._channels.includes(channelId)) {
@@ -85,22 +85,19 @@ export class Balancer {
 
     const channelCalls = this._calls.get(channelId)!;
 
-    const data = Buffer.from(msg.buffer, msg.byteOffset, msg.byteLength);
     const chunks = [];
     for (let i = 0; i < data.length; i += MAX_CHUNK_SIZE) {
-      chunks.push(data.slice(i, i + MAX_CHUNK_SIZE));
+      chunks.push(data.subarray(i, i + MAX_CHUNK_SIZE));
     }
 
     chunks.forEach((chunk, index) => {
-      const chunkTrigger = index === chunks.length - 1 ? trigger : undefined;
-
       const msg = encodeChunk(chunk, channelId, index === 0 ? data.length : undefined);
-      channelCalls.push({ msg, trigger: chunkTrigger });
+      channelCalls.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
     });
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      this._processCalls().catch(err => log.catch(err));
+      this._processCalls().catch((err) => log.catch(err));
     }
   }
 
@@ -155,7 +152,7 @@ export class Balancer {
   }
 }
 
-export const encodeChunk = (chunk: Buffer, channelId: number, dataLength?: number): Buffer => {
+export const encodeChunk = (chunk: Uint8Array, channelId: number, dataLength?: number): Buffer => {
   const channelTagLength = varint.encodingLength(channelId);
   const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
   const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
@@ -167,13 +164,15 @@ export const encodeChunk = (chunk: Buffer, channelId: number, dataLength?: numbe
   return message;
 };
 
-export const decodeChunk = (buffer: Buffer, predicate: (channelId: number) => boolean): { channelId: number; dataLength?: number; data: Buffer } => {
+export const decodeChunk = (
+  buffer: Buffer,
+  withLength: (channelId: number) => boolean,
+): { channelId: number; dataLength?: number; data: Buffer } => {
   const channelId = varint.decode(buffer);
   let dataLength;
   let offset = varint.decode.bytes;
 
-  const withLength = predicate(channelId);
-  if (withLength) {
+  if (withLength(channelId)) {
     dataLength = varint.decode(buffer, offset);
     offset += varint.decode.bytes;
   }
