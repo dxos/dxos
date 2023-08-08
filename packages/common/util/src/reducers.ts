@@ -64,7 +64,7 @@ export const numericalValues = (values: any[], accessor: Accessor<any, number>) 
  */
 export const reduceSet = <T, V>(values: T[], accessor: Accessor<T, V>): Set<V> => {
   return values.reduce((values, value) => {
-    const v = accessBy(accessor, value);
+    const v = accessBy(value, accessor);
     values.add(v);
     return values;
   }, new Set<V>());
@@ -73,10 +73,9 @@ export const reduceSet = <T, V>(values: T[], accessor: Accessor<T, V>): Set<V> =
 /**
  * Returns an object containing values grouped by the given key accessor.
  */
-// TODO(burdon): Accessors as function or property.
-export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, V>): Map<K, T[]> => {
+export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, K>): Map<K, T[]> => {
   return values.reduce((values, value) => {
-    const key = accessBy(accessor, value);
+    const key = accessBy(value, accessor);
     defaultMap(values, key, []).push(value);
     return values;
   }, new Map<K, T[]>());

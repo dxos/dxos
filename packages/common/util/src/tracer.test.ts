@@ -43,7 +43,7 @@ describe('Tracer', () => {
     }
 
     const values = tracer.get('test')!;
-    const uniqueObjectIds = reduceSet(values, (event) => event.value.id);
+    const uniqueObjectIds = Array.from(reduceSet(values, (event) => event.value.id).values());
     expect(uniqueObjectIds).to.deep.equal(objectIds);
 
     const groups = reduceGroupBy(values, (event) => event.value.id);
