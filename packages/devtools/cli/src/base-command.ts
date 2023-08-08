@@ -15,6 +15,7 @@ import pkgUp from 'pkg-up';
 import { AgentWaitTimeoutError, Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import {
+  getProfilePath,
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
@@ -104,7 +105,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       helpValue: 'path',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
-        return join(DX_CONFIG, `profile/${profile}.yml`);
+        return getProfilePath(DX_CONFIG, profile) + '.yml';
       },
       dependsOn: ['profile'],
       aliases: ['c'],
@@ -236,6 +237,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
   }
 
+  /**
+   * Load or create config file from defaults.
+   * @private
+   */
   private async _loadConfig() {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
@@ -251,7 +256,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         yamlConfig.runtime ??= {};
         yamlConfig.runtime.client ??= {};
         yamlConfig.runtime.client.storage ??= {};
-        yamlConfig.runtime.client.storage.path = join(
+        yamlConfig.runtime.client.storage.path = getProfilePath(
           yamlConfig.runtime.client.storage.path ?? DX_DATA,
           this.flags.profile,
         );

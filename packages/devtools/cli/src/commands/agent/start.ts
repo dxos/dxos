@@ -8,7 +8,7 @@ import { rmSync } from 'node:fs';
 
 import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
@@ -50,7 +50,7 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
-    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
       const { path } = parseAddress(socket);
