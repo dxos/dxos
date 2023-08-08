@@ -5,7 +5,7 @@
 import { ComponentFunction, Density, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { focusRing, densityBlockSize, getSize, osFocusRing } from '../fragments';
+import { focusRing, densityBlockSize, getSize } from '../fragments';
 
 export type ListStyleProps = Partial<{
   density: Density;
@@ -26,10 +26,8 @@ export const listItemHeading: ComponentFunction<ListStyleProps> = ({ density }, 
 export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) =>
   mx(getSize(5), 'mbs-2.5', ...etc);
 
-export const listItemAppOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
+export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), focusRing, ...etc);
-export const listItemOsOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx('is-5 rounded flex justify-center items-center', densityBlockSize(density), osFocusRing, ...etc);
 export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => mx(getSize(3.5), ...etc);
 
 export const listTheme: Theme<ListStyleProps> = {
@@ -39,15 +37,7 @@ export const listTheme: Theme<ListStyleProps> = {
     endcap: listItemEndcap,
     heading: listItemHeading,
     dragHandleIcon: listItemDragHandleIcon,
-    openTrigger: listItemAppOpenTrigger,
+    openTrigger: listItemOpenTrigger,
     openTriggerIcon: listItemOpenTriggerIcon,
-  },
-};
-
-export const listOsTheme: Theme<ListStyleProps> = {
-  ...listTheme,
-  item: {
-    ...listTheme.item,
-    openTrigger: listItemOsOpenTrigger,
   },
 };

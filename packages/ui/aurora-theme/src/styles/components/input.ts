@@ -12,8 +12,6 @@ import {
   placeholderText,
   focusRing,
   hoverColors,
-  osFocusRing,
-  osHoverColors,
   subduedFocus,
   fineBlockSize,
   coarseBlockSize,
@@ -85,7 +83,7 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   props.focused && staticFocusRing,
 ];
 
-export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
@@ -100,36 +98,12 @@ export const inputAppInput: ComponentFunction<InputStyleProps> = (props, ...etc)
         ...etc,
       );
 
-export const inputOsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
-  props.variant === 'subdued'
-    ? mx(...sharedSubduedInputStyles(props), ...etc)
-    : props.variant === 'static'
-    ? mx(...sharedStaticInputStyles(props), ...etc)
-    : mx(
-        'rounded-sm text-sm bg-white/50 dark:bg-neutral-750/50',
-        !props.disabled && osFocusRing,
-        !props.disabled && osHoverColors,
-        inputValence(props.validationValence) ||
-          'border-transparent focus-visible:border-transparent dark:focus-visible:border-transparent',
-        ...sharedDefaultInputStyles(props),
-        ...etc,
-      );
-
-export const inputAppCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size),
     'flex items-center justify-center rounded text-white',
     'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
     focusRing,
-    ...etc,
-  );
-
-export const inputOsCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
-  mx(
-    getSize(size),
-    'flex items-center justify-center rounded text-white',
-    'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
-    osFocusRing,
     ...etc,
   );
 
@@ -152,18 +126,12 @@ export const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, .
   mx(descriptionText, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 
 export const inputTheme = {
-  input: inputAppInput,
+  input: inputInput,
   inputWithSegments: inputWithSegmentsInput,
-  checkbox: inputAppCheckbox,
+  checkbox: inputCheckbox,
   checkboxIndicator: inputCheckboxIndicator,
   label: inputLabel,
   description: inputDescription,
   validation: inputValidation,
   descriptionAndValidation: inputDescriptionAndValidation,
-};
-
-export const inputOsTheme = {
-  ...inputTheme,
-  input: inputOsInput,
-  checkbox: inputOsCheckbox,
 };

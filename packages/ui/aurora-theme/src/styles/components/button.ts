@@ -11,9 +11,7 @@ import {
   fineButtonDimensions,
   openOutline,
   staticDisabled,
-  osOpenColors,
   focusRing,
-  osFocusRing,
   contentElevation,
 } from '../fragments';
 
@@ -51,7 +49,7 @@ const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
   ];
 };
 
-export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
+export const buttonRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
     'font-medium text-sm',
@@ -74,21 +72,6 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
   );
 };
 
-export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...etc) => {
-  const resolvedVariant = props.variant ?? 'default';
-  return mx(
-    'font-system-medium text-xs shadow-none',
-    !props.inGroup && 'rounded',
-    !props.disabled && hoverColors,
-    resolvedVariant === 'default' && defaultOsButtonColors,
-    !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    !props.disabled && osFocusRing,
-    ...osOpenColors({ side: props.sideInset ?? 'be' }),
-    ...sharedButtonStyles(props),
-    ...etc,
-  );
-};
-
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx(
     'inline-flex rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
@@ -98,11 +81,6 @@ export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props,
 };
 
 export const buttonTheme: Theme<AppButtonStyleProps> = {
-  root: buttonAppRoot,
+  root: buttonRoot,
   group: buttonGroup,
-};
-
-export const buttonOsTheme: Theme<OsButtonStyleProps> = {
-  ...buttonTheme,
-  root: buttonOsRoot,
 };
