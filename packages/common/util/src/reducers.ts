@@ -25,12 +25,12 @@ export const median = (values: number[]) => {
 /**
  * Returns an array of unique values.
  */
-export const numericalValues = (values: any[], accessor: Accessor<any, number>) => {
+export const numericalValues = <T>(values: T[], accessor: Accessor<T, number>) => {
   const result: NumericalValues = { total: 0, count: 0 };
 
   const sorted: number[] = values
     .map((value) => {
-      const v = accessBy(accessor, value);
+      const v = accessBy(value, accessor);
       if (v === undefined || isNaN(v)) {
         return undefined;
       }

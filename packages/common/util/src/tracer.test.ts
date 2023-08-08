@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
-import { createBucketReducer, median, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
+import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
 import { Tracer } from './tracer';
 
 describe('Tracer', () => {
@@ -32,7 +32,7 @@ describe('Tracer', () => {
     expect(total).to.equal(n);
   });
 
-  test.only('filter and group', async () => {
+  test('filter and group', async () => {
     const tracer = new Tracer();
     const key = 'test';
 
@@ -51,12 +51,6 @@ describe('Tracer', () => {
 
     const events = tracer.get('test', { id: uniqueObjectIds[0] });
     expect(events).to.have.length(n / objectIds.length);
-  });
-
-  // TODO(burdon): Move test to reducer.
-  test('median', () => {
-    expect(median([1, 2, 3])).to.equal(2);
-    expect(median([1, 2, 3, 4])).to.equal((2 + 3) / 2);
   });
 
   test('numerical values', async () => {
