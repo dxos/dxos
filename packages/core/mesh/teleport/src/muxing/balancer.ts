@@ -12,6 +12,12 @@ import { Framer } from './framer';
 const MAX_CHUNK_SIZE = 8192;
 
 type Chunk = {
+  chunk: Uint8Array;
+  channelId: number;
+  dataLength?: number;
+};
+
+type ChunkEnvelope = {
   msg: Buffer;
   trigger?: Trigger;
 };
@@ -19,12 +25,6 @@ type Chunk = {
 type ChannelBuffer = {
   buffer: Buffer;
   msgLength: number;
-};
-
-type SubChunk = {
-  chunk: Uint8Array;
-  channelId: number;
-  dataLength?: number;
 };
 
 /**
@@ -39,7 +39,7 @@ export class Balancer {
 
   private readonly _framer = new Framer();
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
-  private readonly _calls: Map<number, Chunk[]> = new Map();
+  private readonly _calls: Map<number, ChunkEnvelope[]> = new Map();
   private readonly _channelBuffers = new Map<number, ChannelBuffer>();
 
   public incomingData = new Event<Uint8Array>();
@@ -126,7 +126,7 @@ export class Balancer {
     return this._channels[index];
   }
 
-  private _getNextCall(): Chunk {
+  private _getNextCall(): ChunkEnvelope {
     let call;
     while (!call) {
       const channelId = this._getNextCallerId();
@@ -161,7 +161,7 @@ export class Balancer {
   }
 }
 
-export const encodeChunk = ({ channelId, dataLength, chunk }: SubChunk): Buffer => {
+export const encodeChunk = ({ channelId, dataLength, chunk }: Chunk): Buffer => {
   const channelTagLength = varint.encodingLength(channelId);
   const dataLengthLength = dataLength ? varint.encodingLength(dataLength) : 0;
   const message = Buffer.allocUnsafe(channelTagLength + dataLengthLength + chunk.length);
@@ -173,7 +173,7 @@ export const encodeChunk = ({ channelId, dataLength, chunk }: SubChunk): Buffer 
   return message;
 };
 
-export const decodeChunk = (data: Uint8Array, withLength: (channelId: number) => boolean): SubChunk => {
+export const decodeChunk = (data: Uint8Array, withLength: (channelId: number) => boolean): Chunk => {
   const channelId = varint.decode(data);
   let dataLength: number | undefined;
   let offset = varint.decode.bytes;
