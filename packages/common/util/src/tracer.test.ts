@@ -67,7 +67,7 @@ describe('Tracer', () => {
     const events = tracer.get('test')!;
     expect(events).to.have.length(n);
 
-    const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration);
+    const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration!);
     expect(mean).to.be.greaterThan(0);
     expect(mean).to.be.lessThan(10);
     expect(Math.round(total)).to.eq(Math.round(mean! * count));
