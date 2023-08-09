@@ -18,9 +18,9 @@ export class ConnectionLimiter {
    */
   private readonly _waitingPromises: { resolve: () => void }[] = [];
 
-  private _initiatingConnections: number;
+  private _initiatingConnections = 0;
 
-  private readonly updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
+  private readonly _updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
     this._initiatingConnections = Array.from(this._networkManager._swarms.values())
       .map((swarm) => swarm.connections)
       .flat()
@@ -34,14 +34,11 @@ export class ConnectionLimiter {
   });
 
   constructor(private readonly _networkManager: NetworkManager) {
-    this._initiatingConnections = Array.from(this._networkManager._swarms.values())
-      .map((swarm) => swarm.connections)
-      .flat()
-      .filter((connection) => connection.state === ConnectionState.CONNECTING).length;
+    this._updateInitiatingConnections.schedule();
     let swarmCtx = new Context();
     this._networkManager.topicsUpdated.on(this._ctx, () => {
       void swarmCtx?.dispose();
-      this.updateInitiatingConnections.schedule();
+      this._updateInitiatingConnections.schedule();
       swarmCtx = this._subscribeSwarms(this._ctx);
     });
   }
@@ -49,10 +46,10 @@ export class ConnectionLimiter {
   private _subscribeSwarms = (ctx: Context) => {
     const swarmCtx = ctx.derive();
     Array.from(this._networkManager._swarms.values()).forEach((swarm) => {
-      swarm.connectionAdded.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
-      swarm.disconnected.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
+      swarm.connectionAdded.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
+      swarm.disconnected.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
       swarm.connections.forEach((connection) => {
-        connection.stateChanged.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
+        connection.stateChanged.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
       });
     });
     return swarmCtx;
@@ -61,10 +58,14 @@ export class ConnectionLimiter {
   async wait(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this._ctx.disposed) {
-        reject(new Error('Network manager is destroyed'));
+        reject(new Error('Context is disposed'));
       }
       this._waitingPromises.push({ resolve: resolve as () => void });
-      this.updateInitiatingConnections.schedule();
+      this._updateInitiatingConnections.schedule();
     });
+  }
+
+  destroy() {
+    void this._ctx.dispose();
   }
 }
