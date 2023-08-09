@@ -14,7 +14,7 @@ const getMicroseconds = () => {
  */
 export type Event = {
   id: string;
-  timestamp: number;
+  timestamp: number; // Microseconds.
   duration?: number; // Microseconds.
   value?: any;
 };

@@ -12,7 +12,7 @@ import { Tracer } from './tracer';
 
 describe('Tracer', () => {
   test('simple time-series', async () => {
-    const tracer = new Tracer();
+    const tracer = new Tracer().start();
     const key = 'test';
 
     const n = 20;
@@ -24,7 +24,7 @@ describe('Tracer', () => {
     const events = tracer.get('test')!;
     expect(events).to.have.length(n);
 
-    const buckets = reduceSeries(createBucketReducer(10), events);
+    const buckets = reduceSeries(createBucketReducer(10_000), events);
     expect(buckets.length).to.be.greaterThan(0);
     expect(buckets.length).to.be.lessThan(n);
 
@@ -33,7 +33,7 @@ describe('Tracer', () => {
   });
 
   test('filter and group', async () => {
-    const tracer = new Tracer();
+    const tracer = new Tracer().start();
     const key = 'test';
 
     const n = 30;
@@ -54,7 +54,7 @@ describe('Tracer', () => {
   });
 
   test('numerical values', async () => {
-    const tracer = new Tracer();
+    const tracer = new Tracer().start();
     const key = 'test';
 
     const n = 20;
@@ -69,7 +69,7 @@ describe('Tracer', () => {
 
     const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration!);
     expect(mean).to.be.greaterThan(0);
-    expect(mean).to.be.lessThan(10);
+    expect(mean).to.be.lessThan(10_000);
     expect(Math.round(total)).to.eq(Math.round(mean! * count));
     expect(median).to.be.greaterThan(min!);
     expect(median).to.be.lessThan(max!);
