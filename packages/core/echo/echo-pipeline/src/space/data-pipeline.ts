@@ -22,7 +22,7 @@ import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { tracer } from '@dxos/util';
 
-import { DatabaseHost, SnapshotManager } from '../dbhost';
+import { DatabaseHost, SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
@@ -220,7 +220,7 @@ export class DataPipeline implements CredentialProcessor {
 
           // TODO(burdon): Min = 0?
           // TODO(burdon): Reconcile different tracer approaches.
-          const timer = tracer.emit('echo.pipeline.data.consume');
+          const timer = tracer.emit('echo.pipeline.data');
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {

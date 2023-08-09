@@ -57,10 +57,7 @@ export class SystemServiceImpl implements SystemService {
 
         const metrics: Metrics = {
           timestamp: new Date(),
-          values: [
-            createNumericalValues('echo.pipeline.control.consume'),
-            createNumericalValues('echo.pipeline.data.consume'),
-          ],
+          values: [createNumericalValues('echo.pipeline.control'), createNumericalValues('echo.pipeline.data')],
         };
 
         next({ status: this._getCurrentStatus(), metrics });
