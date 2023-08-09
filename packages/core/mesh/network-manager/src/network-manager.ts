@@ -80,7 +80,7 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
-  private _connectionLimiter!: ConnectionLimiter;
+  private readonly _connectionLimiter: ConnectionLimiter;
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
@@ -103,6 +103,7 @@ export class NetworkManager {
       leave: (opts) => this._signalManager.leave(opts),
     };
 
+    this._connectionLimiter = this._getConnectionLimiter();
     // TODO(burdon): Inject listener (generic pattern).
     if (log) {
       this._connectionLog = new ConnectionLog();
@@ -135,7 +136,6 @@ export class NetworkManager {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
-    this._connectionLimiter = await this._getConnectionLimiter();
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
@@ -148,6 +148,59 @@ export class NetworkManager {
 
     await this._messenger.close();
     await this._signalManager.close();
+  }
+
+  _getConnectionLimiter(): ConnectionLimiter {
+    /**
+     * Queue of promises to resolve when initiating connections amount is below the limit.
+     */
+    const waitingPromises: { resolve: () => void }[] = [];
+
+    let initiatingConnections = Array.from(this._swarms.values())
+      .map((swarm) => swarm.connections)
+      .flat()
+      .filter((connection) => connection.state === SwarmConnectionState.CONNECTING).length;
+
+    const updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
+      initiatingConnections = Array.from(this._swarms.values())
+        .map((swarm) => swarm.connections)
+        .flat()
+        .filter((connection) => connection.state === SwarmConnectionState.CONNECTING).length;
+
+      if (initiatingConnections < MAX_INITIATING_CONNECTIONS) {
+        waitingPromises.splice(0, MAX_INITIATING_CONNECTIONS - initiatingConnections).forEach((p) => p.resolve());
+      }
+    });
+
+    let swarmCtx = new Context();
+    this.topicsUpdated.on(this._ctx, () => {
+      void swarmCtx?.dispose();
+      updateInitiatingConnections.schedule();
+      swarmCtx = subscribeSwarms(this._ctx);
+    });
+
+    const subscribeSwarms = (ctx: Context) => {
+      const swarmCtx = ctx.derive();
+      Array.from(this._swarms.values()).forEach((swarm) => {
+        swarm.connectionAdded.on(swarmCtx, () => updateInitiatingConnections.schedule());
+        swarm.disconnected.on(swarmCtx, () => updateInitiatingConnections.schedule());
+        swarm.connections.forEach((connection) => {
+          connection.stateChanged.on(swarmCtx, () => updateInitiatingConnections.schedule());
+        });
+      });
+      return swarmCtx;
+    };
+
+    return {
+      wait: async () =>
+        new Promise((resolve, reject) => {
+          if (this._ctx.disposed) {
+            reject(new Error('Network manager is destroyed'));
+          }
+          waitingPromises.push({ resolve });
+          updateInitiatingConnections.schedule();
+        }),
+    };
   }
 
   /**
@@ -169,7 +222,17 @@ export class NetworkManager {
     }
 
     log('joining', { topic: PublicKey.from(topic), peerId, topology: topology.toString() }); // TODO(burdon): Log peerId.
-    const swarm = new Swarm(topic, peerId, topology, protocol, this._messenger, this._transportFactory, label);
+    const swarm = new Swarm(
+      topic,
+      peerId,
+      topology,
+      protocol,
+      this._messenger,
+      this._transportFactory,
+      label,
+      this._connectionLimiter,
+    );
+
     swarm.errors.handle((error) => {
       log('swarm error', { error });
     });
@@ -242,58 +305,5 @@ export class NetworkManager {
     }
 
     this.connectionStateChanged.emit(this._connectionState);
-  }
-
-  async _getConnectionLimiter(): Promise<ConnectionLimiter> {
-    /**
-     * Queue of promises to resolve when initiating connections amount is below the limit.
-     */
-    const waitingPromises: { resolve: () => void }[] = [];
-
-    let initiatingConnections = Array.from(this._swarms.values())
-      .map((swarm) => swarm.connections)
-      .flat()
-      .filter((connection) => connection.state === SwarmConnectionState.CONNECTING).length;
-
-    const updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
-      initiatingConnections = Array.from(this._swarms.values())
-        .map((swarm) => swarm.connections)
-        .flat()
-        .filter((connection) => connection.state === SwarmConnectionState.CONNECTING).length;
-
-      if (initiatingConnections < MAX_INITIATING_CONNECTIONS) {
-        waitingPromises.splice(0, MAX_INITIATING_CONNECTIONS - initiatingConnections).forEach((p) => p.resolve());
-      }
-    });
-
-    let swarmCtx = new Context();
-    this.topicsUpdated.on(this._ctx, () => {
-      void swarmCtx?.dispose();
-      updateInitiatingConnections.schedule();
-      swarmCtx = subscribeSwarms(this._ctx);
-    });
-
-    const subscribeSwarms = (ctx: Context) => {
-      const swarmCtx = ctx.derive();
-      Array.from(this._swarms.values()).forEach((swarm) => {
-        swarm.connectionAdded.on(swarmCtx, () => updateInitiatingConnections.schedule());
-        swarm.disconnected.on(swarmCtx, () => updateInitiatingConnections.schedule());
-        swarm.connections.forEach((connection) => {
-          connection.stateChanged.on(swarmCtx, () => updateInitiatingConnections.schedule());
-        });
-      });
-      return swarmCtx;
-    };
-
-    return {
-      wait: async () =>
-        new Promise((resolve, reject) => {
-          if (this._ctx.disposed) {
-            reject(new Error('Network manager is destroyed'));
-          }
-          waitingPromises.push({ resolve });
-          updateInitiatingConnections.schedule();
-        }),
-    };
   }
 }
