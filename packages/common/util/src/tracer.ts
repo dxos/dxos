@@ -25,6 +25,9 @@ export type Event = {
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 
+  // TODO(burdon): Don't auto-start.
+  private _recording = true;
+
   // TODO(burdon): Start/stop methods for recording data? By id?
   //  Alternatively, enable subscriptions to track/compute series.
 
@@ -43,21 +46,43 @@ export class Tracer {
     this._events.clear();
   }
 
-  // TODO(burdon): Start/stop timer.
+  start() {
+    this._recording = true;
+    return this;
+  }
+
+  stop() {
+    this._recording = false;
+    return this;
+  }
+
   emit(id: string, value?: any) {
+    this._post(this._createEvent(id, value));
+  }
+
+  mark(id: string, value?: any): { end: () => void } {
+    const event = this._createEvent(id, value);
+    return {
+      end: () => {
+        event.duration = Math.floor(getMicroseconds() - event.timestamp!);
+        this._post(event);
+      },
+    };
+  }
+
+  private _createEvent(id: string, value?: any): Event {
     const event: Event = { id, timestamp: getMicroseconds() };
     if (value !== undefined) {
       event.value = value;
     }
 
-    defaultMap(this._events, id, []).push(event);
+    return event;
+  }
 
-    // TODO(burdon): Don't emit until or unless done.
-    return {
-      done: () => {
-        event.duration = Math.floor(getMicroseconds() - event.timestamp!);
-      },
-    };
+  private _post(event: Event) {
+    if (this._recording) {
+      defaultMap(this._events, event.id, []).push(event);
+    }
   }
 }
 

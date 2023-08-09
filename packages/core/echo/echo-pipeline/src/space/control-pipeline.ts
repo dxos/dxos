@@ -87,13 +87,13 @@ export class ControlPipeline {
           // log('processing', { msg });
           log('processing', { key: msg.feedKey, seq: msg.seq });
           if (msg.data.payload.credential) {
-            const timer = tracer.emit('echo.pipeline.control');
+            const timer = tracer.mark('echo.pipeline.control');
             const result = await this._spaceStateMachine.process(
               msg.data.payload.credential.credential,
               PublicKey.from(msg.feedKey),
             );
 
-            timer.done();
+            timer.end();
             if (!result) {
               log.warn('processing failed', { msg });
             } else {

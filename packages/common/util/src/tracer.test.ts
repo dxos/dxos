@@ -59,9 +59,9 @@ describe('Tracer', () => {
 
     const n = 20;
     for (let i = 0; i < n; i++) {
-      const event = tracer.emit(key);
+      const event = tracer.mark(key);
       await sleep(Math.random() * 10);
-      event.done();
+      event.end();
     }
 
     const events = tracer.get('test')!;

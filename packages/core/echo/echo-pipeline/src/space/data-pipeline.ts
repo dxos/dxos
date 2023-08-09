@@ -217,7 +217,7 @@ export class DataPipeline implements CredentialProcessor {
             continue;
           }
 
-          const timer = tracer.emit('echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
+          const timer = tracer.mark('echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
@@ -228,7 +228,7 @@ export class DataPipeline implements CredentialProcessor {
             },
           });
 
-          timer.done();
+          timer.end();
           // TODO(burdon): Reconcile different tracer approaches.
           log.trace('dxos.echo.data-pipeline.processed', {
             feedKey: feedKey.toHex(), // TODO(burdon): Need to flatten?
