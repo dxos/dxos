@@ -92,9 +92,9 @@ export class ForeverDaemon implements Daemon {
         args: [
           'agent',
           'start',
-          `--metrics=${String(!!options?.metrics)}`,
           '--foreground',
           `--profile=${profile}`,
+          options?.metrics ? '--metrics' : '',
           options?.config ? `--config=${options.config}` : '',
         ],
         uid: profile,

@@ -90,5 +90,5 @@ export class Tracer {
 }
 
 // TODO(burdon): Factor out (move to @dxos/log?)
-// TODO(burdon): Global singleton (e.g., `trace()`).
+// TODO(burdon): Global singleton (e.g., `trace()`) or part of client services?
 export const tracer = new Tracer();
