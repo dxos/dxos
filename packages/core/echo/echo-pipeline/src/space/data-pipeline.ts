@@ -76,6 +76,8 @@ export class DataPipeline implements CredentialProcessor {
 
   private _lastTimeframeSaveTime = 0;
   private _lastSnapshotSaveTime = 0;
+  private _lastProcessedEpoch = -1;
+  private _epochCtx?: Context;
 
   constructor(private readonly _params: DataPipelineParams) {}
 
@@ -92,10 +94,7 @@ export class DataPipeline implements CredentialProcessor {
    */
   public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
-  private _lastProcessedEpoch = -1;
-  private _epochCtx?: Context;
-
-  public onNewEpoch = new Event<Credential>();
+  public readonly onNewEpoch = new Event<Credential>();
 
   get isOpen() {
     return this._isOpen;
@@ -218,9 +217,7 @@ export class DataPipeline implements CredentialProcessor {
             continue;
           }
 
-          // TODO(burdon): Min = 0?
-          // TODO(burdon): Reconcile different tracer approaches.
-          const timer = tracer.emit('echo.pipeline.data');
+          const timer = tracer.emit('echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
@@ -231,12 +228,13 @@ export class DataPipeline implements CredentialProcessor {
             },
           });
 
+          timer.done();
+          // TODO(burdon): Reconcile different tracer approaches.
           log.trace('dxos.echo.data-pipeline.processed', {
             feedKey: feedKey.toHex(), // TODO(burdon): Need to flatten?
             seq,
             spaceKey: this._params.spaceKey.toHex(),
           } satisfies DataPipelineProcessed);
-          timer.done();
 
           // Timeframe clock is not updated yet.
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
