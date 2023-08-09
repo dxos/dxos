@@ -209,16 +209,18 @@ export class DataPipeline implements CredentialProcessor {
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
-      const timer = tracer.emit('echo.pipeline.consume');
 
       try {
         if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
-            log.error('Could not find feed.', { feedKey });
+            log.warn('Could not find feed.', { feedKey });
             continue;
           }
 
+          // TODO(burdon): Min = 0?
+          // TODO(burdon): Reconcile different tracer approaches.
+          const timer = tracer.emit('echo.pipeline.consume');
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
@@ -230,10 +232,11 @@ export class DataPipeline implements CredentialProcessor {
           });
 
           log.trace('dxos.echo.data-pipeline.processed', {
-            feedKey: feedKey.toHex(),
+            feedKey: feedKey.toHex(), // TODO(burdon): Need to flatten?
             seq,
             spaceKey: this._params.spaceKey.toHex(),
           } satisfies DataPipelineProcessed);
+          timer.done();
 
           // Timeframe clock is not updated yet.
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
@@ -241,8 +244,6 @@ export class DataPipeline implements CredentialProcessor {
       } catch (err: any) {
         log.catch(err);
       }
-
-      timer.done();
     }
   }
 
