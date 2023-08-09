@@ -45,19 +45,6 @@ message QueryStatusRequest {
 
 message QueryStatusResponse {
   SystemStatus status = 1;
-
-  optional Metrics metrics = 10;
-}
-
-message Metrics {
-  message KeyPair {
-    optional string key = 1;
-    optional dxos.value.Value value = 2;
-    optional dxos.value.Stats stats = 3;
-  }
-
-  google.protobuf.Timestamp timestamp = 1;
-  repeated KeyPair values = 10;
 }
 
 //
@@ -459,54 +446,4 @@ message UpdateConfigRequest {
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-}
-
-//
-// Development Tooling
-//
-
-// NOTE: Keep aligned with LogLevel in @dxos/log.
-enum LogLevel {
-  TRACE = 5;
-  DEBUG = 10;
-  INFO = 11;
-  WARN = 12;
-  ERROR = 13;
-}
-
-message QueryLogsRequest {
-  enum MatchingOptions {
-    /// Filters match all log levels above. Default behaviour for the logger.
-    INCLUSIVE = 1;
-
-    /// Explicitly specify all desired log levels.
-    EXPLICIT = 2;
-  }
-
-  message Filter {
-    LogLevel level = 1;
-    optional string pattern = 2;
-  }
-
-  repeated Filter filters = 1;
-  optional MatchingOptions options = 10;
-}
-
-message LogEntry {
-  message Meta {
-    string file = 1;
-    int32 line = 2;
-    optional google.protobuf.Struct scope = 3;
-  }
-
-  LogLevel level = 1;
-  string message = 2;
-  optional google.protobuf.Struct context = 3;
-  optional Meta meta = 4;
-  optional dxos.error.Error error = 5;
-  google.protobuf.Timestamp timestamp = 6;
-}
-
-service LoggingService {
-  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }

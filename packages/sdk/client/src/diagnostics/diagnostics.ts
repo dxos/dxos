@@ -73,6 +73,9 @@ export type DiagnosticOptions = {
 // TODO(burdon): Factor out (move into Monitor class).
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const host = client.services.services.DevtoolsHost!;
+  const identity = client.halo.identity.get();
+  log('diagnostics', { identity });
+
   const data: Partial<Diagnostics> = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
@@ -89,14 +92,12 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
   // Trace metrics.
   {
     invariant(client.services.services.SystemService, 'SystemService is not available.');
-    const stream = client.services.services.SystemService.queryStatus({});
+    const stream = client.services.services.LoggingService!.queryMetrics({});
     const trigger = new Trigger<Metrics>();
-    stream?.subscribe(async (msg) => trigger.wake(msg.metrics!));
+    stream?.subscribe(async (metrics) => trigger.wake(metrics!));
     data.metrics = await trigger.wait();
   }
 
-  const identity = client.halo.identity.get();
-  log('diagnostics', { identity });
   if (identity) {
     data.identity = identity;
     data.devices = client.halo.devices.get();

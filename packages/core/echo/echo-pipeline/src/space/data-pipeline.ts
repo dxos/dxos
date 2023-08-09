@@ -217,7 +217,7 @@ export class DataPipeline implements CredentialProcessor {
             continue;
           }
 
-          const timer = tracer.mark('echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
+          const timer = tracer.mark('dxos.echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {

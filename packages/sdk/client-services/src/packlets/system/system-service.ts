@@ -6,14 +6,13 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
-  Metrics,
   SystemService,
   SystemStatus,
   UpdateStatusRequest,
   QueryStatusRequest,
   QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { MaybePromise, numericalValues, tracer } from '@dxos/util';
+import { MaybePromise } from '@dxos/util';
 
 export type SystemServiceOptions = {
   config?: Config;
@@ -46,21 +45,11 @@ export class SystemServiceImpl implements SystemService {
     await this._onUpdateStatus(status);
   }
 
+  // TODO(burdon): Standardize interval option in stream request?
   queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
-        const createNumericalValues = (key: string) => {
-          const consume = tracer.get(key) ?? [];
-          return { key, stats: numericalValues(consume, 'duration') };
-        };
-
-        const metrics: Metrics = {
-          timestamp: new Date(),
-          values: [createNumericalValues('echo.pipeline.control'), createNumericalValues('echo.pipeline.data')],
-        };
-
-        next({ status: this._getCurrentStatus(), metrics });
+        next({ status: this._getCurrentStatus() });
       };
 
       update();

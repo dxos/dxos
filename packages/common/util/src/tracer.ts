@@ -33,6 +33,10 @@ export class Tracer {
 
   // TODO(burdon): Hierarchical traces?
 
+  get recording() {
+    return this._recording;
+  }
+
   get(id: string, filter?: Record<string, any>): Event[] | undefined {
     const events = this._events.get(id);
     if (filter) {
