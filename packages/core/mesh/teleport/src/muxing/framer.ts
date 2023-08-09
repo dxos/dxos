@@ -6,7 +6,6 @@ import { Duplex } from 'node:stream';
 import invariant from 'tiny-invariant';
 
 import { RpcPort } from './rpc-port';
-import { log } from '@dxos/log';
 
 const FRAME_LENGTH_SIZE = 2;
 
@@ -20,14 +19,16 @@ export class Framer {
   private _messageCb?: (msg: Uint8Array) => void;
   private _subscribeCb?: () => void;
   private _buffer?: Buffer; // The rest of the bytes from the previous write call.
-  private _responseQueue: (() => void)[] = [];
+  private _sendCallbacks: (() => void)[] = [];
 
   private _bytesSent = 0;
   private _bytesReceived = 0;
 
   private readonly _stream = new Duplex({
     objectMode: false,
-    read: () => {},
+    read: () => {
+      this._processResponseQueue();
+    },
     write: (chunk, encoding, callback) => {
       invariant(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
 
@@ -61,8 +62,7 @@ export class Framer {
         this._bytesSent += frame.length;
         const canContinue = this._stream.push(frame);
         if (!canContinue) {
-          log.info('PAUSE')
-          this._responseQueue.push(resolve);
+          this._sendCallbacks.push(resolve);
         } else {
           resolve();
         }
@@ -91,13 +91,11 @@ export class Framer {
   }
 
   constructor() {
-    this.stream.on('drain', this._processResponseQueue.bind(this));
   }
 
   private _processResponseQueue() {
-    log.info('RESUME')
-    const responseQueue = this._responseQueue;
-    this._responseQueue = [];
+    const responseQueue = this._sendCallbacks;
+    this._sendCallbacks = [];
     responseQueue.forEach((cb) => cb());
   }
 
@@ -128,7 +126,6 @@ export class Framer {
 
   destroy() {
     // TODO(dmaretskyi): Call stream.end() instead?
-    this._stream.removeAllListeners('drain');
     this._stream.destroy();
   }
 }

@@ -80,13 +80,13 @@ const runTransport = () =>
       streamsDelay: 60_000,
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
-      streamLoadInterval: 10,
-      streamLoadChunkSize: 100_000,
+      streamLoadInterval: 1,
+      streamLoadChunkSize: 5_000_000,
     },
     options: {
       staggerAgents: 1000,
       randomSeed: PublicKey.random().toHex(),
-      profile: true,
+      // profile: true,
       // repeatAnalysis:
       // '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json'
     },

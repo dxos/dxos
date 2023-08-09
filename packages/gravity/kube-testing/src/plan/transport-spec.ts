@@ -368,15 +368,15 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
               })),
               backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
             })),
-            ...Array.from(muxerStats.entries()).map(([key, entries]) => ({
-              label: `${key}-received`,
-              showLine: true,
-              data: entries.map((entry) => ({
-                x: entry.timestamp,
-                y: entry.context.bytesReceived,
-              })),
-              backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
-            })),
+            // ...Array.from(muxerStats.entries()).map(([key, entries]) => ({
+            //   label: `${key}-received`,
+            //   showLine: true,
+            //   data: entries.map((entry) => ({
+            //     x: entry.timestamp,
+            //     y: entry.context.bytesReceived,
+            //   })),
+            //   backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            // })),
             ...Array.from(testStats.entries()).map(([key, entries]) => ({
               label: `${key}-sent`,
               showLine: true,
@@ -387,15 +387,15 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
               backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
 
             })),
-            ...Array.from(testStats.entries()).map(([key, entries]) => ({
-              label: `${key}-received`,
-              showLine: true,
-              data: entries.map((entry) => ({
-                x: entry.timestamp,
-                y: entry.context.bytesReceived,
-              })),
-              backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
-            })),
+            // ...Array.from(testStats.entries()).map(([key, entries]) => ({
+            //   label: `${key}-received`,
+            //   showLine: true,
+            //   data: entries.map((entry) => ({
+            //     x: entry.timestamp,
+            //     y: entry.context.bytesReceived,
+            //   })),
+            //   backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            // })),
           ]
         },
         options: {},
