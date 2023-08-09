@@ -81,4 +81,5 @@ export const os = {
   'device list heading': 'Devices',
   'space member list heading': 'Members in this space',
   'space panel heading': 'Space settings',
+  'auth code message': 'Enter the following auth code on the joining device.',
 };

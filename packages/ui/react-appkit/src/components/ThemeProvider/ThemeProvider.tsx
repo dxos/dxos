@@ -13,7 +13,7 @@ import {
   ToastProviderProps,
   ToastViewportProps,
 } from '@dxos/aurora';
-import { appTx } from '@dxos/aurora-theme';
+import { auroraTx } from '@dxos/aurora-theme';
 
 export type ThemeProviderProps = AuroraThemeProviderProps &
   PropsWithChildren<{
@@ -31,7 +31,7 @@ export const ThemeProvider = ({
   ...auroraThemeProviderProps
 }: ThemeProviderProps) => {
   return (
-    <AuroraThemeProvider tx={appTx} {...auroraThemeProviderProps}>
+    <AuroraThemeProvider tx={auroraTx} {...auroraThemeProviderProps}>
       <Toast.Provider {...toastProviderProps}>
         <Tooltip.Provider delayDuration={100} skipDelayDuration={400} {...tooltipProviderProps}>
           {children}
