@@ -9,7 +9,7 @@ import React from 'react';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
-import { App } from '../../components/App';
+import { App } from '../../components';
 
 // TODO(burdon): Experimental (make JIT to remove react dependency).
 //  https://oclif.io/docs/jit_plugins

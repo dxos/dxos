@@ -13,6 +13,7 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
   Identity,
+  Metrics,
   Space as SpaceProto,
   SpaceMember,
   SpacesService,
@@ -35,6 +36,7 @@ export type Diagnostics = {
   devices: Device[];
   spaces: SpaceStats[];
   feeds: Partial<SubscribeToFeedsResponse.Feed>[];
+  metrics?: Metrics;
 };
 
 export type SpaceStats = {
@@ -71,6 +73,9 @@ export type DiagnosticOptions = {
 // TODO(burdon): Factor out (move into Monitor class).
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const host = client.services.services.DevtoolsHost!;
+  const identity = client.halo.identity.get();
+  log('diagnostics', { identity });
+
   const data: Partial<Diagnostics> = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
@@ -84,8 +89,15 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     config: client.config.values,
   };
 
-  const identity = client.halo.identity.get();
-  log('diagnostics', { identity });
+  // Trace metrics.
+  {
+    invariant(client.services.services.SystemService, 'SystemService is not available.');
+    const stream = client.services.services.LoggingService!.queryMetrics({});
+    const trigger = new Trigger<Metrics>();
+    stream?.subscribe(async (metrics) => trigger.wake(metrics!));
+    data.metrics = await trigger.wait();
+  }
+
   if (identity) {
     data.identity = identity;
     data.devices = client.halo.devices.get();
@@ -113,7 +125,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
                   name: space.properties.name,
                 },
                 metrics: space.internal.data.metrics,
-                epochs: await getEpochs(client.services!.services.SpacesService!, space),
+                epochs: await getEpochs(client.services.services.SpacesService!, space),
                 members: space?.members.get(),
                 db: {
                   items: objects.length,
