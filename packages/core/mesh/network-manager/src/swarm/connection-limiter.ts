@@ -48,6 +48,7 @@ export class ConnectionLimiterImpl implements ConnectionLimiter {
   }
 
   async wait(peerId: PublicKey): Promise<void> {
+    invariant(!this._waitingPromises.has(peerId), 'Peer is already waiting for connection');
     return new Promise((resolve, reject) => {
       this._waitingPromises.set(peerId, {
         resolve,
