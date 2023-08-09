@@ -213,7 +213,7 @@ export class DataPipeline implements CredentialProcessor {
         if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
-            log.warn('Could not find feed.', { feedKey });
+            log.warn('Could not find feed', { feedKey });
             continue;
           }
 

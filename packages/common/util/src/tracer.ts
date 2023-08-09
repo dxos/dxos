@@ -25,7 +25,7 @@ export type Event = {
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 
-  // TODO(burdon): Don't auto-start.
+  // TODO(burdon): Don't auto-start. Trigger via client/services.
   private _recording = true;
 
   // TODO(burdon): Start/stop methods for recording data? By id?
