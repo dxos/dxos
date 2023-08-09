@@ -64,10 +64,10 @@ export class ForeverDaemon implements Daemon {
     );
   }
 
-  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
+  async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       // Check if there is stopped process.
-      if ((await this._getProcess(profile)).running === false) {
+      if (!(await this._getProcess(profile)).running) {
         // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
         await this.stop(profile);
       }
@@ -92,9 +92,10 @@ export class ForeverDaemon implements Daemon {
         args: [
           'agent',
           'start',
+          `--metrics=${String(!!options?.metrics)}`,
           '--foreground',
           `--profile=${profile}`,
-          params?.config ? `--config=${params.config}` : '',
+          options?.config ? `--config=${options.config}` : '',
         ],
         uid: profile,
         max: 0,
