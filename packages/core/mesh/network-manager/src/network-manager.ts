@@ -15,14 +15,16 @@ import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
 import { SignalConnection } from './signal';
-import { ConnectionState as SwarmConnectionState, Swarm, SwarmMapper } from './swarm';
-import { ConnectionLimiter } from './swarm/connection-limiter';
+import {
+  ConnectionState as SwarmConnectionState,
+  Swarm,
+  SwarmMapper,
+  ConnectionLimiter,
+  MAX_INITIATING_CONNECTIONS,
+} from './swarm';
 import { Topology } from './topology';
 import { TransportFactory } from './transport';
 import { WireProtocolProvider } from './wire-protocol';
-
-export const MAX_INITIATING_CONNECTIONS = 15;
-
 /**
  * Represents a single connection to a remote peer.
  */
@@ -78,6 +80,7 @@ export class NetworkManager {
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
+  private _connectionLimiter!: ConnectionLimiter;
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
@@ -132,6 +135,7 @@ export class NetworkManager {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
     await this._messenger.open();
     await this._signalManager.open();
+    this._connectionLimiter = await this._getConnectionLimiter();
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 

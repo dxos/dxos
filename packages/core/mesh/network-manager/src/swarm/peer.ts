@@ -14,6 +14,7 @@ import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
 
 interface PeerCallbacks {
   /**
@@ -88,6 +89,7 @@ export class Peer {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _transportFactory: TransportFactory,
+    private readonly _connectionLimiter: ConnectionLimiter,
     private readonly _callbacks: PeerCallbacks,
   ) {}
 
@@ -124,7 +126,7 @@ export class Peer {
         invariant(message.sessionId);
         const connection = this._createConnection(false, message.sessionId);
         try {
-          connection.openConnection();
+          await connection.openConnection();
         } catch (err: any) {
           log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           // Calls `onStateChange` with CLOSED state.
@@ -166,7 +168,7 @@ export class Peer {
         this._callbacks.onRejected();
         return;
       }
-      connection.openConnection();
+      await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
@@ -202,6 +204,7 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory,
+      this._connectionLimiter,
     );
     this._callbacks.onInitiated(connection);
 

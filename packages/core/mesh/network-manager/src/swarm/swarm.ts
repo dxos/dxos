@@ -21,6 +21,7 @@ import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
@@ -82,6 +83,7 @@ export class Swarm {
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined,
+    private readonly _connectionLimiter: ConnectionLimiter,
   ) {
     log.trace(
       'dxos.mesh.swarm.constructor',
@@ -258,6 +260,7 @@ export class Swarm {
         this._swarmMessenger,
         this._protocolProvider,
         this._transportFactory,
+        this._connectionLimiter,
         {
           onInitiated: (connection) => {
             this.connectionAdded.emit(connection);
