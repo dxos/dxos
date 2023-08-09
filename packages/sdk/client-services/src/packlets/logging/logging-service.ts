@@ -31,7 +31,7 @@ export class LoggingServiceImpl implements LoggingService {
     log.runtimeConfig.processors.splice(index, 1);
   }
 
-  async controlMetrics({ record, reset }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
+  async controlMetrics({ reset, record }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
     if (reset) {
       tracer.clear();
     }

@@ -6,9 +6,11 @@ export type ProcessInfo = {
   profile?: string;
   pid?: number;
   running?: boolean;
+  restarts?: number;
   started?: number;
   logFile?: string;
   locked?: boolean;
+  metrics?: boolean;
 };
 
 export type StartOptions = {

@@ -10,6 +10,7 @@ import path from 'node:path';
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
+import { tracer } from '@dxos/util';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
@@ -48,7 +49,7 @@ export class ForeverDaemon implements Daemon {
     });
 
     return Promise.all(
-      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile }: ForeverProcess) => {
         return {
           profile: uid,
           pid: foreverPid,
@@ -57,7 +58,8 @@ export class ForeverDaemon implements Daemon {
           restarts,
           logFile,
           locked: await this.isRunning(uid), // TODO(burdon): Different from "running"?
-        };
+          metrics: tracer.recording,
+        } satisfies ProcessInfo;
       }),
     );
   }

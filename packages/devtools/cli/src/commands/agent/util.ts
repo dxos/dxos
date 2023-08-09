@@ -36,6 +36,10 @@ export const printAgents = (daemons: ProcessInfo[], flags = {}) => {
           return formatDistance(new Date(), new Date(row.started!));
         },
       },
+      metrics: {
+        header: 'metrics',
+        extended: true,
+      },
       logFile: {
         header: 'logFile',
         extended: true,
