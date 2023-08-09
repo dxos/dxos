@@ -10,15 +10,17 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
-import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
+import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../types';
+import { getLevel } from '../util';
 import { TreeView } from './TreeView';
 
-type SortableBranchTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+type SortableBranchTreeItemProps = { node: GraphNode; level: number } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   node,
+  level,
   rearranging,
 }: SortableBranchTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -28,6 +30,7 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   return (
     <BranchTreeItem
       node={node}
+      level={level}
       draggableAttributes={attributes}
       draggableListeners={listeners}
       rearranging={rearranging}
@@ -37,12 +40,12 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   );
 };
 
-type BranchTreeItemProps = { node: GraphNode } & SortableProps;
+type BranchTreeItemProps = { node: GraphNode; level: number } & SortableProps;
 
 export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   BranchTreeItemProps
->(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
   const { invokeAction } = useGraph();
@@ -70,7 +73,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
       collapsible
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1 rounded', focusRing, rearranging && 'invisible']}
+      classNames={['mbe-1 rounded', getLevel(level), focusRing, rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -84,9 +87,12 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           {...(!sidebarOpen && { tabIndex: -1 })}
         >
           <OpenTriggerIcon
-            {...(hasActiveDocument && !open
-              ? { weight: 'fill', className: 'shrink-0 text-primary-500 dark:text-primary-300' }
-              : {})}
+            weight='fill'
+            className={mx(
+              'shrink-0',
+              getSize(2),
+              hasActiveDocument && !open && 'text-primary-500 dark:text-primary-300',
+            )}
           />
           <TreeItem.Heading
             data-testid='spacePlugin.spaceTreeItemHeading'
@@ -203,7 +209,11 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]} parent={node} />
+        <TreeView
+          items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]}
+          parent={node}
+          level={level + 1}
+        />
       </TreeItem.Body>
     </TreeItem.Root>
   );

@@ -8,6 +8,7 @@ import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { MarkdownComposerProps } from '@dxos/aurora-composer';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
+export const MARKDOWN_GROUP_NODE = 'dxos.org/plugin/markdown/objects';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 

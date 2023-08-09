@@ -19,9 +19,10 @@ import { LeafTreeItem, SortableLeafTreeItem } from './LeafTreeItem';
 export type TreeViewProps = {
   items?: GraphNode[];
   parent?: string | GraphNode;
+  level?: number;
 };
 
-const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: GraphNode[] }) => {
+const TreeViewSortableImpl = ({ parent, items, level }: { parent: GraphNode; items: GraphNode[]; level: number }) => {
   // todo(thure): `observer` does not trigger updates when node indices are updated.
   const itemsInOrder = items.sort(sortByIndex);
   const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
@@ -84,9 +85,19 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
     <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) =>
         item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length ? (
-          <SortableBranchTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
+          <SortableBranchTreeItem
+            key={item.id}
+            node={item}
+            level={level}
+            rearranging={overIsMember && activeId === item.id}
+          />
         ) : (
-          <SortableLeafTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
+          <SortableLeafTreeItem
+            key={item.id}
+            node={item}
+            level={level}
+            rearranging={overIsMember && activeId === item.id}
+          />
         ),
       )}
     </SortableContext>
@@ -94,22 +105,22 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 };
 
 export const TreeView = (props: TreeViewProps) => {
-  const { items } = props;
+  const { items, level = 0 } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.attributes?.hidden);
   return (
     <Tree.Branch>
       {visibleItems?.length ? (
         typeof props.parent === 'object' && props.parent?.onChildrenRearrange ? (
-          <TreeViewSortableImpl items={visibleItems} parent={props.parent} />
+          <TreeViewSortableImpl items={visibleItems} level={level} parent={props.parent} />
         ) : (
           visibleItems
             .sort(sortByIndex)
             .map((item) =>
               item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length > 0 ? (
-                <BranchTreeItem key={item.id} node={item} />
+                <BranchTreeItem key={item.id} node={item} level={level} />
               ) : (
-                <LeafTreeItem key={item.id} node={item} />
+                <LeafTreeItem key={item.id} node={item} level={level} />
               ),
             )
         )

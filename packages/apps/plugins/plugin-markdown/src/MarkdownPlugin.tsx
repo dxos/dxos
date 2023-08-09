@@ -11,7 +11,7 @@ import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document as DocumentType } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client/echo';
+import { SpaceProxy, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import {
@@ -22,7 +22,13 @@ import {
   SpaceMarkdownChooser,
 } from './components';
 import translations from './translations';
-import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
+import {
+  MARKDOWN_GROUP_NODE,
+  MARKDOWN_PLUGIN,
+  MarkdownAction,
+  MarkdownPluginProvides,
+  MarkdownProperties,
+} from './types';
 import {
   documentToGraphNode,
   isMarkdown,
@@ -79,7 +85,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
+          // todo(thure): space.properties doesn’t appear to be a good place to store group node meta
+          const initialIndex = (space.properties as TypedObject).groupNodes?.[MARKDOWN_GROUP_NODE]?.index ?? 'a1';
+          return [
+            {
+              id: MARKDOWN_GROUP_NODE,
+              index: initialIndex,
+              label: ['group node label', { ns: MARKDOWN_PLUGIN }],
+              icon: (props) => <ArticleMedium {...props} />,
+              data: { meta: { index: initialIndex } },
+              pluginChildren: {
+                [MARKDOWN_PLUGIN]: adapter.createNodes(space, parent, emit),
+              },
+            },
+          ];
         },
         actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {

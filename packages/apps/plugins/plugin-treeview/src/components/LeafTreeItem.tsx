@@ -24,11 +24,13 @@ import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-t
 
 import { useTreeView } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
+import { getLevel } from '../util';
 
-type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+type SortableLeafTreeItemProps = { node: GraphNode; level: number } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   node,
+  level,
   rearranging,
 }: SortableLeafTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -38,6 +40,7 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   return (
     <LeafTreeItem
       node={node}
+      level={level}
       draggableAttributes={attributes}
       draggableListeners={listeners}
       rearranging={rearranging}
@@ -47,12 +50,12 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   );
 };
 
-type LeafTreeItemProps = { node: GraphNode } & SortableProps;
+type LeafTreeItemProps = { node: GraphNode; level: number } & SortableProps;
 
 export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   LeafTreeItemProps
->(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
   const { invokeAction } = useGraph();
@@ -77,7 +80,12 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 
   return (
     <TreeItem.Root
-      classNames={['pis-7 pointer-fine:pis-6 pointer-fine:pie-0 flex rounded', focusRing, rearranging && 'invisible']}
+      classNames={[
+        'pointer-fine:pis-6 pointer-fine:pie-0 flex rounded',
+        getLevel(level),
+        focusRing,
+        rearranging && 'invisible',
+      ]}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}

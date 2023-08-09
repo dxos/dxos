@@ -20,3 +20,16 @@ export const resolveNodes = (graph: GraphNode[], [id, ...path]: string[], nodes:
   const children = Object.values(node.pluginChildren ?? {}).flat() as GraphNode[];
   return resolveNodes(children, path, [...nodes, node]);
 };
+
+export const getLevel = (level: number) => {
+  switch (true) {
+    case level === 1:
+      return 'pis-3';
+    case level === 2:
+      return 'pis-6';
+    case level > 2:
+      return 'pis-9';
+    default:
+      return 'pis-0';
+  }
+};

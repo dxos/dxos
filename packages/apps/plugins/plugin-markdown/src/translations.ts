@@ -18,6 +18,7 @@ export default [
         'chooser done label': 'Add selected',
         'create document label': 'Create document',
         'delete document label': 'Delete',
+        'group node label': 'Documents',
       },
     },
   },
