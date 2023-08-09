@@ -11,12 +11,11 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
+import { CreateChannelOpts, Muxer, MuxerStats, RpcPort } from './muxing';
 
 export type TeleportParams = {
   initiator: boolean;
@@ -84,13 +83,23 @@ export class Teleport {
         await this.destroy(err);
       });
     }
+
+    this._muxer.statsUpdated.on((stats) => {
+      log.trace('dxos.mesh.teleport.stats', {
+        localPeerId,
+        remotePeerId,
+        bytesSent: stats.bytesSent,
+        bytesReceived: stats.bytesReceived,
+        channels: stats.channels,
+      });
+    });
   }
 
   get stream(): Duplex {
     return this._muxer.stream;
   }
 
-  get stats(): Event<ConnectionInfo.StreamStats[]> {
+  get stats(): Event<MuxerStats> {
     return this._muxer.statsUpdated;
   }
 
