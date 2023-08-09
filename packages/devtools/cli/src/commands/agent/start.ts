@@ -36,6 +36,9 @@ export default class Start extends BaseCommand<typeof Start> {
     monitor: Flags.boolean({
       description: 'Run epoch monitoring.',
     }),
+    metrics: Flags.boolean({
+      description: 'Start metrics recording.',
+    }),
   };
 
   private readonly _ctx = new Context();
@@ -57,9 +60,12 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
+    // TODO(burdon): Option to start metrics recording (or config).
+
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
+      metrics: this.flags.metrics,
       protocol: {
         socket,
         webSocket: this.flags.ws,

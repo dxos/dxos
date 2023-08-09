@@ -13,7 +13,7 @@ export default class Metrics extends BaseCommand<typeof Metrics> {
   static override enableJsonFlag = true;
   static override description = 'Control metrics.';
   static override args = {
-    command: Args.string({ description: 'Space key head in hex.', values: ['reset', 'start', 'stop'] }),
+    command: Args.string({ description: 'Control metrics recording.', values: ['reset', 'start', 'stop'] }),
   };
 
   async run(): Promise<any> {
