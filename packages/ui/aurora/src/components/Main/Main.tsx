@@ -61,7 +61,7 @@ type MainRootProps = PropsWithChildren<{
 
 const MainRoot = ({
   sidebarOpen: propsSidebarOpen,
-  defaultSidebarOpen, // TODO(burdon): Make controlled.
+  defaultSidebarOpen,
   onSidebarOpenChange,
   children,
   ...props
@@ -90,7 +90,7 @@ const handleOpenAutoFocus = (e: Event) => {
 };
 
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
-  ({ classNames, children, swipeToDismiss, ...props }, forwardedRef) => {
+  ({ classNames, children, swipeToDismiss, onOpenAutoFocus, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
     const { tx } = useThemeContext();
@@ -102,8 +102,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const Root = isLg ? Primitive.div : DialogContent;
     return (
       <Root
-        {...(!isLg && { forceMount: true, tabIndex: -1 })}
-        onOpenAutoFocus={handleOpenAutoFocus}
+        {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
         {...props}
         className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
         ref={ref}
