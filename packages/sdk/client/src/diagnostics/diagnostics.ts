@@ -154,10 +154,10 @@ const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.Spa
       epochs: await getEpochs(client.services.services.SpacesService!, space),
       members: space?.members.get(),
       feeds: {
-        control: space.internal.data.pipeline?.controlFeeds,
-        data: space.internal.data.pipeline?.dataFeeds,
+        control: space.internal.data.pipeline?.controlFeeds ?? [],
+        data: space.internal.data.pipeline?.dataFeeds ?? [],
       },
-    } as SpaceStats);
+    } satisfies Partial<SpaceStats>);
 
     // TODO(burdon): Factor out.
     if (stats.metrics) {
