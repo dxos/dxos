@@ -31,7 +31,13 @@ export type CreateChannelOpts = {
   contentType?: string;
 };
 
-const STATS_INTERVAL = 1000;
+export type MuxerStats = {
+  channels: ConnectionInfo.StreamStats[];
+  bytesSent: number;
+  bytesReceived: number;
+}
+
+const STATS_INTERVAL = 100;
 
 const SYSTEM_CHANNEL_ID = 0;
 
@@ -56,7 +62,7 @@ export class Muxer {
   private _destroying = false;
 
   public close = new Event<Error | undefined>();
-  public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
+  public statsUpdated = new Event<MuxerStats>();
 
   public readonly stream = this._balancer.stream;
 
@@ -332,14 +338,20 @@ export class Muxer {
       return;
     }
 
-    this.statsUpdated.emit(
-      Array.from(this._channelsByTag.values()).map((channel) => ({
+    const bytesSent = this._balancer.bytesSent;
+    const bytesReceived = this._balancer.bytesReceived;
+
+    this.statsUpdated.emit({
+      channels: Array.from(this._channelsByTag.values()).map((channel) => ({
         id: channel.id,
         tag: channel.tag,
+        contentType: channel.contentType,
         bytesSent: channel.stats.bytesSent,
         bytesReceived: channel.stats.bytesReceived,
       })),
-    );
+      bytesSent,
+      bytesReceived, 
+    });
   }
 }
 

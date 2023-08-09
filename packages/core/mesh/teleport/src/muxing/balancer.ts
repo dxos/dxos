@@ -39,8 +39,8 @@ export class Balancer {
 
   private readonly _framer = new Framer();
   // TODO(egorgripasov): Will cause a memory leak if channels do not appreciate the backpressure.
-  private readonly _calls: Map<number, ChunkEnvelope[]> = new Map();
-  private readonly _channelBuffers = new Map<number, ChannelBuffer>();
+  private readonly _sendBuffers: Map<number, ChunkEnvelope[]> = new Map();
+  private readonly _receiveBuffers = new Map<number, ChannelBuffer>();
 
   public incomingData = new Event<Uint8Array>();
   public readonly stream = this._framer.stream;
@@ -49,28 +49,15 @@ export class Balancer {
     this._channels.push(_sysChannelId);
 
     // Handle incoming messages.
-    this._framer.port.subscribe(async (msg) => {
-      const { channelId, dataLength, chunk } = decodeChunk(msg, (channelId) => !this._channelBuffers.has(channelId));
-      if (!this._channelBuffers.has(channelId)) {
-        if (chunk.length < dataLength!) {
-          this._channelBuffers.set(channelId, {
-            buffer: Buffer.from(chunk),
-            msgLength: dataLength!,
-          });
-        } else {
-          this.incomingData.emit(chunk);
-        }
-      } else {
-        const channelBuffer = this._channelBuffers.get(channelId)!;
-        channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, chunk]);
-        if (channelBuffer.buffer.length < channelBuffer.msgLength) {
-          return;
-        }
-        const msg = channelBuffer.buffer;
-        this._channelBuffers.delete(channelId);
-        this.incomingData.emit(msg);
-      }
-    });
+    this._framer.port.subscribe(this._processIncomingMessage.bind(this));
+  }
+
+  get bytesSent() {
+    return this._framer.bytesSent;
+  }
+
+  get bytesReceived() {
+    return this._framer.bytesReceived;
   }
 
   addChannel(channel: number) {
@@ -78,21 +65,21 @@ export class Balancer {
   }
 
   pushData(data: Uint8Array, trigger: Trigger, channelId: number) {
-    const noCalls = this._calls.size === 0;
+    const noCalls = this._sendBuffers.size === 0;
 
     if (!this._channels.includes(channelId)) {
       throw new Error(`Unknown channel ${channelId}`);
     }
 
-    if (!this._calls.has(channelId)) {
-      this._calls.set(channelId, []);
+    if (!this._sendBuffers.has(channelId)) {
+      this._sendBuffers.set(channelId, []);
     }
 
-    const channelCalls = this._calls.get(channelId)!;
+    const sendBuffer = this._sendBuffers.get(channelId)!;
 
     const chunks = [];
-    for (let i = 0; i < data.length; i += MAX_CHUNK_SIZE) {
-      chunks.push(data.subarray(i, i + MAX_CHUNK_SIZE));
+    for (let idx = 0; idx < data.length; idx += MAX_CHUNK_SIZE) {
+      chunks.push(data.subarray(idx, idx + MAX_CHUNK_SIZE));
     }
 
     chunks.forEach((chunk, index) => {
@@ -101,22 +88,45 @@ export class Balancer {
         channelId,
         dataLength: index === 0 ? data.length : undefined,
       });
-      channelCalls.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
+      sendBuffer.push({ msg, trigger: index === chunks.length - 1 ? trigger : undefined });
     });
 
     // Start processing calls if this is the first call.
     if (noCalls) {
-      this._processCalls().catch((err) => log.catch(err));
+      this._sendChunks().catch((err) => log.catch(err));
     }
   }
 
   destroy() {
-    this._calls.clear();
+    this._sendBuffers.clear();
     this._framer.destroy();
   }
 
+  private _processIncomingMessage(msg: Uint8Array) {
+    const { channelId, dataLength, chunk } = decodeChunk(msg, (channelId) => !this._receiveBuffers.has(channelId));
+    if (!this._receiveBuffers.has(channelId)) {
+      if (chunk.length < dataLength!) {
+        this._receiveBuffers.set(channelId, {
+          buffer: Buffer.from(chunk),
+          msgLength: dataLength!,
+        });
+      } else {
+        this.incomingData.emit(chunk);
+      }
+    } else {
+      const channelBuffer = this._receiveBuffers.get(channelId)!;
+      channelBuffer.buffer = Buffer.concat([channelBuffer.buffer, chunk]);
+      if (channelBuffer.buffer.length < channelBuffer.msgLength) {
+        return;
+      }
+      const msg = channelBuffer.buffer;
+      this._receiveBuffers.delete(channelId);
+      this.incomingData.emit(msg);
+    }
+  }
+
   private _getNextCallerId() {
-    if (this._calls.has(this._sysChannelId)) {
+    if (this._sendBuffers.has(this._sysChannelId)) {
       return this._sysChannelId;
     }
 
@@ -126,38 +136,38 @@ export class Balancer {
     return this._channels[index];
   }
 
-  private _getNextCall(): ChunkEnvelope {
-    let call;
-    while (!call) {
+  private _getNextChunk(): ChunkEnvelope {
+    let chunk;
+    while (!chunk) {
       const channelId = this._getNextCallerId();
-      const channelCalls = this._calls.get(channelId);
-      if (!channelCalls) {
+      const sendBuffer = this._sendBuffers.get(channelId);
+      if (!sendBuffer) {
         continue;
       }
 
-      call = channelCalls.shift();
-      if (channelCalls.length === 0) {
-        this._calls.delete(channelId);
+      chunk = sendBuffer.shift();
+      if (sendBuffer.length === 0) {
+        this._sendBuffers.delete(channelId);
       }
     }
-    return call;
+    return chunk;
   }
 
-  private async _processCalls() {
-    if (this._calls.size === 0) {
+  private async _sendChunks() {
+    if (this._sendBuffers.size === 0) {
       return;
     }
 
-    const call = this._getNextCall();
+    const chunk = this._getNextChunk();
 
     try {
-      await this._framer.port.send(call.msg);
-      call.trigger?.wake();
+      await this._framer.port.send(chunk.msg);
+      chunk.trigger?.wake();
     } catch (err: any) {
-      call.trigger?.throw(err);
+      chunk.trigger?.throw(err);
     }
 
-    await this._processCalls();
+    await this._sendChunks();
   }
 }
 

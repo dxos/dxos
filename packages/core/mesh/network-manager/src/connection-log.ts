@@ -10,6 +10,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
 import { WireProtocol } from './wire-protocol';
+import { MuxerStats } from '@dxos/teleport';
 
 export enum EventType {
   CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',
@@ -68,8 +69,8 @@ export class ConnectionLog {
         this.update.emit();
       });
 
-      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> })?.stats?.on((stats) => {
-        connectionInfo.streams = stats;
+      (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
+        connectionInfo.streams = stats.channels;
         this.update.emit();
       });
 

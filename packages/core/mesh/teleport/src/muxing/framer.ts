@@ -6,6 +6,7 @@ import { Duplex } from 'node:stream';
 import invariant from 'tiny-invariant';
 
 import { RpcPort } from './rpc-port';
+import { log } from '@dxos/log';
 
 const FRAME_LENGTH_SIZE = 2;
 
@@ -21,11 +22,16 @@ export class Framer {
   private _buffer?: Buffer; // The rest of the bytes from the previous write call.
   private _responseQueue: (() => void)[] = [];
 
+  private _bytesSent = 0;
+  private _bytesReceived = 0;
+
   private readonly _stream = new Duplex({
     objectMode: false,
     read: () => {},
     write: (chunk, encoding, callback) => {
       invariant(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.');
+
+      this._bytesReceived += chunk.length;
 
       if (this._buffer && this._buffer.length > 0) {
         this._buffer = Buffer.concat([this._buffer, chunk]);
@@ -51,8 +57,11 @@ export class Framer {
     send: (message) => {
       // log('write', { len: message.length, frame: Buffer.from(message).toString('hex') })
       return new Promise<void>((resolve) => {
-        const canContinue = this._stream.push(encodeFrame(message));
+        const frame = encodeFrame(message);
+        this._bytesSent += frame.length;
+        const canContinue = this._stream.push(frame);
         if (!canContinue) {
+          log.info('PAUSE')
           this._responseQueue.push(resolve);
         } else {
           resolve();
@@ -73,11 +82,20 @@ export class Framer {
     return this._stream;
   }
 
+  get bytesSent() {
+    return this._bytesSent;
+  }
+
+  get bytesReceived() {
+    return this._bytesReceived;
+  }
+
   constructor() {
     this.stream.on('drain', this._processResponseQueue.bind(this));
   }
 
   private _processResponseQueue() {
+    log.info('RESUME')
     const responseQueue = this._responseQueue;
     this._responseQueue = [];
     responseQueue.forEach((cb) => cb());
