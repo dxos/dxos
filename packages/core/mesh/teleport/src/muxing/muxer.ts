@@ -39,6 +39,8 @@ export type MuxerStats = {
 
 const STATS_INTERVAL = 1000;
 
+const MAX_SAFE_FRAME_SIZE = 1_000_000;
+
 const SYSTEM_CHANNEL_ID = 0;
 
 /**
@@ -308,6 +310,10 @@ export class Muxer {
   }
 
   private async _sendData(channel: Channel, data: Uint8Array): Promise<void> {
+    if (data.length > MAX_SAFE_FRAME_SIZE) {
+      log.warn('frame size exceeds maximum safe value', { size: data.length, threshold: MAX_SAFE_FRAME_SIZE });
+    }
+
     channel.stats.bytesSent += data.length;
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
