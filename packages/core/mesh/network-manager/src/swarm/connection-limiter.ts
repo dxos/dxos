@@ -4,75 +4,65 @@
 
 import { DeferredTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
+import { ComplexMap } from '@dxos/util';
 
-import { NetworkManager } from '../network-manager';
-import { ConnectionState } from './connection';
-
-export const MAX_INITIATING_CONNECTIONS = 15;
+export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 15;
 
 export interface ConnectionLimiter {
   /**
    * @returns Promise that resolves when initiating connections amount is below the limit.
    */
-  wait(): Promise<void>;
+  wait(peerId: PublicKey): Promise<void>;
+
+  rejectWait(peerId: PublicKey): void;
 }
+
+export type ConnectionLimiterOptions = {
+  maxConcurrentInitConnections?: number;
+};
 
 export class ConnectionLimiterImpl implements ConnectionLimiter {
   private readonly _ctx = new Context();
-
+  private readonly _maxConcurrentInitConnections;
   /**
    * Queue of promises to resolve when initiating connections amount is below the limit.
    */
-  private readonly _waitingPromises: { resolve: () => void }[] = [];
+  private readonly _waitingPromises = new ComplexMap<PublicKey, { resolve: () => void; reject: () => void }>(
+    PublicKey.hash,
+  );
 
-  private _initiatingConnections = 0;
-
-  private readonly _updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
-    this._initiatingConnections = Array.from(this._networkManager._swarms.values())
-      .map((swarm) => swarm.connections)
-      .flat()
-      .filter((connection) => connection.state === ConnectionState.CONNECTING).length;
-
-    if (this._initiatingConnections < MAX_INITIATING_CONNECTIONS) {
-      this._waitingPromises
-        .splice(0, MAX_INITIATING_CONNECTIONS - this._initiatingConnections)
-        .forEach((p) => p.resolve());
+  resolveWaitingPromises = new DeferredTask(this._ctx, async () => {
+    if (this._waitingPromises.size < this._maxConcurrentInitConnections) {
+      Array.from(this._waitingPromises.values())
+        .slice(0, this._maxConcurrentInitConnections - this._waitingPromises.size)
+        .forEach(({ resolve }) => {
+          resolve();
+        });
     }
   });
 
-  constructor(private readonly _networkManager: NetworkManager) {
-    this._updateInitiatingConnections.schedule();
-    let swarmCtx = new Context();
-    this._networkManager.topicsUpdated.on(this._ctx, () => {
-      void swarmCtx?.dispose();
-      this._updateInitiatingConnections.schedule();
-      swarmCtx = this._subscribeSwarms(this._ctx);
-    });
+  constructor({ maxConcurrentInitConnections = MAX_CONCURRENT_INITIATING_CONNECTIONS }: ConnectionLimiterOptions = {}) {
+    this._maxConcurrentInitConnections = maxConcurrentInitConnections;
   }
 
-  private _subscribeSwarms = (ctx: Context) => {
-    const swarmCtx = ctx.derive();
-    Array.from(this._networkManager._swarms.values()).forEach((swarm) => {
-      swarm.connectionAdded.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
-      swarm.disconnected.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
-      swarm.connections.forEach((connection) => {
-        connection.stateChanged.on(swarmCtx, () => this._updateInitiatingConnections.schedule());
-      });
-    });
-    return swarmCtx;
-  };
-
-  async wait(): Promise<void> {
+  async wait(peerId: PublicKey): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this._ctx.disposed) {
-        reject(new Error('Context is disposed'));
-      }
-      this._waitingPromises.push({ resolve: resolve as () => void });
-      this._updateInitiatingConnections.schedule();
+      this._waitingPromises.set(peerId, {
+        resolve,
+        reject: () => {
+          reject(new Error('Finished waiting for connection'));
+          this._waitingPromises.delete(peerId);
+        },
+      });
+      this.resolveWaitingPromises.schedule();
     });
   }
 
-  destroy() {
-    void this._ctx.dispose();
+  rejectWait(peerId: PublicKey) {
+    invariant(this._waitingPromises.has(peerId), 'Peer is not waiting for connection');
+    this._waitingPromises.get(peerId)!.reject();
+    this.resolveWaitingPromises.schedule();
   }
 }
