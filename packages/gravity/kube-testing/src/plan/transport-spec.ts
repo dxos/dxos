@@ -9,11 +9,11 @@ import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
+import { SerializedLogEntry, getReader } from '../analysys';
+import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
-import { SerializedLogEntry, getReader } from '../analysys';
-import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 
 export type TransportTestSpec = {
   agents: number;
@@ -157,7 +157,9 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     /**
      * Iterate over all swarms and all agents.
      */
-    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>) => {
+    const forEachSwarmAndAgent = async (
+      callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>,
+    ) => {
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
@@ -207,14 +209,14 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const to = env.params.agents[agentId].agentIdx;
-          if(agentIdx > to) {
+          if (agentIdx > to) {
             return;
           }
 
-          log.info('starting stream', { from: agentIdx, to, swarmIdx  });
+          log.info('starting stream', { from: agentIdx, to, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-            log.info('open stream', { streamTag })
+            log.info('open stream', { streamTag });
             await swarm.protocol.openStream(
               PublicKey.from(agentId),
               streamTag,
@@ -331,7 +333,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     const reader = getReader(results);
 
-    const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>()
+    const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();
     const testStats = new Map<string, SerializedLogEntry<TestStatsLog>[]>();
 
     for await (const entry of reader) {
@@ -339,7 +341,9 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         case 'dxos.mesh.teleport.stats':
           {
             const { localPeerId, remotePeerId } = entry.context as TeleportStatsLog;
-            const key = `connection-${PublicKey.from(localPeerId).truncate()}-${PublicKey.from(remotePeerId).truncate()}`;
+            const key = `connection-${PublicKey.from(localPeerId).truncate()}-${PublicKey.from(
+              remotePeerId,
+            ).truncate()}`;
             defaultMap(muxerStats, key, []).push(entry);
           }
           break;
@@ -385,7 +389,6 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
                 y: entry.context.bytesSent,
               })),
               backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
-
             })),
             // ...Array.from(testStats.entries()).map(([key, entries]) => ({
             //   label: `${key}-received`,
@@ -396,7 +399,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             //   })),
             //   backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
             // })),
-          ]
+          ],
         },
         options: {},
       }),
@@ -405,18 +408,18 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 }
 
 type TeleportStatsLog = {
-  localPeerId: string,
-  remotePeerId: string,
-  bytesSent: number
-  bytesReceived: number,
+  localPeerId: string;
+  remotePeerId: string;
+  bytesSent: number;
+  bytesReceived: number;
 };
 
 type TestStatsLog = {
-  streamTag: string
-  bytesSent: number
-  bytesReceived: number
-  sendErrors: number
-  receiveErrors: number
-  from: string
-  to: string
-}
+  streamTag: string;
+  bytesSent: number;
+  bytesReceived: number;
+  sendErrors: number;
+  receiveErrors: number;
+  from: string;
+  to: string;
+};

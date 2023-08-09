@@ -90,9 +90,6 @@ export class Framer {
     return this._bytesReceived;
   }
 
-  constructor() {
-  }
-
   private _processResponseQueue() {
     const responseQueue = this._sendCallbacks;
     this._sendCallbacks = [];

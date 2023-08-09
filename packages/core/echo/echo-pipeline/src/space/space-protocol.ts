@@ -15,7 +15,6 @@ import {
   WireProtocolParams,
   WireProtocolProvider,
 } from '@dxos/network-manager';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { MuxerStats, Teleport } from '@dxos/teleport';
 import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';

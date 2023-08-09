@@ -11,7 +11,6 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -92,7 +91,7 @@ export class Teleport {
         bytesSent: stats.bytesSent,
         bytesReceived: stats.bytesReceived,
         channels: stats.channels,
-      })
+      });
     });
   }
 

@@ -1,8 +1,11 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { ChartConfiguration } from 'chart.js';
 import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
 import { exec } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-
 
 export const renderPNG = async (
   configuration: ChartConfiguration,

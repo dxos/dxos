@@ -35,7 +35,7 @@ export type MuxerStats = {
   channels: ConnectionInfo.StreamStats[];
   bytesSent: number;
   bytesReceived: number;
-}
+};
 
 const STATS_INTERVAL = 1000;
 
@@ -350,7 +350,7 @@ export class Muxer {
         bytesReceived: channel.stats.bytesReceived,
       })),
       bytesSent,
-      bytesReceived, 
+      bytesReceived,
     });
   }
 }

@@ -338,4 +338,3 @@ type SyncTimeLog = {
   agentIdx: number;
   iter: number;
 };
-

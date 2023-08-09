@@ -88,8 +88,16 @@ export class TestExtensionWithStreams implements TeleportExtension {
     streamEntry.reportingTimer = setInterval(() => {
       const { bytesSent, bytesReceived, sendErrors, receiveErrors } = streamEntry;
       // log.info('stream stats', { streamTag, bytesSent, bytesReceived, sendErrors, receiveErrors });
-        log.trace('dxos.test.stream-stats', { streamTag, bytesSent, bytesReceived, sendErrors, receiveErrors, from: this.extensionContext?.localPeerId, to: this.extensionContext?.remotePeerId });
-    }, 100)
+      log.trace('dxos.test.stream-stats', {
+        streamTag,
+        bytesSent,
+        bytesReceived,
+        sendErrors,
+        receiveErrors,
+        from: this.extensionContext?.localPeerId,
+        to: this.extensionContext?.remotePeerId,
+      });
+    }, 100);
   }
 
   private _closeStream(streamTag: string): Stats {
