@@ -8,10 +8,12 @@ import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
   Identity,
+  Metrics,
   Space as SpaceProto,
   SpaceMember,
   SpacesService,
@@ -37,6 +39,7 @@ export type Diagnostics = {
   devices?: Device[];
   spaces?: SpaceStats[];
   feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+  metrics?: Metrics;
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
@@ -63,6 +66,9 @@ export type SpaceStats = {
 export type DiagnosticOptions = JsonStringifyOptions;
 
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
+  const identity = client.halo.identity.get();
+  log('diagnostics', { identity });
+
   const data: Diagnostics = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
@@ -78,7 +84,15 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     config: client.config.values,
   };
 
-  const identity = client.halo.identity.get();
+  // Trace metrics.
+  {
+    invariant(client.services.services.SystemService, 'SystemService is not available.');
+    const stream = client.services.services.LoggingService!.queryMetrics({});
+    const trigger = new Trigger<Metrics>();
+    stream?.subscribe(async (metrics) => trigger.wake(metrics!));
+    data.metrics = await trigger.wait();
+  }
+
   if (identity) {
     const host = client.services.services.DevtoolsHost!;
     Object.assign(data, {
@@ -137,7 +151,7 @@ const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.Spa
       db: {
         objects: space.db.objects.length,
       },
-      epochs: await getEpochs(client.services!.services.SpacesService!, space),
+      epochs: await getEpochs(client.services.services.SpacesService!, space),
       members: space?.members.get(),
       feeds: {
         control: space.internal.data.pipeline?.controlFeeds,

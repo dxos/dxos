@@ -71,24 +71,24 @@ const runTransport = () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
-      agents: 4,
-      swarmsPerAgent: 5,
-      duration: 240_000,
+      agents: 2,
+      swarmsPerAgent: 1,
+      duration: 60_000,
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,
-      streamsDelay: 5_000,
+      streamsDelay: 60_000,
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
       streamLoadInterval: 1,
-      streamLoadChunkSize: 1024,
+      streamLoadChunkSize: 5_000_000,
     },
     options: {
       staggerAgents: 1000,
       randomSeed: PublicKey.random().toHex(),
-      profile: true,
+      // profile: true,
       // repeatAnalysis:
-      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+      // '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json'
     },
   });
 

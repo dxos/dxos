@@ -5,8 +5,16 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { LogLevel, LogProcessor, LogEntry as NaturalLogEntry, getContextFromEntry, log } from '@dxos/log';
-import { LogEntry, LoggingService, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonify } from '@dxos/util';
+import {
+  LogEntry,
+  LoggingService,
+  Metrics,
+  QueryLogsRequest,
+  ControlMetricsRequest,
+  ControlMetricsResponse,
+  QueryMetricsRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
@@ -21,6 +29,48 @@ export class LoggingServiceImpl implements LoggingService {
   async close() {
     const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
     log.runtimeConfig.processors.splice(index, 1);
+  }
+
+  async controlMetrics({ reset, record }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
+    if (reset) {
+      tracer.clear();
+    }
+
+    if (record === true) {
+      tracer.start();
+    } else if (record === false) {
+      tracer.stop();
+    }
+
+    return { recording: tracer.recording };
+  }
+
+  queryMetrics({ interval }: QueryMetricsRequest): Stream<Metrics> {
+    // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
+    const createNumericalValues = (key: string) => {
+      const consume = tracer.get(key) ?? [];
+      return { key, stats: numericalValues(consume, 'duration') };
+    };
+
+    return new Stream(({ next }) => {
+      const update = () => {
+        const metrics: Metrics = {
+          timestamp: new Date(),
+          values: [
+            createNumericalValues('dxos.echo.pipeline.control'),
+            createNumericalValues('dxos.echo.pipeline.data'),
+          ],
+        };
+
+        next(metrics);
+      };
+
+      update();
+      const i = setInterval(update, interval);
+      return () => {
+        clearInterval(i);
+      };
+    });
   }
 
   queryLogs(request: QueryLogsRequest): Stream<LogEntry> {

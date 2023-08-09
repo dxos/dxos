@@ -20,7 +20,7 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
+import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
@@ -86,7 +86,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
       <TreeItem.Heading
         asChild
         data-testid='spacePlugin.documentTreeItemHeading'
-        classNames={appTx(
+        classNames={auroraTx(
           'button.root',
           'tree-item__heading--link',
           { variant: 'ghost', density },

@@ -7,7 +7,7 @@ import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'reac
 import { QR } from 'react-qr-rounded';
 
 import { useId, useTranslation } from '@dxos/aurora';
-import { chromeSurface, getSize, mx } from '@dxos/aurora-theme';
+import { chromeSurface, descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
@@ -67,7 +67,7 @@ export const InvitationManager = ({
       aria-label={t('done label')}
       onClick={onDone}
       disabled={!active}
-      classNames='order-1'
+      classNames='order-2'
       data-testid='identity-panel-done'
     >
       <Check weight='light' className={getSize(6)} />
@@ -104,9 +104,11 @@ export const InvitationManager = ({
             </span>
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code' emoji={emoji}>
-            <p className='text-[6rem] leading-[6rem] break-all text-center text-success-500 dark:text-success-300 font-mono'>
-              {authCode}
-            </p>
+            <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
+              <p className={mx(descriptionText, 'text-center')}>{t('auth code message')}</p>
+              <div role='none' className='bs-14' />
+              <p className='text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+            </div>
           </InvitationManagerView>
           <InvitationManagerView
             id='showing final'
@@ -122,6 +124,16 @@ export const InvitationManager = ({
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
       <PanelActions classNames='mbs-4'>
+        <CopyButtonIconOnly
+          variant='ghost'
+          classNames='order-1 p-4'
+          disabled={!active || activeView === 'showing final'}
+          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
+          iconProps={{
+            weight: 'light',
+            className: getSize(6),
+          }}
+        />
         {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
         <PanelAction
           aria-label={t('back label')}
@@ -130,15 +142,6 @@ export const InvitationManager = ({
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction>
-        <CopyButtonIconOnly
-          variant='ghost'
-          disabled={!active || activeView === 'showing final'}
-          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-          iconProps={{
-            weight: 'light',
-            className: getSize(6),
-          }}
-        />
       </PanelActions>
     </>
   );

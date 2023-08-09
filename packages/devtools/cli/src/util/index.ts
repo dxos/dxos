@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './agents';
 export * from './credentials';
+export * from './devices';
 export * from './invitations';
 export * from './publish';
 export * from './random';

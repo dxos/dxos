@@ -11,7 +11,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
+import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { DataPipeline } from '../space';
 
 export const createMemoryDatabase = async (modelFactory: ModelFactory) => {
