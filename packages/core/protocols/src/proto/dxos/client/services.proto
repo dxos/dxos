@@ -17,6 +17,7 @@ import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/teleport/gossip.proto";
+import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -49,18 +50,14 @@ message QueryStatusResponse {
 }
 
 message Metrics {
-  message Value {
+  message KeyPair {
     optional string key = 1;
-
-    // TODO(burdon): Factor out ValueProto?
-    optional bool bool_value = 10;
-    optional string string_value = 11;
-    optional int32 int_value = 12;
-    optional float float_value = 13;
+    optional dxos.value.Value value = 2;
+    optional dxos.value.Stats stats = 3;
   }
 
   google.protobuf.Timestamp timestamp = 1;
-  repeated Value values = 10;
+  repeated KeyPair values = 10;
 }
 
 //

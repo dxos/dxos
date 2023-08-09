@@ -22,7 +22,7 @@ export const median = (values: number[]) => {
   }
 };
 
-// TODO(burdon): Proto.
+// TODO(burdon): Value Proto.
 export type NumericalValues = {
   min?: number;
   max?: number;
