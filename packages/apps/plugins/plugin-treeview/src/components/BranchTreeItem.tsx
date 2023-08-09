@@ -10,7 +10,7 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
-import { staticDisabled, focusRing, getSize } from '@dxos/aurora-theme';
+import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../types';
 import { TreeView } from './TreeView';
@@ -84,9 +84,12 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           {...(!sidebarOpen && { tabIndex: -1 })}
         >
           <OpenTriggerIcon
-            {...(hasActiveDocument && !open
-              ? { weight: 'fill', className: 'shrink-0 text-primary-500 dark:text-primary-300' }
-              : {})}
+            weight='fill'
+            className={mx(
+              'shrink-0',
+              getSize(2),
+              hasActiveDocument && !open && 'text-primary-500 dark:text-primary-300',
+            )}
           />
           <TreeItem.Heading
             data-testid='spacePlugin.spaceTreeItemHeading'
@@ -147,6 +150,9 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                     <DropdownMenu.Item
                       key={action.id}
                       onClick={(event) => {
+                        if (action.disabled) {
+                          return;
+                        }
                         event.stopPropagation();
                         // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                         suppressNextTooltip.current = true;
@@ -154,6 +160,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                         void invokeAction(action);
                       }}
                       classNames='gap-2'
+                      disabled={action.disabled}
                     >
                       {action.icon && <action.icon className={getSize(4)} />}
                       <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>

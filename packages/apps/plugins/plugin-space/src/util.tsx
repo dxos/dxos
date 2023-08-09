@@ -47,6 +47,8 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
   const identity = client.halo.identity.get();
   const id = getSpaceId(space.key);
   const actionIndices = getIndices(5);
+  const disabled = space.state.get() !== SpaceState.READY;
+  const error = space.state.get() === SpaceState.ERROR;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
   const node: GraphNode = {
     id,
@@ -77,8 +79,8 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     attributes: {
       role: 'branch',
       hidden: identity && space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,
-      disabled: space.state.get() !== SpaceState.READY,
-      error: space.state.get() === SpaceState.ERROR,
+      disabled,
+      error,
     },
     pluginActions: {
       [SPACE_PLUGIN]: [
@@ -88,6 +90,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['rename space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PencilSimpleLine {...props} />,
           intent: { ...baseIntent, action: SpaceAction.RENAME },
+          disabled: disabled || error,
         },
         {
           id: 'view-invitations',
@@ -95,6 +98,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['view invitations label', { ns: SPACE_PLUGIN }],
           icon: (props) => <PaperPlane {...props} />,
           intent: { ...baseIntent, action: SpaceAction.SHARE },
+          disabled: disabled || error,
         },
         {
           id: 'hide-space',
@@ -109,6 +113,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Download {...props} />,
           intent: { ...baseIntent, action: SpaceAction.BACKUP },
+          disabled: disabled || error,
         },
         {
           id: 'restore-space',
@@ -116,6 +121,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           label: ['upload all docs in space label', { ns: SPACE_PLUGIN }],
           icon: (props) => <Upload {...props} />,
           intent: { ...baseIntent, action: SpaceAction.RESTORE },
+          disabled: disabled || error,
         },
       ],
     },

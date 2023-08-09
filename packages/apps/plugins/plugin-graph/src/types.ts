@@ -41,6 +41,7 @@ export type GraphNodeAction = {
   icon?: FC<IconProps>;
   disposition?: 'menu' | 'toolbar';
   intent: Intent | Intent[];
+  disabled?: boolean;
 };
 
 export type GraphContextValue = {
