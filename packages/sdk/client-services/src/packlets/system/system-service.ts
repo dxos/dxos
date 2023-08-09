@@ -13,7 +13,7 @@ import {
   QueryStatusRequest,
   QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { MaybePromise, tracer } from '@dxos/util';
+import { MaybePromise, numericalValues, tracer } from '@dxos/util';
 
 export type SystemServiceOptions = {
   config?: Config;
@@ -49,13 +49,37 @@ export class SystemServiceImpl implements SystemService {
   queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        // TODO(burdon): ???
+        // TODO(burdon): Process all traces.
+        const consume = tracer.get('echo.pipeline.consume') ?? [];
+        const values = numericalValues(consume, 'duration');
+
         const metrics: Metrics = {
           timestamp: new Date(),
+          // TODO(burdon): NumericalValues.
           values: [
             {
-              key: 'echo.pipeline.consume',
-              intValue: tracer.get('echo.pipeline.consume')?.length ?? 0,
+              key: 'echo.pipeline.consume.count',
+              intValue: values.count,
+            },
+            {
+              key: 'echo.pipeline.consume.mean',
+              floatValue: values.mean ?? 0,
+            },
+            {
+              key: 'echo.pipeline.consume.median',
+              floatValue: values.median ?? 0,
+            },
+            {
+              key: 'echo.pipeline.consume.min',
+              intValue: values.min ?? 0,
+            },
+            {
+              key: 'echo.pipeline.consume.max',
+              intValue: values.max ?? 0,
+            },
+            {
+              key: 'echo.pipeline.consume.total',
+              intValue: values.total ?? 0,
             },
           ],
         };

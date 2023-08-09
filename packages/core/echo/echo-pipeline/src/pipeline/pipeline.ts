@@ -350,7 +350,6 @@ export class Pipeline implements PipelineAccessor {
 
     while (!this._isStopping) {
       await this._pauseTrigger.wait();
-      tracer.emit('echo.pipeline.consume');
 
       // Iterator might have been changed while we were waiting for the processing to complete.
       if (lastFeedSetIterator !== this._feedSetIterator) {
@@ -359,18 +358,18 @@ export class Pipeline implements PipelineAccessor {
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
+      // TODO(burdon): What does "done" mean?
       const { done, value } = await iterable.next();
-      if (done) {
-        continue;
+      if (!done) {
+        const block = value ?? failUndefined();
+        const timer = tracer.emit('echo.pipeline.consume');
+        this._processingTrigger.reset();
+        this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
+        yield block;
+        this._processingTrigger.wake();
+        this._timeframeClock.updateTimeframe();
+        timer.done();
       }
-
-      const block = value ?? failUndefined();
-      this._processingTrigger.reset();
-      this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
-      yield block;
-      this._processingTrigger.wake();
-
-      this._timeframeClock.updateTimeframe();
     }
 
     // TODO(burdon): Test re-entrant?

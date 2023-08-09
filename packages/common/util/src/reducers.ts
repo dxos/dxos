@@ -22,6 +22,16 @@ export const median = (values: number[]) => {
   }
 };
 
+// TODO(burdon): Proto.
+export type NumericalValues = {
+  min?: number;
+  max?: number;
+  mean?: number;
+  median?: number;
+  total: number;
+  count: number;
+};
+
 /**
  * Returns an array of unique values.
  */
@@ -79,15 +89,6 @@ export const reduceGroupBy = <T, K>(values: T[], accessor: Accessor<T, K>): Map<
     defaultMap(values, key, []).push(value);
     return values;
   }, new Map<K, T[]>());
-};
-
-export type NumericalValues = {
-  min?: number;
-  max?: number;
-  mean?: number;
-  median?: number;
-  total: number;
-  count: number;
 };
 
 /**
