@@ -49,7 +49,6 @@ export class Agent {
     if (this._options.metrics) {
       tracer.start();
     }
-    console.log(':::::::::::::::::::::::::::', this._options, tracer.recording);
   }
 
   async start() {

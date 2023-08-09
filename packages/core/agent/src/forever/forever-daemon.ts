@@ -92,9 +92,9 @@ export class ForeverDaemon implements Daemon {
           'start',
           '--foreground',
           `--profile=${profile}`,
-          options?.metrics ? '--metrics' : '',
-          options?.config ? `--config=${options.config}` : '',
-        ],
+          options?.metrics ? '--metrics' : undefined,
+          options?.config ? `--config=${options.config}` : undefined,
+        ].filter(Boolean) as string[],
         uid: profile,
         max: 0,
         logFile, // Forever daemon process.
