@@ -2,11 +2,69 @@
 // Copyright 2023 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+
+import { NetworkManager } from '../network-manager';
+import { ConnectionState } from './connection';
+
 export const MAX_INITIATING_CONNECTIONS = 15;
 
-export interface ConnectionLimiter {
+export class ConnectionLimiter {
+  private readonly _ctx = new Context();
+
   /**
-   * Waits while the number of connections is less than the limit.
+   * Queue of promises to resolve when initiating connections amount is below the limit.
    */
-  wait(): Promise<void>;
+  private readonly _waitingPromises: { resolve: () => void }[] = [];
+
+  private _initiatingConnections: number;
+
+  private readonly updateInitiatingConnections = new DeferredTask(this._ctx, async () => {
+    this._initiatingConnections = Array.from(this._networkManager._swarms.values())
+      .map((swarm) => swarm.connections)
+      .flat()
+      .filter((connection) => connection.state === ConnectionState.CONNECTING).length;
+
+    if (this._initiatingConnections < MAX_INITIATING_CONNECTIONS) {
+      this._waitingPromises
+        .splice(0, MAX_INITIATING_CONNECTIONS - this._initiatingConnections)
+        .forEach((p) => p.resolve());
+    }
+  });
+
+  constructor(private readonly _networkManager: NetworkManager) {
+    this._initiatingConnections = Array.from(this._networkManager._swarms.values())
+      .map((swarm) => swarm.connections)
+      .flat()
+      .filter((connection) => connection.state === ConnectionState.CONNECTING).length;
+    let swarmCtx = new Context();
+    this._networkManager.topicsUpdated.on(this._ctx, () => {
+      void swarmCtx?.dispose();
+      this.updateInitiatingConnections.schedule();
+      swarmCtx = this._subscribeSwarms(this._ctx);
+    });
+  }
+
+  private _subscribeSwarms = (ctx: Context) => {
+    const swarmCtx = ctx.derive();
+    Array.from(this._networkManager._swarms.values()).forEach((swarm) => {
+      swarm.connectionAdded.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
+      swarm.disconnected.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
+      swarm.connections.forEach((connection) => {
+        connection.stateChanged.on(swarmCtx, () => this.updateInitiatingConnections.schedule());
+      });
+    });
+    return swarmCtx;
+  };
+
+  async wait(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this._ctx.disposed) {
+        reject(new Error('Network manager is destroyed'));
+      }
+      this._waitingPromises.push({ resolve: resolve as () => void });
+      this.updateInitiatingConnections.schedule();
+    });
+  }
 }
