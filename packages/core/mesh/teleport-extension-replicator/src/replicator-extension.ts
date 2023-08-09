@@ -237,6 +237,12 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
 
+      log.trace('dxos.mesh.replicator-extension.ReplicationStreamError', {
+        ...JSON.parse(process.env.GRAVITY_AGENT_CONTEXT ?? ''),
+        timestamp: Date.now(),
+        err,
+        info,
+      });
       log.warn('replication stream error', { err, info });
     });
 

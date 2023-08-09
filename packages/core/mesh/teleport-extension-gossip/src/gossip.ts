@@ -58,6 +58,11 @@ export class Gossip {
       onClose: async (err) => {
         if (err) {
           log.catch(err);
+          log.trace('dxos.mesh.gossip.ConnectionClosedWithError', {
+            ...JSON.parse(process.env.GRAVITY_AGENT_CONTEXT ?? ''),
+            timestamp: Date.now(),
+            err,
+          });
         }
         if (this._connections.has(remotePeerId)) {
           this._connections.delete(remotePeerId);

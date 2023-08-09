@@ -40,6 +40,7 @@ export type EchoTestSpec = {
 
   insertionSize: number;
   operationCount: number;
+  operationsDelay: number;
 
   signalArguments: string[];
 };
@@ -176,6 +177,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
                 randomInt(this.getObj().text.length, 0),
                 randomInt(this.getObj().text.length, 100),
               );
+              await sleep(spec.operationsDelay);
             }
 
             if (idx % 100 === 0) {
@@ -185,7 +187,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
           await this.space.db.flush();
 
-          if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
+          if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0 && iter > 0) {
+            log.info('creating epoch', { agentIdx, iter });
             await this.space.internal.createEpoch();
           }
         } else {
@@ -266,6 +269,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     const statsLogs: SerializedLogEntry<StatsLog>[] = [];
     const syncLogs: SerializedLogEntry<SyncTimeLog>[] = [];
+    const errorLogs: SerializedLogEntry<ReplicationStreamErrorLog>[] = [];
 
     const reader = getReader(results);
     for await (const entry of reader) {
@@ -276,8 +280,25 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         case 'dxos.test.echo.sync':
           syncLogs.push(entry);
           break;
+
+        case 'dxos.mesh.replicator-extension.ReplicationStreamError':
+          errorLogs.push(entry);
+          break;
+
+        case 'dxos.mesh.gossip.ConnectionClosedWithError':
+          errorLogs.push(entry);
+          break;
       }
     }
+
+    log.info('stats', {
+      errorLogs: errorLogs
+        .sort((a, b) => a.context.timestamp - b.context.timestamp)
+        .map((entry) => ({
+          message: entry.message,
+          agentIdx: entry.context.agentIdx,
+        })),
+    });
 
     if (!params.spec.measureNewAgentSyncTime) {
       showPng(
@@ -341,6 +362,12 @@ type SyncTimeLog = {
   time: number;
   agentIdx: number;
   iter: number;
+};
+
+type ReplicationStreamErrorLog = {
+  error: string;
+  agentIdx: number;
+  timestamp: number;
 };
 
 const renderPNG = async (

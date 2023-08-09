@@ -204,6 +204,8 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
     const env = new AgentEnv<S, C>(params);
     await env.open();
 
+    process.env.GRAVITY_AGENT_CONTEXT = JSON.stringify(params);
+
     await plan.run(env);
   } catch (err) {
     console.error(err);

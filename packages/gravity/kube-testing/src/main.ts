@@ -46,13 +46,14 @@ const runEcho = () =>
     plan: new EchoTestPlan(),
     spec: {
       agents: 3,
-      duration: 300_000,
+      duration: 60_000,
       iterationDelay: 300,
 
       epochPeriod: 10,
-      measureNewAgentSyncTime: true,
+      // measureNewAgentSyncTime: true,
 
-      insertionSize: 512,
+      insertionSize: 10,
+      operationsDelay: 10,
       operationCount: 1000,
 
       signalArguments: ['globalsubserver'],
