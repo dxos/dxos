@@ -2,11 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChartConfiguration } from 'chart.js';
-import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
-import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
@@ -25,6 +21,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
 import { SerializedLogEntry, getReader } from '../analysys';
+import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
@@ -341,30 +338,3 @@ type SyncTimeLog = {
   agentIdx: number;
   iter: number;
 };
-
-const renderPNG = async (
-  configuration: ChartConfiguration,
-  opts: ChartJSNodeCanvasOptions = { width: 1920, height: 1080, backgroundColour: 'white' },
-) => {
-  // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
-  const chartJSNodeCanvas = new ChartJSNodeCanvas(opts);
-
-  const image = await chartJSNodeCanvas.renderToBuffer(configuration as any);
-  return image;
-};
-
-const showPng = (data: Buffer) => {
-  const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
-  writeFileSync(filename, data);
-  exec(`open ${filename}`);
-};
-
-const BORDER_COLORS = [
-  'rgb(54, 162, 235)', // blue
-  'rgb(255, 99, 132)', // red
-  'rgb(255, 159, 64)', // orange
-  'rgb(255, 205, 86)', // yellow
-  'rgb(75, 192, 192)', // green
-  'rgb(153, 102, 255)', // purple
-  'rgb(201, 203, 207)', // grey
-];
