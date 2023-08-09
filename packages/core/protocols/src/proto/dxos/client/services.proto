@@ -17,6 +17,7 @@ import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/teleport/gossip.proto";
+import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -34,11 +35,15 @@ enum SystemStatus {
   INACTIVE = 1;
 }
 
-message UpdateSystemStatusRequest {
+message UpdateStatusRequest {
   SystemStatus status = 1;
 }
 
-message SystemStatusResponse {
+message QueryStatusRequest {
+  optional int32 interval = 1;
+}
+
+message QueryStatusResponse {
   SystemStatus status = 1;
 }
 
@@ -51,10 +56,10 @@ service SystemService {
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
 
   /// Update the status of the client. Used to re-activate an inactive client.
-  rpc UpdateStatus(UpdateSystemStatusRequest) returns (google.protobuf.Empty);
+  rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
 
   /// Stream the status of the client.
-  rpc QueryStatus(google.protobuf.Empty) returns (stream SystemStatusResponse);
+  rpc QueryStatus(QueryStatusRequest) returns (stream QueryStatusResponse);
 
   /// Reset the client.
   rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
@@ -441,54 +446,4 @@ message UpdateConfigRequest {
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-}
-
-//
-// Development Tooling
-//
-
-// NOTE: Keep aligned with LogLevel in @dxos/log.
-enum LogLevel {
-  TRACE = 5;
-  DEBUG = 10;
-  INFO = 11;
-  WARN = 12;
-  ERROR = 13;
-}
-
-message QueryLogsRequest {
-  enum MatchingOptions {
-    /// Filters match all log levels above. Default behaviour for the logger.
-    INCLUSIVE = 1;
-
-    /// Explicitly specify all desired log levels.
-    EXPLICIT = 2;
-  }
-
-  message Filter {
-    LogLevel level = 1;
-    optional string pattern = 2;
-  }
-
-  repeated Filter filters = 1;
-  optional MatchingOptions options = 10;
-}
-
-message LogEntry {
-  message Meta {
-    string file = 1;
-    int32 line = 2;
-    optional google.protobuf.Struct scope = 3;
-  }
-
-  LogLevel level = 1;
-  string message = 2;
-  optional google.protobuf.Struct context = 3;
-  optional Meta meta = 4;
-  optional dxos.error.Error error = 5;
-  google.protobuf.Timestamp timestamp = 6;
-}
-
-service LoggingService {
-  rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }
