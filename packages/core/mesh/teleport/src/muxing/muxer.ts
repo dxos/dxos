@@ -37,7 +37,7 @@ export type MuxerStats = {
   bytesReceived: number;
 }
 
-const STATS_INTERVAL = 100;
+const STATS_INTERVAL = 1000;
 
 const SYSTEM_CHANNEL_ID = 0;
 
