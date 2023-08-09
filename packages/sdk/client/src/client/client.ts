@@ -21,7 +21,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
-import { Invitation, SystemStatus, SystemStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, MaybePromise } from '@dxos/util';
 
 import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
@@ -63,7 +63,7 @@ export class Client {
   private readonly _statusUpdate = new Event<SystemStatus | null>();
 
   private _initialized = false;
-  private _statusStream?: Stream<SystemStatusResponse>;
+  private _statusStream?: Stream<QueryStatusResponse>;
   private _statusTimeout?: NodeJS.Timeout;
   private _status = MulticastObservable.from(this._statusUpdate, null);
 
@@ -249,10 +249,9 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
-
     const trigger = new Trigger<Error | undefined>();
-    this._statusStream = this._services.services.SystemService.queryStatus();
+    invariant(this._services.services.SystemService, 'SystemService is not available.');
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
         this._statusTimeout && clearTimeout(this._statusTimeout);

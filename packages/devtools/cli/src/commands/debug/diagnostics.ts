@@ -26,6 +26,10 @@ export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
 
   static override examples = [
     {
+      description: 'Inspect diagnostics.',
+      command: "dx debug diagnostics --json --truncate | jq -r '.metrics'",
+    },
+    {
       description: 'Upload diagnostics to GitHub.',
       command: 'dx debug diagnostics --json --truncate | gh gist create --filename diagnostics.json',
     },

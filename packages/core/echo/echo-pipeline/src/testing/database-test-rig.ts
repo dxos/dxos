@@ -15,7 +15,7 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { DatabaseHost } from '../dbhost';
+import { DatabaseHost } from '../db-host';
 
 const SPACE_KEY = PublicKey.random();
 

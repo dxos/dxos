@@ -14,9 +14,9 @@ import { useStream } from '@dxos/react-client/devtools';
 
 import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
 
-const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
+const MAX_LOGS = 2_000;
 
-const MAX_LOGS = 2000;
+const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
 const columns: TableColumn<LogEntry>[] = [
   {

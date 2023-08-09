@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
-import { AsyncCallback, Callback } from '@dxos/util';
+import { AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 import { Pipeline, PipelineAccessor } from '../pipeline';
@@ -87,10 +87,13 @@ export class ControlPipeline {
           // log('processing', { msg });
           log('processing', { key: msg.feedKey, seq: msg.seq });
           if (msg.data.payload.credential) {
+            const timer = tracer.mark('dxos.echo.pipeline.control');
             const result = await this._spaceStateMachine.process(
               msg.data.payload.credential.credential,
               PublicKey.from(msg.feedKey),
             );
+
+            timer.end();
             if (!result) {
               log.warn('processing failed', { msg });
             } else {

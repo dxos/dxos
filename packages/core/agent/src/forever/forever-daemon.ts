@@ -48,7 +48,7 @@ export class ForeverDaemon implements Daemon {
     });
 
     return Promise.all(
-      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile }: ForeverProcess) => {
         return {
           profile: uid,
           pid: foreverPid,
@@ -57,15 +57,15 @@ export class ForeverDaemon implements Daemon {
           restarts,
           logFile,
           locked: await this.isRunning(uid), // TODO(burdon): Different from "running"?
-        };
+        } satisfies ProcessInfo;
       }),
     );
   }
 
-  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
+  async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       // Check if there is stopped process.
-      if ((await this._getProcess(profile)).running === false) {
+      if (!(await this._getProcess(profile)).running) {
         // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
         await this.stop(profile);
       }
@@ -92,8 +92,9 @@ export class ForeverDaemon implements Daemon {
           'start',
           '--foreground',
           `--profile=${profile}`,
-          params?.config ? `--config=${params.config}` : '',
-        ],
+          options?.metrics ? '--metrics' : undefined,
+          options?.config ? `--config=${options.config}` : undefined,
+        ].filter(Boolean) as string[],
         uid: profile,
         max: 0,
         logFile, // Forever daemon process.
@@ -130,7 +131,7 @@ export class ForeverDaemon implements Daemon {
           await services.open();
 
           const trigger = new Trigger();
-          const stream = services.services.SystemService!.queryStatus();
+          const stream = services.services.SystemService!.queryStatus({});
           stream.subscribe(({ status }) => {
             assert(status === SystemStatus.ACTIVE);
             trigger.wake();
