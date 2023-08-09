@@ -29,9 +29,7 @@ const DiagnosticsPanel = () => {
     }
   };
 
-  // TODO(burdon): Not working.
   const [recording, setRecording] = useState(false);
-
   useAsyncEffect(async () => {
     const { recording = false } = await client.services.services.LoggingService!.controlMetrics({});
     setRecording(recording);
