@@ -15,7 +15,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
 import { SignalConnection } from './signal';
-import { Swarm, SwarmMapper, ConnectionLimiter } from './swarm';
+import { Swarm, SwarmMapper, ConnectionLimiter, ConnectionLimiterImpl } from './swarm';
 import { Topology } from './topology';
 import { TransportFactory } from './transport';
 import { WireProtocolProvider } from './wire-protocol';
@@ -100,7 +100,7 @@ export class NetworkManager {
       leave: (opts) => this._signalManager.leave(opts),
     };
 
-    this._connectionLimiter = new ConnectionLimiter(this);
+    this._connectionLimiter = new ConnectionLimiterImpl(this);
     // TODO(burdon): Inject listener (generic pattern).
     if (log) {
       this._connectionLog = new ConnectionLog();

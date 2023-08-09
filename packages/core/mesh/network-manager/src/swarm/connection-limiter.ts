@@ -10,7 +10,14 @@ import { ConnectionState } from './connection';
 
 export const MAX_INITIATING_CONNECTIONS = 15;
 
-export class ConnectionLimiter {
+export interface ConnectionLimiter {
+  /**
+   * @returns Promise that resolves when initiating connections amount is below the limit.
+   */
+  wait(): Promise<void>;
+}
+
+export class ConnectionLimiterImpl implements ConnectionLimiter {
   private readonly _ctx = new Context();
 
   /**
