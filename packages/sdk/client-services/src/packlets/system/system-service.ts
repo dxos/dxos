@@ -52,10 +52,11 @@ export class SystemServiceImpl implements SystemService {
         // TODO(burdon): Process all traces.
         const consume = tracer.get('echo.pipeline.consume') ?? [];
         const values = numericalValues(consume, 'duration');
+        console.log(consume);
 
         const metrics: Metrics = {
           timestamp: new Date(),
-          // TODO(burdon): NumericalValues.
+          // TODO(burdon): Define NumericalValues proto.
           values: [
             {
               key: 'echo.pipeline.consume.count',

@@ -20,6 +20,7 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { tracer } from '@dxos/util';
 
 import { DatabaseHost, SnapshotManager } from '../dbhost';
 import { MetadataStore } from '../metadata';
@@ -208,6 +209,7 @@ export class DataPipeline implements CredentialProcessor {
     for await (const msg of this._pipeline.consume()) {
       const { feedKey, seq, data } = msg;
       log('processing message', { feedKey, seq });
+      const timer = tracer.emit('echo.pipeline.consume');
 
       try {
         if (data.payload.data) {
@@ -217,7 +219,7 @@ export class DataPipeline implements CredentialProcessor {
             continue;
           }
 
-          await this.databaseHost!.echoProcessor({
+          this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
@@ -233,12 +235,14 @@ export class DataPipeline implements CredentialProcessor {
             spaceKey: this._params.spaceKey.toHex(),
           } satisfies DataPipelineProcessed);
 
-          // Timeframe clock is not updated yet
+          // Timeframe clock is not updated yet.
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
         }
       } catch (err: any) {
         log.catch(err);
       }
+
+      timer.done();
     }
   }
 

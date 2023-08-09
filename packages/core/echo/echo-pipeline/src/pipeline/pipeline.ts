@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexMap, tracer } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
@@ -203,7 +203,6 @@ export interface PipelineAccessor {
  */
 export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(new Timeframe());
-
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
   // Inbound feed stream.
@@ -214,15 +213,11 @@ export class Pipeline implements PipelineAccessor {
 
   // Waits for the message consumer to process the message and yield control back to the pipeline.
   private readonly _processingTrigger = new Trigger().wake();
-
   private readonly _pauseTrigger = new Trigger().wake();
 
   private _isStopping = false;
-
   private _isStarted = false;
-
   private _isOpen = false;
-
   private _isPaused = false;
 
   // Outbound feed writer.
@@ -237,6 +232,10 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
+  hasFeed(feedKey: PublicKey) {
+    return this._feeds.has(feedKey);
+  }
+
   getFeeds(): FeedWrapper<FeedMessage>[] {
     return this._feedSetIterator!.feeds;
   }
@@ -249,10 +248,6 @@ export class Pipeline implements PipelineAccessor {
       await this._feedSetIterator.addFeed(feed);
     }
     this._setFeedDownloadState(feed);
-  }
-
-  hasFeed(feedKey: PublicKey) {
-    return this._feeds.has(feedKey);
   }
 
   setWriteFeed(feed: FeedWrapper<FeedMessage>) {
@@ -270,28 +265,29 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async start() {
-    log('starting...', {});
+    log('starting...');
     await this._initIterator();
     await this._feedSetIterator!.open();
-    log('started');
     this._isStarted = true;
+    log('started');
   }
 
   @synchronized
   async stop() {
-    log('stopping...', {});
+    log('stopping...');
     this._isStopping = true;
     await this._feedSetIterator?.close();
     await this._processingTrigger.wait(); // Wait for the in-flight message to be processed.
     await this._state._ctx.dispose();
     this._state._ctx = new Context();
     this._state._reachedTargetPromise = undefined;
-    log('stopped');
     this._isStarted = false;
+    log('stopped');
   }
 
   /**
-   * @param timeframe Timeframe of already processed messages. The pipeline will start processing messages AFTER this timeframe.
+   * @param timeframe Timeframe of already processed messages.
+   *  The pipeline will start processing messages AFTER this timeframe.
    */
   @synchronized
   async setCursor(timeframe: Timeframe) {
@@ -358,17 +354,14 @@ export class Pipeline implements PipelineAccessor {
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
-      // TODO(burdon): What does "done" mean?
       const { done, value } = await iterable.next();
       if (!done) {
         const block = value ?? failUndefined();
-        const timer = tracer.emit('echo.pipeline.consume');
         this._processingTrigger.reset();
         this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;
         this._processingTrigger.wake();
         this._timeframeClock.updateTimeframe();
-        timer.done();
       }
     }
 
@@ -391,6 +384,7 @@ export class Pipeline implements PipelineAccessor {
       start: startAfter(this._timeframeClock.timeframe),
       stallTimeout: 1000,
     });
+
     this._feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
       this._state.stalled.emit();
