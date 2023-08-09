@@ -7,7 +7,7 @@ import type { Resource } from 'i18next';
 import React from 'react';
 
 import { ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/aurora';
-import { appTx } from '@dxos/aurora-theme';
+import { auroraTx } from '@dxos/aurora-theme';
 import { PluginDefinition } from '@dxos/react-surface';
 
 import compositeEnUs from './translations/en-US';
@@ -44,7 +44,7 @@ export const ThemePlugin = ({ appName }: ThemePluginOptions = { appName: 'test' 
     },
     provides: {
       context: ({ children }) => (
-        <ThemeProvider {...{ tx: appTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+        <ThemeProvider {...{ tx: auroraTx, themeMode: state.themeMode, resourceExtensions: resources }}>
           <Toast.Provider>
             <Tooltip.Provider>{children}</Tooltip.Provider>
             <Toast.Viewport />
