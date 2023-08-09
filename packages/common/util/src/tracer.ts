@@ -4,13 +4,18 @@
 
 import { defaultMap } from './map';
 
+const getMicroseconds = () => {
+  const [seconds, nano] = process.hrtime();
+  return seconds * 1e6 + nano / 1e3;
+};
+
 /**
  * Tracer events form a graph.
  */
 export type Event = {
   id: string;
   timestamp: number;
-  duration?: number;
+  duration?: number; // Microseconds.
   value?: any;
 };
 
@@ -40,16 +45,17 @@ export class Tracer {
 
   // TODO(burdon): Start/stop timer.
   emit(id: string, value?: any) {
-    const event: Event = { id, timestamp: Date.now() };
+    const event: Event = { id, timestamp: getMicroseconds() };
     if (value !== undefined) {
       event.value = value;
     }
 
     defaultMap(this._events, id, []).push(event);
 
+    // TODO(burdon): Don't emit until or unless done.
     return {
       done: () => {
-        event.duration = Date.now() - event.timestamp!;
+        event.duration = Math.floor(getMicroseconds() - event.timestamp!);
       },
     };
   }

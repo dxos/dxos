@@ -220,7 +220,7 @@ export class DataPipeline implements CredentialProcessor {
 
           // TODO(burdon): Min = 0?
           // TODO(burdon): Reconcile different tracer approaches.
-          const timer = tracer.emit('echo.pipeline.consume');
+          const timer = tracer.emit('echo.pipeline.data.consume');
           this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {

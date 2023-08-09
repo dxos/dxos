@@ -49,16 +49,17 @@ export class SystemServiceImpl implements SystemService {
   queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
     return new Stream(({ next }) => {
       const update = () => {
-        // TODO(burdon): Process all traces.
-        const consume = tracer.get('echo.pipeline.consume') ?? [];
-        const stats = numericalValues(consume, 'duration');
+        // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
+        const createNumericalValues = (key: string) => {
+          const consume = tracer.get(key) ?? [];
+          return { key, stats: numericalValues(consume, 'duration') };
+        };
+
         const metrics: Metrics = {
           timestamp: new Date(),
           values: [
-            {
-              key: 'echo.pipeline.consume',
-              stats,
-            },
+            createNumericalValues('echo.pipeline.control.consume'),
+            createNumericalValues('echo.pipeline.data.consume'),
           ],
         };
 
