@@ -10,6 +10,7 @@ import { BaseCommand } from '../../base-command';
 
 // TODO(burdon): Move to logging.
 export default class Metrics extends BaseCommand<typeof Metrics> {
+  static override enableJsonFlag = true;
   static override description = 'Control metrics.';
   static override args = {
     command: Args.string({ description: 'Space key head in hex.', values: ['reset', 'start', 'stop'] }),
@@ -19,22 +20,26 @@ export default class Metrics extends BaseCommand<typeof Metrics> {
     return await this.execWithClient(async (client: Client) => {
       switch (this.args.command) {
         case 'reset': {
-          client.services.services.LoggingService?.controlMetrics({ reset: true });
+          await client.services.services.LoggingService?.controlMetrics({ reset: true });
           break;
         }
 
         case 'start': {
-          client.services.services.LoggingService?.controlMetrics({ record: true });
+          await client.services.services.LoggingService?.controlMetrics({ record: true });
           break;
         }
 
         case 'stop': {
-          client.services.services.LoggingService?.controlMetrics({ record: false });
+          await client.services.services.LoggingService?.controlMetrics({ record: false });
           break;
         }
+      }
 
-        default: {
-        }
+      const response = await client.services.services.LoggingService?.controlMetrics({});
+      if (this.flags.json) {
+        return response;
+      } else {
+        this.log(`recording: ${response?.recording}`);
       }
     });
   }
