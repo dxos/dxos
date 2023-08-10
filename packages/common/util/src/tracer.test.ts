@@ -58,7 +58,7 @@ describe('Tracer', () => {
     expect(events).to.have.length(n / objectIds.length);
   });
 
-  test('numerical values', async () => {
+  test.only('numerical values', async () => {
     const tracer = new Tracer().start();
     const key = 'test';
 
@@ -78,5 +78,7 @@ describe('Tracer', () => {
     expect(Math.round(total)).to.eq(Math.round(mean! * count));
     expect(median).to.be.greaterThan(min!);
     expect(median).to.be.lessThan(max!);
+
+    console.log(numericalValues(events, (event) => event.duration!));
   });
 });

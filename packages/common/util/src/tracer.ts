@@ -64,7 +64,7 @@ export class Tracer {
     return {
       start,
       end: () => {
-        event.duration = Math.floor(performance.now() - start);
+        event.duration = performance.now() - start;
         this._post(event);
       },
     };
