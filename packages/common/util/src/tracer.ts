@@ -10,7 +10,7 @@ import { defaultMap } from './map';
 export type Event = {
   id: string;
   timestamp: number; // ms.
-  duration?: number; // ms (fractional).
+  duration?: number; // ms (float).
   value?: any;
 };
 
