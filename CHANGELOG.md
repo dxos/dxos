@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.55](https://github.com/dxos/dxos/compare/v0.1.54...v0.1.55) (2023-08-10)
+
+
+### Features
+
+* Agent monitor ([#3819](https://github.com/dxos/dxos/issues/3819)) ([afab830](https://github.com/dxos/dxos/commit/afab830ae6b32d90f8b345bd9e30bc137cb243f6))
+* Batched feed reads & storage metrics ([#3841](https://github.com/dxos/dxos/issues/3841)) ([1c700ac](https://github.com/dxos/dxos/commit/1c700acd72783d74bb20ec7b93796d53d6c40735))
+* chunks in teleport ([#3825](https://github.com/dxos/dxos/issues/3825)) ([8bdbdae](https://github.com/dxos/dxos/commit/8bdbdae0cc6b92fff7352fb2133464f9b32910c3))
+* CLI fixes and features ([#3815](https://github.com/dxos/dxos/issues/3815)) ([26b8765](https://github.com/dxos/dxos/commit/26b876511d25801a7fa45b75229b63c2c6d17c10))
+* CLI open/close space. ([#3817](https://github.com/dxos/dxos/issues/3817)) ([25fea78](https://github.com/dxos/dxos/commit/25fea78d0ec240b365ad4432f596f8dfc1f35b2f))
+* CLI space list diagnostics ([#3808](https://github.com/dxos/dxos/issues/3808)) ([0d3b09d](https://github.com/dxos/dxos/commit/0d3b09d69b64cb1634b9f4b162258f7729addd04))
+* CLI testbench features ([#3816](https://github.com/dxos/dxos/issues/3816)) ([1fcd443](https://github.com/dxos/dxos/commit/1fcd443ec468485fa9f615246f273bc18ca0d472))
+* Make waitForSpace consistant across CLI; add user-facing errors; fix CLI reset ([#3805](https://github.com/dxos/dxos/issues/3805)) ([b01c908](https://github.com/dxos/dxos/commit/b01c9086276acea6456244affcbfe260a78f049e))
+* **react-shell:** OS design increment ([#3807](https://github.com/dxos/dxos/issues/3807)) ([39c91a0](https://github.com/dxos/dxos/commit/39c91a033ddbbd3fc531d18d950041417cc92de2))
+* Realtime CLI table ([#3811](https://github.com/dxos/dxos/issues/3811)) ([fc12f7c](https://github.com/dxos/dxos/commit/fc12f7c330bfd68c4e2433cf0c56f2576b47d153))
+* Tiny tracer and reducer library. ([#3824](https://github.com/dxos/dxos/issues/3824)) ([0618d91](https://github.com/dxos/dxos/commit/0618d91a4c9dd813817dc082802a0afc783bbeef))
+
+
+### Bug Fixes
+
+* address comments for network testbench / improvements ([#3812](https://github.com/dxos/dxos/issues/3812)) ([6f6b5eb](https://github.com/dxos/dxos/commit/6f6b5eb24fbfb62a78b72bb56d4ceffb4c5e082e))
+* **aurora:** `MainRoot` props ([#3833](https://github.com/dxos/dxos/issues/3833)) ([de1d511](https://github.com/dxos/dxos/commit/de1d5114475a02468ea6c1483cbfb5b087bff359))
+* **aurora:** Detect input modality, refine autofocus. ([#3823](https://github.com/dxos/dxos/issues/3823)) ([6bc955a](https://github.com/dxos/dxos/commit/6bc955a557f181fac5a132fe8df0a3d9df9d5bf3))
+* CLI space list ([#3818](https://github.com/dxos/dxos/issues/3818)) ([ff36828](https://github.com/dxos/dxos/commit/ff36828b6f2e8fcc11d9236a0d28c1e06d18f384))
+* **cli:** Fix space hanging after invitation is completed ([#3806](https://github.com/dxos/dxos/issues/3806)) ([5edf62b](https://github.com/dxos/dxos/commit/5edf62b66e93dbcc0b15ea0ab6fea4f4f4785378))
+* **cli:** Space join flow ([#3809](https://github.com/dxos/dxos/issues/3809)) ([81f7c81](https://github.com/dxos/dxos/commit/81f7c81c167674ef613ffbf2124a7f25c21a3351))
+* Fix blob store invariant ([#3835](https://github.com/dxos/dxos/issues/3835)) ([68f64ea](https://github.com/dxos/dxos/commit/68f64ea3ed7ba0ecbdcde3bfacc4e9f8df67fc23))
+* Fix ECHO testbench ([#3822](https://github.com/dxos/dxos/issues/3822)) ([39ef06f](https://github.com/dxos/dxos/commit/39ef06fe581dfc463277001d0c0a037a7451daa1))
+* **plugin-space:** Disable nonfunctioning actions and change space hiding to closing ([#3838](https://github.com/dxos/dxos/issues/3838)) ([d00e871](https://github.com/dxos/dxos/commit/d00e871280d0e00c6ce450b6d26a8cf5eca82ca1))
+* **react-shell:** Implement less provocative auth code state for `InvitationManager`. ([#3829](https://github.com/dxos/dxos/issues/3829)) ([e7c503c](https://github.com/dxos/dxos/commit/e7c503c10122655d813fb2ebb1687bc60a7d44d5))
+* Startup time debugging ([#3796](https://github.com/dxos/dxos/issues/3796)) ([f57fc85](https://github.com/dxos/dxos/commit/f57fc85193dfe75d6a42aa9577d6343e1fd3478e))
+
 ## [0.1.54](https://github.com/dxos/dxos/compare/v0.1.53...v0.1.54) (2023-08-02)
 
 
