@@ -25,7 +25,6 @@ export const SpaceSelector = () => {
       ...state,
       space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
       spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
-      feedKey: undefined,
     }));
 
     if (spaceKey) {

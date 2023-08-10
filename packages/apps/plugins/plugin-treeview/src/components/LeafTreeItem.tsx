@@ -168,12 +168,16 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
                 {menuActions.map((action) => (
                   <DropdownMenu.Item
                     key={action.id}
-                    onClick={(event) => {
+                    onClick={() => {
+                      if (action.disabled) {
+                        return;
+                      }
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
                       void invokeAction(action);
                     }}
                     classNames='gap-2'
+                    disabled={action.disabled}
                   >
                     {action.icon && <action.icon className={getSize(4)} />}
                     <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>

@@ -41,15 +41,21 @@ export const asyncTimeout = async <T>(
       reject(throwable);
     }, timeout);
 
-    // In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
-    // https://nodejs.org/api/timers.html#timeoutunref
-    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-      timeoutId.unref();
-    }
+    unrefTimeout(timeoutId);
   });
 
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
   return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
+};
+
+/**
+ * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+ * https://nodejs.org/api/timers.html#timeoutunref
+ */
+export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+    timeoutId.unref();
+  }
 };
