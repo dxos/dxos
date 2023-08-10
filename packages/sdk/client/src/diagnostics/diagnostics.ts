@@ -68,7 +68,7 @@ export type DiagnosticOptions = JsonStringifyOptions;
 // TODO(burdon): Move to Client/Services.
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const identity = client.halo.identity.get();
-  log('diagnostics', { identity });
+  log('diagnostics...', { identity });
 
   const data: Diagnostics = {
     created: new Date().toISOString(),
