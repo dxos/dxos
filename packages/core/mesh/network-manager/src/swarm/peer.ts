@@ -204,7 +204,6 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({ initiator, localPeerId: this.localPeerId, remotePeerId: this.id, topic: this.topic }),
       this._transportFactory,
-      this._connectionLimiter,
     );
     this._callbacks.onInitiated(connection);
 
