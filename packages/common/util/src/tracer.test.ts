@@ -29,8 +29,8 @@ describe('Tracer', () => {
     const events = tracer.get('test')!;
     expect(events).to.have.length(n);
 
-    const buckets = reduceSeries(createBucketReducer(10_000), events);
-    expect(buckets.length).to.be.greaterThan(0);
+    const buckets = reduceSeries(createBucketReducer(10), events);
+    expect(buckets.length).to.be.greaterThan(1);
     expect(buckets.length).to.be.lessThan(n);
 
     const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
@@ -73,8 +73,8 @@ describe('Tracer', () => {
     expect(events).to.have.length(n);
 
     const { min, max, mean, median, total, count } = numericalValues(events, (event) => event.duration!);
-    expect(mean).to.be.greaterThan(0);
-    expect(mean).to.be.lessThan(10_000);
+    expect(mean).to.be.greaterThan(1);
+    expect(mean).to.be.lessThan(10);
     expect(Math.round(total)).to.eq(Math.round(mean! * count));
     expect(median).to.be.greaterThan(min!);
     expect(median).to.be.lessThan(max!);
