@@ -8,17 +8,15 @@ import { rmSync } from 'node:fs';
 
 import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
 import { BaseCommand } from '../../base-command';
 
 export default class Start extends BaseCommand<typeof Start> {
-  private readonly _ctx = new Context();
   static override enableJsonFlag = true;
   static override description = 'Starts the agent.';
-
   static override flags = {
     ...BaseCommand.flags,
     foreground: Flags.boolean({
@@ -26,10 +24,10 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Run in foreground.',
       default: false,
     }),
-    'web-socket': Flags.integer({
+    ws: Flags.integer({
       description: 'Expose web socket port.',
       helpValue: 'port',
-      aliases: ['ws'],
+      aliases: ['web-socket'],
     }),
     echo: Flags.integer({
       description: 'Expose ECHO REST API.',
@@ -38,11 +36,16 @@ export default class Start extends BaseCommand<typeof Start> {
     monitor: Flags.boolean({
       description: 'Run epoch monitoring.',
     }),
+    metrics: Flags.boolean({
+      description: 'Start metrics recording.',
+    }),
   };
+
+  private readonly _ctx = new Context();
 
   async run(): Promise<any> {
     if (this.flags.foreground) {
-      // NOTE: Called by the agent's forever daemon.
+      // NOTE: This is invoked by the agent's forever daemon.
       await this._runInForeground();
     } else {
       await this._runAsDaemon();
@@ -50,19 +53,22 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
-    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
       const { path } = parseAddress(socket);
       rmSync(path, { force: true });
     }
 
+    // TODO(burdon): Option to start metrics recording (or config).
+
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
+      metrics: this.flags.metrics,
       protocol: {
         socket,
-        webSocket: this.flags['web-socket'],
+        webSocket: this.flags.ws,
       },
       plugins: [
         // Epoch monitoring.
@@ -74,9 +80,9 @@ export default class Start extends BaseCommand<typeof Start> {
         this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.functions &&
+        this.clientConfig.values.runtime?.agent?.plugins?.functions &&
           new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.functions?.port,
+            port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
           }),
       ],
     });
@@ -92,7 +98,7 @@ export default class Start extends BaseCommand<typeof Start> {
     this._sendTelemetry();
 
     if (this.flags['web-socket']) {
-      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags['web-socket']}`);
+      this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
     }
   }
 
@@ -103,9 +109,16 @@ export default class Start extends BaseCommand<typeof Start> {
         return;
       }
 
-      const process = await daemon.start(this.flags.profile, { config: this.flags.config });
-      if (process) {
-        this.log('Agent started.');
+      try {
+        const process = await daemon.start(this.flags.profile, {
+          config: this.flags.config,
+          metrics: this.flags.metrics,
+        });
+        if (process) {
+          this.log('Agent started.');
+        }
+      } catch (err: any) {
+        this.error(err);
       }
     });
   }
@@ -122,6 +135,7 @@ export default class Start extends BaseCommand<typeof Start> {
         },
       });
     };
+
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
   }

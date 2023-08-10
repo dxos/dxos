@@ -240,24 +240,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
               break;
             }
 
-            case SpaceAction.HIDE: {
-              const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-              const client = clientPlugin?.provides.client;
-              const identity = client?.halo.identity.get();
-              if (identity && space) {
-                const identityHex = identity.identityKey.toHex();
-                space.properties.members = {
-                  ...space.properties.members,
-                  [identityHex]: {
-                    ...space.properties.members?.[identityHex],
-                    hidden: true,
-                  },
-                };
-                if (treeViewPlugin?.provides.treeView.active[0] === getSpaceId(space.key)) {
-                  treeViewPlugin.provides.treeView.active = [];
-                }
-                return true;
-              }
+            case SpaceAction.CLOSE: {
+              void space?.internal.close();
               break;
             }
 

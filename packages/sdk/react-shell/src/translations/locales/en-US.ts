@@ -8,7 +8,7 @@ export const os = {
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy URL',
   'copy invitation code success label': 'Copied',
-  'open share panel label': 'Share',
+  'open share panel label': 'View QR code',
   'joining space heading': 'Joining space',
   'join space heading': 'Join a space',
   'halo heading': 'Initialize device identity',
@@ -68,7 +68,7 @@ export const os = {
   'welcome message': 'Welcome',
   'selecting identity heading': 'Selecting identity',
   'devices heading': 'Devices',
-  'identity heading': 'Options for your active identity',
+  'identity heading': 'Profile settings',
   'choose devices label': 'Add device',
   'choose profile label': 'Edit profile',
   'choose sign out label': 'Sign out',
@@ -81,4 +81,5 @@ export const os = {
   'device list heading': 'Devices',
   'space member list heading': 'Members in this space',
   'space panel heading': 'Space settings',
+  'auth code message': 'Enter the following auth code on the joining device.',
 };

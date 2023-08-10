@@ -12,8 +12,9 @@ import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { log } from '@dxos/log';
 
 import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
-import { DAEMON_START_TIMEOUT } from '../defs';
-import { lockFilePath, parseAddress, removeSocketFile, waitFor } from '../util';
+import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
+import { AgentWaitTimeoutError } from '../errors';
+import { lockFilePath, parseAddress, removeSocketFile } from '../util';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -47,7 +48,7 @@ export class ForeverDaemon implements Daemon {
     });
 
     return Promise.all(
-      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile, ..._rest }: ForeverProcess) => {
+      result.map(async ({ uid, foreverPid, ctime, running, restarts, logFile }: ForeverProcess) => {
         return {
           profile: uid,
           pid: foreverPid,
@@ -55,16 +56,16 @@ export class ForeverDaemon implements Daemon {
           running,
           restarts,
           logFile,
-          lockAcquired: await this.isRunning(uid),
-        };
+          locked: await this.isRunning(uid), // TODO(burdon): Different from "running"?
+        } satisfies ProcessInfo;
       }),
     );
   }
 
-  async start(profile: string, params?: StartOptions): Promise<ProcessInfo> {
+  async start(profile: string, options?: StartOptions): Promise<ProcessInfo> {
     if (!(await this.isRunning(profile))) {
       // Check if there is stopped process.
-      if ((await this._getProcess(profile)).running === false) {
+      if (!(await this._getProcess(profile)).running) {
         // NOTE: This kills forever watchdog process. We do not try to restart it in case if arguments changed.
         await this.stop(profile);
       }
@@ -91,8 +92,9 @@ export class ForeverDaemon implements Daemon {
           'start',
           '--foreground',
           `--profile=${profile}`,
-          params?.config ? `--config=${params.config}` : '',
-        ],
+          options?.metrics ? '--metrics' : undefined,
+          options?.config ? `--config=${options.config}` : undefined,
+        ].filter(Boolean) as string[],
         uid: profile,
         max: 0,
         logFile, // Forever daemon process.
@@ -109,8 +111,18 @@ export class ForeverDaemon implements Daemon {
       try {
         // Wait for socket file to appear.
         {
-          await waitForCondition(async () => await this.isRunning(profile), DAEMON_START_TIMEOUT);
-          await waitForCondition(() => fs.existsSync(parseAddress(getUnixSocket(profile)).path), DAEMON_START_TIMEOUT);
+          await waitForCondition({
+            condition: async () => await this.isRunning(profile),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
+          await waitForCondition({
+            condition: () => fs.existsSync(parseAddress(getUnixSocket(profile)).path),
+            timeout: DAEMON_START_TIMEOUT,
+            interval: CHECK_INTERVAL,
+            error: new AgentWaitTimeoutError(),
+          });
         }
 
         // Check if agent is initialized.
@@ -119,7 +131,7 @@ export class ForeverDaemon implements Daemon {
           await services.open();
 
           const trigger = new Trigger();
-          const stream = services.services.SystemService!.queryStatus();
+          const stream = services.services.SystemService!.queryStatus({});
           stream.subscribe(({ status }) => {
             assert(status === SystemStatus.ACTIVE);
             trigger.wake();
@@ -135,6 +147,7 @@ export class ForeverDaemon implements Daemon {
         const errContent = fs.readFileSync(errFile, 'utf-8');
         log.error(errContent);
         await this.stop(profile);
+        throw err;
       }
     }
 
@@ -148,18 +161,21 @@ export class ForeverDaemon implements Daemon {
 
     // NOTE: Kill all processes with the given profile.
     // This is necessary when somehow few processes are started with the same profile.
-    (await this.list()).forEach((process) => {
-      if (process.profile === profile) {
+    (await this.list())
+      .filter((process) => process.profile === profile)
+      .forEach((process) => {
         if (force && process.running) {
           forever.stop(process.profile!);
         } else {
           forever.kill(proc.pid!, true, 'SIGINT');
         }
-      }
-    });
+      });
 
-    await waitFor({
+    await waitForCondition({
       condition: async () => !(await this.isRunning(profile)),
+      timeout: DAEMON_STOP_TIMEOUT,
+      interval: CHECK_INTERVAL,
+      error: new AgentWaitTimeoutError(),
     });
 
     removeSocketFile(profile);

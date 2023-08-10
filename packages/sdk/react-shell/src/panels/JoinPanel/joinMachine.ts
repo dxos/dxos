@@ -382,7 +382,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
 type JoinMachine = typeof joinMachine;
 
 type JoinState = StateFrom<JoinMachine>;
-type JoinSend = InterpreterFrom<JoinMachine>['send'];
+type JoinSendVoid = (...params: Parameters<InterpreterFrom<JoinMachine>['send']>) => void;
+type JoinSend = InterpreterFrom<JoinMachine>['send'] | JoinSendVoid;
 
 const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   try {

@@ -15,6 +15,7 @@ import { FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true, // Keep reading until closed.
+  batch: 64, // Read in batches.
 };
 
 export type FeedQueueOptions = {};

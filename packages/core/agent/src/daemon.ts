@@ -6,13 +6,15 @@ export type ProcessInfo = {
   profile?: string;
   pid?: number;
   running?: boolean;
+  restarts?: number;
   started?: number;
   logFile?: string;
-  lockAcquired?: boolean;
+  locked?: boolean;
 };
 
 export type StartOptions = {
   config?: string;
+  metrics?: boolean;
 };
 
 export type StopOptions = {

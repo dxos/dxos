@@ -26,7 +26,6 @@ export const hostInvitation = async ({
   const invitationEvent = new Event<Invitation>();
 
   const done = invitationEvent.waitForCount(peersNumber);
-
   const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
       switch (invitation.state) {
@@ -49,7 +48,6 @@ export const hostInvitation = async ({
 
   const invitation = await done;
   unsubscribeHandle.unsubscribe();
-
   return invitation;
 };
 
@@ -65,7 +63,6 @@ export const acceptInvitation = async ({
   };
 }): Promise<Invitation> => {
   const done = new Trigger<Invitation>();
-
   const unsubscribeHandle = observable.subscribe(
     async (invitation) => {
       switch (invitation.state) {
@@ -75,8 +72,8 @@ export const acceptInvitation = async ({
         }
 
         case Invitation.State.READY_FOR_AUTHENTICATION: {
-          const callbackResult = await callbacks?.onReadyForAuth?.(invitation);
           if (invitation.authMethod === Invitation.AuthMethod.SHARED_SECRET) {
+            const callbackResult = await callbacks?.onReadyForAuth?.(invitation);
             const code = invitation.authCode ?? callbackResult;
             assert(code, 'No code provided');
             await observable.authenticate(code);
@@ -98,6 +95,5 @@ export const acceptInvitation = async ({
 
   const invitation = await done.wait();
   unsubscribeHandle.unsubscribe();
-
   return invitation;
 };

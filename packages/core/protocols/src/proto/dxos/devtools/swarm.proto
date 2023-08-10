@@ -22,6 +22,7 @@ message ConnectionInfo {
     string tag = 2;
     uint32 bytesSent = 3;
     uint32 bytesReceived = 4;
+    optional string contentType = 5;
   }
 
   string state = 1;

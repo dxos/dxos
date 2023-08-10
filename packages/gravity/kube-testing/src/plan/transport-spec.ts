@@ -6,9 +6,11 @@ import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
-import { range } from '@dxos/util';
+import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
+import { defaultMap, range } from '@dxos/util';
 
+import { SerializedLogEntry, getReader } from '../analysys';
+import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
@@ -21,7 +23,7 @@ export type TransportTestSpec = {
   streamLoadInterval: number;
   streamLoadChunkSize: number;
 
-  desiredSwarmTimeout: number;
+  targetSwarmTimeout: number;
   fullSwarmTimeout: number;
   iterationDelay: number;
   streamsDelay: number;
@@ -54,7 +56,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     const { config, spec, agents } = env.params;
     const { agentIdx, swarmTopicIds, signalUrl } = config;
 
-    const numOfAgents = Object.keys(agents).length;
+    const numAgents = Object.keys(agents).length;
 
     log.info('run', {
       agentIdx,
@@ -90,13 +92,13 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       await cancelWithContext(context, swarm.join());
 
       log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      await sleep(spec.desiredSwarmTimeout);
+      await sleep(spec.targetSwarmTimeout);
       log.info('number of connections within duration', {
         agentIdx,
         swarmIdx,
         swarmTopic: swarm.topic,
         connections: swarm.protocol.connections.size,
-        numOfAgents,
+        numAgents,
       });
 
       /**
@@ -118,7 +120,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           swarmIdx,
           swarmTopic: swarm.topic,
           connections: swarm.protocol.connections.size,
-          numOfAgents,
+          numAgents,
         });
       });
     };
@@ -155,7 +157,9 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     /**
      * Iterate over all swarms and all agents.
      */
-    const forEachSwarmAndAgent = async (callback: (swarmIdx: number, swarm: any, agentId: string) => Promise<void>) => {
+    const forEachSwarmAndAgent = async (
+      callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>,
+    ) => {
       await Promise.all(
         Object.keys(env.params.agents)
           .filter((agentId) => agentId !== env.params.agentId)
@@ -180,7 +184,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       log.info('testRun iteration', { iterationId: testCounter });
 
       // Join all swarms.
-      // How many connections established within the desired duration.
+      // How many connections established within the target duration.
       {
         log.info('joining all swarms', { agentIdx });
 
@@ -200,14 +204,20 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         log.info('starting streams', { agentIdx });
 
         // TODO(egorgripasov): Multiply by iterration number.
-        const desiredStreems = (numOfAgents - 1) * spec.swarmsPerAgent;
+        const targetStreems = (numAgents - 1) * spec.swarmsPerAgent;
         let actualStreams = 0;
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          log.info('starting stream', { agentIdx, swarmIdx });
+          const to = env.params.agents[agentId].agentIdx;
+          if (agentIdx > to) {
+            return;
+          }
+
+          log.info('starting stream', { from: agentIdx, to, swarmIdx });
           try {
             const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-            await swarm.protocol.startStream(
+            log.info('open stream', { streamTag });
+            await swarm.protocol.openStream(
               PublicKey.from(agentId),
               streamTag,
               spec.streamLoadInterval,
@@ -216,11 +226,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             actualStreams++;
             log.info('test stream started', { agentIdx, swarmIdx });
           } catch (error) {
-            log.info('test stream failed', { agentIdx, swarmIdx, error });
+            log.error('test stream failed', { agentIdx, swarmIdx, error });
           }
         });
 
-        log.info('streams started', { testCounter, agentIdx, desiredStreems, actualStreams });
+        log.info('streams started', { testCounter, agentIdx, targetStreems, actualStreams });
         await env.syncBarrier(`streams are started at ${testCounter}`);
       }
 
@@ -230,7 +240,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       {
         log.info('start testing connections', { agentIdx, testCounter });
 
-        const desiredConnections = (numOfAgents - 1) * spec.swarmsPerAgent;
+        const targetConnections = (numAgents - 1) * spec.swarmsPerAgent;
         let actualConnections = 0;
 
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
@@ -244,7 +254,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           }
         });
 
-        log.info('test connections done', { testCounter, agentIdx, desiredConnections, actualConnections });
+        log.info('test connections done', { testCounter, agentIdx, targetConnections, actualConnections });
         await env.syncBarrier(`connections are tested on ${testCounter}`);
       }
 
@@ -306,7 +316,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       ctx,
       async () => {
         await env.syncBarrier(`iteration-${testCounter}`);
-        await cancelWithContext(ctx, testRun());
+        await testRun();
         testCounter++;
       },
       spec.repeatInterval,
@@ -320,5 +330,96 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
   async finish(params: TestParams<TransportTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
     log.info('finished shutdown');
+
+    const reader = getReader(results);
+
+    const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();
+    const testStats = new Map<string, SerializedLogEntry<TestStatsLog>[]>();
+
+    for await (const entry of reader) {
+      switch (entry.message) {
+        case 'dxos.mesh.teleport.stats':
+          {
+            const { localPeerId, remotePeerId } = entry.context as TeleportStatsLog;
+            const key = `connection-${PublicKey.from(localPeerId).truncate()}-${PublicKey.from(
+              remotePeerId,
+            ).truncate()}`;
+            defaultMap(muxerStats, key, []).push(entry);
+          }
+          break;
+        case 'dxos.test.stream-stats':
+          {
+            const { from, to } = entry.context as TestStatsLog;
+            const key = `stream-${PublicKey.from(from).truncate()}-${PublicKey.from(to).truncate()}`;
+            defaultMap(testStats, key, []).push(entry);
+          }
+          break;
+      }
+    }
+
+    let colorIdx = 0;
+    showPng(
+      await renderPNG({
+        type: 'scatter',
+        data: {
+          datasets: [
+            ...Array.from(muxerStats.entries()).map(([key, entries]) => ({
+              label: `${key}-sent`,
+              showLine: true,
+              data: entries.map((entry) => ({
+                x: entry.timestamp,
+                y: entry.context.bytesSent,
+              })),
+              backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            })),
+            // ...Array.from(muxerStats.entries()).map(([key, entries]) => ({
+            //   label: `${key}-received`,
+            //   showLine: true,
+            //   data: entries.map((entry) => ({
+            //     x: entry.timestamp,
+            //     y: entry.context.bytesReceived,
+            //   })),
+            //   backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            // })),
+            ...Array.from(testStats.entries()).map(([key, entries]) => ({
+              label: `${key}-sent`,
+              showLine: true,
+              data: entries.map((entry) => ({
+                x: entry.timestamp,
+                y: entry.context.bytesSent,
+              })),
+              backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            })),
+            // ...Array.from(testStats.entries()).map(([key, entries]) => ({
+            //   label: `${key}-received`,
+            //   showLine: true,
+            //   data: entries.map((entry) => ({
+            //     x: entry.timestamp,
+            //     y: entry.context.bytesReceived,
+            //   })),
+            //   backgroundColor: BORDER_COLORS[colorIdx++ % BORDER_COLORS.length],
+            // })),
+          ],
+        },
+        options: {},
+      }),
+    );
   }
 }
+
+type TeleportStatsLog = {
+  localPeerId: string;
+  remotePeerId: string;
+  bytesSent: number;
+  bytesReceived: number;
+};
+
+type TestStatsLog = {
+  streamTag: string;
+  bytesSent: number;
+  bytesReceived: number;
+  sendErrors: number;
+  receiveErrors: number;
+  from: string;
+  to: string;
+};

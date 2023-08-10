@@ -11,6 +11,7 @@ import { dirname } from 'node:path';
 import { Config, Client, PublicKey } from '@dxos/client';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { log } from '@dxos/log';
+import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { Plugin } from './plugins';
@@ -25,6 +26,7 @@ export type AgentOptions = {
   config: Config;
   profile: string;
   plugins?: Plugin[];
+  metrics?: boolean;
   protocol?: {
     socket: string;
     webSocket?: number;
@@ -44,6 +46,9 @@ export class Agent {
   constructor(private readonly _options: AgentOptions) {
     assert(this._options);
     this._plugins = (this._options.plugins?.filter(Boolean) as Plugin[]) ?? [];
+    if (this._options.metrics) {
+      tracer.start();
+    }
   }
 
   async start() {

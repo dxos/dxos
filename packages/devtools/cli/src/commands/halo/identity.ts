@@ -8,9 +8,9 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-export default class Halo extends BaseCommand<typeof Halo> {
+export default class Identity extends BaseCommand<typeof Identity> {
   static override enableJsonFlag = true;
-  static override description = 'Show HALO profile.';
+  static override description = 'Show HALO identity.';
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
@@ -21,7 +21,8 @@ export default class Halo extends BaseCommand<typeof Halo> {
         return {};
       } else {
         const { identityKey, profile } = identity;
-        this.logToStderr('Identity key:', identityKey.toHex());
+        this.log('Identity key:', identityKey.toHex());
+        this.log('Profile name:', profile?.displayName);
         return {
           identityKey: identityKey.toHex(),
           profile,
