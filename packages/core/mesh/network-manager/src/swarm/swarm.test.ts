@@ -36,7 +36,7 @@ describe('Swarm', () => {
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined,
-      { wait: async () => {} },
+      { connecting: async () => {}, doneConnecting: async () => {} },
     );
 
     afterTest(async () => {
