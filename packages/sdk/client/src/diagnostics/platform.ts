@@ -19,7 +19,8 @@ export const getPlatform = async (): Promise<Platform> => {
 
   // https://nodejs.org/api/os.html
   try {
-    const { machine, platform, release } = await require('node:os');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { machine, platform, release } = require('node:os');
     return {
       type: 'node',
       platform: `${platform()} ${release()} ${machine()}`,

@@ -94,6 +94,7 @@ export class EpochMonitor extends AbstractPlugin {
           // TODO(burdon): Rather than total messages, implement inequality in timeframe?
           assert(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
           const timeframe = pipeline.currentEpoch?.subject.assertion.timeframe;
+          // TODO(burdon): timeframe.newMessages().
           const currentEpoch = timeframe.totalMessages();
           const totalMessages = pipeline.currentDataTimeframe?.totalMessages() ?? 0;
           log('updated', {
@@ -103,8 +104,8 @@ export class EpochMonitor extends AbstractPlugin {
             epochTriggered: state.epochTriggered,
           });
 
-          // Guard race condition (epoch triggered while processing pipeline update).
-          if (state.epochTriggered) {
+          // Prevent epoch creation while one is already being created.
+          if (state.epochTriggered !== undefined) {
             state.epochTriggered = undefined;
           } else {
             // TODO(burdon): New epoch message # is off by one.
