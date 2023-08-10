@@ -405,7 +405,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!space) {
       this.error(`Invalid key: ${key}`);
     } else {
-      if (wait && !this.flags['no-wait']) {
+      if (wait && !this.flags['no-wait'] && space.state.get() === SpaceState.INITIALIZING) {
         await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
       }
 
