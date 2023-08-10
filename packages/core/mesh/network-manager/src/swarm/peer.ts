@@ -125,6 +125,8 @@ export class Peer {
         // Connection might have been already established.
         invariant(message.sessionId);
         const connection = this._createConnection(false, message.sessionId);
+        await this._connectionLimiter.connecting(connection.sessionId);
+
         try {
           await connection.openConnection();
         } catch (err: any) {
@@ -149,6 +151,7 @@ export class Peer {
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
+    await this._connectionLimiter.connecting(connection.sessionId);
 
     try {
       const answer = await this._signalMessaging.offer({
@@ -216,6 +219,7 @@ export class Peer {
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
+          this._connectionLimiter.doneConnecting(sessionId);
           break;
         }
 
@@ -233,6 +237,7 @@ export class Peer {
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
+          this._connectionLimiter.doneConnecting(sessionId);
 
           scheduleTask(
             this._connectionCtx!,
