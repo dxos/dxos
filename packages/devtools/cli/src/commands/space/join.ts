@@ -4,13 +4,13 @@
 
 import { ux, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import assert from 'node:assert';
 
+import { sleep, Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base-command';
-import { acceptInvitation, mapMembers, printMembers } from '../../util';
+import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;
@@ -27,45 +27,40 @@ export default class Join extends BaseCommand<typeof Join> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      let { invitation: encoded, secret, json } = this.flags;
+      let { invitation: encoded, secret } = this.flags;
       if (!encoded) {
         encoded = await ux.prompt(chalk`\n{blue Invitation}`);
       }
       if (encoded.startsWith('http')) {
         const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
-        encoded = searchParams.get('spaceInvitationCode') ?? encoded;
+        encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
       }
 
-      let invitation = InvitationEncoder.decode(encoded!);
-
-      const observable = client.acceptInvitation(invitation);
+      ux.log('');
       ux.action.start('Waiting for peer to connect');
-      const invitationSuccess = acceptInvitation({
-        observable,
+      const done = new Trigger();
+      // TODO(burdon): Error code if joining same space (don't throw!)
+      const invitation = await acceptInvitation({
+        observable: client.acceptInvitation(InvitationEncoder.decode(encoded!)),
         callbacks: {
-          onConnecting: async () => {
-            ux.action.stop();
-          },
+          onConnecting: async () => ux.action.stop(),
           onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+          onSuccess: async () => {
+            done.wake();
+          },
         },
       });
 
-      ux.action.start('Waiting for peer to finish invitation');
-      invitation = await invitationSuccess;
-      ux.action.stop();
+      await done.wait();
+      // TODO(burdon): Race condition.
+      await sleep(1000);
+      const space = client.getSpace(invitation.spaceKey!)!;
 
-      assert(invitation.spaceKey);
-      const space = client.getSpace(invitation.spaceKey)!;
-      await space.waitUntilReady();
-      const members = space.members.get();
-      if (!json) {
-        printMembers(members);
-      }
+      ux.log();
+      ux.log(chalk`{green Joined}: ${space.key.truncate()}`);
 
       return {
-        key: space.key.toHex(),
-        name: space.properties.name,
-        members: mapMembers(members),
+        key: space.key,
       };
     });
   }

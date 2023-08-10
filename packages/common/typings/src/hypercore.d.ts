@@ -174,13 +174,17 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
     readonly stats: Stats;
 
-    bitfield?: {
-      data: any; // sparse-bitfield package
-
-      // TODO(dmaretskyi): More props.
-    };
+    bitfield?: HypercoreBitfield;
 
     readonly sparse: boolean;
+  }
+
+  export interface HypercoreBitfield {
+    data: any; // sparse-bitfield package
+
+    total(start: number, end: number): number;
+
+    // TODO(dmaretskyi): More props.
   }
 
   /**

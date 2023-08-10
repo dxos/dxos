@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-shell",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "description": "A React component library for DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,7 +37,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.8.1",
+    "@fluentui/react-tabster": "^9.12.0",
     "@radix-ui/react-accordion": "^1.1.1",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-radio-group": "^1.1.2",
@@ -45,7 +45,7 @@
     "@react-hook/async": "^3.1.1",
     "@xstate/react": "^3.2.1",
     "lodash.toarray": "^4.4.0",
-    "qrcode.react": "^3.1.0",
+    "react-qr-rounded": "^1.0.0",
     "url-join": "^5.0.0",
     "xstate": "^4.37.0"
   },

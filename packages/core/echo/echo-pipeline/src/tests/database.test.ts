@@ -13,7 +13,7 @@ import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { test } from '@dxos/test';
 
 import { createMappedFeedWriter } from '../common';
-import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../dbhost';
+import { DatabaseHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
 import { createMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '../testing';
 
 const createDatabase = async () => {

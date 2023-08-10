@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -35,7 +35,6 @@
     "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -49,7 +48,6 @@
     "@dxos/tasks-template": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/websocket-rpc": "workspace:*",
     "@oclif/core": "^2.9.4",
     "@oclif/plugin-help": "^5.2.14",
     "@oclif/plugin-plugins": "^3.1.8",
@@ -61,6 +59,8 @@
     "fs-extra": "^8.1.0",
     "get-folder-size": "^2.0.1",
     "git-rev-sync": "^3.0.2",
+    "ink": "^3.2.0",
+    "ink-table": "~3.0.0",
     "inquirer": "^8.2.0",
     "ipfs-http-client": "~56.0.1",
     "isomorphic-ws": "^4.0.1",
@@ -70,8 +70,6 @@
     "oclif": "^3.7.0",
     "pkg-up": "^3.1.0",
     "react": "^18.2.0",
-    "tempy": "^1.0.1",
-    "tiny-invariant": "^1.3.1",
     "uuid": "^8.3.2",
     "ws": "^7.4.4"
   },
@@ -83,8 +81,6 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
-    "globby": "^11.1.0",
-    "nodemon": "^2.0.22",
     "shx": "^0.3.3",
     "typescript": "^5.0.4"
   },

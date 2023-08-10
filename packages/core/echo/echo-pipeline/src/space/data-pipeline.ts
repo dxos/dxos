@@ -20,8 +20,9 @@ import { ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Credential, Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { tracer } from '@dxos/util';
 
-import { DatabaseHost, SnapshotManager } from '../dbhost';
+import { DatabaseHost, SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { Pipeline } from '../pipeline';
 
@@ -75,6 +76,8 @@ export class DataPipeline implements CredentialProcessor {
 
   private _lastTimeframeSaveTime = 0;
   private _lastSnapshotSaveTime = 0;
+  private _lastProcessedEpoch = -1;
+  private _epochCtx?: Context;
 
   constructor(private readonly _params: DataPipelineParams) {}
 
@@ -91,10 +94,7 @@ export class DataPipeline implements CredentialProcessor {
    */
   public appliedEpoch?: SpecificCredential<Epoch> = undefined;
 
-  private _lastProcessedEpoch = -1;
-  private _epochCtx?: Context;
-
-  public onNewEpoch = new Event<Credential>();
+  public readonly onNewEpoch = new Event<Credential>();
 
   get isOpen() {
     return this._isOpen;
@@ -213,11 +213,12 @@ export class DataPipeline implements CredentialProcessor {
         if (data.payload.data) {
           const feedInfo = this._params.feedInfoProvider(feedKey);
           if (!feedInfo) {
-            log.error('Could not find feed.', { feedKey });
+            log.warn('Could not find feed', { feedKey });
             continue;
           }
 
-          await this.databaseHost!.echoProcessor({
+          const timer = tracer.mark('dxos.echo.pipeline.data'); // TODO(burdon): Add ID to params to filter.
+          this.databaseHost!.echoProcessor({
             batch: data.payload.data.batch,
             meta: {
               feedKey,
@@ -227,13 +228,15 @@ export class DataPipeline implements CredentialProcessor {
             },
           });
 
+          timer.end();
+          // TODO(burdon): Reconcile different tracer approaches.
           log.trace('dxos.echo.data-pipeline.processed', {
-            feedKey: feedKey.toHex(),
+            feedKey: feedKey.toHex(), // TODO(burdon): Need to flatten?
             seq,
             spaceKey: this._params.spaceKey.toHex(),
           } satisfies DataPipelineProcessed);
 
-          // Timeframe clock is not updated yet
+          // Timeframe clock is not updated yet.
           await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
         }
       } catch (err: any) {

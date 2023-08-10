@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.54"</code>
+Type: <code>"0.1.55"</code>
 
 The version of this client API
 
@@ -131,11 +131,11 @@ Arguments: none
 Get client diagnostics data.
 
 
-Returns: <code>Promise&lt;Partial&lt;ClientStats&gt;&gt;</code>
+Returns: <code>Promise&lt;Diagnostics&gt;</code>
 
 Arguments: 
 
-`opts`: <code>DiagnosticOptions</code>
+`opts`: <code>JsonStringifyOptions</code>
 
 ### [getSpace(spaceKey)]()
 

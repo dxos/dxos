@@ -5,9 +5,9 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { PropsWithChildren, RefObject } from 'react';
 
-import { Button, DropdownMenu, ThemeContext, Main, Input, useThemeContext, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, Main, Input, useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
-import { blockSeparator, getSize, mx, osTx, paperSurface } from '@dxos/aurora-theme';
+import { blockSeparator, getSize, mx, paperSurface } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
@@ -24,7 +24,6 @@ export const StandaloneLayout = ({
   editorRef?: RefObject<MarkdownComposerRef>;
 }>) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
-  const themeContext = useThemeContext();
   return (
     <Main.Content classNames='min-bs-full' bounce>
       <div role='none' className={mx('mli-auto max-is-[60rem] min-bs-[100dvh] flex flex-col', paperSurface)}>
@@ -42,21 +41,19 @@ export const StandaloneLayout = ({
             />
           </Input.Root>
           {!properties.readOnly && (
-            <ThemeContext.Provider value={{ ...themeContext, tx: osTx }}>
-              <DropdownMenu.Root modal={false}>
-                <DropdownMenu.Trigger asChild>
-                  <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
-                    <DotsThreeVertical className={getSize(6)} />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content sideOffset={10} classNames='z-10'>
-                    <Surface data={[model, properties, editorRef]} role='menuitem' />
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </ThemeContext.Provider>
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <Button classNames='p-0 is-10 shrink-0 mie-3' variant='ghost' density='coarse'>
+                  <DotsThreeVertical className={getSize(6)} />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content sideOffset={10} classNames='z-10'>
+                  <Surface data={[model, properties, editorRef]} role='menuitem' />
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           )}
         </div>
         <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />

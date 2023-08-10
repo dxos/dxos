@@ -58,7 +58,7 @@ export class TestWireProtocol {
     await connection.test(message);
   }
 
-  async startStream(
+  async openStream(
     peerId: PublicKey,
     streamTag: string,
     streamLoadInterval: number,

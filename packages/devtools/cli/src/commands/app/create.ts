@@ -60,13 +60,13 @@ export default class Create extends BaseCommand<typeof Create> {
     const outputDirExists = await exists(outputDirectory);
     const isOutputEmpty = outputDirExists && (await isDirEmpty(outputDirectory));
     if (outputDirExists && !isOutputEmpty) {
-      this.error(`Output directory ${outputDirectory} is not empty`, { exit: 1 });
+      this.error(`Output directory ${outputDirectory} is not empty`);
     }
 
     try {
       await exec('which pnpm');
     } catch {
-      this.error('pnpm not found. Please run "npm i -g pnpm" first.', { exit: 1 });
+      this.error('pnpm not found. Please run "npm i -g pnpm" first.');
     }
 
     // TODO(???): make sure this exists in the @dxos/create packages too.
@@ -74,7 +74,7 @@ export default class Create extends BaseCommand<typeof Create> {
       try {
         await exec('which xcrun');
       } catch {
-        this.error('XCode Command Line Tools not found. Please run "xcode-select --install" first.', { exit: 1 });
+        this.error('XCode Command Line Tools not found. Please run "xcode-select --install" first.');
       }
     }
 

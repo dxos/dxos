@@ -5,9 +5,7 @@
 import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
-import { range } from '@dxos/util';
-
-import { TimeRecord, createBucketReducer, reduceSeries } from './reducers';
+import { range, TimeRecord, createBucketReducer, reduceSeries } from '@dxos/util';
 
 describe('Monitor', () => {
   test('bucket time series', () => {

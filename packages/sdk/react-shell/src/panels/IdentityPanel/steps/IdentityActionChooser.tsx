@@ -2,22 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
-import React, { cloneElement } from 'react';
+import { CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
+import React, { cloneElement, useCallback } from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
+import { useClient } from '@dxos/react-client';
+import { useHaloInvitations } from '@dxos/react-client/halo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
+import { PanelAction, PanelActions } from '../../../components';
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }: IdentityPanelStepProps) => {
   const { t } = useTranslation('os');
-  const doneButton = (
-    <Button density='fine' onClick={onDone} disabled={!active} classNames='pli-4' data-testid='identity-panel-done'>
-      <CaretLeft weight='bold' className={mx(getSize(4), 'invisible')} />
-      <span className='grow'>{t('done label')}</span>
-      <Check weight='bold' className={getSize(4)} />
-    </Button>
+  const client = useClient();
+  const invitations = useHaloInvitations();
+
+  const onInvitationEvent = useCallback((invitation: Invitation) => {
+    const invitationCode = InvitationEncoder.encode(invitation);
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    }
+  }, []);
+
+  const doneAction = (
+    <PanelAction aria-label={t('done label')} onClick={onDone} disabled={!active} data-testid='identity-panel-done'>
+      <Check weight='light' className={getSize(6)} />
+    </PanelAction>
   );
   return (
     <div role='none' className='grow flex flex-col gap-1'>
@@ -25,8 +37,16 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
         <div className='grow justify-center flex flex-col gap-1'>
           <Button
             disabled={!active}
-            data-testid='manage-devices'
-            onClick={() => send({ type: 'chooseDevices' })}
+            data-testid='devices-panel.create-invitation'
+            onClick={() => {
+              invitations.forEach((invitation) => invitation.cancel());
+              const invitation = client.halo.createInvitation();
+              // TODO(wittjosiah): Don't depend on NODE_ENV.
+              if (process.env.NODE_ENV !== 'production') {
+                invitation.subscribe(onInvitationEvent);
+              }
+              send({ type: 'selectInvitation', invitation });
+            }}
             classNames='plb-4'
           >
             <Plus className={getSize(6)} />
@@ -34,7 +54,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
           <Button
-            disabled={!active}
+            disabled
             data-testid='manage-profile'
             onClick={() => {} /* send({ type: 'chooseProfile' }) */}
             classNames='plb-4'
@@ -44,7 +64,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
             <CaretRight weight='bold' className={getSize(4)} />
           </Button>
           <Button
-            disabled={!active}
+            disabled
             data-testid='sign-out'
             onClick={() => {} /* send({ type: 'chooseSignOut' }) */}
             classNames='plb-4'
@@ -55,7 +75,7 @@ export const IdentityActionChooser = ({ send, active, onDone, doneActionParent }
           </Button>
         </div>
       </DensityProvider>
-      {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
+      <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions>
     </div>
   );
 };
