@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download, EyeSlash, PaperPlane, PencilSimpleLine, Planet, Upload } from '@phosphor-icons/react';
+import { Download, PaperPlane, PencilSimpleLine, Planet, Upload, X } from '@phosphor-icons/react';
 import { getIndices } from '@tldraw/indices';
 import React from 'react';
 
@@ -43,12 +43,12 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     throw new Error('Client plugin not found');
   }
 
-  const client = clientPlugin.provides.client;
-  const identity = client.halo.identity.get();
   const id = getSpaceId(space.key);
   const actionIndices = getIndices(5);
-  const disabled = space.state.get() !== SpaceState.READY;
-  const error = space.state.get() === SpaceState.ERROR;
+  const state = space.state.get();
+  const disabled = state !== SpaceState.READY;
+  const error = state === SpaceState.ERROR;
+  const inactive = state === SpaceState.INACTIVE;
   const baseIntent = { plugin: SPACE_PLUGIN, data: { spaceKey: space.key.toHex() } };
   const node: GraphNode = {
     id,
@@ -78,7 +78,7 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
     },
     attributes: {
       role: 'branch',
-      hidden: identity && space.properties.members?.[identity.identityKey.toHex()]?.hidden === true,
+      hidden: inactive,
       disabled,
       error,
     },
@@ -101,13 +101,6 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           disabled: disabled || error,
         },
         {
-          id: 'hide-space',
-          index: actionIndices[2],
-          label: ['hide space label', { ns: SPACE_PLUGIN }],
-          icon: (props) => <EyeSlash {...props} />,
-          intent: { ...baseIntent, action: SpaceAction.HIDE },
-        },
-        {
           id: 'backup-space',
           index: actionIndices[3],
           label: ['download all docs in space label', { ns: SPACE_PLUGIN }],
@@ -122,6 +115,13 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           icon: (props) => <Upload {...props} />,
           intent: { ...baseIntent, action: SpaceAction.RESTORE },
           disabled: disabled || error,
+        },
+        {
+          id: 'close-space',
+          index: actionIndices[2],
+          label: ['close space label', { ns: SPACE_PLUGIN }],
+          icon: (props) => <X {...props} />,
+          intent: { ...baseIntent, action: SpaceAction.CLOSE },
         },
       ],
     },
