@@ -38,12 +38,16 @@ const BUCKET_COLLECTION_INTERVAL = 1_000;
  * Storage performance metrics.
  */
 export class StorageMonitor {
+  private _enabled = false;
+  
   /**
    * By resource.
    */
   private readonly _buckets = new Map<string, StatsBucket>();
 
-  constructor() {
+  enable() {
+    this._enabled = true;
+
     const timer = setInterval(() => {
       this._finalizeBuckets();
     }, BUCKET_COLLECTION_INTERVAL);
@@ -51,6 +55,12 @@ export class StorageMonitor {
   }
 
   beginOp(op: StorageOperation): OpHandle {
+    if(!this._enabled) {
+      return {
+        end: () => {}
+      }
+    }
+    
     const beginTime = performance.now();
     return {
       end: () => {
@@ -121,3 +131,6 @@ export class StorageMonitor {
 }
 
 export const STORAGE_MONITOR = new StorageMonitor();
+
+// TODO(dmaretskyi): Disabled due to performance concerns.
+// STORAGE_MONITOR.enable();
