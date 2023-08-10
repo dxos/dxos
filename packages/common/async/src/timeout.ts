@@ -58,4 +58,4 @@ export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
   if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
     timeoutId.unref();
   }
-}
+};

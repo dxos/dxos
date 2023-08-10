@@ -1,14 +1,18 @@
-import { unrefTimeout } from "@dxos/async";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { unrefTimeout } from '@dxos/async';
 
 export type StorageOperation = {
   resource: string;
   type: 'read' | 'write' | 'stat' | 'delete' | 'truncate';
   size?: number;
-}
+};
 
 export type OpHandle = {
   end: () => void;
-}
+};
 
 export type StatsBucket = {
   resource: string;
@@ -30,7 +34,7 @@ export type StatsBucket = {
 
   otherOps: number;
   otherTime: number;
-}
+};
 
 const BUCKET_COLLECTION_INTERVAL = 1_000;
 
@@ -39,7 +43,7 @@ const BUCKET_COLLECTION_INTERVAL = 1_000;
  */
 export class StorageMonitor {
   private _enabled = false;
-  
+
   /**
    * By resource.
    */
@@ -55,12 +59,12 @@ export class StorageMonitor {
   }
 
   beginOp(op: StorageOperation): OpHandle {
-    if(!this._enabled) {
+    if (!this._enabled) {
       return {
-        end: () => {}
-      }
+        end: () => {},
+      };
     }
-    
+
     const beginTime = performance.now();
     return {
       end: () => {
@@ -83,8 +87,8 @@ export class StorageMonitor {
             bucket.otherOps++;
             bucket.otherTime += duration;
         }
-      }
-    }
+      },
+    };
   }
 
   private _getOrInitBucket(resource: string): StatsBucket {
@@ -119,14 +123,14 @@ export class StorageMonitor {
       bucket.usage = (bucket.readTime + bucket.writeTime + bucket.otherTime) / (bucket.endTime - bucket.beginTime);
       toEmit.push(bucket);
     }
-    
+
     // Clear the buckets.
     this._buckets.clear();
-    for(const bucket of toEmit) {
-      this._getOrInitBucket(bucket.resource)
+    for (const bucket of toEmit) {
+      this._getOrInitBucket(bucket.resource);
     }
 
-    ((globalThis as any).__STORAGE_METRICS ??= []).push(...toEmit)
+    ((globalThis as any).__STORAGE_METRICS ??= []).push(...toEmit);
   }
 }
 

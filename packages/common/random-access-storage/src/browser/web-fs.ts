@@ -22,7 +22,7 @@ export class WebFS implements Storage {
   protected readonly _files = new Map<string, File>();
   protected _root?: FileSystemDirectoryHandle;
 
-  constructor(public readonly path: string) { }
+  constructor(public readonly path: string) {}
 
   public get size() {
     return this._files.size;
@@ -176,7 +176,15 @@ export class WebFile extends EventEmitter implements File {
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
   private readonly _destroy: () => Promise<void>;
 
-  constructor({ fileName, file, destroy }: { file: Promise<FileSystemFileHandle>; fileName: string, destroy: () => Promise<void> }) {
+  constructor({
+    fileName,
+    file,
+    destroy,
+  }: {
+    file: Promise<FileSystemFileHandle>;
+    fileName: string;
+    destroy: () => Promise<void>;
+  }) {
     super();
     this._fileName = fileName;
     this._fileHandle = file;
@@ -199,7 +207,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async write(offset: number, data: Buffer) {
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length })
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'write', size: data.length });
     try {
       // TODO(mykola): Fix types.
       const fileHandle: any = await this._fileHandle;
@@ -213,7 +221,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async read(offset: number, size: number) {
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size })
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'read', size });
     try {
       const fileHandle: any = await this._fileHandle;
       const file = await fileHandle.getFile();
@@ -229,7 +237,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async del(offset: number, size: number) {
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'delete', size })
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'delete', size });
     try {
       if (offset < 0 || size < 0) {
         return;
@@ -250,12 +258,11 @@ export class WebFile extends EventEmitter implements File {
     } finally {
       metric.end();
     }
-
   }
 
   @synchronized
   async stat() {
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' })
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'stat' });
     try {
       const fileHandle: any = await this._fileHandle;
       const file = await fileHandle.getFile();
@@ -269,7 +276,7 @@ export class WebFile extends EventEmitter implements File {
 
   @synchronized
   async truncate(offset: number) {
-    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' })
+    const metric = STORAGE_MONITOR.beginOp({ resource: this._fileName, type: 'truncate' });
     try {
       const fileHandle: any = await this._fileHandle;
       const writable = await fileHandle.createWritable({ keepExistingData: true });
@@ -280,12 +287,11 @@ export class WebFile extends EventEmitter implements File {
     }
   }
 
-  async close(): Promise<void> { }
+  async close(): Promise<void> {}
 
   @synchronized
   async destroy() {
     this.destroyed = true;
     return await this._destroy();
   }
-
 }

@@ -6,7 +6,7 @@ import { defaultMap } from './map';
 
 const getMicroseconds = () => {
   if (typeof process.hrtime !== 'function') {
-    return 0
+    return 0;
   }
   const [seconds, nano] = process.hrtime();
   return seconds * 1e6 + nano / 1e3;

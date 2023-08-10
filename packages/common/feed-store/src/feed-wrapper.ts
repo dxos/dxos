@@ -5,13 +5,12 @@
 import { Range } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
-import { invariant } from '@dxos/log';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
@@ -75,9 +74,10 @@ export class FeedWrapper<T extends {}> {
         });
       },
     });
-    const readStream = opts?.batch !== undefined && opts?.batch > 1
-      ? new BatchedReadStream(this._hypercore, opts)
-      : this._hypercore.createReadStream(opts);
+    const readStream =
+      opts?.batch !== undefined && opts?.batch > 1
+        ? new BatchedReadStream(this._hypercore, opts)
+        : this._hypercore.createReadStream(opts);
 
     readStream.pipe(transform, (err: any) => {
       // Ignore errors.
@@ -205,7 +205,6 @@ class BatchedReadStream extends Readable {
     }
   }
 
-
   private _nonBatchedRead(cb: (err: Error | null) => void) {
     this._feed.get(this._cursor, { wait: true }, (err, data) => {
       if (err) {
@@ -214,7 +213,7 @@ class BatchedReadStream extends Readable {
         this._cursor++;
         this._reading = false;
         this.push(data);
-        cb(null)
+        cb(null);
       }
     });
   }
@@ -229,7 +228,7 @@ class BatchedReadStream extends Readable {
         for (const item of data) {
           this.push(item);
         }
-        cb(null)
+        cb(null);
       }
     });
   }
