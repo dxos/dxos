@@ -8,21 +8,24 @@ import { PublicKey } from '@dxos/keys';
 import { invariant } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 15;
+export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 3;
 
 export interface ConnectionLimiter {
   /**
    * @returns Promise that resolves when initiating connections amount is below the limit.
    */
-  wait(peerId: PublicKey): Promise<void>;
+  connecting(sessionId: PublicKey): Promise<void>;
 
-  rejectWait(peerId: PublicKey): void;
+  doneConnecting(sessionId: PublicKey): void;
 }
 
 export type ConnectionLimiterOptions = {
   maxConcurrentInitConnections?: number;
 };
 
+/**
+ * Limits the amount of concurrent initiating connections.
+ */
 export class ConnectionLimiterImpl implements ConnectionLimiter {
   private readonly _ctx = new Context();
   private readonly _maxConcurrentInitConnections;
@@ -47,23 +50,29 @@ export class ConnectionLimiterImpl implements ConnectionLimiter {
     this._maxConcurrentInitConnections = maxConcurrentInitConnections;
   }
 
-  async wait(peerId: PublicKey): Promise<void> {
-    invariant(!this._waitingPromises.has(peerId), 'Peer is already waiting for connection');
+  /**
+   * @returns Promise that resolves when connections amount with 'CONNECTING' state is below the limit.
+   */
+  async connecting(sessionId: PublicKey): Promise<void> {
+    invariant(!this._waitingPromises.has(sessionId), 'Peer is already waiting for connection');
     return new Promise((resolve, reject) => {
-      this._waitingPromises.set(peerId, {
+      this._waitingPromises.set(sessionId, {
         resolve,
         reject: () => {
           reject(new Error('Finished waiting for connection'));
-          this._waitingPromises.delete(peerId);
+          this._waitingPromises.delete(sessionId);
         },
       });
       this.resolveWaitingPromises.schedule();
     });
   }
 
-  rejectWait(peerId: PublicKey) {
-    invariant(this._waitingPromises.has(peerId), 'Peer is not waiting for connection');
-    this._waitingPromises.get(peerId)!.reject();
+  /**
+   * Rejects promise returned by `connecting` method.
+   */
+  doneConnecting(sessionId: PublicKey) {
+    invariant(this._waitingPromises.has(sessionId), 'Peer is not waiting for connection');
+    this._waitingPromises.get(sessionId)!.reject();
     this.resolveWaitingPromises.schedule();
   }
 }
