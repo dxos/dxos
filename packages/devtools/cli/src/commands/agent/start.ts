@@ -8,7 +8,7 @@ import { rmSync } from 'node:fs';
 
 import { Agent, EchoProxyServer, EpochMonitor, FunctionsPlugin, parseAddress } from '@dxos/agent';
 import { runInContext, scheduleTaskInterval } from '@dxos/async';
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import * as Telemetry from '@dxos/telemetry';
 
@@ -36,6 +36,9 @@ export default class Start extends BaseCommand<typeof Start> {
     monitor: Flags.boolean({
       description: 'Run epoch monitoring.',
     }),
+    metrics: Flags.boolean({
+      description: 'Start metrics recording.',
+    }),
   };
 
   private readonly _ctx = new Context();
@@ -50,16 +53,19 @@ export default class Start extends BaseCommand<typeof Start> {
   }
 
   private async _runInForeground() {
-    const socket = `unix://${DX_RUNTIME}/profile/${this.flags.profile}/agent.sock`;
+    const socket = 'unix://' + getProfilePath(DX_RUNTIME, this.flags.profile, 'agent.sock');
     {
       // Clear out old socket file.
       const { path } = parseAddress(socket);
       rmSync(path, { force: true });
     }
 
+    // TODO(burdon): Option to start metrics recording (or config).
+
     const agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
+      metrics: this.flags.metrics,
       protocol: {
         socket,
         webSocket: this.flags.ws,
@@ -74,9 +80,9 @@ export default class Start extends BaseCommand<typeof Start> {
         this.flags['echo-proxy'] && new EchoProxyServer({ port: this.flags['echo-proxy'] }),
 
         // Functions.
-        this.clientConfig.values.runtime?.agent?.functions &&
+        this.clientConfig.values.runtime?.agent?.plugins?.functions &&
           new FunctionsPlugin({
-            port: this.clientConfig.values.runtime?.agent?.functions?.port,
+            port: this.clientConfig.values.runtime?.agent?.plugins?.functions?.port,
           }),
       ],
     });
@@ -104,7 +110,10 @@ export default class Start extends BaseCommand<typeof Start> {
       }
 
       try {
-        const process = await daemon.start(this.flags.profile, { config: this.flags.config });
+        const process = await daemon.start(this.flags.profile, {
+          config: this.flags.config,
+          metrics: this.flags.metrics,
+        });
         if (process) {
           this.log('Agent started.');
         }

@@ -114,7 +114,6 @@ export class Teleport {
 
   async close(err?: Error) {
     // TODO(dmaretskyi): Try soft close.
-
     await this.destroy(err);
   }
 
@@ -216,6 +215,10 @@ export interface TeleportExtension {
   onClose(err?: Error): Promise<void>;
 }
 
+type ControlRpcBundle = {
+  Control: ControlService;
+};
+
 type ControlExtensionOpts = {
   heartbeatInterval: number;
   heartbeatTimeout: number;
@@ -229,12 +232,16 @@ class ControlExtension implements TeleportExtension {
     },
   });
 
+  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
+
   private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
 
-  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
-
   constructor(private readonly opts: ControlExtensionOpts) {}
+
+  async registerExtension(name: string) {
+    await this._rpc.rpc.Control.registerExtension({ name });
+  }
 
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
     this._extensionContext = extensionContext;
@@ -282,12 +289,4 @@ class ControlExtension implements TeleportExtension {
     await this._ctx.dispose();
     await this._rpc.close();
   }
-
-  async registerExtension(name: string) {
-    await this._rpc.rpc.Control.registerExtension({ name });
-  }
 }
-
-type ControlRpcBundle = {
-  Control: ControlService;
-};

@@ -13,70 +13,70 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   Device,
   Identity,
+  Metrics,
   Space as SpaceProto,
   SpaceMember,
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { SubscribeToSpacesResponse, SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SubscribeToFeedsResponse, SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { Timeframe } from '@dxos/timeframe';
-import { humanize } from '@dxos/util';
 
 import { Client } from '../client';
+import { getPlatform, Platform } from './platform';
+import { jsonStringify, JsonStringifyOptions } from './util';
 
 export type Diagnostics = {
   created: string;
+  platform: Platform;
+  config: ConfigProto;
   client: {
     version: string;
-    storageVersion: number;
+    storage: {
+      version: number;
+    };
   };
-  config: ConfigProto;
-  platform: Platform;
-  identity: Identity;
-  devices: Device[];
-  spaces: SpaceStats[];
-  feeds: Partial<SubscribeToFeedsResponse.Feed>[];
+  identity?: Identity;
+  devices?: Device[];
+  spaces?: SpaceStats[];
+  feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+  metrics?: Metrics;
 };
 
+// TODO(burdon): Normalize for ECHO/HALO.
 export type SpaceStats = {
   type: 'echo' | 'halo';
+  info: SubscribeToSpacesResponse.SpaceInfo;
   properties?: {
     name: string;
   };
-  info: SubscribeToSpacesResponse.SpaceInfo;
-  db?: {
-    items: number;
-  };
-  members?: SpaceMember[];
-  keys?: {
-    control: PublicKey[];
-    data: PublicKey[];
-  };
-  epochs?: { number: number; timeframe: Timeframe }[];
   metrics?: SpaceProto.Metrics & {
     startupTime?: number;
   };
+  db?: {
+    objects: number;
+  };
+  epochs?: { number: number; timeframe: Timeframe }[];
+  members?: SpaceMember[];
+  feeds?: {
+    control: PublicKey[];
+    data: PublicKey[];
+  };
 };
 
-export type Platform = {
-  type: 'browser' | 'node';
-  platform: string;
-  runtime?: string;
-};
+export type DiagnosticOptions = JsonStringifyOptions;
 
-export type DiagnosticOptions = {
-  truncate?: boolean;
-  humanize?: boolean;
-};
-
-// TODO(burdon): Factor out (move into Monitor class).
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
-  const host = client.services.services.DevtoolsHost!;
-  const data: Partial<Diagnostics> = {
+  const identity = client.halo.identity.get();
+  log('diagnostics', { identity });
+
+  const data: Diagnostics = {
     created: new Date().toISOString(),
     platform: await getPlatform(),
     client: {
       version: client.version,
-      storageVersion: STORAGE_VERSION,
+      storage: {
+        version: STORAGE_VERSION,
+      },
     },
 
     // TODO(burdon): Are these the same?
@@ -84,157 +84,114 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     config: client.config.values,
   };
 
-  const identity = client.halo.identity.get();
-  log('diagnostics', { identity });
+  // Trace metrics.
+  {
+    invariant(client.services.services.SystemService, 'SystemService is not available.');
+    const stream = client.services.services.LoggingService!.queryMetrics({});
+    const trigger = new Trigger<Metrics>();
+    stream?.subscribe(async (metrics) => trigger.wake(metrics!));
+    data.metrics = await trigger.wait();
+  }
+
   if (identity) {
-    data.identity = identity;
-    data.devices = client.halo.devices.get();
+    const host = client.services.services.DevtoolsHost!;
+    Object.assign(data, {
+      identity,
+      devices: client.halo.devices.get(),
+    });
 
     // Spaces.
     {
-      const trigger = new Trigger();
+      const done = new Trigger();
       const stream = host.subscribeToSpaces({});
-      stream?.subscribe(async (msg) => {
-        data.spaces = await Promise.all(
-          msg.spaces!.map(async (info) => {
-            log('processing...', info);
-            const type = info.key.equals(identity.spaceKey!) ? 'halo' : 'echo';
-            const stats: SpaceStats = { type, info };
-
-            // TODO(burdon): Process HALO pipeline also.
-            if (type === 'echo' && info.isOpen) {
-              const space = client.getSpace(info.key);
-              invariant(space);
-              await space.waitUntilReady();
-              const { objects } = space.db.query();
-
-              Object.assign(stats, {
-                properties: {
-                  name: space.properties.name,
-                },
-                metrics: space.internal.data.metrics,
-                epochs: await getEpochs(client.services!.services.SpacesService!, space),
-                members: space?.members.get(),
-                db: {
-                  items: objects.length,
-                },
-                keys: {
-                  control: space.internal.data.pipeline?.controlFeeds,
-                  data: space.internal.data.pipeline?.dataFeeds,
-                },
-              });
-
-              // TODO(burdon): Factor out.
-              if (stats.metrics) {
-                const { open, ready } = stats.metrics ?? {};
-                stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
-              }
-            }
-
-            return stats;
-          }),
-        );
-
-        trigger.wake();
+      stream.subscribe(async ({ spaces = [] }) => {
+        data.spaces = await Promise.all(spaces.map(async (info) => await getSpaceStats(client, info)));
+        done.wake();
       });
 
-      log('waiting...');
-      await trigger.wait();
+      await done.wait();
+      stream.close();
+    }
+
+    // Feeds.
+    {
+      const done = new Trigger();
+      const stream = host.subscribeToFeeds({});
+      stream.subscribe(({ feeds = [] }) => {
+        data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
+        done.wake();
+      });
+
+      await done.wait();
+      stream.close();
     }
   }
 
-  // Feeds.
-  // TODO(burdon): Map feeds to spaces?
-  if (identity) {
-    const trigger = new Trigger();
-    const stream = host.subscribeToFeeds({});
-    stream?.subscribe((msg) => {
-      data.feeds = msg.feeds?.map(({ feedKey, bytes, length }) => ({
-        feedKey,
-        bytes,
-        length,
-      }));
+  return jsonStringify(data, options) as Diagnostics;
+};
 
-      trigger.wake();
-    });
+// TODO(burdon): Normalize for ECHO/HALO.
+const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.SpaceInfo): Promise<SpaceStats> => {
+  const identity = client.halo.identity.get();
+  const type = info.key.equals(identity!.spaceKey!) ? 'halo' : 'echo';
+  const stats: SpaceStats = { type, info };
 
-    await trigger.wait();
+  // TODO(burdon): Process HALO pipeline also.
+  if (type === 'echo' && info.isOpen) {
+    const space = client.getSpace(info.key);
+    invariant(space);
+    await space.waitUntilReady();
+
+    // TODO(burdon): Other stats from internal.data.
+    Object.assign(stats, {
+      properties: {
+        name: space.properties.name,
+      },
+      metrics: space.internal.data.metrics,
+      db: {
+        objects: space.db.objects.length,
+      },
+      epochs: await getEpochs(client.services.services.SpacesService!, space),
+      members: space?.members.get(),
+      feeds: {
+        control: space.internal.data.pipeline?.controlFeeds ?? [],
+        data: space.internal.data.pipeline?.dataFeeds ?? [],
+      },
+    } satisfies Partial<SpaceStats>);
+
+    // TODO(burdon): Factor out.
+    if (stats.metrics) {
+      const { open, ready } = stats.metrics;
+      stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
+    }
   }
 
-  // Transform keys.
-  if (options.humanize || options.truncate) {
-    return JSON.parse(
-      JSON.stringify(data, (key, value) => {
-        if (typeof value === 'string') {
-          const key = PublicKey.fromHex(value);
-          if (key.toHex() === value) {
-            return options.humanize ? humanize(key) : key.truncate();
-          }
-        }
-
-        return value;
-      }),
-    );
-  }
-
-  return data as Diagnostics;
+  return stats;
 };
 
 const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceStats['epochs']> => {
   const epochs: SpaceStats['epochs'] = [];
-  await space.waitUntilReady();
-
-  const done = new Trigger();
-  // TODO(burdon): Other stats from internal.data.
-  const currentEpoch = space.internal.data.pipeline!.currentEpoch!;
-  if (!currentEpoch) {
-    log.warn('Invalid current epoch.');
-    setTimeout(() => done.wake(), 1000);
-  }
-
-  // TODO(burdon): Hangs.
-  const stream = service.queryCredentials({ spaceKey: space.key });
-  stream.subscribe(async (credential) => {
-    switch (credential.subject.assertion['@type']) {
-      case 'dxos.halo.credentials.Epoch': {
-        // TODO(burdon): Epoch number is not monotonic.
-        const { number, timeframe } = credential.subject.assertion;
-        epochs.push({ number, timeframe });
-        if (currentEpoch.id && credential.id?.equals(currentEpoch.id)) {
-          done.wake();
+  const currentEpoch = space.internal.data.pipeline!.currentEpoch;
+  if (currentEpoch) {
+    const done = new Trigger();
+    const stream = service.queryCredentials({ spaceKey: space.key });
+    stream.subscribe(async (credential) => {
+      switch (credential.subject.assertion['@type']) {
+        case 'dxos.halo.credentials.Epoch': {
+          // TODO(burdon): Epoch number is not monotonic?
+          const { number, timeframe } = credential.subject.assertion;
+          epochs.push({ number, timeframe });
+          if (currentEpoch.id && credential.id!.equals(currentEpoch.id)) {
+            done.wake();
+          }
+          break;
         }
-        break;
       }
-    }
-  });
+    });
 
-  await done.wait();
-  stream.close();
+    await done.wait();
+    stream.close();
+  }
+
   return epochs;
-};
-
-const getPlatform = async (): Promise<Platform> => {
-  if (typeof window !== 'undefined') {
-    const { userAgent } = window.navigator;
-    return {
-      type: 'browser',
-      platform: userAgent,
-    };
-  }
-
-  // https://nodejs.org/api/os.html
-  try {
-    const { machine, platform, release } = await require('node:os');
-    return {
-      type: 'node',
-      platform: `${platform()} ${release()} ${machine()}`,
-      runtime: process.version,
-    };
-  } catch (err) {
-    // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"
-    return {
-      type: 'node',
-      platform: '',
-    };
-  }
 };
