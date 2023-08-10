@@ -61,8 +61,8 @@ export const SpaceListPanel = ({ onAction, onNavigate, onClose }: SpacePanelProp
         <div className='flex px-0.5 py-1 items-center'>
           <Input.Root id='sidebar.showDeleted'>
             <Input.Checkbox checked={showDeletedObjects} onCheckedChange={setShowDeletedObjects} />
+            <Input.Label>Show deleted objects</Input.Label>
           </Input.Root>
-          <span className='px-2.5 pt-0.5 text-sm'>Show deleted objects</span>
         </div>
         <Separator />
 
