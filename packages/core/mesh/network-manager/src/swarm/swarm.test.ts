@@ -6,10 +6,9 @@
 
 import { expect } from 'earljs';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
 import { afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
@@ -18,16 +17,33 @@ import { createWebRTCTransportFactory } from '../transport';
 import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
 
+type TestPeer = {
+  swarm: Swarm;
+  peerId: PublicKey;
+  protocol: TestWireProtocol;
+  topic: PublicKey;
+};
+
 describe('Swarm', () => {
   const context = new MemorySignalManagerContext();
-  let signalManager: MemorySignalManager;
+  let signal: MemorySignalManager;
 
   beforeEach(() => {
-    signalManager = new MemorySignalManager(context);
-    afterTest(() => signalManager.close());
+    signal = new MemorySignalManager(context);
+    afterTest(() => signal.close());
   });
 
-  const setupSwarm = async ({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) => {
+  const setupSwarm = async ({
+    topic = PublicKey.random(),
+    peerId = PublicKey.random(),
+    connectionLimiter = new ConnectionLimiter(),
+    signalManager = signal,
+  }: {
+    topic?: PublicKey;
+    peerId?: PublicKey;
+    connectionLimiter?: ConnectionLimiter;
+    signalManager?: SignalManager;
+  }): Promise<TestPeer> => {
     const protocol = new TestWireProtocol(peerId);
     const swarm = new Swarm(
       topic,
@@ -37,7 +53,7 @@ describe('Swarm', () => {
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined,
-      new ConnectionLimiter(),
+      connectionLimiter,
     );
 
     afterTest(async () => {
@@ -46,108 +62,71 @@ describe('Swarm', () => {
 
     await swarm.open();
 
-    return { swarm, protocol };
+    return { swarm, protocol, topic, peerId };
   };
 
   test('connects two peers in a swarm', async () => {
     const topic = PublicKey.random();
-    const peerId1 = PublicKey.random();
-    const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1, protocol: protocol1 } = await setupSwarm({ topic, peerId: peerId1 });
+    const peer1 = await setupSwarm({ topic });
 
-    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
+    const peer2 = await setupSwarm({ topic });
 
-    expect(swarm1.connections.length).toEqual(0);
-    expect(swarm2.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).toEqual(0);
+    expect(peer2.swarm.connections.length).toEqual(0);
 
-    const promise = Promise.all([
-      asyncTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
-      asyncTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.')),
-    ]);
-
-    // Behavior of the Signal Server.
-    swarm1.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId1.asUint8Array(),
-        since: new Date(),
-      },
-    });
-
-    swarm1.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId2.asUint8Array(),
-        since: new Date(),
-      },
-    });
-
-    log('Candidates changed');
-    await promise;
-    log('Swarms connected');
-
-    await protocol1.testConnection(peerId2);
+    await connectSwarms(peer1, peer2);
   }).timeout(5_000);
 
   test('two peers try to originate connections to each other simultaneously', async () => {
     const topic = PublicKey.random();
-    const peerId1 = PublicKey.random();
-    const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1 } = await setupSwarm({ topic, peerId: peerId1 });
-    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
+    const peer1 = await setupSwarm({ topic });
+    const peer2 = await setupSwarm({ topic });
 
-    expect(swarm1.connections.length).toEqual(0);
-    expect(swarm2.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).toEqual(0);
+    expect(peer2.swarm.connections.length).toEqual(0);
 
-    const connectPromises = Promise.all([swarm1.connected.waitForCount(1), swarm2.connected.waitForCount(1)]);
-
-    swarm1.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId2.asUint8Array(),
-        since: new Date(),
-      },
-    });
-
-    swarm2.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId1.asUint8Array(),
-        since: new Date(),
-      },
-    });
-
-    await connectPromises;
+    await connectSwarms(peer1, peer2);
   }).timeout(5_000);
 
   test('second peer discovered after delay', async () => {
     const topic = PublicKey.random();
-    const peerId1 = PublicKey.random();
-    const peerId2 = PublicKey.random();
 
-    const { swarm: swarm1, protocol: protocol1 } = await setupSwarm({ topic, peerId: peerId1 });
+    const peer1 = await setupSwarm({ topic });
+    const peer2 = await setupSwarm({ topic });
 
-    const { swarm: swarm2 } = await setupSwarm({ topic, peerId: peerId2 });
+    expect(peer1.swarm.connections.length).toEqual(0);
+    expect(peer2.swarm.connections.length).toEqual(0);
 
-    expect(swarm1.connections.length).toEqual(0);
-    expect(swarm2.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).toEqual(0);
+    expect(peer2.swarm.connections.length).toEqual(0);
 
-    const connectPromises = Promise.all([swarm1.connected.waitForCount(1), swarm2.connected.waitForCount(1)]);
-
-    swarm1.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId2.asUint8Array(),
-        since: new Date(),
-      },
-    });
-    await sleep(15);
-    swarm2.onSwarmEvent({
-      peerAvailable: {
-        peer: peerId1.asUint8Array(),
-        since: new Date(),
-      },
-    });
-
-    await connectPromises;
-
-    await protocol1.testConnection(peerId2);
+    await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 });
+
+const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () => {}) => {
+  const connectPromises = Promise.all([peer1.swarm.connected.waitForCount(1), peer2.swarm.connected.waitForCount(1)]);
+
+  peer1.swarm.onSwarmEvent({
+    peerAvailable: {
+      peer: peer2.peerId.asUint8Array(),
+      since: new Date(),
+    },
+  });
+
+  await delay();
+
+  peer2.swarm.onSwarmEvent({
+    peerAvailable: {
+      peer: peer1.peerId.asUint8Array(),
+      since: new Date(),
+    },
+  });
+
+  await connectPromises;
+
+  await peer1.protocol.testConnection(peer2.peerId);
+  await peer2.protocol.testConnection(peer1.peerId);
+};
