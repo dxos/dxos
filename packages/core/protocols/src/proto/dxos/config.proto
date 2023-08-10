@@ -142,11 +142,15 @@ message Runtime {
   }
 
   message Agent {
-    message Functions {
-      int32 port = 1;
+    message Plugins {
+      message Functions {
+        int32 port = 1;
+      }
+
+      optional Functions functions = 1;
     }
 
-    optional Functions functions = 1;
+    optional Plugins plugins = 1;
   }
 
   // CLI configuration
