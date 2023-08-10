@@ -18,7 +18,6 @@ import { NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { ComplexMap } from '@dxos/util';
 
 import { InvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
@@ -29,8 +28,6 @@ export class EchoProxy implements Echo {
   private readonly _spacesChanged = new Event<Space[]>();
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _spaces = MulticastObservable.from(this._spacesChanged, []);
-  // TODO(wittjosiah): Remove this.
-  private readonly _spacesMap = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
 
   // TODO(burdon): Rethink API (just db?)
   public readonly dbRouter = new DatabaseRouter();
@@ -53,7 +50,7 @@ export class EchoProxy implements Echo {
 
   toJSON() {
     return {
-      spaces: this._spacesMap.size,
+      spaces: this._spaces.get().length,
     };
   }
 
@@ -100,21 +97,21 @@ export class EchoProxy implements Echo {
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
     spacesStream.subscribe(async (data) => {
       let emitUpdate = false;
+      const newSpaces = this._spaces.get() as SpaceProxy[];
 
       for (const space of data.spaces ?? []) {
         if (this._ctx.disposed) {
           return;
         }
 
-        let spaceProxy = this._spacesMap.get(space.spaceKey);
+        let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // Propagate space state updates to the space list observable.
-          spaceProxy._stateUpdate.on(this._ctx, () => this._updateSpaceList());
+          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesChanged.emit(this._spaces.get()));
 
-          // NOTE: Must set in a map before initializing.
-          this._spacesMap.set(spaceProxy.key, spaceProxy);
+          newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
 
           emitUpdate = true;
@@ -128,7 +125,7 @@ export class EchoProxy implements Echo {
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._updateSpaceList();
+        this._spacesChanged.emit(newSpaces);
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
@@ -139,12 +136,7 @@ export class EchoProxy implements Echo {
 
   async close() {
     await this._ctx.dispose();
-
-    // TODO(dmaretskyi): Parallelize.
-    for (const space of this._spacesMap.values()) {
-      await space._destroy();
-    }
-    this._spacesMap.clear();
+    await Promise.all(this._spaces.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesChanged.emit([]);
 
     await this._invitationProxy?.close();
@@ -159,10 +151,6 @@ export class EchoProxy implements Echo {
   // Spaces.
   //
 
-  private _updateSpaceList() {
-    this._spacesChanged.emit(Array.from(this._spacesMap.values()));
-  }
-
   /**
    * Creates a new space.
    */
@@ -173,9 +161,10 @@ export class EchoProxy implements Echo {
     const space = await this._serviceProvider.services.SpacesService.createSpace();
 
     await this._spaceCreated.waitForCondition(() => {
-      return this._spacesMap.has(space.spaceKey);
+      return this._spaces.get().some(({ key }) => key.equals(space.spaceKey));
     });
-    const spaceProxy = this._spacesMap.get(space.spaceKey) ?? failUndefined();
+    const spaceProxy =
+      (this._spaces.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     spaceProxy.db.add(new Properties(meta));
@@ -212,7 +201,7 @@ export class EchoProxy implements Echo {
    * Returns an individual space by its key.
    */
   getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._spacesMap.get(spaceKey);
+    return this._spaces.get().find(({ key }) => key.equals(spaceKey));
   }
 
   /**
