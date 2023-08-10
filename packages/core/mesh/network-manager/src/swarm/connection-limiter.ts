@@ -10,15 +10,6 @@ import { ComplexMap } from '@dxos/util';
 
 export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 3;
 
-export interface ConnectionLimiter {
-  /**
-   * @returns Promise that resolves when initiating connections amount is below the limit.
-   */
-  connecting(sessionId: PublicKey): Promise<void>;
-
-  doneConnecting(sessionId: PublicKey): void;
-}
-
 export type ConnectionLimiterOptions = {
   maxConcurrentInitConnections?: number;
 };
@@ -26,7 +17,7 @@ export type ConnectionLimiterOptions = {
 /**
  * Limits the amount of concurrent connections with 'CONNECTING' state.
  */
-export class ConnectionLimiterImpl implements ConnectionLimiter {
+export class ConnectionLimiter {
   private readonly _ctx = new Context();
   private readonly _maxConcurrentInitConnections;
   /**

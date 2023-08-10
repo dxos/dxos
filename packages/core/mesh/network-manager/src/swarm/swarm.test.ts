@@ -15,6 +15,7 @@ import { afterTest, beforeEach, describe, test } from '@dxos/test';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
+import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
 
 describe('Swarm', () => {
@@ -36,7 +37,7 @@ describe('Swarm', () => {
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined,
-      { connecting: async () => {}, doneConnecting: async () => {} },
+      new ConnectionLimiter(),
     );
 
     afterTest(async () => {
