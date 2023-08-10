@@ -18,7 +18,8 @@ import { ComplexSet, humanize } from '@dxos/util';
 
 import { DetailsTable, PanelContainer, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../hooks';
+import { useNavigate } from 'react-router-dom';
 
 const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -112,7 +113,16 @@ const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'FeedKey',
     width: 80,
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    Cell: ({ value, row }: any) => {
+      const setContext = useDevtoolsDispatch();
+      const navigate = useNavigate();
+      const onClick = () => {
+        setContext(ctx => ({ ...ctx, feedKey: row.original.feedKey }));
+        navigate('/echo/feeds');
+      }
+
+      return <a className='font-mono text-blue-800 cursor-pointer' onClick={onClick}>{value}</a>
+    },
     accessor: (block) => {
       const feedKey = block.feedKey;
       return `${feedKey.truncate()}`;
