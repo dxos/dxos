@@ -2,25 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChartConfiguration } from 'chart.js';
-import { ChartJSNodeCanvas, ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
-import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { Client, Config, Invitation, Space, Text, LocalClientServices } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
+import { Space, Text } from '@dxos/client/echo';
+import { Invitation } from '@dxos/client/invitations';
+import { LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { Space as EchoSpace } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
 import { SerializedLogEntry, getReader } from '../analysys';
+import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
 import { PlanResults, TestParams, TestPlan } from './spec-base';
@@ -231,15 +232,28 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         invitation.subscribe((event) => {
           switch (event.state) {
             case Invitation.State.SUCCESS:
-              resolve(this.client.getSpace(event.spaceKey!)!);
+              this.client.spaces.subscribe({
+                next: (spaces) => {
+                  const space = spaces.find((space) => space.key === event.spaceKey);
+                  if (space) {
+                    resolve(space);
+                  }
+                },
+              });
           }
         });
       });
     }
+
+    invariant(
+      this.space,
+      `Space is not defined for agent:${env.params.config.agentIdx} creator:${env.params.config.creator}`,
+    );
     await this.space.waitUntilReady();
   }
 
-  getSpaceBackend = () => this.services.host._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+  getSpaceBackend = (): EchoSpace =>
+    this.services.host?._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 
@@ -324,30 +338,3 @@ type SyncTimeLog = {
   agentIdx: number;
   iter: number;
 };
-
-const renderPNG = async (
-  configuration: ChartConfiguration,
-  opts: ChartJSNodeCanvasOptions = { width: 1920, height: 1080, backgroundColour: 'white' },
-) => {
-  // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
-  const chartJSNodeCanvas = new ChartJSNodeCanvas(opts);
-
-  const image = await chartJSNodeCanvas.renderToBuffer(configuration as any);
-  return image;
-};
-
-const showPng = (data: Buffer) => {
-  const filename = `/tmp/${Math.random().toString(36).substring(7)}.png`;
-  writeFileSync(filename, data);
-  exec(`open ${filename}`);
-};
-
-const BORDER_COLORS = [
-  'rgb(54, 162, 235)', // blue
-  'rgb(255, 99, 132)', // red
-  'rgb(255, 159, 64)', // orange
-  'rgb(255, 205, 86)', // yellow
-  'rgb(75, 192, 192)', // green
-  'rgb(153, 102, 255)', // purple
-  'rgb(201, 203, 207)', // grey
-];

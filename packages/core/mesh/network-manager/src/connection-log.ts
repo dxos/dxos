@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
@@ -68,8 +69,8 @@ export class ConnectionLog {
         this.update.emit();
       });
 
-      (connection.protocol as WireProtocol & { stats: Event<ConnectionInfo.StreamStats[]> })?.stats?.on((stats) => {
-        connectionInfo.streams = stats;
+      (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
+        connectionInfo.streams = stats.channels;
         this.update.emit();
       });
 

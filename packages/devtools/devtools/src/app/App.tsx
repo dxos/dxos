@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Config, Defaults } from '@dxos/react-client';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
+import { Config, Defaults } from '@dxos/react-client';
 
 import { namespace, useRemoteClient } from '../hooks';
 import { Devtools } from './Devtools';

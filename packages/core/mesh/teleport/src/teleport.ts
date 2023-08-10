@@ -11,12 +11,11 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
+import { CreateChannelOpts, Muxer, MuxerStats, RpcPort } from './muxing';
 
 export type TeleportParams = {
   initiator: boolean;
@@ -56,7 +55,6 @@ export class Teleport {
     invariant(typeof initiator === 'boolean');
     invariant(PublicKey.isPublicKey(localPeerId));
     invariant(PublicKey.isPublicKey(remotePeerId));
-    invariant(typeof initiator === 'boolean');
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
@@ -85,13 +83,23 @@ export class Teleport {
         await this.destroy(err);
       });
     }
+
+    this._muxer.statsUpdated.on((stats) => {
+      log.trace('dxos.mesh.teleport.stats', {
+        localPeerId,
+        remotePeerId,
+        bytesSent: stats.bytesSent,
+        bytesReceived: stats.bytesReceived,
+        channels: stats.channels,
+      });
+    });
   }
 
   get stream(): Duplex {
     return this._muxer.stream;
   }
 
-  get stats(): Event<ConnectionInfo.StreamStats[]> {
+  get stats(): Event<MuxerStats> {
     return this._muxer.statsUpdated;
   }
 
@@ -106,7 +114,6 @@ export class Teleport {
 
   async close(err?: Error) {
     // TODO(dmaretskyi): Try soft close.
-
     await this.destroy(err);
   }
 
@@ -208,6 +215,10 @@ export interface TeleportExtension {
   onClose(err?: Error): Promise<void>;
 }
 
+type ControlRpcBundle = {
+  Control: ControlService;
+};
+
 type ControlExtensionOpts = {
   heartbeatInterval: number;
   heartbeatTimeout: number;
@@ -221,12 +232,16 @@ class ControlExtension implements TeleportExtension {
     },
   });
 
+  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
+
   private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
 
-  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
-
   constructor(private readonly opts: ControlExtensionOpts) {}
+
+  async registerExtension(name: string) {
+    await this._rpc.rpc.Control.registerExtension({ name });
+  }
 
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
     this._extensionContext = extensionContext;
@@ -274,12 +289,4 @@ class ControlExtension implements TeleportExtension {
     await this._ctx.dispose();
     await this._rpc.close();
   }
-
-  async registerExtension(name: string) {
-    await this._rpc.rpc.Control.registerExtension({ name });
-  }
 }
-
-type ControlRpcBundle = {
-  Control: ControlService;
-};

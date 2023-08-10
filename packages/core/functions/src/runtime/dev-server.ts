@@ -104,11 +104,16 @@ export class DevServer {
 
     // TODO(burdon): Check plugin is registered.
     //  TypeError: Cannot read properties of undefined (reading 'register')
-    const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
-      endpoint: this.endpoint!,
-      functions: this.functions.map((name) => ({ name })),
-    });
-    this._registrationId = registrationId;
+    try {
+      const { registrationId } = await this._client.services.services.FunctionRegistryService!.register({
+        endpoint: this.endpoint!,
+        functions: this.functions.map((name) => ({ name })),
+      });
+      this._registrationId = registrationId;
+    } catch (err: any) {
+      await this.stop();
+      throw new Error('FunctionRegistryService not available; check config (agent.plugins.functions).');
+    }
   }
 
   async stop() {

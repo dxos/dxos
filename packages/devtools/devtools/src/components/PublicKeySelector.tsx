@@ -7,7 +7,6 @@ import React, { FC } from 'react';
 import { Select } from '@dxos/react-appkit';
 import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
-import { log } from 'console';
 
 export type PublicKeySelectorProps = {
   Icon?: FC;
@@ -15,7 +14,7 @@ export type PublicKeySelectorProps = {
   getLabel?: (key: PublicKey) => string;
   keys: PublicKey[];
   value?: PublicKey;
-  onChange?: (value: PublicKey) => any;
+  onChange?: (key: PublicKey) => any;
 };
 
 export const PublicKeySelector = ({

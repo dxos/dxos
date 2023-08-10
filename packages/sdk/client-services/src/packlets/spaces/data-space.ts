@@ -190,7 +190,7 @@ export class DataSpace {
         await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError) {
-          log('Data pipeline initialization cancelled', err);
+          log('data pipeline initialization cancelled', err);
           return;
         }
 
@@ -208,8 +208,8 @@ export class DataSpace {
     if (this._state !== SpaceState.CONTROL_ONLY) {
       throw new SystemError('Invalid operation');
     }
-    this._state = SpaceState.INITIALIZING;
 
+    this._state = SpaceState.INITIALIZING;
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx: this._ctx,
       breakOnStall: false,
@@ -218,7 +218,7 @@ export class DataSpace {
     this.metrics.controlPipelineReady = new Date();
 
     await this._createWritableFeeds();
-    log('Writable feeds created');
+    log('writable feeds created');
     this.stateUpdate.emit();
 
     if (!this.notarizationPlugin.hasWriter) {
@@ -323,7 +323,6 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-
     for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
       const indexBeforeEpoch = epoch.timeframe.get(feed.key);
       if (indexBeforeEpoch) {
@@ -335,7 +334,7 @@ export class DataSpace {
   @synchronized
   async activate() {
     if (this._state !== SpaceState.INACTIVE) {
-      throw new SystemError('Invalid operation');
+      return;
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.ACTIVE);
@@ -346,10 +345,10 @@ export class DataSpace {
   @synchronized
   async deactivate() {
     if (this._state === SpaceState.INACTIVE) {
-      throw new SystemError('Invalid operation');
+      return;
     }
 
-    // de-register from data service
+    // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
     await this._close();
     this._state = SpaceState.INACTIVE;

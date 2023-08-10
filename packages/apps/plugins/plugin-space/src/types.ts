@@ -11,7 +11,7 @@ export enum SpaceAction {
   JOIN = `${SPACE_ACTION}/join`,
   SHARE = `${SPACE_ACTION}/share`,
   RENAME = `${SPACE_ACTION}/rename`,
-  HIDE = `${SPACE_ACTION}/hide`,
+  CLOSE = `${SPACE_ACTION}/close`,
   BACKUP = `${SPACE_ACTION}/backup`,
   RESTORE = `${SPACE_ACTION}/restore`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,

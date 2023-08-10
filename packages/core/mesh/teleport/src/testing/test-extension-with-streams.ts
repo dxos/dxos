@@ -22,11 +22,10 @@ interface TestExtensionWithStreamsCallbacks {
 export class TestExtensionWithStreams implements TeleportExtension {
   public readonly open = new Trigger();
   public readonly closed = new Trigger();
+  private readonly _streams = new Map<string, TestStream>();
 
   public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestServiceWithStreams: TestServiceWithStreams }>;
-
-  private readonly _streams = new Map<string, TestStream>();
 
   constructor(public readonly callbacks: TestExtensionWithStreamsCallbacks = {}) {}
 
@@ -34,8 +33,8 @@ export class TestExtensionWithStreams implements TeleportExtension {
     return this.extensionContext?.remotePeerId;
   }
 
-  private async _loadStream(streamTag: string, interval = 5, chunkSize = 2048) {
-    assert(!this._streams.has(streamTag), `Stream ${streamTag} already exists.`);
+  private async _openStream(streamTag: string, interval = 5, chunkSize = 2048) {
+    assert(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
 
     const networkStream = await this.extensionContext!.createStream(streamTag, {
       contentType: 'application/x-test-stream',
@@ -81,14 +80,33 @@ export class TestExtensionWithStreams implements TeleportExtension {
     networkStream.on('error', (err) => {
       streamEntry.receiveErrors += 1;
     });
+
+    networkStream.on('close', () => {
+      networkStream.removeAllListeners();
+    });
+
+    streamEntry.reportingTimer = setInterval(() => {
+      const { bytesSent, bytesReceived, sendErrors, receiveErrors } = streamEntry;
+      // log.info('stream stats', { streamTag, bytesSent, bytesReceived, sendErrors, receiveErrors });
+      log.trace('dxos.test.stream-stats', {
+        streamTag,
+        bytesSent,
+        bytesReceived,
+        sendErrors,
+        receiveErrors,
+        from: this.extensionContext?.localPeerId,
+        to: this.extensionContext?.remotePeerId,
+      });
+    }, 100);
   }
 
   private _closeStream(streamTag: string): Stats {
-    assert(this._streams.has(streamTag), `Stream ${streamTag} does not exist.`);
+    assert(this._streams.has(streamTag), `Stream does not exist: ${streamTag}`);
 
     const stream = this._streams.get(streamTag)!;
 
     clearTimeout(stream.timer);
+    clearTimeout(stream.reportingTimer);
 
     const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
@@ -125,7 +143,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
           requestTestStream: async (request) => {
             const { data: streamTag, streamLoadInterval, streamLoadChunkSize } = request;
 
-            await this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
+            await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
 
             return {
               data: streamTag,
@@ -179,7 +197,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     });
     assert(data === streamTag);
 
-    await this._loadStream(streamTag, streamLoadInterval, streamLoadChunkSize);
+    await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
     return streamTag;
   }
 
@@ -192,13 +210,13 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
     assert(data === streamTag);
 
-    const localPeer = this._closeStream(streamTag);
+    const local = this._closeStream(streamTag);
 
     return {
       streamTag,
       stats: {
-        localPeer,
-        remotePeer: {
+        local,
+        remote: {
           bytesSent,
           bytesReceived,
           sendErrors,
@@ -228,8 +246,8 @@ type Stats = {
 export type TestStreamStats = {
   streamTag: string;
   stats: {
-    localPeer: Stats;
-    remotePeer: Stats;
+    local: Stats;
+    remote: Stats;
   };
 };
 
@@ -241,4 +259,5 @@ type TestStream = {
   receiveErrors: number;
   timer?: NodeJS.Timer;
   startTimestamp?: number;
+  reportingTimer?: NodeJS.Timer;
 };

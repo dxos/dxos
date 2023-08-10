@@ -42,10 +42,10 @@ const FeedsPanel = () => {
 
   const devtoolsHost = useDevtools();
   const [refreshCount, setRefreshCount] = useState(0);
-  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
+  const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
 
   const messages = useFeedMessages({ feedKey }).reverse();
-  const meta = feeds.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+  const meta = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
 
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
@@ -58,6 +58,12 @@ const FeedsPanel = () => {
     }
   }, [key]);
 
+  useEffect(() => {
+    if(feedKey && feedKeys.length > 0 && !feedKeys.find(feed => feed.equals(feedKey))) {
+      handleSelect(feedKeys[0]);
+    }
+  }, [JSON.stringify(feedKeys), feedKey])
+
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
   };
@@ -68,7 +74,7 @@ const FeedsPanel = () => {
 
   const getLabel = (key: PublicKey) => {
     const type = space?.internal.data.pipeline?.controlFeeds?.includes(key) ? 'control' : 'data';
-    const meta = feeds.find((feed) => feed.feedKey.equals(key));
+    const meta = feeds?.find((feed) => feed.feedKey.equals(key));
     if (meta) {
       return `${type} (${meta.length})`;
     } else {

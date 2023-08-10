@@ -20,7 +20,7 @@ import {
   useSidebar,
   useTranslation,
 } from '@dxos/aurora';
-import { appTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
+import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
@@ -86,7 +86,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
       <TreeItem.Heading
         asChild
         data-testid='spacePlugin.documentTreeItemHeading'
-        classNames={appTx(
+        classNames={auroraTx(
           'button.root',
           'tree-item__heading--link',
           { variant: 'ghost', density },
@@ -168,12 +168,16 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
                 {menuActions.map((action) => (
                   <DropdownMenu.Item
                     key={action.id}
-                    onClick={(event) => {
+                    onClick={() => {
+                      if (action.disabled) {
+                        return;
+                      }
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
                       void invokeAction(action);
                     }}
                     classNames='gap-2'
+                    disabled={action.disabled}
                   >
                     {action.icon && <action.icon className={getSize(4)} />}
                     <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>

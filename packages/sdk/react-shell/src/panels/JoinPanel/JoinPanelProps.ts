@@ -2,16 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { cloneElement, ComponentProps } from 'react';
-import { Event, SingleOrArray } from 'xstate';
+import { cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation } from '@dxos/react-client/invitations';
 import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
-import { JoinEvent } from './joinMachine';
+import { StepProps } from '../../steps';
+import { JoinSend } from './joinMachine';
 
 export type JoinPanelMode = 'default' | 'halo-only';
+
+export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
+  send: JoinSend;
+  onDone?: (result: InvitationResult | null) => void;
+};
 
 export interface JoinPanelProps {
   mode?: JoinPanelMode;
@@ -27,27 +32,27 @@ export interface JoinPanelProps {
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,
   'mode' | 'onExit' | 'onDone' | 'exitActionParent' | 'doneActionParent'
-> &
-  Pick<JoinStepProps, 'send'> & {
-    titleId: string;
-    activeView: string;
-    failed: Set<'Halo' | 'Space'>;
-    pending: boolean;
-    unredeemedCodes?: Partial<{
-      Halo: string;
-      Space: string;
-    }>;
-    invitationStates?: Partial<{
-      Halo: Invitation.State;
-      Space: Invitation.State;
-    }>;
-    onHaloDone?: () => void;
-    onSpaceDone?: () => void;
-    onHaloInvitationCancel?: () => Promise<void> | undefined;
-    onSpaceInvitationCancel?: () => Promise<void> | undefined;
-    onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
-    onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
-  };
+> & {
+  send: JoinSend;
+  titleId: string;
+  activeView: string;
+  failed: Set<'Halo' | 'Space'>;
+  pending: boolean;
+  unredeemedCodes?: Partial<{
+    Halo: string;
+    Space: string;
+  }>;
+  invitationStates?: Partial<{
+    Halo: Invitation.State;
+    Space: Invitation.State;
+  }>;
+  onHaloDone?: () => void;
+  onSpaceDone?: () => void;
+  onHaloInvitationCancel?: () => Promise<void> | undefined;
+  onSpaceInvitationCancel?: () => Promise<void> | undefined;
+  onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+};
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
@@ -100,11 +105,6 @@ export type JoinView =
   | 'identity added'
   | 'space invitation acceptor'
   | 'halo invitation acceptor';
-
-export interface JoinStepProps extends ComponentProps<'div'> {
-  send: (event: SingleOrArray<Event<JoinEvent>>) => void;
-  active?: boolean;
-}
 
 export interface JoinStateContext {
   activeView: JoinView;

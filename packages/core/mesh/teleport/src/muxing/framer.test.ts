@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 import { pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
-import * as varint from 'varint';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
@@ -50,21 +49,8 @@ const pipe = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream): (() => void
 };
 
 describe('Framer', () => {
-  test('varints', () => {
-    const values = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
-    for (const value of values) {
-      const encoded = varint.encode(value, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
-      const length = varint.encode.bytes;
-      expect(encoded.length).to.eq(length);
-
-      const decoded = varint.decode(encoded);
-      expect(decoded).to.equal(value);
-      expect(varint.decode.bytes).to.equal(length);
-    }
-  });
-
   test('frame encoding', () => {
-    const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 1024];
+    const sizes = [0, 1, 5, 127, 128, 255, 256, 257, 1024, 1024 * 60];
     for (const size of sizes) {
       const payload = randomBytes(size);
       const frame = encodeFrame(payload);

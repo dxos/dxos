@@ -14,7 +14,6 @@ import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Balancer } from './balancer';
-import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
 
 const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
@@ -32,9 +31,17 @@ export type CreateChannelOpts = {
   contentType?: string;
 };
 
+export type MuxerStats = {
+  channels: ConnectionInfo.StreamStats[];
+  bytesSent: number;
+  bytesReceived: number;
+};
+
 const STATS_INTERVAL = 1000;
 
-const SYSTEM_CHANNEL_ID = -1;
+const MAX_SAFE_FRAME_SIZE = 1_000_000;
+
+const SYSTEM_CHANNEL_ID = 0;
 
 /**
  * Channel based multiplexer.
@@ -47,26 +54,23 @@ const SYSTEM_CHANNEL_ID = -1;
  * A higher level API (could be build on top of this muxer) for channel discovery is required.
  */
 export class Muxer {
-  private readonly _framer = new Framer();
-  private readonly _balancer = new Balancer(this._framer.port, SYSTEM_CHANNEL_ID);
-  public readonly stream = this._framer.stream;
-
+  private readonly _balancer = new Balancer(SYSTEM_CHANNEL_ID);
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
+  private readonly _ctx = new Context();
 
-  private _nextId = 0;
+  private _nextId = 1;
   private _destroyed = false;
   private _destroying = false;
 
   public close = new Event<Error | undefined>();
+  public statsUpdated = new Event<MuxerStats>();
 
-  public statsUpdated = new Event<ConnectionInfo.StreamStats[]>();
-
-  private readonly _ctx = new Context();
+  public readonly stream = this._balancer.stream;
 
   constructor() {
     // Add a channel for control messages.
-    this._framer.port.subscribe(async (msg) => {
+    this._balancer.incomingData.on(async (msg) => {
       await this._handleCommand(Command.decode(msg));
     });
 
@@ -196,15 +200,13 @@ export class Muxer {
     }
     this._destroying = true;
 
-    Promise.resolve(
-      this._sendCommand(
-        {
-          destroy: {
-            error: err?.message,
-          },
+    this._sendCommand(
+      {
+        destroy: {
+          error: err?.message,
         },
-        SYSTEM_CHANNEL_ID,
-      ),
+      },
+      SYSTEM_CHANNEL_ID,
     )
       .then(() => {
         this._dispose();
@@ -222,7 +224,6 @@ export class Muxer {
 
     this._destroyed = true;
     this._balancer.destroy();
-    this._framer.destroy();
 
     for (const channel of this._channelsByTag.values()) {
       channel.destroy?.(err);
@@ -278,7 +279,7 @@ export class Muxer {
   private async _sendCommand(cmd: Command, channelId = -1) {
     try {
       const trigger = new Trigger<void>();
-      this._balancer.pushChunk(Command.encode(cmd), trigger, channelId);
+      this._balancer.pushData(Command.encode(cmd), trigger, channelId);
       await trigger.wait();
     } catch (err: any) {
       this.destroy(err);
@@ -309,6 +310,10 @@ export class Muxer {
   }
 
   private async _sendData(channel: Channel, data: Uint8Array): Promise<void> {
+    if (data.length > MAX_SAFE_FRAME_SIZE) {
+      log.warn('frame size exceeds maximum safe value', { size: data.length, threshold: MAX_SAFE_FRAME_SIZE });
+    }
+
     channel.stats.bytesSent += data.length;
     if (channel.remoteId === null) {
       // Remote side has not opened the channel yet.
@@ -339,14 +344,20 @@ export class Muxer {
       return;
     }
 
-    this.statsUpdated.emit(
-      Array.from(this._channelsByTag.values()).map((channel) => ({
+    const bytesSent = this._balancer.bytesSent;
+    const bytesReceived = this._balancer.bytesReceived;
+
+    this.statsUpdated.emit({
+      channels: Array.from(this._channelsByTag.values()).map((channel) => ({
         id: channel.id,
         tag: channel.tag,
+        contentType: channel.contentType,
         bytesSent: channel.stats.bytesSent,
         bytesReceived: channel.stats.bytesReceived,
       })),
-    );
+      bytesSent,
+      bytesReceived,
+    });
   }
 }
 
