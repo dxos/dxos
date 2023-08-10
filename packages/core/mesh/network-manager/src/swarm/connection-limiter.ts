@@ -24,7 +24,7 @@ export type ConnectionLimiterOptions = {
 };
 
 /**
- * Limits the amount of concurrent initiating connections.
+ * Limits the amount of concurrent connections with 'CONNECTING' state.
  */
 export class ConnectionLimiterImpl implements ConnectionLimiter {
   private readonly _ctx = new Context();
