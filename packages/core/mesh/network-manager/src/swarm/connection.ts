@@ -16,7 +16,6 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 import { WireProtocol } from '../wire-protocol';
-import { ConnectionLimiter } from './connection-limiter';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.
@@ -93,7 +92,6 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
-    private readonly _connectionLimiter: ConnectionLimiter,
   ) {}
 
   get state() {
@@ -115,7 +113,6 @@ export class Connection {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
 
-    await this._connectionLimiter.wait();
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.

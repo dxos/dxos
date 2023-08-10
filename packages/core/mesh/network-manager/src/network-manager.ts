@@ -100,7 +100,7 @@ export class NetworkManager {
       leave: (opts) => this._signalManager.leave(opts),
     };
 
-    this._connectionLimiter = new ConnectionLimiterImpl(this);
+    this._connectionLimiter = new ConnectionLimiterImpl();
     // TODO(burdon): Inject listener (generic pattern).
     if (log) {
       this._connectionLog = new ConnectionLog();
