@@ -124,8 +124,9 @@ export class Peer {
       if (!this.connection) {
         // Connection might have been already established.
         invariant(message.sessionId);
+        await this._connectionLimiter.connecting(message.sessionId);
+
         const connection = this._createConnection(false, message.sessionId);
-        await this._connectionLimiter.connecting(connection.sessionId);
 
         try {
           await connection.openConnection();
@@ -149,9 +150,10 @@ export class Peer {
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
+    await this._connectionLimiter.connecting(sessionId);
+
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
-    await this._connectionLimiter.connecting(connection.sessionId);
 
     try {
       const answer = await this._signalMessaging.offer({

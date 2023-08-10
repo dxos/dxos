@@ -6,7 +6,7 @@
 
 import { expect } from 'earljs';
 
-import { sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
 import { afterTest, beforeEach, describe, test } from '@dxos/test';
@@ -104,6 +104,63 @@ describe('Swarm', () => {
 
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
+
+  test('connection limiter', async () => {
+    const peerId = PublicKey.random();
+    const topic1 = PublicKey.random();
+    const topic2 = PublicKey.random();
+    const remotePeerId1 = PublicKey.random();
+    const remotePeerId2 = PublicKey.random();
+
+    const connectionLimiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
+
+    const messageTrigger = new Trigger();
+    const signalManager = new MemorySignalManager(context);
+    // Stop signaling to stop connection in initiation state.
+    const originalSend = signalManager.sendMessage.bind(signalManager);
+    signalManager.sendMessage = async (msg) => {
+      await messageTrigger.wait();
+      return originalSend(msg);
+    };
+
+    const peerToRemotePeerId1 = await setupSwarm({
+      topic: topic1,
+      peerId: remotePeerId1,
+      connectionLimiter,
+      signalManager,
+    });
+    const remotePeerId1toPeer = await setupSwarm({ topic: topic1, peerId });
+
+    const connection1Init = Promise.all([
+      peerToRemotePeerId1.swarm.connectionAdded.waitForCount(1),
+      remotePeerId1toPeer.swarm.connectionAdded.waitForCount(1),
+    ]);
+
+    const connected1 = connectSwarms(peerToRemotePeerId1, remotePeerId1toPeer);
+    // Connection limiter allow only one connection to be initiated.
+    await connection1Init;
+
+    const peerToRemotePeerId2 = await setupSwarm({
+      topic: topic2,
+      peerId: remotePeerId2,
+      connectionLimiter,
+      signalManager,
+    });
+    const remotePeerId2toPeer = await setupSwarm({ topic: topic2, peerId });
+    const connection2Init = Promise.all([
+      peerToRemotePeerId2.swarm.connectionAdded.waitForCount(1),
+      remotePeerId2toPeer.swarm.connectionAdded.waitForCount(1),
+    ]);
+    const connected2 = connectSwarms(peerToRemotePeerId2, remotePeerId2toPeer);
+
+    // Connection limiter should prevent connection from being initiated.
+    await expect(asyncTimeout(connection2Init, 50)).toBeRejected();
+
+    // Allow connection to be initiated.
+    messageTrigger.wake();
+    await connected1;
+    await connected2;
+  });
 });
 
 const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () => {}) => {
