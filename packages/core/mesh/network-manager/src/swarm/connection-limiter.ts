@@ -37,13 +37,11 @@ export class ConnectionLimiterImpl implements ConnectionLimiter {
   );
 
   resolveWaitingPromises = new DeferredTask(this._ctx, async () => {
-    if (this._waitingPromises.size < this._maxConcurrentInitConnections) {
-      Array.from(this._waitingPromises.values())
-        .slice(0, this._maxConcurrentInitConnections - this._waitingPromises.size)
-        .forEach(({ resolve }) => {
-          resolve();
-        });
-    }
+    Array.from(this._waitingPromises.values())
+      .slice(0, this._maxConcurrentInitConnections)
+      .forEach(({ resolve }) => {
+        resolve();
+      });
   });
 
   constructor({ maxConcurrentInitConnections = MAX_CONCURRENT_INITIATING_CONNECTIONS }: ConnectionLimiterOptions = {}) {
@@ -71,7 +69,9 @@ export class ConnectionLimiterImpl implements ConnectionLimiter {
    * Rejects promise returned by `connecting` method.
    */
   doneConnecting(sessionId: PublicKey) {
-    invariant(this._waitingPromises.has(sessionId), 'Peer is not waiting for connection');
+    if (!this._waitingPromises.has(sessionId)) {
+      return;
+    }
     this._waitingPromises.get(sessionId)!.reject();
     this.resolveWaitingPromises.schedule();
   }
