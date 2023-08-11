@@ -4,7 +4,7 @@
 
 import invariant from 'tiny-invariant';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
@@ -24,6 +24,8 @@ import { Timeframe } from '@dxos/timeframe';
 import { Client } from '../client';
 import { getPlatform, Platform } from './platform';
 import { jsonStringify, JsonStringifyOptions } from './util';
+
+const DEFAULT_DIAGNOSTICS_TIMEOUT = 1000;
 
 export type Diagnostics = {
   created: string;
@@ -72,7 +74,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
 
   const data: Diagnostics = {
     created: new Date().toISOString(),
-    platform: await getPlatform(),
+    platform: getPlatform(),
     client: {
       version: client.version,
       storage: {
@@ -91,7 +93,10 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     const stream = client.services.services.LoggingService!.queryMetrics({});
     const trigger = new Trigger<Metrics>();
     stream?.subscribe(async (metrics) => trigger.wake(metrics!));
-    data.metrics = await trigger.wait();
+    data.metrics = await asyncTimeout(trigger.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
+      log.warn('Metics take to long to query.');
+      return undefined;
+    });
   }
 
   if (identity) {
@@ -141,7 +146,9 @@ const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.Spa
   if (type === 'echo' && info.isOpen) {
     const space = client.getSpace(info.key);
     invariant(space);
-    await space.waitUntilReady();
+    await asyncTimeout(space.waitUntilReady(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
+      log.warn('Space takes to long to get ready.s');
+    });
 
     // TODO(burdon): Other stats from internal.data.
     Object.assign(stats, {
@@ -190,7 +197,9 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
       }
     });
 
-    await done.wait();
+    await asyncTimeout(done.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
+      log.warn('Epochs take to long to query.');
+    });
     stream.close();
   }
 
