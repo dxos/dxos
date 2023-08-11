@@ -41,6 +41,7 @@ describe('SystemService', () => {
       onReset: () => {
         reset.wake(true);
       },
+      getDiagnostics: async () => undefined,
     });
   });
 

@@ -40,6 +40,7 @@ describe('service registry', () => {
         onReset: () => {},
         onUpdateStatus: () => {},
         statusUpdate: new Event(),
+        getDiagnostics: async () => undefined,
       }),
     });
 

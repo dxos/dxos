@@ -31,6 +31,7 @@ import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { createDiagnostics } from './diagnostics';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
@@ -133,6 +134,10 @@ export class ClientServicesHost {
       onReset: async () => {
         await this.reset();
       },
+
+      getDiagnostics: () => {
+        return createDiagnostics(this, {}); // TODO(dmaretskyi): options.
+      }
     });
 
     this._loggingService = new LoggingServiceImpl();
@@ -145,6 +150,10 @@ export class ClientServicesHost {
 
   get isOpen() {
     return this._open;
+  }
+
+  get config() {
+    return this._config;
   }
 
   get serviceRegistry() {

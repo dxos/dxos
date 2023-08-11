@@ -20,6 +20,7 @@ export type SystemServiceOptions = {
   getCurrentStatus: () => SystemStatus;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
+  getDiagnostics: () => Promise<any>;
 };
 
 export class SystemServiceImpl implements SystemService {
@@ -28,13 +29,15 @@ export class SystemServiceImpl implements SystemService {
   private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
   private readonly _onUpdateStatus: SystemServiceOptions['onUpdateStatus'];
   private readonly _onReset: SystemServiceOptions['onReset'];
+  private readonly _getDiagnostics: SystemServiceOptions['getDiagnostics'];
 
-  constructor({ config, statusUpdate, onUpdateStatus, getCurrentStatus, onReset }: SystemServiceOptions) {
+  constructor({ config, statusUpdate, onUpdateStatus, getCurrentStatus, onReset, getDiagnostics }: SystemServiceOptions) {
     this._config = config;
     this._statusUpdate = statusUpdate;
     this._getCurrentStatus = getCurrentStatus;
     this._onUpdateStatus = onUpdateStatus;
     this._onReset = onReset;
+    this._getDiagnostics = getDiagnostics;
   }
 
   async getConfig() {
@@ -60,6 +63,10 @@ export class SystemServiceImpl implements SystemService {
         unsubscribe();
       };
     });
+  }
+
+  async getDiagnostics() {
+    return this._getDiagnostics()
   }
 
   async reset() {
