@@ -128,7 +128,7 @@ import { useSpaces, useQuery } from '@dxos/react-client/echo';
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx file=./snippets/counter-1.tsx#L14-24
+```tsx file=./snippets/counter-1.tsx#L14-
 const [counter] = useQuery(space, { type: 'counter' });
 
 return (
@@ -155,7 +155,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 Above the `return` statement, add the following effect:
 
-```tsx file=./snippets/counter-2.tsx#L13-18
+```tsx file=./snippets/counter-2.tsx#L13-
 useEffect(() => {
   if (space && !counter) {
     const counter = new Expando({ type: 'counter', values: [] });
@@ -176,7 +176,7 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{20-27} file=./snippets/counter-2.tsx#L5-37
+```tsx{20-27} file=./snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
