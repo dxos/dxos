@@ -49,7 +49,9 @@ const SelectRoot: FunctionComponent<SelectRootProps> = ({ children, density: pro
   );
 };
 
-const SelectTrigger: FunctionComponent<SelectPrimitiveTriggerProps> = ({ children, placeholder, ...props }) => {
+type SelectTriggerProps = SelectPrimitiveTriggerProps;
+
+const SelectTrigger: FunctionComponent<SelectTriggerProps> = ({ children, placeholder, ...props }) => {
   const { tx } = useThemeContext();
   // const elevation = useElevationContext(propsElevation);
   const density = useDensityContext();
@@ -115,7 +117,7 @@ export const Select = {
 
 export type {
   SelectRootProps,
-  // SelectTriggerProps,
+  SelectTriggerProps,
   SelectContentProps,
   SelectGroupProps,
   SelectItemProps,
