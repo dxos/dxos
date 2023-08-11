@@ -23,7 +23,7 @@ export class ConnectionLimiter {
   /**
    * Queue of promises to resolve when initiating connections amount is below the limit.
    */
-  private readonly _waitingPromises = new ComplexMap<PublicKey, { resolve: () => void; reject: () => void }>(
+  private readonly _waitingPromises = new ComplexMap<PublicKey, { resolve: () => void; reject: (err: Error) => void }>(
     PublicKey.hash,
   );
 
@@ -47,10 +47,7 @@ export class ConnectionLimiter {
     return new Promise((resolve, reject) => {
       this._waitingPromises.set(sessionId, {
         resolve,
-        reject: () => {
-          reject(new Error('Done connecting'));
-          this._waitingPromises.delete(sessionId);
-        },
+        reject,
       });
       this.resolveWaitingPromises.schedule();
     });
@@ -63,7 +60,8 @@ export class ConnectionLimiter {
     if (!this._waitingPromises.has(sessionId)) {
       return;
     }
-    this._waitingPromises.get(sessionId)!.reject();
+    this._waitingPromises.get(sessionId)!.reject(new Error('Done connecting'));
+    this._waitingPromises.delete(sessionId);
     this.resolveWaitingPromises.schedule();
   }
 }

@@ -106,7 +106,8 @@ describe('Swarm', () => {
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 
-  test('connection limiter', async () => {
+  test.repeat(100)('connection limiter', async () => {
+    // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
     const peerId = PublicKey.random();
     const topic = PublicKey.random();
     const connectionLimiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
@@ -131,14 +132,14 @@ describe('Swarm', () => {
       signalManager,
     });
 
-    const remotePeer1 = await setupSwarm({ topic, signalManager });
-    const remotePeer2 = await setupSwarm({ topic, signalManager });
+    const remotePeer1 = await setupSwarm({ topic });
+    const remotePeer2 = await setupSwarm({ topic });
 
     let connected1: Promise<void>;
     {
       // Connection limiter allow only one connection to be started.
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected1 = connectSwarms(peer, remotePeer1).catch(() => {});
+      connected1 = connectSwarms(peer, remotePeer1);
       await asyncTimeout(connectionInit, 1000);
     }
 
@@ -146,7 +147,7 @@ describe('Swarm', () => {
     {
       // Connection limiter should prevent second connection from being started (only created).
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected2 = connectSwarms(peer, remotePeer2).catch(() => {});
+      connected2 = connectSwarms(peer, remotePeer2);
       await asyncTimeout(connectionInit, 1000);
     }
 

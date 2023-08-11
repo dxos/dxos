@@ -24,7 +24,7 @@ import { Connection, ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
 
-const INITIATION_DELAY = 100;
+const INITIATION_DELAY = 600;
 
 // TODO(burdon): Factor out.
 const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;

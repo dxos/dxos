@@ -82,6 +82,8 @@ export class Peer {
 
   public initiating = false;
 
+  private readonly index = getId(this);
+
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -125,7 +127,14 @@ export class Peer {
         // Connection might have been already established.
         invariant(message.sessionId);
 
+        log.info('PEER ON_OFFER CONNECTION LIMITER CONNECTING', {
+          index: this.index,
+          localPeerId: this.localPeerId.truncate(),
+          sessionId: message.sessionId.truncate(),
+        });
+
         const connection = this._createConnection(false, message.sessionId);
+
         try {
           await this._connectionLimiter.connecting(message.sessionId);
           await connection.openConnection();
@@ -154,7 +163,13 @@ export class Peer {
     this.initiating = true;
 
     try {
+      log.info('PEER INITIATE CONNECTION LIMITER CONNECTING', {
+        index: this.index,
+        localPeerId: this.localPeerId.truncate(),
+        sessionId: sessionId.truncate(),
+      });
       await this._connectionLimiter.connecting(sessionId);
+
       const answer = await this._signalMessaging.offer({
         author: this.localPeerId,
         recipient: this.id,
@@ -220,6 +235,12 @@ export class Peer {
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
+
+          log.info('PEER CONNECTED CONNECTION LIMITER DONE', {
+            index: this.index,
+            localPeerId: this.localPeerId.truncate(),
+            sessionId: sessionId.truncate(),
+          });
           this._connectionLimiter.doneConnecting(sessionId);
           break;
         }
@@ -238,6 +259,12 @@ export class Peer {
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
+          log.info('PEER CLOSED CONNECTION LIMITER DONE', {
+            index: this.index,
+            localPeerId: this.localPeerId.truncate(),
+
+            sessionId: sessionId.truncate(),
+          });
           this._connectionLimiter.doneConnecting(sessionId);
 
           scheduleTask(
@@ -308,4 +335,18 @@ const increaseInterval = (interval: number) => {
     return 5_000;
   }
   return 10_000;
+};
+
+const ids = new WeakMap<any, number>();
+let nextId = 0;
+
+const getId = (obj) => {
+  let id = ids.get(obj);
+  if (id !== undefined) {
+    return id;
+  }
+
+  id = nextId++;
+  ids.set(obj, id);
+  return id;
 };
