@@ -129,17 +129,18 @@ import { useSpaces, useQuery } from '@dxos/react-client/echo';
 In the `Counter` component, replace the `return` with the following:
 
 ```tsx file=./snippets/counter-1.tsx#L14-
-const [counter] = useQuery(space, { type: 'counter' });
+  const [counter] = useQuery(space, { type: 'counter' });
 
-return (
-  <div>
-    {counter && (
-      <div className='text-center'>
-        Clicked {counter.values.length ?? 0} times.
-      </div>
-    )}
-  </div>
-);
+  return (
+    <div>
+      {counter && (
+        <div className='text-center'>
+          Clicked {counter.values.length ?? 0} times.
+        </div>
+      )}
+    </div>
+  );
+};
 ```
 
 `useQuery` allows you to search the database for objects that match the query. In our case, we are searching for objects that have a key and value of `type: 'counter'`. The first time this query executes, there is no object that matches it.
@@ -150,7 +151,6 @@ Grab an `Expando`:
 
 ```tsx file=./snippets/counter-2.tsx#L6
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
 ```
 
 Above the `return` statement, add the following effect:
@@ -233,9 +233,9 @@ What's going on behind the scenes? The two peers are communicating directly, pee
 
 You may wonder why we chose to represent a counter as an array when an integer would be simpler. ECHO uses [CRDTs](https://crdt.tech/) to ensure the state remains consistent. If we used an integer to represent the count, the algorithm for updating the state effectively becomes "last write wins" and short-circuits the CRDT. Consider how each client would update the count, assuming it was an integer:
 
-1. Grab the most recent count value.
-2. Increment the count value by 1.
-3. Save the count value to the shared state.
+1.  Grab the most recent count value.
+2.  Increment the count value by 1.
+3.  Save the count value to the shared state.
 
 If both peers click the button at the exact same time, the count _should_ increase by 2. But it will increase by 1. Why? Each of them started with the same number and did the same operation of incrementing by 1.
 
@@ -255,11 +255,11 @@ DXOS apps are static apps that rely on peer-to-peer networking and client-side r
 
 For the sake of simplicity, we will deploy the app's static assets to Netlify. These instructions should be easy to cross-apply to any hosting provider, including Vercel, GitHub Pages, Cloudflare, etc.
 
-1. Go to "Add new site" in Netlify, and click "Import an existing project."
-2. Link to your application's repository.
-   - Set the build command to `npm run build`
-   - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
-3. Publish!
+1.  Go to "Add new site" in Netlify, and click "Import an existing project."
+2.  Link to your application's repository.
+    - Set the build command to `npm run build`
+    - Set the output directory to `out/shared-counter` (To customize this, change `vite.config.ts`)
+3.  Publish!
 
 That's it. Your app is now live!
 
