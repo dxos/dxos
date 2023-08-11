@@ -23,6 +23,25 @@ import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
+  test('creates a default space', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    await waitForExpect(() => {
+      expect(client.getSpace()).not.to.be.undefined;
+    });
+    const space = client.getSpace()!;
+    await testSpace(space.internal.db);
+
+    expect(space.members.get()).to.be.length(1);
+  });
+
   test('creates a space', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
@@ -73,8 +92,7 @@ describe('Spaces', () => {
 
     let itemId: string;
     {
-      // TODO(burdon): API (client.echo/client.halo).
-      const space = await client.createSpace();
+      const space = client.getSpace()!;
       const {
         objectsUpdated: [item],
       } = await testSpace(space.internal.db);

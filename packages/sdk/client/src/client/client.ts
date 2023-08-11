@@ -25,14 +25,12 @@ import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/p
 import { isNode, MaybePromise } from '@dxos/util';
 
 import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
-import type { EchoProxy } from '../echo';
+import { defaultKey, type EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
 import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
-
-// TODO(burdon): Define package-specific errors.
 
 /**
  * This options object configures the DXOS Client
@@ -185,8 +183,10 @@ export class Client {
 
   /**
    * Get an existing space by its key.
+   *
+   * If no key is specified the default space is returned.
    */
-  getSpace(spaceKey: PublicKey): Space | undefined {
+  getSpace(spaceKey?: PublicKey): Space | undefined {
     return this._echo.getSpace(spaceKey);
   }
 
@@ -230,13 +230,18 @@ export class Client {
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 
+    const handleIdentityCreated = async () => {
+      const defaultSpace = await this.createSpace();
+      defaultSpace.properties[defaultKey] = true;
+    };
+
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
     const monitor = new Monitor(this._services);
     const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
+    const halo = new HaloProxy(this._services, handleIdentityCreated, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
     this._runtime = new ClientRuntime({ monitor, echo, halo, mesh });
 

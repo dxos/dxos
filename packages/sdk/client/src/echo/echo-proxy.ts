@@ -8,13 +8,12 @@ import invariant from 'tiny-invariant';
 import { Event, scheduleTask, Trigger, MulticastObservable } from '@dxos/async';
 import { CREATE_SPACE_TIMEOUT, ClientServicesProvider, Echo, Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { failUndefined, inspectObject, raise, todo } from '@dxos/debug';
+import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
-import { ApiError, SystemError } from '@dxos/errors';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -22,6 +21,9 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { InvitationsProxy } from '../invitations';
 import { Properties, PropertiesProps } from '../proto';
 import { SpaceProxy } from './space-proxy';
+
+// TODO(wittjosiah): Remove. Default space should be indicated by internal metadata.
+export const defaultKey = '__DEFAULT__';
 
 export class EchoProxy implements Echo {
   private _ctx!: Context;
@@ -56,20 +58,6 @@ export class EchoProxy implements Echo {
 
   get modelFactory(): ModelFactory {
     return this._modelFactory;
-  }
-
-  /**
-   * @deprecated
-   */
-  get networkManager(): NetworkManager {
-    return 'echo' in this._serviceProvider
-      ? (this._serviceProvider as any).echo.networkManager
-      : raise(new SystemError('Network manager not available in service proxy.'));
-  }
-
-  // TODO(burdon): ???
-  get opened() {
-    return this._invitationProxy !== undefined;
   }
 
   get spaces() {
@@ -199,8 +187,14 @@ export class EchoProxy implements Echo {
 
   /**
    * Returns an individual space by its key.
+   *
+   * If no key is specified the default space is returned.
    */
-  getSpace(spaceKey: PublicKey): Space | undefined {
+  getSpace(spaceKey?: PublicKey): Space | undefined {
+    if (!spaceKey) {
+      return this.spaces.get().find((space) => space.properties[defaultKey]);
+    }
+
     return this._spaces.get().find(({ key }) => key.equals(spaceKey));
   }
 
@@ -208,11 +202,11 @@ export class EchoProxy implements Echo {
    * Initiates an interactive accept invitation flow.
    */
   acceptInvitation(invitation: Invitation) {
-    if (!this.opened) {
+    if (!this._invitationProxy) {
       throw new ApiError('Client not open.');
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy!.acceptInvitation(invitation);
+    return this._invitationProxy.acceptInvitation(invitation);
   }
 }
