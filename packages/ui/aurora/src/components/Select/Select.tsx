@@ -25,7 +25,6 @@ import {
 } from '@radix-ui/react-select';
 import React, { FunctionComponent } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
 import { Density, Elevation } from '@dxos/aurora-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -79,7 +78,7 @@ const SelectContent: FunctionComponent<SelectContentProps> = ({ children }) => {
   const { tx } = useThemeContext();
   return (
     <SelectPrimitivePortal className={tx('select.content', 'content')}>
-      <SelectPrimitiveContent className={mx('z-[50]')}>
+      <SelectPrimitiveContent className='z-[50]'>
         <SelectPrimitiveViewport>{children}</SelectPrimitiveViewport>
       </SelectPrimitiveContent>
     </SelectPrimitivePortal>
