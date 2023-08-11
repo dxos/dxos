@@ -97,7 +97,11 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost, o
   if (identity) {
     const devices = await getFirstStreamValue(clientServiceHost.services.DevicesService!.queryDevices(), { timeout: DEFAULT_DIAGNOSTICS_TIMEOUT }).catch(() => undefined);
     Object.assign(data, {
-      identity,
+      identity: {
+        identityKey: identity.identityKey,
+        spaceKey: identity.space.key,
+        profile: identity.profileDocument,
+      },
       devices,
     });
 
