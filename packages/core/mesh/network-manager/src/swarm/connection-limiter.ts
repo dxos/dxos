@@ -48,7 +48,7 @@ export class ConnectionLimiter {
       this._waitingPromises.set(sessionId, {
         resolve,
         reject: () => {
-          reject(new Error('Finished waiting for connection'));
+          reject(new Error('Done connecting'));
           this._waitingPromises.delete(sessionId);
         },
       });

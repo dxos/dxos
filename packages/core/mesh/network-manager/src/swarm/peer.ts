@@ -126,9 +126,8 @@ export class Peer {
         invariant(message.sessionId);
 
         const connection = this._createConnection(false, message.sessionId);
-        await this._connectionLimiter.connecting(message.sessionId);
-
         try {
+          await this._connectionLimiter.connecting(message.sessionId);
           await connection.openConnection();
         } catch (err: any) {
           log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
@@ -152,10 +151,10 @@ export class Peer {
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
 
     const connection = this._createConnection(true, sessionId);
-    await this._connectionLimiter.connecting(sessionId);
     this.initiating = true;
 
     try {
+      await this._connectionLimiter.connecting(sessionId);
       const answer = await this._signalMessaging.offer({
         author: this.localPeerId,
         recipient: this.id,

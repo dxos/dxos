@@ -10,6 +10,7 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
 import { afterTest, beforeEach, describe, test } from '@dxos/test';
+import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
@@ -105,17 +106,20 @@ describe('Swarm', () => {
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 
-  test.only('connection limiter', async () => {
+  test('connection limiter', async () => {
     const peerId = PublicKey.random();
     const topic = PublicKey.random();
-
     const connectionLimiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
 
     const unfreeze = new Trigger();
     const signalManager = new MemorySignalManager(context);
-    // Stop signaling to stop connection in initiation state.
+    const messages = new ComplexSet<{ author: PublicKey; recipient: PublicKey }>(
+      ({ author, recipient }) => author.toHex() + recipient.toHex(),
+    );
+    // Stop signaling to freeze connection in initiation state.
     const originalSend = signalManager.sendMessage.bind(signalManager);
     signalManager.sendMessage = async (msg) => {
+      messages.add({ author: PublicKey.from(msg.author), recipient: PublicKey.from(msg.recipient) });
       await unfreeze.wait();
       return originalSend(msg);
     };
@@ -126,33 +130,35 @@ describe('Swarm', () => {
       connectionLimiter,
       signalManager,
     });
+
     const remotePeer1 = await setupSwarm({ topic, signalManager });
     const remotePeer2 = await setupSwarm({ topic, signalManager });
 
+    let connected1: Promise<void>;
     {
-      // Connection limiter allow only one connection to be initiated.
-      const connection1Init = Promise.all([
-        peer.swarm.connectionAdded.waitForCount(1),
-        remotePeer1.swarm.connectionAdded.waitForCount(1),
-      ]);
+      // Connection limiter allow only one connection to be started.
+      const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
+      connected1 = connectSwarms(peer, remotePeer1).catch(() => {});
+      await asyncTimeout(connectionInit, 1000);
+    }
 
-      void connectSwarms(peer, remotePeer1).catch(() => {});
-      await asyncTimeout(connection1Init, 1000);
+    let connected2: Promise<void>;
+    {
+      // Connection limiter should prevent second connection from being started (only created).
+      const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
+      connected2 = connectSwarms(peer, remotePeer2).catch(() => {});
+      await asyncTimeout(connectionInit, 1000);
     }
 
     {
-      // Connection limiter should prevent second connection from being initiated.
-      const connection2Init = peer.swarm.connectionAdded.waitForCount(1);
-      void connectSwarms(peer, remotePeer2).catch(() => {});
-
-      await expect(asyncTimeout(connection2Init, 50)).toBeRejected();
+      // Peer sent messages only to first remote peer.
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer1.peerId })).toEqual(true);
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer2.peerId })).toEqual(false);
     }
 
     // Unfreeze signaling.
     unfreeze.wake();
-
-    await connectSwarms(peer, remotePeer1);
-    await connectSwarms(peer, remotePeer2);
+    await Promise.all([connected1, connected2]);
   });
 });
 
@@ -182,7 +188,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
       ConnectionState.CONNECTED
     )
   ) {
-    await asyncTimeout(connect1, 5000);
+    await asyncTimeout(connect1, 1000);
   }
   if (
     !(
@@ -190,7 +196,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
       ConnectionState.CONNECTED
     )
   ) {
-    await asyncTimeout(connect2, 5000);
+    await asyncTimeout(connect2, 1000);
   }
 
   await peer1.protocol.testConnection(peer2.peerId);
