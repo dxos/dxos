@@ -11,9 +11,6 @@ import { useClientServices } from '@dxos/react-client';
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
-// TODO(burdon): Restructure sections (panels).
-// TODO(burdon): Sections as hook.
-
 const Footer = () => {
   const services = useClientServices();
   if (!services) {
@@ -21,14 +18,16 @@ const Footer = () => {
   }
 
   return (
-    <div className='flex flex-col shrink-0 p-2'>
-      {/* Print current package version */}
-      {process.env.PACKAGE_VERSION && (
-        <div className='flex flex-row justify-center p-2'>
-          <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
+    <>
+      <div className='flex-1' />
+      <div className='flex flex-col shrink-0 justify-center p-2 space-y-2'>
+        <div className='flex shrink-1 justify-center'>
+          {process.env.PACKAGE_VERSION && (
+            <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 
@@ -51,7 +50,6 @@ export const RootContainer = () => {
           selected={pathname}
           onSelect={handleSelect}
         />
-        <div className='flex-1' />
         <Footer />
       </div>
 

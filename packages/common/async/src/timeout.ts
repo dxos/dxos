@@ -29,29 +29,33 @@ export const sleep = (ms: number) => {
 /**
  * Wait for promise or throw error.
  */
-// prettier-ignore
-export const asyncTimeout = <T>(
+export const asyncTimeout = async <T>(
   promise: Promise<T> | (() => Promise<T>),
   timeout: number,
-  err?: Error | string
+  err?: Error | string,
 ): Promise<T> => {
-  const throwable = (err === undefined || typeof err === 'string') ? new TimeoutError(timeout, err) : err;
-  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
-
   let timeoutId: NodeJS.Timeout;
+  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
     timeoutId = setTimeout(() => {
       reject(throwable);
     }, timeout);
 
-    // In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
-    // https://nodejs.org/api/timers.html#timeoutunref
-    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-      timeoutId.unref();
-    }
+    unrefTimeout(timeoutId);
   });
 
-  return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
+  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
+  return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
+};
+
+/**
+ * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+ * https://nodejs.org/api/timers.html#timeoutunref
+ */
+export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+    timeoutId.unref();
+  }
 };

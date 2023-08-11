@@ -280,8 +280,14 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
         ],
       },
       choosingIdentity: {
-        initial: 'choosingAuthMethod',
+        initial: 'unknownAuthMethod',
         states: {
+          unknownAuthMethod: {
+            always: [
+              { cond: 'hasHaloUnredeemedCode', target: 'acceptingHaloInvitation', actions: 'log' },
+              { target: 'choosingAuthMethod', actions: 'log' },
+            ],
+          },
           choosingAuthMethod: {},
           recoveringIdentity: {},
           creatingIdentity: {},
@@ -312,7 +318,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
   {
     guards: {
       noSelectedIdentity: ({ identity }, _event) => !identity,
-      noHaloInvitation: ({ halo }, _event) => !halo.invitation && !halo.unredeemedCode,
+      hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },
     actions: {
@@ -376,7 +382,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
 type JoinMachine = typeof joinMachine;
 
 type JoinState = StateFrom<JoinMachine>;
-type JoinSend = InterpreterFrom<JoinMachine>['send'];
+type JoinSendVoid = (...params: Parameters<InterpreterFrom<JoinMachine>['send']>) => void;
+type JoinSend = InterpreterFrom<JoinMachine>['send'] | JoinSendVoid;
 
 const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   try {

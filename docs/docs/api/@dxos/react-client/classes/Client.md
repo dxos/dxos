@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/packlets/client/client.d.ts:28]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:30]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version]()
-Type: <code>"0.1.52"</code>
+Type: <code>"0.1.55"</code>
 
 The version of this client API
 
@@ -29,10 +29,10 @@ Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 Current configuration object
 
 ### [dbRouter]()
-Type: <code>[DatabaseRouter](/api/@dxos/react-client/classes/DatabaseRouter)</code>
+Type: <code>DatabaseRouter</code>
 
 ### [halo]()
-Type: <code>[HaloProxy](/api/@dxos/react-client/classes/HaloProxy)</code>
+Type: <code>HaloProxy</code>
 
 HALO credentials.
 
@@ -42,12 +42,12 @@ Type: <code>boolean</code>
 Returns true if the client has been initialized. Initialize by calling  `.initialize()`
 
 ### [mesh]()
-Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
+Type: <code>MeshProxy</code>
 
 MESH networking.
 
 ### [monitor]()
-Type: <code>[Monitor](/api/@dxos/react-client/classes/Monitor)</code>
+Type: <code>Monitor</code>
 
 Debug monitor.
 
@@ -57,7 +57,7 @@ Type: <code>[ClientServicesProvider](/api/@dxos/react-client/interfaces/ClientSe
 Current client services provider.
 
 ### [spaces]()
-Type: <code>MulticastObservable&lt;[Space](/api/@dxos/react-client/interfaces/Space)[]&gt;</code>
+Type: <code>MulticastObservable&lt;Space[]&gt;</code>
 
 ECHO spaces.
 
@@ -83,11 +83,11 @@ Arguments: none
 Accept an invitation to a space.
 
 
-Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/react-client/classes/AuthenticatingInvitationObservable)</code>
+Returns: <code>AuthenticatingInvitationObservable</code>
 
 Arguments: 
 
-`invitation`: <code>[Invitation](/api/@dxos/react-client/interfaces/Invitation)</code>
+`invitation`: <code>Invitation</code>
 
 ### [addSchema(schema)]()
 
@@ -97,15 +97,7 @@ Returns: <code>void</code>
 
 Arguments: 
 
-`schema`: <code>[EchoSchema](/api/@dxos/react-client/classes/EchoSchema)</code>
-
-### [createSerializer()]()
-
-
-
-Returns: <code>[SpaceSerializer](/api/@dxos/react-client/classes/SpaceSerializer)</code>
-
-Arguments: none
+`schema`: <code>EchoSchema</code>
 
 ### [createSpace(\[meta\])]()
 
@@ -114,11 +106,11 @@ Arguments: none
 Creates a new space.
 
 
-Returns: <code>Promise&lt;[Space](/api/@dxos/react-client/interfaces/Space)&gt;</code>
+Returns: <code>Promise&lt;Space&gt;</code>
 
 Arguments: 
 
-`meta`: <code>[PropertiesProps](/api/@dxos/react-client/types/PropertiesProps)</code>
+`meta`: <code>PropertiesProps</code>
 
 ### [destroy()]()
 
@@ -132,6 +124,19 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
+### [diagnostics(\[opts\])]()
+
+
+
+Get client diagnostics data.
+
+
+Returns: <code>Promise&lt;Diagnostics&gt;</code>
+
+Arguments: 
+
+`opts`: <code>JsonStringifyOptions</code>
+
 ### [getSpace(spaceKey)]()
 
 
@@ -139,7 +144,7 @@ Arguments: none
 Get an existing space by its key.
 
 
-Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
+Returns: <code>undefined | Space</code>
 
 Arguments: 
 

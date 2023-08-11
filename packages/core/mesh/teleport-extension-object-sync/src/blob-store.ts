@@ -3,11 +3,11 @@
 //
 
 import path from 'node:path';
-import invariant from 'tiny-invariant';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
@@ -62,7 +62,7 @@ export class BlobStore {
     const endChunk = Math.ceil((offset + length) / metadata.chunkSize);
 
     invariant(metadata.bitfield, 'Bitfield not present');
-    invariant(metadata.bitfield.length >= endChunk, 'Invalid bitfield length');
+    invariant(metadata.bitfield.length * 8 >= endChunk, 'Invalid bitfield length');
 
     const present = BitField.count(metadata.bitfield, beginChunk, endChunk) === endChunk - beginChunk;
 

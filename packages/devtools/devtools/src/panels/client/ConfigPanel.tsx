@@ -2,28 +2,28 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Config } from '@dxos/protocols/proto/dxos/config';
+// import { Config } from '@dxos/protocols/proto/dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
-import { useClientServices } from '@dxos/react-client';
+import { useClientServices, useConfig } from '@dxos/react-client';
 
 import { JsonView, PanelContainer } from '../../components';
 
 const ConfigPanel = () => {
+  const config = useConfig();
   const services = useClientServices();
-  if (!services) {
-    return null;
-  }
-
-  const [config, setConfig] = useState<Config>({});
+  // const [config, setConfig] = useState<Config>({});
   useAsyncEffect(async () => {
-    setConfig(await services.SystemService.getConfig());
-  }, []);
+    if (services) {
+      // const config = await services.SystemService.getConfig();
+      // setConfig(config);
+    }
+  }, [services]);
 
   return (
     <PanelContainer>
-      <JsonView data={config} />
+      <JsonView data={config.values} />
     </PanelContainer>
   );
 };

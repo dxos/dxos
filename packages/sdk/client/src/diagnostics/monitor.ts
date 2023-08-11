@@ -6,8 +6,7 @@ import { ClientServicesProvider } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-
-import { createBucketReducer, createGroupReducer, reduceSeries } from './reducers';
+import { createBucketReducer, createGroupReducer, reduceSeries } from '@dxos/util';
 
 /**
  * Activity monitor.

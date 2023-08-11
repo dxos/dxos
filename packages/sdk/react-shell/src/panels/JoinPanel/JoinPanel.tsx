@@ -104,6 +104,8 @@ export const JoinPanelImpl = ({
               Kind='Space'
               active={activeView === 'space invitation input'}
               {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
+              onExit={onExit}
+              exitActionParent={exitActionParent}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='space invitation rescuer'>

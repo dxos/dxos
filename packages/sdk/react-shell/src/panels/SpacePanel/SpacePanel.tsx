@@ -2,64 +2,71 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
-import React, { cloneElement, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { Button, DensityProvider, Tooltip, useId, useTranslation } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
+import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
+import { log } from '@dxos/log';
+import { useInvitationStatus } from '@dxos/react-client/invitations';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { Viewport } from '../../components';
+import { PanelHeading, Viewport } from '../../components';
+import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { SpacePanelHeadingProps, SpacePanelImplProps, SpacePanelProps } from './SpacePanelProps';
+import { useSpaceMachine } from './spaceMachine';
 import { SpaceManager } from './steps';
 
-const SpacePanelHeading = ({ titleId, space, doneActionParent, onDone }: SpacePanelHeadingProps) => {
+const SpacePanelHeading = ({ titleId, space }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');
   const name = space.properties.name;
-
-  const doneButton = (
-    <Button variant='ghost' onClick={() => onDone?.()} data-testid='show-all-spaces'>
-      <X className={getSize(4)} weight='bold' />
-    </Button>
-  );
-
+  const fallbackHref = useJdenticonHref(space.key.toHex(), 8);
   return (
-    <div role='none' className={mx('flex items-center p-2 gap-2')}>
-      {/* TODO(wittjosiah): Label this as the space panel. */}
-      <h2 id={titleId} className={mx('grow font-system-medium', !name && 'font-mono')}>
-        {name ?? space.key.truncate()}
-      </h2>
-      <Tooltip.Root>
-        <Tooltip.Content classNames='z-50'>{t('close label')}</Tooltip.Content>
-        <Tooltip.Trigger asChild>
-          {doneActionParent ? cloneElement(doneActionParent, {}, doneButton) : doneButton}
-        </Tooltip.Trigger>
-      </Tooltip.Root>
-    </div>
+    <PanelHeading titleId={titleId} title={t('space panel heading')}>
+      <Avatar.Root variant='square' size={8}>
+        <div role='none' className='flex gap-4 items-center justify-center'>
+          <Avatar.Frame>
+            <Avatar.Fallback href={fallbackHref} />
+          </Avatar.Frame>
+          <Avatar.Label classNames='block text-start font-light text-xl'>{name ?? space.key.truncate()}</Avatar.Label>
+        </div>
+      </Avatar.Root>
+    </PanelHeading>
   );
 };
 
-export const SpacePanelImpl = ({
-  titleId,
-  activeView,
-  space,
-  createInvitationUrl,
-  send = () => {},
-  doneActionParent,
-  onDone,
-}: SpacePanelImplProps) => {
+export const SpacePanelImpl = ({ titleId, activeView, space, ...props }: SpacePanelImplProps) => {
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...{ titleId, space, doneActionParent, onDone }} />
+      <SpacePanelHeading {...props} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManager {...{ active: activeView === 'space manager', send, space, createInvitationUrl }} />
+            <SpaceManager active={activeView === 'space manager'} space={space} {...props} />
           </Viewport.View>
-          <Viewport.View {...{} /* todo(thure): Remove this unused View */} id='never' classNames={stepStyles} />
+          <Viewport.View id='space invitation manager' classNames={stepStyles}>
+            <InvitationManager
+              active={activeView === 'space invitation manager'}
+              {...props}
+              invitationUrl={props.invitationUrl}
+            />
+          </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
     </DensityProvider>
+  );
+};
+
+const SpacePanelWithInvitationImpl = ({
+  invitation,
+  ...props
+}: SpacePanelImplProps & { invitation: CancellableInvitationObservable }) => {
+  const invitationStatus = useInvitationStatus(invitation);
+  return (
+    <SpacePanelImpl
+      {...props}
+      {...invitationStatus}
+      invitationUrl={props.createInvitationUrl(invitationStatus.invitationCode!)}
+    />
   );
 };
 
@@ -69,14 +76,39 @@ export const SpacePanel = ({
   ...props
 }: SpacePanelProps) => {
   const titleId = useId('spacePanel__heading', propsTitleId);
-  const activeView = useMemo(() => 'space manager', []);
-  return (
-    <SpacePanelImpl
-      {...props}
-      titleId={titleId}
-      activeView={activeView}
-      createInvitationUrl={createInvitationUrl}
-      send={() => {}}
-    />
+
+  const [spaceState, spaceSend, spaceService] = useSpaceMachine({ context: { space: props.space } });
+
+  useEffect(() => {
+    const subscription = spaceService.subscribe((state) => {
+      log('[state]', state);
+    });
+
+    return subscription.unsubscribe;
+  }, [spaceService]);
+
+  const activeView = useMemo(() => {
+    switch (true) {
+      case spaceState.matches('managingSpace'):
+        return 'space manager';
+      case spaceState.matches('managingSpaceInvitation'):
+        return 'space invitation manager';
+      default:
+        return 'never';
+    }
+  }, [spaceState]);
+
+  const implProps = {
+    ...props,
+    activeView,
+    send: spaceSend,
+    titleId,
+    createInvitationUrl,
+  };
+
+  return spaceState.context.invitation ? (
+    <SpacePanelWithInvitationImpl {...implProps} invitation={spaceState.context.invitation} />
+  ) : (
+    <SpacePanelImpl {...implProps} />
   );
 };

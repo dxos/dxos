@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { List, useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 import { Device } from '@dxos/react-client/halo';
 
@@ -18,7 +18,7 @@ export interface DeviceListProps {
 export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
   const { t } = useTranslation('os');
   return devices.length > 0 ? (
-    <ul className='flex flex-col gap-2'>
+    <List classNames='flex flex-col gap-2'>
       {devices.map((device) => {
         const identity = { identityKey: device.deviceKey, profile: { displayName: device.profile?.displayName } };
         return (
@@ -29,7 +29,7 @@ export const DeviceList = ({ devices, onSelect }: DeviceListProps) => {
           />
         );
       })}
-    </ul>
+    </List>
   ) : (
     <div role='none' className='grow flex items-center p-2'>
       <p className={mx(descriptionText, 'text-center is-full')}>{t('empty device list message')}</p>

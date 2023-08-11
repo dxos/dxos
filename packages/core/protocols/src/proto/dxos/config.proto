@@ -129,6 +129,7 @@ message Runtime {
       optional string commit_hash = 2;
       /// Version from package.json.
       optional string version = 3;
+      optional string branch = 4;
     }
 
     optional string org = 1;
@@ -141,11 +142,15 @@ message Runtime {
   }
 
   message Agent {
-    message Functions {
-      int32 port = 1;
+    message Plugins {
+      message Functions {
+        int32 port = 1;
+      }
+
+      optional Functions functions = 1;
     }
 
-    optional Functions functions = 1;
+    optional Plugins plugins = 1;
   }
 
   // CLI configuration

@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GraphProvides } from '@braneframe/plugin-graph';
+import { IntentProvides } from '@braneframe/plugin-intent';
+import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { Game } from '@dxos/chess-app';
 import { isTypedObject, TypedObject } from '@dxos/client/echo';
 
@@ -14,6 +17,12 @@ export enum ChessAction {
 }
 
 export type ChessProvides = {};
+
+export type ChessPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[Game.name] = Game;
 
 export const isObject = (object: unknown): object is TypedObject => {
   return isTypedObject(object) && object.__typename === Game.type.name;

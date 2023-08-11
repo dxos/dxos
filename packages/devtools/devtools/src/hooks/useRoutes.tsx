@@ -9,6 +9,7 @@ import { RootContainer } from '../containers';
 import {
   ConfigPanel,
   CredentialsPanel,
+  DiagnosticsPanel,
   FeedsPanel,
   IdentityPanel,
   ItemsPanel,
@@ -16,6 +17,7 @@ import {
   LoggingPanel,
   MembersPanel,
   SignalPanel,
+  SpaceInfoPanel,
   SpacesPanel,
   StoragePanel,
   SwarmPanel,
@@ -34,6 +36,10 @@ export const useRoutes = () => {
       path: '/',
       element: <RootContainer />,
       children: [
+        {
+          path: '/diagnostics',
+          element: <DiagnosticsPanel />,
+        },
         {
           path: '/client',
           children: [
@@ -74,6 +80,10 @@ export const useRoutes = () => {
             {
               path: '/echo/spaces',
               element: <SpacesPanel />,
+            },
+            {
+              path: '/echo/space',
+              element: <SpaceInfoPanel />,
             },
             {
               path: '/echo/feeds',

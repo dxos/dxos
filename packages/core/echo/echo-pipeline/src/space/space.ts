@@ -15,7 +15,7 @@ import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/creden
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { SnapshotManager } from '../dbhost';
+import { SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';

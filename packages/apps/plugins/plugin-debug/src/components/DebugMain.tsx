@@ -13,7 +13,6 @@ import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { baseSurface, fullSurface, getSize } from '@dxos/aurora-theme';
-import { diagnostics } from '@dxos/client/diagnostics';
 import { SpaceProxy } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
@@ -32,7 +31,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await diagnostics(client, { humanize: false, truncate: true });
+    const data = await client.diagnostics({ humanize: false, truncate: true });
     setData(data);
   };
   useEffect(() => {
@@ -89,56 +88,44 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
           <Button onClick={handleUpdateObject}>Update</Button>
-          <div className='w-[80px]'>
-            <Input.Root>
-              <Input.TextInput
-                title={t('mutation period')}
-                autoComplete='off'
-                classNames='flex-1 is-auto pis-2 text-right'
-                placeholder='Mutation period'
-                value={mutationInterval}
-                onChange={({ target: { value } }) => setMutationInterval(value)}
-              />
-            </Input.Root>
-          </div>
+          <Input.Root>
+            <Input.TextInput
+              title={t('mutation period')}
+              autoComplete='off'
+              classNames='w-[100px] text-right'
+              placeholder='Mutation period'
+              value={mutationInterval}
+              onChange={({ target: { value } }) => setMutationInterval(value)}
+            />
+          </Input.Root>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
+          <Button onClick={handleRefresh}>Refresh</Button>
 
           <div className='grow' />
-          <Button onClick={handleRefresh}>Refresh</Button>
           <Button onClick={handleOpenDevtools}>Open Devtools</Button>
           <Button onClick={handleResetClient}>Reset client</Button>
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>
       </div>
 
-      <div className='flex grow overflow-hidden px-2'>
-        <div className='flex flex-col w-full overflow-auto space-y-2'>
-          {config.values?.runtime?.app?.build?.timestamp && (
-            <div>
-              <pre className='p-2 text-sm'>Build</pre>
-              <div className='px-2'>
-                {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
-                  addSuffix: true,
-                  includeSeconds: true,
-                })}
-              </div>
-            </div>
-          )}
-          <div>
-            <pre className='p-2 text-sm'>Config</pre>
-            <SyntaxHighlighter language='json' style={style}>
-              {JSON.stringify(config.values, replacer, 2)}
-            </SyntaxHighlighter>
-          </div>
-          <div>
-            <pre className='p-2 text-sm'>Diagnostics</pre>
-            <SyntaxHighlighter language='json' style={style}>
-              {JSON.stringify(data, replacer, 2)}
-            </SyntaxHighlighter>
-          </div>
+      <div className='flex flex-col grow px-2 overflow-hidden'>
+        <div className='flex grow overflow-auto text-sm'>
+          <SyntaxHighlighter language='json' style={style}>
+            {JSON.stringify(data, replacer, 2)}
+          </SyntaxHighlighter>
         </div>
+        {config.values?.runtime?.app?.build?.timestamp && (
+          <div className='p-2 text-sm font-mono'>
+            {config.values?.runtime?.app?.build?.version} (
+            {formatDistance(new Date(config.values?.runtime?.app?.build?.timestamp), new Date(), {
+              addSuffix: true,
+              includeSeconds: true,
+            })}
+            )
+          </div>
+        )}
       </div>
     </Main.Content>
   );

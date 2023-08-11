@@ -6,46 +6,59 @@ import React, { useEffect, useMemo } from 'react';
 import { Avatar, DensityProvider, useId, useJdenticonHref, useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useInvitationStatus } from '@dxos/react-client/invitations';
+import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
-import { Viewport } from '../../components';
+import { Viewport, PanelHeading } from '../../components';
+import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
-import { DeviceManager, IdentityActionChooser } from './steps';
+import { IdentityActionChooser } from './steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
-const IdentityHeading = ({ titleId, identity }: IdentityPanelHeadingProps) => {
-  const { t } = useTranslation('os');
+const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps) => {
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <div role='none' className='mbs-3 mbe-1'>
-      <h2 className='sr-only' id={titleId}>
-        {t('identity heading')}
-      </h2>
+    <PanelHeading titleId={titleId} title={title}>
       <Avatar.Root size={12} variant='circle'>
-        <Avatar.Frame classNames='block mli-auto mlb-2 chromatic-ignore'>
+        <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
         </Avatar.Frame>
-        <Avatar.Label classNames='block text-center font-light text-xl mlb-2'>
+        <Avatar.Label classNames='block text-center font-light text-xl'>
           {identity.profile?.displayName ?? humanize(identity.identityKey)}
         </Avatar.Label>
       </Avatar.Root>
-    </div>
+    </PanelHeading>
   );
 };
 
 export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
+  const { t } = useTranslation('os');
+  const title = useMemo(() => {
+    switch (activeView) {
+      case 'device manager':
+      case 'device invitation manager':
+        return t('choose devices label');
+      default:
+        return t('identity heading');
+    }
+  }, [activeView, t]);
   return (
     <DensityProvider density='fine'>
-      <IdentityHeading {...{ identity, titleId }} />
+      <IdentityHeading {...{ identity, titleId, title }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
             <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
           </Viewport.View>
-          <Viewport.View id='device manager' classNames={viewStyles}>
-            <DeviceManager active={activeView === 'device manager'} {...props} />
+          <Viewport.View id='device invitation manager' classNames={viewStyles}>
+            <InvitationManager
+              active={activeView === 'device invitation manager'}
+              {...props}
+              invitationUrl={props.createInvitationUrl(props.invitationCode!)}
+            />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
           {/* <Viewport.View id='signing out'></Viewport.View> */}
@@ -53,6 +66,14 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
       </Viewport.Root>
     </DensityProvider>
   );
+};
+
+const IdentityPanelWithInvitationImpl = ({
+  invitation,
+  ...props
+}: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
+  const invitationStatus = useInvitationStatus(invitation);
+  return <IdentityPanelImpl {...props} {...invitationStatus} />;
 };
 
 export const IdentityPanel = ({
@@ -66,7 +87,7 @@ export const IdentityPanel = ({
     console.error('IdentityPanel rendered with no active identity.');
     return null;
   }
-  const [identityState, identitySend, identityService] = useIdentityMachine(identity);
+  const [identityState, identitySend, identityService] = useIdentityMachine({ context: { identity } });
 
   useEffect(() => {
     const subscription = identityService.subscribe((state) => {
@@ -82,6 +103,8 @@ export const IdentityPanel = ({
         return 'identity action chooser';
       case identityState.matches('managingDevices'):
         return 'device manager';
+      case identityState.matches('managingDeviceInvitation'):
+        return 'device invitation manager';
       // case identityState.matches('managingProfile'):
       //   return 'profile manager';
       // case identityState.matches('signingOut'):
@@ -91,14 +114,18 @@ export const IdentityPanel = ({
     }
   }, [identityState]);
 
-  return (
-    <IdentityPanelImpl
-      {...props}
-      identity={identity}
-      activeView={activeView}
-      send={identitySend}
-      titleId={titleId}
-      createInvitationUrl={createInvitationUrl}
-    />
+  const implProps = {
+    ...props,
+    identity,
+    activeView,
+    send: identitySend,
+    titleId,
+    createInvitationUrl,
+  };
+
+  return identityState.context.invitation ? (
+    <IdentityPanelWithInvitationImpl {...implProps} invitation={identityState.context.invitation} />
+  ) : (
+    <IdentityPanelImpl {...implProps} />
   );
 };
