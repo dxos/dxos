@@ -118,7 +118,7 @@ export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);

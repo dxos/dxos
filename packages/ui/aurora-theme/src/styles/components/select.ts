@@ -7,6 +7,7 @@ import type { Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
+  chromeSurface,
   coarseButtonDimensions,
   contentElevation,
   fineButtonDimensions,
@@ -64,7 +65,7 @@ export const selectTrigger: ComponentFunction<AppSelectStyleProps> = (props, ...
 };
 
 export const selectContent: ComponentFunction<AppSelectStyleProps> = (props, ...etc) => {
-  return mx('font-medium text-sm', ...etc);
+  return mx('font-medium text-sm p-2', chromeSurface, ...etc);
 };
 
 export const selectTheme: Theme<AppSelectStyleProps> = {

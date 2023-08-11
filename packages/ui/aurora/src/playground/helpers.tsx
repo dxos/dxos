@@ -9,7 +9,8 @@ import { Density } from '@dxos/aurora-types';
 import '@dxosTheme';
 import { DensityProvider, ElevationProvider } from '../components';
 
-export const createDensityTest =
+// TODO(burdon): Grid: density, variant (context?), elevation.
+export const createScenarios =
   (Component: FunctionComponent<any>) =>
   ({ ...props }) => {
     const densities: Density[] = ['coarse', 'fine'];
