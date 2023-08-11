@@ -100,7 +100,7 @@ Before an application can read or write user data, the device must be authentica
 
 Let's create a simple component called `Counter.tsx`.
 
-```tsx{6,8} file=./snippets/counter.tsx#L5-14
+```tsx{6,8} file=./snippets/counter.tsx#L5-
 import React from 'react';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useSpaces } from '@dxos/react-client/echo';
