@@ -3,13 +3,33 @@
 //
 
 import { faker } from '@faker-js/faker';
-import React, { PropsWithChildren, useState } from 'react';
+import React, { FC, PropsWithChildren, useState } from 'react';
+
+import { Density } from '@dxos/aurora-types';
 
 import '@dxosTheme';
-
+import { DensityProvider } from '../DensityProvider';
 import { Select } from './Select';
 
 faker.seed(1234);
+
+// TODO(burdon): Factor out density test.
+const createDensityTest =
+  (Component: FC<any>) =>
+  ({ ...props }) => {
+    const densities: Density[] = ['coarse', 'fine'];
+    return (
+      <div className='grid grid-cols-2'>
+        {densities.map((density) => (
+          <div key={density}>
+            <DensityProvider density={density}>
+              <Component {...props} />
+            </DensityProvider>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
 type ItemProps = { id: string; text: string };
 
@@ -17,7 +37,7 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
-      <Select.Trigger placeholder={'Select value...'} />
+      <Select.Trigger placeholder={'Select value'} />
       <Select.Content>
         {items.map(({ id, text }) => (
           <Select.Item key={id} value={id}>
@@ -30,11 +50,11 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
 };
 
 export default {
-  component: StorybookSelect,
+  component: createDensityTest(StorybookSelect),
 };
 
 export const Default = {
   args: {
-    items: Array.from({ length: 8 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
+    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
   },
 };

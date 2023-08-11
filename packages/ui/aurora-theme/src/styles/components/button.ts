@@ -41,7 +41,7 @@ export type OsButtonStyleProps = Partial<{
   sideInset: 'be';
 }>;
 
-const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
+export const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
   return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,

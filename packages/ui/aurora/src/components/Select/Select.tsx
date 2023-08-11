@@ -21,42 +21,46 @@ import {
   SelectGroupProps as SelectPrimitiveGroupProps,
   SelectSeparator as SelectPrimitiveSeparator,
   SelectSeparatorProps as SelectPrimitiveSeparatorProps,
+  SelectViewport as SelectPrimitiveViewport,
 } from '@radix-ui/react-select';
 import React, { FunctionComponent } from 'react';
 
+import { mx } from '@dxos/aurora-theme';
 import { Density, Elevation } from '@dxos/aurora-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
+import { useDensityContext, useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
+import { DensityProvider } from '../DensityProvider';
 
 // https://www.radix-ui.com/themes/docs/components/select
 // https://www.radix-ui.com/primitives/docs/components/select
 
-type SelectRootProps = ThemedClassName<SelectPrimitiveRootProps>;
-
-const SelectRoot: FunctionComponent<SelectRootProps> = SelectPrimitiveRoot;
-
-// TODO(burdon): Add placeholder.
-type SelectTriggerProps = ThemedClassName<SelectPrimitiveTriggerProps> & {
+type SelectRootProps = ThemedClassName<SelectPrimitiveRootProps> & {
+  variant?: 'default' | 'primary' | 'outline' | 'ghost';
   density?: Density;
   elevation?: Elevation;
 };
 
-// TODO(burdon): Style as button.
-const SelectTrigger: FunctionComponent<SelectTriggerProps> = ({
-  children,
-  placeholder,
-  density: propsDensity,
-  elevation: propsElevation,
-  ...props
-}) => {
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext(propsElevation);
+const SelectRoot: FunctionComponent<SelectRootProps> = ({ children, density: propsDensity, ...props }) => {
   const density = useDensityContext(propsDensity);
+  return (
+    <SelectPrimitiveRoot {...props}>
+      <DensityProvider density={density}>{children}</DensityProvider>
+    </SelectPrimitiveRoot>
+  );
+};
+
+const SelectTrigger: FunctionComponent<SelectPrimitiveTriggerProps> = ({ children, placeholder, ...props }) => {
+  const { tx } = useThemeContext();
+  // const elevation = useElevationContext(propsElevation);
+  const density = useDensityContext();
   return (
     <SelectPrimitiveTrigger
       {...props}
-      className={tx('select.root', 'select', { disabled: props.disabled, density, elevation })}
+      className={tx('select.trigger', 'select', {
+        disabled: props.disabled,
+        density,
+      })}
     >
       <div className='flex items-center'>
         <SelectPrimitiveValue placeholder={placeholder} />
@@ -70,10 +74,14 @@ const SelectTrigger: FunctionComponent<SelectTriggerProps> = ({
 
 type SelectContentProps = ThemedClassName<SelectPrimitiveContentProps>;
 
-const SelectContent: FunctionComponent<SelectContentProps> = (props) => {
+// TODO(burdon): Make same width as trigger?
+const SelectContent: FunctionComponent<SelectContentProps> = ({ children }) => {
+  const { tx } = useThemeContext();
   return (
-    <SelectPrimitivePortal>
-      <SelectPrimitiveContent {...props} />
+    <SelectPrimitivePortal className={tx('select.content', 'content')}>
+      <SelectPrimitiveContent className={mx('z-[50]')}>
+        <SelectPrimitiveViewport>{children}</SelectPrimitiveViewport>
+      </SelectPrimitiveContent>
     </SelectPrimitivePortal>
   );
 };
@@ -108,7 +116,7 @@ export const Select = {
 
 export type {
   SelectRootProps,
-  SelectTriggerProps,
+  // SelectTriggerProps,
   SelectContentProps,
   SelectGroupProps,
   SelectItemProps,

@@ -17,6 +17,7 @@ import {
   messageTheme,
   popoverTheme,
   scrollAreaTheme,
+  selectTheme,
   separatorTheme,
   toastTheme,
   tooltipTheme,
@@ -36,7 +37,7 @@ export const auroraTheme: Theme<Record<string, any>> = {
   main: mainTheme,
   message: messageTheme,
   popover: popoverTheme,
-  select: buttonTheme, // TODO(burdon): ???
+  select: selectTheme,
   scrollArea: scrollAreaTheme,
   separator: separatorTheme,
   tag: tagTheme,
