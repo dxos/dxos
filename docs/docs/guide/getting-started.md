@@ -6,7 +6,7 @@ next: ./tutorial
 
 # Quick Start Guide
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software. 
+DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
@@ -30,7 +30,7 @@ npm install --save @dxos/client
 
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-```ts file=./snippets/create-client.ts#L5-
+```ts file=./typescript/snippets/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client
@@ -60,14 +60,14 @@ npm install --save @dxos/react-client
 
 Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
 
-```tsx file=./snippets/create-client-react.tsx#L5-
+```tsx file=./react/snippets/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   ClientProvider,
   useIdentity,
   useQuery,
-  useSpaces
+  useSpaces,
 } from '@dxos/react-client';
 
 const Component = () => {
