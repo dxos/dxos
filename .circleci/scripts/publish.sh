@@ -25,7 +25,7 @@ for APP in "${APPS[@]}"; do
   PACKAGE_CAPS=${PACKAGE^^}
   PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
-  if [ $BRANCH = "production" ]; then
+  if [[ $BRANCH = "production" || ($BRANCH = "main" && $APP = "./docs") ]]; then
     export DX_ENVIRONMENT=production
     DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
     VERSION=$(cat package.json | jq -r ".version")
