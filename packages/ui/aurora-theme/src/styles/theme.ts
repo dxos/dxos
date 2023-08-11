@@ -36,6 +36,7 @@ export const auroraTheme: Theme<Record<string, any>> = {
   main: mainTheme,
   message: messageTheme,
   popover: popoverTheme,
+  select: buttonTheme, // TODO(burdon): ???
   scrollArea: scrollAreaTheme,
   separator: separatorTheme,
   tag: tagTheme,

@@ -15,8 +15,6 @@ type ItemProps = { id: string; text: string };
 
 const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] }>) => {
   const [value, setValue] = useState<string>();
-  console.log(items);
-
   return (
     <Select.Root value={value} onValueChange={setValue}>
       <Select.Trigger placeholder={'Select value...'} />
