@@ -1,0 +1,30 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { FunctionComponent } from 'react';
+
+import { Density } from '@dxos/aurora-types';
+
+import '@dxosTheme';
+import { DensityProvider, ElevationProvider } from '../components';
+
+export const createDensityTest =
+  (Component: FunctionComponent<any>) =>
+  ({ ...props }) => {
+    const densities: Density[] = ['coarse', 'fine'];
+    return (
+      <div className='flex flex-col space-y-8'>
+        {densities.map((density) => (
+          <div key={density}>
+            <ElevationProvider elevation='chrome'>
+              <DensityProvider density={density}>
+                <label className='p-2 text-xs'>{density}</label>
+                <Component {...props} />
+              </DensityProvider>
+            </ElevationProvider>
+          </div>
+        ))}
+      </div>
+    );
+  };

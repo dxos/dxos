@@ -45,7 +45,7 @@ const sharedSelectStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
 export const selectTrigger: ComponentFunction<AppSelectStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm',
+    'font-medium text-sm whitespace-nowrap', // TODO(burdon): nowrap for buttons also.
     !props.disabled &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
       contentElevation({ elevation: props.elevation }),
