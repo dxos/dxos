@@ -8,7 +8,7 @@ export type Platform = {
   runtime?: string;
 };
 
-export const getPlatform = async (): Promise<Platform> => {
+export const getPlatform = (): Platform => {
   if (typeof window !== 'undefined') {
     const { userAgent } = window.navigator;
     return {
