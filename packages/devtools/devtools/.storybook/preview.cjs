@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createElement, useEffect } from 'react';
+import { createElement, useEffect } from 'react';
 import { ThemeProvider } from '@dxos/react-appkit';
 
 export const parameters = {

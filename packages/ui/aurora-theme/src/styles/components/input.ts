@@ -60,6 +60,10 @@ export const inputValence = (valence?: MessageValence) => {
   }
 };
 
+// TODO(burdon): Remove is-full as default (prevents setting specific width).
+// TODO(burdon): Set whitespace-nowrap by default.
+// TODO(burdon): Factor out color defs?
+
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full bg-transparent text-current',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,

@@ -162,6 +162,9 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
+// TODO(burdon): Input width is overridden by default 'is-full' style.
+// TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
@@ -225,6 +228,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     );
   },
 );
+
+// TODO(burdon): Provide inline checkbox label left/right.
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
 
