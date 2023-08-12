@@ -2,16 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Cube, TextT } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
-import { TreeViewItem } from '@dxos/react-appkit';
 import { PublicKey } from '@dxos/react-client';
-import { DocumentModel, TypedObject, TextModel, useQuery } from '@dxos/react-client/echo';
+import { TypedObject, useQuery } from '@dxos/react-client/echo';
 
-import { JsonView, MasterDetailTable, PanelContainer, Searchbar, Toolbar } from '../../components';
+import { MasterDetailTable, PanelContainer, Searchbar, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 
@@ -31,34 +28,6 @@ const textFilter = (text?: string) => {
     return match;
   };
 };
-
-// TODO(burdon): Rationalize with new API.
-const getItemType = (doc: TypedObject) => (doc.toJSON()['@model'] === TextModel.meta.type ? 'Text' : doc.__typename);
-const getItemDetails = (item: TypedObject) => ({
-  id: truncateKey(item.id),
-  type: item.__typename,
-  deleted: String(Boolean(item.__deleted)),
-  properties: <JsonView data={item.toJSON()} />,
-});
-
-const getObjectIcon = (item: TypedObject) => {
-  const model = item.toJSON()['@model'];
-  switch (model) {
-    case DocumentModel.meta.type:
-      return Cube;
-    case TextModel.meta.type:
-      return TextT;
-    default:
-      return undefined;
-  }
-};
-
-const getHierarchicalItem = (item: TypedObject): TreeViewItem => ({
-  id: item.id,
-  title: getItemType(item) || 'Unknown type',
-  value: item,
-  Icon: getObjectIcon(item),
-});
 
 const columns: TableColumn<TypedObject>[] = [
   {
