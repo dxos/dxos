@@ -2,73 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ComponentFragment, ComponentFunction, Density, Elevation } from '@dxos/aurora-types';
+import { ComponentFunction } from '@dxos/aurora-types';
 import type { Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import {
-  chromeSurface,
-  coarseButtonDimensions,
-  contentElevation,
-  fineButtonDimensions,
-  focusRing,
-  hoverColors,
-  openOutline,
-  staticDisabled,
-} from '../fragments';
-import {
-  AppButtonStyleProps,
-  defaultAppButtonColors,
-  ghostButtonColors,
-  OsButtonStyleProps,
-  primaryAppButtonColors,
-} from './button';
+import { chromeSurface } from '../fragments';
 
-export type AppSelectStyleProps = Partial<{
-  density: Density;
-  elevation: Elevation;
-  disabled: boolean;
-  variant: 'default' | 'primary' | 'ghost' | 'outline';
-}>;
+export type SelectStyleProps = Partial<{}>;
 
-// TODO(burdon): Share with button?
-const sharedSelectStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
-  return [
-    'inline-flex select-none items-center justify-center transition-color duration-100',
-    props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
-    // Register all radix states
-    'group',
-    props.disabled && staticDisabled,
-  ];
+export const selectContent: ComponentFunction<SelectStyleProps> = (props, ...etc) => {
+  return mx('font-medium text-sm p-2 z-[50]', chromeSurface, ...etc);
 };
 
-// TODO(burdon): inGroup?
-export const selectTrigger: ComponentFunction<AppSelectStyleProps> = (props, ...etc) => {
-  const resolvedVariant = props.variant ?? 'default';
-  return mx(
-    'font-medium text-sm whitespace-nowrap', // TODO(burdon): nowrap for buttons also.
-    !props.disabled &&
-      (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
-      contentElevation({ elevation: props.elevation }),
-    !props.disabled && hoverColors,
-    resolvedVariant !== 'outline' && ' hover:border-transparent dark:hover:border-transparent',
-    resolvedVariant === 'default' && defaultAppButtonColors,
-    !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    resolvedVariant === 'primary' && primaryAppButtonColors,
-    resolvedVariant === 'outline' &&
-      'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
-    !props.disabled && focusRing,
-    openOutline,
-    ...sharedSelectStyles(props),
-    ...etc,
-  );
-};
-
-export const selectContent: ComponentFunction<AppSelectStyleProps> = (props, ...etc) => {
-  return mx('font-medium text-sm p-2', chromeSurface, ...etc);
-};
-
-export const selectTheme: Theme<AppSelectStyleProps> = {
-  trigger: selectTrigger,
+export const selectTheme: Theme<SelectStyleProps> = {
   content: selectContent,
 };

@@ -3,104 +3,142 @@
 //
 
 import { CaretDown } from '@phosphor-icons/react';
-// TODO(burdon): Clearer and less verbose to use `import *` across components?
 import * as SelectPrimitive from '@radix-ui/react-select';
-import React, { FunctionComponent } from 'react';
+import React, { forwardRef } from 'react';
 
-import { Density, Elevation } from '@dxos/aurora-types';
-
-import { useDensityContext, useThemeContext } from '../../hooks';
+import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
-import { DensityProvider } from '../DensityProvider';
+import { Button, ButtonProps } from '../Buttons';
 
-// https://www.radix-ui.com/themes/docs/components/select
-// https://www.radix-ui.com/primitives/docs/components/select
+type SelectRootProps = SelectPrimitive.SelectProps;
 
-type SelectRootProps = ThemedClassName<SelectPrimitive.SelectProps> & {
-  variant?: 'default' | 'primary' | 'outline' | 'ghost'; // TODO(burdon): Export type.
-  density?: Density;
-  elevation?: Elevation; // TODO(burdon): ???
-};
-
-const SelectRoot: FunctionComponent<SelectRootProps> = ({ children, density: propsDensity, ...props }) => {
-  const density = useDensityContext(propsDensity);
-  return (
-    <SelectPrimitive.Root {...props}>
-      <DensityProvider density={density}>{children}</DensityProvider>
-    </SelectPrimitive.Root>
-  );
-};
+const SelectRoot = SelectPrimitive.Root;
 
 type SelectTriggerProps = SelectPrimitive.SelectTriggerProps;
 
-const SelectTrigger: FunctionComponent<SelectTriggerProps> = ({ children, placeholder, ...props }) => {
-  const { tx } = useThemeContext();
-  const density = useDensityContext();
+const SelectTrigger = SelectPrimitive.Trigger;
+
+type SelectValueProps = SelectPrimitive.SelectValueProps;
+
+const SelectValue = SelectPrimitive.Value;
+
+type SelectIconProps = SelectPrimitive.SelectIconProps;
+
+const SelectIcon = SelectPrimitive.Icon;
+
+type SelectPortalProps = SelectPrimitive.SelectPortalProps;
+
+const SelectPortal = SelectPrimitive.Portal;
+
+type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder'>;
+
+const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(({ placeholder, ...props }, forwardedRef) => {
   return (
-    <SelectPrimitive.Trigger
-      {...props}
-      className={tx('select.trigger', 'select', {
-        disabled: props.disabled,
-        density,
-      })}
-    >
-      <div className='flex items-center'>
+    <SelectPrimitive.Trigger asChild>
+      <Button {...props} ref={forwardedRef}>
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon className='pis-2'>
           <CaretDown />
         </SelectPrimitive.Icon>
-      </div>
+      </Button>
     </SelectPrimitive.Trigger>
   );
-};
+});
 
 type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
 
 // TODO(burdon): Make same width as trigger?
-const SelectContent: FunctionComponent<SelectContentProps> = ({ children }) => {
-  const { tx } = useThemeContext();
-  return (
-    <SelectPrimitive.Portal className={tx('select.content', 'content')}>
-      <SelectPrimitive.Content className='z-[50]'>
-        <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <SelectPrimitive.Content
+        {...props}
+        className={tx('select.content', 'select__content', {}, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
       </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
-  );
-};
+    );
+  },
+);
 
-type SelectGroupProps = ThemedClassName<SelectPrimitive.SelectGroupProps>;
+type SelectScrollUpButtonProps = SelectPrimitive.SelectScrollUpButtonProps;
 
-const SelectGroup: FunctionComponent<SelectGroupProps> = SelectPrimitive.Group;
+const SelectScrollUpButton = SelectPrimitive.SelectScrollUpButton;
 
-type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
+type SelectScrollDownButtonProps = SelectPrimitive.SelectScrollDownButtonProps;
 
-// TODO(burdon): Add Check icon.
-const SelectItem = ({ children, ...props }: SelectItemProps) => {
-  return (
-    <SelectPrimitive.Item {...props}>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    </SelectPrimitive.Item>
-  );
-};
+const SelectScrollDownButton = SelectPrimitive.SelectScrollDownButton;
 
-type SelectSeparatorProps = ThemedClassName<SelectPrimitive.SelectSeparatorProps>;
+type SelectViewportProps = SelectPrimitive.SelectViewportProps;
 
-const SelectSeparator: FunctionComponent<SelectSeparatorProps> = SelectPrimitive.Separator;
+const SelectViewport = SelectPrimitive.Viewport;
+
+type SelectItemProps = SelectPrimitive.SelectItemProps;
+
+const SelectItem = SelectPrimitive.Item;
+
+type SelectItemTextProps = SelectPrimitive.SelectItemTextProps;
+
+const SelectItemText = SelectPrimitive.ItemText;
+
+type SelectItemIndicatorProps = SelectPrimitive.SelectItemIndicatorProps;
+
+const SelectItemIndicator = SelectPrimitive.ItemIndicator;
+
+type SelectGroupProps = SelectPrimitive.SelectGroupProps;
+
+const SelectGroup = SelectPrimitive.Group;
+
+type SelectLabelProps = SelectPrimitive.SelectLabelProps;
+
+const SelectLabel = SelectPrimitive.Label;
+
+type SelectSeparatorProps = SelectPrimitive.SelectSeparatorProps;
+
+const SelectSeparator = SelectPrimitive.Separator;
+
+type SelectArrowProps = SelectPrimitive.SelectArrowProps;
+
+const SelectArrow = SelectPrimitive.Arrow;
 
 export const Select = {
   Root: SelectRoot,
   Trigger: SelectTrigger,
+  TriggerButton: SelectTriggerButton,
+  Value: SelectValue,
+  Icon: SelectIcon,
+  Portal: SelectPortal,
   Content: SelectContent,
-  Group: SelectGroup,
+  ScrollUpButton: SelectScrollUpButton,
+  ScrollDownButton: SelectScrollDownButton,
+  Viewport: SelectViewport,
   Item: SelectItem,
+  ItemText: SelectItemText,
+  ItemIndicator: SelectItemIndicator,
+  Group: SelectGroup,
+  Label: SelectLabel,
   Separator: SelectSeparator,
+  Arrow: SelectArrow,
 };
 
 export type {
   SelectRootProps,
   SelectTriggerProps,
+  SelectTriggerButtonProps,
+  SelectValueProps,
+  SelectIconProps,
+  SelectPortalProps,
   SelectContentProps,
-  SelectGroupProps,
+  SelectScrollUpButtonProps,
+  SelectScrollDownButtonProps,
+  SelectViewportProps,
   SelectItemProps,
+  SelectItemTextProps,
+  SelectItemIndicatorProps,
+  SelectGroupProps,
+  SelectLabelProps,
   SelectSeparatorProps,
+  SelectArrowProps,
 };
