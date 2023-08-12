@@ -16,7 +16,7 @@ export default {
   component: Button,
 };
 
-// TOOD(burdon): Replace "ghost" with elevation 0?
+// TOOD(burdon): Replace "ghost" with elevation base?
 // TODO(burdon): Update all stories with chromeSurface.
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
