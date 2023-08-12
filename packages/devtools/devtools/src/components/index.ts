@@ -3,6 +3,7 @@
 //
 
 export * from './BitfieldDisplay';
+export * from './ConnectionInfoView';
 export * from './DetailsTable';
 export * from './ErrorBoundary';
 export * from './FeedGraph';
