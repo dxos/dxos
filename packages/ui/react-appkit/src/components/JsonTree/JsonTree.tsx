@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React from 'react';
 
 import { TreeItem, Tree, TreeRootProps } from '@dxos/aurora';
