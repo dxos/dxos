@@ -4,7 +4,7 @@
 
 import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@dxos/aurora';
 import {
@@ -22,7 +22,6 @@ import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { BitField } from '@dxos/util';
 
 import { BitfieldDisplay, JsonView, PanelContainer, Toolbar } from '../../components';
-import { TreeItemText } from '../../components/TreeItemText';
 
 type SelectionValue =
   | {
@@ -267,5 +266,17 @@ const calculateBlobProgress = (blob: BlobMeta) => {
 };
 
 const formatPercent = (ratio: number) => (ratio * 100).toFixed(0) + '%';
+
+export type TreeItemTextProps = {
+  primary: ReactNode;
+  secondary?: ReactNode;
+};
+
+const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
+  <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
+    <span className='font-mono'>{primary}</span>
+    <span className='text-gray-400'>{secondary}</span>
+  </div>
+);
 
 export default StoragePanel;
