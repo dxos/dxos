@@ -42,25 +42,24 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
     editor?.updateViewportScreenBounds();
   }, [editor, width]);
   useEffect(() => {
-    const update = (animate = false) => {
-      const bounds = editor?.allShapesCommonBounds;
-      if (bounds && width && bounds.width && bounds.height) {
-        const zoom = Math.min(1, Math.min(width / bounds.width, height / bounds.height) * 0.8);
+    const zoomToFit = (animate = true) => {
+      const commonBounds = editor?.allShapesCommonBounds;
+      if (editor && width && commonBounds?.width && commonBounds?.height) {
+        const padding = 40;
+        const zoom = Math.min(1, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
         const center = {
-          x: bounds.x + bounds.width / 2,
-          y: bounds.y + bounds.height / 2,
+          x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+          y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
         };
 
-        editor.stopCameraAnimation();
-        const { width: pw, height: ph } = editor.viewportPageBounds;
-        editor.animateCamera(pw / 2 - center.x, ph / 2 - center.y, zoom, animate ? { duration: 250 } : undefined);
+        editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
         setReady(true);
       }
     };
 
-    update(false);
-    const f = debounce<boolean>(update, 100);
-    const subscription = store.listen(() => f(true), { scope: 'document' });
+    const onUpdate = debounce(zoomToFit, 200);
+    const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
+    zoomToFit(false);
     return () => subscription();
   }, [editor, width]);
 
@@ -79,6 +78,10 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, 
     if (editor) {
       editor.setReadOnly(readonly);
       editor.setDarkMode(themeMode === 'dark');
+
+      // TODO(burdon): Config.
+      editor.setSnapMode(true);
+      editor.setGridMode(true);
     }
   }, [editor, readonly, themeMode]);
 

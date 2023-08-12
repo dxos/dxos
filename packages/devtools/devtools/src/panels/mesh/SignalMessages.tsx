@@ -12,12 +12,12 @@ import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Searchbar, Select } from '@dxos/react-appkit';
+import { Select } from '@dxos/react-appkit';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
-import { MasterDetailTable, Toolbar } from '../../components';
+import { MasterDetailTable, Searchbar, Toolbar } from '../../components';
 
 export type View<T extends {}> = {
   id: string;
@@ -59,13 +59,13 @@ const views = [
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).truncate()) ||
           (response.swarmEvent!.peerLeft && truncateKey(response.swarmEvent!.peerLeft.peer)),
       },
-      {
-        Header: 'Peer Name',
-        width: 180,
-        accessor: (response: SignalResponse) =>
-          (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
-          (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
-      },
+      // {
+      //   Header: 'Peer Name',
+      //   width: 180,
+      //   accessor: (response: SignalResponse) =>
+      //     (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
+      //     (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
+      // },
       // TODO(burdon): Time delta since last message?
       {
         Header: 'Since',
@@ -204,8 +204,10 @@ const getFilteredData = (messages: SignalResponse[], view?: View<SignalResponse>
     if (!match) {
       return true;
     }
+
     return JSON.stringify(object).includes(match);
   };
+
   return view
     ? messages.filter(view.filter).filter(view.subFilter ? view.subFilter(searchText) : defaultSubFilter(searchText))
     : messages;

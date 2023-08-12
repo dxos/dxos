@@ -52,12 +52,10 @@ export const PublicKeySelector = ({
 
 // TODO(burdon): Factor out.
 const removeDuplicates = (keys: PublicKey[]) =>
-  keys.reduce((acc, key) => {
-    if (acc.some((accKey) => accKey.equals(key))) {
-      // Already added.
-      return acc;
-    } else if (key !== undefined) {
-      acc.push(key);
+  keys.reduce<PublicKey[]>((result, key) => {
+    if (key !== undefined && !result.some((existing) => existing.equals(key))) {
+      result.push(key);
     }
-    return acc;
-  }, [] as PublicKey[]);
+
+    return result;
+  }, []);
