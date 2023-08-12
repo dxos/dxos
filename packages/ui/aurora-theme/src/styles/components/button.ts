@@ -52,7 +52,7 @@ const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
 export const buttonRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm',
+    'font-medium text-sm whitespace-nowrap',
     !props.inGroup && 'rounded-md',
     !props.disabled &&
       !props.inGroup &&

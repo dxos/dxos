@@ -60,6 +60,7 @@ export const inputValence = (valence?: MessageValence) => {
   }
 };
 
+// TODO(burdon): Remove is-full by default.
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full bg-transparent text-current',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
