@@ -2,33 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Devices, Intersect, Planet } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import { getIndices } from '@tldraw/indices';
-import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
+import { SessionNode, SessionPluginParticipant, SessionPluginProvides } from '@braneframe/plugin-session';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
-import { IFrameClientServicesHost, IFrameClientServicesProxy, PublicKey, ShellLayout } from '@dxos/react-client';
-import { Space, SpaceProxy } from '@dxos/react-client/echo';
+import {
+  Client,
+  IFrameClientServicesHost,
+  IFrameClientServicesProxy,
+  PublicKey,
+  ShellLayout,
+} from '@dxos/react-client';
+import { SpaceProxy, Space } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
-import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
+import { DialogRenameSpace, DialogRestoreSpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import translations from './translations';
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
-import { getSpaceId, isSpace, spaceToGraphNode } from './util';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpaceNode } from './types';
+import { isSpace, isSpaceNode } from './util';
 
-type SpacePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+type SpacePluginProvides = SessionPluginParticipant & IntentProvides & TranslationsProvides;
+
+const spaceToSessionNode = (space: Space, index: string): SpaceNode => ({
+  id: `dxos.org/space/${space.key.toHex()}`,
+  label: (space.properties as any).title ?? 'Space',
+  params: {
+    index,
+    spaceKey: space.key.toHex(),
+  },
+});
+
+const resolveSpace = (client: Client, node: SpaceNode): Space | undefined => {
+  return node.params ? client.getSpace(PublicKey.fromHex(node.params!.spaceKey)) : undefined;
+};
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  let onSpaceUpdate: ((node?: GraphNode<Space>) => void) | undefined;
+  let onSpaceUpdate: ((node?: SessionNode) => void) | undefined;
   const subscriptions = new EventSubscriptions();
   const spaceSubs = new EventSubscriptions();
 
@@ -40,7 +57,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     ready: async (plugins) => {
       const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
-      const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
+      const sessionPlugin = findPlugin<SessionPluginProvides>(plugins, 'dxos.org/plugin/session');
       if (!clientPlugin) {
         return;
       }
@@ -52,7 +69,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const spaceIndices = getIndices(spaces.length);
           spaces.forEach((space, index) => {
             const handle = createSubscription(() => {
-              onSpaceUpdate?.(spaceToGraphNode(space, plugins, spaceIndices[index]));
+              onSpaceUpdate?.(spaceToSessionNode(space, spaceIndices[index]));
             });
             handle.update([space.properties]);
             spaceSubs.add(handle.unsubscribe);
@@ -69,14 +86,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
         client.services.joinedSpace.on((spaceKey) => {
-          treeView.active = [getSpaceId(spaceKey)];
+          treeView.active = [spaceKey.toHex()];
         });
       }
 
       const dispose = effect(() => {
-        const space = graphPlugin?.provides.graph.pluginChildren?.[SPACE_PLUGIN]?.find(
-          (node) => node.id === treeView.active[0],
-        )?.data;
+        const space = sessionPlugin?.provides.sessionGraph.nodes[treeView.active[0] as string];
         if (
           space instanceof SpaceProxy &&
           (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
@@ -93,6 +108,16 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
     },
     provides: {
       translations,
+      session: {
+        resolver: (plugins) => (node: SessionNode) => {
+          const client = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client')?.provides.client;
+          if (client && isSpaceNode(node)) {
+            return resolveSpace(client, node);
+          } else {
+            return undefined;
+          }
+        },
+      },
       component: (data, role) => {
         switch (role) {
           case 'main':
@@ -106,8 +131,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             switch (true) {
               case data === SPACE_PLUGIN:
                 return EmptyTree;
-              case isGraphNode(data) && isSpace(data?.data):
-                return EmptySpace;
+              // case isSpaceNode(data) && !!resolveSpace(client, data as SpaceNode):
+              //   return EmptySpace;
               default:
                 return null;
             }
@@ -130,65 +155,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       },
       components: {
         Main: SpaceMain,
-      },
-      graph: {
-        nodes: (parent, emit, plugins) => {
-          if (parent.id !== 'root') {
-            return [];
-          }
-
-          onSpaceUpdate = emit;
-          const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-          const spaces = clientPlugin?.provides.client.spaces.get();
-          const indices = spaces?.length ? getIndices(spaces.length) : [];
-          return spaces?.map((space, index) => spaceToGraphNode(space, plugins, indices[index])) ?? [];
-        },
-        actions: (parent) => {
-          if (parent.id !== 'root') {
-            return [];
-          }
-
-          const indices = getIndices(3);
-
-          // TODO(wittjosiah): Disable if no identity.
-          return [
-            {
-              id: 'create-space',
-              index: indices[0],
-              testId: 'spacePlugin.createSpace',
-              label: ['create space label', { ns: 'os' }],
-              icon: (props) => <Planet {...props} />,
-              disposition: 'toolbar',
-              intent: {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.CREATE,
-              },
-            },
-            {
-              id: 'join-space',
-              index: indices[1],
-              testId: 'spacePlugin.joinSpace',
-              label: ['join space label', { ns: 'os' }],
-              icon: (props) => <Intersect {...props} />,
-              disposition: 'toolbar',
-              intent: {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.JOIN,
-              },
-            },
-            // TODO(wittjosiah): Factor out.
-            {
-              id: 'invite-device',
-              index: indices[2],
-              testId: 'spacePlugin.inviteDevice',
-              label: ['invite device label', { ns: 'os' }],
-              icon: (props) => <Devices {...props} />,
-              intent: {
-                action: 'device-invitations',
-              },
-            },
-          ];
-        },
       },
       intent: {
         resolver: async (intent, plugins) => {
@@ -274,7 +240,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             case SpaceAction.ADD_OBJECT: {
               if (space && intent.data.object) {
                 const object = space.db.add(intent.data.object);
-                return [getSpaceId(space.key), object.id];
+                return [space.key.toHex(), object.id];
               }
               break;
             }

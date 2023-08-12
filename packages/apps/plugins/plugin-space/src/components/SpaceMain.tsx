@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
+// import { isGraphNode } from '@braneframe/plugin-graph';
 import { Document } from '@braneframe/types';
 import { useTextModel } from '@dxos/aurora-composer';
 import { isTypedObject, SpaceProxy } from '@dxos/react-client/echo';
@@ -19,9 +19,7 @@ export const SpaceMain: FC<{ data: unknown }> = ({ data }) => {
     data &&
     typeof data === 'object' &&
     'active' in data &&
-    Array.isArray(data.active) &&
-    isGraphNode(data.active[0]) &&
-    isGraphNode(data.active[1])
+    Array.isArray(data.active) /* && isGraphNode(data.active[0]) && isGraphNode(data.active[1]) */
       ? [data.active[0], data.active[1]]
       : [];
   const identity = useIdentity();

@@ -58,15 +58,6 @@
       "path": "../plugins/plugin-error"
     },
     {
-      "path": "../plugins/plugin-files"
-    },
-    {
-      "path": "../plugins/plugin-github"
-    },
-    {
-      "path": "../plugins/plugin-graph"
-    },
-    {
       "path": "../plugins/plugin-intent"
     },
     {
@@ -74,6 +65,9 @@
     },
     {
       "path": "../plugins/plugin-pwa"
+    },
+    {
+      "path": "../plugins/plugin-session"
     },
     {
       "path": "../plugins/plugin-space"

@@ -10,15 +10,15 @@ import { createRoot } from 'react-dom/client';
 import { ClientPlugin } from '@braneframe/plugin-client';
 import { DndPlugin } from '@braneframe/plugin-dnd';
 import { ErrorPlugin } from '@braneframe/plugin-error';
-import { FilesPlugin } from '@braneframe/plugin-files';
-import { GithubPlugin } from '@braneframe/plugin-github';
-import { GraphPlugin } from '@braneframe/plugin-graph';
+// import { FilesPlugin } from '@braneframe/plugin-files';
+// import { GithubPlugin } from '@braneframe/plugin-github';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
+import { SessionPlugin } from '@braneframe/plugin-session';
 import { SpacePlugin } from '@braneframe/plugin-space';
 import { SplitViewPlugin } from '@braneframe/plugin-splitview';
-import { StackPlugin } from '@braneframe/plugin-stack';
+// import { StackPlugin } from '@braneframe/plugin-stack';
 import { ThemePlugin } from '@braneframe/plugin-theme';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
@@ -45,15 +45,15 @@ createRoot(document.getElementById('root')!).render(
         // Inside theme provider so that errors are styled.
         ErrorPlugin(),
         ClientPlugin(),
-        GraphPlugin(),
+        SessionPlugin(),
         TreeViewPlugin(),
         UrlSyncPlugin(),
         SplitViewPlugin(),
         SpacePlugin(),
         MarkdownPlugin(),
-        StackPlugin(),
-        GithubPlugin(),
-        FilesPlugin(),
+        // StackPlugin(),
+        // GithubPlugin(),
+        // FilesPlugin(),
       ]}
     />
   </StrictMode>,

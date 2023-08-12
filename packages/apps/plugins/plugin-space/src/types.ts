@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { SessionNode } from '@braneframe/plugin-session';
+
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
 
@@ -17,3 +19,5 @@ export enum SpaceAction {
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
 }
+
+export type SpaceNode = SessionNode<{ spaceKey: string; index: string }>;

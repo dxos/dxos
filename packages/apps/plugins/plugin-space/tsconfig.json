@@ -63,10 +63,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-intent"
     },
     {
-      "path": "../plugin-intent"
+      "path": "../plugin-session"
     },
     {
       "path": "../plugin-splitview"

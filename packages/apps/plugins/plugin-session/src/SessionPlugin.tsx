@@ -19,7 +19,9 @@ export const SessionPlugin = (): PluginDefinition<SessionPluginProvides> => {
     ready: async (plugins) => {
       plugins.forEach((plugin) => {
         if ('nodeDataResolver' in plugin.provides) {
-          dataResolvers.push((plugin as SessionPluginParticipant).provides!.dataResolver);
+          dataResolvers.push(
+            (plugin as PluginDefinition<SessionPluginParticipant>).provides!.session.resolver(plugins),
+          );
         }
       });
     },

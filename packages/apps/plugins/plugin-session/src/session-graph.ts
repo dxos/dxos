@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
+import { DeepSignal, deepSignal } from 'deepsignal/react';
 import update from 'lodash.update';
 
 import { NodeKey, RelationKey, SessionGraph, SessionNode } from './types';
@@ -20,7 +20,7 @@ export const addNodes = (...nodes: SessionNode[]): AddNodesResult =>
       if (sessionGraph.nodes[node.id]) {
         acc.failed[node.id] = node;
       } else {
-        sessionGraph.nodes[node.id] = node;
+        sessionGraph.nodes[node.id] = node as DeepSignal<SessionNode>;
         acc.added[node.id] = node;
       }
       return acc;
