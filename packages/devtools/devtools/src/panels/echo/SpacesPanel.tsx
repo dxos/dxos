@@ -14,7 +14,7 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { PanelContainer, Toolbar } from '../../components';
+import { PanelContainer } from '../../components';
 import { useDevtoolsDispatch } from '../../hooks';
 
 const SpacesPanel: FC = () => {
@@ -117,7 +117,7 @@ const SpacesPanel: FC = () => {
   ];
 
   return (
-    <PanelContainer className='overflow-auto' toolbar={<Toolbar></Toolbar>}>
+    <PanelContainer className='overflow-auto'>
       <Table compact slots={{ cell: { className: 'items-center ' } }} columns={columns} data={spaces} />;
     </PanelContainer>
   );

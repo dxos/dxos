@@ -34,11 +34,6 @@ export type SectionItem = {
 export const useSections = (): SectionItem[] => {
   return [
     {
-      id: '/diagnostics',
-      title: 'Diagnostics',
-      Icon: ChartLine,
-    },
-    {
       id: '/client',
       title: 'Client',
       Icon: Users,
@@ -57,6 +52,11 @@ export const useSections = (): SectionItem[] => {
           id: '/client/logs',
           title: 'Logs',
           Icon: Receipt,
+        },
+        {
+          id: '/client/diagnostics',
+          title: 'Diagnostics',
+          Icon: ChartLine,
         },
       ],
     },

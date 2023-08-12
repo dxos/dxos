@@ -4,21 +4,15 @@
 
 import { Clipboard } from '@phosphor-icons/react';
 import React, { Component, PropsWithChildren, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Button, Message } from '@dxos/aurora';
-import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
-  let insideRouter = false;
-  try {
-    insideRouter = !!useLocation().pathname;
-  } catch (err) {
-    log.info('ErrorBoundary is outside of Router.');
-  }
+  return <div>{error.message}</div>;
 
-  const navigate = insideRouter ? useNavigate() : undefined;
+  const navigate = useNavigate();
   const message = String(error);
   const stack = error.stack;
 
