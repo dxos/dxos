@@ -13,7 +13,7 @@ import { useDevtoolsState } from '../../hooks';
 
 const columns: TableColumn<SpaceMember>[] = [
   {
-    Header: 'key',
+    Header: 'Key',
     width: 120,
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (member) => {
@@ -22,11 +22,11 @@ const columns: TableColumn<SpaceMember>[] = [
     },
   },
   {
-    Header: 'name',
+    Header: 'Name',
     accessor: (member) => member.identity.profile?.displayName,
   },
   {
-    Header: 'status',
+    Header: 'Status',
     accessor: (member) => {
       switch (member.presence) {
         case SpaceMember.PresenceState.ONLINE:

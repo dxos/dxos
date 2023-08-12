@@ -5,7 +5,7 @@
 import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
-import { mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
@@ -38,7 +38,7 @@ export const RootContainer = () => {
                       id === pathname && 'bg-sky-600 text-white',
                     )}
                   >
-                    <Icon />
+                    <Icon className={getSize(5)} />
                     <Link to={id} className='grow'>
                       <span>{title}</span>
                     </Link>

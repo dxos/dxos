@@ -19,12 +19,12 @@ import {
   Users,
   UsersThree,
 } from '@phosphor-icons/react';
-import { FC } from 'react';
+import { FC, PropsWithChildren } from 'react';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon?: FC;
+  Icon?: FC<PropsWithChildren>;
   items?: SectionItem[];
 };
 

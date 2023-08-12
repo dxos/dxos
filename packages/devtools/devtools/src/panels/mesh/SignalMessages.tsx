@@ -59,13 +59,13 @@ const views = [
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).truncate()) ||
           (response.swarmEvent!.peerLeft && truncateKey(response.swarmEvent!.peerLeft.peer)),
       },
-      {
-        Header: 'Peer Name',
-        width: 180,
-        accessor: (response: SignalResponse) =>
-          (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
-          (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
-      },
+      // {
+      //   Header: 'Peer Name',
+      //   width: 180,
+      //   accessor: (response: SignalResponse) =>
+      //     (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
+      //     (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
+      // },
       // TODO(burdon): Time delta since last message?
       {
         Header: 'Since',
@@ -204,8 +204,10 @@ const getFilteredData = (messages: SignalResponse[], view?: View<SignalResponse>
     if (!match) {
       return true;
     }
+
     return JSON.stringify(object).includes(match);
   };
+
   return view
     ? messages.filter(view.filter).filter(view.subFilter ? view.subFilter(searchText) : defaultSubFilter(searchText))
     : messages;
