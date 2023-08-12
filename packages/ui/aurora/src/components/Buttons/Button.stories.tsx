@@ -6,6 +6,8 @@ import '@dxosTheme';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
 
+import { chromeSurface, mx } from '@dxos/aurora-theme';
+
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 import { Button, ButtonGroup, ButtonProps } from './Button';
@@ -14,9 +16,11 @@ export default {
   component: Button,
 };
 
+// TOOD(burdon): Replace "ghost" with elevation 0?
+// TODO(burdon): Update all stories with chromeSurface.
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <div role='group' className='flex flex-col gap-4 mbe-4'>
+    <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4', chromeSurface)}>
       <ElevationProvider elevation='base'>
         <div className='flex gap-4'>{children}</div>
         <DensityProvider density='fine'>
@@ -24,7 +28,7 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
         </DensityProvider>
       </ElevationProvider>
     </div>
-    <div role='group' className='flex flex-col gap-4'>
+    <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4', chromeSurface)}>
       <ElevationProvider elevation='group'>
         <div className='flex gap-4'>{children}</div>
         <DensityProvider density='fine'>
