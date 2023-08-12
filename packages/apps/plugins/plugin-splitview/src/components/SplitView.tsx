@@ -19,7 +19,7 @@ export const SplitView = () => {
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      <Main.Sidebar>
+      <Main.Sidebar classNames='overflow-hidden'>
         <Surface name='sidebar' />
       </Main.Sidebar>
       <div
