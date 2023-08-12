@@ -10,6 +10,7 @@ import {
   Graph,
   HardDrive,
   HardDrives,
+  Icon,
   IdentificationBadge,
   Key,
   PaperPlane,
@@ -19,12 +20,11 @@ import {
   Users,
   UsersThree,
 } from '@phosphor-icons/react';
-import { FC } from 'react';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon?: FC;
+  Icon: Icon;
   items?: SectionItem[];
 };
 
@@ -33,11 +33,6 @@ export type SectionItem = {
  */
 export const useSections = (): SectionItem[] => {
   return [
-    {
-      id: '/diagnostics',
-      title: 'Diagnostics',
-      Icon: ChartLine,
-    },
     {
       id: '/client',
       title: 'Client',
@@ -57,6 +52,11 @@ export const useSections = (): SectionItem[] => {
           id: '/client/logs',
           title: 'Logs',
           Icon: Receipt,
+        },
+        {
+          id: '/client/diagnostics',
+          title: 'Diagnostics',
+          Icon: ChartLine,
         },
       ],
     },

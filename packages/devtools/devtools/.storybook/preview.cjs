@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createElement, useEffect } from 'react';
-import { ThemeProvider } from '@dxos/react-appkit';
+import React, { createElement, useEffect } from 'react';
+import { ThemeProvider } from '@dxos/aurora';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -39,6 +39,7 @@ const withTheme = (StoryFn, context) => {
   useEffect(() => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
   }, [theme]);
+
   return createElement(ThemeProvider, { children: createElement(StoryFn) });
 };
 

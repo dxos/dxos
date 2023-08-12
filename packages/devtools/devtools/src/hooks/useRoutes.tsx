@@ -37,10 +37,6 @@ export const useRoutes = () => {
       element: <RootContainer />,
       children: [
         {
-          path: '/diagnostics',
-          element: <DiagnosticsPanel />,
-        },
-        {
           path: '/client',
           children: [
             {
@@ -54,6 +50,10 @@ export const useRoutes = () => {
             {
               path: '/client/logs',
               element: <LoggingPanel />,
+            },
+            {
+              path: '/client/diagnostics',
+              element: <DiagnosticsPanel />,
             },
           ],
         },
