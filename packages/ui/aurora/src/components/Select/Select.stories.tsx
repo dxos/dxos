@@ -37,13 +37,14 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
-      <Select.Trigger placeholder={'Select value'} />
+      <Select.TriggerButton placeholder='Select value' />
       <Select.Content>
         {items.map(({ id, text }) => (
-          <Select.Item key={id} value={id}>
+          <Select.Option key={id} value={id}>
             {text}
-          </Select.Item>
+          </Select.Option>
         ))}
+        <Select.Arrow />
       </Select.Content>
     </Select.Root>
   );

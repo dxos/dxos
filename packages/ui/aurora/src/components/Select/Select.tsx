@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDown, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
+
+import { getSize } from '@dxos/aurora-theme';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
@@ -34,11 +36,11 @@ type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValue
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(({ placeholder, ...props }, forwardedRef) => {
   return (
-    <SelectPrimitive.Trigger asChild>
-      <Button {...props} ref={forwardedRef}>
+    <SelectPrimitive.Trigger asChild ref={forwardedRef}>
+      <Button {...props}>
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon className='pis-2'>
-          <CaretDown />
+          <CaretDown weight='bold' />
         </SelectPrimitive.Icon>
       </Button>
     </SelectPrimitive.Trigger>
@@ -75,17 +77,48 @@ type SelectViewportProps = SelectPrimitive.SelectViewportProps;
 
 const SelectViewport = SelectPrimitive.Viewport;
 
-type SelectItemProps = SelectPrimitive.SelectItemProps;
+type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
 
-const SelectItem = SelectPrimitive.Item;
+const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef} />;
+});
 
 type SelectItemTextProps = SelectPrimitive.SelectItemTextProps;
 
 const SelectItemText = SelectPrimitive.ItemText;
 
-type SelectItemIndicatorProps = SelectPrimitive.SelectItemIndicatorProps;
+type SelectItemIndicatorProps = ThemedClassName<SelectPrimitive.SelectItemIndicatorProps>;
 
-const SelectItemIndicator = SelectPrimitive.ItemIndicator;
+const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <SelectPrimitive.ItemIndicator
+        {...props}
+        className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </SelectPrimitive.ItemIndicator>
+    );
+  },
+);
+
+type SelectOptionProps = SelectItemProps;
+
+const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+
+  return (
+    <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}>
+        <Check weight='bold' className={getSize(4)} />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  );
+});
 
 type SelectGroupProps = SelectPrimitive.SelectGroupProps;
 
@@ -99,9 +132,19 @@ type SelectSeparatorProps = SelectPrimitive.SelectSeparatorProps;
 
 const SelectSeparator = SelectPrimitive.Separator;
 
-type SelectArrowProps = SelectPrimitive.SelectArrowProps;
+type SelectArrowProps = ThemedClassName<SelectPrimitive.SelectArrowProps>;
 
-const SelectArrow = SelectPrimitive.Arrow;
+const SelectArrow = forwardRef<SVGSVGElement, SelectArrowProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+
+  return (
+    <SelectPrimitive.Arrow
+      {...props}
+      className={tx('select.arrow', 'select__arrow', {}, classNames)}
+      ref={forwardedRef}
+    />
+  );
+});
 
 export const Select = {
   Root: SelectRoot,
@@ -117,6 +160,7 @@ export const Select = {
   Item: SelectItem,
   ItemText: SelectItemText,
   ItemIndicator: SelectItemIndicator,
+  Option: SelectOption,
   Group: SelectGroup,
   Label: SelectLabel,
   Separator: SelectSeparator,
@@ -137,6 +181,7 @@ export type {
   SelectItemProps,
   SelectItemTextProps,
   SelectItemIndicatorProps,
+  SelectOptionProps,
   SelectGroupProps,
   SelectLabelProps,
   SelectSeparatorProps,
