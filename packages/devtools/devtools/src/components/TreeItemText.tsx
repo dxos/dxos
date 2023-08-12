@@ -11,7 +11,7 @@ export type TreeItemTextProps = {
 
 export const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
   <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
-    <span>{primary}</span>
+    <span className='font-mono'>{primary}</span>
     <span className='text-gray-400'>{secondary}</span>
   </div>
 );

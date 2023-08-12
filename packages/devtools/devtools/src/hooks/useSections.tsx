@@ -10,6 +10,7 @@ import {
   Graph,
   HardDrive,
   HardDrives,
+  Icon,
   IdentificationBadge,
   Key,
   PaperPlane,
@@ -19,12 +20,11 @@ import {
   Users,
   UsersThree,
 } from '@phosphor-icons/react';
-import { FC, PropsWithChildren } from 'react';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon?: FC<PropsWithChildren>;
+  Icon: Icon;
   items?: SectionItem[];
 };
 

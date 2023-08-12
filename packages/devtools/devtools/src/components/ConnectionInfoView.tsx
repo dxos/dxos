@@ -2,16 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Upload } from '@phosphor-icons/react';
-import bytes from 'bytes';
 import React from 'react';
 
+import { Table, TableColumn } from '@dxos/mosaic';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { TreeView } from '@dxos/react-appkit';
 
 import { DetailsTable } from './DetailsTable';
-import { JsonView } from './JsonView';
-import { TreeItemText } from './TreeItemText';
 
 export interface ConnectionInfoViewProps {
   connectionInfo?: ConnectionInfo;
@@ -27,46 +23,40 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
     return null;
   }
 
+  const columns: TableColumn<ConnectionInfo.StreamStats>[] = [
+    {
+      Header: 'Sent',
+      align: 'right',
+      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.toLocaleString()}</span>,
+      width: 40,
+      accessor: 'bytesSent',
+    },
+    {
+      Header: 'Received',
+      align: 'right',
+      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value?.toLocaleString()}</span>,
+      width: 40,
+      accessor: 'bytesReceived',
+    },
+    {
+      Header: 'Tag',
+      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value}</span>,
+      accessor: 'tag',
+    },
+  ];
+
   return (
-    <DetailsTable
-      object={{
-        state: connectionInfo.state,
-        sessionId: connectionInfo.sessionId.toHex(),
-        remotePeerId: connectionInfo.remotePeerId.toHex(),
-        transport: connectionInfo.transport,
-        protocolExtensions: connectionInfo.protocolExtensions?.join(','),
-        events: (
-          <JsonView
-            data={{
-              events: connectionInfo.events,
-            }}
-          />
-        ),
-        streams: (
-          <TreeView
-            items={
-              connectionInfo.streams?.map((streamStat) => ({
-                id: streamStat.id.toString(),
-                Icon: Upload,
-                Element: (
-                  <TreeItemText
-                    primary={`| Up: ${bytes.format(streamStat.bytesSent)} | Down: ${bytes.format(
-                      streamStat.bytesReceived,
-                    )} |`}
-                    secondary={streamStat.tag}
-                  />
-                ),
-              })) ?? []
-            }
-            expanded={connectionInfo.streams?.map((streamStat) => streamStat.id.toString())}
-            slots={{
-              value: {
-                className: 'overflow-hidden text-gray-400 truncate pl-2',
-              },
-            }}
-          />
-        ),
-      }}
-    />
+    <div>
+      <DetailsTable
+        object={{
+          state: connectionInfo.state,
+          sessionId: connectionInfo.sessionId.toHex(),
+          remotePeerId: connectionInfo.remotePeerId.toHex(),
+          transport: connectionInfo.transport,
+          extensions: connectionInfo.protocolExtensions?.join(','),
+        }}
+      />
+      <Table compact columns={columns} data={connectionInfo.streams ?? []} />
+    </div>
   );
 };

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { Table, TableColumn } from '@dxos/mosaic';
-import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { PanelContainer, ConnectionInfoView } from '../../components';
@@ -18,55 +18,70 @@ const SwarmPanel = () => {
   const { data } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
   const [sessionId, setSessionId] = useState<PublicKey | undefined>();
 
-  // TODO(burdon): Table.
-  // {
-  //   (data ?? []).map((swarm) => ({
-  //     id: swarm.id.toHex(),
-  //     Element: <TreeItemText primary={humanize(swarm.topic)} secondary={swarm.label} />,
-  //     Icon: ShareNetwork,
-  //     items: swarm.connections?.map((connection) => ({
-  //       id: connection.sessionId.toHex(),
-  //       Element: <TreeItemText primary={humanize(connection.remotePeerId)} secondary={connection.state} />,
-  //       Icon:
-  //         {
-  //           CONNECTED: LinkSimple,
-  //           CLOSED: LinkBreak,
-  //         }[connection.state] ?? LinkSimpleBreak,
-  //       value: connection,
-  //     })),
-  //   }));
-  // }
+  type Connection = SwarmInfo & Partial<ConnectionInfo>;
 
-  // TODO(burdon): Show connections.
-  const items = data?.flatMap((swarm) => swarm) ?? [];
-  const columns: TableColumn<SwarmInfo>[] = [
+  const items =
+    data?.reduce<Connection[]>((connections, swarm) => {
+      if (!swarm.connections?.length) {
+        connections.push({ ...swarm });
+      } else {
+        for (const connection of swarm.connections ?? []) {
+          connections.push({ ...swarm, ...connection });
+        }
+      }
+      return connections;
+    }, []) ?? [];
+
+  const columns: TableColumn<Connection>[] = [
+    {
+      Header: 'Active',
+      Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
+      width: 40,
+      accessor: 'isActive',
+    },
     {
       Header: 'Swarm',
       Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.truncate()}</span>,
       width: 80,
-      accessor: ({ id }) => id,
+      accessor: 'id',
     },
     {
       Header: 'Topic',
       Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.truncate()}</span>,
       width: 80,
-      accessor: ({ topic }) => topic,
+      accessor: 'topic',
     },
     {
-      Header: 'Active',
-      Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
+      Header: 'Connection',
+      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value}</span>,
       width: 80,
-      accessor: ({ isActive }) => isActive,
+      accessor: 'state',
+    },
+    {
+      Header: 'Session',
+      Cell: ({ value }: any) => (
+        <span onClick={() => setSessionId(value)} className='font-mono text-sm cursor-pointer text-blue-500 underline'>
+          {value?.truncate()}
+        </span>
+      ),
+      width: 80,
+      accessor: 'sessionId',
+    },
+    {
+      Header: 'Remote Peer',
+      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value?.truncate()}</span>,
+      width: 80,
+      accessor: 'remotePeerId',
     },
   ];
 
   return (
-    <PanelContainer className='flex-row'>
-      <div className='flex flex-col w-1/3 mt-2 overflow-auto border-r'>
+    <PanelContainer className='flex flex-col space-y-4 divide-y'>
+      <div>
         <Table compact columns={columns} data={items} />
       </div>
       {sessionId && (
-        <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
+        <div className='overflow-auto'>
           <ConnectionInfoView
             connectionInfo={data
               ?.flatMap((swarm) => swarm.connections)

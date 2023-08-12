@@ -52,9 +52,7 @@ export const Select = (props: SelectProps) => {
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Content className='z-[50]'>
         <SelectPrimitive.ScrollUpButton className='flex items-center justify-center text-gray-700 dark:text-gray-300'>
-          <div className=''>
-            <CaretUp />
-          </div>
+          <CaretUp />
         </SelectPrimitive.ScrollUpButton>
         <SelectPrimitive.Viewport className='bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg'>
           {children}
