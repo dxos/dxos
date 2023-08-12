@@ -29,4 +29,4 @@ export type SessionPluginProvides = { sessionGraph: SessionGraph; dataResolvers:
 
 export type SessionPluginParticipant = PluginDefinition<{ dataResolver: DataResolver }>;
 
-export type SessionContext = SessionPluginProvides;
+export type SessionContextValue = SessionPluginProvides;

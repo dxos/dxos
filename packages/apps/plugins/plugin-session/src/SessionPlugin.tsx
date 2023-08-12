@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext } from 'react';
+import React from 'react';
 
 import { PluginDefinition } from '@dxos/react-surface';
 
+import { defaultSessionContextValue, SessionContext } from './SessionContext';
 import { dataResolvers } from './data-resolver';
 import { sessionGraph } from './session-graph';
-import { SessionPluginProvides, SessionContext, SessionPluginParticipant } from './types';
-
-const SessionContext = createContext<SessionContext>({ sessionGraph, dataResolvers });
+import { SessionPluginProvides, SessionPluginParticipant } from './types';
 
 export const SessionPlugin = (): PluginDefinition<SessionPluginProvides> => {
   return {
@@ -25,9 +24,9 @@ export const SessionPlugin = (): PluginDefinition<SessionPluginProvides> => {
       });
     },
     provides: {
-      context: ({ children }) => {
-        return <SessionContext.Provider value={{ sessionGraph, dataResolvers }}>{children}</SessionContext.Provider>;
-      },
+      context: ({ children }) => (
+        <SessionContext.Provider value={defaultSessionContextValue}>{children}</SessionContext.Provider>
+      ),
       sessionGraph,
       dataResolvers,
     },
