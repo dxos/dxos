@@ -4,11 +4,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, Input } from '@dxos/aurora';
 import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { Input } from '@dxos/react-appkit';
 import { useClientServices } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 
@@ -96,13 +95,9 @@ const LoggingPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar>
-          <Input
-            ref={inputRef}
-            slots={{ root: { className: 'w-full ' } }}
-            label='Filter'
-            labelVisuallyHidden
-            placeholder='Filter (e.g., "info", "client:debug")'
-          />
+          <Input.Root>
+            <Input.TextInput ref={inputRef} placeholder='Filter (e.g., "info", "client:debug")' />
+          </Input.Root>
           <Button onClick={handleQueryLogs}>Refresh</Button>
           <Button onClick={() => setLogs([])}>Clear</Button>
         </Toolbar>

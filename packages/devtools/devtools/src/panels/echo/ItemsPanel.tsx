@@ -7,11 +7,11 @@ import React, { useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
-import { TreeViewItem, Searchbar } from '@dxos/react-appkit';
+import { TreeViewItem } from '@dxos/react-appkit';
 import { PublicKey } from '@dxos/react-client';
 import { DocumentModel, TypedObject, TextModel, useQuery } from '@dxos/react-client/echo';
 
-import { JsonView, MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { JsonView, MasterDetailTable, PanelContainer, Searchbar, Toolbar } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 

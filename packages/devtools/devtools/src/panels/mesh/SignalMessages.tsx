@@ -12,12 +12,12 @@ import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Searchbar, Select } from '@dxos/react-appkit';
+import { Select } from '@dxos/react-appkit';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
-import { MasterDetailTable, Toolbar } from '../../components';
+import { MasterDetailTable, Searchbar, Toolbar } from '../../components';
 
 export type View<T extends {}> = {
   id: string;
