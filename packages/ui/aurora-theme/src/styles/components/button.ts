@@ -15,6 +15,8 @@ import {
   contentElevation,
 } from '../fragments';
 
+// TODO(burdon): Ghost styles should have no border (be really flat).
+
 export const primaryAppButtonColors =
   'bg-primary-550 dark:bg-primary-550 aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 text-white aria-pressed:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
 export const defaultAppButtonColors =
@@ -39,7 +41,7 @@ export type OsButtonStyleProps = Partial<{
   sideInset: 'be';
 }>;
 
-const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
+export const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
   return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,

@@ -13,9 +13,11 @@ export * from './Main';
 export * from './Message';
 export * from './Popover';
 export * from './ScrollArea';
+export * from './Select';
 export * from './Separator';
 export * from './Tag';
 export * from './Toast';
+export * from './Toolbar';
 export * from './Tooltip';
 
 export * from './DensityProvider';
