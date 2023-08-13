@@ -68,7 +68,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
 type SelectScrollUpButtonProps = ThemedClassName<SelectPrimitive.SelectScrollUpButtonProps>;
 
 const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <SelectPrimitive.SelectScrollUpButton
@@ -76,7 +76,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
         className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
         ref={forwardedRef}
       >
-        <CaretUp weight='bold' className={getSize(4)} />
+        {children ?? <CaretUp weight='bold' className={getSize(4)} />}
       </SelectPrimitive.SelectScrollUpButton>
     );
   },
@@ -85,7 +85,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
 type SelectScrollDownButtonProps = ThemedClassName<SelectPrimitive.SelectScrollDownButtonProps>;
 
 const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButtonProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <SelectPrimitive.SelectScrollDownButton
@@ -93,7 +93,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
         className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
         ref={forwardedRef}
       >
-        <CaretDown weight='bold' className={getSize(4)} />
+        {children ?? <CaretDown weight='bold' className={getSize(4)} />}
       </SelectPrimitive.SelectScrollDownButton>
     );
   },
