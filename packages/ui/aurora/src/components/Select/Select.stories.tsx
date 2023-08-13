@@ -37,14 +37,21 @@ const StorybookSelect = ({ items = [] }: PropsWithChildren<{ items: ItemProps[] 
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
-      <Select.Trigger placeholder={'Select value'} />
-      <Select.Content>
-        {items.map(({ id, text }) => (
-          <Select.Item key={id} value={id}>
-            {text}
-          </Select.Item>
-        ))}
-      </Select.Content>
+      <Select.TriggerButton placeholder='Select value' />
+      <Select.Portal>
+        <Select.Content>
+          <Select.ScrollUpButton />
+          <Select.Viewport>
+            {items.map(({ id, text }) => (
+              <Select.Option key={id} value={id}>
+                {text}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+          <Select.ScrollDownButton />
+          <Select.Arrow />
+        </Select.Content>
+      </Select.Portal>
     </Select.Root>
   );
 };
