@@ -199,13 +199,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
         {/* TODO(burdon): Add to menu. */}
-        <FileUpload
-          classNames='mb-4 p-2'
-          fileTypes={['png']}
-          onUpload={(file: any) => {
-            console.log('upload', file);
-          }}
-        />
+        <div className='mb-4'>
+          <FileUpload
+            classNames='p-2'
+            fileTypes={['png']}
+            onUpload={(file: any) => {
+              console.log('upload', file);
+            }}
+          />
+        </div>
 
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>
