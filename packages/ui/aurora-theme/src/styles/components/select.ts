@@ -6,7 +6,7 @@ import { ComponentFunction, Elevation } from '@dxos/aurora-types';
 import type { Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { arrow, chromeSurface, surfaceElevation } from '../fragments';
+import { arrow, blockSeparator, chromeSurface, surfaceElevation } from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
@@ -28,9 +28,16 @@ export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props,
 
 export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(arrow, ...etc);
 
+export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(blockSeparator, ...etc);
+
+export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+  mx(chromeSurface, 'flex items-center justify-center cursor-default bs-6 is-full', ...etc);
+
 export const selectTheme: Theme<SelectStyleProps> = {
   content: selectContent,
   item: selectItem,
   itemIndicator: selectItemIndicator,
   arrow: selectArrow,
+  separator: selectSeparator,
+  scrollButton: selectScrollButton,
 };

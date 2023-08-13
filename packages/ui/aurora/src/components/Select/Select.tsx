@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
@@ -65,13 +65,39 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   },
 );
 
-type SelectScrollUpButtonProps = SelectPrimitive.SelectScrollUpButtonProps;
+type SelectScrollUpButtonProps = ThemedClassName<SelectPrimitive.SelectScrollUpButtonProps>;
 
-const SelectScrollUpButton = SelectPrimitive.SelectScrollUpButton;
+const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <SelectPrimitive.SelectScrollUpButton
+        {...props}
+        className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
+        ref={forwardedRef}
+      >
+        <CaretUp weight='bold' className={getSize(4)} />
+      </SelectPrimitive.SelectScrollUpButton>
+    );
+  },
+);
 
-type SelectScrollDownButtonProps = SelectPrimitive.SelectScrollDownButtonProps;
+type SelectScrollDownButtonProps = ThemedClassName<SelectPrimitive.SelectScrollDownButtonProps>;
 
-const SelectScrollDownButton = SelectPrimitive.SelectScrollDownButton;
+const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButtonProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <SelectPrimitive.SelectScrollDownButton
+        {...props}
+        className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
+        ref={forwardedRef}
+      >
+        <CaretDown weight='bold' className={getSize(4)} />
+      </SelectPrimitive.SelectScrollDownButton>
+    );
+  },
+);
 
 type SelectViewportProps = SelectPrimitive.SelectViewportProps;
 
@@ -128,9 +154,18 @@ type SelectLabelProps = SelectPrimitive.SelectLabelProps;
 
 const SelectLabel = SelectPrimitive.Label;
 
-type SelectSeparatorProps = SelectPrimitive.SelectSeparatorProps;
+type SelectSeparatorProps = ThemedClassName<SelectPrimitive.SelectSeparatorProps>;
 
-const SelectSeparator = SelectPrimitive.Separator;
+const SelectSeparator = forwardRef<HTMLDivElement, SelectSeparatorProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <SelectPrimitive.Separator
+      {...props}
+      className={tx('select.separator', 'select__separator', {}, classNames)}
+      ref={forwardedRef}
+    />
+  );
+});
 
 type SelectArrowProps = ThemedClassName<SelectPrimitive.SelectArrowProps>;
 
