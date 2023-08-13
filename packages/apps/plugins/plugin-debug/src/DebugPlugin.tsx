@@ -55,7 +55,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       graph: {
         nodes: (parent) => {
           // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
-          console.log('###', !!localStorage.getItem(DebugPanelKey));
           if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
             return [];
           }
@@ -122,6 +121,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             }
             break;
           }
+          // TODO(burdon): Trigger update nodes.
+          // TODO(burdon): Change role to 'settings'?
           case 'dialog': {
             if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
               return DebugSettings;

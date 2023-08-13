@@ -24,10 +24,12 @@ export const DebugSettings = () => {
   return (
     <Input.Root>
       {/* TODO(burdon): Requires custom CSS. */}
-      <div role='none' className='flex items-center gap-2'>
-        <Input.Checkbox checked={visible} onCheckedChange={(checked) => handleSetVisible(!!checked)} />
-        <Input.Label>{t('show debug panel')}</Input.Label>
-      </div>
+      <Input.Root>
+        <div className='flex gap-2'>
+          <Input.Checkbox checked={visible} onCheckedChange={(checked) => handleSetVisible(!!checked)} />
+          <Input.Label>{t('show debug panel')}</Input.Label>
+        </div>
+      </Input.Root>
     </Input.Root>
   );
 };
