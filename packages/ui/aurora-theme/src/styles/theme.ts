@@ -20,6 +20,7 @@ import {
   selectTheme,
   separatorTheme,
   toastTheme,
+  toolbarTheme,
   tooltipTheme,
   tagTheme,
 } from './components';
@@ -42,6 +43,7 @@ export const auroraTheme: Theme<Record<string, any>> = {
   separator: separatorTheme,
   tag: tagTheme,
   toast: toastTheme,
+  toolbar: toolbarTheme,
   tooltip: tooltipTheme,
 };
 

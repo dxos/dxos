@@ -12,19 +12,14 @@ import {
   TextAlignRight,
   TextAlignCenter,
 } from '@phosphor-icons/react';
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 
-import { Button, Input, Select, Toggle, ToggleGroup, ToggleGroupItem } from '../components';
+import { Button, Input, Select, Toggle, ToggleGroup, ToggleGroupItem, Toolbar } from '../components';
 import { createScenarios } from './helpers';
-
-// TODO(burdon): Candidate for aurora component?
-const Toolbar = ({ children }: PropsWithChildren) => {
-  return <div className='flex items-center space-x-2'>{children}</div>;
-};
 
 const Story = () => (
   <div className='flex flex-col space-y-2'>
-    <Toolbar>
+    <Toolbar classNames='flex'>
       <Button>Test</Button>
       <Button>
         <ArrowClockwise />

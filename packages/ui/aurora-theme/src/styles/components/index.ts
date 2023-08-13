@@ -17,4 +17,5 @@ export * from './select';
 export * from './separator';
 export * from './tag';
 export * from './toast';
+export * from './toolbar';
 export * from './tooltip';

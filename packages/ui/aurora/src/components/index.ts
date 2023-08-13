@@ -17,6 +17,7 @@ export * from './Select';
 export * from './Separator';
 export * from './Tag';
 export * from './Toast';
+export * from './Toolbar';
 export * from './Tooltip';
 
 export * from './DensityProvider';
