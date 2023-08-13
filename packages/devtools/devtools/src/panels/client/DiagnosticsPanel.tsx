@@ -63,10 +63,8 @@ const DiagnosticsPanel = () => {
           </Button>
           <Button onClick={handleResetMetrics}>Reset metrics</Button>
           <Input.Root>
-            <div role='none' className='flex space-x-2 bg-red-100 items-center'>
-              <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
-              <Input.Label>Record metrics!</Input.Label>
-            </div>
+            <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
+            <Input.Label>Record metrics</Input.Label>
           </Input.Root>
         </Toolbar>
       }
