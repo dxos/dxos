@@ -5,13 +5,12 @@
 import { Range } from 'hypercore';
 import { inspect } from 'node:util';
 import { Readable, Transform } from 'streamx';
-import invariant from 'tiny-invariant';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { invariant, log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
@@ -75,11 +74,17 @@ export class FeedWrapper<T extends {}> {
         });
       },
     });
-    this._hypercore.createReadStream(opts).pipe(transform, (err) => {
+    const readStream =
+      opts?.batch !== undefined && opts?.batch > 1
+        ? new BatchedReadStream(this._hypercore, opts)
+        : this._hypercore.createReadStream(opts);
+
+    readStream.pipe(transform, (err: any) => {
       // Ignore errors.
       // We might get "Writable stream closed prematurely" error.
       // Its okay since the pipeline is closed and does not expect more messages.
     });
+
     return transform;
   }
 
@@ -164,4 +169,67 @@ export class FeedWrapper<T extends {}> {
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
   clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+}
+
+class BatchedReadStream extends Readable {
+  private readonly _feed: Hypercore<any>;
+  private readonly _batchSize: number;
+  private _cursor: number;
+  private _reading = false;
+
+  constructor(feed: Hypercore<any>, opts: ReadStreamOptions = {}) {
+    super({
+      objectMode: true,
+    });
+    this._feed = feed;
+
+    invariant(opts.live === true, 'Only live mode supported');
+    invariant(opts.batch !== undefined && opts.batch > 1);
+    this._batchSize = opts.batch;
+    this._cursor = opts.start ?? 0;
+  }
+
+  override _open(cb: (err: Error | null) => void): void {
+    this._feed.ready(cb);
+  }
+
+  override _read(cb: (err: Error | null) => void): void {
+    if (this._reading) {
+      return;
+    }
+
+    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batchSize) === this._batchSize) {
+      this._batchedRead(cb);
+    } else {
+      this._nonBatchedRead(cb);
+    }
+  }
+
+  private _nonBatchedRead(cb: (err: Error | null) => void) {
+    this._feed.get(this._cursor, { wait: true }, (err, data) => {
+      if (err) {
+        cb(err);
+      } else {
+        this._cursor++;
+        this._reading = false;
+        this.push(data);
+        cb(null);
+      }
+    });
+  }
+
+  private _batchedRead(cb: (err: Error | null) => void) {
+    this._feed.getBatch(this._cursor, this._cursor + this._batchSize, { wait: true }, (err, data) => {
+      if (err) {
+        cb(err);
+      } else {
+        this._cursor += data.length;
+        this._reading = false;
+        for (const item of data) {
+          this.push(item);
+        }
+        cb(null);
+      }
+    });
+  }
 }

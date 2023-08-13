@@ -15,9 +15,8 @@ import {
   WireProtocolParams,
   WireProtocolProvider,
 } from '@dxos/network-manager';
-import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Teleport } from '@dxos/teleport';
+import { MuxerStats, Teleport } from '@dxos/teleport';
 import { BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { ComplexMap } from '@dxos/util';
@@ -119,12 +118,13 @@ export class SpaceProtocol {
     await this.blobSync.open();
 
     log('starting...');
+    const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm({
       protocolProvider: this._createProtocolProvider(credentials),
       peerId: this._swarmIdentity.peerKey,
-      topic: await this._topic,
+      topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._topic}`,
+      label: `Protocol swarm: ${topic}`,
     });
 
     log('started');
@@ -206,7 +206,7 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._authStatus;
   }
 
-  get stats(): Event<ConnectionInfo.StreamStats[]> {
+  get stats(): Event<MuxerStats> {
     return this._teleport.stats;
   }
 

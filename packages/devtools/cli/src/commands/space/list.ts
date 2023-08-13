@@ -25,8 +25,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client, !this.flags.live);
-
+      const spaces = await this.getSpaces(client);
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
@@ -47,8 +46,8 @@ export default class List extends BaseCommand<typeof List> {
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
-    const tableUpdate = new Event().debounce(1000);
-    tableUpdate.on(ctx, async () => {
+    const update = new Event().debounce(1000);
+    update.on(ctx, async () => {
       console.clear();
       printSpaces(spaces, this.flags);
     });
@@ -56,12 +55,12 @@ export default class List extends BaseCommand<typeof List> {
     const subscribeToSpaceUpdate = (space: Space) =>
       space.pipeline.subscribe({
         next: () => {
-          tableUpdate.emit();
+          update.emit();
         },
       });
 
     // Monitor space updates.
-    let spaces = await this.getSpaces(client, false);
+    let spaces = await this.getSpaces(client);
     spaces.forEach((space) => {
       subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
     });
@@ -71,7 +70,7 @@ export default class List extends BaseCommand<typeof List> {
       'client',
       client.spaces.subscribe({
         next: async () => {
-          spaces = await this.getSpaces(client, false);
+          spaces = await this.getSpaces(client);
           // Monitor space updates for new spaces.
           spaces
             .filter((space) => !subscriptions.has(space.key.toHex()))

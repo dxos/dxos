@@ -11,42 +11,45 @@ import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 
-/**
- * DX_PROFILE=test dx debug diagnostics --json
- */
 export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
   static override enableJsonFlag = true;
-  static override description = 'Output debug diagnostics.';
+  static override description = 'Create diagnostics report.';
   static override flags = {
     ...BaseCommand.flags,
     humanize: Flags.boolean({
-      description: 'Humanized keys.',
+      description: 'Humanize keys.',
     }),
     truncate: Flags.boolean({
       description: 'Truncate keys.',
     }),
-    verbose: Flags.boolean({
-      description: 'Verbose output.',
-    }),
   };
+
+  static override examples = [
+    {
+      description: 'Inspect diagnostics.',
+      command: "dx debug diagnostics --json --truncate | jq -r '.metrics'",
+    },
+    {
+      description: 'Upload diagnostics to GitHub.',
+      command: 'dx debug diagnostics --json --truncate | gh gist create --filename diagnostics.json',
+    },
+  ];
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       const data = await asyncTimeout(
         client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate }),
-        5_000,
+        this.flags.timeout,
       );
 
       return defaultsDeep({}, data, {
-        client: {
-          config: {
-            runtime: {
-              app: {
-                build: {
-                  timestamp: rev.date().toISOString(),
-                  hash: rev.long(),
-                  branch: rev.branch(),
-                },
+        config: {
+          runtime: {
+            app: {
+              build: {
+                timestamp: rev.date().toISOString(),
+                hash: rev.long(),
+                branch: rev.branch(),
               },
             },
           },

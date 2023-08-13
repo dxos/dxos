@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './credential';
-export * from './invitation';
-export * from './print';
+export * from './agents';
+export * from './credentials';
+export * from './devices';
+export * from './invitations';
 export * from './publish';
 export * from './random';
+export * from './spaces';
 export * from './supervisor';
 export * from './telemetry';
-export * from './test-util';
+export * from './testing';
 export * from './tunnel';
-export * from './util';
+export * from './types';

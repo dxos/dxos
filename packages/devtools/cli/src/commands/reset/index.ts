@@ -5,9 +5,8 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
-import path from 'path';
 
-import { DX_CACHE, DX_DATA, DX_RUNTIME, DX_STATE } from '@dxos/client-protocol';
+import { DX_CACHE, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
 
 import { BaseCommand } from '../../base-command';
 
@@ -26,11 +25,11 @@ export default class Reset extends BaseCommand<typeof Reset> {
     const paths = [
       ...new Set<string>(
         [
-          path.join(DX_CACHE, profile),
-          path.join(DX_DATA, profile),
-          path.join(DX_STATE, profile),
-          path.join(DX_RUNTIME, profile),
-          this.clientConfig?.get('runtime.client.storage.path'), // TODO(burdon): Duplicate of DX_RUNTIME?
+          getProfilePath(DX_CACHE, profile),
+          getProfilePath(DX_DATA, profile),
+          getProfilePath(DX_STATE, profile),
+          getProfilePath(DX_RUNTIME, profile),
+          this.clientConfig?.get('runtime.client.storage.path'),
         ].filter(Boolean) as string[],
       ),
     ];

@@ -1,48 +1,53 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 import { ux } from '@oclif/core';
 import { Table } from '@oclif/core/lib/cli-ux';
 
+import { asyncTimeout } from '@dxos/async';
 import { Space, SpaceMember } from '@dxos/client/echo';
-import { Device, Credential } from '@dxos/client/halo';
+import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './util';
+import { SpaceWaitTimeoutError } from '../errors';
+import { SPACE_WAIT_TIMEOUT } from '../timeouts';
+import { maybeTruncateKey } from './types';
 
-//
-// Devices
-//
+export const selectSpace = async (spaces: Space[]) => {
+  // eslint-disable-next-line no-eval
+  const inquirer = (await eval('import("inquirer")')).default;
+  const { key } = await inquirer.prompt([
+    {
+      name: 'key',
+      type: 'list',
+      message: 'Select a space:',
+      choices: spaces.map((space) => ({
+        name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
+        value: space.key,
+      })),
+    },
+  ]);
 
-export const mapDevices = (devices: Device[], truncateKeys = false) => {
-  return devices.map((device) => ({
-    key: maybeTruncateKey(device.deviceKey, truncateKeys),
-    kind: device.kind,
-  }));
+  return key;
 };
 
-export const printDevices = (devices: Device[], flags = {}) => {
-  ux.table(
-    mapDevices(devices, true),
-    {
-      key: {
-        header: 'key',
-      },
-      kind: {
-        header: 'kind',
-      },
-    },
-    {
-      ...flags,
-    },
-  );
+export const waitForSpace = async (
+  space: Space,
+  timeout = SPACE_WAIT_TIMEOUT,
+  exceptionHandler?: (err: Error) => void,
+) => {
+  try {
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
+  } catch (err: any) {
+    if (exceptionHandler) {
+      exceptionHandler(err);
+    } else {
+      throw err;
+    }
+  }
 };
 
-//
-// Spaces
-//
-
-type MapSpacesOptions = {
+export type MapSpacesOptions = {
   verbose?: boolean;
   truncateKeys?: boolean;
 };
@@ -52,7 +57,7 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
     const { open, ready } = space.internal.data.metrics ?? {};
-    const startup = open && ready && new Date(ready).getTime() - new Date(open).getTime();
+    const startup = open && ready && ready.getTime() - open.getTime();
 
     // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     // const host = client.services.services.DevtoolsHost!;
@@ -76,7 +81,8 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       startDataMutations,
       currentDataMutations,
       totalDataMutations, // TODO(burdon): Shows up lower than current.
-      // TODO(burdon): Negative.
+
+      // TODO(burdon): Negative?
       progress: (
         Math.min(Math.abs((currentDataMutations - startDataMutations) / (totalDataMutations - startDataMutations)), 1) *
         100
@@ -94,6 +100,7 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       },
       open: {
         header: 'open',
+        minWidth: 6,
       },
       name: {
         header: 'name',
@@ -104,10 +111,6 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       objects: {
         header: 'objects',
       },
-      startup: {
-        header: 'startup',
-        extended: true,
-      },
       epoch: {
         header: 'epoch',
       },
@@ -115,6 +118,10 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       //   header: 'Applied Epoch',
       // },
 
+      startup: {
+        header: 'startup',
+        extended: true,
+      },
       startDataMutations: {
         header: 'stashed', // TODO(burdon): Stashed?
         extended: true,
@@ -129,6 +136,7 @@ export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.tab
       },
       progress: {
         header: 'progress',
+        extended: true,
         // TODO(burdon): Use `ink` to render progress bar (separate from list commands).
         // get: (spaceInfo) => {
         //   let progressValue = +spaceInfo.progress;
@@ -173,42 +181,6 @@ export const printMembers = (members: SpaceMember[], flags = {}) => {
       },
       presence: {
         header: 'presence',
-      },
-    },
-    {
-      ...flags,
-    },
-  );
-};
-
-//
-// Credentials
-//
-
-export const mapCredentials = (credentials: Credential[], truncateKeys = false) => {
-  return credentials.map((credential) => ({
-    id: maybeTruncateKey(credential.id!, truncateKeys),
-    issuer: maybeTruncateKey(credential.issuer!, truncateKeys),
-    subject: maybeTruncateKey(credential.subject!.id!, truncateKeys),
-    type: credential.subject.assertion['@type'],
-  }));
-};
-
-export const printCredentials = (credentials: Credential[], flags = {}) => {
-  ux.table(
-    mapCredentials(credentials, true),
-    {
-      id: {
-        header: 'id',
-      },
-      issuer: {
-        header: 'issuer',
-      },
-      subject: {
-        header: 'subject',
-      },
-      type: {
-        header: 'type',
       },
     },
     {

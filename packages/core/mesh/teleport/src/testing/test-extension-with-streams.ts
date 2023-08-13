@@ -84,6 +84,20 @@ export class TestExtensionWithStreams implements TeleportExtension {
     networkStream.on('close', () => {
       networkStream.removeAllListeners();
     });
+
+    streamEntry.reportingTimer = setInterval(() => {
+      const { bytesSent, bytesReceived, sendErrors, receiveErrors } = streamEntry;
+      // log.info('stream stats', { streamTag, bytesSent, bytesReceived, sendErrors, receiveErrors });
+      log.trace('dxos.test.stream-stats', {
+        streamTag,
+        bytesSent,
+        bytesReceived,
+        sendErrors,
+        receiveErrors,
+        from: this.extensionContext?.localPeerId,
+        to: this.extensionContext?.remotePeerId,
+      });
+    }, 100);
   }
 
   private _closeStream(streamTag: string): Stats {
@@ -92,6 +106,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
     const stream = this._streams.get(streamTag)!;
 
     clearTimeout(stream.timer);
+    clearTimeout(stream.reportingTimer);
 
     const { bytesSent, bytesReceived, sendErrors, receiveErrors, startTimestamp } = stream;
 
@@ -244,4 +259,5 @@ type TestStream = {
   receiveErrors: number;
   timer?: NodeJS.Timer;
   startTimestamp?: number;
+  reportingTimer?: NodeJS.Timer;
 };

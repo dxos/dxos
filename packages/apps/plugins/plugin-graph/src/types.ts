@@ -23,6 +23,7 @@ export type GraphNode<TData = any> = {
   data?: TData;
   parent?: GraphNode;
   onChildrenRearrange?: (child: GraphNode, nextIndex: Index) => void;
+  // TODO(burdon): Combine with onChildrenRearrange (move nodes across spaces).
   onMoveNode?: (source: GraphNode, target: GraphNode, child: GraphNode, nextIndex: Index) => void;
   attributes?: { [key: string]: any };
   pluginChildren?: { [key: string]: GraphNode[] };
@@ -41,6 +42,7 @@ export type GraphNodeAction = {
   icon?: FC<IconProps>;
   disposition?: 'menu' | 'toolbar';
   intent: Intent | Intent[];
+  disabled?: boolean;
 };
 
 export type GraphContextValue = {

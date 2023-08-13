@@ -11,11 +11,11 @@ import {
   fineButtonDimensions,
   openOutline,
   staticDisabled,
-  osOpenColors,
   focusRing,
-  osFocusRing,
   contentElevation,
 } from '../fragments';
+
+// TODO(burdon): Ghost styles should have no border (be really flat).
 
 export const primaryAppButtonColors =
   'bg-primary-550 dark:bg-primary-550 aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 text-white aria-pressed:text-primary-100 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white dark:hover:text-white';
@@ -41,7 +41,7 @@ export type OsButtonStyleProps = Partial<{
   sideInset: 'be';
 }>;
 
-const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
+export const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
   return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
@@ -51,10 +51,10 @@ const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleP
   ];
 };
 
-export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
+export const buttonRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm',
+    'font-medium text-sm whitespace-nowrap',
     !props.inGroup && 'rounded-md',
     !props.disabled &&
       !props.inGroup &&
@@ -74,21 +74,6 @@ export const buttonAppRoot: ComponentFunction<AppButtonStyleProps> = (props, ...
   );
 };
 
-export const buttonOsRoot: ComponentFunction<OsButtonStyleProps> = (props, ...etc) => {
-  const resolvedVariant = props.variant ?? 'default';
-  return mx(
-    'font-system-medium text-xs shadow-none',
-    !props.inGroup && 'rounded',
-    !props.disabled && hoverColors,
-    resolvedVariant === 'default' && defaultOsButtonColors,
-    !props.disabled && resolvedVariant === 'ghost' && ghostButtonColors,
-    !props.disabled && osFocusRing,
-    ...osOpenColors({ side: props.sideInset ?? 'be' }),
-    ...sharedButtonStyles(props),
-    ...etc,
-  );
-};
-
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx(
     'inline-flex rounded-md [&>:first-child]:rounded-is-md [&>:last-child]:rounded-ie-md [&>button]:relative',
@@ -98,11 +83,6 @@ export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props,
 };
 
 export const buttonTheme: Theme<AppButtonStyleProps> = {
-  root: buttonAppRoot,
+  root: buttonRoot,
   group: buttonGroup,
-};
-
-export const buttonOsTheme: Theme<OsButtonStyleProps> = {
-  ...buttonTheme,
-  root: buttonOsRoot,
 };

@@ -15,6 +15,7 @@ import pkgUp from 'pkg-up';
 import { AgentWaitTimeoutError, Daemon, ForeverDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import {
+  getProfilePath,
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
@@ -27,6 +28,7 @@ import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
@@ -104,7 +106,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       helpValue: 'path',
       async default({ flags }: { flags: any }) {
         const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
-        return join(DX_CONFIG, `profile/${profile}.yml`);
+        return getProfilePath(DX_CONFIG, profile) + '.yml';
       },
       dependsOn: ['profile'],
       aliases: ['c'],
@@ -236,6 +238,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
   }
 
+  /**
+   * Load or create config file from defaults.
+   * @private
+   */
   private async _loadConfig() {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
@@ -251,7 +257,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         yamlConfig.runtime ??= {};
         yamlConfig.runtime.client ??= {};
         yamlConfig.runtime.client.storage ??= {};
-        yamlConfig.runtime.client.storage.path = join(
+        yamlConfig.runtime.client.storage.path = getProfilePath(
           yamlConfig.runtime.client.storage.path ?? DX_DATA,
           this.flags.profile,
         );
@@ -309,7 +315,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (err instanceof SpaceWaitTimeoutError) {
       this.logToStderr(chalk`{red Error}: ${err.message} [still processing?]`);
     } else if (err instanceof AgentWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: Agent is stale (restart with \n'dx agent restart --force')`);
+      // TODO(burdon): Need better diagnostics -- might fail for other reasons.
+      this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
     } else {
       // Handle unknown errors with default method.
       super.error(err, options as any);
@@ -373,7 +380,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getSpaces(client: Client, wait = true): Promise<Space[]> {
     const spaces = client.spaces.get();
     if (wait && !this.flags['no-wait']) {
-      await Promise.all(spaces.map((space) => waitForSpace(space, this.flags.timeout, (err) => this.error(err))));
+      await Promise.all(
+        spaces.map(async (space) => {
+          if (space.state.get() === SpaceState.INITIALIZING) {
+            await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+          }
+        }),
+      );
     }
 
     return spaces;
@@ -382,8 +395,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get or select space.
    */
-  async getSpace(client: Client, key?: string): Promise<Space> {
-    const spaces = await this.getSpaces(client);
+  async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+    const spaces = await this.getSpaces(client, wait);
     if (!key) {
       key = await selectSpace(spaces);
     }
@@ -392,7 +405,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!space) {
       this.error(`Invalid key: ${key}`);
     } else {
-      await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+      if (wait && !this.flags['no-wait'] && space.state.get() === SpaceState.INITIALIZING) {
+        await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+      }
+
       return space;
     }
   }

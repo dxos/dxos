@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { DX_RUNTIME } from '@dxos/client-protocol';
+import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { getUnixSocket } from '@dxos/client/services';
 
 export const parseAddress = (sock: string) => {
@@ -19,7 +19,7 @@ export const removeSocketFile = (profile: string) => {
 };
 
 export const lockFilePath = (profile: string): string => {
-  const lockFile = path.join(DX_RUNTIME, 'profile', profile, 'lockfile');
+  const lockFile = getProfilePath(DX_RUNTIME, profile, 'lockfile');
   fs.mkdirSync(path.dirname(lockFile), { recursive: true });
   return lockFile;
 };

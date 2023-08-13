@@ -8,26 +8,24 @@ import { ComponentFunction, Theme } from '@dxos/aurora-types';
 import {
   avatarTheme,
   buttonTheme,
-  buttonOsTheme,
   dialogTheme,
-  dialogOsTheme,
   dropdownMenuTheme,
   inputTheme,
-  inputOsTheme,
   linkTheme,
   listTheme,
-  listOsTheme,
   mainTheme,
   messageTheme,
   popoverTheme,
   scrollAreaTheme,
+  selectTheme,
   separatorTheme,
   toastTheme,
+  toolbarTheme,
   tooltipTheme,
   tagTheme,
 } from './components';
 
-export const theme: Theme<Record<string, any>> = {
+export const auroraTheme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
 
   avatar: avatarTheme,
@@ -40,21 +38,13 @@ export const theme: Theme<Record<string, any>> = {
   main: mainTheme,
   message: messageTheme,
   popover: popoverTheme,
+  select: selectTheme,
   scrollArea: scrollAreaTheme,
   separator: separatorTheme,
   tag: tagTheme,
   toast: toastTheme,
+  toolbar: toolbarTheme,
   tooltip: tooltipTheme,
-};
-
-export const osTheme: Theme<Record<string, any>> = {
-  ...theme,
-  themeName: () => 'dxos',
-
-  button: buttonOsTheme,
-  dialog: dialogOsTheme,
-  input: inputOsTheme,
-  list: listOsTheme,
 };
 
 export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {
@@ -64,6 +54,4 @@ export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<str
   };
 };
 
-export const appTx = bindTheme(theme);
-
-export const osTx = bindTheme(osTheme);
+export const auroraTx = bindTheme(auroraTheme);

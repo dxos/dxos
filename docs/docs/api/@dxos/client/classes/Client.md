@@ -19,7 +19,7 @@ Arguments:
 
 ## Properties
 ### [version](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L56)
-Type: <code>"0.1.54"</code>
+Type: <code>"0.1.55"</code>
 
 The version of this client API
 
@@ -112,7 +112,7 @@ Arguments:
 
 `meta`: <code>PropertiesProps</code>
 
-### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L289)
+### [destroy()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L288)
 
 
 
@@ -131,11 +131,11 @@ Arguments: none
 Get client diagnostics data.
 
 
-Returns: <code>Promise&lt;Partial&lt;ClientStats&gt;&gt;</code>
+Returns: <code>Promise&lt;Diagnostics&gt;</code>
 
 Arguments: 
 
-`opts`: <code>DiagnosticOptions</code>
+`opts`: <code>JsonStringifyOptions</code>
 
 ### [getSpace(spaceKey)](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L189)
 
@@ -162,7 +162,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L317)
+### [reset()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L316)
 
 
 
@@ -174,7 +174,7 @@ Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
 
-### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L308)
+### [resumeHostServices()](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/client/client.ts#L307)
 
 
 

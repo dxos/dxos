@@ -4,21 +4,22 @@
 
 import { Check } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
-import { Button } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
+import { Button, Toolbar } from '@dxos/aurora';
+import { getSize, mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
 import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
-import { ComplexSet } from '@dxos/util';
+import { ComplexSet, humanize } from '@dxos/util';
 
-import { DetailsTable, PanelContainer, Toolbar } from '../../components';
+import { DetailsTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../hooks';
 
 const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -26,7 +27,8 @@ const SpaceInfoPanel: FC = () => {
   const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
-  // TODO(dmaretskyi): We dont need SpaceInfo anymore?
+  // TODO(burdon): Factor out.
+  // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const object = useMemo(() => {
     if (!metadata) {
       return undefined;
@@ -43,12 +45,18 @@ const SpaceInfoPanel: FC = () => {
     const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
     const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
     const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+    const dataProgress = Math.min(
+      Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages) || 1),
+      1,
+    );
 
-    // TODO(burdon): List feeds and nav.
+    const { open, ready } = space?.internal.data?.metrics ?? {};
+    const startupTime = open && ready && ready.getTime() - open.getTime();
+
     return {
       id: metadata.key.truncate(),
+      name: space.properties.name ?? humanize(metadata?.key),
       state: SpaceState[space.state.get()] ?? 'Unknown',
-      name: space.properties.name ?? metadata?.key.truncate(),
       currentEpoch:
         currentEpochNumber === appliedEpochNumber
           ? currentEpochNumber
@@ -57,28 +65,18 @@ const SpaceInfoPanel: FC = () => {
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
       mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
       controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
-      dataProgress: `${(
-        Math.min(Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages)), 1) *
-        100
-      ).toFixed(0)}%`,
-      startupTime:
-        space?.internal.data?.metrics.open &&
-        space?.internal.data?.metrics.ready &&
-        space?.internal.data?.metrics.ready.getTime() - space?.internal.data?.metrics.open.getTime() + 'ms',
+      dataProgress: dataProgress && `${dataProgress * 100}%`,
+      startupTime: startupTime && `${startupTime}ms`,
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);
 
   const toggleActive = async () => {
-    if (!space) {
-      return;
-    }
-
-    const state = space.state.get();
+    const state = space!.state.get();
     if (state === SpaceState.INACTIVE) {
-      await space.internal.activate();
+      await space!.internal.open();
     } else {
-      await space.internal.deactivate();
+      await space!.internal.close();
     }
   };
 
@@ -87,10 +85,7 @@ const SpaceInfoPanel: FC = () => {
       toolbar={
         <Toolbar>
           <SpaceSelector />
-          <div className='grow' />
-          <Button onClick={toggleActive}>
-            {space?.state.get() === SpaceState.INACTIVE ? 'Activate' : 'Deactivate'}
-          </Button>
+          <Button onClick={toggleActive}>{space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}</Button>
         </Toolbar>
       }
       className='overflow-auto'
@@ -118,7 +113,20 @@ const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'FeedKey',
     width: 80,
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    Cell: ({ value, row }: any) => {
+      const setContext = useDevtoolsDispatch();
+      const navigate = useNavigate();
+      const onClick = () => {
+        setContext((ctx) => ({ ...ctx, feedKey: row.original.feedKey }));
+        navigate('/echo/feeds');
+      };
+
+      return (
+        <a className='font-mono text-blue-800 cursor-pointer' onClick={onClick}>
+          {value}
+        </a>
+      );
+    },
     accessor: (block) => {
       const feedKey = block.feedKey;
       return `${feedKey.truncate()}`;
@@ -132,13 +140,13 @@ const columns: TableColumn<PipelineTableRow>[] = [
   {
     Header: 'Gen',
     width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
     accessor: 'genesis',
   },
   {
     Header: 'Own',
     width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={getSize(5)} /> : null),
+    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
     accessor: 'own',
   },
   {

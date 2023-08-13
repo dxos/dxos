@@ -71,7 +71,7 @@ export const SignalStatusInfo = () => {
     },
     {
       Header: 'State',
-      width: 40,
+      width: 60,
       Cell: ({ value, row }: any) => {
         const v: SignalState = row.original.state;
         return <span style={{ color: states[v]?.color }}>{value}</span>;
@@ -94,7 +94,7 @@ export const SignalStatusInfo = () => {
     },
     {
       Header: 'Error',
-      width: 160,
+      width: 140,
       accessor: (status) => {
         return status.error ?? 'none';
       },

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -22,6 +22,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",

@@ -5,28 +5,51 @@
 import { Download } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, Input, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useFileDownload } from '@dxos/react-appkit';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
-import { JsonView, PanelContainer, Toolbar } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 
-const ConfigPanel = () => {
+const DiagnosticsPanel = () => {
   const client = useClient();
-  const fileDownload = useFileDownload();
-
   const [data, setData] = useState({});
   useEffect(() => {
     void handleRefresh();
   }, []);
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
-    setData(data);
+    try {
+      setData({ status: 'Pending...' });
+      const data = await client.diagnostics({ humanize: false, truncate: true });
+      setData(data);
+    } catch (err: any) {
+      setData({ status: err.message });
+    }
   };
 
+  const [recording, setRecording] = useState(false);
+  useAsyncEffect(async () => {
+    const { recording = false } = await client.services.services.LoggingService!.controlMetrics({});
+    setRecording(recording);
+  }, [client]);
+  const handleSetRecording = async (record: boolean) => {
+    const { recording = false } = await client.services.services.LoggingService!.controlMetrics({ record });
+    setRecording(recording);
+  };
+  const handleResetMetrics = async () => {
+    const { recording = false } = await client.services.services.LoggingService!.controlMetrics({ reset: true });
+    setRecording(recording);
+    await handleRefresh();
+  };
+
+  const fileDownload = useFileDownload();
   const handleDownload = async () => {
-    fileDownload(new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }), 'diagnostics.json');
+    fileDownload(
+      new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}.json`,
+    );
   };
 
   return (
@@ -38,6 +61,11 @@ const ConfigPanel = () => {
             <Download className={getSize(5)} />
             <span className='m-2'>Download</span>
           </Button>
+          <Button onClick={handleResetMetrics}>Reset metrics</Button>
+          <Input.Root>
+            <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
+            <Input.Label>Record metrics</Input.Label>
+          </Input.Root>
         </Toolbar>
       }
     >
@@ -46,4 +74,4 @@ const ConfigPanel = () => {
   );
 };
 
-export default ConfigPanel;
+export default DiagnosticsPanel;

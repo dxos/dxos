@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { createContext, PropsWithChildren } from 'react';
+import { createKeyborg } from 'keyborg';
+import React, { createContext, PropsWithChildren, useEffect } from 'react';
 
 import { Density, Elevation, ThemeFunction } from '@dxos/aurora-types';
 
@@ -32,6 +33,14 @@ export const ThemeContext = createContext<ThemeContextValue>({
   hasIosKeyboard: false,
 });
 
+const handleInputModalityChange = (isUsingKeyboard: boolean) => {
+  if (isUsingKeyboard) {
+    document.body.setAttribute('data-is-keyboard', 'true');
+  } else {
+    document.body.removeAttribute('data-is-keyboard');
+  }
+};
+
 export const ThemeProvider = ({
   children,
   fallback = null,
@@ -42,6 +51,13 @@ export const ThemeProvider = ({
   rootElevation = 'base',
   rootDensity = 'coarse',
 }: ThemeProviderProps) => {
+  useEffect(() => {
+    if (document.defaultView) {
+      const kb = createKeyborg(document.defaultView);
+      kb.subscribe(handleInputModalityChange);
+      return () => kb.unsubscribe(handleInputModalityChange);
+    }
+  }, []);
   return (
     <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
       <TranslationsProvider

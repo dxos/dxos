@@ -5,9 +5,10 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
 
 import { LockFile } from './lock-file';
@@ -33,13 +34,21 @@ describe('LockFile', () => {
     });
 
     // Wait for process to start
-    await sleep(200);
+    const trigger = new Trigger();
+    const intervalId = setInterval(() => {
+      if (existsSync(filename)) {
+        trigger.wake();
+      }
+    }, 100);
+    await trigger.wait({ timeout: 1_000 });
+    clearInterval(intervalId);
+
     await expect(LockFile.acquire(filename)).to.be.rejected;
 
     processHandle.kill();
 
     // Wait for process to be killed
-    await sleep(200);
+    await sleep(400);
 
     const handle = await LockFile.acquire(filename);
     await LockFile.release(handle);
