@@ -6,8 +6,6 @@ import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
-import { getSize } from '@dxos/aurora-theme';
-
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { Button, ButtonProps } from '../Buttons';
@@ -76,7 +74,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
         className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretUp weight='bold' className={getSize(4)} />}
+        {children ?? <CaretUp weight='bold' />}
       </SelectPrimitive.SelectScrollUpButton>
     );
   },
@@ -93,7 +91,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
         className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretDown weight='bold' className={getSize(4)} />}
+        {children ?? <CaretDown weight='bold' />}
       </SelectPrimitive.SelectScrollDownButton>
     );
   },
@@ -140,7 +138,7 @@ const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, cl
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}>
-        <Check weight='bold' className={getSize(4)} />
+        <Check weight='bold' />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );
