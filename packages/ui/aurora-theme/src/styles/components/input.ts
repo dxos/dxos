@@ -60,7 +60,8 @@ export const inputValence = (valence?: MessageValence) => {
   }
 };
 
-// TODO(burdon): Remove is-full by default.
+// TODO(burdon): Remove is-full as default (prevents setting specific width).
+// TODO(burdon): Factor out color defs?
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'is-full bg-transparent text-current',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
@@ -115,7 +116,7 @@ export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm font-medium text-neutral-900 dark:text-neutral-100', props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);
