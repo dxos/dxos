@@ -23,6 +23,7 @@ import {
   StackSectionModel,
   StackSections,
 } from '../types';
+import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 
 const getSectionModels = (sections: StackSections): StackSectionModel[] =>
@@ -156,7 +157,7 @@ const StackSectionsImpl = ({
           );
         })}
       </SortableContext>
-      <div role='none' className='plb-1' ref={setNodeRef}>
+      <div role='none' className='__plb-1' ref={setNodeRef}>
         {sectionModels.length < 1 && (
           <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
             {t('empty stack message')}
@@ -196,6 +197,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
         <div role='separator' className={mx(blockSeparator, 'mli-4 opacity-50')} />
 
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
+
+        {/* TODO(burdon): Add to menu. */}
+        <FileUpload
+          classNames='mb-4 p-2'
+          fileTypes={['png']}
+          onUpload={(file: any) => {
+            console.log('upload', file);
+          }}
+        />
 
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>

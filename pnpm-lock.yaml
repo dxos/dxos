@@ -1255,6 +1255,7 @@ importers:
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -1266,6 +1267,7 @@ importers:
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
+      react-drag-drop-files: 2.3.8_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -34699,6 +34701,20 @@ packages:
       - react-is
     dev: false
 
+  /react-drag-drop-files/2.3.8_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-/tA1FEGhw6IwG5DlogYu0y3uLkyZ6np8cbzihW7Hy/k3b1T022T7zjn/4elZ6+M69GwnJnUUO0Utisu1xZFATA==}
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      styled-components: 5.3.6_biqbaboplfbrettd7655fr4n2y
+    transitivePeerDependencies:
+      - react-is
+    dev: false
+
   /react-element-to-jsx-string/15.0.0_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
     peerDependencies:
@@ -37458,6 +37474,29 @@ packages:
       react-is: 18.2.0
       shallowequal: 1.1.0
       supports-color: 5.5.0
+
+  /styled-components/5.3.6_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-hGTZquGAaTqhGWldX7hhfzjnIYBZ0IXQXkCYdvF1Sq3DsUaLx6+NTHC5Jj1ooM2F68sBiVz3lvhfwQs/S3l6qg==}
+    engines: {node: '>=10'}
+    requiresBuild: true
+    peerDependencies:
+      react: '>= 16.8.0'
+      react-dom: '>= 16.8.0'
+      react-is: '>= 16.8.0'
+    dependencies:
+      '@babel/helper-module-imports': 7.18.6
+      '@babel/traverse': 7.21.3_supports-color@5.5.0
+      '@emotion/is-prop-valid': 1.2.0
+      '@emotion/stylis': 0.8.5
+      '@emotion/unitless': 0.7.5
+      babel-plugin-styled-components: 2.0.7_styled-components@5.3.6
+      css-to-react-native: 3.0.0
+      hoist-non-react-statics: 3.3.2
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      shallowequal: 1.1.0
+      supports-color: 5.5.0
+    dev: false
 
   /styled-system/5.1.5:
     resolution: {integrity: sha512-7VoD0o2R3RKzOzPK0jYrVnS8iJdfkKsQJNiLRDjikOpQVqQHns/DXWaPZOH4tIKkhAT7I6wIsy9FWTWh2X3q+A==}

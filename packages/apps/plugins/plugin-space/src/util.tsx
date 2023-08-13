@@ -93,9 +93,9 @@ export const spaceToGraphNode = (space: Space, plugins: Plugin[], index: string)
           disabled: disabled || error,
         },
         {
-          id: 'view-invitations',
+          id: 'share-space',
           index: actionIndices[1],
-          label: ['view invitations label', { ns: SPACE_PLUGIN }],
+          label: ['share space', { ns: SPACE_PLUGIN }],
           icon: (props) => <PaperPlane {...props} />,
           intent: { ...baseIntent, action: SpaceAction.SHARE },
           disabled: disabled || error,

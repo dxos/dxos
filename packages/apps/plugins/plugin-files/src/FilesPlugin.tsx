@@ -128,6 +128,10 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               return LocalFileMainPermissions;
             }
             break;
+
+          case 'drop': {
+            return Test;
+          }
         }
 
         return null;
@@ -279,3 +283,5 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     },
   };
 };
+
+const Test = () => <div>Test</div>;
