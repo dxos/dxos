@@ -12,4 +12,5 @@ export * from './MasterDetailTable';
 export * from './PanelContainer';
 export * from './PublicKeySelector';
 export * from './Searchbar';
+export * from './Select';
 export * from './SwarmDetails';

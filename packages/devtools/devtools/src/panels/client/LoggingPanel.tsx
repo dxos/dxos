@@ -4,14 +4,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, Input } from '@dxos/aurora';
+import { Button, Input, Toolbar } from '@dxos/aurora';
 import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 
-import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { MasterDetailTable, PanelContainer } from '../../components';
 
 const MAX_LOGS = 2_000;
 

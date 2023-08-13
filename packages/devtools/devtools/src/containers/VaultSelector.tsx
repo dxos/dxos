@@ -4,11 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Select } from '@dxos/react-appkit';
+import { Select } from '../components';
 
 // TODO(burdon): Configurable (remember custom values).
 const targets = [
-  { label: 'No remote target', value: '' },
+  { label: 'Default', value: '' },
   { label: 'localhost:3967', value: 'http://localhost:3967' },
   { label: 'halo.dxos.org', value: 'https://halo.dxos.org' },
   { label: 'halo.dev.dxos.org', value: 'https://halo.dev.dxos.org' },
@@ -27,13 +27,5 @@ export const VaultSelector = () => {
     window.location.href = url.origin + (vault !== '' ? '?target=vault:' + vault + '/vault.html' : '') + url.hash;
   };
 
-  return (
-    <Select value={vault} onValueChange={(value) => handleSetVault(value)}>
-      {targets.map(({ label, value }) => (
-        <Select.Item key={value} value={value} className='font-mono'>
-          {label}
-        </Select.Item>
-      ))}
-    </Select>
-  );
+  return <Select value={vault} onValueChange={(value) => handleSetVault(value)} items={targets} />;
 };

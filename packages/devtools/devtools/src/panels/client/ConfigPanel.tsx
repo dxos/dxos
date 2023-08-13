@@ -4,9 +4,10 @@
 
 import React from 'react';
 
+import { Toolbar } from '@dxos/aurora';
 import { useConfig } from '@dxos/react-client';
 
-import { JsonView, PanelContainer, Toolbar } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 import { VaultSelector } from '../../containers';
 
 const ConfigPanel = () => {
