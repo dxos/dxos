@@ -6,18 +6,17 @@ import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import React, { FC, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Toolbar, Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Select } from '@dxos/react-appkit';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
-import { MasterDetailTable, Searchbar, Toolbar } from '../../components';
+import { MasterDetailTable, Searchbar, Select } from '../../components';
 
 export type View<T extends {}> = {
   id: string;
@@ -181,13 +180,11 @@ export const SignalMessages = (props: SignalMessagesProps) => {
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <Toolbar>
-        <Select className='mr-2' defaultValue={viewType} onValueChange={(s) => setViewType(s as ViewType)}>
-          {views.map(({ id, title }) => (
-            <Select.Item value={id} key={id}>
-              {title}
-            </Select.Item>
-          ))}
-        </Select>
+        <Select
+          items={views.map(({ id, title }) => ({ value: id, label: title }))}
+          value={viewType}
+          onValueChange={(type) => setViewType(type as ViewType)}
+        />
         <Searchbar onSearch={setSearch} />
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar>
