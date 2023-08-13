@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { JsonView, PanelContainer, Toolbar } from '../../components';
+import { Toolbar } from '@dxos/aurora';
+
+import { JsonView, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState, useCredentials } from '../../hooks';
 

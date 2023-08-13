@@ -23,10 +23,10 @@ const createKey = (key: string, prefix?: string) => (prefix === undefined ? key 
 const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
   const keys = Array.isArray(data) ? Array.from(data.keys()) : Object.keys(data);
   return (
-    <>
+    <Tree.Root density='fine'>
       {keys.map((key) => {
-        const value = data[key as keyof typeof data];
         const id = createKey(String(key), prefix);
+        const value = data[key as keyof typeof data];
         const valueIsScalar = isScalar(value);
 
         return (
@@ -45,16 +45,12 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
           </TreeItem.Root>
         );
       })}
-    </>
+    </Tree.Root>
   );
 };
 
 const StorybookTree = ({ data }: StorybookTreeProps) => {
-  return (
-    <Tree.Root density='fine'>
-      <StorybookTreeItem data={data} />
-    </Tree.Root>
-  );
+  return <StorybookTreeItem data={data} />;
 };
 
 export default {

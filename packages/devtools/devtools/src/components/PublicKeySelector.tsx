@@ -2,23 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React from 'react';
 
-import { Select } from '@dxos/react-appkit';
+import { Select } from '@dxos/aurora';
 import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
-  Icon?: FC;
-  placeholder?: string;
-  getLabel?: (key: PublicKey) => string;
+  placeholder: string;
   keys: PublicKey[];
   value?: PublicKey;
+  getLabel?: (key: PublicKey) => string;
   onChange?: (key: PublicKey) => any;
 };
 
 export const PublicKeySelector = ({
-  Icon,
   placeholder,
   getLabel = humanize,
   keys,
@@ -26,27 +24,28 @@ export const PublicKeySelector = ({
   onChange,
 }: PublicKeySelectorProps) => {
   return (
-    <Select
-      placeholder={placeholder}
+    <Select.Root
       value={value?.toHex()}
       onValueChange={(id) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      {removeDuplicates(keys).map((key) => (
-        <Select.Item value={key.toHex()} key={key.toHex()}>
-          <div className='flex items-center gap-2'>
-            {Icon && (
-              <div className='pr-1'>
-                <Icon />
-              </div>
-            )}
-            <span className='font-mono text-neutral-250'>{key.truncate()}</span>
-            {getLabel(key)}
-          </div>
-        </Select.Item>
-      ))}
-    </Select>
+      <Select.TriggerButton placeholder={placeholder} />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {removeDuplicates(keys).map((key) => (
+              <Select.Option value={key.toHex()} key={key.toHex()}>
+                <div className='flex items-center gap-2'>
+                  <span className='font-mono text-neutral-250'>{key.truncate()}</span>
+                  {getLabel(key)}
+                </div>
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };
 

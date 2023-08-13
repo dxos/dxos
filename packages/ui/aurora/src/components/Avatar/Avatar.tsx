@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { Circle, Moon } from '@phosphor-icons/react';
 import {
   Root as AvatarRootPrimitive,
