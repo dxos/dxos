@@ -11,7 +11,7 @@ export type ToolbarStyleProps = Partial<{}>;
 
 // TODO(burdon): Surface?
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = (props, ...etc) => {
-  return mx('space-x-2', ...etc);
+  return mx('space-x-2 p-2', ...etc);
 };
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {

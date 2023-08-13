@@ -4,10 +4,11 @@
 
 import React from 'react';
 
+import { Toolbar } from '@dxos/aurora';
 import { TableColumn } from '@dxos/mosaic';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
-import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { MasterDetailTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 

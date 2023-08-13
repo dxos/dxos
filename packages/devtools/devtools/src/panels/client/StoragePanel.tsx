@@ -4,9 +4,9 @@
 
 import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, Tree, TreeItem, Toolbar } from '@dxos/aurora';
 import {
   GetBlobsResponse,
   GetSnapshotsResponse,
@@ -15,13 +15,14 @@ import {
   SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { TreeView, TreeViewItem } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { BitField } from '@dxos/util';
 
-import { BitfieldDisplay, JsonView, PanelContainer, Toolbar } from '../../components';
+import { BitfieldDisplay, JsonView, PanelContainer } from '../../components';
+
+// TODO(burdon): Rewrite this panel as a table.
 
 type SelectionValue =
   | {
@@ -36,12 +37,20 @@ type SelectionValue =
       kind: 'snapshot';
     };
 
+type Node = {
+  id: string;
+  Icon: FC;
+  Element: ReactNode;
+  items?: Node[];
+  value?: SelectionValue;
+};
+
 const getInfoTree = (
   storageInfo: StorageInfo,
   feedInfo: SubscribeToFeedsResponse,
   snapshots: StoredSnapshotInfo[],
   blobs: BlobMeta[],
-): TreeViewItem[] => [
+): Node[] => [
   {
     id: 'origin',
     Icon: GitCommit,
@@ -67,7 +76,7 @@ const getInfoTree = (
               id: feed.feedKey.toHex(),
               Icon: Rows,
               Element: <TreeItemText primary={feed.feedKey.truncate()} secondary={bytes.format(feed.bytes)} />,
-              value: { kind: 'feed', feed } satisfies SelectionValue,
+              value: { kind: 'feed', feed },
             })),
           },
           {
@@ -80,7 +89,7 @@ const getInfoTree = (
               Element: (
                 <TreeItemText primary={PublicKey.from(blob.id).truncate()} secondary={bytes.format(blob.length)} />
               ),
-              value: { kind: 'blob', blob } satisfies SelectionValue,
+              value: { kind: 'blob', blob },
             })),
           },
           {
@@ -91,7 +100,7 @@ const getInfoTree = (
               id: snapshot.key,
               Icon: Bookmark,
               Element: <TreeItemText primary={snapshot.key} secondary={bytes.format(snapshot.size)} />,
-              value: { kind: 'snapshot' } satisfies SelectionValue,
+              value: { kind: 'snapshot' },
             })),
           },
         ],
@@ -112,7 +121,7 @@ const StoragePanel = () => {
     return null;
   }
 
-  const [selected, setSelected] = useState<TreeViewItem | undefined>();
+  const [selected, setSelected] = useState<Node | undefined>();
 
   const refresh = async () => {
     setIsRefreshing(true);
@@ -175,21 +184,57 @@ const StoragePanel = () => {
     if (!selected) {
       return;
     }
-    const rec = (items: TreeViewItem[]) => {
+
+    const build = (items: Node[]) => {
       for (const item of items) {
         if (item.id !== undefined && item.id === selected.id) {
           setSelected(item);
           return;
         }
+
         if (item.items) {
-          rec(item.items);
+          build(item.items);
         }
       }
     };
-    rec(items);
+
+    build(items);
   }, [items]);
 
   const selectedValue = selected?.value as SelectionValue | undefined;
+
+  const DataItems: FC<{ items: Node[] }> = ({ items = [] }) => {
+    return (
+      <>
+        {items.map((item) => {
+          const { id, Icon, Element, items } = item;
+          return (
+            <TreeItem.Root key={id} collapsible={!!items?.length} open>
+              <div
+                role='none'
+                className='flex grow items-center gap-2 font-mono cursor-pointer'
+                onClick={() => setSelected(item)}
+              >
+                <Icon />
+                {Element}
+              </div>
+              <TreeItem.Body className='pis-4'>
+                <Tree.Branch>{items && <DataItems items={items} />}</Tree.Branch>
+              </TreeItem.Body>
+            </TreeItem.Root>
+          );
+        })}
+      </>
+    );
+  };
+
+  const DataTree: FC<{ items: Node[] }> = ({ items = [] }) => {
+    return (
+      <Tree.Root>
+        <DataItems items={items} />
+      </Tree.Root>
+    );
+  };
 
   return (
     <PanelContainer
@@ -212,18 +257,8 @@ const StoragePanel = () => {
         </Toolbar>
       }
     >
-      <div className='flex w-1/3 overflow-auto'>
-        <TreeView
-          items={items}
-          expanded={['origin', 'storage']}
-          onSelect={(item) => setSelected(item)}
-          selected={selected?.id}
-          slots={{
-            value: {
-              className: 'overflow-hidden text-gray-400 truncate pl-2',
-            },
-          }}
-        />
+      <div className='flex w-1/3 overflow-auto p-2'>
+        <DataTree items={items} />
       </div>
 
       {selectedValue && (
