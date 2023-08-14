@@ -109,8 +109,7 @@ export class Connection {
   /**
    * Create an underlying transport and prepares it for the connection.
    */
-  // TODO(burdon): Make async?
-  openConnection() {
+  async openConnection() {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
 
