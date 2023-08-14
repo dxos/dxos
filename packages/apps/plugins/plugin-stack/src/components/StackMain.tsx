@@ -24,10 +24,10 @@ import {
   StackSectionModel,
   StackSections,
 } from '../types';
-import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
+import { Surface } from '@dxos/react-surface';
 
-// TODO(burdon): Move to types?
+// TODO(burdon): Move to util/types?
 const getSectionModels = (sections: StackSections): StackSectionModel[] =>
   Array.from(sections)
     .filter((section) => section?.object?.id)
@@ -159,7 +159,7 @@ const StackSectionsImpl = ({
           );
         })}
       </SortableContext>
-      <div role='none' className='__plb-1' ref={setNodeRef}>
+      <div role='none' ref={setNodeRef}>
         {sectionModels.length < 1 && (
           <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
             {t('empty stack message')}
@@ -200,19 +200,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
 
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
-        {/* TODO(burdon): Add to menu. */}
-        {/* TODO(burdon): Move to file-plugin. */}
-        <div className='mb-4'>
-          <FileUpload
-            classNames='p-2'
-            fileTypes={['png']}
-            onUpload={(file: FileProto) => {
-              // TODO(burdon): Update graph.
-              console.log('upload', stack, file);
-              handleAdd(file, stack.sections.length);
-            }}
-          />
-        </div>
+        <Surface role='drop' />
 
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>

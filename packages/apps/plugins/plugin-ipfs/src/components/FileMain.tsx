@@ -9,7 +9,7 @@ import { baseSurface, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { SpaceProxy, TypedObject } from '@dxos/client/echo';
 
-export const TemplateMain = ({ data: { space, object } }: { data: { space: SpaceProxy; object: TypedObject } }) => {
+export const FileMain = ({ data: { space, object } }: { data: { space: SpaceProxy; object: TypedObject } }) => {
   return (
     // TODO(burdon): Boilerplate.
     <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>

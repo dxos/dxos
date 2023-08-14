@@ -49,3 +49,20 @@ export const FileUpload: FC<{
     </div>
   );
 };
+
+// TODO(burdon): Move to file-plugin.
+export const FileDrop: FC<{}> = () => {
+  return (
+    <div className='mb-4'>
+      <FileUpload
+        classNames='p-2'
+        fileTypes={['png']}
+        onUpload={(file: FileProto) => {
+          // TODO(burdon): Update graph.
+          console.log('upload', file);
+          // handleAdd(file, stack.sections.length);
+        }}
+      />
+    </div>
+  );
+};

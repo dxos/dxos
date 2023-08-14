@@ -23,5 +23,5 @@ export type IpfsPluginProvides = GraphProvides & IntentProvides & TranslationsPr
 // TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
 // TODO(burdon): Better way to detect?
 export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && (object as FileProto).type === 'template';
+  return isTypedObject(object) && FileProto.type.name === object.__typename;
 };
