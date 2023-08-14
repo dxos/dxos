@@ -8,6 +8,9 @@ import { getIndices } from '@tldraw/indices';
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import {
+  addNodes,
+  addRelations,
+  NAVMENU_ROOT,
   resolveData,
   SessionNode,
   SessionPluginParticipant,
@@ -68,15 +71,29 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         return;
       }
 
+      addNodes({
+        id: SPACE_PLUGIN,
+        label: ['plugin name', { ns: SPACE_PLUGIN }],
+      });
+
+      addRelations(
+        { by: SPACE_PLUGIN, of: NAVMENU_ROOT, as: 'navmenu-parent' },
+        { by: NAVMENU_ROOT, of: SPACE_PLUGIN, as: 'navmenu-child' },
+      );
+
       const client = clientPlugin.provides.client;
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubs.clear();
           const spaceIndices = getIndices(spaces.length);
           spaces.forEach((space, index) => {
+            const spaceNode = spaceToSessionNode(space, spaceIndices[index]);
+            upsertNodes(spaceNode);
+            addRelations(
+              { by: spaceNode.id, of: SPACE_PLUGIN, as: 'navmenu-parent' },
+              { by: SPACE_PLUGIN, of: spaceNode.id, as: 'navmenu-child' },
+            );
             const handle = createSubscription(() => {
-              const spaceNode = spaceToSessionNode(space, spaceIndices[index]);
-              upsertNodes(spaceNode);
               onSpaceUpdate?.(spaceNode);
             });
             handle.update([space.properties]);
