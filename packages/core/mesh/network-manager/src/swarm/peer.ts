@@ -6,6 +6,7 @@ import invariant from 'tiny-invariant';
 
 import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { CancelledError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -14,6 +15,7 @@ import { OfferMessage, SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
 
 interface PeerCallbacks {
   /**
@@ -80,7 +82,6 @@ export class Peer {
   public advertizing = false;
 
   public initiating = false;
-
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -88,6 +89,7 @@ export class Peer {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
     private readonly _transportFactory: TransportFactory,
+    private readonly _connectionLimiter: ConnectionLimiter,
     private readonly _callbacks: PeerCallbacks,
   ) {}
 
@@ -102,10 +104,11 @@ export class Peer {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         // TODO(burdon): Too verbose.
-        log("closing local connection and accepting remote peer's offer", {
-          id: this.id,
+        log('close local connection', {
+          localPeerId: this.id,
           topic: this.topic,
-          peerId: this.localPeerId,
+          remotePeerId: this.localPeerId,
+          sessionId: this.connection?.sessionId,
         });
 
         if (this.connection) {
@@ -123,10 +126,15 @@ export class Peer {
         // Connection might have been already established.
         invariant(message.sessionId);
         const connection = this._createConnection(false, message.sessionId);
+
         try {
-          connection.openConnection();
+          await this._connectionLimiter.connecting(message.sessionId);
+          await connection.openConnection();
         } catch (err: any) {
-          log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+          if (!(err instanceof CancelledError)) {
+            log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+          }
+
           // Calls `onStateChange` with CLOSED state.
           await this.closeConnection();
         }
@@ -145,10 +153,13 @@ export class Peer {
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
+
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
 
     try {
+      await this._connectionLimiter.connecting(sessionId);
+
       const answer = await this._signalMessaging.offer({
         author: this.localPeerId,
         recipient: this.id,
@@ -166,7 +177,7 @@ export class Peer {
         this._callbacks.onRejected();
         return;
       }
-      connection.openConnection();
+      await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
       log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
@@ -214,6 +225,8 @@ export class Peer {
           this.availableToConnect = true;
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
+
+          this._connectionLimiter.doneConnecting(sessionId);
           break;
         }
 
@@ -231,6 +244,7 @@ export class Peer {
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
+          this._connectionLimiter.doneConnecting(sessionId);
 
           scheduleTask(
             this._connectionCtx!,
@@ -276,6 +290,7 @@ export class Peer {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
+
     await this.connection.signal(message);
   }
 
