@@ -121,8 +121,6 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             }
             break;
           }
-          // TODO(burdon): Trigger update nodes.
-          // TODO(burdon): Change role to 'settings'?
           case 'dialog': {
             if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
               return DebugSettings;
