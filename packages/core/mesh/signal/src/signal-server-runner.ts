@@ -3,7 +3,7 @@
 //
 
 import fetch from 'node-fetch';
-import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { ChildProcessWithoutNullStreams, execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -70,6 +70,9 @@ export class SignalServerRunner {
     if (this._cwd && !fs.existsSync(this._cwd)) {
       throw new Error(`CWD not exists: ${this._cwd}`);
     }
+
+    killProcessOnPort(this._port);
+
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
       shell: this._shell,
@@ -193,3 +196,16 @@ export const runTestSignalServer = async ({
   await server.waitUntilStarted();
   return server;
 };
+
+
+function killProcessOnPort(port: number) {
+  try {
+    const pid = execSync(`lsof -t -i:${port}`).toString().trim();
+    if (pid) {
+      log.info(`killing process occupying signal port`, { port, pid });
+      process.kill(-Number(pid), 'SIGINT');
+    }
+  } catch (err) {
+    log.warn(`failed to kill process occupying signal port`, { port, err });
+  }
+}
