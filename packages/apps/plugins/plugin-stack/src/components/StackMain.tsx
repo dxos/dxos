@@ -10,9 +10,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useIntent } from '@braneframe/plugin-intent';
-import { File as FileProto } from '@braneframe/types';
 import { Main, Input, List, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
 import { blockSeparator, chromeSurface, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
+import { Surface } from '@dxos/react-surface';
 import { arrayMove } from '@dxos/util';
 
 import { stackState } from '../stores';
@@ -25,7 +25,6 @@ import {
   StackSections,
 } from '../types';
 import { StackSection } from './StackSection';
-import { Surface } from '@dxos/react-surface';
 
 // TODO(burdon): Move to util/types?
 const getSectionModels = (sections: StackSections): StackSectionModel[] =>
@@ -200,8 +199,8 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
 
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
-        {/* TODO(burdon): Set datum and action for when dropped. */}
-        <Surface role='drop' />
+        {/* TODO(burdon): Set datum and action for dropped. Reconcile with "dragoverlay". */}
+        <Surface role='drop' data={{ parent: stack }} />
 
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>
           <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), chromeSurface]}>

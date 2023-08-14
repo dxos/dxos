@@ -6,8 +6,10 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
+// import { useIntent } from '@braneframe/plugin-intent';
 import { File as FileProto } from '@braneframe/types';
 import { getSize, mx } from '@dxos/aurora-theme';
+// import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
 
 import { useIpfsClient } from '../hooks';
 
@@ -50,17 +52,20 @@ export const FileUpload: FC<{
   );
 };
 
+// export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
+
 // TODO(burdon): Move to file-plugin.
 export const FileDrop: FC<{}> = () => {
+  // const { sendIntent } = useIntent();
+
   return (
     <div className='mb-4'>
       <FileUpload
         classNames='p-2'
         fileTypes={['png']}
         onUpload={(file: FileProto) => {
-          // TODO(burdon): Update graph.
           console.log('upload', file);
-          // handleAdd(file, stack.sections.length);
+          // sendIntent({ action: SpaceAction.ADD_OBJECT, data: { object: file } });
         }}
       />
     </div>

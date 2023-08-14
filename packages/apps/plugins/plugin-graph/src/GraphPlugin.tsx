@@ -42,6 +42,8 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       context: ({ children }) => {
         const { sendIntent } = useIntent();
         const invokeAction = async (action: GraphNodeAction) => {
+          // Process chain of intents.
+          // TODO(burdon): Factor out to Intent plugin?
           if (Array.isArray(action.intent)) {
             let result: any = null;
             for (const intent of action.intent) {

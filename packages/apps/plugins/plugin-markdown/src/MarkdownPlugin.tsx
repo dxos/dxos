@@ -93,7 +93,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               testId: 'spacePlugin.createDocument',
               label: ['create document label', { ns: MARKDOWN_PLUGIN }],
               icon: (props) => <Plus {...props} />,
-              disposition: 'toolbar', // TODO(burdon): Both places.
+              disposition: 'toolbar',
               intent: [
                 {
                   plugin: MARKDOWN_PLUGIN,
