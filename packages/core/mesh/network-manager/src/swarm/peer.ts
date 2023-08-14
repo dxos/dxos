@@ -180,7 +180,7 @@ export class Peer {
       await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
-      log.warn('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
+      log('initiation error', { err, topic: this.topic, peerId: this.localPeerId, remoteId: this.id });
       // Calls `onStateChange` with CLOSED state.
       await this.closeConnection();
       throw err;
