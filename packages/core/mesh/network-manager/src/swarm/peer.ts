@@ -15,7 +15,6 @@ import { TransportFactory } from '../transport';
 import { WireProtocolProvider } from '../wire-protocol';
 import { Connection, ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
-import { CancelledError } from '@dxos/errors';
 
 interface PeerCallbacks {
   /**
@@ -82,9 +81,6 @@ export class Peer {
   public advertizing = false;
 
   public initiating = false;
-
-  private readonly index = getId(this);
-
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
@@ -98,7 +94,7 @@ export class Peer {
     log.info('construct', {
       localPeerId,
       remotePeerId: id,
-    })
+    });
   }
 
   /**
@@ -112,7 +108,7 @@ export class Peer {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
         // TODO(burdon): Too verbose.
-        log.info("closing local connection and accepting remote peer's offer", {
+        log('close local connection', {
           localPeerId: this.id,
           topic: this.topic,
           remotePeerId: this.localPeerId,
@@ -133,22 +129,15 @@ export class Peer {
       if (!this.connection) {
         // Connection might have been already established.
         invariant(message.sessionId);
-
-        log.info('accept offer', {
-          index: this.index,
-          localPeerId: this.localPeerId,
-          sessionId: message.sessionId,
-        });
-
         const connection = this._createConnection(false, message.sessionId);
 
         try {
           await this._connectionLimiter.connecting(message.sessionId);
           await connection.openConnection();
         } catch (err: any) {
-          // if(!(err instanceof CancelledError)) {
+          if (!(err instanceof CancelledError)) {
             log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
-          // }
+          }
 
           // Calls `onStateChange` with CLOSED state.
           await this.closeConnection();
@@ -173,11 +162,6 @@ export class Peer {
     this.initiating = true;
 
     try {
-      log.info('initiate', {
-        index: this.index,
-        localPeerId: this.localPeerId,
-        sessionId: sessionId,
-      });
       await this._connectionLimiter.connecting(sessionId);
 
       const answer = await this._signalMessaging.offer({
@@ -246,11 +230,6 @@ export class Peer {
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
 
-          log.info('CONNECTED', {
-            index: this.index,
-            localPeerId: this.localPeerId,
-            sessionId: sessionId,
-          });
           this._connectionLimiter.doneConnecting(sessionId);
           break;
         }
@@ -269,11 +248,6 @@ export class Peer {
 
           this.connection = undefined;
           this._callbacks.onDisconnected();
-          log.info('CLOSED', {
-            index: this.index,
-            localPeerId: this.localPeerId,
-            sessionId: sessionId,
-          });
           this._connectionLimiter.doneConnecting(sessionId);
 
           scheduleTask(
@@ -320,6 +294,7 @@ export class Peer {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
+
     await this.connection.signal(message);
   }
 
@@ -328,7 +303,7 @@ export class Peer {
     log.info('destroy', {
       localPeerId: this.localPeerId,
       remotePeerId: this.id,
-    })
+    });
 
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
@@ -349,18 +324,4 @@ const increaseInterval = (interval: number) => {
     return 5_000;
   }
   return 10_000;
-};
-
-const ids = new WeakMap<any, number>();
-let nextId = 0;
-
-const getId = (obj: any) => {
-  let id = ids.get(obj);
-  if (id !== undefined) {
-    return id;
-  }
-
-  id = nextId++;
-  ids.set(obj, id);
-  return id;
 };
