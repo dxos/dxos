@@ -175,7 +175,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { sendIntent } = useIntent();
   const handleAdd = useCallback(
     (sectionObject: GenericStackObject, start: number) => {
-      const sectionModel = sectionModel(nextSectionObject);
+      const sectionModel = getSectionModel(sectionObject);
       stack.sections.splice(start, 0, sectionModel);
       return getSectionModels(stack.sections);
     },
