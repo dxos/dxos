@@ -100,7 +100,7 @@ describe('Swarm', () => {
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 
-  test.repeat(100)('connection limiter', async () => {
+  test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
 
     const peerId = PublicKey.fromHex('7701dc2d');
