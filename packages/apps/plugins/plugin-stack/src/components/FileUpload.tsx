@@ -6,6 +6,7 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
+import { File as FileProto } from '@braneframe/types';
 import { getSize, mx } from '@dxos/aurora-theme';
 
 import { useIpfsClient } from '../hooks';
@@ -14,13 +15,17 @@ import { useIpfsClient } from '../hooks';
 export const FileUpload: FC<{
   classNames?: string | string[];
   fileTypes: string[];
-  onUpload: (file: File) => void;
+  onUpload: (file: FileProto) => void;
 }> = ({ classNames, fileTypes, onUpload }) => {
   const ipfsClient = useIpfsClient();
   const handleUpdate = async (file: File) => {
     // TODO(burdon): Create and return object; add to stack.
     const info = await ipfsClient?.add(file);
-    console.log('upload', info);
+    if (info) {
+      const filename = file.name;
+      const f = new FileProto({ name: filename, filename, cid: info.path });
+      onUpload(f);
+    }
   };
 
   if (!ipfsClient) {

@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { useIntent } from '@braneframe/plugin-intent';
+import { File as FileProto } from '@braneframe/types';
 import { Main, Input, List, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
 import { blockSeparator, chromeSurface, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
@@ -26,6 +27,7 @@ import {
 import { FileUpload } from './FileUpload';
 import { StackSection } from './StackSection';
 
+// TODO(burdon): Move to types?
 const getSectionModels = (sections: StackSections): StackSectionModel[] =>
   Array.from(sections)
     .filter((section) => section?.object?.id)
@@ -44,7 +46,7 @@ const StackSectionsImpl = ({
 }: {
   sections: StackSections;
   id: string;
-  onAdd: (start: number, nextSectionObject: GenericStackObject) => StackSectionModel[];
+  onAdd: (sectionObject: GenericStackObject, start: number) => StackSectionModel[];
 }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const dnd = useDnd();
@@ -120,7 +122,7 @@ const StackSectionsImpl = ({
       const activeModelIndex = sectionModels.findIndex(({ id }) => id === activeAddableObject?.id);
       if (activeModelIndex >= 0) {
         dnd.overlayDropAnimation = 'into';
-        setSectionModels(onAdd(activeModelIndex, activeAddableObject!));
+        setSectionModels(onAdd(activeAddableObject!, activeModelIndex));
       } else if (overIsMember) {
         const overSectionId = get(over, 'data.current.section.object.id');
         const activeSectionId = get(active, 'data.current.section.object.id', null);
@@ -172,9 +174,9 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
   const handleAdd = useCallback(
-    (start: number, nextSectionObject: GenericStackObject) => {
-      const nextSectionModel = getSectionModel(nextSectionObject);
-      stack.sections.splice(start, 0, nextSectionModel);
+    (sectionObject: GenericStackObject, start: number) => {
+      const sectionModel = sectionModel(nextSectionObject);
+      stack.sections.splice(start, 0, sectionModel);
       return getSectionModels(stack.sections);
     },
     [stack.sections],
@@ -199,12 +201,15 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
         {/* TODO(burdon): Add to menu. */}
+        {/* TODO(burdon): Move to file-plugin. */}
         <div className='mb-4'>
           <FileUpload
             classNames='p-2'
             fileTypes={['png']}
-            onUpload={(file: any) => {
-              console.log('upload', file);
+            onUpload={(file: FileProto) => {
+              // TODO(burdon): Update graph.
+              console.log('upload', stack, file);
+              handleAdd(file, stack.sections.length);
             }}
           />
         </div>
@@ -228,7 +233,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
                       data-testid={testId}
                       onClick={async () => {
                         const { object: nextSection } = await sendIntent(intent);
-                        handleAdd(stack.sections.length, nextSection);
+                        handleAdd(nextSection, stack.sections.length);
                       }}
                     >
                       <Icon className={getSize(4)} />
