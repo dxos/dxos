@@ -158,7 +158,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
-    log.info('send message', { author, recipient, ...dec(payload) });
+    log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
     invariant(!this._ctx.disposed, 'Closed');
