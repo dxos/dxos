@@ -36,7 +36,7 @@ export type ButtonStyleProps = Partial<{
 
 export const sharedButtonStyles: ComponentFragment<ButtonStyleProps> = (props) => {
   return [
-    'inline-flex select-none items-center justify-center transition-color duration-100',
+    'shrink-0 inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
     // Register all radix states
     'group',

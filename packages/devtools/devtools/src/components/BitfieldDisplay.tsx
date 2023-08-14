@@ -54,7 +54,7 @@ export const BitfieldDisplay = ({ value, length }: { value: Uint8Array; length: 
   return (
     <div ref={container} className='flex flex-row shrink-0 h-6 my-2 p-1'>
       {range(subdivisions).map((index) => (
-        <div key={index} className='h-full flex-1 mr-[1px]' style={{ backgroundColor: getColor(index), minWidth: 1 }} />
+        <div key={index} className='h-full grow mr-[1px]' style={{ backgroundColor: getColor(index), minWidth: 1 }} />
       ))}
     </div>
   );

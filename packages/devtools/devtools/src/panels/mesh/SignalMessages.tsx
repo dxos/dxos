@@ -178,7 +178,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
   };
 
   return (
-    <div className='flex flex-col flex-1 overflow-hidden'>
+    <div className='flex flex-col grow overflow-hidden'>
       <Toolbar>
         <Select
           items={views.map(({ id, title }) => ({ value: id, label: title }))}
@@ -189,7 +189,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar>
 
-      <div className='flex flex-1 overflow-hidden'>
+      <div className='flex grow overflow-hidden'>
         {view ? <MasterDetailTable columns={view.columns as any} data={filteredMessages} /> : null}
       </div>
     </div>

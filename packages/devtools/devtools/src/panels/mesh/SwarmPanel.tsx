@@ -12,6 +12,7 @@ import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/s
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { PanelContainer, ConnectionInfoView } from '../../components';
+import { textLink } from '../../styles';
 
 const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
@@ -60,7 +61,7 @@ const SwarmPanel = () => {
     {
       Header: 'Session',
       Cell: ({ value }: any) => (
-        <span onClick={() => setSessionId(value)} className='font-mono text-sm cursor-pointer text-blue-500 underline'>
+        <span onClick={() => setSessionId(value)} className={mx('font-mono text-sm', textLink)}>
           {value?.truncate()}
         </span>
       ),
@@ -76,7 +77,7 @@ const SwarmPanel = () => {
   ];
 
   return (
-    <PanelContainer className='flex flex-col space-y-4 divide-y'>
+    <PanelContainer className='flex flex-col gap-4 divide-y'>
       <div>
         <Table compact columns={columns} data={items} />
       </div>
