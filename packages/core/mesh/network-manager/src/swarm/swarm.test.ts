@@ -6,10 +6,11 @@
 
 import { expect } from 'earljs';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
-import { afterTest, beforeEach, describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
@@ -18,13 +19,13 @@ import { createWebRTCTransportFactory } from '../transport';
 import { ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
-import { log } from '@dxos/log';
 
 type TestPeer = {
   swarm: Swarm;
   peerId: PublicKey;
   protocol: TestWireProtocol;
   topic: PublicKey;
+  signalManager: SignalManager;
 };
 
 describe('Swarm', () => {
@@ -60,7 +61,7 @@ describe('Swarm', () => {
 
     await swarm.open();
 
-    return { swarm, protocol, topic, peerId };
+    return { swarm, protocol, topic, peerId, signalManager };
   };
 
   test('connects two peers in a swarm', async () => {
@@ -102,16 +103,27 @@ describe('Swarm', () => {
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 
-  test.repeat(100)('connection limiter', async () => {
-    log.break();
+  test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
-    const peerId = PublicKey.random();
+
+    const peerId = PublicKey.fromHex('7701dc2d');
+    const remotePeerId1 = PublicKey.fromHex('7d2bc6aa');
+    const remotePeerId2 = PublicKey.fromHex('39ba0e41');
+
     const topic = PublicKey.random();
     const connectionLimiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
 
     const signalManager = new MemorySignalManager(context);
+    const sendOriginal = signalManager.sendMessage.bind(signalManager);
+    const messages = new ComplexSet<{ author: PublicKey; recipient: PublicKey }>(
+      ({ author, recipient }) => author.toHex() + recipient.toHex(),
+    );
+    signalManager.sendMessage = async (message) => {
+      messages.add({ author: message.author, recipient: message.recipient });
+      return sendOriginal(message);
+    };
     // Stop signaling to stop connection in initiation state.
-    // signalManager.freeze();
+    signalManager.freeze();
 
     const peer = await setupSwarm({
       topic,
@@ -119,46 +131,40 @@ describe('Swarm', () => {
       connectionLimiter,
       signalManager,
     });
-    const remotePeer1 = await setupSwarm({ topic });
-    const remotePeer2 = await setupSwarm({ topic });
-    log.info('construct peers', {
-      peerId: peer.peerId,
-      remotePeer1: remotePeer1.peerId,
-      remotePeer2: remotePeer2.peerId,
-    })
+    const remotePeer1 = await setupSwarm({ peerId: remotePeerId1, topic });
+    const remotePeer2 = await setupSwarm({ peerId: remotePeerId2, topic });
 
     let connected1: Promise<void>;
     {
       // Connection limiter allow only one connection to be started.
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected1 = connectSwarms(peer, remotePeer1);
+      connected1 = connectSwarms(peer, remotePeer1).then(() => log.error('connected1'));
       await asyncTimeout(connectionInit, 1000);
-      log.info('connectionInit 1')
     }
 
     let connected2: Promise<void>;
     {
       // Connection limiter should prevent second connection from being started (only created).
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected2 = connectSwarms(peer, remotePeer2);
+      connected2 = connectSwarms(peer, remotePeer2)
+        .then(() => log.error('connected2'))
+        .catch(() => {});
       await asyncTimeout(connectionInit, 1000);
-      log.info('connectionInit 2')
     }
 
     {
       // Peer sent messages only to first remote peer.
-      // expect(messages.has({ author: peer.peerId, recipient: remotePeer1.peerId })).toEqual(true);
-      // expect(messages.has({ author: peer.peerId, recipient: remotePeer2.peerId })).toEqual(false);
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer1.peerId })).toEqual(true);
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer2.peerId })).toEqual(false);
     }
 
-    log.info('===== UNFREEZE ======')
     signalManager.unfreeze();
-    
+
     await Promise.all([connected1, connected2]);
   });
 });
 
-const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () => { }) => {
+const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () => {}) => {
   const connect1 = peer1.swarm.connected.waitForCount(1);
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
@@ -195,6 +201,6 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
     await asyncTimeout(connect2, 3000);
   }
 
-  await peer1.protocol.testConnection(peer2.peerId);
-  await peer2.protocol.testConnection(peer1.peerId);
+  await peer1.protocol.testConnection(peer2.peerId, 'test message 1');
+  await peer2.protocol.testConnection(peer1.peerId, 'test message 2');
 };
