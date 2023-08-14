@@ -5,7 +5,6 @@
 import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, SignalManager } from '@dxos/messaging';
@@ -66,7 +65,6 @@ export type NetworkManagerOptions = {
  */
 // TODO(dmaretskyi): Rename SwarmManager.
 export class NetworkManager {
-  private readonly _ctx = new Context();
   /**
    * @internal
    */
