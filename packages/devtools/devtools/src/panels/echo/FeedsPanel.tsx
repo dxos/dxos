@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Rows } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Button, Toolbar } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector, Toolbar } from '../../components';
+import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
 
@@ -59,10 +58,10 @@ const FeedsPanel = () => {
   }, [key]);
 
   useEffect(() => {
-    if(feedKey && feedKeys.length > 0 && !feedKeys.find(feed => feed.equals(feedKey))) {
+    if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
       handleSelect(feedKeys[0]);
     }
-  }, [JSON.stringify(feedKeys), feedKey])
+  }, [JSON.stringify(feedKeys), feedKey]);
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
@@ -88,8 +87,7 @@ const FeedsPanel = () => {
         <Toolbar>
           <SpaceSelector />
           <PublicKeySelector
-            Icon={Rows}
-            placeholder={'Select feed'}
+            placeholder='Select feed'
             getLabel={getLabel}
             keys={feedKeys}
             value={key}

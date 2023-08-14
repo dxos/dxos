@@ -4,16 +4,17 @@
 
 import React from 'react';
 
+import { Toolbar } from '@dxos/aurora';
 import { TableColumn } from '@dxos/mosaic';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
-import { MasterDetailTable, PanelContainer, Toolbar } from '../../components';
+import { MasterDetailTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
 
 const columns: TableColumn<SpaceMember>[] = [
   {
-    Header: 'key',
+    Header: 'Key',
     width: 120,
     Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
     accessor: (member) => {
@@ -22,11 +23,11 @@ const columns: TableColumn<SpaceMember>[] = [
     },
   },
   {
-    Header: 'name',
+    Header: 'Name',
     accessor: (member) => member.identity.profile?.displayName,
   },
   {
-    Header: 'status',
+    Header: 'Status',
     accessor: (member) => {
       switch (member.presence) {
         case SpaceMember.PresenceState.ONLINE:

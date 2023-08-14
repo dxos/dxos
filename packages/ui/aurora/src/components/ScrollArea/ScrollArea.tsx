@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import {
   Root as ScrollAreaPrimitiveRoot,
   ScrollAreaProps as ScrollAreaPrimitiveRootProps,
