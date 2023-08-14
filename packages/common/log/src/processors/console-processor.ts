@@ -6,9 +6,10 @@ import chalk from 'chalk';
 import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
+import { defaultMap } from '@dxos/util';
+
 import { LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
-import { defaultMap } from '@dxos/util';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
@@ -50,22 +51,26 @@ export type FormatParts = {
 
 export type Formatter = (config: LogConfig, parts: FormatParts) => (string | undefined)[];
 
-
-const instanceContexts = new WeakMap<any, {
-  nextId: number,
-  instanceIds: WeakMap<any, number>,
-}>();
-
+const instanceContexts = new WeakMap<
+  any,
+  {
+    nextId: number;
+    instanceIds: WeakMap<any, number>;
+  }
+>();
 
 export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context, error, scope }) => {
   const column = config.options?.formatter?.column;
 
   const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
 
-  let instance = undefined;
-  if(scope) {
+  let instance;
+  if (scope) {
     const prototype = Object.getPrototypeOf(scope);
-    const instanceCtx = defaultMap(instanceContexts as any, prototype, () => ({ nextId: 0, instanceIds: new WeakMap() }));
+    const instanceCtx = defaultMap(instanceContexts as any, prototype, () => ({
+      nextId: 0,
+      instanceIds: new WeakMap(),
+    }));
 
     let id = instanceCtx.instanceIds.get(scope);
     if (id === undefined) {
@@ -77,7 +82,6 @@ export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, messag
 
     instance = chalk.magentaBright(instance);
   }
-
 
   return [
     // NOTE: File path must come fist for console hyperlinks.
