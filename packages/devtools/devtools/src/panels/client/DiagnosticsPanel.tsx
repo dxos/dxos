@@ -5,13 +5,13 @@
 import { Download } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, Input } from '@dxos/aurora';
+import { Button, Input, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useFileDownload } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
-import { JsonView, PanelContainer, Toolbar } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 
 const DiagnosticsPanel = () => {
   const client = useClient();
@@ -63,10 +63,8 @@ const DiagnosticsPanel = () => {
           </Button>
           <Button onClick={handleResetMetrics}>Reset metrics</Button>
           <Input.Root>
-            <div role='none' className='flex space-x-2 bg-red-100 items-center'>
-              <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
-              <Input.Label>Record metrics!</Input.Label>
-            </div>
+            <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
+            <Input.Label>Record metrics</Input.Label>
           </Input.Root>
         </Toolbar>
       }

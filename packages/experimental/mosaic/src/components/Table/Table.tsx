@@ -79,7 +79,7 @@ export const Table = <T extends {}>({
   );
 
   return (
-    <div ref={slots.root?.ref} className={mx('flex flex-1 flex-col overflow-x-auto', slots.root?.className)}>
+    <div ref={slots.root?.ref} className={mx('flex flex-col overflow-x-auto', slots.root?.className)}>
       <div className='table' {...getTableProps()}>
         {/* Header */}
         {/* TODO(burdon): Header is transparent. */}

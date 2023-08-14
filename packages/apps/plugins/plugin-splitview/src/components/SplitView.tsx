@@ -19,7 +19,7 @@ export const SplitView = () => {
 
   return (
     <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      <Main.Sidebar>
+      <Main.Sidebar classNames='overflow-hidden'>
         <Surface name='sidebar' />
       </Main.Sidebar>
       <div
@@ -38,13 +38,16 @@ export const SplitView = () => {
       </div>
       <Main.Overlay />
       <Surface name='main' />
+      {/* TODO(burdon): Move dialog to settings-plugin. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>
           <Dialog.Overlay>
             {dialogContent === 'dxos.org/plugin/splitview/ProfileSettings' ? (
               <Dialog.Content>
                 <Dialog.Title>{t('settings dialog title', { ns: 'os' })}</Dialog.Title>
-                <Surface role='dialog' data={dialogContent} />
+                <div className='flex flex-col my-2 space-y-2'>
+                  <Surface role='dialog' data={dialogContent} />
+                </div>
                 <Dialog.Close asChild>
                   <Button variant='primary' classNames='mbs-2'>
                     {t('done label', { ns: 'os' })}

@@ -3,53 +3,52 @@
 //
 
 import React, { Suspense } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 
-import { TreeView, TreeViewItem } from '@dxos/react-appkit';
-import { useClientServices } from '@dxos/react-client';
+import { getSize, mx } from '@dxos/aurora-theme';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
 const Footer = () => {
-  const services = useClientServices();
-  if (!services) {
-    return null;
-  }
-
   return (
-    <>
-      <div className='flex-1' />
-      <div className='flex flex-col shrink-0 justify-center p-2 space-y-2'>
-        <div className='flex shrink-1 justify-center'>
-          {process.env.PACKAGE_VERSION && (
-            <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION}</span>
-          )}
-        </div>
-      </div>
-    </>
+    <div className='flex justify-center p-2'>
+      <span className='text-xs text-gray-500'>Version: {process.env.PACKAGE_VERSION ?? 'DEV'}</span>
+    </div>
   );
 };
 
 export const RootContainer = () => {
   const sections = useSections();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
-
-  const handleSelect = (item: TreeViewItem) => {
-    navigate(item.id);
-  };
 
   return (
     <div className='flex w-full h-screen overflow-hidden'>
       <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-100'}>
-        <TreeView
-          items={sections}
-          expanded={sections.map((section) => section.id)}
-          slots={{ title: { className: 'ml-1' }, selected: { className: 'bg-blue-600 text-white' } }}
-          selected={pathname}
-          onSelect={handleSelect}
-        />
+        <div className='flex flex-col space-y-4 divide-y'>
+          {sections.map((section) => (
+            <div key={section.id}>
+              <div className='flex text-sm pis-4 py-1'>{section.title}</div>
+              <div>
+                {section.items?.map(({ id, title, Icon }) => (
+                  <div
+                    key={id}
+                    className={mx(
+                      'flex items-center pis-4 gap-2 text-neutral-600',
+                      id === pathname && 'bg-sky-600 text-white',
+                    )}
+                  >
+                    <Icon className={getSize(5)} />
+                    <Link to={id} className='grow'>
+                      <span>{title}</span>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className='grow' />
         <Footer />
       </div>
 
