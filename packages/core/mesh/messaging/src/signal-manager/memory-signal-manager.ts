@@ -9,12 +9,12 @@ import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { CommandTrace, SignalStatus } from '../signal-client';
 import { SignalManager } from './signal-manager';
-import { schema } from '@dxos/protocols';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -158,7 +158,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
-    log.info('send message', { author, recipient, ...dec(payload) })
+    log.info('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
     invariant(!this._ctx.disposed, 'Closed');
@@ -176,17 +176,21 @@ export class MemorySignalManager implements SignalManager {
       return;
     }
 
-    remote._freezeTrigger.wait().then(() => {
-      if (remote._ctx.disposed) {
-        log.warn('recipient is disposed', { author, recipient });
-        return;
-      }
+    remote._freezeTrigger
+      .wait()
+      .then(() => {
+        if (remote._ctx.disposed) {
+          log.warn('recipient is disposed', { author, recipient });
+          return;
+        }
 
-      log.info('receive message', { author, recipient, ...dec(payload) })
+        log('receive message', { author, recipient, ...dec(payload) });
 
-      remote.onMessage.emit({ author, recipient, payload });
-    });
-
+        remote.onMessage.emit({ author, recipient, payload });
+      })
+      .catch((err) => {
+        log.error('error while waiting for freeze', { err });
+      });
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -207,18 +211,16 @@ export class MemorySignalManager implements SignalManager {
     this._freezeTrigger.wake();
   }
 }
-
-
 const dec = (payload: Any) => {
-  if(!payload.type_url.endsWith('ReliablePayload')) {
-    return {}
+  if (!payload.type_url.endsWith('ReliablePayload')) {
+    return {};
   }
 
-  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value)
+  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value);
 
-  if(typeof relPayload?.payload?.data === 'object' ) {
-    return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId }
+  if (typeof relPayload?.payload?.data === 'object') {
+    return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };
   }
 
-  return { }
-}
+  return {};
+};
