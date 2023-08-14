@@ -112,10 +112,6 @@ export class Connection {
   async openConnection() {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
-    log.info('open', { localPeerId: this.ownId, remotePeerId: this.remoteId, sessionId: this.sessionId });
-    this._ctx.onDispose(() => {
-      log.info('disposed', { localPeerId: this.ownId, remotePeerId: this.remoteId, sessionId: this.sessionId });
-    });
 
     this._changeState(ConnectionState.CONNECTING);
 
@@ -147,7 +143,6 @@ export class Connection {
     });
 
     this._transport.errors.handle((err) => {
-      log.warn('transport error', { err, sessionId: this.sessionId });
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         this.errors.raise(err);
       }
@@ -193,8 +188,6 @@ export class Connection {
   }
 
   private _sendSignal(signal: Signal) {
-    log.info('sendSignal', { localPeerId: this.ownId, remotePeerId: this.remoteId, sessionId: this.sessionId });
-
     this._outgoingSignalBuffer.push(signal);
     this._signalSendTask.schedule();
   }
