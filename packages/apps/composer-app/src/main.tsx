@@ -13,7 +13,7 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 // import { FilesPlugin } from '@braneframe/plugin-files';
 // import { GithubPlugin } from '@braneframe/plugin-github';
 import { IntentPlugin } from '@braneframe/plugin-intent';
-import { MarkdownPlugin } from '@braneframe/plugin-markdown';
+// import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
 import { SessionPlugin } from '@braneframe/plugin-session';
 import { SpacePlugin } from '@braneframe/plugin-space';
@@ -50,7 +50,7 @@ createRoot(document.getElementById('root')!).render(
         UrlSyncPlugin(),
         SplitViewPlugin(),
         SpacePlugin(),
-        MarkdownPlugin(),
+        // MarkdownPlugin(),
         // StackPlugin(),
         // GithubPlugin(),
         // FilesPlugin(),

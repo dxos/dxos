@@ -4,11 +4,11 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
+import { Circle, DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
+import { SessionNode, useActions } from '@braneframe/plugin-session';
 import {
   Button,
   DropdownMenu,
@@ -24,8 +24,9 @@ import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-t
 
 import { useTreeView } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
+import { ActionItem, PrimaryAction } from './Actions';
 
-type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+type SortableLeafTreeItemProps = { node: SessionNode } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   node,
@@ -47,7 +48,7 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   );
 };
 
-type LeafTreeItemProps = { node: GraphNode } & SortableProps;
+type LeafTreeItemProps = { node: SessionNode } & SortableProps;
 
 export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
@@ -55,7 +56,6 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
 >(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
   // todo(thure): Handle `sortable`
 
-  const { invokeAction } = useGraph();
   const { sidebarOpen, closeSidebar } = useSidebar();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const density = useDensityContext();
@@ -63,13 +63,13 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   const treeView = useTreeView();
 
   const active = node.id === treeView.active.at(-1);
-  const modified = node.attributes?.modified ?? false;
-  const disabled = node.attributes?.disabled ?? false;
-  const error = node.attributes?.error ?? false;
-  const Icon = node.icon ?? Placeholder;
-  const allActions = getActions(node);
-  const [primaryAction, ...actions] = allActions;
-  const menuActions = disabled ? actions : allActions;
+  const modified = node.params?.modified ?? false;
+  const disabled = node.params?.disabled ?? false;
+  const error = node.params?.error ?? false;
+  // const Icon = node.params?.icon ?? Placeholder;
+  const allActions = useActions(node.id);
+  const [primaryAction, ...actions] = Object.values(allActions);
+  const menuActions = disabled ? actions : Object.values(allActions);
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -105,19 +105,19 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             if (event.key === ' ' || event.key === 'Enter') {
               event.stopPropagation();
               // TODO(wittjosiah): Intent.
-              treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
+              treeView.active = [node.id];
               !isLg && closeSidebar();
             }
           }}
           onClick={(event) => {
             // TODO(wittjosiah): Intent.
             // TODO(wittjosiah): Make recursive.
-            treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
+            treeView.active = [node.id];
             !isLg && closeSidebar();
           }}
           className='text-start flex gap-2 justify-start'
         >
-          <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} />
+          {/* <Icon weight='regular' className={mx(getSize(4), 'shrink-0 mbs-2')} /> */}
           <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1 truncate')}>
             {Array.isArray(node.label) ? t(...node.label) : node.label}
           </p>
@@ -166,22 +166,12 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             <DropdownMenu.Portal>
               <DropdownMenu.Content classNames='z-[31]'>
                 {menuActions.map((action) => (
-                  <DropdownMenu.Item
+                  <ActionItem
                     key={action.id}
-                    onClick={() => {
-                      if (action.disabled) {
-                        return;
-                      }
-                      suppressNextTooltip.current = true;
-                      setOptionsMenuOpen(false);
-                      void invokeAction(action);
-                    }}
-                    classNames='gap-2'
-                    disabled={action.disabled}
-                  >
-                    {action.icon && <action.icon className={getSize(4)} />}
-                    <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
-                  </DropdownMenu.Item>
+                    action={action}
+                    setOptionsMenuOpen={setOptionsMenuOpen}
+                    suppressNextTooltip={suppressNextTooltip}
+                  />
                 ))}
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>
@@ -190,32 +180,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
         </Tooltip.Root>
       )}
       {disabled && primaryAction ? (
-        <Tooltip.Root>
-          <Tooltip.Portal>
-            <Tooltip.Content side='bottom' classNames='z-[31]'>
-              {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-              <Tooltip.Arrow />
-            </Tooltip.Content>
-          </Tooltip.Portal>
-          <Tooltip.Trigger asChild>
-            <Button
-              variant='ghost'
-              classNames='shrink-0 pli-2 pointer-fine:pli-1'
-              onClick={() => invokeAction(primaryAction)}
-              {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
-              {...(!sidebarOpen && { tabIndex: -1 })}
-            >
-              <span className='sr-only'>
-                {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-              </span>
-              {primaryAction.icon ? (
-                <primaryAction.icon className={getSize(4)} />
-              ) : (
-                <Placeholder className={getSize(4)} />
-              )}
-            </Button>
-          </Tooltip.Trigger>
-        </Tooltip.Root>
+        <PrimaryAction action={primaryAction} />
       ) : (
         <ListItem.Endcap classNames='is-8 pointer-fine:is-6 flex items-center'>
           <Circle

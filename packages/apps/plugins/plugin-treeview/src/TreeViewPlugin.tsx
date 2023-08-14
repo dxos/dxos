@@ -5,15 +5,13 @@
 import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
-import { GraphNode, useGraph } from '@braneframe/plugin-graph';
 import { PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeViewContainer } from './components';
+import { TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
-import { resolveNodes } from './util';
 
 export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
   const state = deepSignal<TreeViewContextValue>({ active: [] });
@@ -31,23 +29,22 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
         default: () => {
           const { plugins } = usePluginContext();
           const treeView = useTreeView();
-          const { graph } = useGraph();
           const [shortId, component] = treeView.active[0]?.split('/') ?? [];
           const plugin = findPlugin(plugins, shortId);
-          const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
+          // const active = resolveNodes(Object.values(graph.pluginChildren ?? {}).flat() as GraphNode[], treeView.active);
 
           if (plugin && plugin.provides.components?.[component]) {
             return <Surface component={`${plugin.meta.id}/${component}`} />;
-          } else if (active.length > 0) {
-            return (
-              <Surface
-                component='dxos.org/plugin/splitview/SplitView'
-                surfaces={{
-                  sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
-                  main: { component: `${shortId}/Main`, fallback: Fallback, data: { active } },
-                }}
-              />
-            );
+            // } else if (active.length > 0) {
+            //   return (
+            //     <Surface
+            //       component='dxos.org/plugin/splitview/SplitView'
+            //       surfaces={{
+            //         sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
+            //         main: { component: `${shortId}/Main`, fallback: Fallback, data: { active } },
+            //       }}
+            //     />
+            //   );
           } else {
             return (
               <Surface

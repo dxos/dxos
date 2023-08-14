@@ -7,8 +7,12 @@ import update from 'lodash.update';
 
 import { NodeKey, RelationKey, SessionGraph, SessionNode } from './types';
 
+export const NAVMENU_ROOT = 'NAVMENU_ROOT';
+
 export const sessionGraph: SessionGraph = {
-  nodes: deepSignal({}),
+  nodes: deepSignal({
+    [NAVMENU_ROOT]: { id: NAVMENU_ROOT, label: 'never' },
+  } as Record<NodeKey, SessionNode>),
   relations: deepSignal({}),
 };
 
@@ -27,6 +31,11 @@ export const addNodes = (...nodes: SessionNode[]): AddNodesResult =>
     },
     { added: {}, failed: {} },
   );
+
+export const upsertNodes = (...nodes: SessionNode[]) =>
+  nodes.forEach((node) => {
+    sessionGraph.nodes[node.id] = node as DeepSignal<SessionNode>;
+  });
 
 export type RelationParams = { by: NodeKey; of: NodeKey | NodeKey[]; as: RelationKey };
 

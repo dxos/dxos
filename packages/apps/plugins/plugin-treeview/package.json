@@ -27,8 +27,8 @@
   },
   "devDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-session": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",
@@ -44,8 +44,8 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-dnd": "workspace:*",
-    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/plugin-intent": "workspace:*",
+    "@braneframe/plugin-session": "workspace:*",
     "@braneframe/plugin-splitview": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
     "@dxos/aurora": "workspace:*",

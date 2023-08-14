@@ -7,7 +7,13 @@ import { getIndices } from '@tldraw/indices';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { IntentProvides } from '@braneframe/plugin-intent';
-import { SessionNode, SessionPluginParticipant, SessionPluginProvides } from '@braneframe/plugin-session';
+import {
+  resolveData,
+  SessionNode,
+  SessionPluginParticipant,
+  SessionPluginProvides,
+  upsertNodes,
+} from '@braneframe/plugin-session';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
@@ -32,7 +38,7 @@ import { isSpace, isSpaceNode } from './util';
 type SpacePluginProvides = SessionPluginParticipant & IntentProvides & TranslationsProvides;
 
 const spaceToSessionNode = (space: Space, index: string): SpaceNode => ({
-  id: `dxos.org/space/${space.key.toHex()}`,
+  id: `space/${space.key.toHex()}`,
   label: (space.properties as any).title ?? 'Space',
   params: {
     index,
@@ -69,7 +75,9 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const spaceIndices = getIndices(spaces.length);
           spaces.forEach((space, index) => {
             const handle = createSubscription(() => {
-              onSpaceUpdate?.(spaceToSessionNode(space, spaceIndices[index]));
+              const spaceNode = spaceToSessionNode(space, spaceIndices[index]);
+              upsertNodes(spaceNode);
+              onSpaceUpdate?.(spaceNode);
             });
             handle.update([space.properties]);
             spaceSubs.add(handle.unsubscribe);
@@ -91,7 +99,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       }
 
       const dispose = effect(() => {
-        const space = sessionPlugin?.provides.sessionGraph.nodes[treeView.active[0] as string];
+        const spaceNode = sessionPlugin?.provides.sessionGraph.nodes[treeView.active[0] as string];
+        const space = spaceNode ? resolveData(spaceNode as SessionNode) : null;
         if (
           space instanceof SpaceProxy &&
           (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
