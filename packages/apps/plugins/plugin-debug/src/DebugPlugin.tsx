@@ -9,7 +9,7 @@ import { ClientPluginProvides } from '@braneframe/plugin-client';
 import { SpaceProxy } from '@dxos/client/echo';
 import { findPlugin, PluginDefinition } from '@dxos/react-surface';
 
-import { DebugMain } from './components';
+import { DebugMain, DebugPanelKey, DebugSettings } from './components';
 import { DEBUG_PLUGIN, DebugContext, DebugPluginProvides } from './props';
 import translations from './translations';
 
@@ -54,7 +54,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
+          // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
+          if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
             return [];
           }
 
@@ -114,11 +115,21 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       component: (data, role) => {
         switch (role) {
-          case 'main':
+          case 'main': {
             if (isDebug(data)) {
               return DebugMain;
             }
+            break;
+          }
+          case 'dialog': {
+            if (data === 'dxos.org/plugin/splitview/ProfileSettings') {
+              return DebugSettings;
+            }
+            break;
+          }
         }
+
+        return null;
       },
       components: {
         DebugMain,
