@@ -6,6 +6,7 @@ import invariant from 'tiny-invariant';
 
 import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { CancelledError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -90,12 +91,7 @@ export class Peer {
     private readonly _transportFactory: TransportFactory,
     private readonly _connectionLimiter: ConnectionLimiter,
     private readonly _callbacks: PeerCallbacks,
-  ) {
-    log.info('construct', {
-      localPeerId,
-      remotePeerId: id,
-    });
-  }
+  ) {}
 
   /**
    * Respond to remote offer.
@@ -136,7 +132,7 @@ export class Peer {
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
-            log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
+            log('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, err });
           }
 
           // Calls `onStateChange` with CLOSED state.
@@ -300,11 +296,6 @@ export class Peer {
 
   @synchronized
   async destroy() {
-    log.info('destroy', {
-      localPeerId: this.localPeerId,
-      remotePeerId: this.id,
-    });
-
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.id, topic: this.topic });
 
