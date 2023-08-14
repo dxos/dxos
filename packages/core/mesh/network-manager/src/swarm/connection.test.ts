@@ -23,7 +23,7 @@ describe('Connection', () => {
       true,
       {
         offer: async (msg) => {
-          log.info('offer', { msg });
+          log('offer', { msg });
 
           return { accept: true };
         },
@@ -49,7 +49,7 @@ describe('Connection', () => {
       false,
       {
         offer: async (msg) => {
-          log.info('offer', { msg });
+          log('offer', { msg });
 
           return { accept: true };
         },
