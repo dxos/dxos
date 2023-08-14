@@ -6,23 +6,23 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
-import { Main, useSidebar } from './Main';
+import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
 const SidebarToggle = () => {
-  const { toggleSidebar } = useSidebar('StoryMain__SidebarToggle');
-  return <Button onClick={toggleSidebar}>Toggle sidebar</Button>;
+  const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
+  return <Button onClick={toggleNavigationSidebar}>Toggle sidebar</Button>;
 };
 
 const StoryMain = (_args: StoryMainArgs) => {
   return (
-    <Main.Root defaultSidebarOpen>
+    <Main.Root defaultNavigationSidebarOpen>
       <Main.Overlay />
-      <Main.Sidebar swipeToDismiss>
+      <Main.NavigationSidebar swipeToDismiss>
         <p>Sidebar content, hi!</p>
         <SidebarToggle />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <Main.Content>
         <p>Main content, hello!</p>
         <SidebarToggle />

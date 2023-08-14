@@ -25,109 +25,132 @@ import { ElevationProvider } from '../ElevationProvider';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'MainRoot';
-const SIDEBAR_NAME = 'Sidebar';
+const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
 type MainContextValue = {
-  sidebarOpen: boolean;
-  setSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
+  navigationSidebarOpen: boolean;
+  setNavigationSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
-  sidebarOpen: false,
-  setSidebarOpen: (nextOpen) => {
+  navigationSidebarOpen: false,
+  setNavigationSidebarOpen: (nextOpen) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
     console.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
 });
 
-const useSidebar = (consumerName = GENERIC_CONSUMER_NAME) => {
-  const { setSidebarOpen, sidebarOpen } = useMainContext(consumerName);
+const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
+  const { setNavigationSidebarOpen, navigationSidebarOpen } = useMainContext(consumerName);
   return {
-    sidebarOpen,
-    setSidebarOpen,
-    toggleSidebar: useCallback(() => setSidebarOpen(!sidebarOpen), [sidebarOpen, setSidebarOpen]),
-    openSidebar: useCallback(() => setSidebarOpen(true), [setSidebarOpen]),
-    closeSidebar: useCallback(() => setSidebarOpen(false), [setSidebarOpen]),
+    navigationSidebarOpen,
+    setNavigationSidebarOpen,
+    toggleNavigationSidebar: useCallback(
+      () => setNavigationSidebarOpen(!navigationSidebarOpen),
+      [navigationSidebarOpen, setNavigationSidebarOpen],
+    ),
+    openNavigationSidebar: useCallback(() => setNavigationSidebarOpen(true), [setNavigationSidebarOpen]),
+    closeNavigationSidebar: useCallback(() => setNavigationSidebarOpen(false), [setNavigationSidebarOpen]),
   };
 };
 
 type MainRootProps = PropsWithChildren<{
-  sidebarOpen?: boolean;
-  defaultSidebarOpen?: boolean;
-  onSidebarOpenChange?: (nextOpen: boolean) => void;
+  navigationSidebarOpen?: boolean;
+  defaultNavigationSidebarOpen?: boolean;
+  onNavigationSidebarOpenChange?: (nextOpen: boolean) => void;
 }>;
 
 const MainRoot = ({
-  sidebarOpen: propsSidebarOpen,
-  defaultSidebarOpen,
-  onSidebarOpenChange,
+  navigationSidebarOpen: propsNavigationSidebarOpen,
+  defaultNavigationSidebarOpen,
+  onNavigationSidebarOpenChange,
   children,
   ...props
 }: MainRootProps) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const [sidebarOpen = isLg, setSidebarOpen] = useControllableState<boolean>({
-    prop: propsSidebarOpen,
-    defaultProp: defaultSidebarOpen,
-    onChange: onSidebarOpenChange,
+  const [navigationSidebarOpen = isLg, setNavigationSidebarOpen] = useControllableState<boolean>({
+    prop: propsNavigationSidebarOpen,
+    defaultProp: defaultNavigationSidebarOpen,
+    onChange: onNavigationSidebarOpenChange,
   });
-  return (
-    <MainProvider {...{ ...props, sidebarOpen, setSidebarOpen }}>
-      <DialogRoot open={sidebarOpen} modal={false}>
-        {children}
-      </DialogRoot>
-    </MainProvider>
-  );
+  return <MainProvider {...{ ...props, navigationSidebarOpen, setNavigationSidebarOpen }}>{children}</MainProvider>;
 };
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
-type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & { swipeToDismiss?: boolean };
+type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
+  swipeToDismiss?: boolean;
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean | undefined>>;
+  side: 'inline-start' | 'inline-end';
+};
 
 const handleOpenAutoFocus = (e: Event) => {
   !document.body.hasAttribute('data-is-keyboard') && e.preventDefault();
 };
 
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
-  ({ classNames, children, swipeToDismiss, onOpenAutoFocus, ...props }, forwardedRef) => {
+  ({ classNames, children, swipeToDismiss, onOpenAutoFocus, open, setOpen, side, ...props }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
-    const { sidebarOpen, setSidebarOpen } = useMainContext(SIDEBAR_NAME);
     const { tx } = useThemeContext();
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
-      onDismiss: () => setSidebarOpen(false),
+      onDismiss: () => setOpen(false),
     });
     const Root = isLg ? Primitive.div : DialogContent;
     return (
-      <Root
-        {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
-        {...props}
-        className={tx('main.sidebar', 'main__sidebar', { isLg, sidebarOpen }, classNames)}
-        ref={ref}
-      >
-        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
-      </Root>
+      <DialogRoot open={open} modal={false}>
+        <Root
+          {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
+          {...props}
+          className={tx(
+            'main.sidebar',
+            'main__sidebar',
+            { isLg, [side === 'inline-end' ? 'inlineEndSidebarOpen' : 'inlineStartSidebarOpen']: open, side },
+            classNames,
+          )}
+          ref={ref}
+        >
+          <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+        </Root>
+      </DialogRoot>
     );
   },
 );
 
-MainSidebar.displayName = SIDEBAR_NAME;
+type MainNavigationSidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 'side'>;
+
+const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
+  const { navigationSidebarOpen, setNavigationSidebarOpen } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+  return (
+    <MainSidebar
+      {...props}
+      open={navigationSidebarOpen}
+      setOpen={setNavigationSidebarOpen}
+      side='inline-start'
+      ref={forwardedRef}
+    />
+  );
+});
+
+MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
 type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { asChild?: boolean; bounce?: boolean };
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, bounce, children, ...props }: MainProps, forwardedRef) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
-    const { sidebarOpen } = useMainContext(MAIN_NAME);
+    const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'main';
 
     return (
       <Root
         {...props}
-        className={tx('main.content', 'main', { isLg, sidebarOpen, bounce }, classNames)}
+        className={tx('main.content', 'main', { isLg, navigationSidebarOpen, bounce }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -142,14 +165,14 @@ type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { sidebarOpen, setSidebarOpen } = useMainContext(MAIN_NAME);
+  const { navigationSidebarOpen, setNavigationSidebarOpen } = useMainContext(MAIN_NAME);
   const { tx } = useThemeContext();
   return (
     <div
-      onClick={() => setSidebarOpen(false)}
+      onClick={() => setNavigationSidebarOpen(false)}
       {...props}
-      className={tx('main.overlay', 'main__overlay', { isLg, sidebarOpen }, classNames)}
-      data-open={sidebarOpen}
+      className={tx('main.overlay', 'main__overlay', { isLg, navigationSidebarOpen }, classNames)}
+      data-open={navigationSidebarOpen}
       aria-hidden='true'
       data-aria-hidden='true'
       ref={forwardedRef}
@@ -157,8 +180,13 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
   );
 });
 
-export const Main = { Content: MainContent, Overlay: MainOverlay, Root: MainRoot, Sidebar: MainSidebar };
+export const Main = {
+  Content: MainContent,
+  Overlay: MainOverlay,
+  Root: MainRoot,
+  NavigationSidebar: MainNavigationSidebar,
+};
 
-export { useMainContext, useSidebar };
+export { useMainContext, useSidebars };
 
-export type { MainRootProps, MainProps, MainOverlayProps, MainSidebarProps };
+export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps };

@@ -18,10 +18,13 @@ export const SplitView = () => {
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
-    <Main.Root sidebarOpen={context.sidebarOpen} onSidebarOpenChange={(next) => (context.sidebarOpen = next)}>
-      <Main.Sidebar classNames='overflow-hidden'>
+    <Main.Root
+      navigationSidebarOpen={context.sidebarOpen}
+      onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
+    >
+      <Main.NavigationSidebar classNames='overflow-hidden'>
         <Surface name='sidebar' />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <div
         role='none'
         className={mx(
