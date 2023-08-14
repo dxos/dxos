@@ -37,8 +37,6 @@ export class ConnectionLimiter {
   });
 
   constructor({ maxConcurrentInitConnections = MAX_CONCURRENT_INITIATING_CONNECTIONS }: ConnectionLimiterOptions = {}) {
-    log.info('construct', { maxConcurrentInitConnections })
-
     this._maxConcurrentInitConnections = maxConcurrentInitConnections;
   }
 
@@ -47,7 +45,7 @@ export class ConnectionLimiter {
    */
   async connecting(sessionId: PublicKey): Promise<void> {
     invariant(!this._waitingPromises.has(sessionId), 'Peer is already waiting for connection');
-    log.info('waiting', { sessionId })
+    log('waiting', { sessionId });
     await new Promise<void>((resolve, reject) => {
       this._waitingPromises.set(sessionId, {
         resolve,
@@ -55,14 +53,14 @@ export class ConnectionLimiter {
       });
       this.resolveWaitingPromises.schedule();
     });
-    log.info('allow', { sessionId })
+    log('allow', { sessionId });
   }
 
   /**
    * Rejects promise returned by `connecting` method.
    */
   doneConnecting(sessionId: PublicKey) {
-    log.info('done', { sessionId })
+    log('done', { sessionId });
     if (!this._waitingPromises.has(sessionId)) {
       return;
     }
