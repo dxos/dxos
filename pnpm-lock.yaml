@@ -510,6 +510,7 @@ importers:
       '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
       '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-ipfs': workspace:*
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
@@ -553,6 +554,7 @@ importers:
       '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
+      '@braneframe/plugin-ipfs': link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
@@ -995,6 +997,57 @@ importers:
       react: 18.2.0
       vite: 4.3.9
 
+  packages/apps/plugins/plugin-ipfs:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      ipfs-http-client: ~56.0.1
+      lodash.get: ^4.4.2
+      node-fetch: ^2.6.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-is: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/types': link:../../types
+      '@dxos/client': link:../../../sdk/client
+      deepsignal: 1.3.4_react@18.2.0
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      lodash.get: 4.4.2
+      react-is: 18.2.0
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      node-fetch: 2.6.7
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
   packages/apps/plugins/plugin-kanban:
     specifiers:
       '@braneframe/plugin-graph': workspace:*
@@ -1253,11 +1306,9 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
-      ipfs-http-client: ~56.0.1
       lodash.get: ^4.4.2
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-drag-drop-files: ^2.3.8
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -1269,9 +1320,7 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
-      ipfs-http-client: 56.0.3
       lodash.get: 4.4.2
-      react-drag-drop-files: 2.3.8_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -21835,7 +21884,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -23267,17 +23316,6 @@ packages:
       '@react-dnd/asap': 5.0.2
       '@react-dnd/invariant': 4.0.2
       redux: 4.2.0
-    dev: false
-
-  /dns-over-http-resolver/1.2.3:
-    resolution: {integrity: sha512-miDiVSI6KSNbi4SVifzO/reD8rMnxgrlnkrlkugOLQpWQTe2qMdHsZp5DmfKjxNE+/T3VAAYLQUZMv9SMr6+AA==}
-    dependencies:
-      debug: 4.3.4
-      native-fetch: 3.0.0
-      receptacle: 1.3.2
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
     dev: false
 
   /dns-over-http-resolver/1.2.3_node-fetch@2.6.7:
@@ -27373,20 +27411,6 @@ packages:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
     engines: {node: '>= 0.10'}
 
-  /ipfs-core-types/0.10.3:
-    resolution: {integrity: sha512-GNid2lRBjR5qgScCglgk7w9Hk3TZAwPHQXxOLQx72wgyc0jF2U5NXRoKW0GRvX8NPbHmsrFszForIqxd23I1Gw==}
-    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
-    dependencies:
-      '@ipld/dag-pb': 2.1.18
-      interface-datastore: 6.1.1
-      ipfs-unixfs: 6.0.9
-      multiaddr: 10.0.1
-      multiformats: 9.9.0
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
   /ipfs-core-types/0.10.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-GNid2lRBjR5qgScCglgk7w9Hk3TZAwPHQXxOLQx72wgyc0jF2U5NXRoKW0GRvX8NPbHmsrFszForIqxd23I1Gw==}
     deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
@@ -27396,35 +27420,6 @@ packages:
       ipfs-unixfs: 6.0.9
       multiaddr: 10.0.1_node-fetch@2.6.7
       multiformats: 9.9.0
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
-  /ipfs-core-utils/0.14.3:
-    resolution: {integrity: sha512-aBkewVhgAj3NWXPwu6imj0wADGiGVZmJzqKzODOJsibDjkx6FGdMv8kvvqtLnK8LS/dvSk9yk32IDtuDyYoV7Q==}
-    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
-    dependencies:
-      any-signal: 3.0.1
-      blob-to-it: 1.0.4
-      browser-readablestream-to-it: 1.0.3
-      debug: 4.3.4
-      err-code: 3.0.1
-      ipfs-core-types: 0.10.3
-      ipfs-unixfs: 6.0.9
-      ipfs-utils: 9.0.7
-      it-all: 1.0.6
-      it-map: 1.0.6
-      it-peekable: 1.0.3
-      it-to-stream: 1.0.0
-      merge-options: 3.0.4
-      multiaddr: 10.0.1
-      multiaddr-to-uri: 8.0.0
-      multiformats: 9.9.0
-      nanoid: 3.3.6
-      parse-duration: 1.0.2
-      timeout-abort-controller: 3.0.0
-      uint8arrays: 3.1.1
     transitivePeerDependencies:
       - node-fetch
       - supports-color
@@ -27453,34 +27448,6 @@ packages:
       nanoid: 3.3.6
       parse-duration: 1.0.2
       timeout-abort-controller: 3.0.0
-      uint8arrays: 3.1.1
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
-  /ipfs-http-client/56.0.3:
-    resolution: {integrity: sha512-E3L5ylVl6BjyRUsNehvfuRBYp1hj8vQ8in4zskVPMNzXs6JiCFUbif5a6BtcAlSK4xPQyJCeLNNAWLUeFQTLNA==}
-    engines: {node: '>=15.0.0', npm: '>=3.0.0'}
-    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
-    dependencies:
-      '@ipld/dag-cbor': 7.0.3
-      '@ipld/dag-json': 8.0.11
-      '@ipld/dag-pb': 2.1.18
-      any-signal: 3.0.1
-      dag-jose: 1.0.0
-      debug: 4.3.4
-      err-code: 3.0.1
-      ipfs-core-types: 0.10.3
-      ipfs-core-utils: 0.14.3
-      ipfs-utils: 9.0.7
-      it-first: 1.0.7
-      it-last: 1.0.6
-      merge-options: 3.0.4
-      multiaddr: 10.0.1
-      multiformats: 9.9.0
-      parse-duration: 1.0.2
-      stream-to-it: 0.2.4
       uint8arrays: 3.1.1
     transitivePeerDependencies:
       - node-fetch
@@ -31760,36 +31727,11 @@ packages:
   /ms/2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  /multiaddr-to-uri/8.0.0:
-    resolution: {integrity: sha512-dq4p/vsOOUdVEd1J1gl+R2GFrXJQH8yjLtz4hodqdVbieg39LvBOdMQRdQnfbg5LSM/q1BYNVf5CBbwZFFqBgA==}
-    deprecated: This module is deprecated, please upgrade to @multiformats/multiaddr-to-uri
-    dependencies:
-      multiaddr: 10.0.1
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
   /multiaddr-to-uri/8.0.0_node-fetch@2.6.7:
     resolution: {integrity: sha512-dq4p/vsOOUdVEd1J1gl+R2GFrXJQH8yjLtz4hodqdVbieg39LvBOdMQRdQnfbg5LSM/q1BYNVf5CBbwZFFqBgA==}
     deprecated: This module is deprecated, please upgrade to @multiformats/multiaddr-to-uri
     dependencies:
       multiaddr: 10.0.1_node-fetch@2.6.7
-    transitivePeerDependencies:
-      - node-fetch
-      - supports-color
-    dev: false
-
-  /multiaddr/10.0.1:
-    resolution: {integrity: sha512-G5upNcGzEGuTHkzxezPrrD6CaIHR9uo+7MwqhNVcXTs33IInon4y7nMiGxl2CY5hG7chvYQUQhz5V52/Qe3cbg==}
-    deprecated: This module is deprecated, please upgrade to @multiformats/multiaddr
-    dependencies:
-      dns-over-http-resolver: 1.2.3
-      err-code: 3.0.1
-      is-ip: 3.1.0
-      multiformats: 9.9.0
-      uint8arrays: 3.1.1
-      varint: 6.0.0
     transitivePeerDependencies:
       - node-fetch
       - supports-color
@@ -31955,12 +31897,6 @@ packages:
 
   /napi-macros/2.0.0:
     resolution: {integrity: sha512-A0xLykHtARfueITVDernsAWdtIMbOJgKgcluwENp3AlsKN/PloyO10HtmoqnFAQAcxPkgZN7wdfPfEd0zNGxbg==}
-
-  /native-fetch/3.0.0:
-    resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
-    peerDependencies:
-      node-fetch: '*'
-    dev: false
 
   /native-fetch/3.0.0_hmwa7nplpltavckpkeobtw6pv4:
     resolution: {integrity: sha512-G3Z7vx0IFb/FQ4JxvtqGABsOTIqRWvgQz6e+erkB+JJD6LrszQtMozEHI4EkmgZQvnGHrpLVzUWk7t4sJCIkVw==}
@@ -34821,20 +34757,6 @@ packages:
       - react-is
     dev: false
 
-  /react-drag-drop-files/2.3.8_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-/tA1FEGhw6IwG5DlogYu0y3uLkyZ6np8cbzihW7Hy/k3b1T022T7zjn/4elZ6+M69GwnJnUUO0Utisu1xZFATA==}
-    peerDependencies:
-      react: ^18.0.0
-      react-dom: ^18.0.0
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      styled-components: 5.3.6_biqbaboplfbrettd7655fr4n2y
-    transitivePeerDependencies:
-      - react-is
-    dev: false
-
   /react-element-to-jsx-string/15.0.0_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-UDg4lXB6BzlobN60P8fHWVPX3Kyw8ORrTeBtClmIlGdkOOE+GYQSFvmEU5iLLpwp/6v42DINwNcwOhOLfQ//FQ==}
     peerDependencies:
@@ -37594,29 +37516,6 @@ packages:
       react-is: 18.2.0
       shallowequal: 1.1.0
       supports-color: 5.5.0
-
-  /styled-components/5.3.6_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-hGTZquGAaTqhGWldX7hhfzjnIYBZ0IXQXkCYdvF1Sq3DsUaLx6+NTHC5Jj1ooM2F68sBiVz3lvhfwQs/S3l6qg==}
-    engines: {node: '>=10'}
-    requiresBuild: true
-    peerDependencies:
-      react: '>= 16.8.0'
-      react-dom: '>= 16.8.0'
-      react-is: '>= 16.8.0'
-    dependencies:
-      '@babel/helper-module-imports': 7.18.6
-      '@babel/traverse': 7.21.3_supports-color@5.5.0
-      '@emotion/is-prop-valid': 1.2.0
-      '@emotion/stylis': 0.8.5
-      '@emotion/unitless': 0.7.5
-      babel-plugin-styled-components: 2.0.7_styled-components@5.3.6
-      css-to-react-native: 3.0.0
-      hoist-non-react-statics: 3.3.2
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      shallowequal: 1.1.0
-      supports-color: 5.5.0
-    dev: false
 
   /styled-system/5.1.5:
     resolution: {integrity: sha512-7VoD0o2R3RKzOzPK0jYrVnS8iJdfkKsQJNiLRDjikOpQVqQHns/DXWaPZOH4tIKkhAT7I6wIsy9FWTWh2X3q+A==}
