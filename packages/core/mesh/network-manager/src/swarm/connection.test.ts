@@ -1,9 +1,14 @@
-import { describe } from "@dxos/test"
-import { Connection } from "./connection";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
-import { TestWireProtocol } from "../testing/test-wire-protocol";
-import { createWebRTCTransportFactory } from "../transport";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
+
+import { TestWireProtocol } from '../testing/test-wire-protocol';
+import { createWebRTCTransportFactory } from '../transport';
+import { Connection } from './connection';
 
 describe('Connection', () => {
   test('initiator opens after responder', async () => {
@@ -15,17 +20,16 @@ describe('Connection', () => {
       sessionId,
       true,
       {
-        offer: async msg => {
+        offer: async (msg) => {
           log.info('offer', { msg });
 
-          return { accept: true }
+          return { accept: true };
         },
         signal: async (msg) => {
           await connection2.signal(msg);
-
         },
       },
-      new TestWireProtocol(peerId1).factory({initiator: true, localPeerId: peerId1, remotePeerId: peerId2, topic }),
+      new TestWireProtocol(peerId1).factory({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2, topic }),
       createWebRTCTransportFactory(),
     );
 
@@ -36,10 +40,10 @@ describe('Connection', () => {
       sessionId,
       false,
       {
-        offer: async msg => {
+        offer: async (msg) => {
           log.info('offer', { msg });
 
-          return { accept: true }
+          return { accept: true };
         },
         signal: async (msg) => {
           await connection1.signal(msg);
@@ -49,4 +53,4 @@ describe('Connection', () => {
       createWebRTCTransportFactory(),
     );
   });
-})
+});
