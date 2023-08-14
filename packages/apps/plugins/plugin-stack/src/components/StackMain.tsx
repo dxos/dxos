@@ -200,6 +200,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
 
         <StackSectionsImpl sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
+        {/* TODO(burdon): Set datum and action for when dropped. */}
         <Surface role='drop' />
 
         <div role='none' className='flex gap-4 justify-center items-center pbe-4'>

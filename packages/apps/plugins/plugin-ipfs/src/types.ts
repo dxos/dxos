@@ -3,7 +3,6 @@
 //
 
 import { GraphProvides } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { File as FileProto } from '@braneframe/types';
 import { isTypedObject, TypedObject } from '@dxos/client/echo';
@@ -18,7 +17,7 @@ export enum IpfsAction {
 
 export type IpfsProvides = {};
 
-export type IpfsPluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+export type IpfsPluginProvides = GraphProvides & TranslationsProvides;
 
 // TODO(burdon): Warning: Encountered two children with the same key, `dxos.org/plugin/template`.
 // TODO(burdon): Better way to detect?

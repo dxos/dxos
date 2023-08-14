@@ -125,14 +125,11 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       translations,
       component: (data, role) => {
         switch (role) {
-          case 'main':
+          case 'main': {
             if (isGraphNode(data) && isLocalFile(data.data) && data.attributes?.disabled) {
               return LocalFileMainPermissions;
             }
             break;
-
-          case 'drop': {
-            return Test;
           }
         }
 
@@ -286,5 +283,3 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     },
   };
 };
-
-const Test = () => <div>Test</div>;
