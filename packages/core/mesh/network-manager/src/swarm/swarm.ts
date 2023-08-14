@@ -181,8 +181,6 @@ export class Swarm {
         peer.advertizing = true;
       }
     } else if (swarmEvent.peerLeft) {
-      throw new Error('PEEEEEEEERR LEEEEEEFT!!!!!!!!!!');
-      
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
@@ -221,7 +219,6 @@ export class Swarm {
     return answer;
   }
 
-  @synchronized
   async onSignal(message: SignalMessage): Promise<void> {
     log('signal', { message });
     if (this._ctx.disposed) {
@@ -271,7 +268,6 @@ export class Swarm {
             this.connected.emit(peerId);
           },
           onDisconnected: async () => {
-            log.info('onDisconnected', { localPeerId: this._ownPeerId, peerId, advertizing: peer!.advertizing })
             if (!peer!.advertizing) {
               await this._destroyPeer(peer!.id);
             }
@@ -280,7 +276,6 @@ export class Swarm {
             this._topology.update();
           },
           onRejected: () => {
-            log.info('onRejected', { localPeerId: this._ownPeerId, peerId, advertizing: peer!.advertizing })
             // If the peer rejected our connection remove it from the set of candidates.
             // TODO(dmaretskyi): Set flag instead.
             if (this._peers.has(peerId)) {
