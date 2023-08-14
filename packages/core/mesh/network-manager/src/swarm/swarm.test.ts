@@ -2,13 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/test platform=nodejs
-
-import { expect } from 'earljs';
+import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, SignalManager } from '@dxos/messaging';
 import { afterTest, describe, test } from '@dxos/test';
 import { ComplexSet } from '@dxos/util';
@@ -70,8 +67,8 @@ describe('Swarm', () => {
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
 
-    expect(peer1.swarm.connections.length).toEqual(0);
-    expect(peer2.swarm.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).to.equal(0);
+    expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2);
   }).timeout(5_000);
@@ -82,8 +79,8 @@ describe('Swarm', () => {
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
 
-    expect(peer1.swarm.connections.length).toEqual(0);
-    expect(peer2.swarm.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).to.equal(0);
+    expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2);
   }).timeout(5_000);
@@ -94,16 +91,16 @@ describe('Swarm', () => {
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
 
-    expect(peer1.swarm.connections.length).toEqual(0);
-    expect(peer2.swarm.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).to.equal(0);
+    expect(peer2.swarm.connections.length).to.equal(0);
 
-    expect(peer1.swarm.connections.length).toEqual(0);
-    expect(peer2.swarm.connections.length).toEqual(0);
+    expect(peer1.swarm.connections.length).to.equal(0);
+    expect(peer2.swarm.connections.length).to.equal(0);
 
     await connectSwarms(peer1, peer2, () => sleep(15));
   }).timeout(10_000);
 
-  test('connection limiter', async () => {
+  test.repeat(100)('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
 
     const peerId = PublicKey.fromHex('7701dc2d');
@@ -138,7 +135,7 @@ describe('Swarm', () => {
     {
       // Connection limiter allow only one connection to be started.
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected1 = connectSwarms(peer, remotePeer1).then(() => log.error('connected1'));
+      connected1 = connectSwarms(peer, remotePeer1);
       await asyncTimeout(connectionInit, 1000);
     }
 
@@ -146,16 +143,14 @@ describe('Swarm', () => {
     {
       // Connection limiter should prevent second connection from being started (only created).
       const connectionInit = peer.swarm.connectionAdded.waitForCount(1);
-      connected2 = connectSwarms(peer, remotePeer2)
-        .then(() => log.error('connected2'))
-        .catch(() => {});
+      connected2 = connectSwarms(peer, remotePeer2);
       await asyncTimeout(connectionInit, 1000);
     }
 
     {
       // Peer sent messages only to first remote peer.
-      expect(messages.has({ author: peer.peerId, recipient: remotePeer1.peerId })).toEqual(true);
-      expect(messages.has({ author: peer.peerId, recipient: remotePeer2.peerId })).toEqual(false);
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer1.peerId })).to.equal(true);
+      expect(messages.has({ author: peer.peerId, recipient: remotePeer2.peerId })).to.equal(false);
     }
 
     signalManager.unfreeze();
