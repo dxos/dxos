@@ -58,7 +58,11 @@ export const CompoundButton = ({
           {before}
         </div>
       )}
-      <div role='none' {...slots.middle} className={mx('grow flex flex-col gap-1 text-left', slots.middle?.className)}>
+      <div
+        role='none'
+        {...slots.middle}
+        className={mx('grow whitespace-normal flex flex-col gap-1 text-left', slots.middle?.className)}
+      >
         <p {...slots.label} id={labelId} className={mx(slots.label?.className)}>
           {children}
         </p>
