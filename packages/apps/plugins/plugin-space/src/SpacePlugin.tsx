@@ -42,7 +42,7 @@ type SpacePluginProvides = SessionPluginParticipant & IntentProvides & Translati
 
 const spaceToSessionNode = (space: Space, index: string): SpaceNode => ({
   id: `space/${space.key.toHex()}`,
-  label: (space.properties as any).title ?? 'Space',
+  label: (space.properties as any).name ?? ['untitled space title', { ns: SPACE_PLUGIN }],
   params: {
     index,
     spaceKey: space.key.toHex(),
@@ -88,12 +88,16 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const spaceIndices = getIndices(spaces.length);
           spaces.forEach((space, index) => {
             const spaceNode = spaceToSessionNode(space, spaceIndices[index]);
-            upsertNodes(spaceNode);
-            addRelations(
-              { by: spaceNode.id, of: SPACE_PLUGIN, as: 'navmenu-parent' },
-              { by: SPACE_PLUGIN, of: spaceNode.id, as: 'navmenu-child' },
-            );
+            const { added } = addNodes(spaceNode);
+            Object.keys(added).length > 0 &&
+              addRelations(
+                { by: spaceNode.id, of: SPACE_PLUGIN, as: 'navmenu-parent' },
+                { by: spaceNode.id, of: SPACE_PLUGIN, as: 'provenance-parent' },
+                { by: SPACE_PLUGIN, of: spaceNode.id, as: 'navmenu-child' },
+              );
             const handle = createSubscription(() => {
+              const spaceNode = spaceToSessionNode(space, spaceIndices[index]);
+              upsertNodes(spaceNode);
               onSpaceUpdate?.(spaceNode);
             });
             handle.update([space.properties]);
