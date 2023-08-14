@@ -25,23 +25,16 @@ export const defaultOsButtonColors = 'bg-white/50 text-neutral-900 dark:bg-neutr
 export const ghostButtonColors =
   'hover:bg-transparent dark:hover:bg-transparent hover:text-primary-500 dark:hover:text-primary-300 aria-pressed:text-primary-800 dark:aria-pressed:text-primary-50';
 
-export type AppButtonStyleProps = Partial<{
+export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
+  textWrap?: boolean;
   density: Density;
   elevation: Elevation;
   disabled: boolean;
   variant: 'default' | 'primary' | 'ghost' | 'outline';
 }>;
 
-export type OsButtonStyleProps = Partial<{
-  inGroup?: boolean;
-  density: Density;
-  disabled: boolean;
-  variant: 'default' | 'ghost';
-  sideInset: 'be';
-}>;
-
-export const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButtonStyleProps> = (props) => {
+export const sharedButtonStyles: ComponentFragment<ButtonStyleProps> = (props) => {
   return [
     'inline-flex select-none items-center justify-center transition-color duration-100',
     props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
@@ -51,11 +44,12 @@ export const sharedButtonStyles: ComponentFragment<AppButtonStyleProps | OsButto
   ];
 };
 
-export const buttonRoot: ComponentFunction<AppButtonStyleProps> = (props, ...etc) => {
+export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm whitespace-nowrap',
+    'font-medium text-sm',
     !props.inGroup && 'rounded-md',
+    !props.textWrap && 'truncate',
     !props.disabled &&
       !props.inGroup &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
@@ -82,7 +76,7 @@ export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props,
   );
 };
 
-export const buttonTheme: Theme<AppButtonStyleProps> = {
+export const buttonTheme: Theme<ButtonStyleProps> = {
   root: buttonRoot,
   group: buttonGroup,
 };
