@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
-import { auroraTx } from '@dxos/aurora-theme';
+import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
 import { useTelemetry } from '@dxos/react-appkit';
 import { ClientServices, Client, ClientContext } from '@dxos/react-client';
 
@@ -38,8 +38,17 @@ export const Devtools = ({
     return null;
   }
 
+  const devtoolsTx = bindTheme({
+    ...auroraTheme,
+    toolbar: {
+      root: (props, ...etc) => {
+        return toolbarRoot(props, 'p-2', ...etc);
+      },
+    },
+  });
+
   return (
-    <ThemeProvider {...{ tx: auroraTx, themeMode: state.themeMode }}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
           <ClientContext.Provider value={context}>

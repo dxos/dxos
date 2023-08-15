@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, Input, Toolbar } from '@dxos/aurora';
+import { Input, Toolbar } from '@dxos/aurora';
 import { levels, parseFilter } from '@dxos/log';
 import { TableColumn } from '@dxos/mosaic';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -94,13 +94,13 @@ const LoggingPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <Input.Root>
             <Input.TextInput ref={inputRef} placeholder='Filter (e.g., "info", "client:debug")' />
           </Input.Root>
-          <Button onClick={handleQueryLogs}>Refresh</Button>
-          <Button onClick={() => setLogs([])}>Clear</Button>
-        </Toolbar>
+          <Toolbar.Button onClick={handleQueryLogs}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={() => setLogs([])}>Clear</Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <MasterDetailTable<LogEntry>

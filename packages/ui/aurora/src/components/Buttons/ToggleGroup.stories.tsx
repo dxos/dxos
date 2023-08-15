@@ -31,6 +31,6 @@ export default {
 
 export const Default = {
   args: {
-    type: 'multiple',
+    type: 'single',
   },
 };

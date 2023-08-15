@@ -64,10 +64,10 @@ const ItemsPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
           <Searchbar onSearch={setFilter} />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <MasterDetailTable<TypedObject> columns={columns} data={items.filter(textFilter(filter))} />
