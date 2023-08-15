@@ -3,18 +3,10 @@
 //
 
 import '@dxosTheme';
-import {
-  FileTs,
-  FileJs,
-  ArrowClockwise,
-  Bug,
-  TextAlignLeft,
-  TextAlignRight,
-  TextAlignCenter,
-} from '@phosphor-icons/react';
+import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button, Input, Select, Toggle, ToggleGroup, ToggleGroupItem, Toolbar } from '../components';
+import { Input, Select, Toggle, Toolbar } from '../components';
 import { createScenarios } from './helpers';
 
 const Story = () => {
@@ -23,10 +15,12 @@ const Story = () => {
 
   return (
     <div className='flex flex-col gap-2'>
-      <Toolbar classNames='flex'>
+      <Toolbar.Root>
         {/* TODO(burdon): Should be fixed width (regardless of selection). */}
         <Select.Root value={select} onValueChange={setSelect}>
-          <Select.TriggerButton placeholder={'Select value'} />
+          <Toolbar.Button asChild>
+            <Select.TriggerButton placeholder={'Select value'} />
+          </Toolbar.Button>
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
@@ -40,29 +34,31 @@ const Story = () => {
         {/* TODO(burdon): Highlight is cyan. */}
         {/* TODO(burdon): Show vertical divider by default. */}
         {/* TODO(burdon): Icon sizes should adapt to density. */}
-        <ToggleGroup type='multiple'>
-          <ToggleGroupItem value='a'>
-            <TextAlignLeft />
-          </ToggleGroupItem>
-          <ToggleGroupItem value='b'>
-            <TextAlignCenter />
-          </ToggleGroupItem>
-          <ToggleGroupItem value='c'>
-            <TextAlignRight />
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <Toolbar.ToggleGroup type='multiple'>
+          <Toolbar.ToggleGroupItem value='a'>
+            <TextB />
+          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupItem value='b'>
+            <TextItalic />
+          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupItem value='c'>
+            <TextUnderline />
+          </Toolbar.ToggleGroupItem>
+        </Toolbar.ToggleGroup>
         {/* TODO(burdon): Highlight isn't shown. */}
-        <ToggleGroup type='single' value='a'>
-          <ToggleGroupItem value='a'>
+        <Toolbar.ToggleGroup type='single' defaultValue='a'>
+          <Toolbar.ToggleGroupItem value='a'>
             <FileTs />
-          </ToggleGroupItem>
-          <ToggleGroupItem value='b'>
+          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupItem value='b'>
             <FileJs />
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <Toggle>
-          <Bug />
-        </Toggle>
+          </Toolbar.ToggleGroupItem>
+        </Toolbar.ToggleGroup>
+        <Toolbar.Button asChild>
+          <Toggle>
+            <Bug />
+          </Toggle>
+        </Toolbar.Button>
         {/* TODO(burdon): Should not be 'is-full' by default. */}
         <Input.Root>
           <Input.TextInput placeholder='Enter text...' />
@@ -72,11 +68,11 @@ const Story = () => {
           <Input.Checkbox checked={checked} onCheckedChange={(value) => setChecked(!!value)} />
           <Input.Label>Checkbox</Input.Label>
         </Input.Root>
-        <Button>Test</Button>
-        <Button>
+        <Toolbar.Button>Test</Toolbar.Button>
+        <Toolbar.Button>
           <ArrowClockwise />
-        </Button>
-      </Toolbar>
+        </Toolbar.Button>
+      </Toolbar.Root>
       <Input.Root>
         <Input.TextArea placeholder='Enter text...' rows={3} classNames='resize-none' />
       </Input.Root>
