@@ -7,7 +7,7 @@ import React, { FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
-import { Button, Toolbar } from '@dxos/aurora';
+import { Toolbar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -84,10 +84,12 @@ const SpaceInfoPanel: FC = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
-          <Button onClick={toggleActive}>{space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}</Button>
-        </Toolbar>
+          <Toolbar.Button onClick={toggleActive}>
+            {space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}
+          </Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <div className='flex flex-col'>

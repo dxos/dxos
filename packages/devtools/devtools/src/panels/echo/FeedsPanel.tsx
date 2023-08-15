@@ -4,8 +4,12 @@
 
 import React, { useEffect, useState } from 'react';
 
+<<<<<<< HEAD
 import { Button, Toolbar } from '@dxos/aurora';
 import { mx } from '@dxos/aurora-theme';
+=======
+import { Toolbar } from '@dxos/aurora';
+>>>>>>> origin/main
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -83,7 +87,7 @@ const FeedsPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
           <PublicKeySelector
             placeholder='Select feed'
@@ -93,8 +97,8 @@ const FeedsPanel = () => {
             onChange={handleSelect}
           />
 
-          <Button onClick={handleRefresh}>Refresh</Button>
-        </Toolbar>
+          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />

@@ -6,7 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Button, Tree, TreeItem, Toolbar } from '@dxos/aurora';
+import { Tree, TreeItem, Toolbar } from '@dxos/aurora';
 import {
   GetBlobsResponse,
   GetSnapshotsResponse,
@@ -240,21 +240,26 @@ const StoragePanel = () => {
     <PanelContainer
       className='flex-row divide-x'
       toolbar={
-        <Toolbar>
-          <Button onClick={refresh} disabled={isRefreshing}>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button>
+          </Toolbar.Button>
 
+<<<<<<< HEAD
           <div className='grow' />
           <Button
+=======
+          <div className='flex-1' />
+          <Toolbar.Button
+>>>>>>> origin/main
             onClick={async () => {
               await services?.SystemService.reset();
               location.reload();
             }}
           >
             Reset Storage
-          </Button>
-        </Toolbar>
+          </Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <div className='flex w-1/3 overflow-auto p-2'>

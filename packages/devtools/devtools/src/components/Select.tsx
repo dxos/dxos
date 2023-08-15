@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select as AuroraSelect, SelectRootProps } from '@dxos/aurora';
+import { Select as AuroraSelect, SelectRootProps, Toolbar } from '@dxos/aurora';
 
 export type SelectProps = SelectRootProps & {
   items?: { value: string; label: string }[];
@@ -13,7 +13,9 @@ export type SelectProps = SelectRootProps & {
 export const Select = ({ items = [], ...props }: SelectProps) => {
   return (
     <AuroraSelect.Root {...props}>
-      <AuroraSelect.TriggerButton placeholder={'Select value'} />
+      <Toolbar.Button asChild>
+        <AuroraSelect.TriggerButton placeholder={'Select value'} />
+      </Toolbar.Button>
       <AuroraSelect.Portal>
         <AuroraSelect.Content>
           <AuroraSelect.Viewport>

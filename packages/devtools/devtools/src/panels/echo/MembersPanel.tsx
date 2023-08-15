@@ -48,9 +48,9 @@ const MembersPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <MasterDetailTable<SpaceMember> columns={columns} data={members} />

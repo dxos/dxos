@@ -1,23 +1,99 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
+import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
+import { Button, ButtonGroup, ButtonGroupProps, ButtonProps, ToggleGroupItemProps } from '../Buttons';
+import { Link, LinkProps } from '../Link';
+import { Separator, SeparatorProps } from '../Separator';
 
-export type ToolbarProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {};
+type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps>;
 
-export const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(({ classNames, ...props }, forwardedRef) => {
+const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const Root = Primitive.div;
   return (
-    <Root
-      {...props}
-      className={tx('toolbar.root', 'toolbar', {}, 'flex w-full items-center whitespace-nowrap', classNames)}
-      ref={forwardedRef}
-    />
+    <ToolbarPrimitive.Root {...props} className={tx('toolbar.root', 'toolbar', {}, classNames)} ref={forwardedRef}>
+      {children}
+    </ToolbarPrimitive.Root>
   );
 });
+
+type ToolbarButtonProps = ButtonProps;
+
+const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => {
+  return (
+    <ToolbarPrimitive.Button asChild>
+      <Button {...props} ref={forwardedRef} />
+    </ToolbarPrimitive.Button>
+  );
+});
+
+type ToolbarLinkProps = LinkProps;
+
+const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
+  return (
+    <ToolbarPrimitive.Link asChild>
+      <Link {...props} ref={forwardedRef} />
+    </ToolbarPrimitive.Link>
+  );
+});
+
+type ToolbarToggleGroupProps = (
+  | Omit<ToolbarPrimitive.ToolbarToggleGroupSingleProps, 'className'>
+  | Omit<ToolbarPrimitive.ToolbarToggleGroupMultipleProps, 'className'>
+) &
+  ButtonGroupProps;
+
+const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    return (
+      <ToolbarPrimitive.ToolbarToggleGroup {...props} asChild>
+        <ButtonGroup {...{ classNames, children }} ref={forwardedRef} />
+      </ToolbarPrimitive.ToolbarToggleGroup>
+    );
+  },
+);
+
+type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
+
+const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>(
+  ({ variant, density, elevation, classNames, children, ...props }, forwardedRef) => {
+    return (
+      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
+        <Button {...{ variant, density, elevation, classNames, children }} ref={forwardedRef} />
+      </ToolbarPrimitive.ToolbarToggleItem>
+    );
+  },
+);
+
+type ToolbarSeparatorProps = SeparatorProps;
+
+const ToolbarSeparator = (props: SeparatorProps) => {
+  return (
+    <ToolbarPrimitive.Separator asChild>
+      <Separator orientation='vertical' {...props} />
+    </ToolbarPrimitive.Separator>
+  );
+};
+
+export const Toolbar = {
+  Root: ToolbarRoot,
+  Button: ToolbarButton,
+  Link: ToolbarLink,
+  ToggleGroup: ToolbarToggleGroup,
+  ToggleGroupItem: ToolbarToggleGroupItem,
+  Separator: ToolbarSeparator,
+};
+
+export type {
+  ToolbarRootProps,
+  ToolbarButtonProps,
+  ToolbarLinkProps,
+  ToolbarToggleGroupProps,
+  ToolbarToggleGroupItemProps,
+  ToolbarSeparatorProps,
+};
