@@ -177,7 +177,6 @@ export class ClientServicesHost {
 
     if (config) {
       invariant(!this._config, 'config already set');
-
       this._config = config;
       if (!this._storage) {
         this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
@@ -210,7 +209,7 @@ export class ClientServicesHost {
     }
 
     const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.client-services-host.open', trace.begin({ id: traceId }));
+    log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
 
     invariant(this._config, 'config not set');
     invariant(this._storage, 'storage not set');
@@ -274,7 +273,7 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log.info('opened', { deviceKey });
-    log.trace('dxos.sdk.client-services-host.open', trace.end({ id: traceId }));
+    log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
   @synchronized

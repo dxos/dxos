@@ -31,7 +31,14 @@ export class SystemServiceImpl implements SystemService {
   private readonly _onReset: SystemServiceOptions['onReset'];
   private readonly _getDiagnostics: SystemServiceOptions['getDiagnostics'];
 
-  constructor({ config, statusUpdate, onUpdateStatus, getCurrentStatus, onReset, getDiagnostics }: SystemServiceOptions) {
+  constructor({
+    config,
+    statusUpdate,
+    onUpdateStatus,
+    getCurrentStatus,
+    onReset,
+    getDiagnostics,
+  }: SystemServiceOptions) {
     this._config = config;
     this._statusUpdate = statusUpdate;
     this._getCurrentStatus = getCurrentStatus;
@@ -66,7 +73,7 @@ export class SystemServiceImpl implements SystemService {
   }
 
   async getDiagnostics() {
-    return this._getDiagnostics()
+    return this._getDiagnostics();
   }
 
   async reset() {

@@ -21,6 +21,7 @@ import { jsonify, numericalValues, tracer } from '@dxos/util';
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
+  private readonly _started = new Date();
 
   async open() {
     log.runtimeConfig.processors.push(this._logProcessor);
@@ -45,28 +46,36 @@ export class LoggingServiceImpl implements LoggingService {
     return { recording: tracer.recording };
   }
 
-  queryMetrics({ interval }: QueryMetricsRequest): Stream<Metrics> {
+  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<Metrics> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
-    const createNumericalValues = (key: string) => {
-      const consume = tracer.get(key) ?? [];
-      return { key, stats: numericalValues(consume, 'duration') };
+    const getNumericalValues = (key: string) => {
+      const events = tracer.get(key) ?? [];
+      return { key, stats: numericalValues(events, 'duration') };
     };
 
+    // TODO(burdon): Debounce since called very frequently.
     return new Stream(({ next }) => {
       const update = () => {
         const metrics: Metrics = {
           timestamp: new Date(),
           values: [
-            createNumericalValues('dxos.echo.pipeline.control'),
-            createNumericalValues('dxos.echo.pipeline.data'),
-          ],
+            // TODO(burdon): Remove once Diagnostics moved to server.
+            {
+              key: 'started',
+              value: {
+                string: this._started.toISOString(),
+              },
+            },
+            getNumericalValues('dxos.echo.pipeline.control'),
+            getNumericalValues('dxos.echo.pipeline.data'),
+          ].filter(Boolean) as Metrics.KeyPair[],
         };
 
         next(metrics);
       };
 
       update();
-      const i = setInterval(update, interval);
+      const i = setInterval(update, Math.max(interval, 1_000));
       return () => {
         clearInterval(i);
       };

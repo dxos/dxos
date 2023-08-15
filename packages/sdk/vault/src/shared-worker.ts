@@ -10,7 +10,8 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';
 
-const LOG_FILTER = 'warn';
+// TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
+const LOG_FILTER = 'info';
 
 void initializeAppTelemetry({
   namespace,

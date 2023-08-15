@@ -67,7 +67,7 @@ export type SpaceStats = {
 
 export type DiagnosticOptions = JsonStringifyOptions;
 
-// TODO(burdon): Move to Client/Services.
+// TODO(burdon): Move to ClientServices.
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const identity = client.halo.identity.get();
   log('diagnostics...', { identity });
@@ -82,8 +82,6 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
       },
     },
 
-    // TODO(burdon): Are these the same?
-    // config: await client.services.services.SystemService?.getConfig(),
     config: client.config.values,
   };
 
@@ -94,7 +92,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
     const trigger = new Trigger<Metrics>();
     stream?.subscribe(async (metrics) => trigger.wake(metrics!));
     data.metrics = await asyncTimeout(trigger.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
-      log.warn('Metics take to long to query.');
+      log.warn(err.message);
       return undefined;
     });
   }

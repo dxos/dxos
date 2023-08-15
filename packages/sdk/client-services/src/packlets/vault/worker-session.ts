@@ -74,6 +74,7 @@ export class WorkerSession {
       port: appPort,
       ...middleware,
     });
+
     this._shellClientRpc = new ClientRpcServer({
       serviceRegistry: this._serviceHost.serviceRegistry,
       port: shellPort,
@@ -103,7 +104,7 @@ export class WorkerSession {
         },
       },
       port: systemPort,
-      timeout: 1000, // With low timeout heartbeat may fail if the tab's thread is saturated.
+      timeout: 1_000, // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
@@ -113,10 +114,14 @@ export class WorkerSession {
     log.info('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
+    // Wait until the worker's RPC service has started.
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+
+    // TODO(burdon): Comment required.
     if (this.lockKey) {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
+
     log.info('opened');
   }
 
