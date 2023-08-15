@@ -3,7 +3,7 @@
 //
 
 import isEqualWith from 'lodash.isequalwith';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';

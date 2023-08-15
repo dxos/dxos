@@ -3,7 +3,7 @@
 //
 
 import get from 'lodash.get';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';

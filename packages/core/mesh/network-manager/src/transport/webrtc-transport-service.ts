@@ -3,7 +3,7 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';

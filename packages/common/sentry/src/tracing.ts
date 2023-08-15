@@ -4,7 +4,7 @@
 
 import { setUser, getCurrentHub } from '@sentry/browser';
 import { Transaction, Span } from '@sentry/types';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { runInContext, scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Event, sleep, synchronized, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';

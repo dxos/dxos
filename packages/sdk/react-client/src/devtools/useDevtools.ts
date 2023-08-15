@@ -3,7 +3,7 @@
 //
 
 import { useContext } from 'react';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { DevtoolsHost } from '@dxos/client/devtools';
 import { raise } from '@dxos/debug';

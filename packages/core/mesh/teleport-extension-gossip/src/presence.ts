@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { WithTypeUrl } from '@dxos/codec-protobuf';

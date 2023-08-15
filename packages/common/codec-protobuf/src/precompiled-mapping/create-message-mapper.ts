@@ -3,7 +3,7 @@
 //
 
 import * as pb from 'protobufjs';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { MapingDescriptors, TypeMapperContext } from '../mapping';
 import { codegen, ref } from './codegen';

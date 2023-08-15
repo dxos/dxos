@@ -4,7 +4,7 @@
 
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Main } from '@dxos/aurora';
 import { baseSurface, mx } from '@dxos/aurora-theme';

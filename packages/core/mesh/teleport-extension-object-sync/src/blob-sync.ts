@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { trackLeaks, Trigger, Lock } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';

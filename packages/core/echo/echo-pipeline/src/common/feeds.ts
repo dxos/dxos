@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { FeedWriter } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';

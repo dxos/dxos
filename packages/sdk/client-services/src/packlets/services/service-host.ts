@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';

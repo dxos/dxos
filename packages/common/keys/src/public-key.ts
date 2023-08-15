@@ -4,7 +4,7 @@
 
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
 

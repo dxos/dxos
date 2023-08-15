@@ -6,7 +6,7 @@ import { DownloadSimple, UploadSimple, ScribbleLoop, Trash } from '@phosphor-ico
 import React, { useEffect, useRef, useState } from 'react';
 import { GithubPicker } from 'react-color';
 import { CanvasPath, ReactSketchCanvas } from 'react-sketch-canvas';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';

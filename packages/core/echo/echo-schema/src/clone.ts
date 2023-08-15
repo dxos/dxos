@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';

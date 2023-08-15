@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Trigger } from '@dxos/async';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';

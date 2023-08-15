@@ -3,7 +3,7 @@
 //
 
 import { inspect, InspectOptionsStylized } from 'node:util';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
 import { log } from '@dxos/log';

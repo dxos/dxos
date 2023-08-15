@@ -3,7 +3,7 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {

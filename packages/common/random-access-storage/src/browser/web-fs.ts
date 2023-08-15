@@ -5,7 +5,7 @@
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
 import { RandomAccessStorage } from 'random-access-storage';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';

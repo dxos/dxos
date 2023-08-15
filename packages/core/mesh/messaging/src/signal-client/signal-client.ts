@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';

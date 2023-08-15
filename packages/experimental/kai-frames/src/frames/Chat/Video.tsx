@@ -5,7 +5,7 @@
 import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import React, { FC, useRef, useState } from 'react';
 import Peer from 'simple-peer';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';

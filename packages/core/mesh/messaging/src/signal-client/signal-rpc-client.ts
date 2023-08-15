@@ -3,7 +3,7 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Trigger } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';

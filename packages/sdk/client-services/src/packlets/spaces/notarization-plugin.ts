@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';

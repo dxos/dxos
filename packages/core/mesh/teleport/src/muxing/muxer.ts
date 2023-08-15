@@ -3,7 +3,7 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';

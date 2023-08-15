@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';

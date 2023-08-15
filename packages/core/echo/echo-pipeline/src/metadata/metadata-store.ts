@@ -3,7 +3,7 @@
 //
 
 import CRC32 from 'crc-32';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';

@@ -4,7 +4,7 @@
 
 import { CaretLeft, Info, Function, Graph, PuzzlePiece, Users, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useEffect, useState, Suspense } from 'react';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Button, DensityProvider, Main, ClassNameValue, useSidebars } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

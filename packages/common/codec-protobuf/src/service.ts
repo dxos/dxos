@@ -3,7 +3,7 @@
 //
 
 import pb from 'protobufjs';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { getAsyncValue } from '@dxos/util';
 

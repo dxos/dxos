@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Any, ProtoCodec } from '@dxos/codec-protobuf';
 import { createModelMutation, encodeModelMutation, Item, MutateResult } from '@dxos/echo-db';

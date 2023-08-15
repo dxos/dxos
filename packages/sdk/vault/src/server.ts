@@ -8,7 +8,7 @@ import fastify from 'fastify';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { join } from 'node:path';
 import pkgDir from 'pkg-dir';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { definitions, ConfigPluginOpts } from '@dxos/config';
 

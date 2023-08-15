@@ -4,7 +4,7 @@
 
 import { Recycle, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
