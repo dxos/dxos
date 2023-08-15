@@ -3,7 +3,7 @@
 //
 
 import forever, { ForeverProcess } from 'forever';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 import fs, { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
@@ -133,7 +133,7 @@ export class ForeverDaemon implements Daemon {
           const trigger = new Trigger();
           const stream = services.services.SystemService!.queryStatus({});
           stream.subscribe(({ status }) => {
-            assert(status === SystemStatus.ACTIVE);
+            invariant(status === SystemStatus.ACTIVE);
             trigger.wake();
           });
           await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);

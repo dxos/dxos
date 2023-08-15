@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -66,7 +66,7 @@ export class FaasClient {
     private readonly _config: Runtime.Services.Faasd,
     private readonly _context: InvocationContext = {}
   ) {
-    assert(this._config.gateway, 'Invalid gateway URL.');
+    invariant(this._config.gateway, 'Invalid gateway URL.');
   }
 
   async dispatch(event: TriggerEvent) {

@@ -16,7 +16,7 @@ describe.skip('IMAP processor', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
-    assert(config);
+    invariant(config);
 
     const processor = new ImapProcessor('dxos.module.bot.mail', {
       user: process.env.COM_PROTONMAIL_USERNAME!,

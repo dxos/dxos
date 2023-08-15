@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 import { randomBytes } from 'node:crypto';
 import { Duplex } from 'node:stream';
 
@@ -34,7 +34,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   }
 
   private async _openStream(streamTag: string, interval = 5, chunkSize = 2048) {
-    assert(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
+    invariant(!this._streams.has(streamTag), `Stream already exists: ${streamTag}`);
 
     const networkStream = await this.extensionContext!.createStream(streamTag, {
       contentType: 'application/x-test-stream',
@@ -101,7 +101,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   }
 
   private _closeStream(streamTag: string): Stats {
-    assert(this._streams.has(streamTag), `Stream does not exist: ${streamTag}`);
+    invariant(this._streams.has(streamTag), `Stream does not exist: ${streamTag}`);
 
     const stream = this._streams.get(streamTag)!;
 
@@ -195,7 +195,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
       streamLoadInterval,
       streamLoadChunkSize,
     });
-    assert(data === streamTag);
+    invariant(data === streamTag);
 
     await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
     return streamTag;
@@ -208,7 +208,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
         data: streamTag,
       });
 
-    assert(data === streamTag);
+    invariant(data === streamTag);
 
     const local = this._closeStream(streamTag);
 

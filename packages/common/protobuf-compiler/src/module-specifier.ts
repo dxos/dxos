@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 import { isAbsolute, resolve, relative } from 'path';
 
 /**
@@ -18,7 +18,7 @@ export class ModuleSpecifier {
   }
 
   constructor(public readonly name: string, public readonly contextPath: string) {
-    assert(isAbsolute(contextPath));
+    invariant(isAbsolute(contextPath));
   }
 
   isAbsolute() {

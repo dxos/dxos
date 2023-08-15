@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 // import { Trigger } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
@@ -27,12 +27,12 @@ export abstract class AgentStateMachine {
   public _agent?: AgentContext;
 
   get agent(): AgentContext {
-    assert(this._agent);
+    invariant(this._agent);
     return this._agent;
   }
 
   setContext(agent: AgentContext) {
-    assert(agent);
+    invariant(agent);
     this._agent = agent;
     return this;
   }

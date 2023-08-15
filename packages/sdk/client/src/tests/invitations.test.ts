@@ -4,7 +4,7 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout } from '@dxos/async';
@@ -280,8 +280,8 @@ describe('Invitations', () => {
         const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
-        assert(hostContext.dataSpaceManager);
-        assert(guestContext.dataSpaceManager);
+        invariant(hostContext.dataSpaceManager);
+        invariant(guestContext.dataSpaceManager);
 
         const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
           hostContext.getInvitationHandler(invitation),

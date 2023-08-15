@@ -3,7 +3,7 @@
 //
 
 import startCase from 'lodash.startcase';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 import { ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
@@ -25,8 +25,8 @@ const parseJson = (content: string) => {
 
 export class ContactStackResolver implements Resolver<DocumentStack> {
   constructor(private readonly _id: string, private readonly _chatModel: ChatModel) {
-    assert(this._id);
-    assert(this._chatModel);
+    invariant(this._id);
+    invariant(this._chatModel);
   }
 
   async update(space: Space, stack: DocumentStack) {

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { Event } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
@@ -52,7 +52,7 @@ export class Agent implements AgentContext {
   }
 
   get client(): Client {
-    assert(this._client);
+    invariant(this._client);
     return this._client!;
   }
 

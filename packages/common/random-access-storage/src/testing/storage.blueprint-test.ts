@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { asyncTimeout } from '@dxos/async';
 import { describe, test } from '@dxos/test';

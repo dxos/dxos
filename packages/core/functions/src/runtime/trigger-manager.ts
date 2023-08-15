@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { DeferredTask } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
@@ -116,8 +116,8 @@ export class TriggerManager {
 
   private async invokeFunction(options: InvokeOptions, functionName: string, data: any) {
     const { endpoint, runtime } = options;
-    assert(endpoint, 'Missing endpoint');
-    assert(runtime, 'Missing runtime');
+    invariant(endpoint, 'Missing endpoint');
+    invariant(runtime, 'Missing runtime');
 
     try {
       log('invoke', { function: functionName });

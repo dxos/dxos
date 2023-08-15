@@ -3,7 +3,7 @@
 //
 
 import { formatISO9075 } from 'date-fns';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { debounce } from '@dxos/async';
 import { Subscription } from '@dxos/echo-schema';
@@ -65,8 +65,8 @@ export class TravelBot extends Bot {
         currencyCode: 'USD',
         originDestinations: destinations.map((destination, i) => {
           const previous = trip.destinations[i];
-          assert(previous.address?.cityCode);
-          assert(destination.address?.cityCode);
+          invariant(previous.address?.cityCode);
+          invariant(destination.address?.cityCode);
 
           return {
             id: String(i + 1),

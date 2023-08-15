@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { DeferredTask } from '@dxos/async';
 import { Space, SpaceState } from '@dxos/client/echo';
@@ -136,8 +136,8 @@ export class FaasConnector extends AbstractPlugin {
 
   private async _mountTrigger(trigger: Trigger) {
     const ctx = this._ctx.derive();
-    assert(trigger.spaceKey);
-    assert(trigger.subscription);
+    invariant(trigger.spaceKey);
+    invariant(trigger.subscription);
 
     this._mountedTriggers.push({
       trigger,

@@ -4,7 +4,7 @@
 
 import express from 'express';
 import http from 'http';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
@@ -25,7 +25,7 @@ export class EchoProxyServer extends AbstractPlugin {
   }
 
   async open() {
-    assert(this._client);
+    invariant(this._client);
     log('starting proxy...', { ports: this._options.port });
     await this._client.initialize();
 

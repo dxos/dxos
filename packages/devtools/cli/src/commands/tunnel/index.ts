@@ -3,7 +3,7 @@
 //
 
 import { Args, Flags } from '@oclif/core';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
@@ -33,7 +33,7 @@ export default class Tunnel extends BaseCommand<typeof Tunnel> {
       const { command } = this.args;
       const { name } = this.flags;
       const response = await tunnel.rpc.tunnel({ name, enabled: command === 'start' });
-      assert(response, 'Unable to set tunnel.');
+      invariant(response, 'Unable to set tunnel.');
       printTunnels([response], this.flags);
     });
   }

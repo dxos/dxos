@@ -3,7 +3,7 @@
 //
 
 import { Args } from '@oclif/core';
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { Client } from '@dxos/client';
 import { schema } from '@dxos/protocols';
@@ -22,7 +22,7 @@ export default class Add extends BaseCommand<typeof Add> {
       credentialHex = await this.stdin;
     }
 
-    assert(credentialHex, 'Invalid credential.');
+    invariant(credentialHex, 'Invalid credential.');
     return await this.execWithClient(async (client: Client) => {
       const identity = client.halo.identity;
       if (!identity) {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
+import { invariant } from '@dxos/invariant';
 
 import { PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client-protocol';
@@ -44,7 +44,7 @@ export class EpochMonitor extends AbstractPlugin {
    * Monitor spaces for which the agent is the leader.
    */
   async open() {
-    assert(this._client);
+    invariant(this._client);
     this._subscriptions.push(
       this._client.spaces.subscribe((spaces) => {
         spaces.forEach(async (space) => {
@@ -92,7 +92,7 @@ export class EpochMonitor extends AbstractPlugin {
       state.subscriptions.push(
         space.pipeline.subscribe(async (pipeline) => {
           // TODO(burdon): Rather than total messages, implement inequality in timeframe?
-          assert(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
+          invariant(checkCredentialType(pipeline.currentEpoch!, 'dxos.halo.credentials.Epoch'));
           const timeframe = pipeline.currentEpoch?.subject.assertion.timeframe;
           // TODO(burdon): timeframe.newMessages().
           const currentEpoch = timeframe.totalMessages();
