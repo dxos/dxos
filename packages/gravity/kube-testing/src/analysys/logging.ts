@@ -91,6 +91,10 @@ export class LogReader implements AsyncIterable<SerializedLogEntry> {
     reader._logs = [...this._logs];
     return reader;
   }
+
+  reduce<T>(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue?: T) {
+    return this._logs.reduce(callbackfn, initialValue);
+  }
 }
 
 export type SerializedLogEntry<T = any> = {
