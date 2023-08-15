@@ -52,7 +52,6 @@ export const FileUpload: FC<{
   );
 };
 
-// TODO(burdon): Move to file-plugin.
 // export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
 export const FileDrop: FC<{}> = () => {
   const { sendIntent } = useIntent();
@@ -65,6 +64,7 @@ export const FileDrop: FC<{}> = () => {
         onUpload={(file: FileProto) => {
           console.log('upload', file);
           // TODO(burdon): Must be serialized?
+          // TODO(burdon): Need spaceKey.
           sendIntent({ action: SpaceAction.ADD_OBJECT, data: { object: file } });
         }}
       />
