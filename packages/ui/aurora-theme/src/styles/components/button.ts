@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Density, Elevation, ComponentFunction, ComponentFragment, Theme } from '@dxos/aurora-types';
+import type { Density, Elevation, ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
 import {
@@ -34,22 +34,14 @@ export type ButtonStyleProps = Partial<{
   variant: 'default' | 'primary' | 'ghost' | 'outline';
 }>;
 
-export const sharedButtonStyles: ComponentFragment<ButtonStyleProps> = (props) => {
-  return [
-    'shrink-0 inline-flex select-none items-center justify-center transition-color duration-100',
-    props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
-    // Register all radix states
-    'group',
-    props.disabled && staticDisabled,
-  ];
-};
-
 export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) => {
   const resolvedVariant = props.variant ?? 'default';
   return mx(
-    'font-medium text-sm',
+    'font-medium text-sm shrink-0 inline-flex select-none items-center justify-center transition-color duration-100',
+    props.density === 'fine' ? fineButtonDimensions : coarseButtonDimensions,
+    props.disabled && staticDisabled,
     !props.inGroup && 'rounded-md',
-    !props.textWrap && 'truncate',
+    !props.textWrap && 'text-ellipsis whitespace-nowrap',
     !props.disabled &&
       !props.inGroup &&
       (resolvedVariant === 'default' || resolvedVariant === 'primary') &&
@@ -63,7 +55,8 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (props, ...etc) =
       'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     !props.disabled && focusRing,
     openOutline,
-    ...sharedButtonStyles(props),
+    // Register all radix states
+    'group',
     ...etc,
   );
 };
