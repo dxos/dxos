@@ -22,7 +22,7 @@ const Story = () => {
   const [select, setSelect] = useState<string>();
 
   return (
-    <div className='flex flex-col space-y-2'>
+    <div className='flex flex-col gap-2'>
       <Toolbar classNames='flex'>
         {/* TODO(burdon): Should be fixed width (regardless of selection). */}
         <Select.Root value={select} onValueChange={setSelect}>
@@ -77,11 +77,9 @@ const Story = () => {
           <ArrowClockwise />
         </Button>
       </Toolbar>
-      <div>
-        <Input.Root>
-          <Input.TextArea placeholder='Enter text...' rows={3} classNames='resize-none' />
-        </Input.Root>
-      </div>
+      <Input.Root>
+        <Input.TextArea placeholder='Enter text...' rows={3} classNames='resize-none' />
+      </Input.Root>
     </div>
   );
 };

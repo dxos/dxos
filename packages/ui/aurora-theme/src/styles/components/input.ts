@@ -103,7 +103,7 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size),
-    'flex items-center justify-center rounded text-white',
+    'shrink-0 flex items-center justify-center rounded text-white',
     'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
     focusRing,
     ...etc,
