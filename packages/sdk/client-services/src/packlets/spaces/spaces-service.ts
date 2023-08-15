@@ -37,7 +37,7 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _spaceManager: SpaceManager,
     private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
-  ) { }
+  ) {}
 
   async createSpace(): Promise<Space> {
     if (!this._identityManager.identity) {
@@ -190,7 +190,7 @@ export class SpacesServiceImpl implements SpacesService {
         const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
         if (isMe) {
-          peers.push(space.presence.getLocalState())
+          peers.push(space.presence.getLocalState());
         }
 
         return {
@@ -200,12 +200,9 @@ export class SpacesServiceImpl implements SpacesService {
               displayName: member.assertion.profile?.displayName ?? humanize(member.key),
             },
           },
-          presence:
-            isMe || peers.length > 0
-              ? SpaceMember.PresenceState.ONLINE
-              : SpaceMember.PresenceState.OFFLINE,
+          presence: isMe || peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
-        }
+        };
       }),
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
