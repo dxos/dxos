@@ -17,6 +17,7 @@ export enum SplitViewAction {
 
 export type SplitViewContextValue = DeepSignal<{
   sidebarOpen: boolean;
+  complementarySidebarOpen: boolean | null;
   dialogContent: any;
   dialogOpen: boolean;
 }>;
