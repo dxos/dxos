@@ -5,7 +5,7 @@
 import { ComponentFunction } from '@dxos/aurora-types/src';
 
 import { mx } from '../../util';
-import { baseSurface, inlineSeparator } from '../fragments';
+import { baseSurface } from '../fragments';
 
 export type MainStyleProps = Partial<{
   isLg: boolean;
@@ -22,10 +22,15 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
   mx(
     'fixed block-start-0 block-end-0 is-[100vw] sm:is-[270px] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
-    side === 'inline-start' &&
-      (inlineStartSidebarOpen ? 'inline-start-0' : '-inline-start-[100vw] sm:-inline-start-[270px]'),
-    side === 'inline-end' && (inlineEndSidebarOpen ? 'inline-end-0' : '-inline-end-[100vw] sm:-inline-end-[270px]'),
-    inlineSeparator,
+    'border-neutral-200 dark:border-neutral-800',
+    side === 'inline-start'
+      ? inlineStartSidebarOpen
+        ? 'inline-start-0'
+        : '-inline-start-[100vw] sm:-inline-start-[270px]'
+      : inlineEndSidebarOpen
+      ? 'inline-end-0'
+      : '-inline-end-[100vw] sm:-inline-end-[270px]',
+    side === 'inline-start' ? 'border-ie' : 'border-is',
     baseSurface,
     ...etc,
   );
@@ -47,7 +52,7 @@ export const mainContent: ComponentFunction<MainStyleProps> = (
   ...etc
 ) =>
   mx(
-    'transition-[padding-inline-start] duration-200 ease-in-out',
+    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
     isLg && inlineStartSidebarOpen ? 'pis-[270px]' : 'pis-0',
     isLg && inlineEndSidebarOpen ? 'pie-[270px]' : 'pie-0',
     bounce && 'fixed inset-0 z-0 overflow-auto overscroll-auto scroll-smooth',

@@ -10,23 +10,35 @@ import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
-const SidebarToggle = () => {
+const NavigationSidebarToggle = () => {
   const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
-  return <Button onClick={toggleNavigationSidebar}>Toggle sidebar</Button>;
+  return <Button onClick={toggleNavigationSidebar}>Toggle navigation sidebar</Button>;
+};
+
+const ComplementarySidebarToggle = () => {
+  const { toggleComplementarySidebar } = useSidebars('StoryMain__SidebarToggle');
+  return <Button onClick={toggleComplementarySidebar}>Toggle complementary sidebar</Button>;
 };
 
 const StoryMain = (_args: StoryMainArgs) => {
   return (
-    <Main.Root defaultNavigationSidebarOpen>
+    <Main.Root defaultComplementarySidebarOpen>
       <Main.Overlay />
-      <Main.NavigationSidebar swipeToDismiss>
-        <p>Sidebar content, hi!</p>
-        <SidebarToggle />
+      <Main.NavigationSidebar classNames='p-4'>
+        <p>Navigation sidebar content, hi!</p>
+        <NavigationSidebarToggle />
       </Main.NavigationSidebar>
       <Main.Content>
-        <p>Main content, hello!</p>
-        <SidebarToggle />
+        <div role='group' className='m-4 p-4 bg-neutral-950 rounded'>
+          <ComplementarySidebarToggle />
+          <p>Main content, hello!</p>
+          <NavigationSidebarToggle />
+        </div>
       </Main.Content>
+      <Main.ComplementarySidebar classNames='p-4'>
+        <p>Complementary sidebar content, hello!</p>
+        <ComplementarySidebarToggle />
+      </Main.ComplementarySidebar>
     </Main.Root>
   );
 };
@@ -35,4 +47,5 @@ export default { component: StoryMain };
 
 export const Default = {
   args: {},
+  layout: 'fullscreen',
 };
