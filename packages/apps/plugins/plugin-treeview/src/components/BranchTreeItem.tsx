@@ -9,7 +9,7 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
+import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../types';
@@ -51,7 +51,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
   const hasActiveDocument = false;
   const disabled = node.attributes?.disabled;
   const error = node.attributes?.error;
-  const { sidebarOpen } = useSidebar();
+  const { navigationSidebarOpen } = useSidebars();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -81,7 +81,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           disabled={disabled}
           classNames={['grow flex', disabled && staticDisabled]}
           {...(disabled && { 'aria-disabled': true })}
-          {...(!sidebarOpen && { tabIndex: -1 })}
+          {...(!navigationSidebarOpen && { tabIndex: -1 })}
         >
           <OpenTriggerIcon
             weight='fill'
@@ -138,7 +138,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                   <Button
                     variant='ghost'
                     classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                    {...(!sidebarOpen && { tabIndex: -1 })}
+                    {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
                   </Button>
@@ -194,7 +194,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                   void invokeAction(primaryAction);
                 }}
                 {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
-                {...(!sidebarOpen && { tabIndex: -1 })}
+                {...(!navigationSidebarOpen && { tabIndex: -1 })}
               >
                 <span className='sr-only'>
                   {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}

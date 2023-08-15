@@ -17,7 +17,7 @@ import {
   TreeItem,
   useDensityContext,
   useMediaQuery,
-  useSidebar,
+  useSidebars,
   useTranslation,
 } from '@dxos/aurora';
 import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
@@ -56,7 +56,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
   // todo(thure): Handle `sortable`
 
   const { invokeAction } = useGraph();
-  const { sidebarOpen, closeSidebar } = useSidebar();
+  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const density = useDensityContext();
   const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -99,21 +99,21 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
       >
         <button
           role='link'
-          {...(!sidebarOpen && { tabIndex: -1 })}
+          {...(!navigationSidebarOpen && { tabIndex: -1 })}
           data-itemid={node.id}
           onKeyDown={(event) => {
             if (event.key === ' ' || event.key === 'Enter') {
               event.stopPropagation();
               // TODO(wittjosiah): Intent.
               treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
-              !isLg && closeSidebar();
+              !isLg && closeNavigationSidebar();
             }
           }}
           onClick={(event) => {
             // TODO(wittjosiah): Intent.
             // TODO(wittjosiah): Make recursive.
             treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
-            !isLg && closeSidebar();
+            !isLg && closeNavigationSidebar();
           }}
           className='text-start flex gap-2 justify-start'
         >
@@ -157,7 +157,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
                 <Button
                   variant='ghost'
                   classNames='shrink-0 pli-2 pointer-fine:pli-1 self-start'
-                  {...(!sidebarOpen && { tabIndex: -1 })}
+                  {...(!navigationSidebarOpen && { tabIndex: -1 })}
                 >
                   <DotsThreeVertical className={getSize(4)} />
                 </Button>
@@ -203,7 +203,7 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
               classNames='shrink-0 pli-2 pointer-fine:pli-1'
               onClick={() => invokeAction(primaryAction)}
               {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
-              {...(!sidebarOpen && { tabIndex: -1 })}
+              {...(!navigationSidebarOpen && { tabIndex: -1 })}
             >
               <span className='sr-only'>
                 {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}

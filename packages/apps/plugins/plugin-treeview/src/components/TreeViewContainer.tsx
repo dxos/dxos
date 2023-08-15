@@ -16,7 +16,7 @@ import {
   ElevationProvider,
   Tooltip,
   useJdenticonHref,
-  useSidebar,
+  useSidebars,
   useTranslation,
   DropdownMenu,
 } from '@dxos/aurora';
@@ -32,7 +32,7 @@ export const TreeViewContainer = () => {
   const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const { sidebarOpen } = useSidebar(TREE_VIEW_PLUGIN);
+  const { navigationSidebarOpen } = useSidebars(TREE_VIEW_PLUGIN);
   const splitViewContext = useSplitView();
 
   const suppressNextTooltip = useRef<boolean>(false);
@@ -68,7 +68,7 @@ export const TreeViewContainer = () => {
                     {...(action.testId && { 'data-testid': action.testId })}
                     onClick={() => invokeAction(action)}
                     classNames='pli-2 pointer-fine:pli-1'
-                    {...(!sidebarOpen && { tabIndex: -1 })}
+                    {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <span className='sr-only'>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
                     {action.icon ? <action.icon className={getSize(4)} /> : <Placeholder className={getSize(4)} />}
@@ -113,7 +113,7 @@ export const TreeViewContainer = () => {
                     <Button
                       variant='ghost'
                       classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                      {...(!sidebarOpen && { tabIndex: -1 })}
+                      {...(!navigationSidebarOpen && { tabIndex: -1 })}
                     >
                       <DotsThreeVertical className={getSize(4)} />
                     </Button>
@@ -161,7 +161,7 @@ export const TreeViewContainer = () => {
                       <Button
                         variant='ghost'
                         classNames='pli-2 pointer-fine:pli-1'
-                        {...(!sidebarOpen && { tabIndex: -1 })}
+                        {...(!navigationSidebarOpen && { tabIndex: -1 })}
                         onClick={() => {
                           splitViewContext.dialogOpen = true;
                           splitViewContext.dialogContent = 'dxos.org/plugin/splitview/ProfileSettings';
