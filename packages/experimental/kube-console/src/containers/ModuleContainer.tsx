@@ -28,9 +28,9 @@ export const ModuleContainer = () => {
   return (
     <Main.Root>
       <Main.Overlay />
-      <Main.Sidebar>
+      <Main.NavigationSidebar>
         <Sidebar modules={modules} active={active.id} onActiveChange={handleActiveChange} />
-      </Main.Sidebar>
+      </Main.NavigationSidebar>
       <Main.Content classNames='flex overflow-hidden'>
         <Component />
       </Main.Content>
