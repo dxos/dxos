@@ -13,11 +13,13 @@ import { SplitView, SplitViewMainContentEmpty } from './components';
 import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
 
+export type SplitViewPluginConfig = Partial<{
+  enableComplementarySidebar: boolean;
+}>;
+
 export const SplitViewPlugin = ({
   enableComplementarySidebar,
-}: {
-  enableComplementarySidebar?: boolean;
-}): PluginDefinition<SplitViewProvides> => {
+}: SplitViewPluginConfig = {}): PluginDefinition<SplitViewProvides> => {
   const state = deepSignal({
     sidebarOpen: true,
     complementarySidebarOpen: enableComplementarySidebar ? false : null,
