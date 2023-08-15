@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CallMetadata } from './meta';
+import { CallMetadata } from '@dxos/log';
 
 export type InvariantFn = (condition: unknown, message?: string, meta?: CallMetadata) => asserts condition;
 
