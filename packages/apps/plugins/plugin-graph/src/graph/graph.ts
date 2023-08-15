@@ -78,7 +78,8 @@ export class SessionGraph implements Graph {
         delete node.children[id];
         return child;
       },
-      addAction: (action) => {
+      addAction: (partial) => {
+        const action = this._createAction(partial);
         node.actions[action.id] = action;
         return action;
       },
@@ -96,5 +97,27 @@ export class SessionGraph implements Graph {
     };
 
     return node;
+  }
+
+  private _createAction<TProperties extends { [key: string]: any } = { [key: string]: any }>(
+    partial: Pick<Graph.Action, 'id'> & Partial<Graph.Action<TProperties>>,
+  ): Graph.Action<TProperties> {
+    const set: Graph.Action<TProperties> = {
+      properties: {} as TProperties,
+      actions: {},
+      ...partial,
+      addAction: (partial) => {
+        const action = this._createAction(partial);
+        set.actions[action.id] = action;
+        return action;
+      },
+      removeAction: (id) => {
+        const action = set.actions[id];
+        delete set.actions[id];
+        return action;
+      },
+    };
+
+    return set;
   }
 }

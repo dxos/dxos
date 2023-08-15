@@ -95,6 +95,17 @@ describe.only('SessionGraph', () => {
     expect(Object.keys(graph.root.children['root-test2'].actions)).to.deep.equal(['root-test2-test1']);
   });
 
+  test('builders can add actions to action sets', () => {
+    const graph = new SessionGraph();
+    graph.registerNodeBuilder((parent) => {
+      const set = parent.addAction({ id: 'test-set' });
+      set.addAction({ id: 'test-action', intent: { action: 'test' } });
+    });
+    graph.construct();
+
+    expect(Object.keys(graph.root.actions['test-set'].actions)).to.deep.equal(['test-action']);
+  });
+
   test('is updated when nodes change', async () => {
     const graph = new SessionGraph();
     const { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty } =
@@ -237,7 +248,7 @@ const createTestNodeBuilder = (id: string, depth = 1) => {
     return parent.remove(id);
   };
 
-  const addAction = (parentId: string, action: Graph.Action) => {
+  const addAction = (parentId: string, action: Pick<Graph.Action, 'id'> & Partial<Graph.Action>) => {
     const parent = nodes.get(parentId);
     if (!parent) {
       return;

@@ -32,14 +32,18 @@ export namespace Graph {
     actions: { [key: string]: Action };
     add(node: Pick<Node, 'id'> & Partial<Node>): Node;
     remove(id: string): Node;
-    addAction(action: Action): void;
-    removeAction(id: string): void;
+    addAction(action: Pick<Action, 'id'> & Partial<Action>): Action;
+    removeAction(id: string): Action;
     addProperty(key: string, value: any): void;
     removeProperty(key: string): void;
   };
 
-  export type Action = {
+  export type Action<TProperties extends { [key: string]: any } = { [key: string]: any }> = {
     id: string;
-    intent: Intent | Intent[];
+    intent?: Intent | Intent[];
+    properties: TProperties;
+    actions: { [key: string]: Action };
+    addAction(action: Pick<Action, 'id'> & Partial<Action>): Action;
+    removeAction(id: string): Action;
   };
 }
