@@ -36,15 +36,15 @@ const StorybookAlertDialog = ({
           <AlertDialog.Title>{title}</AlertDialog.Title>
           <AlertDialog.Description>{description}</AlertDialog.Description>
           <p className='mbs-2 mbe-8'>{body}</p>
-          <Toolbar>
+          <Toolbar.Root>
             <div className='grow' />
             <AlertDialog.Cancel asChild>
-              <Button>{cancelTrigger}</Button>
+              <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <Button variant='primary'>{actionTrigger}</Button>
+              <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
             </AlertDialog.Action>
-          </Toolbar>
+          </Toolbar.Root>
         </AlertDialog.Content>
       </AlertDialog.Overlay>
     </AlertDialog.Root>

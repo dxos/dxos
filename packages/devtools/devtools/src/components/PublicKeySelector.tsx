@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/aurora';
+import { Select, Toolbar } from '@dxos/aurora';
 import { PublicKey } from '@dxos/react-client';
 import { humanize } from '@dxos/util';
 
@@ -30,7 +30,9 @@ export const PublicKeySelector = ({
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Select.TriggerButton placeholder={placeholder} />
+      <Toolbar.Button asChild>
+        <Select.TriggerButton placeholder={placeholder} />
+      </Toolbar.Button>
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>

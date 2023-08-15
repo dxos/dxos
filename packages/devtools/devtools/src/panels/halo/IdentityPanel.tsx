@@ -17,9 +17,9 @@ const IdentityPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <VaultSelector />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <JsonView data={{ ...identity, devices }} />
