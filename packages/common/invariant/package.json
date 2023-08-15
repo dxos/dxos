@@ -16,8 +16,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
     "@swc/core": "1.3.70",
