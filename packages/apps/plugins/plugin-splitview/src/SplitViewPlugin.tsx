@@ -13,9 +13,14 @@ import { SplitView, SplitViewMainContentEmpty } from './components';
 import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
 
-export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
+export const SplitViewPlugin = ({
+  enableComplementarySidebar,
+}: {
+  enableComplementarySidebar?: boolean;
+}): PluginDefinition<SplitViewProvides> => {
   const state = deepSignal({
     sidebarOpen: true,
+    complementarySidebarOpen: enableComplementarySidebar ? false : null,
     dialogContent: 'never',
     dialogOpen: false,
   });
