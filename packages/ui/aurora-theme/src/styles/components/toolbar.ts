@@ -9,9 +9,8 @@ import { mx } from '../../util';
 
 export type ToolbarStyleProps = Partial<{}>;
 
-// TODO(burdon): Surface?
-export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = (props, ...etc) => {
-  return mx('space-x-2 p-2', ...etc);
+export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = (_props, ...etc) => {
+  return mx('flex items-center gap-2 is-full', ...etc);
 };
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
