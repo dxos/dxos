@@ -29,9 +29,9 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { createDiagnostics } from './diagnostics';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
-import { createDiagnostics } from './diagnostics';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
@@ -87,10 +87,8 @@ export class ClientServicesHost {
   constructor({
     config,
     modelFactory = createDefaultModelFactory(),
-    // TODO(burdon): Create ApolloLink abstraction (see Client).
     transportFactory,
     signalManager,
-    connectionLog,
     storage,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
@@ -137,7 +135,7 @@ export class ClientServicesHost {
 
       getDiagnostics: () => {
         return createDiagnostics(this, {}); // TODO(dmaretskyi): options.
-      }
+      },
     });
 
     this._loggingService = new LoggingServiceImpl();
@@ -175,6 +173,7 @@ export class ClientServicesHost {
    */
   initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
+    log.info('initializing...');
 
     if (config) {
       invariant(!this._config, 'config already set');
@@ -200,6 +199,8 @@ export class ClientServicesHost {
       transportFactory,
       signalManager,
     });
+
+    log.info('initialized');
   }
 
   @synchronized
@@ -217,7 +218,7 @@ export class ClientServicesHost {
     invariant(this._networkManager, 'network manager not set');
 
     this._opening = true;
-    log('opening...', { lockKey: this._resourceLock?.lockKey });
+    log.info('opening...', { lockKey: this._resourceLock?.lockKey });
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
@@ -272,7 +273,7 @@ export class ClientServicesHost {
     this._open = true;
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('opened', { deviceKey });
+    log.info('opened', { deviceKey });
     log.trace('dxos.sdk.client-services-host.open', trace.end({ id: traceId }));
   }
 
@@ -283,13 +284,13 @@ export class ClientServicesHost {
     }
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('closing...', { deviceKey });
+    log.info('closing...', { deviceKey });
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
     this._open = false;
     this._statusUpdate.emit();
-    log('closed', { deviceKey });
+    log.info('closed', { deviceKey });
   }
 
   async reset() {
