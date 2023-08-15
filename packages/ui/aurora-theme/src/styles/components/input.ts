@@ -91,7 +91,7 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     : props.variant === 'static'
     ? mx(...sharedStaticInputStyles(props), !props.disabled && contentElevation(props), ...etc)
     : mx(
-        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 border-transparent',
+        'rounded text-base bg-white/50 focus-visible:bg-white/50 dark:bg-neutral-700/50 dark:focus-visible:bg-neutral-700/50 border-transparent focus:border-transparent',
         !props.disabled && focusRing,
         !props.disabled && hoverColors,
         inputValence(props.validationValence) || neutralInputValence,
@@ -103,7 +103,7 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size),
-    'flex items-center justify-center rounded text-white',
+    'shrink-0 flex items-center justify-center rounded text-white',
     'radix-state-checked:bg-primary-600 radix-state-unchecked:bg-neutral-200 dark:radix-state-unchecked:bg-neutral-700',
     focusRing,
     ...etc,

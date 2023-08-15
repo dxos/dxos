@@ -5,7 +5,7 @@
 import { Download } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button, Input, Toolbar } from '@dxos/aurora';
+import { Input, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useFileDownload } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -55,18 +55,18 @@ const DiagnosticsPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
-          <Button onClick={handleRefresh}>Refresh</Button>
-          <Button onClick={handleDownload}>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={handleDownload}>
             <Download className={getSize(5)} />
             <span className='m-2'>Download</span>
-          </Button>
-          <Button onClick={handleResetMetrics}>Reset metrics</Button>
+          </Toolbar.Button>
+          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
           <Input.Root>
             <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
             <Input.Label>Record metrics</Input.Label>
           </Input.Root>
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <JsonView data={data} level={5} />
