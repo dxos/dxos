@@ -11,7 +11,7 @@ import {
 } from '@radix-ui/react-toggle-group';
 import React, { forwardRef } from 'react';
 
-import { Button, ButtonGroup, ButtonGroupProps } from './Button';
+import { Button, ButtonGroup, ButtonGroupProps, ButtonProps } from './Button';
 
 type ToggleGroupProps = Omit<ToggleGroupSingleProps, 'className'> | Omit<ToggleGroupMultipleProps, 'className'>;
 
@@ -25,15 +25,17 @@ const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupPro
   },
 );
 
-type ToggleGroupItemProps = ToggleGroupItemPrimitiveProps;
+type ToggleGroupItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & ButtonProps;
 
-const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(({ value, ...props }, forwardedRef) => {
-  return (
-    <ToggleGroupItemPrimitive {...{ value, disabled: props.disabled }} asChild>
-      <Button {...props} ref={forwardedRef} />
-    </ToggleGroupItemPrimitive>
-  );
-});
+const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
+  ({ variant, elevation, density, classNames, children, ...props }, forwardedRef) => {
+    return (
+      <ToggleGroupItemPrimitive {...props} asChild>
+        <Button {...{ variant, elevation, density, classNames, children }} ref={forwardedRef} />
+      </ToggleGroupItemPrimitive>
+    );
+  },
+);
 
 export { ToggleGroup, ToggleGroupItem };
 export type { ToggleGroupProps, ToggleGroupItemProps };

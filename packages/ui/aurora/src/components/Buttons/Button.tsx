@@ -68,16 +68,23 @@ type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
   asChild?: boolean;
 };
 
-const ButtonGroup = ({ children, elevation: propsElevation, classNames, asChild, ...props }: ButtonGroupProps) => {
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext(propsElevation);
-  const Root = asChild ? Slot : Primitive.div;
-  return (
-    <Root role='none' {...props} className={tx('button.group', 'button-group', { elevation }, classNames)}>
-      <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-    </Root>
-  );
-};
+const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
+  ({ children, elevation: propsElevation, classNames, asChild, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const elevation = useElevationContext(propsElevation);
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root
+        role='none'
+        {...props}
+        className={tx('button.group', 'button-group', { elevation }, classNames)}
+        ref={forwardedRef}
+      >
+        <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
+      </Root>
+    );
+  },
+);
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
