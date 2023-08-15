@@ -167,6 +167,7 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
   const { navigationSidebarOpen, setNavigationSidebarOpen } = useMainContext(NAVIGATION_SIDEBAR_NAME);
   return (
     <MainSidebar
+      role='navigation'
       {...props}
       open={navigationSidebarOpen}
       setOpen={setNavigationSidebarOpen}
@@ -184,6 +185,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
   const { complementarySidebarOpen, setComplementarySidebarOpen } = useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
   return (
     <MainSidebar
+      role='complementary'
       {...props}
       open={complementarySidebarOpen}
       setOpen={setComplementarySidebarOpen}
