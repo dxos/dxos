@@ -245,13 +245,8 @@ const StoragePanel = () => {
             Refresh
           </Toolbar.Button>
 
-<<<<<<< HEAD
           <div className='grow' />
-          <Button
-=======
-          <div className='flex-1' />
           <Toolbar.Button
->>>>>>> origin/main
             onClick={async () => {
               await services?.SystemService.reset();
               location.reload();

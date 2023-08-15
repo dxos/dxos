@@ -4,12 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-<<<<<<< HEAD
-import { Button, Toolbar } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
-=======
 import { Toolbar } from '@dxos/aurora';
->>>>>>> origin/main
+import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
