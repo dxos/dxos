@@ -16,7 +16,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*"
   },
   "devDependencies": {
