@@ -116,6 +116,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             case StackAction.CREATE: {
               return { object: new StackType() };
             }
+            case StackAction.INSERT_SECTION: {
+              console.log('###', intent);
+              break;
+            }
           }
         },
       },

@@ -15,6 +15,7 @@ export const STACK_PLUGIN = 'dxos.org/plugin/stack';
 const STACK_ACTION = `${STACK_PLUGIN}/action`;
 export enum StackAction {
   CREATE = `${STACK_ACTION}/create`,
+  INSERT_SECTION = `${STACK_ACTION}/insert-seciton`,
 }
 
 // TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
