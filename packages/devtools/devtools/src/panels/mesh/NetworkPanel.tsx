@@ -1,15 +1,15 @@
 import { Toolbar } from "@dxos/aurora";
-import { FullScreen, Grid, SVG, SVGContextProvider, Zoom, createSvgContext } from '@dxos/gem-core';
-import { Graph, GraphData, GraphForceProjector, GraphLayoutNode, GraphLink, GraphModel, Markers, emptyGraph } from "@dxos/gem-spore";
+import { mx } from "@dxos/aurora-theme";
+import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
+import { Graph, GraphData, GraphForceProjector, GraphLayoutNode, GraphLink, GraphModel, emptyGraph } from "@dxos/gem-spore";
 import { PeerState } from "@dxos/protocols/proto/dxos/mesh/presence";
 import { SpaceMember, useMembers } from "@dxos/react-client/echo";
+import { useIdentity } from "@dxos/react-client/halo";
+import { defaultMap } from "@dxos/util";
 import React, { useEffect, useMemo, useState } from 'react';
 import { PanelContainer } from "../../components";
 import { SpaceSelector } from "../../containers";
 import { useDevtoolsState } from "../../hooks";
-import { defaultMap } from "@dxos/util";
-import { useIdentity } from "@dxos/react-client/halo";
-import { mx } from "@dxos/aurora-theme";
 
 const NetworkPanel = () => {
   const { space } = useDevtoolsState();
