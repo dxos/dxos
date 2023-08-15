@@ -4,29 +4,19 @@
 
 import get from 'lodash.get';
 
-import { Graph, GraphActionBuilder, GraphNode, GraphNodeActions, GraphNodeBuilder, GraphNodeChildren } from './types';
+import { Graph } from './types';
 
 export class SessionGraph implements Graph {
-  private readonly _root: GraphNode<null> = {
-    id: 'root',
-    data: null,
-    parent: null,
-    attributes: {},
-    children: {},
-    actions: {},
-  };
-
-  private readonly _nodeBuilders = new Map<string, GraphNodeBuilder>();
-  private readonly _actionBuilders = new Map<string, GraphActionBuilder>();
-
+  private readonly _root = this._createNode({ id: 'root' });
+  private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
   // TODO(wittjosiah): Should this support multiple paths to the same node?
   private readonly _index = new Map<string, string[]>();
 
-  get root(): GraphNode<any> {
+  get root(): Graph.Node {
     return this._root;
   }
 
-  find(id: string): GraphNode<any> | undefined {
+  find(id: string): Graph.Node | undefined {
     const path = this._index.get(id);
     if (!path) {
       return undefined;
@@ -35,49 +25,76 @@ export class SessionGraph implements Graph {
     return path.length > 0 ? get(this._root, path) : this._root;
   }
 
-  registerNodeBuilder(id: string, builder: GraphNodeBuilder): void {
-    this._nodeBuilders.set(id, builder);
+  traverse({ from = this._root, predicate, onVisitNode }: Graph.TraverseOptions): void {
+    if (!predicate || predicate(from)) {
+      onVisitNode?.(from);
+    }
+
+    Object.values(from.children).forEach((child) => this.traverse({ from: child, predicate, onVisitNode }));
   }
 
-  registerActionBuilder(id: string, builder: GraphActionBuilder): void {
-    this._actionBuilders.set(id, builder);
+  registerNodeBuilder(builder: Graph.NodeBuilder): void {
+    this._nodeBuilders.add(builder);
   }
 
-  removeNodeBuilder(id: string): void {
-    this._nodeBuilders.delete(id);
+  removeNodeBuilder(builder: Graph.NodeBuilder): void {
+    this._nodeBuilders.delete(builder);
   }
 
-  removeActionBuilder(id: string): void {
-    this._actionBuilders.delete(id);
-  }
-
-  invalidate(id: string): void {
-    const node = this.find(id);
-    const path = this._index.get(id);
-    this.construct(node, path);
-  }
-
-  construct(from = this._root, path: string[] = []): void {
+  construct(from = this._root as Graph.Node, path: string[] = [], ignoreBuilders: Graph.NodeBuilder[] = []): void {
     this._index.set(from.id, path);
+    Array.from(this._nodeBuilders.values())
+      .filter((builder) => ignoreBuilders.findIndex((ignore) => ignore === builder) === -1)
+      .forEach((builder) => {
+        (from as any).__currentBuilder = builder;
+        builder(from);
+      });
+  }
 
-    from.children = Array.from(this._nodeBuilders.entries()).reduce((acc, [id, builder]) => {
-      const nodes = builder(from).reduce((acc, node) => {
-        return { ...acc, [`${id}:${node.id}`]: node };
-      }, {} as GraphNodeChildren);
+  private _createNode<TData = null, TProperties extends { [key: string]: any } = { [key: string]: any }>(
+    partial: Pick<Graph.Node, 'id'> & Partial<Graph.Node<TData, TProperties>>,
+    path: string[] = [],
+    ignoreBuilders: Graph.NodeBuilder[] = [],
+  ): Graph.Node<TData, TProperties> {
+    const node: Graph.Node<TData, TProperties> = {
+      data: null as TData,
+      parent: null,
+      properties: {} as TProperties,
+      children: {},
+      actions: {},
+      ...partial,
+      add: (partial) => {
+        const childPath = [...path, 'children', partial.id];
+        // Track builders used through a graph path to limit how many times a builder can be used.
+        // TODO(wittjosiah): Is there a better way to do this without degrading the api?
+        const childBuilders = [...ignoreBuilders, (node as any).__currentBuilder];
+        const child = this._createNode({ ...partial, parent: node }, childPath, childBuilders);
+        node.children[child.id] = child;
+        this.construct(child, childPath, childBuilders);
+        return child;
+      },
+      remove: (id) => {
+        const child = node.children[id];
+        delete node.children[id];
+        return child;
+      },
+      addAction: (action) => {
+        node.actions[action.id] = action;
+        return action;
+      },
+      removeAction: (id) => {
+        const action = node.actions[id];
+        delete node.actions[id];
+        return action;
+      },
+      addProperty: (key, value) => {
+        (node.properties as { [key: string]: any })[key] = value;
+      },
+      removeProperty: (key) => {
+        delete (node.properties as { [key: string]: any })[key];
+      },
+    };
 
-      return { ...acc, ...nodes };
-    }, {} as GraphNodeChildren);
-
-    from.actions = Array.from(this._actionBuilders.entries()).reduce((acc, [id, builder]) => {
-      const actions = builder(from).reduce((acc, action) => {
-        return { ...acc, [`${id}:${action.id}`]: action };
-      }, {} as GraphNodeActions);
-
-      return { ...acc, ...actions };
-    }, {} as GraphNodeActions);
-
-    Object.entries(from.children).forEach(([id, node]) => {
-      this.construct(node, [...path, 'children', id]);
-    });
+    return node;
   }
 }

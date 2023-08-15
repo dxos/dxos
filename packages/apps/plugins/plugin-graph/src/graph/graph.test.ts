@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { SessionGraph } from './graph';
-import { GraphActionBuilder, GraphNode, GraphNodeAction, GraphNodeBuilder } from './types';
+import { Graph } from './types';
 
 describe.only('SessionGraph', () => {
   test('returns root node', () => {
@@ -19,132 +19,175 @@ describe.only('SessionGraph', () => {
   test('root node unmodified without builders', () => {
     const graph = new SessionGraph();
     graph.construct();
-    expect(graph.root.attributes).to.be.empty;
+    expect(graph.root.properties).to.be.empty;
     expect(graph.root.children).to.be.empty;
     expect(graph.root.actions).to.be.empty;
   });
 
   test('builder can add children to root node', () => {
     const graph = new SessionGraph();
-    const testNode = { id: 'test', data: null, parent: graph.root, attributes: {}, children: {}, actions: {} };
-    graph.registerNodeBuilder('test', (parent) => (parent.id === 'root' ? [testNode] : []));
+    const testNode = { id: 'test', data: null };
+    graph.registerNodeBuilder((parent) => {
+      if (parent.id === 'root') {
+        parent.add(testNode);
+      }
+    });
     graph.construct();
-    expect(graph.root.children['test:test']).to.equal(testNode);
+    expect(graph.root.children.test.id).to.equal(testNode.id);
+    expect(graph.root.children.test.parent).to.equal(graph.root);
   });
 
   test('builder can add actions to root node', () => {
     const graph = new SessionGraph();
     const testAction = { id: 'test', intent: { action: 'test' } };
-    graph.registerActionBuilder('test', (parent) => (parent.id === 'root' ? [testAction] : []));
+    graph.registerNodeBuilder((parent) => {
+      if (parent.id === 'root') {
+        parent.addAction(testAction);
+      }
+    });
     graph.construct();
-    expect(graph.root.actions['test:test']).to.equal(testAction);
+    expect(graph.root.actions.test.id).to.equal(testAction.id);
   });
 
   test('multiple builders can add children to root node', () => {
     const graph = new SessionGraph();
-    const [builder1, cache1] = createTestNodeBuilder('test1');
-    const [builder2, cache2] = createTestNodeBuilder('test2');
-    graph.registerNodeBuilder('test1', builder1);
-    graph.registerNodeBuilder('test2', builder2);
+    graph.registerNodeBuilder(createTestNodeBuilder('test1').builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
 
-    expect(Array.from(cache1.keys())).to.deep.equal(['root']);
-    expect(Array.from(cache2.keys())).to.deep.equal(['root']);
+    expect(Object.keys(graph.root.children)).to.deep.equal(['root-test1', 'root-test2']);
 
-    for (const node of cache1.get('root')!) {
+    for (const node of Object.values(graph.root.children)) {
       expect(graph.root).to.equal(node.parent);
-      expect(graph.find(node.id)).to.equal(node);
-    }
-    for (const node of cache2.get('root')!) {
-      expect(graph.root).to.equal(node.parent);
-      expect(graph.find(node.id)).to.equal(node);
     }
   });
 
-  test('multiple plugins can add actions to root node', () => {
+  test('multiple builders can add actions to root node', () => {
     const graph = new SessionGraph();
-    const [builder1, cache1] = createTestActionBuilder('test1');
-    const [builder2, cache2] = createTestActionBuilder('test2');
-    graph.registerActionBuilder('test1', builder1);
-    graph.registerActionBuilder('test2', builder2);
+    graph.registerNodeBuilder(createTestNodeBuilder('test1').builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
 
-    expect(Array.from(cache1.keys())).to.deep.equal(['root']);
-    expect(Array.from(cache2.keys())).to.deep.equal(['root']);
-
-    for (const action of cache1.get('root')!) {
-      expect(graph.root.actions['test1:root-test1']).to.equal(action);
-    }
-    for (const action of cache2.get('root')!) {
-      expect(graph.root.actions['test2:root-test2']).to.equal(action);
-    }
+    expect(Object.keys(graph.root.actions)).to.deep.equal(['root-test1', 'root-test2']);
   });
 
   test('builders can add children to child node', () => {
     const graph = new SessionGraph();
-    const [builder1, cache1] = createTestNodeBuilder('test1', 2);
-    const [builder2, cache2] = createTestNodeBuilder('test2');
-    graph.registerNodeBuilder('test1', builder1);
-    graph.registerNodeBuilder('test2', builder2);
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
 
-    expect(Array.from(cache1.keys())).to.deep.equal(['root', 'root-test1', 'root-test2']);
-    expect(Array.from(cache2.keys())).to.deep.equal(['root']);
+    expect(Object.keys(graph.root.children['root-test1'].children)).to.be.empty;
+    expect(Object.keys(graph.root.children['root-test2'].children)).to.deep.equal(['root-test2-test1']);
 
-    for (const key of cache1.keys()) {
-      const parent = graph.find(key);
-      for (const node of cache1.get(key)!) {
-        expect(parent).to.equal(node.parent);
-        expect(graph.find(node.id)).to.equal(node);
-      }
-    }
-    for (const node of cache2.get('root')!) {
-      expect(graph.root).to.equal(node.parent);
-      expect(graph.find(node.id)).to.equal(node);
+    for (const node of Object.values(graph.root.children['root-test2'].children)) {
+      expect(graph.root.children['root-test2']).to.equal(node.parent);
     }
   });
 
-  test('plugin can add actions to child node', () => {
+  test('builders can add actions to child node', () => {
     const graph = new SessionGraph();
-    const [builder1, cache1] = createTestActionBuilder('test1', 2);
-    const [builder2, cache2] = createTestActionBuilder('test2');
-    graph.registerNodeBuilder('test', createTestNodeBuilder('test', 2)[0]);
-    graph.registerActionBuilder('test1', builder1);
-    graph.registerActionBuilder('test2', builder2);
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
 
-    expect(Array.from(cache1.keys())).to.deep.equal(['root', 'root-test']);
-    expect(Array.from(cache2.keys())).to.deep.equal(['root']);
-
-    for (const key of cache1.keys()) {
-      const parent = graph.find(key);
-      for (const action of cache1.get(key)!) {
-        expect(parent!.actions[`test1:${key}-test1`]).to.equal(action);
-      }
-    }
-    for (const action of cache2.get('root')!) {
-      expect(graph.root.actions['test2:root-test2']).to.equal(action);
-    }
+    expect(Object.keys(graph.root.children['root-test1'].actions)).to.be.empty;
+    expect(Object.keys(graph.root.children['root-test2'].actions)).to.deep.equal(['root-test2-test1']);
   });
 
-  test('graph is updated on invalidation', async () => {
+  test('is updated when nodes change', async () => {
     const graph = new SessionGraph();
-    const [builder1, cache1] = createTestNodeBuilder('test1', 2);
-    graph.registerNodeBuilder('test1', builder1);
+    const { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty } =
+      createTestNodeBuilder('test1', 2);
+    graph.registerNodeBuilder(builder);
     graph.construct();
 
-    expect(graph.find('root-test1')).to.equal(cache1.get('root')![0]);
-    expect(graph.find('root-test1-test1')).to.equal(cache1.get('root-test1')![0]);
+    expect(Object.keys(graph.root.children)).to.have.length(1);
+    addNode('root', { id: 'root-test2' });
+    expect(Object.keys(graph.root.children)).to.have.length(2);
+    expect(Object.keys(graph.root.children['root-test2'].children)).to.have.length(0);
 
-    cache1.get('root')![0].id = 'root-test11';
-    graph.invalidate('root-test1');
+    expect(Object.keys(graph.root.children['root-test1'].children)).to.have.length(0);
+    addNode('root-test1', { id: 'root-test1-test2' });
+    expect(Object.keys(graph.root.children['root-test1'].children)).to.have.length(1);
+    expect(Object.keys(graph.root.children['root-test1'].children['root-test1-test2'].children)).to.have.length(0);
 
-    expect(graph.find('root-test11')).to.equal(cache1.get('root')![0]);
-    expect(graph.find('root-test11-test1')).to.equal(cache1.get('root-test11')![0]);
+    expect(Object.keys(graph.root.actions)).to.have.length(1);
+    addAction('root', { id: 'root-test2', intent: { action: 'test' } });
+    expect(Object.keys(graph.root.actions)).to.have.length(2);
+
+    expect(graph.root.children['root-test1'].properties).to.not.have.property('test');
+    addProperty('root-test1', 'test', 'test');
+    expect(graph.root.children['root-test1'].properties.test).to.equal('test');
+
+    expect(Object.keys(graph.root.children)).to.have.length(2);
+    removeNode('root', 'root-test2');
+    expect(Object.keys(graph.root.children)).to.have.length(1);
+
+    expect(Object.keys(graph.root.children['root-test1'].children)).to.have.length(1);
+    removeNode('root-test1', 'root-test1-test2');
+    expect(Object.keys(graph.root.children['root-test1'].children)).to.have.length(0);
+
+    expect(Object.keys(graph.root.actions)).to.have.length(2);
+    removeAction('root', 'root-test2');
+    expect(Object.keys(graph.root.actions)).to.have.length(1);
+
+    expect(graph.root.children['root-test1'].properties.test).to.equal('test');
+    removeProperty('root-test1', 'test');
+    expect(graph.root.children['root-test1'].properties).to.not.have.property('test');
+  });
+
+  test('can find nodes', () => {
+    const graph = new SessionGraph();
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
+    graph.construct();
+
+    expect(graph.find('root-test1')?.id).to.equal('root-test1');
+    expect(graph.find('root-test2-test1')?.id).to.equal('root-test2-test1');
+  });
+
+  test('can be traversed', () => {
+    const graph = new SessionGraph();
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
+    graph.construct();
+
+    const nodes: string[] = [];
+    graph.traverse({ onVisitNode: (node) => nodes.push(node.id) });
+    expect(nodes).to.deep.equal(['root', 'root-test1', 'root-test2', 'root-test2-test1']);
+  });
+
+  test('traversal can be limited by predicate', () => {
+    const graph = new SessionGraph();
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
+    graph.construct();
+
+    const nodes: string[] = [];
+    graph.traverse({
+      predicate: (node) => node.id.includes('test1'),
+      onVisitNode: (node) => nodes.push(node.id),
+    });
+    expect(nodes).to.deep.equal(['root-test1', 'root-test2-test1']);
+  });
+
+  test('traversal can be started from any node', () => {
+    const graph = new SessionGraph();
+    graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
+    graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
+    graph.construct();
+
+    const nodes: string[] = [];
+    graph.traverse({
+      from: graph.root.children['root-test2'],
+      onVisitNode: (node) => nodes.push(node.id),
+    });
+    expect(nodes).to.deep.equal(['root-test2', 'root-test2-test1']);
   });
 });
 
-const checkDepth = (node: GraphNode, depth = 0): number => {
+const checkDepth = (node: Graph.Node, depth = 0): number => {
   if (!node.parent) {
     return depth;
   }
@@ -152,54 +195,83 @@ const checkDepth = (node: GraphNode, depth = 0): number => {
   return checkDepth(node.parent, depth + 1);
 };
 
-const createTestNodeBuilder = (id: string, depth = 1): [GraphNodeBuilder, Map<string, GraphNode[]>] => {
-  const cache = new Map<string, GraphNode[]>();
-  const builder = (parent: GraphNode): GraphNode[] => {
+const createTestNodeBuilder = (id: string, depth = 1) => {
+  const nodes = new Map<string, Graph.Node>();
+  const builder: Graph.NodeBuilder = (parent) => {
     if (checkDepth(parent) >= depth) {
-      return [];
+      return;
     }
 
-    let nodes = cache.get(parent.id);
-    if (!nodes) {
-      nodes = [
-        {
-          id: `${parent.id}-${id}`,
-          data: null,
-          parent,
-          attributes: {},
-          children: {},
-          actions: {},
-        },
-      ];
-      cache.set(parent.id, nodes);
-    }
+    const child = parent.add({
+      id: `${parent.id}-${id}`,
+      data: null,
+      parent,
+    });
 
-    return nodes;
+    parent.addAction({
+      id: `${parent.id}-${id}`,
+      intent: { action: 'test' },
+    });
+
+    nodes.set(parent.id, parent);
+    nodes.set(child.id, child);
   };
 
-  return [builder, cache];
-};
-
-const createTestActionBuilder = (id: string, depth = 1): [GraphActionBuilder, Map<string, GraphNodeAction[]>] => {
-  const cache = new Map<string, GraphNodeAction[]>();
-  const builder = (parent: GraphNode): GraphNodeAction[] => {
-    if (checkDepth(parent) >= depth) {
-      return [];
+  const addNode = (parentId: string, node: Pick<Graph.Node, 'id'> & Partial<Graph.Node>) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
     }
 
-    let actions = cache.get(parent.id);
-    if (!actions) {
-      actions = [
-        {
-          id: `${parent.id}-${id}`,
-          intent: { action: 'test' },
-        },
-      ];
-      cache.set(parent.id, actions);
-    }
-
-    return actions;
+    const child = parent.add(node);
+    nodes.set(child.id, child);
+    return child;
   };
 
-  return [builder, cache];
+  const removeNode = (parentId: string, id: string) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
+    }
+
+    return parent.remove(id);
+  };
+
+  const addAction = (parentId: string, action: Graph.Action) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
+    }
+
+    return parent.addAction(action);
+  };
+
+  const removeAction = (parentId: string, id: string) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
+    }
+
+    return parent.removeAction(id);
+  };
+
+  const addProperty = (parentId: string, key: string, value: any) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
+    }
+
+    return parent.addProperty(key, value);
+  };
+
+  const removeProperty = (parentId: string, key: string) => {
+    const parent = nodes.get(parentId);
+    if (!parent) {
+      return;
+    }
+
+    return parent.removeProperty(key);
+  };
+
+  return { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty };
 };
