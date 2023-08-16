@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as process from 'process';
-
 export type Platform = {
   type: 'browser' | 'node';
   platform: string;
