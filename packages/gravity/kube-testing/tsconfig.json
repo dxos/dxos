@@ -17,6 +17,9 @@
   "include": [
     "src"
   ],
+  "ts-node": {
+    "swc": true
+  },
   "references": [
     {
       "path": "../../common/async"
