@@ -11,6 +11,7 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { SpacePanelImpl } from './SpacePanel';
 import { SpacePanelImplProps } from './SpacePanelProps';
+import { Dialog } from '../Dialog';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
@@ -20,25 +21,22 @@ const noOpProps: SpacePanelImplProps = {
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
-const StorybookSpacePanel = (args: Partial<SpacePanelImplProps>) => {
-  const spacePanelProps = { ...noOpProps, ...args };
-  const { tx } = useThemeContext();
-  return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
-          <SpacePanelImpl {...spacePanelProps} />
-        </div>
-      </ElevationProvider>
-    </DensityProvider>
-  );
-};
+const SpaceDialog = (args: Partial<SpacePanelImplProps>) => (
+  <Dialog>
+    <SpacePanelImpl {...noOpProps} {...args} />
+  </Dialog>
+);
 
 export default {
-  component: StorybookSpacePanel,
+  component: SpaceDialog,
 };
 
 export const SpaceManager = {
   decorators: [ClientDecorator()],
   args: { activeView: 'space manager' },
+};
+
+export const SpaceInvitationManager = {
+  decorators: [ClientDecorator()],
+  args: { activeView: 'space invitation manager' },
 };

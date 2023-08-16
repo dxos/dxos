@@ -12,6 +12,7 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
+import { Dialog } from '../Dialog';
 
 faker.seed(1234);
 
@@ -28,22 +29,14 @@ const noOpProps: IdentityPanelImplProps = {
   },
 };
 
-const StorybookIdentityPanel = (args: Partial<IdentityPanelImplProps>) => {
-  const identityPanelProps = { ...noOpProps, ...args };
-  const { tx } = useThemeContext();
-  return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
-          <IdentityPanelImpl {...identityPanelProps} />
-        </div>
-      </ElevationProvider>
-    </DensityProvider>
-  );
-};
+const IdentityDialog = (args: Partial<IdentityPanelImplProps>) => (
+  <Dialog>
+    <IdentityPanelImpl {...noOpProps} {...args} />
+  </Dialog>
+);
 
 export default {
-  component: StorybookIdentityPanel,
+  component: IdentityDialog,
 };
 
 export const IdentityActionChooser = {

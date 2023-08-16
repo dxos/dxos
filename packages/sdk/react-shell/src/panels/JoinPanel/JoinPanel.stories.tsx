@@ -11,6 +11,8 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
 
+import { Dialog } from '../Dialog';
+
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
   send: () => {},
@@ -19,22 +21,14 @@ const noOpProps: JoinPanelImplProps = {
   pending: false,
 };
 
-const StorybookJoinPanel = (args: Partial<JoinPanelImplProps>) => {
-  const joinPanelProps = { ...noOpProps, ...args };
-  const { tx } = useThemeContext();
-  return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
-          <JoinPanelImpl {...joinPanelProps} />
-        </div>
-      </ElevationProvider>
-    </DensityProvider>
-  );
-};
+const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
+  <Dialog>
+    <JoinPanelImpl {...noOpProps} {...args} />
+  </Dialog>
+);
 
 export default {
-  component: StorybookJoinPanel,
+  component: JoinDialog,
 };
 
 export const AdditionMethodChooser = {
