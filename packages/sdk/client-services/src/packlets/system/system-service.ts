@@ -12,7 +12,7 @@ import {
   QueryStatusRequest,
   QueryStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { MaybePromise } from '@dxos/util';
+import { jsonKeyReplacer, MaybePromise } from '@dxos/util';
 
 import { Diagnostics } from '../services';
 
@@ -53,11 +53,14 @@ export class SystemServiceImpl implements SystemService {
     return this._config?.values ?? {};
   }
 
+  /**
+   * NOTE: Since this is serialized as a JSON object, we allow the option to serialize keys.
+   */
   async getDiagnostics() {
     const diagnostics = await this._getDiagnostics();
     return {
       timestamp: new Date(),
-      diagnostics,
+      diagnostics: JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer())),
     };
   }
 

@@ -78,13 +78,15 @@ export type JsonKeyOptions = {
   humanize?: boolean;
 };
 
-export const jsonKeyReplacer = (options: JsonKeyOptions) => (key: string, value: any) => {
-  if (typeof value === 'string') {
-    const key = PublicKey.fromHex(value);
-    if (key.toHex() === value) {
-      return options.humanize ? humanize(key) : key.truncate();
+export const jsonKeyReplacer =
+  (options: JsonKeyOptions = {}) =>
+  (key: string, value: any) => {
+    if (typeof value === 'string') {
+      const key = PublicKey.fromHex(value);
+      if (key.toHex() === value) {
+        return options.humanize ? humanize(key) : options.truncate ? key.truncate() : key.toHex();
+      }
     }
-  }
 
-  return value;
-};
+    return value;
+  };

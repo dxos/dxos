@@ -63,6 +63,9 @@ export type SpaceStats = {
   pipeline?: SpaceProto.PipelineState;
 };
 
+/**
+ * Create diagnostics to provide snapshot of current system state.
+ */
 export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
   serviceContext: ServiceContext,

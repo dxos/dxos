@@ -116,15 +116,11 @@ export class ClientServicesHost {
 
     this._systemService = new SystemServiceImpl({
       config: this._config,
-
       statusUpdate: this._statusUpdate,
-
       getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
-
       getDiagnostics: () => {
         return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
       },
-
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();
@@ -132,7 +128,6 @@ export class ClientServicesHost {
           await this._resourceLock?.release();
         }
       },
-
       onReset: async () => {
         await this.reset();
       },
