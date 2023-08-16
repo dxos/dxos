@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import { isAbsolute, resolve, relative } from 'path';
+
+import { invariant } from '@dxos/invariant';
 
 /**
  * Represents a reference to a module, either as an relative path with the cwd or as a global module specifier.

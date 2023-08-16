@@ -311,7 +311,7 @@ describe('pipeline/Pipeline', () => {
         [[new WriteCommand(agentIds[0], 4), new RestartCommand(agentIds[0]), new SyncCommand()]],
       ];
 
-      await fc.invariant(model, { examples });
+      await fc.assert(model, { examples });
     })
     .timeout(60_000);
 });

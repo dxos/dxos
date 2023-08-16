@@ -42,6 +42,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {

@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
-
+import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../util';

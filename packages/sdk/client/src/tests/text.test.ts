@@ -200,7 +200,7 @@ describe('Client text replication', () => {
       ],
     ];
 
-    await fc.invariant(model, { examples });
+    await fc.assert(model, { examples });
   })
     .onlyEnvironments('node')
     .timeout(300_000);

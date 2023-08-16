@@ -3,13 +3,13 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import { invariant } from '@dxos/invariant';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
