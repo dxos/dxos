@@ -71,8 +71,10 @@ type EmptyInvitationEvent = {
 
 type InvitationEvent = FailInvitationEvent | SetInvitationCodeEvent | SetInvitationEvent | EmptyInvitationEvent;
 
+type Kind = 'Space' | 'Halo';
+
 const getInvitationSubscribable = (
-  Kind: 'Space' | 'Halo',
+  Kind: Kind,
   invitation: AuthenticatingInvitationObservable,
 ): Subscribable<InvitationEvent> => {
   log('[subscribing to invitation]', invitation);
@@ -131,7 +133,7 @@ const getInvitationSubscribable = (
   } as Subscribable<InvitationEvent>;
 };
 
-const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: string) => {
+const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
   const config: StateNodeConfig<JoinMachineContext, any, InvitationEvent> = {
     initial: `unknown${Kind}`,
     states: {
@@ -142,21 +144,20 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             target: '#join.finishingJoiningHalo',
           },
           {
-            // cond: `no${Kind}Invitation`,
+            cond: (context) => !!context[Kind.toLowerCase() as Lowercase<typeof Kind>].unredeemedCode,
+            target: `acceptingRedeemed${Kind}Invitation`,
+            actions: [`redeem${Kind}InvitationCode`, 'log'],
+          },
+          {
             target: `inputting${Kind}InvitationCode`,
             actions: 'log',
           },
-          // TODO(thure): Restore this transition that redeems the invitation code on init.
-          // {
-          //   target: `acceptingRedeemed${Kind}Invitation`,
-          //   actions: [`redeem${Kind}InvitationCode`, 'log']
-          // }
         ],
       },
       [`inputting${Kind}InvitationCode`]: {},
       [`acceptingRedeemed${Kind}Invitation`]: {
         invoke: {
-          src: (context) => context[Kind.toLowerCase() as 'space' | 'halo'].invitationSubscribable!,
+          src: (context) => context[Kind.toLowerCase() as Lowercase<Kind>].invitationSubscribable!,
         },
         initial: `unknown${Kind}Invitation`,
         states: {
@@ -164,7 +165,7 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             always: [
               {
                 cond: (context) => {
-                  const invitation = context[Kind.toLowerCase() as 'space' | 'halo'].invitation;
+                  const invitation = context[Kind.toLowerCase() as Lowercase<Kind>].invitation;
                   return !invitation || invitation?.state === Invitation.State.CONNECTING;
                 },
                 target: `connecting${Kind}Invitation`,
@@ -216,11 +217,8 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
             target: `.failing${Kind}Invitation`,
             actions: [
               assign({
-                [Kind.toLowerCase() as 'space' | 'halo']: (
-                  context: JoinMachineContext,
-                  event: FailInvitationEvent,
-                ) => ({
-                  ...context[Kind.toLowerCase() as 'space' | 'halo'],
+                [Kind.toLowerCase()]: (context: JoinMachineContext, event: FailInvitationEvent) => ({
+                  ...context[Kind.toLowerCase() as Lowercase<Kind>],
                   failReason: event.reason,
                 }),
               }),
@@ -235,8 +233,8 @@ const acceptingInvitationTemplate = (Kind: 'Space' | 'Halo', successTarget: stri
         target: `.acceptingRedeemed${Kind}Invitation`,
         actions: [
           assign({
-            [Kind.toLowerCase() as 'space' | 'halo']: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
-              ...context[Kind.toLowerCase() as 'space' | 'halo'],
+            [Kind.toLowerCase()]: (context: JoinMachineContext, event: SetInvitationCodeEvent) => ({
+              ...context[Kind.toLowerCase() as Lowercase<Kind>],
               unredeemedCode: event.code,
             }),
           }),
