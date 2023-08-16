@@ -13,6 +13,7 @@ module.exports = {
     '**/proto/gen/*',
     'packages/core/protocols/proto/**/*',
     'packages/sdk/client/src/version.ts',
+    'packages/sdk/client-services/src/version.ts',
 
     // Config
     '.eslintrc.js',
