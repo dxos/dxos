@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import node from 'node-datachannel';
 import { IceCandidate } from './rtc-ice-candidate';
 import { PeerConnection } from './rtc-peer-connection';

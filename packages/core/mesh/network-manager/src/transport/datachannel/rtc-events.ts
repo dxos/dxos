@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 export class PeerConnectionIceEvent extends Event implements RTCPeerConnectionIceEvent {
   readonly candidate: RTCIceCandidate | null;
 

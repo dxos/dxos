@@ -7,3 +7,4 @@ export * from './transport';
 export * from './webrtc-transport';
 export * from './webrtc-transport-service';
 export * from './webrtc-transport-proxy';
+export * from './datachannel';

@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 /**
  * @see https://developer.mozilla.org/docs/Web/API/RTCIceCandidate
  */

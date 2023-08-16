@@ -8,8 +8,8 @@
 let wrtc: any = null;
 
 // Try to load WebRTC if available. This will fail in the shared-worker context.
-try {
-  wrtc = require('@koush/wrtc');
-} catch {}
+// try {
+wrtc = require('./datachannel/index');
+// } catch {}
 
 export { wrtc };

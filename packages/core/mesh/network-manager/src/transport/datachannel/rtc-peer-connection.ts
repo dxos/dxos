@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import node from 'node-datachannel';
 import defer, { type DeferredPromise } from 'p-defer';
 import { DataChannel } from './rtc-data-channel';
@@ -159,16 +163,19 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
 
   get currentRemoteDescription(): RTCSessionDescription | null {
     // not exposed by node-datachannel
+    console.log("node-datachannel doesn't expose currentRemoteDescription");
     return toSessionDescription(null);
   }
 
   get pendingRemoteDescription(): RTCSessionDescription | null {
     // not exposed by node-datachannel
+    console.log("node-datachannel doesn't expose pendingRemoteDescription");
     return toSessionDescription(null);
   }
 
   get remoteDescription(): RTCSessionDescription | null {
     // not exposed by node-datachannel
+    console.log("node-datachannel doesn't expose remoteDescription");
     return toSessionDescription(null);
   }
 
@@ -181,11 +188,11 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
   }
 
   addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
-    throw new Error('Not implemented');
+    throw new Error('addTrack Not implemented');
   }
 
   addTransceiver(trackOrKind: MediaStreamTrack | string, init?: RTCRtpTransceiverInit): RTCRtpTransceiver {
-    throw new Error('Not implemented');
+    throw new Error('addTransciever Not implemented');
   }
 
   close(): void {
@@ -235,27 +242,27 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
   }
 
   getReceivers(): RTCRtpReceiver[] {
-    throw new Error('Not implemented');
+    throw new Error('getReceivers Not implemented');
   }
 
   getSenders(): RTCRtpSender[] {
-    throw new Error('Not implemented');
+    throw new Error('getSenders Not implemented');
   }
 
   async getStats(selector?: MediaStreamTrack | null): Promise<RTCStatsReport> {
-    throw new Error('Not implemented');
+    throw new Error('getStats Not implemented');
   }
 
   getTransceivers(): RTCRtpTransceiver[] {
-    throw new Error('Not implemented');
+    throw new Error('getTranscievers Not implemented');
   }
 
   removeTrack(sender: RTCRtpSender): void {
-    throw new Error('Not implemented');
+    throw new Error('removeTrack Not implemented');
   }
 
   restartIce(): void {
-    throw new Error('Not implemented');
+    throw new Error('restartIce Not implemented');
   }
 
   setConfiguration(configuration: RTCConfiguration = {}): void {
@@ -268,6 +275,7 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     }
 
     if (description.type !== 'offer') {
+      console.log(`setLocalDescription: only offer is supported, not ${description.type}`);
       // any other type causes libdatachannel to throw
       return;
     }

@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string';
 import type node from 'node-datachannel';
 
