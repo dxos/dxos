@@ -17,9 +17,6 @@
   "include": [
     "src"
   ],
-  "ts-node": {
-    "swc": true
-  },
   "references": [
     {
       "path": "../../common/async"
@@ -69,5 +66,8 @@
     {
       "path": "../../sdk/client-services"
     }
-  ]
+  ],
+  "ts-node": {
+    "swc": true
+  }
 }
