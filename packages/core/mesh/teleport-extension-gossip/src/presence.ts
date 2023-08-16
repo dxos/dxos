@@ -104,6 +104,14 @@ export class Presence {
       .map((message) => message.payload);
   }
 
+  getLocalState(): PeerState {
+    return {
+      identityKey: this._params.identityKey,
+      connections: this._params.gossip.getConnections(),
+      peerId: this._params.gossip.localPeerId,
+    };
+  }
+
   async destroy() {
     await this._ctx.dispose();
   }
@@ -112,6 +120,9 @@ export class Presence {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
     const oldPeerState = this._peerStates.get(message.peerId);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
+      // Assign peer id to payload.
+      (message.payload as PeerState).peerId = message.peerId;
+
       this._peerStates.set(message.peerId, message);
       this.updated.emit();
     }

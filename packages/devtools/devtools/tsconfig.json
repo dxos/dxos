@@ -49,6 +49,12 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../experimental/gem-spore"
+    },
+    {
       "path": "../../experimental/gem-spore"
     },
     {

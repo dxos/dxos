@@ -17,6 +17,7 @@ import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/teleport/gossip.proto";
+import "dxos/mesh/presence.proto";
 import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
@@ -147,6 +148,7 @@ message SpaceMember {
 
   Identity identity = 1;
   PresenceState presence = 2;
+  repeated PeerState peerStates = 3;
 }
 
 /// Runtime state of the space object.
