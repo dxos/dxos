@@ -4,8 +4,9 @@
 
 import invariant from 'tiny-invariant';
 
+import { ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
-import { ConfigProto } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { credentialTypeFilter } from '@dxos/credentials';
 import { DocumentModel, DocumentModelState } from '@dxos/document-model';
 import { PublicKey } from '@dxos/keys';
@@ -24,9 +25,9 @@ import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DXOS_VERSION } from '../../version';
 import { DataSpace } from '../spaces';
 import { getPlatform, Platform } from './platform';
-import { ClientServicesHost } from './service-host';
+import { ServiceContext } from './service-context';
 
-const DEFAULT_DIAGNOSTICS_TIMEOUT = 1000;
+const DEFAULT_TIMEOUT = 1_000;
 
 export type Diagnostics = {
   created: string;
@@ -62,11 +63,11 @@ export type SpaceStats = {
   pipeline?: SpaceProto.PipelineState;
 };
 
-export const createDiagnostics = async (clientServiceHost: ClientServicesHost): Promise<Diagnostics> => {
-  // TODO(burdon): Fix private access?
-  const serviceContext = clientServiceHost._serviceContext;
-  const clientServices = clientServiceHost.services;
-
+export const createDiagnostics = async (
+  clientServices: Partial<ClientServices>,
+  serviceContext: ServiceContext,
+  config: Config,
+): Promise<Diagnostics> => {
   const data: Diagnostics = {
     created: new Date().toISOString(),
     platform: getPlatform(),
@@ -83,7 +84,7 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost): 
   {
     invariant(clientServices.LoggingService, 'SystemService is not available.');
     data.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
-      timeout: DEFAULT_DIAGNOSTICS_TIMEOUT,
+      timeout: DEFAULT_TIMEOUT,
     }).catch(() => undefined);
   }
 
@@ -99,9 +100,11 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost): 
     // Devices.
     const { devices } =
       (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
-        timeout: DEFAULT_DIAGNOSTICS_TIMEOUT,
+        timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
     data.devices = devices;
+
+    // TODO(dmaretskyi): Add metrics for halo space.
 
     // Spaces.
     if (serviceContext.dataSpaceManager) {
@@ -113,12 +116,12 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost): 
     // Feeds.
     const { feeds = [] } =
       (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
-        timeout: DEFAULT_DIAGNOSTICS_TIMEOUT,
+        timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
     data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
   }
 
-  data.config = clientServiceHost.config?.values;
+  data.config = config.values;
 
   return data;
 };
@@ -142,9 +145,7 @@ const getProperties = (space: DataSpace) => {
   return properties;
 };
 
-// TODO(burdon): Normalize for ECHO/HALO.
 const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
-  // TODO(dmaretskyi): Metrics for halo space.
   const stats: SpaceStats = {
     key: space.key,
     metrics: space.metrics,
@@ -179,6 +180,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
       targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
       totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
+      // TODO(burdon): Empty?
       dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
       startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
       currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
@@ -187,6 +189,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     },
   };
 
+  // TODO(burdon): May not be open?
   if (space.dataPipeline.itemManager) {
     Object.assign(stats, {
       properties: getProperties(space),

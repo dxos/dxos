@@ -80,8 +80,7 @@ export class ClientServicesHost {
   private _storage?: Storage;
   private _callbacks?: ClientServicesHostCallbacks;
 
-  // TODO(burdon): Fix access issue.
-  _serviceContext!: ServiceContext;
+  private _serviceContext!: ServiceContext;
   private _opening = false;
   private _open = false;
 
@@ -123,7 +122,7 @@ export class ClientServicesHost {
       getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
 
       getDiagnostics: () => {
-        return createDiagnostics(this);
+        return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
       },
 
       onUpdateStatus: async (status: SystemStatus) => {
@@ -152,6 +151,10 @@ export class ClientServicesHost {
 
   get config() {
     return this._config;
+  }
+
+  get context() {
+    return this._serviceContext;
   }
 
   get serviceRegistry() {

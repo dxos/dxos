@@ -27,7 +27,7 @@ import { Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { log } from '@dxos/log';
+import { log, LogLevel } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -49,7 +49,7 @@ import {
   waitForSpace,
 } from './util';
 
-log.config({ filter: process.env.LOG_FILTER ?? 'warn' });
+log.config({ filter: process.env.LOG_FILTER ?? LogLevel.ERROR });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 
