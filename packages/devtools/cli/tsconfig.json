@@ -30,9 +30,6 @@
       "path": "../../apps/templates/hello-template"
     },
     {
-      "path": "../../apps/templates/tasks-template"
-    },
-    {
       "path": "../../common/async"
     },
     {
