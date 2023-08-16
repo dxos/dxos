@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Writable } from 'node:stream';
 import invariant from 'tiny-invariant';
 
 import { Event } from '@dxos/async';
@@ -15,7 +16,6 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
 import { Transport, TransportFactory, TransportOptions } from './transport';
-import { Writable } from 'node:stream';
 
 export type WebRTCTransportProxyParams = {
   initiator: boolean;
@@ -70,7 +70,7 @@ export class WebRTCTransportProxy implements Transport {
               }
             );
           },
-        }))
+        }));
       },
       (error) => log.catch(error)
     );

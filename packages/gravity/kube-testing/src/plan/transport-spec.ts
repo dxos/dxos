@@ -20,7 +20,7 @@ export type TransportTestSpec = {
   swarmsPerAgent: number;
   duration: number;
 
-  transport: 'webrtc' | 'webrtc-proxy'
+  transport: 'webrtc' | 'webrtc-proxy';
 
   streamLoadInterval: number;
   streamLoadChunkSize: number;
@@ -68,7 +68,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
-      bridge: spec.transport === 'webrtc-proxy'
+      bridge: spec.transport === 'webrtc-proxy',
     });
 
     const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.agentId));

@@ -24,7 +24,7 @@ import { WebRTCTransport } from './webrtc-transport';
 type TransportState = {
   transport: WebRTCTransport;
   stream: Duplex;
-  writeCallbacks: (() => void)[]
+  writeCallbacks: (() => void)[];
 };
 
 export class WebRTCTransportService implements BridgeService {
@@ -119,7 +119,7 @@ export class WebRTCTransportService implements BridgeService {
     const state = this.transports.get(proxyId)!;
     const bufferHasSpace = state.stream.push(payload);
     if (!bufferHasSpace) {
-      await new Promise<void>(resolve => {
+      await new Promise<void>((resolve) => {
         state.writeCallbacks.push(resolve);
       });
     }
