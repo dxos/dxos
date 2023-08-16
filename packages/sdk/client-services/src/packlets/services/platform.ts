@@ -6,6 +6,14 @@ export type Platform = {
   type: 'browser' | 'node';
   platform: string;
   runtime?: string;
+  uptime?: number;
+  memory?: {
+    rss: number;
+    heapTotal: number;
+    heapUsed: number;
+    external: number;
+    arrayBuffers: number;
+  };
 };
 
 export const getPlatform = (): Platform => {
@@ -25,6 +33,8 @@ export const getPlatform = (): Platform => {
       type: 'node',
       platform: `${platform()} ${release()} ${machine()}`,
       runtime: process.version,
+      uptime: Math.floor(process.uptime()),
+      memory: process.memoryUsage(),
     };
   } catch (err) {
     // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"

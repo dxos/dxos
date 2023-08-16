@@ -17,6 +17,7 @@ export type Event = {
 /**
  * Event sink.
  */
+// TODO(burdon): Reconcile with log.trace.
 export class Tracer {
   private readonly _events = new Map<string, Event[]>();
 

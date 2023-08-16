@@ -24,8 +24,8 @@ export const RootContainer = () => {
 
   return (
     <div className='flex w-full h-screen overflow-hidden'>
-      <div className={'flex flex-col w-[180px] overflow-hidden overflow-y-auto bg-gray-100'}>
-        <div className='flex flex-col space-y-4 divide-y'>
+      <div className={'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto bg-gray-100'}>
+        <div className='flex flex-col gap-4 divide-y'>
           {sections.map((section) => (
             <div key={section.id}>
               <div className='flex text-sm pis-4 py-1'>{section.title}</div>
@@ -52,7 +52,7 @@ export const RootContainer = () => {
         <Footer />
       </div>
 
-      <div className='flex flex-1 flex-col overflow-hidden bg-white'>
+      <div className='flex flex-col grow overflow-hidden bg-white'>
         <ErrorBoundary key={pathname}>
           <Suspense>
             <Outlet />

@@ -112,12 +112,12 @@ export const useRoutes = () => {
               element: <NetworkPanel />,
             },
             {
-              path: '/mesh/swarm',
-              element: <SwarmPanel />,
-            },
-            {
               path: '/mesh/signal',
               element: <SignalPanel />,
+            },
+            {
+              path: '/mesh/swarm',
+              element: <SwarmPanel />,
             },
           ],
         },

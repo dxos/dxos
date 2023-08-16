@@ -12,9 +12,9 @@ export const PanelContainer: FC<{ toolbar?: ReactNode; children: ReactNode; clas
   className,
 }) => {
   return (
-    <div className='flex flex-col flex-1 overflow-hidden divide-y'>
+    <div className='flex flex-col grow overflow-hidden'>
       {toolbar}
-      <div className={mx('flex flex-1 flex-col overflow-auto', className)}>{children}</div>
+      <div className={mx('flex flex-col grow overflow-auto', className)}>{children}</div>
     </div>
   );
 };

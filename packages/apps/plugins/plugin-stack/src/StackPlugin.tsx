@@ -53,8 +53,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             return [];
           }
 
-          const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
+          return adapter.createNodes(parent.data, parent, emit);
         },
         actions: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
