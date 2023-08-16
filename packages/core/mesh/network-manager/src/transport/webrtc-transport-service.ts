@@ -21,20 +21,30 @@ import { ComplexMap } from '@dxos/util';
 
 import { WebRTCTransport } from './webrtc-transport';
 
+type TransportState = {
+  transport: WebRTCTransport;
+  stream: Duplex;
+  writeCallbacks: (() => void)[];
+};
+
 export class WebRTCTransportService implements BridgeService {
-  private readonly transports = new ComplexMap<PublicKey, { transport: WebRTCTransport; stream: Duplex }>(
-    PublicKey.hash,
-  );
+  private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
 
   // prettier-ignore
   constructor(
     private readonly _webrtcConfig?: any
-  ) {}
+  ) { }
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
       const duplex: Duplex = new Duplex({
-        read: () => {},
+        read: () => {
+          const callbacks = [...transportState.writeCallbacks];
+          transportState.writeCallbacks.length = 0;
+          for (const cb of callbacks) {
+            cb();
+          }
+        },
         write: function (chunk, _, callback) {
           next({ data: { payload: chunk } });
           callback();
@@ -85,8 +95,15 @@ export class WebRTCTransportService implements BridgeService {
         close();
       });
 
+      const transportState: TransportState = {
+        transport,
+        stream: duplex,
+        writeCallbacks: [],
+      };
+
       ready();
-      this.transports.set(request.proxyId, { transport, stream: duplex });
+
+      this.transports.set(request.proxyId, transportState);
     });
 
     return rpcStream;
@@ -99,7 +116,13 @@ export class WebRTCTransportService implements BridgeService {
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
     invariant(this.transports.has(proxyId));
-    await this.transports.get(proxyId)!.stream.push(payload);
+    const state = this.transports.get(proxyId)!;
+    const bufferHasSpace = state.stream.push(payload);
+    if (!bufferHasSpace) {
+      await new Promise<void>((resolve) => {
+        state.writeCallbacks.push(resolve);
+      });
+    }
   }
 
   async close({ proxyId }: CloseRequest) {

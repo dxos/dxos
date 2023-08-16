@@ -240,6 +240,10 @@ export class Muxer {
     log('Received command', { cmd });
 
     if (this._destroyed || this._destroying) {
+      if (cmd.destroy) {
+        return;
+      }
+
       log.warn('Received command after destroy', { cmd });
       return;
     }
