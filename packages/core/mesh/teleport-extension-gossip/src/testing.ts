@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestConnection, TestPeer as TestPeerBase } from '@dxos/teleport/testing';
 

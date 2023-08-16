@@ -18,6 +18,9 @@
       "path": "../context"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../log"
     },
     {

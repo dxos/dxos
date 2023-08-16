@@ -20,7 +20,7 @@ const LOG_TRANSFORM_CONFIG = {
     },
     {
       function: 'invariant',
-      package: '@dxos/log',
+      package: '@dxos/invariant',
       param_index: 2,
       include_args: true,
       include_call_site: false,

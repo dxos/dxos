@@ -228,6 +228,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/invariant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/keys/package.json",
           "jsonpath": "$.version"
         },

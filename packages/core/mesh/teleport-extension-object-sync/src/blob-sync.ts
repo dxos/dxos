@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { trackLeaks, Trigger, Lock } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
