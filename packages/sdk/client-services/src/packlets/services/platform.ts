@@ -33,7 +33,7 @@ export const getPlatform = (): Platform => {
       type: 'node',
       platform: `${platform()} ${release()} ${machine()}`,
       runtime: process.version,
-      uptime: process.uptime() * 1000,
+      uptime: Math.floor(process.uptime() * 1000),
       memory: process.memoryUsage(),
     };
   } catch (err) {
