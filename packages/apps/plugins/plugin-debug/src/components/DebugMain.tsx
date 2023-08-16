@@ -112,7 +112,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
         <div className='flex grow overflow-auto text-sm'>
-          <SyntaxHighlighter language='json' style={style}>
+          <SyntaxHighlighter language='json' style={style} className='w-full'>
             {JSON.stringify(data, replacer, 2)}
           </SyntaxHighlighter>
         </div>

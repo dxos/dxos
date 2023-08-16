@@ -16,6 +16,7 @@ import { humanize } from '@dxos/util';
 
 import { PanelContainer } from '../../components';
 import { useDevtoolsDispatch } from '../../hooks';
+import { textLink } from '../../styles';
 
 const SpacesPanel: FC = () => {
   const spaces = useSpaces({ all: true });
@@ -52,7 +53,7 @@ const SpacesPanel: FC = () => {
           values: { key },
         },
       }: any) => (
-        <div className='font-mono text-blue-500 cursor-pointer' onClick={() => handleSelect(key)}>
+        <div className={mx('font-mono', textLink)} onClick={() => handleSelect(key)}>
           {value.truncate()}
         </div>
       ),

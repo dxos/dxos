@@ -10,16 +10,12 @@ import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { DetailsTable } from './DetailsTable';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo?: ConnectionInfo;
-  /**
-   * @deprecated
-   */
-  onReturn?: () => void;
+  connection?: ConnectionInfo;
 }
 
 // TODO(burdon): Convert to table.
-export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => {
-  if (!connectionInfo) {
+export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
+  if (!connection) {
     return null;
   }
 
@@ -28,14 +24,14 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
       Header: 'Sent',
       align: 'right',
       Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.toLocaleString()}</span>,
-      width: 40,
+      width: 60,
       accessor: 'bytesSent',
     },
     {
       Header: 'Received',
       align: 'right',
       Cell: ({ value }: any) => <span className='font-mono text-sm'>{value?.toLocaleString()}</span>,
-      width: 40,
+      width: 60,
       accessor: 'bytesReceived',
     },
     {
@@ -49,14 +45,15 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
     <div>
       <DetailsTable
         object={{
-          state: connectionInfo.state,
-          sessionId: connectionInfo.sessionId.toHex(),
-          remotePeerId: connectionInfo.remotePeerId.toHex(),
-          transport: connectionInfo.transport,
-          extensions: connectionInfo.protocolExtensions?.join(','),
+          state: connection.state,
+          sessionId: connection.sessionId.truncate(),
+          remotePeerId: connection.remotePeerId.truncate(),
+          transport: connection.transport ?? 'N/A',
+          extensions: connection.protocolExtensions?.join(',') || 'none',
         }}
       />
-      <Table compact columns={columns} data={connectionInfo.streams ?? []} />
+
+      <Table compact columns={columns} data={connection.streams ?? []} />
     </div>
   );
 };

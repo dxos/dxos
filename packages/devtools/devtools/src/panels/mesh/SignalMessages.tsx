@@ -193,7 +193,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar.Root>
 
-      <div className='flex flex-1 overflow-hidden'>
+      <div className='flex grow overflow-hidden'>
         {view ? <MasterDetailTable columns={view.columns as any} data={filteredMessages} /> : null}
       </div>
     </div>

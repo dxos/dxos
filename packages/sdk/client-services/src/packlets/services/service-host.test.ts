@@ -55,8 +55,8 @@ describe('ClientServicesHost', () => {
     await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
-      signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey,
+      signer: host.context.keyring,
+      issuer: host.context.identityManager.identity!.deviceKey,
     });
 
     // Test if Identity exposes haloSpace key.
@@ -92,8 +92,8 @@ describe('ClientServicesHost', () => {
     await host.services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
-      signer: host._serviceContext.keyring,
-      issuer: host._serviceContext.identityManager.identity!.deviceKey,
+      signer: host.context.keyring,
+      issuer: host.context.identityManager.identity!.deviceKey,
     });
 
     const nonce = new Uint8Array([0, 0, 0, 0]);
@@ -121,7 +121,7 @@ describe('ClientServicesHost', () => {
 
       await host.services.IdentityService?.createIdentity({});
 
-      expect(host._serviceContext.storage.size).to.exist;
+      expect(host.context.storage.size).to.exist;
 
       await asyncTimeout(host.reset(), 1000);
       await host.close();

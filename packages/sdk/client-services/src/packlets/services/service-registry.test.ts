@@ -37,6 +37,7 @@ describe('service registry', () => {
       SystemService: new SystemServiceImpl({
         config: new Config({ runtime: { client: { remoteSource } } }),
         getCurrentStatus: () => SystemStatus.ACTIVE,
+        getDiagnostics: async () => ({}),
         onReset: () => {},
         onUpdateStatus: () => {},
         statusUpdate: new Event(),

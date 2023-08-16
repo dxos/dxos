@@ -20,12 +20,6 @@
       "require": "./dist/lib/node/devtools/index.cjs",
       "node": "./dist/lib/node/devtools/index.cjs"
     },
-    "./diagnostics": {
-      "browser": "./dist/lib/browser/diagnostics/index.mjs",
-      "import": "./dist/lib/browser/diagnostics/index.mjs",
-      "require": "./dist/lib/node/diagnostics/index.cjs",
-      "node": "./dist/lib/node/diagnostics/index.cjs"
-    },
     "./echo": {
       "browser": "./dist/lib/browser/echo/index.mjs",
       "import": "./dist/lib/browser/echo/index.mjs",
@@ -69,9 +63,6 @@
       "devtools": [
         "dist/types/src/devtools/index.d.ts"
       ],
-      "diagnostics": [
-        "dist/types/src/diagnostics/index.d.ts"
-      ],
       "echo": [
         "dist/types/src/echo/index.d.ts"
       ],
@@ -103,6 +94,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
