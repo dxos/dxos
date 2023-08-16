@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Model, ModelFactory } from '@dxos/model-factory';

@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { Writable } from 'node:stream';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -57,18 +58,19 @@ export class WebRTCTransportProxy implements Transport {
           }
         });
 
-        const dataListener = async (data: Uint8Array) => {
-          try {
-            await this._params.bridgeService.sendData({
+        this._params.stream.pipe(new Writable({
+          write: (chunk, _, callback) => {
+            this._params.bridgeService.sendData({
               proxyId: this._proxyId,
-              payload: data
-            });
-          } catch (err: any) {
-            log.catch(err);
-          }
-        };
-        this._params.stream.on('data', dataListener);
-        this._ctx.onDispose(() => { this._params.stream.off('data', dataListener); });
+              payload: chunk
+            }).then(
+              () => callback(),
+              (err: any) => {
+                log.catch(err);
+              }
+            );
+          },
+        }));
       },
       (error) => log.catch(error)
     );

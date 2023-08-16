@@ -16,6 +16,7 @@ import {
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
+  NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpacesPanel,
@@ -106,6 +107,10 @@ export const useRoutes = () => {
         {
           path: '/mesh',
           children: [
+            {
+              path: '/mesh/network',
+              element: <NetworkPanel />,
+            },
             {
               path: '/mesh/signal',
               element: <SignalPanel />,

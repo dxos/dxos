@@ -5,12 +5,12 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { load } from 'js-yaml';
-import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
 import { DevServer, FunctionsManifest, TriggerManager } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
 
@@ -52,7 +52,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
-      assert(config.values.runtime?.agent?.plugins?.functions?.port, 'Port not set.');
+      invariant(config.values.runtime?.agent?.plugins?.functions?.port, 'Port not set.');
       const endpoint = `http://localhost:${config.values.runtime?.agent?.plugins?.functions?.port}`;
       const triggers = new TriggerManager(client, functionsManifest.triggers, { runtime: 'dev', endpoint });
       await triggers.start();

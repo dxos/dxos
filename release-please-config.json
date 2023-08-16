@@ -143,32 +143,12 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/quickstart/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/tasks-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/tasks-app-2/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/templates/hello-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -224,6 +204,11 @@
         {
           "type": "json",
           "path": "packages/common/hypercore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/invariant/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -434,11 +419,6 @@
         {
           "type": "json",
           "path": "packages/devtools/initializers/create-bare/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create-tasks/package.json",
           "jsonpath": "$.version"
         },
         {

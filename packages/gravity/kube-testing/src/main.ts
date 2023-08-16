@@ -74,6 +74,9 @@ const runTransport = () =>
       agents: 2,
       swarmsPerAgent: 1,
       duration: 60_000,
+
+      transport: 'webrtc-proxy',
+
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,

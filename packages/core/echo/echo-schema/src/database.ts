@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { DocumentModel } from '@dxos/document-model';
 import { DatabaseProxy, Item, ItemManager, QueryOptions } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
 import { TextModel } from '@dxos/text-model';

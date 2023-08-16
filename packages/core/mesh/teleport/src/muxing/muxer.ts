@@ -3,11 +3,11 @@
 //
 
 import { Duplex } from 'node:stream';
-import invariant from 'tiny-invariant';
 
 import { scheduleTaskInterval, Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -240,6 +240,10 @@ export class Muxer {
     log('Received command', { cmd });
 
     if (this._destroyed || this._destroying) {
+      if (cmd.destroy) {
+        return;
+      }
+
       log.warn('Received command after destroy', { cmd });
       return;
     }

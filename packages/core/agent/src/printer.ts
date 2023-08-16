@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
 import fs from 'node:fs';
 import { FileHandle } from 'node:fs/promises';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 
 enum FileState {
   INIT = 'INIT',
@@ -29,7 +29,7 @@ export class Printer {
   }
 
   async start() {
-    assert(this.state === FileState.INIT);
+    invariant(this.state === FileState.INIT);
     await this._readToEnd();
   }
 

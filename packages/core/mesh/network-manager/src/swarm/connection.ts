@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { CancelledError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
@@ -92,7 +91,15 @@ export class Connection {
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory,
-  ) {}
+  ) {
+    log.trace('dxos.mesh.connection.construct', {
+      sessionId: this.sessionId,
+      topic: this.topic,
+      localPeerId: this.ownId,
+      remotePeerId: this.remoteId,
+      initiator: this.initiator,
+    });
+  }
 
   get state() {
     return this._state;
@@ -112,6 +119,13 @@ export class Connection {
   async openConnection() {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.mesh.connection.open', {
+      sessionId: this.sessionId,
+      topic: this.topic,
+      localPeerId: this.ownId,
+      remotePeerId: this.remoteId,
+      initiator: this.initiator,
+    });
 
     this._changeState(ConnectionState.CONNECTING);
 

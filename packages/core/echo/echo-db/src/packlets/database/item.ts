@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event, scheduleTask } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { Model, ModelConstructor, ModelMeta, MutationOf, StateMachine, StateOf } from '@dxos/model-factory';
 import { ItemID } from '@dxos/protocols';

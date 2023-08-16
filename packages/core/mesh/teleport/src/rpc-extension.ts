@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
+import { invariant } from '@dxos/invariant';
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
 
 import { ExtensionContext, TeleportExtension } from './teleport';

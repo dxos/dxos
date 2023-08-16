@@ -4,9 +4,9 @@
 
 import { Info, Plus, Trash, X } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
-import invariant from 'tiny-invariant';
 
 import { getSize } from '@dxos/aurora-theme';
+import { invariant } from '@dxos/invariant';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
