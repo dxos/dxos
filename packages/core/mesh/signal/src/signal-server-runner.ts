@@ -36,7 +36,7 @@ export class SignalServerRunner {
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
-  private readonly _port: number;
+  private _port: number;
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
@@ -117,6 +117,8 @@ export class SignalServerRunner {
 
     if (waited >= this._timeout) {
       await this.stop();
+      // Change port to avoid conflicts with other processes.
+      this._port++;
       this._serverProcess = this.startProcess();
       this._startRetries++;
       if (this._startRetries > this._retriesLimit) {
