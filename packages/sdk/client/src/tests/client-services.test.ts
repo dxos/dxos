@@ -3,12 +3,12 @@
 //
 
 import { expect } from 'chai';
-import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
@@ -205,7 +205,7 @@ describe('Client services', () => {
     const trigger = new Trigger<Space>();
     await waitForExpect(() => {
       const guestSpace = client2.getSpace(guestInvitation!.spaceKey!);
-      assert(guestSpace);
+      invariant(guestSpace);
       expect(guestSpace).to.exist;
       trigger.wake(guestSpace);
     });

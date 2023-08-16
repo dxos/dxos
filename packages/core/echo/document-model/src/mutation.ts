@@ -6,8 +6,8 @@
 
 import get from 'lodash.get';
 import set from 'lodash.set';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/invariant';
 import {
   KeyValue,
   ObjectMutation,

@@ -20,6 +20,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../ui/aurora"
     },
     {

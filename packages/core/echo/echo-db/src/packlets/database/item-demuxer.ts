@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';

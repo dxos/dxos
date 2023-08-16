@@ -4,12 +4,12 @@
 
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
-import invariant from 'tiny-invariant';
 
 import { Main } from '@dxos/aurora';
 import { baseSurface, mx } from '@dxos/aurora-theme';
 import { Chessboard, ChessModel, ChessMove, Game } from '@dxos/chess-app';
 import { SpaceProxy } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 
 export const ChessMain = ({ data: { object } }: { data: { space: SpaceProxy; object: Game } }) => {
   const [model, setModel] = useState<ChessModel>();

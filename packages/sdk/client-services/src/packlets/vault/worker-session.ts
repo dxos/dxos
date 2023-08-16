@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
 import {
   iframeServiceBundle,
@@ -11,6 +9,7 @@ import {
   PROXY_CONNECTION_TIMEOUT,
   workerServiceBundle,
 } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
