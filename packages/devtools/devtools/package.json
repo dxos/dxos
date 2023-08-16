@@ -18,6 +18,8 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-spore": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/mosaic": "workspace:*",

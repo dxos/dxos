@@ -39,6 +39,10 @@ export class Gossip {
 
   constructor(private readonly _params: GossipParams) {}
 
+  get localPeerId() {
+    return this._params.localPeerId;
+  }
+
   getConnections() {
     return Array.from(this._connections.keys());
   }
