@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { Config, ConfigProto } from '@dxos/config';
 import { credentialTypeFilter } from '@dxos/credentials';
 import { DocumentModel, DocumentModelState } from '@dxos/document-model';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
