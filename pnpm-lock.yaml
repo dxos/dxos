@@ -4786,6 +4786,7 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-pipeline': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -4813,6 +4814,7 @@ importers:
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging

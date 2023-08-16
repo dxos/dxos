@@ -226,12 +226,27 @@ export class Peer {
           this._callbacks.onConnected();
 
           this._connectionLimiter.doneConnecting(sessionId);
+          log.trace('dxos.mesh.connection.connected', {
+            topic: this.topic,
+            localPeerId: this.localPeerId,
+            remotePeerId: this.id,
+            sessionId,
+            initiator,
+          });
           break;
         }
 
         case ConnectionState.CLOSED: {
           log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           invariant(this.connection === connection, 'Connection mismatch (race condition).');
+
+          log.trace('dxos.mesh.connection.closed', {
+            topic: this.topic,
+            localPeerId: this.localPeerId,
+            remotePeerId: this.id,
+            sessionId,
+            initiator,
+          });
 
           if (this._lastConnectionTime && this._lastConnectionTime + CONNECTION_COUNTS_STABLE_AFTER < Date.now()) {
             // If we're closing the connection, and it has been connected for a while, reset the backoff.
@@ -260,6 +275,14 @@ export class Peer {
     });
     connection.errors.handle((err) => {
       log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, err });
+      log.trace('dxos.mesh.connection.error', {
+        topic: this.topic,
+        localPeerId: this.localPeerId,
+        remotePeerId: this.id,
+        sessionId,
+        initiator,
+        err,
+      });
 
       // Calls `onStateChange` with CLOSED state.
       void this.closeConnection();
