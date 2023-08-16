@@ -4,12 +4,13 @@
 
 import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader } from '../analysys';
+import { LogReader, SerializedLogEntry, getReader } from '../analysys';
 import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { AgentEnv } from './agent-env';
@@ -319,7 +320,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       ctx,
       async () => {
         await env.syncBarrier(`iteration-${testCounter}`);
-        await testRun();
+        await asyncTimeout(testRun(), spec.duration);
         testCounter++;
       },
       spec.repeatInterval,
@@ -339,26 +340,22 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();
     const testStats = new Map<string, SerializedLogEntry<TestStatsLog>[]>();
 
-    for await (const entry of reader) {
+    reader.forEach((entry: SerializedLogEntry<any>) => {
       switch (entry.message) {
-        case 'dxos.mesh.teleport.stats':
-          {
-            const { localPeerId, remotePeerId } = entry.context as TeleportStatsLog;
-            const key = `connection-${PublicKey.from(localPeerId).truncate()}-${PublicKey.from(
-              remotePeerId,
-            ).truncate()}`;
-            defaultMap(muxerStats, key, []).push(entry);
-          }
+        case 'dxos.mesh.teleport.stats': {
+          const { localPeerId, remotePeerId } = entry.context as TeleportStatsLog;
+          const key = `connection-${PublicKey.from(localPeerId).truncate()}-${PublicKey.from(remotePeerId).truncate()}`;
+          defaultMap(muxerStats, key, []).push(entry);
           break;
-        case 'dxos.test.stream-stats':
-          {
-            const { from, to } = entry.context as TestStatsLog;
-            const key = `stream-${PublicKey.from(from).truncate()}-${PublicKey.from(to).truncate()}`;
-            defaultMap(testStats, key, []).push(entry);
-          }
+        }
+        case 'dxos.test.stream-stats': {
+          const { from, to } = entry.context as TestStatsLog;
+          const key = `stream-${PublicKey.from(from).truncate()}-${PublicKey.from(to).truncate()}`;
+          defaultMap(testStats, key, []).push(entry);
           break;
+        }
       }
-    }
+    });
 
     let colorIdx = 0;
     showPng(
@@ -407,6 +404,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         options: {},
       }),
     );
+
+    //
+    // Connections.
+    //
+    return analyzeConnections(reader);
   }
 }
 
@@ -425,4 +427,126 @@ type TestStatsLog = {
   receiveErrors: number;
   from: string;
   to: string;
+};
+
+type ConnectionsStats = {
+  peerId: string;
+  successful: number;
+  failed: number;
+  maxConcurrentInits: number;
+};
+
+type ConnectionEntry = {
+  sessionId: string;
+  topic: string;
+  localPeerId: string;
+  remotePeerId: string;
+  initiator: string;
+  agentId: string;
+  initiate: number;
+  connected: number;
+  error: number;
+  closed: number;
+};
+
+const analyzeConnections = (reader: LogReader): ConnectionsStats[] => {
+  /**
+   * peerId -> sessionId -> ConnectionEntry
+   */
+  const peerConnections = new Map<string, Map<string, ConnectionEntry>>();
+
+  reader.forEach((entry: SerializedLogEntry<any>) => {
+    let connections = peerConnections.get(entry.context.agentId);
+    if (!connections) {
+      connections = new Map<string, ConnectionEntry>();
+      peerConnections.set(entry.context.agentId, connections);
+    }
+
+    switch (entry.message) {
+      case 'dxos.mesh.connection.construct': {
+        connections.set((entry.context as ConnectionEntry).sessionId, entry.context);
+        break;
+      }
+      case 'dxos.mesh.connection.open': {
+        const connection = connections.get((entry.context as ConnectionEntry).sessionId);
+        invariant(connection, 'connection not found');
+        connection.initiate = entry.timestamp;
+        break;
+      }
+      case 'dxos.mesh.connection.error': {
+        const connection = connections.get((entry.context as ConnectionEntry).sessionId);
+        invariant(connection, 'connection not found');
+        connection.error = entry.timestamp;
+        break;
+      }
+      case 'dxos.mesh.connection.closed': {
+        const connection = connections.get((entry.context as ConnectionEntry).sessionId);
+        invariant(connection, 'connection not found');
+        connection.closed = entry.timestamp;
+        break;
+      }
+      case 'dxos.mesh.connection.connected': {
+        const connection = connections.get((entry.context as ConnectionEntry).sessionId);
+        invariant(connection, 'connection not found');
+        connection.connected = entry.timestamp;
+        break;
+      }
+    }
+  });
+
+  const perPeerConnectionsStats: ConnectionsStats[] = [];
+
+  peerConnections.forEach((connections, peerId) => {
+    const stats: ConnectionsStats = {
+      peerId,
+      successful: 0,
+      failed: 0,
+      maxConcurrentInits: 0,
+    };
+
+    {
+      const minTimestamp = Math.min(
+        ...Array.from(connections.values()).map((entry) => entry.initiate ?? Infinity),
+        Infinity,
+      );
+      const maxTimestamp = Math.max(
+        ...Array.from(connections.values())
+          .map((entry) => [entry.closed ?? 0, entry.error ?? 0, entry.connected ?? 0])
+          .flat(),
+        0,
+      );
+
+      let concurrentInits: number[] | undefined;
+      try {
+        concurrentInits = Array(maxTimestamp - minTimestamp).fill(0);
+      } catch (e) {
+        log.error('error', { minTimestamp, maxTimestamp, connections });
+      }
+
+      connections.forEach((entry) => {
+        if (entry.error && !entry.connected && entry.initiate) {
+          stats.failed++;
+        }
+        if (entry.connected) {
+          stats.successful++;
+        }
+
+        concurrentInits?.forEach((_, idx) => {
+          if (
+            idx >= entry.initiate - minTimestamp &&
+            idx <
+              Math.min(entry.closed ?? Infinity, entry.connected ?? Infinity, entry.error ?? Infinity) - minTimestamp
+          ) {
+            concurrentInits![idx]++;
+          }
+        });
+      });
+      stats.maxConcurrentInits = Math.max(...(concurrentInits ?? []), 0);
+    }
+
+    perPeerConnectionsStats.push(stats);
+  });
+  log.info('connections stats', { connections: perPeerConnectionsStats });
+
+  return perPeerConnectionsStats;
 };
