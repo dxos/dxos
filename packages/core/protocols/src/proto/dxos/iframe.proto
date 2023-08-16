@@ -29,8 +29,11 @@ enum ShellDisplay {
 }
 
 message AppContextRequest {
+  /// The display mode that shell should use
   optional ShellDisplay display = 1;
+  /// The key of the joined space
   optional dxos.keys.PublicKey space_key = 2;
+  /// The invitation code which has become invalidated
   optional string invalidated_invitation_code = 3;
 }
 
