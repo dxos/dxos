@@ -185,19 +185,25 @@ export class SpacesServiceImpl implements SpacesService {
         targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
         totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
       },
-      members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
-        identity: {
-          identityKey: member.key,
-          profile: {
-            displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+      members: Array.from(space.inner.spaceState.members.values()).map((member) => {
+        const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+        const isMe = this._identityManager.identity?.identityKey.equals(member.key);
+
+        if (isMe) {
+          peers.push(space.presence.getLocalState());
+        }
+
+        return {
+          identity: {
+            identityKey: member.key,
+            profile: {
+              displayName: member.assertion.profile?.displayName ?? humanize(member.key),
+            },
           },
-        },
-        presence:
-          this._identityManager.identity?.identityKey.equals(member.key) ||
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
-      })),
+          presence: isMe || peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
+          peerStates: peers,
+        };
+      }),
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
