@@ -171,6 +171,24 @@ export const JoinPanel = ({
   useEffect(() => {
     const subscription = joinService.subscribe((state) => {
       log('[state]', state);
+      if (state.event.type === 'connectingSpaceInvitation') {
+        console.log('[posting message]');
+        window.parent.postMessage(
+          {
+            channel: 'dxos:shell',
+            payload: 'redeemedSpaceInvitation',
+          } /* todo(thure): how get origin? */,
+        );
+      }
+      if (state.event.type === 'connectingHaloInvitation') {
+        console.log('[posting message]');
+        window.parent.postMessage(
+          {
+            channel: 'dxos:shell',
+            payload: 'redeemedDeviceInvitation',
+          } /* todo(thure): how get origin? */,
+        );
+      }
     });
 
     return subscription.unsubscribe;

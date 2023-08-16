@@ -36,6 +36,15 @@ export type IFrameClientServicesProxyOptions = {
   timeout?: number;
 };
 
+const DEVICE_INVITATION_PARAM_NAME = 'deviceInvitationCode';
+const SPACE_INVITATION_PARAM_NAME = 'spaceInvitationCode';
+
+const clearSearchParam = (name: string) => {
+  const url = new URL(location.href);
+  url.searchParams.delete(name);
+  history.replaceState({}, document.title, url);
+};
+
 /**
  * Proxy to host client service via iframe.
  */
@@ -102,14 +111,20 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       },
       onMessage: async (event) => {
         const { channel, payload } = event.data;
-        if (channel !== this._vault) {
-          return;
-        }
-
-        if (payload === 'loaded') {
-          loaded.wake();
-        } else if (payload?.command === 'init') {
-          ready.wake(payload.port);
+        console.log('[received message]', channel, payload);
+        if (channel === this._vault) {
+          if (payload === 'loaded') {
+            loaded.wake();
+          } else if (payload?.command === 'init') {
+            ready.wake(payload.port);
+          }
+        } else if (channel === this._shell) {
+          if (payload.command === 'redeemedSpaceInvitation') {
+            clearSearchParam(SPACE_INVITATION_PARAM_NAME);
+          }
+          if (payload === 'redeemedDeviceInvitation') {
+            clearSearchParam(DEVICE_INVITATION_PARAM_NAME);
+          }
         }
       },
     });
@@ -183,13 +198,13 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.
     const searchParams = new URLSearchParams(window.location.search);
-    const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+    const spaceInvitationCode = searchParams.get(SPACE_INVITATION_PARAM_NAME);
     if (spaceInvitationCode) {
       await this._shellController.setLayout(ShellLayout.JOIN_SPACE, { invitationCode: spaceInvitationCode });
       return;
     }
 
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    const deviceInvitationCode = searchParams.get(DEVICE_INVITATION_PARAM_NAME);
     if (deviceInvitationCode) {
       await this._shellController.setLayout(ShellLayout.INITIALIZE_IDENTITY, {
         invitationCode: deviceInvitationCode ?? undefined,
