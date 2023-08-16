@@ -45,8 +45,23 @@ message ControlMetricsResponse {
   optional bool recording = 1;
 }
 
+// TODO(burdon): Rename Trace?
 message QueryMetricsRequest {
   optional int32 interval = 1;
+}
+
+message QueryMetricsResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  Metrics metrics = 2;
+}
+
+message QueryDiagnosticsRequest {
+  optional int32 interval = 1;
+}
+
+message QueryDiagnosticsResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  google.protobuf.Struct diagnostics = 2;
 }
 
 // NOTE: Keep aligned with LogLevel in @dxos/log.
@@ -93,6 +108,7 @@ message LogEntry {
 
 service LoggingService {
   rpc ControlMetrics(ControlMetricsRequest) returns (ControlMetricsResponse);
-  rpc QueryMetrics(QueryMetricsRequest) returns (stream Metrics);
+  rpc QueryMetrics(QueryMetricsRequest) returns (stream QueryMetricsResponse);
+  rpc QueryDiagnostics(QueryDiagnosticsRequest) returns (stream QueryDiagnosticsResponse);
   rpc QueryLogs(QueryLogsRequest) returns (stream LogEntry);
 }

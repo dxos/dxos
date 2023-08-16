@@ -5,7 +5,8 @@
 import invariant from 'tiny-invariant';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { Space } from '@dxos/client-protocol';
+import { ClientServices, Space } from '@dxos/client-protocol';
+import { Stream } from '@dxos/codec-protobuf';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,6 +23,7 @@ import { SubscribeToFeedsResponse, SubscribeToSpacesResponse } from '@dxos/proto
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from '../client';
+import { DXOS_VERSION } from '../version';
 import { getPlatform, Platform } from './platform';
 import { jsonStringify, JsonStringifyOptions } from './util';
 
@@ -69,107 +71,105 @@ export type DiagnosticOptions = JsonStringifyOptions;
 
 // TODO(burdon): Move to ClientServices.
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
-  const identity = client.halo.identity.get();
-  log('diagnostics...', { identity });
+  const clientServices: Partial<ClientServices> = client.services.services;
 
+  const config = await clientServices.SystemService!.getConfig();
   const data: Diagnostics = {
     created: new Date().toISOString(),
     platform: getPlatform(),
     client: {
-      version: client.version,
+      version: DXOS_VERSION,
       storage: {
         version: STORAGE_VERSION,
       },
     },
 
-    config: client.config.values,
+    config,
   };
 
-  // Trace metrics.
-  {
-    invariant(client.services.services.SystemService, 'SystemService is not available.');
-    const stream = client.services.services.LoggingService!.queryMetrics({});
-    const trigger = new Trigger<Metrics>();
-    stream?.subscribe(async (metrics) => trigger.wake(metrics!));
-    data.metrics = await asyncTimeout(trigger.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
-      log.warn(err.message);
-      return undefined;
-    });
-  }
+  // Identity
+  invariant(clientServices.IdentityService, 'IdentityService is not available.');
+  const { identity } = await getOnceFromStream(clientServices.IdentityService.queryIdentity());
+  data.identity = identity;
 
-  if (identity) {
-    const host = client.services.services.DevtoolsHost!;
-    Object.assign(data, {
-      identity,
-      devices: client.halo.devices.get(),
-    });
+  // TODO(burdon): Trace metrics.
+  // {
+  //   invariant(clientServices.LoggingService, 'LoggingService is not available.');
+  //   const stream = clientServices.LoggingService!.queryMetrics({});
+  //   const trigger = new Trigger<Metrics>();
+  //   stream?.subscribe(async (metrics) => trigger.wake(metrics!));
+  //   data.metrics = await asyncTimeout(trigger.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
+  //     log.warn(err.message);
+  //     return undefined;
+  //   });
+  // }
+
+  if (data.identity) {
+    // Devices.
+    invariant(clientServices.DevicesService, 'DevicesService is not available.');
+    const { devices } = await getOnceFromStream(clientServices.DevicesService.queryDevices());
+    data.devices = devices;
 
     // Spaces.
-    {
-      const done = new Trigger();
-      const stream = host.subscribeToSpaces({});
-      stream.subscribe(async ({ spaces = [] }) => {
-        data.spaces = await Promise.all(spaces.map(async (info) => await getSpaceStats(client, info)));
-        done.wake();
-      });
+    invariant(clientServices.DevtoolsHost, 'DevtoolsHost is not available.');
+    const { spaces = [] } = await getOnceFromStream(clientServices.DevtoolsHost.subscribeToSpaces({}));
+    data.spaces = await Promise.all(
+      spaces.map(async (info) => {
+        const type = info.key.equals(identity!.spaceKey!) ? 'halo' : 'echo';
+        const stats: SpaceStats = { type, info };
+        if (type === 'echo' && info.isOpen) {
+          await getSpaceStats(stats, client, clientServices, info);
+        }
 
-      await done.wait();
-      stream.close();
-    }
+        return stats;
+      }),
+    );
 
     // Feeds.
-    {
-      const done = new Trigger();
-      const stream = host.subscribeToFeeds({});
-      stream.subscribe(({ feeds = [] }) => {
-        data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
-        done.wake();
-      });
-
-      await done.wait();
-      stream.close();
-    }
+    invariant(clientServices.DevtoolsHost, 'DevtoolsHost is not available.');
+    const { feeds = [] } = await getOnceFromStream(clientServices.DevtoolsHost.subscribeToFeeds({}));
+    data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
   }
 
+  // TODO(burdon): Move out of this function.
   return jsonStringify(data, options) as Diagnostics;
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.
-const getSpaceStats = async (client: Client, info: SubscribeToSpacesResponse.SpaceInfo): Promise<SpaceStats> => {
-  const identity = client.halo.identity.get();
-  const type = info.key.equals(identity!.spaceKey!) ? 'halo' : 'echo';
-  const stats: SpaceStats = { type, info };
+const getSpaceStats = async (
+  stats: SpaceStats,
+  client: Client,
+  clientServices: Partial<ClientServices>,
+  info: SubscribeToSpacesResponse.SpaceInfo,
+): Promise<SpaceStats> => {
+  // TODO(burdon): Factor out client.Space deps.
+  const space = client.getSpace(info.key);
+  invariant(space);
+  await asyncTimeout(space.waitUntilReady(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
+    log.warn(err.message);
+  });
 
-  // TODO(burdon): Process HALO pipeline also.
-  if (type === 'echo' && info.isOpen) {
-    const space = client.getSpace(info.key);
-    invariant(space);
-    await asyncTimeout(space.waitUntilReady(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
-      log.warn('Space takes to long to get ready.s');
-    });
+  // TODO(burdon): Other stats from internal.data?
+  Object.assign(stats, {
+    properties: {
+      name: space.properties.name,
+    },
+    db: {
+      objects: space.db.objects.length,
+    },
+    metrics: space.internal.data.metrics,
+    epochs: await getEpochs(clientServices.SpacesService!, space),
+    members: space?.members.get(),
+    feeds: {
+      control: space.internal.data.pipeline?.controlFeeds ?? [],
+      data: space.internal.data.pipeline?.dataFeeds ?? [],
+    },
+  } satisfies Partial<SpaceStats>);
 
-    // TODO(burdon): Other stats from internal.data.
-    Object.assign(stats, {
-      properties: {
-        name: space.properties.name,
-      },
-      metrics: space.internal.data.metrics,
-      db: {
-        objects: space.db.objects.length,
-      },
-      epochs: await getEpochs(client.services.services.SpacesService!, space),
-      members: space?.members.get(),
-      feeds: {
-        control: space.internal.data.pipeline?.controlFeeds ?? [],
-        data: space.internal.data.pipeline?.dataFeeds ?? [],
-      },
-    } satisfies Partial<SpaceStats>);
-
-    // TODO(burdon): Factor out.
-    if (stats.metrics) {
-      const { open, ready } = stats.metrics;
-      stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
-    }
+  // TODO(burdon): Factor out.
+  if (stats.metrics) {
+    const { open, ready } = stats.metrics;
+    stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
   }
 
   return stats;
@@ -180,6 +180,8 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
   const currentEpoch = space.internal.data.pipeline!.currentEpoch;
   if (currentEpoch) {
     const done = new Trigger();
+
+    // Process credentials until we find the latest epoch.
     const stream = service.queryCredentials({ spaceKey: space.key });
     stream.subscribe(async (credential) => {
       switch (credential.subject.assertion['@type']) {
@@ -196,10 +198,23 @@ const getEpochs = async (service: SpacesService, space: Space): Promise<SpaceSta
     });
 
     await asyncTimeout(done.wait(), DEFAULT_DIAGNOSTICS_TIMEOUT).catch((err) => {
-      log.warn('Epochs take to long to query.');
+      log.warn(err.message);
     });
+
     stream.close();
   }
 
   return epochs;
+};
+
+// TODO(burdon): Factor out; timeout?
+const getOnceFromStream = async <T>(stream: Stream<T>) => {
+  const done = new Trigger<T>();
+  stream.subscribe(async (value: T) => {
+    done.wake(value);
+  });
+
+  const result = await done.wait();
+  stream.close();
+  return result;
 };

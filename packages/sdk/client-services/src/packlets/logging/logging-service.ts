@@ -12,7 +12,10 @@ import {
   QueryLogsRequest,
   ControlMetricsRequest,
   ControlMetricsResponse,
+  QueryDiagnosticsRequest,
+  QueryDiagnosticsResponse,
   QueryMetricsRequest,
+  QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify, numericalValues, tracer } from '@dxos/util';
 
@@ -46,7 +49,7 @@ export class LoggingServiceImpl implements LoggingService {
     return { recording: tracer.recording };
   }
 
-  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<Metrics> {
+  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
     const getNumericalValues = (key: string) => {
       const events = tracer.get(key) ?? [];
@@ -71,7 +74,10 @@ export class LoggingServiceImpl implements LoggingService {
           ].filter(Boolean) as Metrics.KeyPair[],
         };
 
-        next(metrics);
+        next({
+          timestamp: new Date(),
+          metrics,
+        });
       };
 
       update();
@@ -79,6 +85,16 @@ export class LoggingServiceImpl implements LoggingService {
       return () => {
         clearInterval(i);
       };
+    });
+  }
+
+  // TODO(burdon): Move from client.
+  queryDiagnostics({ interval = 5_000 }: QueryDiagnosticsRequest): Stream<QueryDiagnosticsResponse> {
+    return new Stream(({ next }) => {
+      next({
+        timestamp: new Date(),
+        diagnostics: {},
+      });
     });
   }
 
