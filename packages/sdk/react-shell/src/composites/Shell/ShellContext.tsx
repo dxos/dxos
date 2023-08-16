@@ -153,7 +153,9 @@ export const ShellProvider = ({
     }
 
     return shellRuntime.contextUpdate.on(({ display, spaceKey }) => {
-      setDisplay(display);
+      if (display) {
+        setDisplay(display);
+      }
       onJoinedSpace?.(spaceKey);
     });
   }, [shellRuntime]);

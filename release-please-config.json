@@ -11,6 +11,7 @@
       "pull-request-title-pattern": "chore: release v${version}",
       "extra-files": [
         "packages/sdk/client/src/version.ts",
+        "packages/sdk/client-services/src/version.ts",
         {
           "type": "json",
           "path": "docs/package.json",
