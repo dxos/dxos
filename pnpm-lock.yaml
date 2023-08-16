@@ -1477,183 +1477,6 @@ importers:
       react: 18.2.0
       vite: 4.3.9
 
-  packages/apps/quickstart:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/cli': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addon-essentials': ^7.0.6
-      '@storybook/addon-interactions': ^7.0.6
-      '@storybook/addon-links': ^7.0.6
-      '@storybook/builder-vite': ^7.0.6
-      '@storybook/core-server': ^7.0.6
-      '@storybook/mdx2-csf': ^1.0.0
-      '@storybook/react': ^7.0.6
-      '@storybook/react-vite': ^7.0.6
-      '@types/node': ^18.11.9
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      autoprefixer: ^10.4.12
-      postcss: ^8.4.21
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      tailwindcss: ~3.3.2
-      typescript: ^5.0.4
-      vite: ^4.3.9
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/cli': link:../../devtools/cli
-      '@storybook/addon-essentials': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-interactions': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-links': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 7.0.7_2gs4ymahx52s2pmgq265ylhxyq
-      '@storybook/core-server': 7.0.7
-      '@storybook/mdx2-csf': 1.0.0
-      '@storybook/react': 7.0.7_tvrvbu6r5w7oyqiu4bvze3slou
-      '@storybook/react-vite': 7.0.7_ywllpln6eimhzafvge634225tu
-      '@types/node': 18.11.9
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.1.0_vite@4.3.9
-      autoprefixer: 10.4.13_postcss@8.4.21
-      postcss: 8.4.21
-      tailwindcss: 3.3.2
-      typescript: 5.0.4
-      vite: 4.3.9_@types+node@18.11.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
-      workbox-window: 6.5.4
-
-  packages/apps/tasks-app:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/echo-typegen': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-shell': workspace:*
-      '@dxos/sentry': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@sentry/react': ^7.41.0
-      '@sentry/vite-plugin': ^0.7.2
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      vite: ^4.3.9
-      vite-plugin-pwa: ^0.14.1
-      workbox-window: ^6.5.4
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/log': link:../../common/log
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-shell': link:../../sdk/react-shell
-      '@dxos/sentry': link:../../common/sentry
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      '@sentry/react': 7.42.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-typegen': link:../../core/echo/echo-typegen
-      '@sentry/vite-plugin': 0.7.2
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      vite: 4.3.9
-      vite-plugin-pwa: 0.14.1_hjemcocyspwkenofjo4wnksrci
-      workbox-window: 6.5.4
-
-  packages/apps/tasks-app-2:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/cli': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-schema': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      '@storybook/addon-essentials': ^7.0.6
-      '@storybook/addon-interactions': ^7.0.6
-      '@storybook/addon-links': ^7.0.6
-      '@storybook/builder-vite': ^7.0.6
-      '@storybook/core-server': ^7.0.6
-      '@storybook/mdx2-csf': ^1.0.0
-      '@storybook/react': ^7.0.6
-      '@storybook/react-vite': ^7.0.6
-      '@types/node': ^18.11.9
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^3.0.1
-      autoprefixer: ^10.4.12
-      postcss: ^8.4.21
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      tailwindcss: ~3.3.2
-      typescript: ^5.0.4
-      vite: ^4.3.9
-    dependencies:
-      '@dxos/aurora': link:../../ui/aurora
-      '@dxos/aurora-theme': link:../../ui/aurora-theme
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-schema': link:../../core/echo/echo-schema
-      '@dxos/react-appkit': link:../../ui/react-appkit
-      '@dxos/react-client': link:../../sdk/react-client
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@dxos/cli': link:../../devtools/cli
-      '@storybook/addon-essentials': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-interactions': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/addon-links': 7.0.7_biqbaboplfbrettd7655fr4n2y
-      '@storybook/builder-vite': 7.0.7_2gs4ymahx52s2pmgq265ylhxyq
-      '@storybook/core-server': 7.0.7
-      '@storybook/mdx2-csf': 1.0.0
-      '@storybook/react': 7.0.7_tvrvbu6r5w7oyqiu4bvze3slou
-      '@storybook/react-vite': 7.0.7_ywllpln6eimhzafvge634225tu
-      '@types/node': 18.11.9
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 3.0.1_vite@4.3.9
-      autoprefixer: 10.4.13_postcss@8.4.21
-      postcss: 8.4.21
-      tailwindcss: 3.3.2
-      typescript: 5.0.4
-      vite: 4.3.9_@types+node@18.11.9
-
   packages/apps/templates/bare-template:
     specifiers:
       '@dxos/plate': workspace:*
@@ -1688,35 +1511,6 @@ importers:
       postcss: 8.4.21
       tailwindcss: 3.3.2
     devDependencies:
-      typescript: 5.0.4
-
-  packages/apps/templates/tasks-template:
-    specifiers:
-      '@dxos/aurora': workspace:*
-      '@dxos/aurora-theme': workspace:*
-      '@dxos/bare-template': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/plate': workspace:*
-      '@dxos/react-appkit': workspace:*
-      '@dxos/react-client': workspace:*
-      '@phosphor-icons/react': ^2.0.5
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-router-dom: ^6.4.0
-      typescript: ^5.0.4
-    dependencies:
-      '@dxos/bare-template': link:../bare-template
-      '@dxos/plate': link:../../../common/plate
-    devDependencies:
-      '@dxos/aurora': link:../../../ui/aurora
-      '@dxos/aurora-theme': link:../../../ui/aurora-theme
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/react-appkit': link:../../../ui/react-appkit
-      '@dxos/react-client': link:../../../sdk/react-client
-      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       typescript: 5.0.4
 
   packages/apps/todomvc:
@@ -3199,7 +2993,6 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
-      '@dxos/tasks-template': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@oclif/core': ^2.9.4
@@ -3252,7 +3045,6 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
-      '@dxos/tasks-template': link:../../apps/templates/tasks-template
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/util': link:../../common/util
       '@oclif/core': 2.9.4_d2gyhxeuxd6tnmgqdyixls47tq
@@ -3500,19 +3292,6 @@ importers:
       typescript: ^5.0.4
     dependencies:
       '@dxos/bare-template': link:../../../apps/templates/bare-template
-      minimist: 1.2.8
-    devDependencies:
-      '@types/minimist': 1.2.2
-      typescript: 5.0.4
-
-  packages/devtools/initializers/create-tasks:
-    specifiers:
-      '@dxos/tasks-template': workspace:*
-      '@types/minimist': ^1.2.2
-      minimist: ^1.2.7
-      typescript: ^5.0.4
-    dependencies:
-      '@dxos/tasks-template': link:../../../apps/templates/tasks-template
       minimist: 1.2.8
     devDependencies:
       '@types/minimist': 1.2.2
