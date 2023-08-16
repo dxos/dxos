@@ -167,6 +167,7 @@ class Toolbox {
           'extra-files': [
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
+            'packages/sdk/client-services/src/version.ts',
             ...this.projects
               .sort((projectA, projectB) => projectA.path.localeCompare(projectB.path))
               .map((project) => ({

@@ -27,7 +27,7 @@ import { fromAgent } from '@dxos/client/services';
 import { ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { log, LogLevel } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
@@ -48,6 +48,8 @@ import {
   selectSpace,
   waitForSpace,
 } from './util';
+
+log.config({ filter: process.env.LOG_FILTER ?? LogLevel.ERROR });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 
@@ -166,7 +168,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   done() {
-    log('ok');
+    this.log('ok');
   }
 
   /**
@@ -196,7 +198,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     {
       if (group === 'dxos') {
-        log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
+        this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
       }
 
       await showTelemetryBanner(DX_DATA);

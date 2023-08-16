@@ -317,6 +317,7 @@ export class DatabaseProxy {
     }
   }
 
+  // TODO(burdon): Add saving callback.
   async flush({ timeout }: { timeout?: number } = {}) {
     const promise = Promise.all(Array.from(this._pendingBatches.values()).map((batch) => batch.waitToBeProcessed()));
     if (timeout) {

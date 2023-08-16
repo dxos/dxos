@@ -245,7 +245,7 @@ const StoragePanel = () => {
             Refresh
           </Toolbar.Button>
 
-          <div className='flex-1' />
+          <div className='grow' />
           <Toolbar.Button
             onClick={async () => {
               await services?.SystemService.reset();
@@ -262,7 +262,7 @@ const StoragePanel = () => {
       </div>
 
       {selectedValue && (
-        <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
+        <div className='flex flex-col grow w-2/3 overflow-auto'>
           {selectedValue.kind === 'blob' && (
             <>
               <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>

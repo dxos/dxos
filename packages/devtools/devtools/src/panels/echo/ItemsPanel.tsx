@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { TableColumn } from '@dxos/mosaic';
 import { PublicKey } from '@dxos/react-client';
 import { TypedObject, useQuery } from '@dxos/react-client/echo';
@@ -12,6 +13,7 @@ import { TypedObject, useQuery } from '@dxos/react-client/echo';
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
+import { textLink } from '../../styles';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -33,10 +35,9 @@ const textFilter = (text?: string) => {
 const columns: TableColumn<TypedObject>[] = [
   {
     Header: 'Id',
-    width: 60,
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
-    accessor: (item) => {
-      const id = item.id;
+    width: 80,
+    Cell: ({ value }: any) => <div className={mx('font-mono', textLink)}>{value}</div>,
+    accessor: ({ id }) => {
       return `${PublicKey.from(id).truncate()}`;
     },
   },

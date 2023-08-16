@@ -95,6 +95,10 @@ export class ForeverDaemon implements Daemon {
           options?.metrics ? '--metrics' : undefined,
           options?.config ? `--config=${options.config}` : undefined,
         ].filter(Boolean) as string[],
+        // TODO(burdon): Make optional.
+        env: {
+          LOG_FILTER: process.env.LOG_FILTER,
+        },
         uid: profile,
         max: 0,
         logFile, // Forever daemon process.

@@ -20,6 +20,7 @@ import { ComplexSet, humanize } from '@dxos/util';
 import { DetailsTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../hooks';
+import { textLink } from '../../styles';
 
 const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -90,9 +91,8 @@ const SpaceInfoPanel: FC = () => {
           </Toolbar.Button>
         </Toolbar.Root>
       }
-      className='overflow-auto'
     >
-      <div className='flex flex-col flex-1 overflow-auto divide-y space-y-2'>
+      <div className='flex flex-col'>
         {object && <DetailsTable object={object} />}
         <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
       </div>
@@ -124,14 +124,14 @@ const columns: TableColumn<PipelineTableRow>[] = [
       };
 
       return (
-        <a className='font-mono text-blue-800 cursor-pointer' onClick={onClick}>
+        <a className={mx('font-mono', textLink)} onClick={onClick}>
           {value}
         </a>
       );
     },
     accessor: (block) => {
       const feedKey = block.feedKey;
-      return `${feedKey.truncate()}`;
+      return feedKey.truncate();
     },
   },
   {
