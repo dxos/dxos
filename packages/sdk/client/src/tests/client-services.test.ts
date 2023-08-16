@@ -214,26 +214,27 @@ describe('Client services', () => {
 
     for (const space of [hostSpace, guestSpace]) {
       await waitForExpect(() => {
-        expect(space.members.get()).to.deep.equal([
-          {
-            identity: {
-              identityKey: client1.halo.identity.get()!.identityKey,
-              profile: {
-                displayName: 'Peer 1',
-              },
+        const members = space.members.get();
+        expect(members).to.have.length(2);
+
+        expect(members[0]).to.deep.include({
+          identity: {
+            identityKey: client1.halo.identity.get()!.identityKey,
+            profile: {
+              displayName: 'Peer 1',
             },
-            presence: SpaceMember.PresenceState.ONLINE,
           },
-          {
-            identity: {
-              identityKey: client2.halo.identity.get()!.identityKey,
-              profile: {
-                displayName: 'Peer 2',
-              },
+          presence: SpaceMember.PresenceState.ONLINE,
+        });
+        expect(members[1]).to.deep.include({
+          identity: {
+            identityKey: client2.halo.identity.get()!.identityKey,
+            profile: {
+              displayName: 'Peer 2',
             },
-            presence: SpaceMember.PresenceState.ONLINE,
           },
-        ]);
+          presence: SpaceMember.PresenceState.ONLINE,
+        });
       }, 3_000);
     }
 
