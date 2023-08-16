@@ -410,6 +410,7 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
           ...halo,
           invitationObservable,
           invitationSubscribable: getInvitationSubscribable('Halo', invitationObservable),
+          unredeemedCode: undefined,
         };
       } else {
         return halo;
@@ -428,6 +429,7 @@ const useJoinMachine = (client: Client, options?: Parameters<typeof useMachine<J
           ...space,
           invitationObservable,
           invitationSubscribable: getInvitationSubscribable('Space', invitationObservable),
+          unredeemedCode: undefined,
         };
       } else {
         return space;
