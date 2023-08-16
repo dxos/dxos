@@ -5098,6 +5098,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/context': link:../../common/context
       '@dxos/credentials': link:../../core/halo/credentials
@@ -5126,7 +5127,6 @@ importers:
       tiny-invariant: 1.3.1
     devDependencies:
       '@braneframe/types': link:../../apps/types
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-typegen': link:../../core/echo/echo-typegen
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/lodash.isequal': 4.5.6

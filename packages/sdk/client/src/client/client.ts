@@ -24,7 +24,8 @@ import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, MaybePromise } from '@dxos/util';
 
-import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
+import type { DiagnosticOptions } from '../diagnostics';
+import { truncateKeys } from '../diagnostics';
 import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
@@ -158,14 +159,6 @@ export class Client {
   }
 
   /**
-   * Debug monitor.
-   */
-  get monitor(): Monitor {
-    invariant(this._runtime, 'Client not initialized.');
-    return this._runtime.monitor;
-  }
-
-  /**
    * @deprecated
    */
   get dbRouter(): DatabaseRouter {
@@ -207,9 +200,10 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Diagnostics> {
-    const { createDiagnostics } = await import('../diagnostics');
-    return createDiagnostics(this, opts);
+  async diagnostics(opts: DiagnosticOptions = {}): Promise<any> {
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    const data = await this._services.services.SystemService.getDiagnostics();
+    return truncateKeys(data, opts);
   }
 
   /**
@@ -225,7 +219,6 @@ export class Client {
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     const { fromHost, fromIFrame } = await import('../services');
-    const { Monitor } = await import('../diagnostics');
     const { EchoProxy, createDefaultModelFactory } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
@@ -234,11 +227,10 @@ export class Client {
     // NOTE: Must currently match the host.
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    const monitor = new Monitor(this._services);
     const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
-    this._runtime = new ClientRuntime({ monitor, echo, halo, mesh });
+    this._runtime = new ClientRuntime({ echo, halo, mesh });
 
     await this._services.open();
 
@@ -258,7 +250,6 @@ export class Client {
         trigger.wake(undefined);
 
         this._statusUpdate.emit(status);
-
         this._statusTimeout = setTimeout(() => {
           this._statusUpdate.emit(null);
         }, STATUS_TIMEOUT);

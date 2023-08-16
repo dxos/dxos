@@ -121,6 +121,10 @@ export class ClientServicesHost {
 
       getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
 
+      getDiagnostics: () => {
+        return createDiagnostics(this);
+      },
+
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
           await this._resourceLock?.acquire();
@@ -132,15 +136,10 @@ export class ClientServicesHost {
       onReset: async () => {
         await this.reset();
       },
-
-      getDiagnostics: () => {
-        return createDiagnostics(this, {}); // TODO(dmaretskyi): options.
-      },
     });
 
     this._loggingService = new LoggingServiceImpl();
 
-    // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
     });

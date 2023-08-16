@@ -12,7 +12,7 @@ export type JsonStringifyOptions = {
   humanize?: boolean;
 };
 
-export const jsonStringify = (data: any, options: JsonStringifyOptions) => {
+export const truncateKeys = (data: any, options: JsonStringifyOptions) => {
   if (options.humanize || options.truncate) {
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }

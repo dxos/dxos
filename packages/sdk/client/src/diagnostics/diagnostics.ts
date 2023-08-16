@@ -25,7 +25,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { Client } from '../client';
 import { DXOS_VERSION } from '../version';
 import { getPlatform, Platform } from './platform';
-import { jsonStringify, JsonStringifyOptions } from './util';
+import { truncateKeys, JsonStringifyOptions } from './util';
 
 const DEFAULT_DIAGNOSTICS_TIMEOUT = 1000;
 
@@ -69,7 +69,9 @@ export type SpaceStats = {
 
 export type DiagnosticOptions = JsonStringifyOptions;
 
-// TODO(burdon): Move to ClientServices.
+/**
+ * @deprecated
+ */
 export const createDiagnostics = async (client: Client, options: DiagnosticOptions): Promise<Diagnostics> => {
   const clientServices: Partial<ClientServices> = client.services.services;
 
@@ -132,7 +134,7 @@ export const createDiagnostics = async (client: Client, options: DiagnosticOptio
   }
 
   // TODO(burdon): Move out of this function.
-  return jsonStringify(data, options) as Diagnostics;
+  return truncateKeys(data, options) as Diagnostics;
 };
 
 // TODO(burdon): Normalize for ECHO/HALO.

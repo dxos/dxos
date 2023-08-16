@@ -33,6 +33,7 @@ const SwarmPanel = () => {
       return connections;
     }, []) ?? [];
 
+  // TODO(burdon): Add peers/connect/disconnect/error info.
   const columns: TableColumn<Connection>[] = [
     {
       Header: 'Active',
@@ -54,14 +55,14 @@ const SwarmPanel = () => {
     },
     {
       Header: 'Connection',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value}</span>,
+      Cell: ({ value }: any) => <span className={'font-mono text-sm'}>{value}</span>,
       width: 80,
       accessor: 'state',
     },
     {
       Header: 'Session',
       Cell: ({ value }: any) => (
-        <span onClick={() => setSessionId(value)} className={mx('font-mono text-sm', textLink)}>
+        <span className={mx('font-mono text-sm', textLink)} onClick={() => setSessionId(value)}>
           {value?.truncate()}
         </span>
       ),
@@ -77,19 +78,19 @@ const SwarmPanel = () => {
   ];
 
   return (
-    <PanelContainer className='flex flex-col gap-4 divide-y'>
-      <div>
+    <PanelContainer>
+      <div className='h-1/2 overflow-auto'>
         <Table compact columns={columns} data={items} />
       </div>
-      {sessionId && (
-        <div className='overflow-auto'>
+      <div className='h-1/2 overflow-auto'>
+        {sessionId && (
           <ConnectionInfoView
-            connectionInfo={data
+            connection={data
               ?.flatMap((swarm) => swarm.connections)
-              .find((connection) => connection?.sessionId.equals(sessionId))}
+              .find((connection) => connection?.sessionId?.equals(sessionId))}
           />
-        </div>
-      )}
+        )}
+      </div>
     </PanelContainer>
   );
 };

@@ -12,8 +12,6 @@ import {
   QueryLogsRequest,
   ControlMetricsRequest,
   ControlMetricsResponse,
-  QueryDiagnosticsRequest,
-  QueryDiagnosticsResponse,
   QueryMetricsRequest,
   QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -49,6 +47,9 @@ export class LoggingServiceImpl implements LoggingService {
     return { recording: tracer.recording };
   }
 
+  /**
+   * @deprecated (Move to diagnostics).
+   */
   queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
     const getNumericalValues = (key: string) => {
@@ -85,16 +86,6 @@ export class LoggingServiceImpl implements LoggingService {
       return () => {
         clearInterval(i);
       };
-    });
-  }
-
-  // TODO(burdon): Move from client.
-  queryDiagnostics({ interval = 5_000 }: QueryDiagnosticsRequest): Stream<QueryDiagnosticsResponse> {
-    return new Stream(({ next }) => {
-      next({
-        timestamp: new Date(),
-        diagnostics: {},
-      });
     });
   }
 

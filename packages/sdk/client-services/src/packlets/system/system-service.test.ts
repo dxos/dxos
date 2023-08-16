@@ -35,13 +35,13 @@ describe('SystemService', () => {
       config,
       statusUpdate,
       getCurrentStatus: () => currentStatus,
+      getDiagnostics: async () => ({}),
       onUpdateStatus: (status) => {
         updateStatus.wake(status);
       },
       onReset: () => {
         reset.wake(true);
       },
-      getDiagnostics: async () => undefined,
     });
   });
 

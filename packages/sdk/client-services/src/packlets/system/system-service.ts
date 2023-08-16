@@ -14,13 +14,15 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { MaybePromise } from '@dxos/util';
 
+import { Diagnostics } from '../services';
+
 export type SystemServiceOptions = {
   config?: Config;
   statusUpdate: Event<void>;
   getCurrentStatus: () => SystemStatus;
+  getDiagnostics: () => Promise<Partial<Diagnostics>>;
   onUpdateStatus: (status: SystemStatus) => MaybePromise<void>;
   onReset: () => MaybePromise<void>;
-  getDiagnostics: () => Promise<any>;
 };
 
 export class SystemServiceImpl implements SystemService {
@@ -34,21 +36,29 @@ export class SystemServiceImpl implements SystemService {
   constructor({
     config,
     statusUpdate,
+    getDiagnostics,
     onUpdateStatus,
     getCurrentStatus,
     onReset,
-    getDiagnostics,
   }: SystemServiceOptions) {
     this._config = config;
     this._statusUpdate = statusUpdate;
     this._getCurrentStatus = getCurrentStatus;
+    this._getDiagnostics = getDiagnostics;
     this._onUpdateStatus = onUpdateStatus;
     this._onReset = onReset;
-    this._getDiagnostics = getDiagnostics;
   }
 
   async getConfig() {
     return this._config?.values ?? {};
+  }
+
+  async getDiagnostics() {
+    const diagnostics = await this._getDiagnostics();
+    return {
+      timestamp: new Date(),
+      diagnostics,
+    };
   }
 
   async updateStatus({ status }: UpdateStatusRequest) {
@@ -70,10 +80,6 @@ export class SystemServiceImpl implements SystemService {
         unsubscribe();
       };
     });
-  }
-
-  async getDiagnostics() {
-    return this._getDiagnostics();
   }
 
   async reset() {
