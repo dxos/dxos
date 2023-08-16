@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CancelledError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';

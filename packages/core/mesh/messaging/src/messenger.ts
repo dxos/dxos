@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';

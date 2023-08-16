@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { MulticastObservable, Observable, Subscriber } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;

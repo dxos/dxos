@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Config } from '@dxos/client';
 import { Space } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 
 import { Bot } from './bot';
 

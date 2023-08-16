@@ -3,10 +3,10 @@
 //
 
 import CRC32 from 'crc-32';
-import { invariant } from '@dxos/invariant';
 
 import { synchronized, Event } from '@dxos/async';
 import { DataCorruptionError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION, schema } from '@dxos/protocols';

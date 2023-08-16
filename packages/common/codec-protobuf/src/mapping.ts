@@ -3,6 +3,7 @@
 //
 
 import protobufjs from 'protobufjs';
+
 import { invariant } from '@dxos/invariant';
 
 import { Substitutions } from './common';

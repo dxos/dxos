@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 

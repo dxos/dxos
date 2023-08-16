@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MaybePromise } from '@dxos/util';
 

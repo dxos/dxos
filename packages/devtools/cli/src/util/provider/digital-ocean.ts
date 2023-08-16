@@ -3,10 +3,10 @@
 //
 
 import DigitalOcean from 'do-wrapper';
-import { invariant } from '@dxos/invariant';
 
 import { waitForCondition } from '@dxos/async';
 import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 
 import { KUBE_TAG, KubeDeployOptions, MachineryProvider } from './provider';
 

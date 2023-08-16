@@ -3,8 +3,8 @@
 //
 
 import get from 'lodash.get';
-import { invariant } from '@dxos/invariant';
 
+import { invariant } from '@dxos/invariant';
 import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/document';

@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';

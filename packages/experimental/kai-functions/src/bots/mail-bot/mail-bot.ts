@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
 import { Message } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 

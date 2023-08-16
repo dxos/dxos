@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 

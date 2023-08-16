@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { DeferredTask } from '@dxos/async';
 import { Space, SpaceState } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { createSubscription } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 

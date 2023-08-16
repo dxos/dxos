@@ -5,11 +5,11 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
 import defaultsDeep from 'lodash.defaultsdeep';
-import { invariant } from '@dxos/invariant';
 import path from 'path';
 
 import { Config } from '@dxos/config';
 import type { ConfigProto } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 
 import { PackageModule } from './common';
 

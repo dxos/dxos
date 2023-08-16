@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-import { invariant } from '@dxos/invariant';
 
 import {
   asyncTimeout,
@@ -17,6 +16,7 @@ import {
 import { AUTH_TIMEOUT, ClientServicesProvider, Halo } from '@dxos/client-protocol';
 import { inspectObject } from '@dxos/debug';
 import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';

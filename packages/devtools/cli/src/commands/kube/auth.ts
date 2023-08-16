@@ -3,9 +3,9 @@
 //
 
 import chalk from 'chalk';
-import { invariant } from '@dxos/invariant';
 
 import { Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { BaseCommand } from '../../base-command';

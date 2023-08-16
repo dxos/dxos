@@ -3,6 +3,7 @@
 //
 
 import * as pb from 'protobufjs';
+
 import { invariant } from '@dxos/invariant';
 
 import { MapingDescriptors, TypeMapperContext } from '../mapping';

@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { ConfigProto } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';

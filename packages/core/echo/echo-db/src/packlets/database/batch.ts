@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { EchoObjectBatch } from '@dxos/protocols/proto/dxos/echo/object';
 import { MutationReceipt } from '@dxos/protocols/proto/dxos/echo/service';
 

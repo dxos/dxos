@@ -3,9 +3,9 @@
 //
 
 import { inspect, InspectOptionsStylized } from 'node:util';
-import { invariant } from '@dxos/invariant';
 
 import { DocumentModel, OrderedArray, Reference } from '@dxos/document-model';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TextModel } from '@dxos/text-model';
 

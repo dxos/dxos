@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';

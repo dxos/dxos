@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { PublicKey } from '@dxos/client';
 import { Space } from '@dxos/client-protocol';
 import { checkCredentialType, SpecificCredential } from '@dxos/credentials';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';

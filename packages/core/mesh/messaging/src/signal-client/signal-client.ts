@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { DeferredTask, Event, Trigger, asyncTimeout, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { Context, cancelWithContext } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';

@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
 import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions } from '@dxos/rpc';
 
 import { ExtensionContext, TeleportExtension } from './teleport';

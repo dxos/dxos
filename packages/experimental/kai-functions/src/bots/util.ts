@@ -3,12 +3,12 @@
 //
 
 import yaml from 'js-yaml';
-import { invariant } from '@dxos/invariant';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
 
 import { Config } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 
 export const loadJson = (filename: string) => {
   invariant(filename, 'Invalid path');

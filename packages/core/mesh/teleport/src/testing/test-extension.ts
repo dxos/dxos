@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { asyncTimeout, Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';

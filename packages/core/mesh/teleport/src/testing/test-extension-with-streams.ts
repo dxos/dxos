@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import { randomBytes } from 'node:crypto';
 import { Duplex } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';

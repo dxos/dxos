@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event, synchronized } from '@dxos/async';
 import { ProtoCodec } from '@dxos/codec-protobuf';
 import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';

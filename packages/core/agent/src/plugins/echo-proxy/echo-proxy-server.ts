@@ -4,10 +4,10 @@
 
 import express from 'express';
 import http from 'http';
-import { invariant } from '@dxos/invariant';
 
 import { PublicKey } from '@dxos/client';
 import { Expando } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { AbstractPlugin } from '../plugin';

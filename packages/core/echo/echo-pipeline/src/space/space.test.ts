@@ -3,10 +3,10 @@
 //
 
 import expect from 'expect';
-import { invariant } from '@dxos/invariant';
 import { promisify } from 'node:util';
 
 import { createCredential, CredentialGenerator } from '@dxos/credentials';
+import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';

@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import distance from 'xor-distance';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 

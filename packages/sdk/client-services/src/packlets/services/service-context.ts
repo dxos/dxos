@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Trigger } from '@dxos/async';
 import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -15,6 +13,7 @@ import {
   SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

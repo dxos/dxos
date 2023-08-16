@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { tagMutationsInBatch, ItemDemuxer, ItemManager, setMetadataOnObject } from '@dxos/echo-db';
 import { FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';

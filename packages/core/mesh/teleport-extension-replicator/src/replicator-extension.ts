@@ -4,12 +4,12 @@
 
 import type { ProtocolStream } from 'hypercore-protocol';
 import { Duplex } from 'node:stream';
-import { invariant } from '@dxos/invariant';
 
 import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';

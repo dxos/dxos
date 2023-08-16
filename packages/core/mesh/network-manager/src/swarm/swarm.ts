@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { ListeningHandle, Messenger } from '@dxos/messaging';

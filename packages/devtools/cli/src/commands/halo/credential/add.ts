@@ -3,9 +3,9 @@
 //
 
 import { Args } from '@oclif/core';
-import { invariant } from '@dxos/invariant';
 
 import { Client } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols';
 
 import { BaseCommand } from '../../../base-command';

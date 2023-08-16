@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import fs from 'node:fs';
 import { FileHandle } from 'node:fs/promises';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 
 enum FileState {
   INIT = 'INIT',

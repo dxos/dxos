@@ -3,10 +3,10 @@
 //
 
 import { formatISO9075 } from 'date-fns';
-import { invariant } from '@dxos/invariant';
 
 import { debounce } from '@dxos/async';
 import { Subscription } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Booking, Ticket, Trip } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 

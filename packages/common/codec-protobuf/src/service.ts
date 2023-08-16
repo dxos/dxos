@@ -3,8 +3,8 @@
 //
 
 import pb from 'protobufjs';
-import { invariant } from '@dxos/invariant';
 
+import { invariant } from '@dxos/invariant';
 import { getAsyncValue } from '@dxos/util';
 
 import { Any, EncodingOptions } from './common';

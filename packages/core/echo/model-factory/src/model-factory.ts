@@ -2,13 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event, scheduleTask } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import type { FeedWriter } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';

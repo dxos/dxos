@@ -3,11 +3,11 @@
 //
 
 import startCase from 'lodash.startcase';
-import { invariant } from '@dxos/invariant';
 import { ChatCompletionRequestMessage } from 'openai';
 
 import { Document } from '@braneframe/types';
 import { Space, Text, TextKind } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 import { Contact, DocumentStack } from '@dxos/kai-types';
 import { log } from '@dxos/log';
 

@@ -2,13 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';

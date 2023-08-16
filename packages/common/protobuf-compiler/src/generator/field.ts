@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
+
+import { invariant } from '@dxos/invariant';
 
 import { SubstitutionsMap } from '../parser';
 import { types } from './types';

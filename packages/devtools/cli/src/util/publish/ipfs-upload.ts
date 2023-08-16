@@ -4,10 +4,10 @@
 
 import fs from 'fs';
 import { CID, create, globSource } from 'ipfs-http-client';
-import { invariant } from '@dxos/invariant';
 import { join } from 'path';
 
 import { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 interface UploadOptions {

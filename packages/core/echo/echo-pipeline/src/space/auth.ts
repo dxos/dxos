@@ -2,11 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { runInContext, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';

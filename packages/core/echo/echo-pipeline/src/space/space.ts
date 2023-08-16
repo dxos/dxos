@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event, synchronized, trackLeaks, Lock } from '@dxos/async';
 import { FeedInfo } from '@dxos/credentials';
 import { FeedOptions, FeedWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';

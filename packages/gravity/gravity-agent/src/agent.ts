@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Event } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
 import { ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Config, ConfigProto } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AgentSpec, CommandSequence } from '@dxos/protocols/proto/dxos/gravity';
 

@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Trigger, Event } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   Invitation,
 } from '@dxos/client/invitations';
+import { invariant } from '@dxos/invariant';
 
 export const hostInvitation = async ({
   observable,

@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import { Signer, subtleCrypto } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

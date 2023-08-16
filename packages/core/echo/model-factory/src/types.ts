@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
-
 import type { Codec } from '@dxos/codec-protobuf';
 import type { WriteReceipt } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 
 import { Model } from './model';

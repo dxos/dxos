@@ -4,7 +4,6 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { invariant } from '@dxos/invariant';
 import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, asyncTimeout } from '@dxos/async';
@@ -17,6 +16,7 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { invariant } from '@dxos/invariant';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 

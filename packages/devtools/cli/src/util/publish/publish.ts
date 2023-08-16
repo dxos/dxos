@@ -6,11 +6,11 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-import { invariant } from '@dxos/invariant';
 import { join } from 'path';
 import { promisify } from 'util';
 
 import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
 
 import { Logger, PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';

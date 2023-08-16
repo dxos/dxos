@@ -4,9 +4,9 @@
 
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
-import { invariant } from '@dxos/invariant';
 
 import { truncateKey, devtoolsFormatter, DevtoolsFormatter, equalsSymbol, Equatable } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;

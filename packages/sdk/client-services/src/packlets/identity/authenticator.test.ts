@@ -3,10 +3,10 @@
 //
 
 import expect from 'expect';
-import { invariant } from '@dxos/invariant';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey } from '@dxos/credentials';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';

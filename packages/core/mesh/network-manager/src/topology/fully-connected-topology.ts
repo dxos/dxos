@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-
 import { PublicKey } from '@dxos/keys';
 
 import { SwarmController, Topology } from './topology';

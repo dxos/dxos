@@ -3,8 +3,9 @@
 //
 
 import { Flags } from '@oclif/core';
-import { invariant } from '@dxos/invariant';
 import os from 'os';
+
+import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base-command';
 import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';

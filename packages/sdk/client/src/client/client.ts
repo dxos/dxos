@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-import { invariant } from '@dxos/invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
@@ -17,6 +16,7 @@ import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';

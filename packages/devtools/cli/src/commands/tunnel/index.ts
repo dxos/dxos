@@ -3,8 +3,8 @@
 //
 
 import { Args, Flags } from '@oclif/core';
-import { invariant } from '@dxos/invariant';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 

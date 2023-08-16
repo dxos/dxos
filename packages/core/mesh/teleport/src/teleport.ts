@@ -3,11 +3,11 @@
 //
 
 import { Duplex } from 'node:stream';
-import { invariant } from '@dxos/invariant';
 
 import { asyncTimeout, scheduleTaskInterval, runInContextAsync, synchronized, scheduleTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, RpcClosedError } from '@dxos/protocols';
