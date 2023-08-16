@@ -158,10 +158,15 @@ export const JoinPanel = ({
   const { hasIosKeyboard } = useThemeContext();
   const titleId = useId('joinPanel__heading', propsTitleId);
 
+  const joinedSpaces = new Set(client.spaces.get().map(({ key }) => key.toHex()));
+  console.log('[joined spaces]', joinedSpaces);
+  // todo: we get the invitation’s `spaceKey` too late to exit the flow early.
+
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
       identity,
+      joinedSpaces,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
       }),

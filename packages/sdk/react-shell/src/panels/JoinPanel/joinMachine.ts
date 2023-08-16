@@ -29,6 +29,7 @@ type JoinMachineContext = {
   identity: Identity | null;
   halo: InvitationKindContext;
   space: InvitationKindContext;
+  joinedSpaces: Set<string>;
 };
 
 type SelectIdentityEvent = {
@@ -86,6 +87,7 @@ const getInvitationSubscribable = (
     ): Subscription =>
       invitation.subscribe(
         (invitation: Invitation) => {
+          console.log('[subscription spaceKey]', invitation.spaceKey?.toHex());
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
               log('[invitation connecting]', { Kind, invitation });
@@ -268,6 +270,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       identity: null,
       halo: {},
       space: {},
+      joinedSpaces: new Set(),
     },
     initial: 'unknown',
     states: {
