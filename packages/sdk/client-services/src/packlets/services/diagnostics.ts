@@ -25,7 +25,6 @@ import { DXOS_VERSION } from '../../version';
 import { DataSpace } from '../spaces';
 import { getPlatform, Platform } from './platform';
 import { ClientServicesHost } from './service-host';
-import { JsonStringifyOptions } from './util';
 
 const DEFAULT_DIAGNOSTICS_TIMEOUT = 1000;
 
@@ -48,21 +47,20 @@ export type Diagnostics = {
 
 // TODO(burdon): Normalize for ECHO/HALO.
 export type SpaceStats = {
+  key: PublicKey;
   properties?: {
     name: string;
   };
-  metrics?: SpaceProto.Metrics & {
-    startupTime?: number;
-  };
   db?: {
     objects: number;
+  };
+  metrics?: SpaceProto.Metrics & {
+    startupTime?: number;
   };
   epochs?: (Epoch & { id?: PublicKey })[];
   members?: SpaceMember[];
   pipeline?: SpaceProto.PipelineState;
 };
-
-export type DiagnosticOptions = JsonStringifyOptions;
 
 export const createDiagnostics = async (clientServiceHost: ClientServicesHost): Promise<Diagnostics> => {
   // TODO(burdon): Fix private access?
@@ -78,9 +76,16 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost): 
         version: STORAGE_VERSION,
       },
     },
-
-    config: clientServiceHost.config?.values,
   };
+
+  // Trace metrics.
+  // TODO(burdon): Move here from logging service?
+  {
+    invariant(clientServices.LoggingService, 'SystemService is not available.');
+    data.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
+      timeout: DEFAULT_DIAGNOSTICS_TIMEOUT,
+    }).catch(() => undefined);
+  }
 
   const identity = serviceContext.identityManager.identity;
   if (identity) {
@@ -113,13 +118,7 @@ export const createDiagnostics = async (clientServiceHost: ClientServicesHost): 
     data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
   }
 
-  // Trace metrics.
-  {
-    invariant(clientServices.LoggingService, 'SystemService is not available.');
-    data.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
-      timeout: DEFAULT_DIAGNOSTICS_TIMEOUT,
-    }).catch(() => undefined);
-  }
+  data.config = clientServiceHost.config?.values;
 
   return data;
 };
@@ -147,17 +146,16 @@ const getProperties = (space: DataSpace) => {
 const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
   // TODO(dmaretskyi): Metrics for halo space.
   const stats: SpaceStats = {
-    properties: getProperties(space),
+    key: space.key,
     metrics: space.metrics,
-    db: {
-      objects: space.dataPipeline.itemManager.entities.size,
-    },
+
     epochs: space.inner.spaceState.credentials
       .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
         ...credential.subject.assertion,
         id: credential.id,
       })),
+
     members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
       identity: {
         identityKey: member.key,
@@ -170,9 +168,11 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           ? SpaceMember.PresenceState.ONLINE
           : SpaceMember.PresenceState.OFFLINE,
     })),
+
     pipeline: {
-      currentEpoch: space.dataPipeline.currentEpoch,
-      appliedEpoch: space.dataPipeline.appliedEpoch,
+      // TODO(burdon): Pick properties from credentials if needed.
+      // currentEpoch: space.dataPipeline.currentEpoch,
+      // appliedEpoch: space.dataPipeline.appliedEpoch,
 
       controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
       currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
@@ -186,6 +186,15 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
       totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
     },
   };
+
+  if (space.dataPipeline.itemManager) {
+    Object.assign(stats, {
+      properties: getProperties(space),
+      db: {
+        objects: space.dataPipeline.itemManager.entities.size,
+      },
+    } as SpaceStats);
+  }
 
   // TODO(burdon): Factor out.
   if (stats.metrics) {

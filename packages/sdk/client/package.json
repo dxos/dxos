@@ -63,9 +63,6 @@
       "devtools": [
         "dist/types/src/devtools/index.d.ts"
       ],
-      "diagnostics": [
-        "dist/types/src/diagnostics/index.d.ts"
-      ],
       "echo": [
         "dist/types/src/echo/index.d.ts"
       ],

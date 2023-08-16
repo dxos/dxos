@@ -80,6 +80,7 @@ export class ClientServicesHost {
   private _storage?: Storage;
   private _callbacks?: ClientServicesHostCallbacks;
 
+  // TODO(burdon): Fix access issue.
   _serviceContext!: ServiceContext;
   private _opening = false;
   private _open = false;

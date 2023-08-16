@@ -22,10 +22,8 @@ import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
 import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, MaybePromise } from '@dxos/util';
+import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import type { DiagnosticOptions } from '../diagnostics';
-import { truncateKeys } from '../diagnostics';
 import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
@@ -200,10 +198,10 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<any> {
+  async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     const data = await this._services.services.SystemService.getDiagnostics();
-    return truncateKeys(data, opts);
+    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
 
   /**
