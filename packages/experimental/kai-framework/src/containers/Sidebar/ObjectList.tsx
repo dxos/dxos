@@ -4,11 +4,11 @@
 
 import { Recycle, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
-import invariant from 'tiny-invariant';
 
 import { Button } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { FrameRuntime } from '@dxos/kai-frames';
 import { EditableObjectList } from '@dxos/mosaic';
 import { ShowDeletedOption, useQuery } from '@dxos/react-client/echo';

@@ -19,6 +19,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../log"
     },
     {

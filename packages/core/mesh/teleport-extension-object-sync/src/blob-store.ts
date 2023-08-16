@@ -6,8 +6,8 @@ import path from 'node:path';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { invariant } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
