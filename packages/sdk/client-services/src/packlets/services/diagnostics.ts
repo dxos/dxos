@@ -70,7 +70,7 @@ export const createDiagnostics = async (
   serviceContext: ServiceContext,
   config: Config,
 ): Promise<Diagnostics> => {
-  const data: Diagnostics = {
+  const diagnostics: Diagnostics = {
     created: new Date().toISOString(),
     platform: getPlatform(),
     client: {
@@ -85,7 +85,7 @@ export const createDiagnostics = async (
   // TODO(burdon): Move here from logging service?
   {
     invariant(clientServices.LoggingService, 'SystemService is not available.');
-    data.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
+    diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
       timeout: DEFAULT_TIMEOUT,
     }).catch(() => undefined);
   }
@@ -93,7 +93,7 @@ export const createDiagnostics = async (
   const identity = serviceContext.identityManager.identity;
   if (identity) {
     // Identity.
-    data.identity = {
+    diagnostics.identity = {
       identityKey: identity.identityKey,
       spaceKey: identity.space.key,
       profile: identity.profileDocument,
@@ -104,13 +104,13 @@ export const createDiagnostics = async (
       (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
         timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
-    data.devices = devices;
+    diagnostics.devices = devices;
 
     // TODO(dmaretskyi): Add metrics for halo space.
 
     // Spaces.
     if (serviceContext.dataSpaceManager) {
-      data.spaces = await Promise.all(
+      diagnostics.spaces = await Promise.all(
         Array.from(serviceContext.dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)) ?? [],
       );
     }
@@ -120,12 +120,12 @@ export const createDiagnostics = async (
       (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
         timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined)) ?? {};
-    data.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
+    diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
   }
 
-  data.config = config.values;
+  diagnostics.config = config.values;
 
-  return data;
+  return diagnostics;
 };
 
 const getProperties = (space: DataSpace) => {

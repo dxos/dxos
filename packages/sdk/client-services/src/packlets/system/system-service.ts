@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
+  GetDiagnosticsRequest,
   SystemService,
   SystemStatus,
   UpdateStatusRequest,
@@ -56,11 +57,19 @@ export class SystemServiceImpl implements SystemService {
   /**
    * NOTE: Since this is serialized as a JSON object, we allow the option to serialize keys.
    */
-  async getDiagnostics() {
+  async getDiagnostics({ keys }: GetDiagnosticsRequest = {}) {
     const diagnostics = await this._getDiagnostics();
     return {
       timestamp: new Date(),
-      diagnostics: JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer())),
+      diagnostics: JSON.parse(
+        JSON.stringify(
+          diagnostics,
+          jsonKeyReplacer({
+            truncate: keys === GetDiagnosticsRequest.KEY_OPTION.TRUNCATE,
+            humanize: keys === GetDiagnosticsRequest.KEY_OPTION.HUMANIZE,
+          }),
+        ),
+      ),
     };
   }
 

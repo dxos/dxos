@@ -57,19 +57,11 @@ export class LoggingServiceImpl implements LoggingService {
       return { key, stats: numericalValues(events, 'duration') };
     };
 
-    // TODO(burdon): Debounce since called very frequently.
     return new Stream(({ next }) => {
       const update = () => {
         const metrics: Metrics = {
           timestamp: new Date(),
           values: [
-            // TODO(burdon): Remove once Diagnostics moved to server.
-            {
-              key: 'started',
-              value: {
-                string: this._started.toISOString(),
-              },
-            },
             getNumericalValues('dxos.echo.pipeline.control'),
             getNumericalValues('dxos.echo.pipeline.data'),
           ].filter(Boolean) as Metrics.KeyPair[],

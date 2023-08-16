@@ -21,7 +21,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
-import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  GetDiagnosticsRequest,
+  Invitation,
+  SystemStatus,
+  QueryStatusResponse,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
 import type { EchoProxy } from '../echo';
@@ -198,9 +203,16 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
+  // TODO(burdon): Pass options to query.
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const data = await this._services.services.SystemService.getDiagnostics();
+    const data = await this._services.services.SystemService.getDiagnostics({
+      keys: options.truncate
+        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
+        : options.truncate
+        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+        : undefined,
+    });
     return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
 

@@ -48,6 +48,16 @@ message QueryStatusResponse {
   SystemStatus status = 1;
 }
 
+message GetDiagnosticsRequest {
+  enum KEY_OPTION {
+    NONE = 0;
+    TRUNCATE = 1;
+    HUMANIZE = 2;
+  }
+
+  optional KEY_OPTION keys = 1;
+}
+
 message GetDiagnosticsResponse {
   google.protobuf.Timestamp timestamp = 1;
   google.protobuf.Struct diagnostics = 2;
@@ -62,7 +72,7 @@ service SystemService {
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
 
   /// Get the diagnostics snapshot.
-  rpc GetDiagnostics(google.protobuf.Empty) returns (GetDiagnosticsResponse);
+  rpc GetDiagnostics(GetDiagnosticsRequest) returns (GetDiagnosticsResponse);
 
   /// Update the status of the client. Used to re-activate an inactive client.
   rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
