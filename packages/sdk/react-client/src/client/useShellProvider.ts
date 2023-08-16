@@ -21,12 +21,17 @@ export type UseShellProviderOptions = {
    * This is called when a user joins a space.
    */
   onJoinedSpace?: (spaceKey?: PublicKey) => void;
+
+  /**
+   * This is called when a code is no longer redeemable.
+   */
+  onInvalidatedInvitationCode?: (code?: string) => void;
 };
 
 /**
  * Use this hook to fully integrate an app with the shell.
  */
-export const useShellProvider = ({ spaceKey, onJoinedSpace }: UseShellProviderOptions) => {
+export const useShellProvider = ({ spaceKey, onJoinedSpace, onInvalidatedInvitationCode }: UseShellProviderOptions) => {
   const client = useClient();
 
   useEffect(() => {
@@ -35,6 +40,15 @@ export const useShellProvider = ({ spaceKey, onJoinedSpace }: UseShellProviderOp
       onJoinedSpace
     ) {
       return client.services.joinedSpace.on(onJoinedSpace);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) &&
+      onInvalidatedInvitationCode
+    ) {
+      return client.services.invalidatedInvitationCode.on(onInvalidatedInvitationCode);
     }
   }, []);
 

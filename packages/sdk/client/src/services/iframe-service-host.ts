@@ -30,6 +30,7 @@ export type IFrameClientServicesHostOptions = {
 
 export class IFrameClientServicesHost implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
+  public readonly invalidatedInvitationCode = new Event<string>();
   private _iframeController!: IFrameController;
   private _shellController!: ShellController;
   private readonly _host: ClientServicesProvider;
@@ -124,7 +125,12 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
         }
       },
     });
-    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
+
+    this._shellController = new ShellController(
+      this._iframeController,
+      this.joinedSpace,
+      this.invalidatedInvitationCode,
+    );
     await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.

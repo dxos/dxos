@@ -29,8 +29,9 @@ enum ShellDisplay {
 }
 
 message AppContextRequest {
-  ShellDisplay display = 1;
+  optional ShellDisplay display = 1;
   optional dxos.keys.PublicKey space_key = 2;
+  optional string invalidated_invitation_code = 3;
 }
 
 /// App RPCs for the shell.
