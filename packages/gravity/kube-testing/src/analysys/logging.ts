@@ -92,8 +92,8 @@ export class LogReader implements Iterable<SerializedLogEntry> {
     return reader;
   }
 
-  reduce<T>(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue?: T) {
-    return this._logs.reduce(callbackfn, initialValue);
+  forEach<T>(callbackFn: (value: T, index: number, array: T[]) => void): void {
+    this._logs.forEach(callbackFn);
   }
 }
 
