@@ -21,24 +21,18 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { randomInt, range } from '@dxos/util';
 
-import { SerializedLogEntry, getReader } from '../analysys';
-import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
+import { SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPng } from '../analysys';
+import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type EchoTestSpec = {
   agents: number;
   duration: number;
   iterationDelay: number;
-
   epochPeriod: number;
-
   measureNewAgentSyncTime: boolean;
-
   insertionSize: number;
   operationCount: number;
-
   signalArguments: string[];
 };
 
@@ -139,12 +133,11 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         await env.syncBarrier(`iter ${iter}`);
 
         if (!config.ephemeral) {
-          // compute lag
           const maximalTimeframe = await getMaximalTimeframe();
           const lag = maximalTimeframe.newMessages(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe);
           const totalMutations = this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.totalMessages();
 
-          // compute throughput
+          // Compute throughput.
           const mutationsSinceLastIter =
             this.getSpaceBackend().dataPipeline.pipelineState!.timeframe.newMessages(lastTimeframe);
           const timeSinceLastIter = Date.now() - lastTime;
@@ -254,7 +247,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 
   getSpaceBackend = (): EchoSpace =>
-    this.services.host?._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+    this.services.host?.context.spaceManager.spaces.get(this.space.key) ?? failUndefined();
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 
