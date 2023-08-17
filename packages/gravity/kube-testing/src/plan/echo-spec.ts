@@ -31,14 +31,10 @@ export type EchoTestSpec = {
   agents: number;
   duration: number;
   iterationDelay: number;
-
   epochPeriod: number;
-
   measureNewAgentSyncTime: boolean;
-
   insertionSize: number;
   operationCount: number;
-
   signalArguments: string[];
 };
 

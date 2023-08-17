@@ -8,7 +8,8 @@ import { Trigger } from '@dxos/async';
 
 import { AgentParams } from './spec-base';
 
-const REDIS_URL = 'redis://default:redispw@localhost:55000';
+// TODO(burdon): Check Docker port.
+export const REDIS_URL = 'redis://default:redispw@localhost:6379';
 
 export class AgentEnv<S, C> {
   public redis: RedisClientType = createClient({ url: REDIS_URL });

@@ -9,8 +9,12 @@ import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 import { TransportTestPlan } from './plan/transport-spec';
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const runSignal = () =>
+// TODO(burdon): Factor out plan to YML files.
+
+/**
+ *
+ */
+const runSignal = async () =>
   runPlan({
     plan: new SignalTestPlan(),
     spec: {
@@ -36,47 +40,21 @@ const runSignal = () =>
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
       // repeatAnalysis:
-      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json'
+      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json`
     },
   });
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const runEcho = () =>
-  runPlan({
-    plan: new EchoTestPlan(),
-    spec: {
-      agents: 2,
-      duration: 300_000,
-      iterationDelay: 300,
-
-      epochPeriod: 8,
-      measureNewAgentSyncTime: true,
-
-      insertionSize: 512,
-      operationCount: 1000,
-
-      signalArguments: ['globalsubserver'],
-    },
-    options: {
-      staggerAgents: 5,
-      randomSeed: PublicKey.random().toHex(),
-      profile: true,
-      // repeatAnalysis:
-      //   '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json',
-    },
-  });
-
-// eslint-disable-next-line unused-imports/no-unused-vars
-const runTransport = () =>
+/**
+ *
+ */
+const runTransport = async () =>
   runPlan({
     plan: new TransportTestPlan(),
     spec: {
       agents: 2,
       swarmsPerAgent: 1,
       duration: 60_000,
-
       transport: 'webrtc-proxy',
-
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
       iterationDelay: 1_000,
@@ -91,9 +69,53 @@ const runTransport = () =>
       randomSeed: PublicKey.random().toHex(),
       // profile: true,
       // repeatAnalysis:
-      // '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json'
+      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json`
     },
   });
 
-// void runEcho();
-void runTransport();
+/**
+ *
+ */
+const runEcho = async () =>
+  runPlan({
+    plan: new EchoTestPlan(),
+    spec: {
+      agents: 2,
+      duration: 300_000,
+      iterationDelay: 300,
+      epochPeriod: 8,
+      // measureNewAgentSyncTime: true,
+      measureNewAgentSyncTime: false,
+      insertionSize: 512,
+      operationCount: 1000,
+      signalArguments: ['globalsubserver'],
+    },
+    options: {
+      staggerAgents: 5,
+      randomSeed: PublicKey.random().toHex(),
+      profile: true,
+      // repeatAnalysis:
+      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
+    },
+  });
+
+const tests: { [key: string]: () => Promise<void> } = {
+  signal: () => runSignal(),
+  transport: () => runTransport(),
+  echo: () => runEcho(),
+};
+
+/**
+ * KUBE_HOME=~/Code/dxos/kube p run-tests echo
+ */
+const start = () => {
+  const [, , name] = process.argv;
+  const test = name && tests[name];
+  if (test) {
+    void test();
+  } else {
+    console.warn(`\nRun with test name: ${Object.keys(tests).join(', ')}`);
+  }
+};
+
+start();
