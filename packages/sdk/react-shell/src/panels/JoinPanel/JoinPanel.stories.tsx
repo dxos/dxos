@@ -5,9 +5,9 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/aurora';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
+import { StorybookDialog } from '../../components/StorybookDialog';
 import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
 
@@ -19,22 +19,14 @@ const noOpProps: JoinPanelImplProps = {
   pending: false,
 };
 
-const StorybookJoinPanel = (args: Partial<JoinPanelImplProps>) => {
-  const joinPanelProps = { ...noOpProps, ...args };
-  const { tx } = useThemeContext();
-  return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
-          <JoinPanelImpl {...joinPanelProps} />
-        </div>
-      </ElevationProvider>
-    </DensityProvider>
-  );
-};
+const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
+  <StorybookDialog>
+    <JoinPanelImpl {...noOpProps} {...args} />
+  </StorybookDialog>
+);
 
 export default {
-  component: StorybookJoinPanel,
+  component: JoinDialog,
 };
 
 export const AdditionMethodChooser = {
