@@ -84,6 +84,9 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
       return (
         <JoinDialog
           initialInvitationCode={invitationCode}
+          onInvalidateInvitationCode={async (code: string) => {
+            await runtime.setAppContext({ invalidatedInvitationCode: code });
+          }}
           onDone={async (result) => {
             await runtime.setAppContext({ display: ShellDisplay.NONE, spaceKey: result?.spaceKey ?? undefined });
             runtime.setLayout(ShellLayout.DEFAULT);
