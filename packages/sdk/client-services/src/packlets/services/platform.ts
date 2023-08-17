@@ -3,8 +3,9 @@
 //
 
 export type Platform = {
-  type: 'browser' | 'node';
-  platform: string;
+  type: 'browser' | 'shared-worker' | 'node';
+  userAgent?: string;
+  platform?: string;
   runtime?: string;
   uptime?: number;
   memory?: {
@@ -17,30 +18,31 @@ export type Platform = {
 };
 
 export const getPlatform = (): Platform => {
-  if (typeof window !== 'undefined') {
-    const { userAgent } = window.navigator;
-    return {
-      type: 'browser',
-      platform: userAgent,
-    };
-  }
-
-  // https://nodejs.org/api/os.html
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { machine, platform, release } = require('node:os');
+  if ((process as any).browser) {
+    if (typeof window !== 'undefined') {
+      // Browser.
+      const { userAgent } = window.navigator;
+      return {
+        type: 'browser',
+        userAgent,
+        uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
+      };
+    } else {
+      // Shared worker.
+      return {
+        type: 'shared-worker',
+        uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
+      };
+    }
+  } else {
+    // Node.
+    const { platform, version, arch } = process;
     return {
       type: 'node',
-      platform: `${platform()} ${release()} ${machine()}`,
+      platform: `${platform} ${version} ${arch}`,
       runtime: process.version,
       uptime: Math.floor(process.uptime()),
       memory: process.memoryUsage(),
-    };
-  } catch (err) {
-    // TODO(burdon): Fails in CI; ERROR: Could not resolve "node:os"
-    return {
-      type: 'node',
-      platform: '',
     };
   }
 };
