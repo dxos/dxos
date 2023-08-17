@@ -45,7 +45,7 @@ export type RunPlanParams<S, C> = {
 };
 
 // TODO(mykola): Introduce Executor class.
-export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode.
@@ -60,7 +60,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
 
   if (!process.env.GRAVITY_AGENT_PARAMS) {
     // Planner mode.
-    await runPlanner({ plan, spec, options });
+    await runPlanner(name, { plan, spec, options });
   } else {
     // Agent mode.
     const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
@@ -68,7 +68,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
   }
 };
 
-const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
+const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   const testId = createTestPathname();
   const outDir = `${process.cwd()}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
@@ -132,8 +132,10 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
         env: {
           ...process.env,
           GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
+          GRAVITY_SPEC: name,
         },
       });
+
       children.push(childProcess);
       promises.push(
         Event.wrap<number>(childProcess, 'exit')

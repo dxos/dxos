@@ -92,11 +92,12 @@ const plans: { [key: string]: () => any } = {
  */
 const start = async () => {
   const [, , name] = process.argv;
-  const plan = name && plans[name];
+  const spec = name ?? process.env.GRAVITY_SPEC; // Env set when forked.
+  const plan = spec && plans[spec];
   if (plan) {
-    await runPlan(plan());
+    await runPlan(name, plan());
   } else {
-    console.warn(`\nRun with test name: ${Object.keys(plans).join(', ')}`);
+    console.warn(`\nRun with test name: [${Object.keys(plans).join(', ')}]`);
   }
 };
 
