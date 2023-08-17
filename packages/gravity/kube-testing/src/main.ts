@@ -106,6 +106,7 @@ const tests: { [key: string]: () => Promise<void> } = {
 };
 
 /**
+ * Configure Redis (e.g., via Docker desktop) and export port.
  * KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
 const start = () => {
