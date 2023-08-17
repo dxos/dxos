@@ -25,12 +25,13 @@ export const getPlatform = (): Platform => {
       return {
         type: 'browser',
         userAgent,
+        uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
       };
     } else {
       // Shared worker.
-      // TODO(burdon): Uptime.
       return {
         type: 'shared-worker',
+        uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
       };
     }
   } else {
