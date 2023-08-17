@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import { Clipboard, Download } from '@phosphor-icons/react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
@@ -52,6 +52,16 @@ const DiagnosticsPanel = () => {
     );
   };
 
+  const info = useMemo<string[] | undefined>(() => {
+    if ((window as any).chrome) {
+      return ['chrome://inspect/#workers'];
+    }
+  }, []);
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+  };
+
   return (
     <PanelContainer
       toolbar={
@@ -67,6 +77,18 @@ const DiagnosticsPanel = () => {
             <Input.Label>Record metrics</Input.Label>
           </Input.Root>
         </Toolbar.Root>
+      }
+      footer={
+        info && (
+          <div className='flex p-2 items-center text-sm font-mono gap-2'>
+            {info.map((text, i) => (
+              <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
+                <Clipboard />
+                {text}
+              </div>
+            ))}
+          </div>
+        )
       }
     >
       <JsonView data={data} level={5} />
