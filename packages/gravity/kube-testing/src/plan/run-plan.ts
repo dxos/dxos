@@ -54,6 +54,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
       summary.results,
     );
+
     return;
   }
 
@@ -76,21 +77,14 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
     outDir,
   });
 
-  const agentsArray = await plan.init({
-    spec,
-    outDir,
-    testId,
-  });
+  const agentsArray = await plan.init({ spec, outDir, testId });
   const agents = Object.fromEntries(agentsArray.map((config) => [PublicKey.random().toHex(), config]));
-
   log.info('starting agents', {
     count: agentsArray.length,
   });
 
   const children: ChildProcess[] = [];
-  const planResults: PlanResults = {
-    agents: {},
-  };
+  const planResults: PlanResults = { agents: {} };
   const promises: Promise<void>[] = [];
 
   {
@@ -163,14 +157,7 @@ const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) =>
 
   let stats: any;
   try {
-    stats = await await plan.finish(
-      {
-        spec,
-        outDir,
-        testId,
-      },
-      planResults,
-    );
+    stats = await plan.finish({ spec, outDir, testId }, planResults);
   } catch (err) {
     log.warn('error finishing plan', err);
   }
