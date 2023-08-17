@@ -119,7 +119,7 @@ const SpacesPanel: FC = () => {
 
   return (
     <PanelContainer className='overflow-auto'>
-      <Table compact slots={{ cell: { className: 'items-center ' } }} columns={columns} data={spaces} />
+      <Table compact slots={{ cell: { className: 'items-center' } }} columns={columns} data={spaces} />
     </PanelContainer>
   );
 };
