@@ -34,6 +34,7 @@ type AvatarContextValue = {
   size: Size;
   variant: AvatarVariant;
   status?: AvatarStatus;
+  inGroup?: boolean;
 };
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
@@ -45,18 +46,22 @@ const AvatarRoot = ({
   children,
   labelId: propsLabelId,
   descriptionId: propsDescriptionId,
+  maskId: propsMaskId,
+  inGroup,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
-  const maskId = useId('mask');
-  return <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status }}>{children}</AvatarProvider>;
+  const maskId = useId('avatar__mask', propsMaskId);
+  return (
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, inGroup }}>{children}</AvatarProvider>
+  );
 };
 
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { size, variant, labelId, descriptionId, maskId, inGroup } = useAvatarContext('AvatarFrame');
     const { tx } = useThemeContext();
     const imageSizeNumber = size === 'px' ? 1 : size * 4;
     const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
@@ -66,7 +71,7 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
       <AvatarRootPrimitive
         role='img'
         {...props}
-        className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
+        className={tx('avatar.root', 'avatar', { size, variant, inGroup }, classNames)}
         ref={forwardedRef}
         aria-labelledby={labelId}
         aria-describedby={descriptionId}
