@@ -9,16 +9,12 @@ import { runPlan } from './plan/run-plan';
 import { SignalTestPlan } from './plan/signal-spec';
 import { TransportTestPlan } from './plan/transport-spec';
 
-// TODO(burdon): Factor out plan to YML files.
-
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
 
-/**
- *
- */
-const runSignal = async () =>
-  runPlan({
+// TODO(burdon): Factor out plan to YML files.
+const plans: { [key: string]: () => any } = {
+  signal: () => ({
     plan: new SignalTestPlan(),
     spec: {
       servers: 1,
@@ -44,13 +40,9 @@ const runSignal = async () =>
       randomSeed: PublicKey.random().toHex(),
       // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json`
     },
-  });
+  }),
 
-/**
- *
- */
-const runTransport = async () =>
-  runPlan({
+  transport: () => ({
     plan: new TransportTestPlan(),
     spec: {
       agents: 2,
@@ -72,13 +64,9 @@ const runTransport = async () =>
       // profile: true,
       // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json`
     },
-  });
+  }),
 
-/**
- *
- */
-const runEcho = async () =>
-  runPlan({
+  echo: () => ({
     plan: new EchoTestPlan(),
     spec: {
       agents: 2,
@@ -97,26 +85,21 @@ const runEcho = async () =>
       profile: true,
       // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
     },
-  });
-
-const tests: { [key: string]: () => Promise<void> } = {
-  signal: () => runSignal(),
-  transport: () => runTransport(),
-  echo: () => runEcho(),
+  }),
 };
 
 /**
  * Configure Redis (e.g., via Docker desktop) and export port.
  * KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
-const start = () => {
+const start = async () => {
   const [, , name] = process.argv;
-  const test = name && tests[name];
-  if (test) {
-    void test();
+  const plan = name && plans[name];
+  if (plan) {
+    await runPlan(plan());
   } else {
-    console.warn(`\nRun with test name: ${Object.keys(tests).join(', ')}`);
+    console.warn(`\nRun with test name: ${Object.keys(plans).join(', ')}`);
   }
 };
 
-start();
+void start();
