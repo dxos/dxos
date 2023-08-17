@@ -5,13 +5,17 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/aurora';
 import { PublicKey } from '@dxos/keys';
+import { Invitation } from '@dxos/react-client/invitations';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
+import { SpaceMemberListImpl } from '../../components';
+import { StorybookDialog } from '../../components/StorybookDialog';
+import { alice } from '../../testing/fixtures/identities';
+import { inviteWithState } from '../../testing/fixtures/invitations';
 import { SpacePanelImpl } from './SpacePanel';
 import { SpacePanelImplProps } from './SpacePanelProps';
-import { Dialog } from '../Dialog';
+import { SpaceManagerImpl } from './steps';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
@@ -21,14 +25,14 @@ const noOpProps: SpacePanelImplProps = {
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
-const SpaceDialog = (args: Partial<SpacePanelImplProps>) => (
-  <Dialog>
+const SpacePanel = (args: Partial<SpacePanelImplProps>) => (
+  <StorybookDialog>
     <SpacePanelImpl {...noOpProps} {...args} />
-  </Dialog>
+  </StorybookDialog>
 );
 
 export default {
-  component: SpaceDialog,
+  component: SpacePanel,
 };
 
 export const SpaceManager = {
@@ -39,4 +43,24 @@ export const SpaceManager = {
 export const SpaceInvitationManager = {
   decorators: [ClientDecorator()],
   args: { activeView: 'space invitation manager' },
+};
+
+export const PureSpaceManager = () => {
+  return (
+    <StorybookDialog>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[inviteWithState(Invitation.State.CONNECTING)]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl members={[alice]} />}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
 };

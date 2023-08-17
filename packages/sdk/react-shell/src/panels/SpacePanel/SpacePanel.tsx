@@ -34,19 +34,20 @@ const SpacePanelHeading = ({ titleId, space }: SpacePanelHeadingProps) => {
   );
 };
 
-export const SpacePanelImpl = ({ titleId, activeView, space, ...props }: SpacePanelImplProps) => {
+export const SpacePanelImpl = (props: SpacePanelImplProps) => {
+  const { titleId, activeView, space, SpaceManager: SpaceMgr = SpaceManager, ...rest } = props;
   return (
     <DensityProvider density='fine'>
-      <SpacePanelHeading {...props} {...{ titleId, space }} />
+      <SpacePanelHeading {...rest} {...{ titleId, space }} />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManager active={activeView === 'space manager'} space={space} {...props} />
+            <SpaceMgr active={activeView === 'space manager'} space={space} {...rest} />
           </Viewport.View>
           <Viewport.View id='space invitation manager' classNames={stepStyles}>
             <InvitationManager
               active={activeView === 'space invitation manager'}
-              {...props}
+              {...rest}
               invitationUrl={props.invitationUrl}
             />
           </Viewport.View>

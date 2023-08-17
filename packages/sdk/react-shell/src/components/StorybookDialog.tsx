@@ -6,9 +6,9 @@ import React, { PropsWithChildren } from 'react';
 
 import { ElevationProvider, useThemeContext } from '@dxos/aurora';
 
-export type DialogProps = PropsWithChildren & {};
+export type StorybookDialogProps = PropsWithChildren & {};
 
-export const Dialog = (props: DialogProps) => {
+export const StorybookDialog = (props: StorybookDialogProps) => {
   const { tx } = useThemeContext();
   return (
     <ElevationProvider elevation='chrome'>

@@ -5,13 +5,11 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/aurora';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
+import { StorybookDialog } from '../../components/StorybookDialog';
 import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
-
-import { Dialog } from '../Dialog';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
@@ -22,9 +20,9 @@ const noOpProps: JoinPanelImplProps = {
 };
 
 const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
-  <Dialog>
+  <StorybookDialog>
     <JoinPanelImpl {...noOpProps} {...args} />
-  </Dialog>
+  </StorybookDialog>
 );
 
 export default {
