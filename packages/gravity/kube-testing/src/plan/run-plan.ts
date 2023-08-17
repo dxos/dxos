@@ -72,7 +72,6 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
   const testId = createTestPathname();
   const outDir = `${process.cwd()}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
-
   log.info('starting plan', {
     outDir,
   });
@@ -175,8 +174,8 @@ const runPlanner = async <S, C>(name: string, { plan, spec, options }: RunPlanPa
     results: planResults,
     agents,
   };
-  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
 
+  writeFileSync(join(outDir, 'test.json'), JSON.stringify(summary, null, 4));
   log.info('plan complete');
   process.exit(0);
 };
@@ -192,7 +191,6 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
 
     const env = new AgentEnv<S, C>(params);
     await env.open();
-
     await plan.run(env);
   } catch (err) {
     console.error(err);
