@@ -14,12 +14,12 @@ import {
   IdentificationBadge,
   Key,
   Planet,
+  Polygon,
   Queue,
   Receipt,
   Users,
   UsersThree,
   WifiHigh,
-  WebhooksLogo,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -131,11 +131,6 @@ export const useSections = (): SectionItem[] => {
       Icon: Graph,
       items: [
         {
-          id: '/mesh/network',
-          title: 'Network',
-          Icon: WebhooksLogo,
-        },
-        {
           id: '/mesh/signal',
           title: 'Signal',
           Icon: WifiHigh,
@@ -144,6 +139,11 @@ export const useSections = (): SectionItem[] => {
           id: '/mesh/swarm',
           title: 'Swarm',
           Icon: UsersThree,
+        },
+        {
+          id: '/mesh/network',
+          title: 'Network',
+          Icon: Polygon,
         },
       ],
     },
