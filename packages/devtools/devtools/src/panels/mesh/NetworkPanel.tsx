@@ -94,8 +94,8 @@ const NetworkPanel = () => {
   const { space } = useDevtoolsState();
   const identity = useIdentity();
 
-  const isMe = (node: NetworkGraphNode) =>
-    identity ? node.member?.identity.identityKey.equals(identity.identityKey) : false;
+  const isMe = (node: NetworkGraphNode | undefined) =>
+    identity ? node?.member?.identity.identityKey.equals(identity.identityKey) : false;
 
   const members = useMembers(space?.key);
   const [model] = useState(() => new NetworkGraphModel());

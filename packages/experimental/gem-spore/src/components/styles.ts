@@ -3,24 +3,9 @@
 //
 
 import { css } from '@emotion/css';
+import clsx from 'clsx';
 
 // TODO(burdon): Replace with tailwind.
-
-export const defaultMarkerStyles = css`
-  marker {
-    &.arrow path {
-      fill: none;
-      stroke: #333;
-      stroke-width: 1px;
-    }
-
-    &.dot circle {
-      fill: none;
-      stroke: #333;
-      stroke-width: 1px;
-    }
-  }
-`;
 
 export const defaultStyles = {
   markers: css`
@@ -100,9 +85,9 @@ export const defaultStyles = {
   `,
 };
 
-export const defaultGraphStyles = [
+export const defaultGraphStyles = clsx([
   defaultStyles.guides,
   defaultStyles.nodes,
   defaultStyles.links,
   defaultStyles.bullet,
-];
+]);
