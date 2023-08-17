@@ -12,8 +12,8 @@ import { Event, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 
-import { AgentEnv } from './agent-env';
-import { AgentParams, PlanResults, TestPlan } from './spec-base';
+import { AgentEnv } from './env';
+import { AgentParams, PlanResults, TestPlan } from './spec';
 
 const AGENT_LOG_FILE = 'agent.log';
 const DEBUG_PORT_START = 9229;

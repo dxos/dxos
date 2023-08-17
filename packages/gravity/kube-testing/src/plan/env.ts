@@ -6,7 +6,7 @@ import { createClient, RedisClientType } from 'redis';
 
 import { Trigger } from '@dxos/async';
 
-import { AgentParams } from './spec-base';
+import { AgentParams } from './spec';
 
 export const REDIS_PORT = 6379;
 export const REDIS_URL = `redis://default:redispw@localhost:${REDIS_PORT}`;
@@ -14,9 +14,10 @@ export const REDIS_URL = `redis://default:redispw@localhost:${REDIS_PORT}`;
 export class AgentEnv<S, C> {
   public redis: RedisClientType = createClient({ url: REDIS_URL });
 
-  // Subscription client
+  // Subscription client.
   public redisSub: RedisClientType = createClient({ url: REDIS_URL });
 
+  // TODO(burdon): Unbind on close.
   constructor(public params: AgentParams<S, C>) {
     this.redis.on('error', (err) => console.log('Redis Client Error', err));
     this.redisSub.on('error', (err) => console.log('Redis Client Error', err));

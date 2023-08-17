@@ -10,10 +10,9 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
-import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type SignalTestSpec = {
   servers: number;

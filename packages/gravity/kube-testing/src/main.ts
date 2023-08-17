@@ -4,10 +4,8 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { EchoTestPlan } from './plan/echo-spec';
-import { runPlan } from './plan/run-plan';
-import { SignalTestPlan } from './plan/signal-spec';
-import { TransportTestPlan } from './plan/transport-spec';
+import { runPlan } from './plan';
+import { EchoTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
