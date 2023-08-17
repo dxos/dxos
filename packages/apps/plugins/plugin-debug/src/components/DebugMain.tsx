@@ -88,16 +88,19 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
           <Button onClick={handleUpdateObject}>Update</Button>
-          <Input.Root>
-            <Input.TextInput
-              title={t('mutation period')}
-              autoComplete='off'
-              classNames='w-[100px] text-right'
-              placeholder='Mutation period'
-              value={mutationInterval}
-              onChange={({ target: { value } }) => setMutationInterval(value)}
-            />
-          </Input.Root>
+          <div>
+            <Input.Root>
+              <Input.TextInput
+                title={t('mutation period')}
+                autoComplete='off'
+                size={6}
+                classNames='w-[100px] text-right'
+                placeholder='Mutation period'
+                value={mutationInterval}
+                onChange={({ target: { value } }) => setMutationInterval(value)}
+              />
+            </Input.Root>
+          </div>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>

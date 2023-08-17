@@ -219,8 +219,6 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // TODO(wittjosiah): Make re-entrant.
-    // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(
       this._storage,
       this._networkManager,
@@ -228,7 +226,6 @@ export class ClientServicesHost {
       this._modelFactory,
     );
 
-    // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
