@@ -108,16 +108,16 @@ export const useRoutes = () => {
           path: '/mesh',
           children: [
             {
-              path: '/mesh/network',
-              element: <NetworkPanel />,
-            },
-            {
               path: '/mesh/signal',
               element: <SignalPanel />,
             },
             {
               path: '/mesh/swarm',
               element: <SwarmPanel />,
+            },
+            {
+              path: '/mesh/network',
+              element: <NetworkPanel />,
             },
           ],
         },

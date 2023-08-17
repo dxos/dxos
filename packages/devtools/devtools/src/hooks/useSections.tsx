@@ -131,11 +131,6 @@ export const useSections = (): SectionItem[] => {
       Icon: Graph,
       items: [
         {
-          id: '/mesh/network',
-          title: 'Network',
-          Icon: Polygon,
-        },
-        {
           id: '/mesh/signal',
           title: 'Signal',
           Icon: WifiHigh,
@@ -144,6 +139,11 @@ export const useSections = (): SectionItem[] => {
           id: '/mesh/swarm',
           title: 'Swarm',
           Icon: UsersThree,
+        },
+        {
+          id: '/mesh/network',
+          title: 'Network',
+          Icon: Polygon,
         },
       ],
     },
