@@ -10,12 +10,19 @@ import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 import { Avatar, AvatarRootProps, useAvatarContext } from './Avatar';
 
-type AvatarGroupProps = Omit<AvatarRootProps, 'status' | 'maskId' | 'inGroup'> &
+type AvatarGroupRootProps = Omit<AvatarRootProps, 'status' | 'maskId' | 'inGroup'> &
   ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-const AvatarGroup = forwardRef<HTMLDivElement, AvatarGroupProps>(
+const AvatarGroupRoot = forwardRef<HTMLDivElement, AvatarGroupRootProps>(
   (
-    { labelId: propsLabelId, descriptionId: propsDescriptionId, size, variant, children, classNames }: AvatarGroupProps,
+    {
+      labelId: propsLabelId,
+      descriptionId: propsDescriptionId,
+      size,
+      variant,
+      children,
+      classNames,
+    }: AvatarGroupRootProps,
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
@@ -88,3 +95,7 @@ const AvatarGroupDescription = forwardRef<HTMLSpanElement, AvatarGroupDescriptio
     );
   },
 );
+
+export const AvatarGroup = { Root: AvatarGroupRoot, Label: AvatarGroupLabel, Description: AvatarGroupDescription };
+export const AvatarGroupItem = { Root: AvatarGroupItemRoot };
+export type { AvatarGroupRootProps, AvatarGroupItemRootProps, AvatarGroupLabelProps, AvatarGroupDescriptionProps };
