@@ -9,6 +9,7 @@ import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
 // TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
 const LOG_FILTER = 'info';
@@ -27,9 +28,9 @@ const workerRuntime = new WorkerRuntime(async () => {
 });
 
 // Allow to access host from console.
-(globalThis as any).__DXOS__ = {
+mountDevtoolsHooks({
   host: workerRuntime.host,
-};
+});
 
 const start = Date.now();
 void workerRuntime.start().then(

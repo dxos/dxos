@@ -16,6 +16,7 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
+import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 
 interface Service {
   open(): Promise<void>;
@@ -65,7 +66,7 @@ export class Agent {
     await this._client.initialize();
 
     // Global hook for debuggers.
-    ((globalThis as any).__DXOS__ ??= {}).host = (this._clientServices as any)._host;
+    mountDevtoolsHooks({ host: (this._clientServices as any)._host });
 
     //
     // Unix socket (accessed via CLI).
@@ -119,7 +120,7 @@ export class Agent {
     this._client = undefined;
     this._clientServices = undefined;
 
-    ((globalThis as any).__DXOS__ ??= {}).host = undefined;
+    unmountDevtoolsHooks();
     log('stopped');
   }
 }
