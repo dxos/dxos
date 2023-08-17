@@ -11,6 +11,9 @@ import { TransportTestPlan } from './plan/transport-spec';
 
 // TODO(burdon): Factor out plan to YML files.
 
+// eslint-disable-next-line unused-imports/no-unused-vars
+const DXOS_REPO = process.env.DXOS_REPO;
+
 /**
  *
  */
@@ -39,8 +42,7 @@ const runSignal = async () =>
     options: {
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
-      // repeatAnalysis:
-      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json`
+      // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-05-13T16:08:09-f0ba/test.json`
     },
   });
 
@@ -68,8 +70,7 @@ const runTransport = async () =>
       staggerAgents: 1000,
       randomSeed: PublicKey.random().toHex(),
       // profile: true,
-      // repeatAnalysis:
-      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json`
+      // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-08-09T11:36:28-784ae212/test.json`
     },
   });
 
@@ -94,8 +95,7 @@ const runEcho = async () =>
       staggerAgents: 5,
       randomSeed: PublicKey.random().toHex(),
       profile: true,
-      // repeatAnalysis:
-      //  `${process.env.HOME}/Projects/protocols/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
+      // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
     },
   });
 

@@ -48,7 +48,7 @@ export type RunPlanParams<S, C> = {
 export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
-    // Analysis mode
+    // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.finish(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
@@ -59,10 +59,10 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
   }
 
   if (!process.env.GRAVITY_AGENT_PARAMS) {
-    // Planner mode
+    // Planner mode.
     await runPlanner({ plan, spec, options });
   } else {
-    // Agent mode
+    // Agent mode.
     const params: AgentParams<S, C> = JSON.parse(process.env.GRAVITY_AGENT_PARAMS);
     await runAgent(plan, params);
   }
