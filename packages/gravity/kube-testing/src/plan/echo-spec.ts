@@ -250,7 +250,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
   }
 
   getSpaceBackend = (): EchoSpace =>
-    this.services.host?._serviceContext.spaceManager.spaces.get(this.space.key) ?? failUndefined();
+    this.services.host?.context.spaceManager.spaces.get(this.space.key) ?? failUndefined();
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof Text) as Text;
 

@@ -11,7 +11,7 @@ import { SignalServerRunner } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
 // TODO(burdon): Also require config for dxos root.
-const KUBE_REPO = process.env.KUBE_HOME ?? raise('Missing KUBE_HOME environment variable.');
+const KUBE_REPO = process.env.KUBE_HOME ?? raise(new Error('KUBE_HOME environment variable not set.'));
 
 const BIN_PATH = './cmds/signal-test/main.go';
 
