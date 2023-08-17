@@ -33,7 +33,6 @@ export class SnapshotManager {
     return SpaceSnapshot.decode(blob);
   }
 
-  @timed(10_000)
   async load(ctx: Context, id: string): Promise<SpaceSnapshot> {
     const blobId = PublicKey.fromHex(id).asUint8Array();
     const blobMeta = await this._blobStore.getMeta(blobId);
