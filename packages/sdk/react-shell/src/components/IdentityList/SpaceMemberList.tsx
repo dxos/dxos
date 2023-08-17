@@ -2,20 +2,43 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
+import { PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
+import { useMembers } from '@dxos/react-client/echo';
 
 import { IdentityListItem } from './IdentityListItem';
 
-export interface SpaceMemberListProps {
+export interface SpaceMemberListImplProps {
   members: SpaceMember[];
   onSelect?: (member: SpaceMember) => void;
 }
+export interface SpaceMemberListProps extends Partial<SpaceMemberListImplProps> {
+  spaceKey: PublicKey;
+  includeSelf?: boolean;
+}
 
-export const SpaceMemberList = ({ members, onSelect }: SpaceMemberListProps) => {
+export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMemberListProps) => {
+  const client = useClient();
+  const allUnsortedMembers = useMembers(spaceKey);
+  const members = useMemo(
+    () =>
+      includeSelf
+        ? allUnsortedMembers.sort((a) =>
+            a.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
+          )
+        : allUnsortedMembers.filter(
+            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),
+          ),
+    [allUnsortedMembers],
+  );
+  return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
+};
+
+export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = useTranslation('os');
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (

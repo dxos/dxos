@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { Button, ListItem, useTranslation } from '@dxos/aurora';
 import { chromeSurface, getSize } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
+import { CancellableInvitationObservable, InvitationStatus, useInvitationStatus } from '@dxos/react-client/invitations';
 
 import { invitationStatusValue } from '../../util';
 import { CopyButtonIconOnly } from '../Clipboard';
@@ -15,24 +15,35 @@ import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;
-  onClickRemove: (invitation: CancellableInvitationObservable) => void;
+  onClickRemove?: (invitation: CancellableInvitationObservable) => void;
 }
 
-export const InvitationListItem = ({
+export interface InvitationListItemImplProps extends InvitationListItemProps {
+  invitationStatus: InvitationStatus;
+}
+
+export const InvitationListItem = (props: InvitationListItemProps) => {
+  const { invitation } = props;
+  const invitationStatus = useInvitationStatus(invitation);
+  return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
+};
+
+export const InvitationListItemImpl = ({
   invitation,
+  invitationStatus,
   send,
   onClickRemove,
   createInvitationUrl,
-}: InvitationListItemProps) => {
+}: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status, haltedAt, invitationCode, authCode } = useInvitationStatus(invitation);
+  const { cancel, status, haltedAt, invitationCode, authCode } = invitationStatus;
   const statusValue = invitationStatusValue.get(status) ?? 0;
 
   const isCancellable = statusValue < 5 && statusValue >= 0;
   const showShare = statusValue < 3 && statusValue >= 0;
   const showAuthCode = statusValue === 3;
 
-  const handleClickRemove = useCallback(() => onClickRemove(invitation), [invitation, onClickRemove]);
+  const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
 

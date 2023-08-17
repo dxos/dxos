@@ -6,10 +6,10 @@ import '@dxosTheme';
 import { faker } from '@faker-js/faker';
 import React from 'react';
 
-import { DensityProvider, ElevationProvider, useThemeContext } from '@dxos/aurora';
 import { PublicKey } from '@dxos/react-client';
 import { ClientDecorator } from '@dxos/react-client/testing';
 
+import { StorybookDialog } from '../../components/StorybookDialog';
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 
@@ -28,22 +28,14 @@ const noOpProps: IdentityPanelImplProps = {
   },
 };
 
-const StorybookIdentityPanel = (args: Partial<IdentityPanelImplProps>) => {
-  const identityPanelProps = { ...noOpProps, ...args };
-  const { tx } = useThemeContext();
-  return (
-    <DensityProvider density='fine'>
-      <ElevationProvider elevation='chrome'>
-        <div role='group' className={tx('dialog.content', 'dialog', { inOverlayLayout: false }, 'p-1')}>
-          <IdentityPanelImpl {...identityPanelProps} />
-        </div>
-      </ElevationProvider>
-    </DensityProvider>
-  );
-};
+const IdentityPanel = (args: Partial<IdentityPanelImplProps>) => (
+  <StorybookDialog>
+    <IdentityPanelImpl {...noOpProps} {...args} />
+  </StorybookDialog>
+);
 
 export default {
-  component: StorybookIdentityPanel,
+  component: IdentityPanel,
 };
 
 export const IdentityActionChooser = {
@@ -51,7 +43,7 @@ export const IdentityActionChooser = {
   args: { activeView: 'identity action chooser' },
 };
 
-export const DeviceManager = {
-  decorators: [ClientDecorator()],
-  args: { activeView: 'device manager' },
-};
+// export const DeviceManager = {
+//   decorators: [ClientDecorator()],
+//   args: { activeView: 'device manager' },
+// };
