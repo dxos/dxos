@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string';
 import type node from 'node-datachannel';
 
 export class DataChannel extends EventTarget implements RTCDataChannel {
@@ -59,7 +58,7 @@ export class DataChannel extends EventTarget implements RTCDataChannel {
     });
     this.#dataChannel.onMessage((data: string | Uint8Array) => {
       if (typeof data === 'string') {
-        data = uint8ArrayFromString(data);
+        data = Buffer.from(data);
       }
 
       this.dispatchEvent(new MessageEvent('message', { data }));
