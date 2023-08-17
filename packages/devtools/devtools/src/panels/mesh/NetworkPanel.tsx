@@ -5,7 +5,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
 import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
 import {
   Graph,
@@ -26,106 +25,6 @@ import { defaultMap } from '@dxos/util';
 import { PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
-
-const NetworkPanel = () => {
-  const { space } = useDevtoolsState();
-  const identity = useIdentity();
-
-  const isMe = (node: NetworkGraphNode) =>
-    identity ? node.member?.identity.identityKey.equals(identity.identityKey) : false;
-
-  const members = useMembers(space?.key);
-  const [model] = useState(() => new NetworkGraphModel());
-  useEffect(() => {
-    if (members) {
-      model.setFromMemberList(members);
-      console.log(model.graph);
-    }
-  }, [members]);
-
-  const context = createSvgContext();
-  const projector = useMemo(
-    () =>
-      new GraphForceProjector<NetworkGraphNode>(context, {
-        // guides: true,
-        forces: {
-          manyBody: {
-            strength: -160,
-          },
-          link: {
-            distance: 120,
-            iterations: 5,
-          },
-          radial: {
-            radius: 60,
-            strength: 0.2,
-          },
-        },
-        attributes: {
-          radius: (node: GraphLayoutNode<NetworkGraphNode>, count) => (isMe(node.data!) ? 24 : 16),
-        },
-      }),
-    [],
-  );
-
-  // TODO(dmaretskyi): Fix colors.
-  // TODO(dmaretskyi): Highlight our direct connections.
-  // TODO(dmaretskyi): Visualize data flowing: line thickness, running ticks, text stats.
-  // TODO(dmaretskyi): Show connections that are forming.
-  return (
-    <PanelContainer
-      toolbar={
-        <Toolbar.Root>
-          <SpaceSelector />
-        </Toolbar.Root>
-      }
-    >
-      <SVGContextProvider context={context}>
-        <SVG>
-          <Markers />
-          <Graph
-            className={defaultStyles.links}
-            model={model}
-            drag
-            arrows
-            projector={projector}
-            labels={{
-              text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
-                return (
-                  node.data!.member?.identity.profile?.displayName ??
-                  node.data!.member?.identity.identityKey.truncate() ??
-                  node.data!.peer?.peerId?.truncate() ??
-                  node.data!.id
-                );
-              },
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<NetworkGraphNode>) => {
-                const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
-                const color = nodeClasses[key?.getInsecureHash(nodeClasses.length) ?? 0];
-                return {
-                  class: mx(color, isMe(node.data!) && 'border-2'),
-                };
-              },
-            }}
-          />
-        </SVG>
-      </SVGContextProvider>
-    </PanelContainer>
-  );
-};
-
-const nodeClasses = [
-  '[&>circle]:fill-red-300',
-  '[&>circle]:fill-green-300',
-  '[&>circle]:fill-blue-300',
-  '[&>circle]:fill-indigo-300',
-  '[&>circle]:fill-teal-300',
-  '[&>circle]:fill-cyan-300',
-  '[&>circle]:fill-gray-300',
-];
-
-export default NetworkPanel;
 
 export type NetworkGraphNode = {
   id: string;
@@ -177,3 +76,105 @@ class NetworkGraphModel extends GraphModel<NetworkGraphNode> {
     this.setData({ nodes: Array.from(nodes.values()), links });
   }
 }
+
+const classes = {
+  default: '[&>circle]:fill-zinc-300 [&>circle]:stroke-zinc-400 [&>circle]:stroke-2',
+  nodes: [
+    '[&>circle]:fill-red-300',
+    '[&>circle]:fill-green-300',
+    '[&>circle]:fill-blue-300',
+    '[&>circle]:fill-indigo-300',
+    '[&>circle]:fill-teal-300',
+    '[&>circle]:fill-cyan-300',
+    '[&>circle]:fill-gray-300',
+  ],
+};
+
+const NetworkPanel = () => {
+  const { space } = useDevtoolsState();
+  const identity = useIdentity();
+
+  const isMe = (node: NetworkGraphNode) =>
+    identity ? node.member?.identity.identityKey.equals(identity.identityKey) : false;
+
+  const members = useMembers(space?.key);
+  const [model] = useState(() => new NetworkGraphModel());
+  useEffect(() => {
+    if (members) {
+      model.setFromMemberList(members);
+      console.log(model.graph);
+    }
+  }, [members]);
+
+  const context = createSvgContext();
+  const projector = useMemo(
+    () =>
+      new GraphForceProjector<NetworkGraphNode>(context, {
+        forces: {
+          manyBody: {
+            strength: -160,
+          },
+          link: {
+            distance: 120,
+            iterations: 5,
+          },
+          radial: {
+            radius: 60,
+            strength: 0.2,
+          },
+        },
+        attributes: {
+          radius: (node: GraphLayoutNode<NetworkGraphNode>, count) => (isMe(node.data!) ? 24 : 16),
+        },
+      }),
+    [],
+  );
+
+  // TODO(dmaretskyi): Highlight our direct connections.
+  // TODO(dmaretskyi): Visualize data flowing: line thickness, running ticks, text stats.
+  // TODO(dmaretskyi): Show connections that are forming.
+  return (
+    <PanelContainer
+      toolbar={
+        <Toolbar.Root>
+          <SpaceSelector />
+        </Toolbar.Root>
+      }
+    >
+      <SVGContextProvider context={context}>
+        <SVG>
+          <Markers />
+          <Graph
+            className={defaultStyles.links}
+            model={model}
+            drag
+            arrows
+            projector={projector}
+            labels={{
+              text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
+                return (
+                  node.data!.member?.identity.profile?.displayName ??
+                  node.data!.member?.identity.identityKey.truncate() ??
+                  node.data!.peer?.peerId?.truncate() ??
+                  node.data!.id
+                );
+              },
+            }}
+            attributes={{
+              node: (node: GraphLayoutNode<NetworkGraphNode>) => {
+                const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
+                return {
+                  class: isMe(node.data)
+                    ? classes.default
+                    : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+                };
+              },
+            }}
+          />
+        </SVG>
+      </SVGContextProvider>
+    </PanelContainer>
+  );
+};
+
+export default NetworkPanel;
