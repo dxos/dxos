@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import type = Mocha.utils.type;
-
 export type Platform = {
   type: 'browser' | 'shared-worker' | 'node';
   userAgent?: string;
