@@ -3113,6 +3113,7 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/react-syntax-highlighter': ^15.5.5
       '@types/react-vis': ^1.11.11
       '@vitejs/plugin-react': ^3.0.1
       bytes: ^3.1.2
@@ -3125,6 +3126,7 @@ importers:
       react-dom: ^18.2.0
       react-json-tree: ^0.18.0
       react-router-dom: ^6.4.0
+      react-syntax-highlighter: ^15.5.0
       react-vis: ^1.11.12
       tailwindcss: ~3.3.2
       typescript: ^5.0.4
@@ -3163,6 +3165,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      react-syntax-highlighter: 15.5.0_react@18.2.0
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@dxos/config': link:../../sdk/config
@@ -3170,6 +3173,7 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/react-syntax-highlighter': 15.5.5
       '@types/react-vis': 1.11.11
       '@vitejs/plugin-react': 3.0.1_vite@4.3.9
       postcss: 8.4.21
