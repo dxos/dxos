@@ -16,6 +16,7 @@ import {
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
+  MetadataPanel,
   NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
@@ -23,7 +24,6 @@ import {
   StoragePanel,
   SwarmPanel,
 } from '../panels';
-import MetadataPanel from '../panels/echo/MetadataPanel';
 
 export const namespace = 'devtools';
 

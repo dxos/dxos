@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import clsx from 'clsx';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useSvgContext } from '@dxos/gem-core';
@@ -33,7 +34,7 @@ export interface GraphProps {
  * @constructor
  */
 export const Graph = ({
-  className = defaultGraphStyles,
+  className = clsx(defaultGraphStyles),
   model,
   projector: controlledProjector,
   drag,
