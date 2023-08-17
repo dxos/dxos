@@ -154,7 +154,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           )}
           ref={ref}
         >
-          <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+          <ElevationProvider elevation='group'>{children}</ElevationProvider>
         </Root>
       </DialogRoot>
     );
