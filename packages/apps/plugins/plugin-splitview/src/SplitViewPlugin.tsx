@@ -37,24 +37,21 @@ export const SplitViewPlugin = ({
       ),
       components: { SplitView, SplitViewMainContentEmpty },
       graph: {
-        actions: (parent) => {
+        nodes: (plugins) => (parent) => {
           if (parent.id !== 'root') {
-            return [];
+            return;
           }
 
-          return [
-            {
-              id: 'close-sidebar',
-              index: 'a1',
-              label: ['close sidebar label', { ns: 'os' }],
-              icon: (props) => <ArrowLineLeft {...props} />,
-              intent: {
-                plugin: SPLITVIEW_PLUGIN,
-                action: SplitViewAction.TOGGLE_SIDEBAR,
-                data: { state: false },
-              },
+          parent.addAction({
+            id: 'close-sidebar',
+            label: ['close sidebar label', { ns: 'os' }],
+            icon: (props) => <ArrowLineLeft {...props} />,
+            intent: {
+              plugin: SPLITVIEW_PLUGIN,
+              action: SplitViewAction.TOGGLE_SIDEBAR,
+              data: { state: false },
             },
-          ];
+          });
         },
       },
       intent: {

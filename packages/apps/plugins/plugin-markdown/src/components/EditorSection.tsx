@@ -9,7 +9,7 @@ import { focusRing, mx } from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
-export const MarkdownSection = ({
+export const EditorSection = ({
   data: {
     object: { content: document },
   },

@@ -5,26 +5,29 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React from 'react';
+import React, { FC } from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { isGraphNode } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Document as DocumentType } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Document as DocumentType, Document } from '@braneframe/types';
+import { ComposerModel, MarkdownComposerProps, useTextModel } from '@dxos/aurora-composer';
+import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { PluginDefinition, findPlugin, Surface, usePluginContext } from '@dxos/react-surface';
 
-import {
-  MarkdownMain,
-  MarkdownMainEmbedded,
-  MarkdownMainEmpty,
-  MarkdownSection,
-  SpaceMarkdownChooser,
-} from './components';
+import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
 import translations from './translations';
-import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
+import {
+  MARKDOWN_PLUGIN,
+  MARKDOWN_PLUGIN_SHORT_ID,
+  MarkdownAction,
+  MarkdownPluginProvides,
+  MarkdownProperties,
+} from './types';
 import {
   documentToGraphNode,
+  getMarkdownId,
   isMarkdown,
   isMarkdownContent,
   isMarkdownPlaceholder,
@@ -36,20 +39,52 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[DocumentType.name] = DocumentType;
 
+export const isDocument = (data: unknown): data is Document =>
+  isTypedObject(data) && Document.type.name === data.__typename;
+
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
-  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode, getMarkdownId);
 
-  const MarkdownMainStandalone = ({
+  const EditorMainStandalone = ({
     data: { composer, properties },
   }: {
     data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
   }) => {
     return (
-      <MarkdownMain
+      <EditorMain
         model={composer}
         properties={properties}
+        layout='standalone'
+        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+      />
+    );
+  };
+
+  const MarkdownMain: FC<{ data: unknown }> = ({ data }) => {
+    const node = data && typeof data === 'object' && 'active' in data && isGraphNode(data.active) ? data.active : null;
+    const document = node && isDocument(node.data) ? node.data : undefined;
+
+    const identity = useIdentity();
+    const { plugins } = usePluginContext();
+    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+
+    const textModel = useTextModel({
+      identity,
+      space: spacePlugin?.provides.space.current,
+      text: document?.content,
+    });
+
+    // Fall back to other surfaces to handle.
+    if (!textModel) {
+      return <Surface data={data} role='main' />;
+    }
+
+    return (
+      <EditorMain
+        model={textModel}
+        properties={node?.data}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
       />
@@ -59,6 +94,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   return {
     meta: {
       id: MARKDOWN_PLUGIN,
+      shortId: MARKDOWN_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
@@ -73,42 +109,37 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (plugins) => (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${MARKDOWN_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${MARKDOWN_PLUGIN}/create`,
+            label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            properties: {
               testId: 'spacePlugin.createDocument',
-              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
               disposition: 'toolbar', // TODO(burdon): Both places.
-              intent: [
-                {
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+            intent: [
+              {
+                plugin: MARKDOWN_PLUGIN,
+                action: MarkdownAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: space.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       stack: {
@@ -134,12 +165,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         ],
       },
+      components: {
+        Main: MarkdownMain,
+      },
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
           return null;
         }
 
         // TODO(burdon): Document.
+        // TODO(wittjosiah): Cleanup.
+        // TODO(wittjosiah): Expose all through `components` as well?
         switch (role) {
           case 'main': {
             if (
@@ -149,9 +185,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               isMarkdownProperties(data.properties)
             ) {
               if ('view' in data && data.view === 'embedded') {
-                return MarkdownMainEmbedded;
+                return EditorMainEmbedded;
               } else {
-                return MarkdownMainStandalone;
+                return EditorMainStandalone;
               }
             } else if (
               'composer' in data &&
@@ -166,7 +202,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           case 'section': {
             if (isMarkdown(get(data, 'object.content', {}))) {
-              return MarkdownSection;
+              return EditorSection;
             }
             break;
           }

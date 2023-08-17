@@ -3,15 +3,14 @@
 //
 
 import { Devices, Intersect, Planet } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { effect } from '@preact/signals-react';
 import { getIndices } from '@tldraw/indices';
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { ClientPluginProvides } from '@braneframe/plugin-client';
-import { GraphNode, GraphProvides, GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
-import { IntentProvides } from '@braneframe/plugin-intent';
+import { GraphPluginProvides, isGraphNode } from '@braneframe/plugin-graph';
 import { SplitViewProvides } from '@braneframe/plugin-splitview';
-import { TranslationsProvides } from '@braneframe/plugin-theme';
 import { TreeViewPluginProvides } from '@braneframe/plugin-treeview';
 import { EventSubscriptions } from '@dxos/async';
 import { createSubscription } from '@dxos/echo-schema';
@@ -22,15 +21,17 @@ import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 import { backupSpace } from './backup';
 import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
 import translations from './translations';
-import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction } from './types';
+import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
 
-type SpacePluginProvides = GraphProvides & IntentProvides & TranslationsProvides;
+// TODO(wittjosiah): This ensures that typed objects are not proxied by deepsignal. Remove.
+// https://github.com/luisherranz/deepsignal/issues/36
+(globalThis as any)[SpaceProxy.name] = SpaceProxy;
 
 export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
-  let onSpaceUpdate: ((node?: GraphNode<Space>) => void) | undefined;
+  const state = deepSignal<SpaceState>({ current: undefined });
   const subscriptions = new EventSubscriptions();
-  const spaceSubs = new EventSubscriptions();
+  let disposeSetSpaceProvider: () => void;
 
   return {
     meta: {
@@ -46,20 +47,6 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
       }
 
       const client = clientPlugin.provides.client;
-      subscriptions.add(
-        client.spaces.subscribe((spaces) => {
-          spaceSubs.clear();
-          const spaceIndices = getIndices(spaces.length);
-          spaces.forEach((space, index) => {
-            const handle = createSubscription(() => {
-              onSpaceUpdate?.(spaceToGraphNode(space, plugins, spaceIndices[index]));
-            });
-            handle.update([space.properties]);
-            spaceSubs.add(handle.unsubscribe);
-          });
-          onSpaceUpdate?.();
-        }).unsubscribe,
-      );
 
       if (!treeViewPlugin) {
         return;
@@ -69,14 +56,30 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
       if (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost) {
         client.services.joinedSpace.on((spaceKey) => {
-          treeView.active = [getSpaceId(spaceKey)];
+          treeView.active = getSpaceId(spaceKey);
         });
       }
 
-      const dispose = effect(() => {
-        const space = graphPlugin?.provides.graph.pluginChildren?.[SPACE_PLUGIN]?.find(
-          (node) => node.id === treeView.active[0],
-        )?.data;
+      disposeSetSpaceProvider = effect(async () => {
+        if (!treeView.activeNode) {
+          return;
+        }
+
+        const space = await new Promise<Space | undefined>((resolve) => {
+          graphPlugin?.provides.graph.traverse({
+            from: treeView.activeNode,
+            direction: 'up',
+            onVisitNode: (node) => {
+              if (isSpace(node.data)) {
+                resolve(node.data);
+              }
+            },
+          });
+          resolve(undefined);
+        });
+
+        state.current = space;
+
         if (
           space instanceof SpaceProxy &&
           (client.services instanceof IFrameClientServicesProxy || client.services instanceof IFrameClientServicesHost)
@@ -84,14 +87,13 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           client.services.setSpaceProvider(() => space.key);
         }
       });
-      subscriptions.add(dispose);
     },
     unload: async () => {
-      onSpaceUpdate = undefined;
-      spaceSubs.clear();
       subscriptions.clear();
+      disposeSetSpaceProvider?.();
     },
     provides: {
+      space: state as SpaceState,
       translations,
       component: (data, role) => {
         switch (role) {
@@ -132,33 +134,49 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         Main: SpaceMain,
       },
       graph: {
-        nodes: (parent, emit, plugins) => {
+        nodes: (plugins) => (parent) => {
           if (parent.id !== 'root') {
-            return [];
+            return;
           }
 
-          onSpaceUpdate = emit;
           const clientPlugin = findPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
-          const spaces = clientPlugin?.provides.client.spaces.get();
-          const indices = spaces?.length ? getIndices(spaces.length) : [];
-          return spaces?.map((space, index) => spaceToGraphNode(space, plugins, indices[index])) ?? [];
-        },
-        actions: (parent) => {
-          if (parent.id !== 'root') {
-            return [];
+          if (!clientPlugin) {
+            return;
           }
 
-          const indices = getIndices(3);
+          const [groupNode] = parent.add({
+            id: getSpaceId('all-spaces'),
+            label: ['plugin name', { ns: SPACE_PLUGIN }],
+          });
 
-          // TODO(wittjosiah): Disable if no identity.
-          return [
+          const client = clientPlugin.provides.client;
+          const spaces = client.spaces.get();
+          const indices = spaces?.length ? getIndices(spaces.length) : [];
+          spaces.forEach((space, index) => spaceToGraphNode(space, groupNode, indices[index]));
+
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            const spaceIndices = getIndices(spaces.length);
+            spaces.forEach((space, index) => {
+              const handle = createSubscription(() => {
+                spaceToGraphNode(space, groupNode, spaceIndices[index]);
+              });
+              handle.update([space.properties]);
+              subscriptions.add(handle.unsubscribe);
+
+              spaceToGraphNode(space, groupNode, indices[index]);
+            });
+          });
+
+          parent.addAction(
             {
               id: 'create-space',
-              index: indices[0],
-              testId: 'spacePlugin.createSpace',
               label: ['create space label', { ns: 'os' }],
               icon: (props) => <Planet {...props} />,
-              disposition: 'toolbar',
+              properties: {
+                disposition: 'toolbar',
+                testId: 'spacePlugin.createSpace',
+              },
               intent: {
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.CREATE,
@@ -166,11 +184,12 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             },
             {
               id: 'join-space',
-              index: indices[1],
-              testId: 'spacePlugin.joinSpace',
               label: ['join space label', { ns: 'os' }],
               icon: (props) => <Intersect {...props} />,
-              disposition: 'toolbar',
+              properties: {
+                disposition: 'toolbar',
+                testId: 'spacePlugin.joinSpace',
+              },
               intent: {
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.JOIN,
@@ -179,15 +198,21 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             // TODO(wittjosiah): Factor out.
             {
               id: 'invite-device',
-              index: indices[2],
-              testId: 'spacePlugin.inviteDevice',
               label: ['invite device label', { ns: 'os' }],
               icon: (props) => <Devices {...props} />,
+              properties: {
+                testId: 'spacePlugin.inviteDevice',
+              },
               intent: {
                 action: 'device-invitations',
               },
             },
-          ];
+          );
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       intent: {

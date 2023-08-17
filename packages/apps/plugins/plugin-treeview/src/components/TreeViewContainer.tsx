@@ -5,7 +5,7 @@
 import { DotsThreeVertical, GearSix, Placeholder } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
+import { Graph, useGraph } from '@braneframe/plugin-graph';
 import { useSplitView } from '@braneframe/plugin-splitview';
 import {
   Avatar,
@@ -24,10 +24,11 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { TREE_VIEW_PLUGIN } from '../types';
+import { sortActions } from '../util';
 import { TreeView } from './TreeView';
 
 export const TreeViewContainer = () => {
-  const { graph, invokeAction } = useGraph();
+  const { graph } = useGraph();
 
   const identity = useIdentity({ login: true });
   const jdenticon = useJdenticonHref(identity?.identityKey.toHex() ?? '', 24);
@@ -39,9 +40,9 @@ export const TreeViewContainer = () => {
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const branches = Object.entries(graph.pluginChildren ?? {}).filter(([, items]) => (items as []).length > 0);
+  const branches = Object.values(graph.root.children ?? {}) as Graph.Node[];
 
-  const [primary, secondary, ...actions] = getActions(graph as GraphNode);
+  const [primary, secondary, ...actions] = sortActions(graph.root.actions);
   const hoistedActions = [primary, secondary].filter(Boolean);
 
   return (
@@ -50,10 +51,12 @@ export const TreeViewContainer = () => {
         <div role='none' className='flex flex-col bs-full'>
           <div role='separator' className='order-1 bs-px mli-2.5 bg-neutral-500/20' />
           <Tree.Root role='none' classNames='order-1 grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth'>
-            {branches.map(([key, items]) => (
-              <TreeItem.Root key={key} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
-                <TreeItem.Heading classNames='pl-2'>{t('plugin name', { ns: key })}</TreeItem.Heading>
-                <TreeView items={items as GraphNode[]} parent={graph.id} />
+            {branches.map((branch) => (
+              <TreeItem.Root key={branch.id} classNames='flex flex-col plb-1.5 pis-1 pie-1.5'>
+                <TreeItem.Heading classNames='pl-2'>
+                  {typeof branch.label === 'string' ? branch.label : t(...branch.label)}
+                </TreeItem.Heading>
+                <TreeView items={Object.values(branch.children)} parent={branch} />
               </TreeItem.Root>
             ))}
           </Tree.Root>
@@ -65,8 +68,8 @@ export const TreeViewContainer = () => {
                   <Button
                     variant='ghost'
                     key={action.id}
-                    {...(action.testId && { 'data-testid': action.testId })}
-                    onClick={() => invokeAction(action)}
+                    {...(action.properties.testId && { 'data-testid': action.properties.testId })}
+                    onClick={() => action.invoke()}
                     classNames='pli-2 pointer-fine:pli-1'
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
@@ -125,10 +128,10 @@ export const TreeViewContainer = () => {
                       <DropdownMenu.Item
                         key={action.id}
                         onClick={(event) => {
-                          // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                          // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                           suppressNextTooltip.current = true;
                           setOptionsMenuOpen(false);
-                          void invokeAction(action);
+                          void action.invoke();
                         }}
                         classNames='gap-2'
                       >
