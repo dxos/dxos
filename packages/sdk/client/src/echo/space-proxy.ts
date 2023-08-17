@@ -251,7 +251,7 @@ export class SpaceProxy implements Space {
         try {
           await waitForSpaceMeta.wait({ timeout: LOAD_PROPERTIES_TIMEOUT });
         } catch {
-          throw new ApiError('Properties not found.');
+          log.warn('Space properties not found in time.', { space: this.key, timeout: LOAD_PROPERTIES_TIMEOUT })
         } finally {
           subscription();
         }
