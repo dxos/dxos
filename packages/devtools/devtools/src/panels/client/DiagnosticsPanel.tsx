@@ -91,7 +91,7 @@ const DiagnosticsPanel = () => {
         )
       }
     >
-      <JsonView data={data} level={5} />
+      <JsonView data={data} />
     </PanelContainer>
   );
 };
