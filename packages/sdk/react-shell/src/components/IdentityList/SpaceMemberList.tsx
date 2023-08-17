@@ -38,7 +38,6 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
   return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
 };
 
-
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = useTranslation('os');
   const visibleMembers = members.filter((member) => member.identity);
