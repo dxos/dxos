@@ -29,7 +29,6 @@ const ports = new Set<number>();
 
 export const runSignal = async (num: number, outFolder: string, signalArguments: string[]) => {
   let port = randomInt(10000, 20000);
-
   while (ports.has(port)) {
     log.warn(`port in use ${port}`);
     port = randomInt(10000, 20000);

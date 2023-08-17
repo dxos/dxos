@@ -69,7 +69,7 @@ export const runPlan = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>
 };
 
 const runPlanner = async <S, C>({ plan, spec, options }: RunPlanParams<S, C>) => {
-  const testId = genTestId();
+  const testId = createTestPathname();
   const outDir = `${process.cwd()}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -201,4 +201,4 @@ const runAgent = async <S, C>(plan: TestPlan<S, C>, params: AgentParams<S, C>) =
   }
 };
 
-const genTestId = () => `${new Date().toISOString().slice(0, -5)}-${PublicKey.random().truncate()}`;
+const createTestPathname = () => new Date().toISOString().replace(/\W/g, '-');
