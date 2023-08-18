@@ -167,7 +167,8 @@ const StackSectionsImpl = ({
   );
 };
 
-const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
+// TODO(burdon): Pass through context to surface.
+export const StackMain = ({ data: stack }: { data: StackModel & StackProperties }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
   const handleAdd = useCallback(
@@ -231,10 +232,4 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
       </div>
     </Main.Content>
   );
-};
-
-// TODO(burdon): Pass through context to surface.
-export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
-  const stack = data.object as StackModel & StackProperties;
-  return <StackMainImpl stack={stack} />;
 };
