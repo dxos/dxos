@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Avatar';
+export * from './Avatars';
 export * from './Buttons';
 export * from './Dialogs';
 export * from './DropdownMenu';
