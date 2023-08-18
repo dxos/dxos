@@ -8,7 +8,8 @@ import { Writable } from 'streamx';
 import { Event, latch, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import type { ReadStreamOptions } from '@dxos/hypercore';
-import { invariant, log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { FeedBlock } from './types';

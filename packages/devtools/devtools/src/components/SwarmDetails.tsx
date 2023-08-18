@@ -18,13 +18,12 @@ interface SwarmDetailsProps {
 export const SwarmDetails = ({ swarms }: SwarmDetailsProps) => {
   const [swarmId, setSwarmId] = useState<PublicKey | undefined>();
   const [sessionId, setSessionId] = useState<PublicKey | undefined>();
-
   if (swarmId && sessionId) {
-    const connectionInfo = swarms
+    const connection = swarms
       .find((swarm) => swarm.id.equals(swarmId))
       ?.connections?.find((conn) => conn.sessionId.equals(sessionId));
-    if (connectionInfo) {
-      return <ConnectionInfoView connectionInfo={connectionInfo} onReturn={() => setSessionId(undefined)} />;
+    if (connection) {
+      return <ConnectionInfoView connection={connection} />;
     } else {
       return <div>Connection not found.</div>;
     }

@@ -3,15 +3,15 @@
 //
 
 import yaml from 'js-yaml';
-import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
 
 import { Config } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 
 export const loadJson = (filename: string) => {
-  assert(filename, 'Invalid path');
+  invariant(filename, 'Invalid path');
   return yaml.load(String(fs.readFileSync(path.join(process.cwd(), filename)))) as any;
 };
 

@@ -5,18 +5,20 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { TableColumn } from '@dxos/mosaic';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsState } from '../../hooks';
+import { textLink } from '../../styles';
 
 const columns: TableColumn<SpaceMember>[] = [
   {
     Header: 'Key',
-    width: 120,
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
+    width: 80,
+    Cell: ({ value }: any) => <div className={mx('font-mono', textLink)}>{value}</div>,
     accessor: (member) => {
       const identityKey = member.identity.identityKey;
       return identityKey.truncate();
@@ -46,9 +48,9 @@ const MembersPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <MasterDetailTable<SpaceMember> columns={columns} data={members} />

@@ -16,13 +16,14 @@ import {
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
+  MetadataPanel,
+  NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpacesPanel,
   StoragePanel,
   SwarmPanel,
 } from '../panels';
-import MetadataPanel from '../panels/echo/MetadataPanel';
 
 export const namespace = 'devtools';
 
@@ -107,12 +108,16 @@ export const useRoutes = () => {
           path: '/mesh',
           children: [
             {
+              path: '/mesh/signal',
+              element: <SignalPanel />,
+            },
+            {
               path: '/mesh/swarm',
               element: <SwarmPanel />,
             },
             {
-              path: '/mesh/signal',
-              element: <SignalPanel />,
+              path: '/mesh/network',
+              element: <NetworkPanel />,
             },
           ],
         },

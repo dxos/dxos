@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'assert';
-
+import { invariant } from '@dxos/invariant';
 import { describe, test } from '@dxos/test';
 
 import { getConfig, getKey } from '../util';
@@ -16,7 +15,7 @@ describe.skip('IMAP processor', () => {
   // eslint-disable-next-line mocha/no-skipped-tests
   test('basic', async () => {
     const config = getConfig(process.env.TEST_CONFIG);
-    assert(config);
+    invariant(config);
 
     const processor = new ImapProcessor('dxos.module.bot.mail', {
       user: process.env.COM_PROTONMAIL_USERNAME!,

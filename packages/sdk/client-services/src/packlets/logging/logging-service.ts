@@ -13,6 +13,7 @@ import {
   ControlMetricsRequest,
   ControlMetricsResponse,
   QueryMetricsRequest,
+  QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonify, numericalValues, tracer } from '@dxos/util';
 
@@ -21,6 +22,7 @@ import { jsonify, numericalValues, tracer } from '@dxos/util';
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
+  private readonly _started = new Date();
 
   async open() {
     log.runtimeConfig.processors.push(this._logProcessor);
@@ -45,11 +47,14 @@ export class LoggingServiceImpl implements LoggingService {
     return { recording: tracer.recording };
   }
 
-  queryMetrics({ interval }: QueryMetricsRequest): Stream<Metrics> {
+  /**
+   * @deprecated (Move to diagnostics).
+   */
+  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
-    const createNumericalValues = (key: string) => {
-      const consume = tracer.get(key) ?? [];
-      return { key, stats: numericalValues(consume, 'duration') };
+    const getNumericalValues = (key: string) => {
+      const events = tracer.get(key) ?? [];
+      return { key, stats: numericalValues(events, 'duration') };
     };
 
     return new Stream(({ next }) => {
@@ -57,16 +62,19 @@ export class LoggingServiceImpl implements LoggingService {
         const metrics: Metrics = {
           timestamp: new Date(),
           values: [
-            createNumericalValues('dxos.echo.pipeline.control'),
-            createNumericalValues('dxos.echo.pipeline.data'),
-          ],
+            getNumericalValues('dxos.echo.pipeline.control'),
+            getNumericalValues('dxos.echo.pipeline.data'),
+          ].filter(Boolean) as Metrics.KeyPair[],
         };
 
-        next(metrics);
+        next({
+          timestamp: new Date(),
+          metrics,
+        });
       };
 
       update();
-      const i = setInterval(update, interval);
+      const i = setInterval(update, Math.max(interval, 1_000));
       return () => {
         clearInterval(i);
       };

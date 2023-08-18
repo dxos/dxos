@@ -13,12 +13,13 @@ import {
   Icon,
   IdentificationBadge,
   Key,
-  PaperPlane,
   Planet,
+  Polygon,
   Queue,
   Receipt,
   Users,
   UsersThree,
+  WifiHigh,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -129,20 +130,20 @@ export const useSections = (): SectionItem[] => {
       title: 'MESH',
       Icon: Graph,
       items: [
-        // {
-        //   id: '/mesh/network',
-        //   title: 'Network Graph',
-        //   Icon: SwarmIcon
-        // },
+        {
+          id: '/mesh/signal',
+          title: 'Signal',
+          Icon: WifiHigh,
+        },
         {
           id: '/mesh/swarm',
           title: 'Swarm',
           Icon: UsersThree,
         },
         {
-          id: '/mesh/signal',
-          title: 'Signal',
-          Icon: PaperPlane,
+          id: '/mesh/network',
+          title: 'Network',
+          Icon: Polygon,
         },
       ],
     },

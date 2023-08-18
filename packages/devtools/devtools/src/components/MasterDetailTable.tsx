@@ -25,7 +25,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact 
   });
 
   return (
-    <div className='flex flex-1 overflow-hidden divide-x'>
+    <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
         <Table<T>
           compact={compact}

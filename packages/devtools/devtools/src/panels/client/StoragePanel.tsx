@@ -6,7 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { Button, Tree, TreeItem, Toolbar } from '@dxos/aurora';
+import { Tree, TreeItem, Toolbar } from '@dxos/aurora';
 import {
   GetBlobsResponse,
   GetSnapshotsResponse,
@@ -240,21 +240,21 @@ const StoragePanel = () => {
     <PanelContainer
       className='flex-row divide-x'
       toolbar={
-        <Toolbar>
-          <Button onClick={refresh} disabled={isRefreshing}>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button>
+          </Toolbar.Button>
 
-          <div className='flex-1' />
-          <Button
+          <div className='grow' />
+          <Toolbar.Button
             onClick={async () => {
               await services?.SystemService.reset();
               location.reload();
             }}
           >
             Reset Storage
-          </Button>
-        </Toolbar>
+          </Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <div className='flex w-1/3 overflow-auto p-2'>
@@ -262,7 +262,7 @@ const StoragePanel = () => {
       </div>
 
       {selectedValue && (
-        <div className='flex flex-1 flex-col w-2/3 overflow-auto'>
+        <div className='flex flex-col grow w-2/3 overflow-auto'>
           {selectedValue.kind === 'blob' && (
             <>
               <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>

@@ -29,6 +29,7 @@
     "@dxos/echo-typegen": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/kai-sandbox": "workspace:*",
     "@dxos/kai-types": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -79,7 +80,6 @@
     "remark-parse-frontmatter": "^1.0.3",
     "simple-peer": "9.11.1",
     "string-hash": "~1.1.3",
-    "tiny-invariant": "^1.3.1",
     "url-join": "^5.0.0"
   },
   "devDependencies": {

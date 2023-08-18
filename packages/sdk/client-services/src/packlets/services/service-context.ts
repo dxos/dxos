@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Trigger } from '@dxos/async';
 import { CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -15,6 +13,7 @@ import {
   SnapshotStore,
 } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -123,11 +122,10 @@ export class ServiceContext {
   }
 
   async open() {
-    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
-
     await this._checkStorageVersion();
 
     log('opening...');
+    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
     await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
@@ -135,8 +133,8 @@ export class ServiceContext {
     if (this.identityManager.identity) {
       await this._initialize();
     }
-    log('opened');
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
+    log('opened');
   }
 
   async close() {

@@ -3,10 +3,10 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';

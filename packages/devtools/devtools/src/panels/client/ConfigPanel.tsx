@@ -16,9 +16,9 @@ const ConfigPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <VaultSelector />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <JsonView data={config.values} />

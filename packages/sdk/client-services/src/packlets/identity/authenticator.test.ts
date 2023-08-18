@@ -3,10 +3,10 @@
 //
 
 import expect from 'expect';
-import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { createCredentialSignerWithKey } from '@dxos/credentials';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -28,7 +28,7 @@ describe('identity/authenticator', () => {
 
     const nonce = new Uint8Array([2, 1, 3, 7]);
     const credential = await authProvider(nonce);
-    assert(credential);
+    invariant(credential);
     expect(await authVerifier.verifier(nonce, credential)).toBeTruthy();
   }).onlyEnvironments('nodejs');
 });

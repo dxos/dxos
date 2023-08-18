@@ -19,9 +19,9 @@ const CredentialsPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
-        </Toolbar>
+        </Toolbar.Root>
       }
     >
       <JsonView data={credentials} />

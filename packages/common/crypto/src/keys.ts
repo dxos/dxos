@@ -3,8 +3,8 @@
 //
 
 import crypto from 'hypercore-crypto';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/invariant';
 import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
 
 /**

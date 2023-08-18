@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { appServiceBundle, AppServiceBundle, ShellRuntime, shellServiceBundle } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';

@@ -18,6 +18,16 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { ClientPluginProvides } from './types';
 
+const handleInvalidatedInvitationCode = (code: string) => {
+  const url = new URL(location.href);
+  const params = Array.from(url.searchParams.entries());
+  const [name] = params.find(([name, value]) => value === code) ?? [null, null];
+  if (name) {
+    url.searchParams.delete(name);
+    history.replaceState({}, document.title, url.href);
+  }
+};
+
 export const ClientPlugin = (
   options: ClientOptions = { config: new Config(Envs(), Local(), Defaults()) },
 ): PluginDefinition<{}, ClientPluginProvides> => {
@@ -50,7 +60,23 @@ export const ClientPlugin = (
             }
 
             const subscription = client.status.subscribe((status) => setStatus(status));
-            return () => subscription.unsubscribe();
+
+            if (
+              client.services instanceof IFrameClientServicesProxy ||
+              client.services instanceof IFrameClientServicesHost
+            ) {
+              client.services.invalidatedInvitationCode.on(handleInvalidatedInvitationCode);
+            }
+
+            return () => {
+              subscription.unsubscribe();
+              if (
+                client.services instanceof IFrameClientServicesProxy ||
+                client.services instanceof IFrameClientServicesHost
+              ) {
+                client.services.invalidatedInvitationCode.off(handleInvalidatedInvitationCode);
+              }
+            };
           }, [client, setStatus]);
 
           return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;

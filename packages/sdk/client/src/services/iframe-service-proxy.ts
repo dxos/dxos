@@ -41,6 +41,7 @@ export type IFrameClientServicesProxyOptions = {
  */
 export class IFrameClientServicesProxy implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
+  public readonly invalidatedInvitationCode = new Event<string>();
 
   private _iframe?: HTMLIFrameElement;
   private _appPort!: RpcPort;
@@ -178,7 +179,11 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
-    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
+    this._shellController = new ShellController(
+      this._iframeController,
+      this.joinedSpace,
+      this.invalidatedInvitationCode,
+    );
     await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.

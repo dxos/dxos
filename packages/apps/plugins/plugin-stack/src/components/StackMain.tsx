@@ -238,6 +238,7 @@ const StackMainImpl = ({ stack }: { stack: StackModel & StackProperties }) => {
   );
 };
 
+// TODO(burdon): Pass through context to surface.
 export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
   const stack = data.object as StackModel & StackProperties;
   return <StackMainImpl stack={stack} />;

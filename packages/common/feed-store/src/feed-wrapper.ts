@@ -9,8 +9,9 @@ import { Readable, Transform } from 'streamx';
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { invariant, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';

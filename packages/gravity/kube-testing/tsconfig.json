@@ -28,6 +28,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -66,5 +69,8 @@
     {
       "path": "../../sdk/client-services"
     }
-  ]
+  ],
+  "ts-node": {
+    "swc": true
+  }
 }

@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
@@ -17,14 +16,19 @@ import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ModelFactory } from '@dxos/model-factory';
 import { trace } from '@dxos/protocols';
-import { Invitation, SystemStatus, QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode, MaybePromise } from '@dxos/util';
+import {
+  GetDiagnosticsRequest,
+  Invitation,
+  SystemStatus,
+  QueryStatusResponse,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
 import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
@@ -158,14 +162,6 @@ export class Client {
   }
 
   /**
-   * Debug monitor.
-   */
-  get monitor(): Monitor {
-    invariant(this._runtime, 'Client not initialized.');
-    return this._runtime.monitor;
-  }
-
-  /**
    * @deprecated
    */
   get dbRouter(): DatabaseRouter {
@@ -207,9 +203,16 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  async diagnostics(opts: DiagnosticOptions = {}): Promise<Diagnostics> {
-    const { createDiagnostics } = await import('../diagnostics');
-    return createDiagnostics(this, opts);
+  async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    const data = await this._services.services.SystemService.getDiagnostics({
+      keys: options.humanize
+        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
+        : options.truncate
+        ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+        : undefined,
+    });
+    return JSON.parse(JSON.stringify(data, jsonKeyReplacer(options)));
   }
 
   /**
@@ -225,7 +228,6 @@ export class Client {
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     const { fromHost, fromIFrame } = await import('../services');
-    const { Monitor } = await import('../diagnostics');
     const { EchoProxy, createDefaultModelFactory } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
@@ -234,11 +236,10 @@ export class Client {
     // NOTE: Must currently match the host.
     const modelFactory = this._options.modelFactory ?? createDefaultModelFactory();
     this._services = await (this._options.services ?? (isNode() ? fromHost(this._config) : fromIFrame(this._config)));
-    const monitor = new Monitor(this._services);
     const echo = new EchoProxy(this._services, modelFactory, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const mesh = new MeshProxy(this._services, this._instanceId);
-    this._runtime = new ClientRuntime({ monitor, echo, halo, mesh });
+    this._runtime = new ClientRuntime({ echo, halo, mesh });
 
     await this._services.open();
 
@@ -258,7 +259,6 @@ export class Client {
         trigger.wake(undefined);
 
         this._statusUpdate.emit(status);
-
         this._statusTimeout = setTimeout(() => {
           this._statusUpdate.emit(null);
         }, STATUS_TIMEOUT);

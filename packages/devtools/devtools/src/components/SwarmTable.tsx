@@ -17,8 +17,8 @@ export interface SwarmListProps {
 }
 
 export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
-  <div className='flex-1 flex-col h-screen w-full'>
-    <div className='flex-1  inline-flex w-full  border-b border-slate-400 border-solid'>
+  <div className='flex flex-col grow h-screen w-full'>
+    <div className='inline-flex w-full border-b border-slate-400 border-solid'>
       <div className='flex w-[400px]'>Label</div>
       <div className='flex w-[400px]'>Topic</div>
       <div className='flex w-[400px]'>Active</div>
@@ -26,7 +26,7 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
     </div>
     <div>
       {swarms.map((swarm) => (
-        <div key={swarm.id.toHex()} className='flex-1 inline-flex w-full border-b border-slate-200 border-solid'>
+        <div key={swarm.id.toHex()} className='inline-flex w-full border-b border-slate-200 border-solid'>
           <div className='flex w-[400px] overflow-hidden'>{swarm.label && humanize(swarm.label)}</div>
           <div className='flex w-[400px] overflow-hidden'>{humanize(swarm.topic)}</div>
           <div className='flex w-[400px] m-1'>

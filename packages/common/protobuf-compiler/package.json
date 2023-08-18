@@ -19,6 +19,7 @@
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "^2.0.1",

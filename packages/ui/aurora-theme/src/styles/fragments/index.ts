@@ -9,6 +9,7 @@ export * from './elevation';
 export * from './focus';
 export * from './group';
 export * from './hover';
+export * from './layout';
 export * from './open';
 export * from './ornament';
 export * from './shimmer';

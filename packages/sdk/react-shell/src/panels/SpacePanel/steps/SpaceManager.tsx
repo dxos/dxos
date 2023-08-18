@@ -8,30 +8,39 @@ import React, { cloneElement, useCallback } from 'react';
 import { Button, ScrollArea, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { InvitationList, PanelAction, PanelActions, SpaceMemberListContainer } from '../../../components';
+import { InvitationList, PanelAction, PanelActions, SpaceMemberList, SpaceMemberListProps } from '../../../components';
 import { SpacePanelStepProps } from '../SpacePanelProps';
 
-type SpaceManagerProps = SpacePanelStepProps;
+export type SpaceManagerProps = SpacePanelStepProps & {
+  SpaceMemberList?: React.FC<SpaceMemberListProps>;
+};
 
-export const SpaceManager = ({
-  active,
-  space,
-  createInvitationUrl,
-  send,
-  doneActionParent,
-  onDone,
-}: SpaceManagerProps) => {
-  const { t } = useTranslation('os');
+export type SpaceManagerImplProps = SpaceManagerProps & {
+  invitations: CancellableInvitationObservable[];
+};
+
+export const SpaceManager = (props: SpaceManagerProps) => {
+  const { space } = props;
+
   const invitations = useSpaceInvitations(space?.key);
 
-  const onInvitationEvent = useCallback((invitation: Invitation) => {
-    const invitationCode = InvitationEncoder.encode(invitation);
-    if (invitation.state === Invitation.State.CONNECTING) {
-      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-    }
-  }, []);
+  return <SpaceManagerImpl {...props} invitations={invitations} />;
+};
+
+export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
+  const {
+    active,
+    space,
+    createInvitationUrl,
+    send,
+    doneActionParent,
+    onDone,
+    invitations,
+    SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
+  } = props;
+  const { t } = useTranslation('os');
 
   const doneButton = (
     <PanelAction
@@ -44,6 +53,13 @@ export const SpaceManager = ({
       <Check weight='light' className={getSize(6)} />
     </PanelAction>
   );
+
+  const onInvitationEvent = useCallback((invitation: Invitation) => {
+    const invitationCode = InvitationEncoder.encode(invitation);
+    if (invitation.state === Invitation.State.CONNECTING) {
+      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+    }
+  }, []);
 
   return (
     <>
@@ -76,7 +92,7 @@ export const SpaceManager = ({
             <UserPlus className={getSize(4)} weight='bold' />
           </Button>
           <h3 className={mx(descriptionText, 'text-center mbs-4 mbe-2')}>{t('space member list heading')}</h3>
-          <SpaceMemberListContainer spaceKey={space.key} includeSelf />
+          <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar orientation='vertical'>
           <ScrollArea.Thumb />
