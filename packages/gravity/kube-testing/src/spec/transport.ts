@@ -10,11 +10,9 @@ import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
 import { defaultMap, range } from '@dxos/util';
 
-import { LogReader, SerializedLogEntry, getReader } from '../analysys';
-import { BORDER_COLORS, renderPNG, showPng } from '../analysys/plot';
+import { LogReader, SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPng } from '../analysys';
+import { AgentEnv, PlanResults, TestParams, TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { AgentEnv } from './agent-env';
-import { PlanResults, TestParams, TestPlan } from './spec-base';
 
 export type TransportTestSpec = {
   agents: number;
