@@ -6,7 +6,7 @@ import { getIndices } from '@tldraw/indices';
 
 import { Graph } from '@braneframe/plugin-graph';
 import { UnsubscribeCallback } from '@dxos/async';
-import { TypeFilter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-schema';
 import { Query, SpaceProxy, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
 import { defaultMap } from '@dxos/util';
 
@@ -18,7 +18,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
   private readonly _previousObjects = new Map<string, T[]>();
 
   constructor(
-    private readonly _filter: TypeFilter<T>,
+    private readonly _filter: Filter<T>,
     private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node,
   ) {}
 
@@ -34,7 +34,11 @@ export class GraphNodeAdapter<T extends TypedObject> {
       return;
     }
 
-    const query = defaultMap(this._queries, parent.id, () => space.db.query<T>(this._filter));
+    const query = defaultMap(
+      this._queries,
+      parent.id,
+      () => space.db.query<T>(this._filter as any), // TODO(burdon): Fix types.
+    );
     this._previousObjects.set(parent.id, query.objects);
 
     // Subscribe to query.

@@ -10,11 +10,9 @@ import { focusRing, mx } from '@dxos/aurora-theme';
 import { MarkdownProperties } from '../types';
 
 export const EditorSection = ({
-  data: {
-    object: { content: document },
-  },
+  data: { content: document },
 }: {
-  data: { object: { content: MarkdownProperties & ComposerModel } };
+  data: { content: MarkdownProperties & ComposerModel };
 }) => {
   const editorRef = useRef<MarkdownComposerRef>(null);
   const model: ComposerModel = {

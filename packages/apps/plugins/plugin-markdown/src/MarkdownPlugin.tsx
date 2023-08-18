@@ -190,7 +190,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }
 
           case 'section': {
-            if (isMarkdown(get(data, 'object.content', {}))) {
+            if (isMarkdown(get(data, 'content', {}))) {
               return EditorSection;
             }
             break;
