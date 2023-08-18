@@ -30,7 +30,13 @@ const AvatarGroupRoot = forwardRef<HTMLDivElement, AvatarGroupRootProps>(
     const descriptionId = useId('avatar-group__description', propsDescriptionId);
     return (
       <Avatar.Root {...{ labelId, descriptionId, size, variant, inGroup: true }}>
-        <div role='group' className={tx('avatar.group', 'avatar-group', {}, classNames)} ref={forwardedRef}>
+        <div
+          role='group'
+          className={tx('avatar.group', 'avatar-group', {}, classNames)}
+          aria-labelledby={labelId}
+          aria-describedby={descriptionId}
+          ref={forwardedRef}
+        >
           {children}
         </div>
       </Avatar.Root>
@@ -64,31 +70,35 @@ const AvatarGroupItemRoot = ({ maskId, size, variant, status, children }: Avatar
   );
 };
 
-type AvatarGroupLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'id'>>;
+type AvatarGroupLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'id'>> & { srOnly?: boolean };
 
 const AvatarGroupLabel = forwardRef<HTMLSpanElement, AvatarGroupLabelProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { labelId } = useAvatarContext('AvatarGroupLabel');
+  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+    const { labelId, size } = useAvatarContext('AvatarGroupLabel');
     const { tx } = useThemeContext();
     return (
-      <span {...props} id={labelId} className={tx('avatar.groupLabel', 'avatar-group__label', {}, classNames)}>
+      <span
+        {...props}
+        id={labelId}
+        className={tx('avatar.groupLabel', 'avatar-group__label', { srOnly, size }, classNames)}
+      >
         {children}
       </span>
     );
   },
 );
 
-type AvatarGroupDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'id'>>;
+type AvatarGroupDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'id'>> & { srOnly?: boolean };
 
 const AvatarGroupDescription = forwardRef<HTMLSpanElement, AvatarGroupDescriptionProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
     const { descriptionId } = useAvatarContext('AvatarGroupDescription');
     const { tx } = useThemeContext();
     return (
       <span
         {...props}
         id={descriptionId}
-        className={tx('avatar.groupDescription', 'avatar-group__description', {}, classNames)}
+        className={tx('avatar.groupDescription', 'avatar-group__description', { srOnly }, classNames)}
       >
         {children}
       </span>
