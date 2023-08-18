@@ -7,14 +7,13 @@ import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
 import React, { FC } from 'react';
 
-import { isGraphNode } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document as DocumentType, Document } from '@braneframe/types';
 import { ComposerModel, MarkdownComposerProps, useTextModel } from '@dxos/aurora-composer';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { PluginDefinition, findPlugin, Surface, usePluginContext } from '@dxos/react-surface';
+import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
 import translations from './translations';
@@ -27,7 +26,6 @@ import {
 } from './types';
 import {
   documentToGraphNode,
-  getMarkdownId,
   isMarkdown,
   isMarkdownContent,
   isMarkdownPlaceholder,
@@ -44,7 +42,7 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
-  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode, getMarkdownId);
+  const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const EditorMainStandalone = ({
     data: { composer, properties },
@@ -62,10 +60,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     );
   };
 
-  const MarkdownMain: FC<{ data: unknown }> = ({ data }) => {
-    const node = data && typeof data === 'object' && 'active' in data && isGraphNode(data.active) ? data.active : null;
-    const document = node && isDocument(node.data) ? node.data : undefined;
-
+  const MarkdownMain: FC<{ data: Document }> = ({ data }) => {
     const identity = useIdentity();
     const { plugins } = usePluginContext();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
@@ -73,18 +68,17 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const textModel = useTextModel({
       identity,
       space: spacePlugin?.provides.space.current,
-      text: document?.content,
+      text: data?.content,
     });
 
-    // Fall back to other surfaces to handle.
     if (!textModel) {
-      return <Surface data={data} role='main' />;
+      return null;
     }
 
     return (
       <EditorMain
         model={textModel}
-        properties={node?.data}
+        properties={data}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
       />
@@ -178,7 +172,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         // TODO(wittjosiah): Expose all through `components` as well?
         switch (role) {
           case 'main': {
-            if (
+            if (isDocument(data)) {
+              return MarkdownMain;
+            } else if (
               'composer' in data &&
               isMarkdown(data.composer) &&
               'properties' in data &&

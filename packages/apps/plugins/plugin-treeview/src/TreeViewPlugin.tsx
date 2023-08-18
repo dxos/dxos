@@ -54,7 +54,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 component='dxos.org/plugin/splitview/SplitView'
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
-                  main: { component: `${shortId}/Main`, fallback: Fallback, data: treeView.activeNode.data },
+                  main: { fallback: Fallback, data: treeView.activeNode.data },
                 }}
               />
             );

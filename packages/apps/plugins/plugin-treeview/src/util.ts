@@ -5,8 +5,8 @@
 import { Graph } from '@braneframe/plugin-graph';
 
 export const uriToActive = (uri: string) => {
-  const [_, pluginShortId, nodeId] = uri.split('/');
-  return pluginShortId && nodeId ? `${pluginShortId}:${nodeId}` : undefined;
+  const [_, ...nodeId] = uri.split('/');
+  return nodeId ? nodeId.join(':') : undefined;
 };
 
 export const activeToUri = (active?: string) =>

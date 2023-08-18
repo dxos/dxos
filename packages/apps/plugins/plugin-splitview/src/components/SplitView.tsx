@@ -71,7 +71,7 @@ export const SplitView = () => {
           <Surface name='presence' limit={1} />
         </div>
       </Main.Content>
-      <Surface name='main' />
+      <Surface name='main' role='main' />
       {/* TODO(burdon): Move dialog to settings-plugin. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>

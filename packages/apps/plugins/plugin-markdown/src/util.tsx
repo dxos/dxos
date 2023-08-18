@@ -13,7 +13,7 @@ import { ComposerModel, TextKind, YText } from '@dxos/aurora-composer';
 import { EchoObject, Space } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
 import { Plugin } from '@dxos/react-surface';
 
-import { MARKDOWN_PLUGIN, MARKDOWN_PLUGIN_SHORT_ID, MarkdownProperties, MarkdownProvides } from './types';
+import { MARKDOWN_PLUGIN, MarkdownProperties, MarkdownProvides } from './types';
 
 // TODO(burdon): These tests clash with Diagram.content.
 //  Uncaught Error: Type with the name content has already been defined with a different constructor.
@@ -63,11 +63,9 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
   return (plugins as MarkdownPlugin[]).filter((p) => Boolean(p.provides?.markdown));
 };
 
-export const getMarkdownId = (objectId: string) => `${MARKDOWN_PLUGIN_SHORT_ID}:${objectId}`;
-
 export const documentToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
   const [child] = parent.add({
-    id: getMarkdownId(document.id),
+    id: document.id,
     label: document.title ?? 'New document',
     icon: (props) =>
       document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,

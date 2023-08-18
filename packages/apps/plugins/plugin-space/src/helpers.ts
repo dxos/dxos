@@ -20,7 +20,6 @@ export class GraphNodeAdapter<T extends TypedObject> {
   constructor(
     private readonly _filter: TypeFilter<T>,
     private readonly _adapter: (parent: Graph.Node, object: T, index: string) => Graph.Node,
-    private readonly _createId: (id: string) => string,
   ) {}
 
   clear() {
@@ -45,7 +44,7 @@ export class GraphNodeAdapter<T extends TypedObject> {
         const previousObjects = this._previousObjects.get(parent.id) ?? [];
         const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
         this._previousObjects.set(parent.id, query.objects);
-        removedObjects.forEach((object) => parent.remove(this._createId(object.id)));
+        removedObjects.forEach((object) => parent.remove(object.id));
         query.objects.forEach((object, index) => this._adapter(parent, object, stackIndices[index]));
       }),
     );
