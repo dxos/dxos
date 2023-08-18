@@ -8,11 +8,11 @@ import { PluginDefinition } from '@dxos/react-surface';
 
 import { FileMain, FileSection } from './components';
 import translations from './translations';
-import { isObject, IPFS_PLUGIN, IpfsPluginProvides } from './types';
+import { isFile, IPFS_PLUGIN, IpfsPluginProvides } from './types';
 import { objectToGraphNode } from './util';
 
 export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
-  const adapter = new GraphNodeAdapter((object: TypedObject) => isObject(object), objectToGraphNode);
+  const adapter = new GraphNodeAdapter((object: TypedObject) => isFile(object), objectToGraphNode);
 
   return {
     meta: {
@@ -24,17 +24,17 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
+          return adapter.createNodes(space, parent);
         },
       },
       component: (data, role) => {
-        if (!(data && typeof data === 'object' && 'object' in data && isObject(data.object))) {
+        if (!(data && typeof data === 'object' && 'object' in data && isFile(data.object))) {
           return null;
         }
 

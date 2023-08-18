@@ -8,9 +8,9 @@ export default [
   {
     'en-US': {
       [IPFS_PLUGIN]: {
-        'plugin name': 'Template',
-        'create object label': 'Create object',
-        'delete object label': 'Delete', // TODO(burdon): Standard for actions menu.
+        'plugin name': 'File',
+        'object title placeholder': 'New file',
+        'delete object label': 'Delete',
       },
     },
   },
