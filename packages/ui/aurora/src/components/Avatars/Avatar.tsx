@@ -34,6 +34,7 @@ type AvatarContextValue = {
   size: Size;
   variant: AvatarVariant;
   status?: AvatarStatus;
+  inGroup?: boolean;
 };
 const AVATAR_NAME = 'Avatar';
 const [AvatarProvider, useAvatarContext] = createContext<AvatarContextValue>(AVATAR_NAME);
@@ -45,18 +46,25 @@ const AvatarRoot = ({
   children,
   labelId: propsLabelId,
   descriptionId: propsDescriptionId,
+  maskId: propsMaskId,
+  inGroup,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
-  const maskId = useId('mask');
-  return <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status }}>{children}</AvatarProvider>;
+  const maskId = useId('avatar__mask', propsMaskId);
+  return (
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, inGroup }}>{children}</AvatarProvider>
+  );
 };
 
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
+const strokeWidth = 2;
+const rx = 8;
+
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    const { labelId, descriptionId, maskId, size, variant, status } = useAvatarContext('AvatarStatus');
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status } = useAvatarContext('AvatarFrame');
     const { tx } = useThemeContext();
     const imageSizeNumber = size === 'px' ? 1 : size * 4;
     const statusIconSize = (size as number) > 9 ? 4 : (size as number) < 6 ? 2 : 3;
@@ -66,10 +74,12 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
       <AvatarRootPrimitive
         role='img'
         {...props}
-        className={tx('avatar.root', 'avatar', { size, variant }, classNames)}
+        className={tx('avatar.root', 'avatar', { size, variant, inGroup }, classNames)}
         ref={forwardedRef}
-        aria-labelledby={labelId}
-        aria-describedby={descriptionId}
+        {...(!inGroup && {
+          'aria-labelledby': labelId,
+          'aria-describedby': descriptionId,
+        })}
       >
         <svg
           viewBox={`0 0 ${imageSizeNumber} ${imageSizeNumber}`}
@@ -80,9 +90,9 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           <defs>
             <mask id={maskId}>
               {variant === 'circle' ? (
-                <circle fill='white' cx='50%' cy='50%' r='50%' />
+                <circle fill='white' cx={imageSizeNumber / 2} cy={imageSizeNumber / 2} r={imageSizeNumber / 2} />
               ) : (
-                <rect fill='white' width='100%' height='100%' />
+                <rect fill='white' width={imageSizeNumber} height={imageSizeNumber} rx={rx} />
               )}
               {status && (
                 <circle
@@ -94,7 +104,41 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
               )}
             </mask>
           </defs>
+          {variant === 'circle' ? (
+            <circle
+              className='avatarFrameFill fill-[var(--surface-bg)]'
+              cx={imageSizeNumber / 2}
+              cy={imageSizeNumber / 2}
+              r={imageSizeNumber / 2}
+            />
+          ) : (
+            <rect
+              className='avatarFrameFill fill-[var(--surface-bg)]'
+              width={imageSizeNumber}
+              height={imageSizeNumber}
+              rx={rx}
+            />
+          )}
           {children}
+          {variant === 'circle' ? (
+            <circle
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              strokeWidth={strokeWidth}
+              cx={imageSizeNumber / 2}
+              cy={imageSizeNumber / 2}
+              r={imageSizeNumber / 2 - strokeWidth / 4}
+            />
+          ) : (
+            <rect
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              strokeWidth={strokeWidth}
+              x={strokeWidth / 4}
+              y={strokeWidth / 4}
+              rx={rx}
+              width={imageSizeNumber - strokeWidth / 4}
+              height={imageSizeNumber - strokeWidth / 4}
+            />
+          )}
         </svg>
         {status === 'inactive' ? (
           <Moon

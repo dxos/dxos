@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
-import { baseSurface, blockSeparator, fullSurface, mx } from '@dxos/aurora-theme';
+import { baseSurface, blockSeparator, fixedFullLayout, mx } from '@dxos/aurora-theme';
 import { SpaceProxy } from '@dxos/client/echo';
 
 import { KANBAN_PLUGIN, type KanbanModel } from '../types';
@@ -30,7 +30,7 @@ export const KanbanMain: FC<{ data: { space: SpaceProxy; object: KanbanType } }>
   };
 
   return (
-    <Main.Content classNames={[fullSurface, baseSurface]}>
+    <Main.Content classNames={[fixedFullLayout, baseSurface]}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>
