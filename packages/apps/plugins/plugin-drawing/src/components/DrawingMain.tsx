@@ -65,7 +65,7 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
 
   return (
     <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
-      <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
+      <Tldraw store={store} hideUi={readonly} onMount={setEditor} />
     </div>
   );
 };
