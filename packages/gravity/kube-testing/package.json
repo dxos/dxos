@@ -32,6 +32,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
+    "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "@faker-js/faker": "^8.0.2",

@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 
 import { AgentParams } from './spec';
 
-export const REDIS_PORT = 6379;
+export const REDIS_PORT = 55000;
 export const REDIS_URL = `redis://default:redispw@localhost:${REDIS_PORT}`;
 
 export class AgentEnv<S, C> {
