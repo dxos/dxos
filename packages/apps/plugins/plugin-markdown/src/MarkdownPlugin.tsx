@@ -58,15 +58,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     const identity = useIdentity();
     const { plugins } = usePluginContext();
     const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const space = spacePlugin?.provides.space.current;
 
     const textModel = useTextModel({
       identity,
-      space: spacePlugin?.provides.space.current,
+      space,
       text: data?.content,
     });
 
     if (!textModel) {
       return null;
+    }
+
+    if (!space?.db.getObjectById(data.id)) {
+      return <MarkdownMainEmpty data={{ composer: { content: () => null }, properties: data }} />;
     }
 
     return (
