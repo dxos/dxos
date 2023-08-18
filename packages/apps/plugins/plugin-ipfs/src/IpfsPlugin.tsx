@@ -6,7 +6,7 @@ import { GraphNodeAdapter } from '@braneframe/plugin-space';
 import { SpaceProxy, TypedObject } from '@dxos/client/echo';
 import { PluginDefinition } from '@dxos/react-surface';
 
-import { FileDrop, FileMain } from './components';
+import { FileMain, FileSection } from './components';
 import translations from './translations';
 import { isObject, IPFS_PLUGIN, IpfsPluginProvides } from './types';
 import { objectToGraphNode } from './util';
@@ -33,17 +33,18 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
           return adapter.createNodes(space, parent, emit);
         },
       },
-      component: (datum, role) => {
+      component: (data, role) => {
+        if (!(data && typeof data === 'object' && 'object' in data && isObject(data.object))) {
+          return null;
+        }
+
         switch (role) {
           case 'main': {
-            if (datum && typeof datum === 'object' && 'object' in datum && isObject(datum.object)) {
-              return FileMain;
-            }
-            break;
+            return FileMain;
           }
 
-          case 'drop': {
-            return FileDrop;
+          case 'section': {
+            return FileSection;
           }
         }
 

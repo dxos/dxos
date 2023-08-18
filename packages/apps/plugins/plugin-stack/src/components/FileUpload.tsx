@@ -6,8 +6,6 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { useIntent } from '@braneframe/plugin-intent';
-import { SpaceAction } from '@braneframe/plugin-space';
 import { File as FileProto } from '@braneframe/types';
 import { getSize, mx } from '@dxos/aurora-theme';
 
@@ -48,26 +46,6 @@ export const FileUpload: FC<{
           <FilePlus weight='thin' className={getSize(10)} />
         </div>
       </FileUploader>
-    </div>
-  );
-};
-
-// export const StackMain = ({ data }: { data: { object: StackModel & StackProperties } }) => {
-export const FileDrop: FC<{}> = () => {
-  const { sendIntent } = useIntent();
-
-  return (
-    <div className='mb-4'>
-      <FileUpload
-        classNames='p-2'
-        fileTypes={['png']}
-        onUpload={(file: FileProto) => {
-          console.log('upload', file);
-          // TODO(burdon): Must be serialized?
-          // TODO(burdon): Need spaceKey.
-          sendIntent({ action: SpaceAction.ADD_OBJECT, data: { object: file } });
-        }}
-      />
     </div>
   );
 };

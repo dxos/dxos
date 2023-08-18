@@ -70,14 +70,14 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           ];
         },
       },
-      component: (datum, role) => {
-        if (!datum || typeof datum !== 'object') {
+      component: (data, role) => {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main': {
-            if ('object' in datum && isObject(datum.object)) {
+            if ('object' in data && isObject(data.object)) {
               return TemplateMain;
             }
           }

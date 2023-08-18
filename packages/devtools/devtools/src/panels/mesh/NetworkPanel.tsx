@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { SVG, SVGContextProvider, createSvgContext } from '@dxos/gem-core';
 import {
   Graph,
@@ -86,7 +87,7 @@ const classes = {
     '[&>circle]:fill-indigo-300',
     '[&>circle]:fill-teal-300',
     '[&>circle]:fill-cyan-300',
-    '[&>circle]:fill-gray-300',
+    '[&>circle]:fill-orange-300',
   ],
 };
 
@@ -124,7 +125,7 @@ const NetworkPanel = () => {
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<NetworkGraphNode>, count) => (isMe(node.data!) ? 24 : 16),
+          radius: (node: GraphLayoutNode<NetworkGraphNode>) => (isMe(node.data!) ? 24 : 16),
         },
       }),
     [],
@@ -152,21 +153,23 @@ const NetworkPanel = () => {
             projector={projector}
             labels={{
               text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
-                return (
+                const identity =
                   node.data!.member?.identity.profile?.displayName ??
-                  node.data!.member?.identity.identityKey.truncate() ??
-                  node.data!.peer?.peerId?.truncate() ??
-                  node.data!.id
-                );
+                  node.data!.member?.identity.identityKey.truncate();
+
+                const peer = node.data!.peer?.peerId?.truncate();
+
+                return `${peer} [${identity}]`;
               },
             }}
             attributes={{
               node: (node: GraphLayoutNode<NetworkGraphNode>) => {
                 const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
                 return {
-                  class: isMe(node.data)
-                    ? classes.default
-                    : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+                  class: mx(
+                    'font-mono',
+                    isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+                  ),
                 };
               },
             }}

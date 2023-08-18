@@ -3,4 +3,4 @@
 //
 
 export * from './FileMain';
-export * from './FileUpload';
+export * from './FilePreview';

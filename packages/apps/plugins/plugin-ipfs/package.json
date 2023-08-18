@@ -21,10 +21,8 @@
     "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "deepsignal": "^1.3.3",
-    "ipfs-http-client": "~56.0.1",
     "lodash.get": "^4.4.2",
-    "react-drag-drop-files": "^2.3.8",
-    "react-is": "^18.2.0"
+    "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
@@ -40,7 +38,6 @@
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "node-fetch": "^2.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vite": "^4.3.9"

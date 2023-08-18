@@ -15,7 +15,6 @@ export const STACK_PLUGIN = 'dxos.org/plugin/stack';
 const STACK_ACTION = `${STACK_PLUGIN}/action`;
 export enum StackAction {
   CREATE = `${STACK_ACTION}/create`,
-  INSERT_SECTION = `${STACK_ACTION}/insert-seciton`,
 }
 
 // TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
@@ -51,6 +50,7 @@ export type StackState = DeepSignal<{
 
 export type StackPluginProvides = GraphProvides & IntentProvides & TranslationsProvides & { stack: StackState };
 
+// TODO(burdon): Rename StackSectionObject?
 export type StackObject = { id: string };
 
 export type GenericStackObject = StackObject & { [key: string]: any };
@@ -72,3 +72,14 @@ export type StackModel<T extends StackObject = GenericStackObject> = {
 export type StackProperties = {
   title?: string;
 };
+
+export const getSectionModels = (sections: StackSections): StackSectionModel[] =>
+  Array.from(sections)
+    .filter((section) => section?.object?.id)
+    .map(({ object }) => getSectionModel(object));
+
+export const getSectionModel = (object: GenericStackObject, isPreview?: boolean): StackSectionModel => ({
+  id: object.id,
+  object,
+  isPreview: !!isPreview,
+});
