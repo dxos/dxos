@@ -12,12 +12,15 @@ const StorybookBreadcrumb = () => {
       <Breadcrumb.List>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link>Grocery</Breadcrumb.Link>
+          <Breadcrumb.Separator />
         </Breadcrumb.ListItem>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link>Produce</Breadcrumb.Link>
+          <Breadcrumb.Separator />
         </Breadcrumb.ListItem>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link>Veggies</Breadcrumb.Link>
+          <Breadcrumb.Separator />
         </Breadcrumb.ListItem>
         <Breadcrumb.ListItem>
           <Breadcrumb.Current>Peppers</Breadcrumb.Current>

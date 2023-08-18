@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Dot } from '@phosphor-icons/react';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { ComponentPropsWithRef, forwardRef } from 'react';
+import React, { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Link, LinkProps } from '../Link';
 
@@ -44,12 +45,23 @@ const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>
   },
 );
 
+type BreadcrumbSeparatorProps = ComponentPropsWithoutRef<typeof Primitive.span>;
+
+const BreadcrumbSeparator = ({ children, ...props }: BreadcrumbSeparatorProps) => {
+  return (
+    <Primitive.span role='separator' aria-hidden='true' {...props}>
+      {children ?? <Dot weight='bold' />}
+    </Primitive.span>
+  );
+};
+
 export const Breadcrumb = {
   Root: BreadcrumbRoot,
   List: BreadcrumbList,
   ListItem: BreadcrumbListItem,
   Link: BreadcrumbLink,
   Current: BreadcrumbCurrent,
+  Separator: BreadcrumbSeparator,
 };
 
 export type {
@@ -58,4 +70,5 @@ export type {
   BreadcrumbListItemProps,
   BreadcrumbLinkProps,
   BreadcrumbCurrentProps,
+  BreadcrumbSeparatorProps,
 };
