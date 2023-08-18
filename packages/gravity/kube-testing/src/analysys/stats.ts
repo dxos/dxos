@@ -7,8 +7,8 @@ import { Series } from 'danfojs-node';
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
-import { SignalTestSpec } from '../plan/signal-spec';
-import { PlanResults, TestParams } from '../plan/spec-base';
+import { PlanResults, TestParams } from '../plan';
+import { SignalTestSpec } from '../spec';
 import { LogReader, TraceEvent, zapPreprocessor } from './logging';
 
 const seriesToJson = (s: Series) => {

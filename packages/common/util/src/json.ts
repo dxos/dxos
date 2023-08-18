@@ -84,6 +84,7 @@ export const jsonKeyReplacer =
     if (typeof value === 'string') {
       const key = PublicKey.fromHex(value);
       if (key.toHex() === value) {
+        // TODO(burdon): Remove humanize.
         return options.humanize ? humanize(key) : options.truncate ? key.truncate() : key.toHex();
       }
     }
