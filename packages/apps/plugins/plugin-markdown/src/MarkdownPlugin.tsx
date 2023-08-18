@@ -17,13 +17,7 @@ import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surf
 
 import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
 import translations from './translations';
-import {
-  MARKDOWN_PLUGIN,
-  MARKDOWN_PLUGIN_SHORT_ID,
-  MarkdownAction,
-  MarkdownPluginProvides,
-  MarkdownProperties,
-} from './types';
+import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
 import {
   documentToGraphNode,
   isMarkdown,
@@ -88,7 +82,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   return {
     meta: {
       id: MARKDOWN_PLUGIN,
-      shortId: MARKDOWN_PLUGIN_SHORT_ID,
     },
     ready: async (plugins) => {
       markdownPlugins(plugins).forEach((plugin) => {
