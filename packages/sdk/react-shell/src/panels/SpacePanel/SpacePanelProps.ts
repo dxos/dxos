@@ -7,6 +7,8 @@ import { SingleOrArray, Event } from 'xstate';
 
 import { Space } from '@dxos/react-client/echo';
 
+import { SpaceManagerProps } from './steps';
+
 export type ErsatzSpace = Pick<Space, 'key'> &
   Partial<Pick<Space, 'createInvitation'>> & { properties: { name?: string } };
 
@@ -20,6 +22,7 @@ export type SpacePanelImplProps = {
   authCode?: string;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
+  SpaceManager?: React.FC<SpaceManagerProps>;
 };
 
 export type SpacePanelProps = Pick<SpacePanelImplProps, 'space'> &
