@@ -40,6 +40,14 @@ export class LibDataChannelTransport implements Transport {
       const { PeerConnection } = await import('./datachannel/rtc-peer-connection');
       const peer = new PeerConnection(params.webrtcConfig);
 
+      peer.onicecandidateerror = (event) => {
+        log.error('onicecandidateerror', { event });
+      };
+
+      peer.onconnectionstatechange = (event) => {
+        log.info('onconnectionstatechange', { event, state: peer.connectionState });
+      };
+
       peer.onicecandidate = async (event) => {
         if (event.candidate) {
           await params.sendSignal({
@@ -60,6 +68,7 @@ export class LibDataChannelTransport implements Transport {
         peer
           .createOffer()
           .then(async (offer) => {
+            await peer.setLocalDescription(offer);
             await params.sendSignal({ payload: { data: { type: offer.type, sdp: offer.sdp } } });
           })
           .catch((err) => {
@@ -135,6 +144,7 @@ export class LibDataChannelTransport implements Transport {
           case 'offer': {
             await peer.setRemoteDescription({ type: data.type, sdp: data.sdp });
             const answer = await peer.createAnswer();
+            await peer.setLocalDescription(answer);
             await this.params.sendSignal({ payload: { data: { type: answer.type, sdp: answer.sdp } } });
             this._readyForCandidates.wake();
             break;
