@@ -5,7 +5,7 @@
 import { ComponentFunction } from '@dxos/aurora-types/src';
 
 import { mx } from '../../util';
-import { baseSurface } from '../fragments';
+import { baseSurface, bounceLayout } from '../fragments';
 
 export type MainStyleProps = Partial<{
   isLg: boolean;
@@ -55,7 +55,7 @@ export const mainContent: ComponentFunction<MainStyleProps> = (
     'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
     isLg && inlineStartSidebarOpen ? 'pis-[270px]' : 'pis-0',
     isLg && inlineEndSidebarOpen ? 'pie-[270px]' : 'pie-0',
-    bounce && 'fixed inset-0 z-0 overflow-auto overscroll-auto scroll-smooth',
+    bounce && bounceLayout,
     ...etc,
   );
 
