@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Kanban, Trash } from '@phosphor-icons/react';
+import { Image, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
@@ -11,25 +11,7 @@ import { SpaceAction } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Space } from '@dxos/client/echo';
 
-import { KANBAN_PLUGIN, Location } from './types';
-
-/**
- * Find the column or item within the model.
- */
-// TODO(burdon): Move to model.
-export const findLocation = (columns: KanbanType.Column[], id: string): Location | undefined => {
-  for (const column of columns) {
-    // TODO(burdon): Need transient ID for UX.
-    if (column.id === id) {
-      return { column };
-    } else {
-      const idx = column.items!.findIndex((item) => item.id === id);
-      if (idx !== -1) {
-        return { column, item: column.items![idx], idx };
-      }
-    }
-  }
-};
+import { IPFS_PLUGIN } from './types';
 
 export const objectToGraphNode = (
   parent: Graph.Node<Space>,
@@ -38,8 +20,8 @@ export const objectToGraphNode = (
 ): Graph.Node<KanbanType> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
-    icon: (props) => <Kanban {...props} />,
+    label: object.title ?? ['object title placeholder', { ns: IPFS_PLUGIN }],
+    icon: (props) => <Image {...props} />,
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
@@ -48,7 +30,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'delete',
-    label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
+    label: ['delete object label', { ns: IPFS_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
