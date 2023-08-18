@@ -1,4 +1,8 @@
-import React, { Component, FC, PropsWithChildren } from "react";
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { Component, FC, PropsWithChildren } from 'react';
 
 type Props = PropsWithChildren<{
   fallback: FC<{ error: Error }>;
