@@ -59,6 +59,9 @@ const AvatarRoot = ({
 
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
 
+const strokeWidth = 2;
+const rx = 8;
+
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { size, variant, labelId, descriptionId, maskId, inGroup, status } = useAvatarContext('AvatarFrame');
@@ -87,9 +90,9 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           <defs>
             <mask id={maskId}>
               {variant === 'circle' ? (
-                <circle fill='white' cx='50%' cy='50%' r='50%' />
+                <circle fill='white' cx={imageSizeNumber / 2} cy={imageSizeNumber / 2} r={imageSizeNumber / 2} />
               ) : (
-                <rect fill='white' width='100%' height='100%' />
+                <rect fill='white' width={imageSizeNumber} height={imageSizeNumber} rx={rx} />
               )}
               {status && (
                 <circle
@@ -102,23 +105,38 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <circle className='avatarFrameFill fill-[var(--surface-bg)]' cx='50%' cy='50%' r='50%' />
+            <circle
+              className='avatarFrameFill fill-[var(--surface-bg)]'
+              cx={imageSizeNumber / 2}
+              cy={imageSizeNumber / 2}
+              r={imageSizeNumber / 2}
+            />
           ) : (
-            <rect className='avatarFrameFill fill-[var(--surface-bg)]' width='100%' height='100%' />
+            <rect
+              className='avatarFrameFill fill-[var(--surface-bg)]'
+              width={imageSizeNumber}
+              height={imageSizeNumber}
+              rx={rx}
+            />
           )}
           {children}
           {variant === 'circle' ? (
             <circle
-              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)] stroke-2'
-              cx='50%'
-              cy='50%'
-              r='50%'
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              strokeWidth={strokeWidth}
+              cx={imageSizeNumber / 2}
+              cy={imageSizeNumber / 2}
+              r={imageSizeNumber / 2 - strokeWidth / 4}
             />
           ) : (
             <rect
-              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)] stroke-2'
-              width='100%'
-              height='100%'
+              className='avatarFrameStroke fill-transparent stroke-[var(--surface-bg)]'
+              strokeWidth={strokeWidth}
+              x={strokeWidth / 4}
+              y={strokeWidth / 4}
+              rx={rx}
+              width={imageSizeNumber - strokeWidth / 4}
+              height={imageSizeNumber - strokeWidth / 4}
             />
           )}
         </svg>
