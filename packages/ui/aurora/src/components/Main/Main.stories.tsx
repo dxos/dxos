@@ -29,7 +29,7 @@ const StoryMain = (_args: StoryMainArgs) => {
         <NavigationSidebarToggle />
       </Main.NavigationSidebar>
       <Main.Content>
-        <div role='group' className='m-4 p-4 bg-neutral-950 rounded'>
+        <div role='group' className='m-2 p-4 bg-neutral-50 dark:bg-neutral-950 rounded space-y-2'>
           <ComplementarySidebarToggle />
           <p>Main content, hello!</p>
           <NavigationSidebarToggle />

@@ -203,11 +203,10 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  // TODO(burdon): Pass options to query.
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     const data = await this._services.services.SystemService.getDiagnostics({
-      keys: options.truncate
+      keys: options.humanize
         ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
         : options.truncate
         ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE

@@ -5,10 +5,21 @@
 import React, { FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { JSONTree } from 'react-json-tree';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+// eslint-disable-next-line no-restricted-imports
+import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { mx } from '@dxos/aurora-theme';
 import { schema } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';
+
+export const JsonView: FC<{ data?: Object }> = ({ data }) => {
+  return (
+    <SyntaxHighlighter language='json' style={style} className='w-full'>
+      {JSON.stringify(data, replacer, 2)}
+    </SyntaxHighlighter>
+  );
+};
 
 // TODO(burdon): Light/dark mode.
 // https://github.com/gaearon/base16-js/tree/master/src
@@ -33,17 +44,13 @@ const theme = {
   base0F: '#b3588e',
 };
 
-// const getItemString = (type: string) => <span className='text-sm'>[{type}]</span>;
-
-export const JsonView: FC<{
+export const JsonTreeView: FC<{
   data?: Object;
   className?: string;
   level?: number;
   showRoot?: boolean;
   showMeta?: boolean;
 }> = ({ data, className, level = 3, showRoot = false, showMeta = false }) => {
-  // TODO(mykola): Add proto schema. Decode bytes.
-  // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
   const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
 
   return (
@@ -72,6 +79,8 @@ export const JsonView: FC<{
 };
 
 // TODO(burdon): Factor out.
+// TODO(mykola): Add proto schema. Decode bytes.
+// TODO(mykola): Write our own recursive replacing, to avoid double serialization.
 const replacer = (key: any, value: any) => {
   if (typeof value === 'object') {
     if (value instanceof Uint8Array) {
