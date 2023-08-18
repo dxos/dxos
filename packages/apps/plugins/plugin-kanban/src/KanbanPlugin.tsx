@@ -29,41 +29,36 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${KANBAN_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${KANBAN_PLUGIN}/create`,
+            label: ['create kanban label', { ns: KANBAN_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            intent: [
+              {
+                plugin: KANBAN_PLUGIN,
+                action: KanbanAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'kanbanPlugin.createKanban',
-              label: ['create kanban label', { ns: KANBAN_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: KANBAN_PLUGIN,
-                  action: KanbanAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       component: (data, role) => {
@@ -73,7 +68,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
         switch (role) {
           case 'main':
-            if ('object' in data && isKanban(data.object)) {
+            if (isKanban(data)) {
               return KanbanMain;
             } else {
               return null;

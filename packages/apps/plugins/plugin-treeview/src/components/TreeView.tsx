@@ -4,24 +4,25 @@
 
 import { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { getIndexAbove, getIndexBelow, getIndexBetween, sortByIndex } from '@tldraw/indices';
+import { getIndexAbove, getIndexBelow, getIndexBetween } from '@tldraw/indices';
 import get from 'lodash.get';
 import React, { useState } from 'react';
 
 import { useDnd, useDragEnd, useDragOver } from '@braneframe/plugin-dnd';
-import { GraphNode } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import { Tree } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
+import { sortByIndex } from '../util';
 import { BranchTreeItem, SortableBranchTreeItem } from './BranchTreeItem';
 import { LeafTreeItem, SortableLeafTreeItem } from './LeafTreeItem';
 
 export type TreeViewProps = {
-  items?: GraphNode[];
-  parent?: string | GraphNode;
+  items?: Graph.Node[];
+  parent?: string | Graph.Node;
 };
 
-const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: GraphNode[] }) => {
+const TreeViewSortableImpl = ({ parent, items }: { parent: Graph.Node; items: Graph.Node[] }) => {
   // todo(thure): `observer` does not trigger updates when node indices are updated.
   const itemsInOrder = items.sort(sortByIndex);
   const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
@@ -33,10 +34,10 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
   useDragEnd(
     ({ active, over }: DragEndEvent) => {
       // TODO(burdon): Use traversal instead of `get`?
-      const activeNode = active?.data?.current?.treeitem as GraphNode | null;
-      const overNode = over?.data?.current?.treeitem as GraphNode | null;
+      const activeNode = active?.data?.current?.treeitem as Graph.Node | null;
+      const overNode = over?.data?.current?.treeitem as Graph.Node | null;
       if (activeNode && overNode && activeNode.parent?.id === parent.id) {
-        if (parent.onChildrenRearrange && overNode.parent?.id === parent.id) {
+        if (parent.properties.onChildrenRearrange && overNode.parent?.id === parent.id) {
           if (overNode.id !== activeNode.id) {
             dnd.overlayDropAnimation = 'around';
             const activeIndex = itemsInOrder.findIndex(({ id }) => id === activeNode.id);
@@ -44,23 +45,23 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 
             const beforeNode = itemsInOrder[overIndex > activeIndex ? overIndex : overIndex - 1];
             const afterNode = itemsInOrder[overIndex > activeIndex ? overIndex + 1 : overIndex];
-            if (beforeNode?.index === afterNode?.index) {
-              const nextActiveIndex = getIndexAbove(beforeNode.index);
+            if (beforeNode?.properties.index === afterNode?.properties.index) {
+              const nextActiveIndex = getIndexAbove(beforeNode.properties.index);
               const nextAfterIndex = getIndexAbove(nextActiveIndex);
-              parent.onChildrenRearrange(activeNode, nextActiveIndex);
-              parent.onChildrenRearrange(afterNode, nextAfterIndex);
+              parent.properties.onChildrenRearrange(activeNode, nextActiveIndex);
+              parent.properties.onChildrenRearrange(afterNode, nextAfterIndex);
             } else {
-              parent.onChildrenRearrange(
+              parent.properties.onChildrenRearrange(
                 activeNode,
                 overIndex < 1
-                  ? getIndexBelow(itemsInOrder[0].index)
-                  : getIndexBetween(beforeNode.index, afterNode?.index),
+                  ? getIndexBelow(itemsInOrder[0].properties.index)
+                  : getIndexBetween(beforeNode.properties.index, afterNode?.properties.index),
               );
             }
           }
-        } else if (overNode.parent?.onMoveNode) {
+        } else if (overNode.parent?.properties.onMoveNode) {
           dnd.overlayDropAnimation = 'into';
-          overNode.parent?.onMoveNode(overNode.parent, activeNode.parent!, activeNode, 'a1'); // TODO(burdon): Index.
+          overNode.parent?.properties.onMoveNode(overNode.parent, activeNode.parent!, activeNode, 'a1'); // TODO(burdon): Index.
         }
       }
       setActiveId(null);
@@ -71,7 +72,7 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 
   useDragOver(
     ({ active, over }) => {
-      const node: GraphNode | null = get(active, 'data.current.treeitem', null);
+      const node: Graph.Node | null = get(active, 'data.current.treeitem', null);
       setOverIsMember(
         !!node && get(node, 'parent.id') === parent.id && get(over, 'data.current.treeitem.parent.id') === parent.id,
       );
@@ -83,7 +84,7 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
   return (
     <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
       {itemsInOrder.map((item) =>
-        item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length ? (
+        item.properties?.role === 'branch' || item.children.length ? (
           <SortableBranchTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
         ) : (
           <SortableLeafTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
@@ -96,17 +97,17 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: GraphNode; items: Gra
 export const TreeView = (props: TreeViewProps) => {
   const { items } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
-  const visibleItems = items && Array.from(items).filter((item) => !item.attributes?.hidden);
+  const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
   return (
     <Tree.Branch>
       {visibleItems?.length ? (
-        typeof props.parent === 'object' && props.parent?.onChildrenRearrange ? (
+        typeof props.parent === 'object' && props.parent?.properties.onChildrenRearrange ? (
           <TreeViewSortableImpl items={visibleItems} parent={props.parent} />
         ) : (
           visibleItems
             .sort(sortByIndex)
             .map((item) =>
-              item.attributes?.role === 'branch' || Object.values(item.pluginChildren ?? {}).flat().length > 0 ? (
+              item.properties?.role === 'branch' || item.children.length > 0 ? (
                 <BranchTreeItem key={item.id} node={item} />
               ) : (
                 <LeafTreeItem key={item.id} node={item} />

@@ -68,7 +68,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             />
           </div>
           <div role='none' className='flex-1'>
-            <Surface role='section' data={section} />
+            <Surface role='section' data={section.object} />
           </div>
           <Button
             variant='ghost'
