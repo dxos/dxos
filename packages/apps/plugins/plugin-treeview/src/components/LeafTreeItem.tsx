@@ -8,7 +8,7 @@ import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -24,8 +24,9 @@ import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-t
 
 import { useTreeView } from '../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../types';
+import { sortActions } from '../util';
 
-type SortableLeafTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+type SortableLeafTreeItemProps = { node: Graph.Node } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   node,
@@ -47,27 +48,26 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   );
 };
 
-type LeafTreeItemProps = { node: GraphNode } & SortableProps;
+type LeafTreeItemProps = { node: Graph.Node } & SortableProps;
 
 export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   LeafTreeItemProps
 >(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
-  // todo(thure): Handle `sortable`
+  // TODO(thure): Handle `sortable`
 
-  const { invokeAction } = useGraph();
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const density = useDensityContext();
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const treeView = useTreeView();
 
-  const active = node.id === treeView.active.at(-1);
-  const modified = node.attributes?.modified ?? false;
-  const disabled = node.attributes?.disabled ?? false;
-  const error = node.attributes?.error ?? false;
+  const active = node.id === treeView.active;
+  const modified = node.properties?.modified ?? false;
+  const disabled = node.properties?.disabled ?? false;
+  const error = node.properties?.error ?? false;
   const Icon = node.icon ?? Placeholder;
-  const allActions = getActions(node);
+  const allActions = sortActions(node.actions);
   const [primaryAction, ...actions] = allActions;
   const menuActions = disabled ? actions : allActions;
 
@@ -105,14 +105,13 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             if (event.key === ' ' || event.key === 'Enter') {
               event.stopPropagation();
               // TODO(wittjosiah): Intent.
-              treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
+              treeView.active = node.id;
               !isLg && closeNavigationSidebar();
             }
           }}
           onClick={(event) => {
             // TODO(wittjosiah): Intent.
-            // TODO(wittjosiah): Make recursive.
-            treeView.active = node.parent ? [node.parent.id, node.id] : [node.id];
+            treeView.active = node.id;
             !isLg && closeNavigationSidebar();
           }}
           className='text-start flex gap-2 justify-start'
@@ -169,15 +168,15 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
                   <DropdownMenu.Item
                     key={action.id}
                     onClick={() => {
-                      if (action.disabled) {
+                      if (action.properties.disabled) {
                         return;
                       }
                       suppressNextTooltip.current = true;
                       setOptionsMenuOpen(false);
-                      void invokeAction(action);
+                      void action.invoke();
                     }}
                     classNames='gap-2'
-                    disabled={action.disabled}
+                    disabled={action.properties.disabled}
                   >
                     {action.icon && <action.icon className={getSize(4)} />}
                     <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
@@ -201,8 +200,8 @@ export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttr
             <Button
               variant='ghost'
               classNames='shrink-0 pli-2 pointer-fine:pli-1'
-              onClick={() => invokeAction(primaryAction)}
-              {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
+              onClick={() => primaryAction.invoke()}
+              {...(primaryAction.properties.testId && { 'data-testid': primaryAction.properties.testId })}
               {...(!navigationSidebarOpen && { tabIndex: -1 })}
             >
               <span className='sr-only'>

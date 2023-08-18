@@ -33,45 +33,39 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${THREAD_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${THREAD_PLUGIN}/create`,
+            label: ['create thread label', { ns: THREAD_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            intent: [
+              {
+                plugin: THREAD_PLUGIN,
+                action: ThreadAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'threadPlugin.createThread',
-              label: ['create thread label', { ns: THREAD_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: THREAD_PLUGIN,
-                  action: ThreadAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+          return adapter.createNodes(space, parent);
         },
       },
       component: (data, role) => {
-        if (!data || typeof data !== 'object' || !('object' in data && isThread(data.object))) {
+        if (!data || typeof data !== 'object' || !isThread(data)) {
           return null;
         }
 
