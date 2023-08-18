@@ -32,42 +32,37 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
-              index: 'a1',
+          parent.addAction({
+            id: `${TEMPLATE_PLUGIN}/create`, // TODO(burdon): Uniformly "create".
+            label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
+            icon: (props) => <Plus {...props} />,
+            // TODO(burdon): Factor out helper.
+            intent: [
+              {
+                plugin: TEMPLATE_PLUGIN,
+                action: TemplateAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'templatePlugin.createKanban', // TODO(burdon): Namespace?
-              label: ['create object label', { ns: TEMPLATE_PLUGIN }], // TODO(burdon): "object"
-              icon: (props) => <Plus {...props} />,
-              // TODO(burdon): Factor out helper.
-              intent: [
-                {
-                  plugin: TEMPLATE_PLUGIN,
-                  action: TemplateAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       component: (data, role) => {
@@ -77,7 +72,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
         switch (role) {
           case 'main': {
-            if ('object' in data && isObject(data.object)) {
+            if (isObject(data)) {
               return TemplateMain;
             }
           }

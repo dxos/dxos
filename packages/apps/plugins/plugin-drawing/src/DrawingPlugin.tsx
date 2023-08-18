@@ -29,41 +29,36 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${DRAWING_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${DRAWING_PLUGIN}/create`,
+            label: ['create drawing label', { ns: DRAWING_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            intent: [
+              {
+                plugin: DRAWING_PLUGIN,
+                action: DrawingAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'drawingPlugin.createDrawing',
-              label: ['create drawing label', { ns: DRAWING_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: DRAWING_PLUGIN,
-                  action: DrawingAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       stack: {
@@ -91,8 +86,7 @@ export const DrawingPlugin = (): PluginDefinition<DrawingPluginProvides> => {
       },
       component: (data, role) => {
         // TODO(burdon): SurfaceResolver error if component not defined.
-        // TODO(burdon): Can we assume data has an object property?
-        if (!data || typeof data !== 'object' || !('object' in data && isDrawing(data.object))) {
+        if (!data || typeof data !== 'object' || !isDrawing(data)) {
           return null;
         }
 

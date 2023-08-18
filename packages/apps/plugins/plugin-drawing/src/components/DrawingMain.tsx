@@ -17,12 +17,10 @@ import { useDrawingModel } from '../hooks';
 
 export type DrawingMainParams = {
   readonly?: boolean;
-  data: {
-    object: DrawingType;
-  };
+  data: DrawingType;
 };
 
-export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = true }) => {
+export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing, readonly = true }) => {
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
@@ -70,7 +68,7 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing 
   );
 };
 
-export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = false }) => {
+export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing, readonly = false }) => {
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
