@@ -36,6 +36,8 @@ import {
   localEntityToGraphNode,
 } from './util';
 
+// TODO(buron): Rename package plugin-file (singular).
+
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownProvides> => {
   let onFilesUpdate: ((node?: Graph.Node<LocalEntity>) => void) | undefined;
   const state = deepSignal<{ files: LocalEntity[]; current: LocalFile | undefined }>({
@@ -120,11 +122,12 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         }
 
         switch (role) {
-          case 'main':
+          case 'main': {
             if (isLocalFile(data)) {
               return LocalFileMain;
             }
             break;
+          }
         }
 
         return null;

@@ -79,6 +79,9 @@
       "path": "../plugins/plugin-intent"
     },
     {
+      "path": "../plugins/plugin-ipfs"
+    },
+    {
       "path": "../plugins/plugin-kanban"
     },
     {
