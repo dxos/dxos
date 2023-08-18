@@ -4,6 +4,7 @@
 
 import node from 'node-datachannel';
 import defer, { type DeferredPromise } from 'p-defer';
+
 import { DataChannel } from './rtc-data-channel';
 import { DataChannelEvent, PeerConnectionIceEvent } from './rtc-events';
 import { IceCandidate } from './rtc-ice-candidate';
@@ -224,6 +225,7 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     failureCallback: RTCPeerConnectionErrorCallback,
     options?: RTCOfferOptions,
   ): Promise<void>;
+
   async createOffer(...args: any[]): Promise<any> {
     return this.#localOffer.promise;
   }
@@ -233,6 +235,7 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
     successCallback: RTCSessionDescriptionCallback,
     failureCallback: RTCPeerConnectionErrorCallback,
   ): Promise<void>;
+
   async createAnswer(...args: any[]): Promise<any> {
     return this.#localAnswer.promise;
   }
@@ -296,15 +299,15 @@ export class PeerConnection extends EventTarget implements RTCPeerConnection {
 
 export { PeerConnection as RTCPeerConnection };
 
-function assertState<T>(state: any, states: T[]): T {
+const assertState = <T>(state: any, states: T[]): T => {
   if (state != null && !states.includes(state)) {
     throw new Error(`Invalid value encountered - "${state}" must be one of ${states}`);
   }
 
   return state as T;
-}
+};
 
-function toSessionDescription(description: { sdp?: string; type: string } | null): RTCSessionDescription | null {
+const toSessionDescription = (description: { sdp?: string; type: string } | null): RTCSessionDescription | null => {
   if (description == null) {
     return null;
   }
@@ -313,7 +316,7 @@ function toSessionDescription(description: { sdp?: string; type: string } | null
     sdp: description.sdp,
     type: assertState(description.type, RTCSdpTypes),
   });
-}
+};
 
 const RTCPeerConnectionStates: RTCPeerConnectionState[] = [
   'closed',
