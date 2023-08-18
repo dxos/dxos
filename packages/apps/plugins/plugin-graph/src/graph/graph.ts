@@ -84,7 +84,7 @@ export class SessionGraph implements Graph {
       },
     }) as RevertDeepSignal<Graph.Node>;
 
-    return node;
+    return builderNode;
   }
 
   private _createNode<TData = null, TProperties extends { [key: string]: any } = { [key: string]: any }>(

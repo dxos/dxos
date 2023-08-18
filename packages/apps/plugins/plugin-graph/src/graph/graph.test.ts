@@ -34,7 +34,7 @@ describe.only('SessionGraph', () => {
     });
     graph.construct();
     expect(graph.root.childrenMap.test.id).to.equal(testNode.id);
-    expect(graph.root.childrenMap.test.parent).to.equal(graph.root);
+    expect(graph.root.childrenMap.test.parent!.id).to.equal(graph.root.id);
   });
 
   test('builder can add actions to root node', () => {
@@ -58,7 +58,7 @@ describe.only('SessionGraph', () => {
     expect(Object.keys(graph.root.childrenMap)).to.deep.equal(['root-test1', 'root-test2']);
 
     for (const node of graph.root.children) {
-      expect(graph.root).to.equal(node.parent);
+      expect(graph.root.id).to.equal(node.parent!.id);
     }
   });
 
@@ -81,7 +81,7 @@ describe.only('SessionGraph', () => {
     expect(Object.keys(graph.root.childrenMap['root-test2'].childrenMap)).to.deep.equal(['root-test2-test1']);
 
     for (const node of graph.root.childrenMap['root-test2'].children) {
-      expect(graph.root.childrenMap['root-test2']).to.equal(node.parent);
+      expect(graph.root.childrenMap['root-test2'].id).to.equal(node.parent!.id);
     }
   });
 
