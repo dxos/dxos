@@ -6,18 +6,18 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { SessionGraph } from './graph';
+import { GraphStore } from './graph';
 import { Graph } from './types';
 
 describe.only('SessionGraph', () => {
   test('returns root node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     expect(graph.root).to.not.be.undefined;
     expect(graph.root.id).to.equal('root');
   });
 
   test('root node unmodified without builders', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.construct();
     expect(graph.root.properties).to.be.empty;
     expect(graph.root.children).to.be.empty;
@@ -25,7 +25,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('builder can add children to root node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     const testNode = { id: 'test', label: 'Test', data: null };
     graph.registerNodeBuilder((parent) => {
       if (parent.id === 'root') {
@@ -38,7 +38,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('builder can add actions to root node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     const testAction = { id: 'test', label: 'Test', intent: { action: 'test' } };
     graph.registerNodeBuilder((parent) => {
       if (parent.id === 'root') {
@@ -50,7 +50,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('multiple builders can add children to root node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1').builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -63,7 +63,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('multiple builders can add actions to root node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1').builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -72,7 +72,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('builders can add children to child node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -86,7 +86,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('builders can add actions to child node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -96,7 +96,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('builders can add actions to action sets', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder((parent) => {
       const [set] = parent.addAction({ id: 'test-set', label: 'Test Set' });
       set.add({ id: 'test-action', label: 'Test', intent: { action: 'test' } });
@@ -107,7 +107,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('is updated when nodes change', async () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     const { builder, addNode, removeNode, addAction, removeAction, addProperty, removeProperty } =
       createTestNodeBuilder('test1', 2);
     graph.registerNodeBuilder(builder);
@@ -153,7 +153,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('can find nodes', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -163,7 +163,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('can be traversed', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -174,7 +174,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('traversal can be limited by predicate', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -188,7 +188,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('traversal can be started from any node', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();
@@ -202,7 +202,7 @@ describe.only('SessionGraph', () => {
   });
 
   test('can traverse up', () => {
-    const graph = new SessionGraph();
+    const graph = new GraphStore();
     graph.registerNodeBuilder(createTestNodeBuilder('test1', 2).builder);
     graph.registerNodeBuilder(createTestNodeBuilder('test2').builder);
     graph.construct();

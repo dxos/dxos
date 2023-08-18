@@ -10,7 +10,7 @@ import { EventSubscriptions } from '@dxos/async';
 
 import { Graph } from './types';
 
-export class SessionGraph implements Graph {
+export class GraphStore implements Graph {
   private readonly _nodeBuilders = new Set<Graph.NodeBuilder>();
   private readonly _unsubscribe = new Map<string, EventSubscriptions>();
   private readonly _root: Graph.Node = this._createNode({ id: 'root', label: 'Root' });

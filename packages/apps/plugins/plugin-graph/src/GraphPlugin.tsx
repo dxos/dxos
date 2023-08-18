@@ -8,12 +8,12 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { Graph, SessionGraph } from './graph';
+import { Graph, GraphStore } from './graph';
 import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
-  const graph = new SessionGraph();
+  const graph = new GraphStore();
 
   return {
     meta: {
