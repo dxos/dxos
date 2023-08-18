@@ -17,6 +17,7 @@ import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
 import { IntentPlugin } from '@braneframe/plugin-intent';
+import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
 import { MarkdownPlugin } from '@braneframe/plugin-markdown';
 import { PwaPlugin } from '@braneframe/plugin-pwa';
@@ -72,6 +73,7 @@ createRoot(document.getElementById('root')!).render(
         StackPlugin(),
         GithubPlugin(),
         FilesPlugin(),
+        IpfsPlugin(),
 
         // Labs
         DebugPlugin(),

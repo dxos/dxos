@@ -90,8 +90,8 @@ export const spaceToGraphNode = (space: Space, parent: Graph.Node, index: string
       },
     },
     {
-      id: 'view-invitations',
-      label: ['view invitations label', { ns: SPACE_PLUGIN }],
+      id: 'share-space',
+      label: ['share space', { ns: SPACE_PLUGIN }],
       icon: (props) => <PaperPlane {...props} />,
       intent: { ...baseIntent, action: SpaceAction.SHARE },
       properties: {

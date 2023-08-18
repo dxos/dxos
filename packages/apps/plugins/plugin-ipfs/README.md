@@ -1,6 +1,6 @@
-# @braneframe/plugin-template
+# @braneframe/plugin-ipfs
 
-Plugin template.
+Plugin to manage IPFS files.
 
 ## DXOS Resources
 

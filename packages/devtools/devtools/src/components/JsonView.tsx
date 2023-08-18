@@ -10,13 +10,14 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { mx } from '@dxos/aurora-theme';
+import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';
 
-export const JsonView: FC<{ data?: Object }> = ({ data }) => {
+export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
   return (
     <SyntaxHighlighter language='json' style={style} className='w-full'>
-      {JSON.stringify(data, replacer, 2)}
+      {JSON.stringify(data, replacer(truncate), 2)}
     </SyntaxHighlighter>
   );
 };
@@ -51,7 +52,7 @@ export const JsonTreeView: FC<{
   showRoot?: boolean;
   showMeta?: boolean;
 }> = ({ data, className, level = 3, showRoot = false, showMeta = false }) => {
-  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer));
+  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer()));
 
   return (
     <div className={mx('m-2', className)}>
@@ -81,26 +82,43 @@ export const JsonTreeView: FC<{
 // TODO(burdon): Factor out.
 // TODO(mykola): Add proto schema. Decode bytes.
 // TODO(mykola): Write our own recursive replacing, to avoid double serialization.
-const replacer = (key: any, value: any) => {
-  if (typeof value === 'object') {
-    if (value instanceof Uint8Array) {
-      return arrayToBuffer(value).toString('hex');
+const replacer =
+  (truncate = false) =>
+  (key: any, value: any) => {
+    if (typeof value === 'string') {
+      if (truncate) {
+        const k = PublicKey.safeFrom(value);
+        if (k) {
+          return k.truncate();
+        }
+      }
     }
 
-    if (value?.type === 'Buffer') {
-      return Buffer.from(value.data).toString('hex');
+    if (typeof value === 'object') {
+      if (truncate) {
+        if (value instanceof PublicKey) {
+          return value.truncate();
+        }
+      }
+
+      if (value instanceof Uint8Array) {
+        return arrayToBuffer(value).toString('hex');
+      }
+
+      if (value?.type === 'Buffer') {
+        return Buffer.from(value.data).toString('hex');
+      }
+
+      if (value?.['@type'] === 'google.protobuf.Any') {
+        try {
+          const codec = schema.getCodecForType(value.type_url);
+          return {
+            '@type': value.type_url,
+            ...codec.decode(value.value),
+          };
+        } catch {}
+      }
     }
 
-    if (value?.['@type'] === 'google.protobuf.Any') {
-      try {
-        const codec = schema.getCodecForType(value.type_url);
-        return {
-          '@type': value.type_url,
-          ...codec.decode(value.value),
-        };
-      } catch {}
-    }
-  }
-
-  return value;
-};
+    return value;
+  };

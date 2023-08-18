@@ -21,9 +21,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
@@ -42,7 +39,7 @@
       "path": "../../types"
     },
     {
-      "path": "../plugin-dnd"
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -54,16 +51,10 @@
       "path": "../plugin-intent"
     },
     {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-splitview"
     },
     {
       "path": "../plugin-theme"
