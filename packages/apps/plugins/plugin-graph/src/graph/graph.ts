@@ -23,6 +23,10 @@ export class SessionGraph implements Graph {
     return this._root;
   }
 
+  getPath(id: string): string[] | undefined {
+    return this._index[id];
+  }
+
   find(id: string): Graph.Node | undefined {
     const path = this._index[id];
     if (!path) {

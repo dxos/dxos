@@ -10,6 +10,7 @@ import type { UnsubscribeCallback } from '@dxos/async';
 
 export interface Graph {
   get root(): Graph.Node;
+  getPath(id: string): string[] | undefined;
   find(id: string): Graph.Node | undefined;
   traverse(options: Graph.TraverseOptions): void;
   registerNodeBuilder(builder: Graph.NodeBuilder): void;
