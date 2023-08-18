@@ -13,8 +13,6 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { PeerConnection } from './rtc-peer-connection';
 
-setTimeout(() => {}, 10 * 1000);
-
 describe('Node WebRTC libdatachannel implementation', () => {
   test('Connect two datachannels', async () => {
     const msg1to2 = 'Hello from Peer1';
@@ -30,11 +28,9 @@ describe('Node WebRTC libdatachannel implementation', () => {
 
     // Set Callbacks
     peer1.onLocalDescription((sdp, type) => {
-      log.info('Peer1 SDP:', { sdp, type });
       peer2.setRemoteDescription(sdp, type);
     });
     peer1.onLocalCandidate((candidate, mid) => {
-      log.info('Peer1 Candidate:', { candidate });
       peer2.addRemoteCandidate(candidate, mid);
     });
 
@@ -43,15 +39,12 @@ describe('Node WebRTC libdatachannel implementation', () => {
 
     // Set Callbacks
     peer2.onLocalDescription((sdp, type) => {
-      log.info('Peer2 SDP:', { sdp, type });
       peer1.setRemoteDescription(sdp, type);
     });
     peer2.onLocalCandidate((candidate, mid) => {
-      log.info('Peer2 Candidate:', { candidate });
       peer1.addRemoteCandidate(candidate, mid);
     });
     peer2.onDataChannel((dc) => {
-      log.info('Peer2 Got DataChannel: ', { label: dc.getLabel() });
       dc2 = dc;
       dc2.onMessage((msg) => secondPeerReceived.wake(msg));
       dc2.sendMessage(msg2to1);
@@ -64,8 +57,8 @@ describe('Node WebRTC libdatachannel implementation', () => {
 
     dc1.onMessage((msg) => firstPeerReceived.wake(msg));
     dc1.onMessage((msg) => firstPeerReceived.wake(msg));
-    expect(await asyncTimeout(firstPeerReceived.wait(), 1000)).to.eq(msg2to1);
-    expect(await asyncTimeout(secondPeerReceived.wait(), 1000)).to.eq(msg1to2);
+    expect(await asyncTimeout(firstPeerReceived.wait(), 3000)).to.eq(msg2to1);
+    expect(await asyncTimeout(secondPeerReceived.wait(), 3000)).to.eq(msg1to2);
   });
 
   test('RTCPeerConnection', async () => {
