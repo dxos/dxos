@@ -96,7 +96,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (plugins) => (parent) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }

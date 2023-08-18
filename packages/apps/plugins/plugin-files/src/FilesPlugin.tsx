@@ -129,7 +129,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         return null;
       },
       graph: {
-        nodes: (plugins) => (parent) => {
+        nodes: (parent) => {
           if (parent.id !== 'root') {
             return;
           }

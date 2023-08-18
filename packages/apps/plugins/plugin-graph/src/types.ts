@@ -10,9 +10,12 @@ export type GraphContextValue = {
   graph: SessionGraph;
 };
 
+export type WithPlugins = (plugin: Plugin[]) => Graph.NodeBuilder;
+
 export type GraphProvides = {
   graph: {
-    nodes: (plugins: Plugin[]) => Graph.NodeBuilder;
+    nodes?: Graph.NodeBuilder;
+    withPlugins?: WithPlugins;
   };
 };
 

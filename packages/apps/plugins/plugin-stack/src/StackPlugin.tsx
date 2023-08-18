@@ -48,7 +48,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (plugins) => (parent) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
             return;
           }

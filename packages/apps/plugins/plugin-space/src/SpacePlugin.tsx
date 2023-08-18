@@ -134,7 +134,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
         Main: SpaceMain,
       },
       graph: {
-        nodes: (plugins) => (parent) => {
+        withPlugins: (plugins) => (parent) => {
           if (parent.id !== 'root') {
             return;
           }

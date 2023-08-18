@@ -12,4 +12,6 @@ export const isGraphNode = (data: unknown): data is Graph.Node =>
 
 type GraphPlugin = Plugin<GraphProvides>;
 export const graphPlugins = (plugins: Plugin[]): GraphPlugin[] =>
-  (plugins as GraphPlugin[]).filter((p) => typeof p.provides?.graph?.nodes === 'function');
+  (plugins as GraphPlugin[]).filter(
+    (p) => typeof p.provides?.graph?.nodes === 'function' || typeof p.provides?.graph?.withPlugins === 'function',
+  );

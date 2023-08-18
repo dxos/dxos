@@ -8,8 +8,8 @@ import { IntentPluginProvides } from '@braneframe/plugin-intent';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { GraphContext } from './GraphContext';
-import { SessionGraph } from './graph';
-import { GraphPluginProvides } from './types';
+import { Graph, SessionGraph } from './graph';
+import { GraphPluginProvides, WithPlugins } from './types';
 import { graphPlugins } from './util';
 
 export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
@@ -24,8 +24,14 @@ export const GraphPlugin = (): PluginDefinition<GraphPluginProvides> => {
       graph._setSendIntent(intentPlugin?.provides.intent.sendIntent);
 
       graphPlugins(plugins)
-        .map((plugin) => plugin.provides.graph.nodes)
+        .map((plugin) => plugin.provides.graph.withPlugins)
+        .filter((withPlugins): withPlugins is WithPlugins => !!withPlugins)
         .forEach((builder) => graph.registerNodeBuilder(builder(plugins)));
+
+      graphPlugins(plugins)
+        .map((plugin) => plugin.provides.graph.nodes)
+        .filter((nodes): nodes is Graph.NodeBuilder => !!nodes)
+        .forEach((builder) => graph.registerNodeBuilder(builder));
 
       graph.construct();
     },

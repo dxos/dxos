@@ -37,7 +37,7 @@ export const SplitViewPlugin = ({
       ),
       components: { SplitView, SplitViewMainContentEmpty },
       graph: {
-        nodes: (plugins) => (parent) => {
+        nodes: (parent) => {
           if (parent.id !== 'root') {
             return;
           }
