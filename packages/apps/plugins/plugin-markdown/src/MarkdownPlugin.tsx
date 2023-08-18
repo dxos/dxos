@@ -157,17 +157,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           },
         ],
       },
-      components: {
-        Main: MarkdownMain,
-      },
       component: (data, role) => {
         if (!data || typeof data !== 'object') {
           return null;
         }
 
         // TODO(burdon): Document.
-        // TODO(wittjosiah): Cleanup.
         // TODO(wittjosiah): Expose all through `components` as well?
+        // TODO(wittjosiah): Improve the naming of surface components.
         switch (role) {
           case 'main': {
             if (isDocument(data)) {

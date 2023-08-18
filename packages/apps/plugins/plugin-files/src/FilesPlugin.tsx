@@ -43,7 +43,6 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
     current: undefined,
   });
   const subscriptions = new EventSubscriptions();
-  const fileSubs = new EventSubscriptions();
 
   const handleKeyDown = async (event: KeyboardEvent) => {
     const modifier = event.ctrlKey || event.metaKey;
@@ -93,21 +92,23 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       const treeViewPlugin = findPlugin<TreeViewPluginProvides>(plugins, 'dxos.org/plugin/treeview');
       const graphPlugin = findPlugin<GraphPluginProvides>(plugins, 'dxos.org/plugin/graph');
       if (treeViewPlugin && graphPlugin) {
-        effect(() => {
-          const active = treeViewPlugin.provides.treeView.active;
-          const path =
-            active && graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
-          const current =
-            (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
-          if (state.current !== current) {
-            state.current = current;
-          }
-        });
+        subscriptions.add(
+          effect(() => {
+            const active = treeViewPlugin.provides.treeView.active;
+            const path =
+              active &&
+              graphPlugin.provides.graph.getPath(active)?.filter((id) => id.startsWith(FILES_PLUGIN_SHORT_ID));
+            const current =
+              (active?.startsWith(FILES_PLUGIN_SHORT_ID) && path && findFile(state.files, path)) || undefined;
+            if (state.current !== current) {
+              state.current = current;
+            }
+          }),
+        );
       }
     },
     unload: async () => {
       onFilesUpdate = undefined;
-      fileSubs.clear();
       subscriptions.clear();
       window.removeEventListener('keydown', handleKeyDown);
     },
