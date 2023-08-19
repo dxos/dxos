@@ -11,6 +11,8 @@ import { PublicKey } from '@dxos/client';
 import { TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePluginContext } from '@dxos/react-surface';
 
+// TODO(burdon): Select type and generate columns from props.
+
 export const GridMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePluginContext();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
