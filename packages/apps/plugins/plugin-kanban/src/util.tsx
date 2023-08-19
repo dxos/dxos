@@ -42,12 +42,12 @@ export const objectToGraphNode = (
     icon: (props) => <Kanban {...props} />,
     data: object,
     properties: {
-      index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
+      index: get(object, 'meta.index', index),
     },
   });
 
   child.addAction({
-    id: 'delete', // TODO(burdon): Namespac@e.
+    id: 'delete',
     label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {

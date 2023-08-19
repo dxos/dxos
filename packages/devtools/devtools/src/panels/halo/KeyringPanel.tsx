@@ -4,24 +4,23 @@
 
 import React from 'react';
 
+import { mx } from '@dxos/aurora-theme';
 import { TableColumn } from '@dxos/mosaic';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { PublicKey } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { humanize } from '@dxos/util';
 
 import { MasterDetailTable } from '../../components';
+import { textLink } from '../../styles';
 
 const columns: TableColumn<KeyRecord>[] = [
   {
-    Header: 'Pub Key',
+    Header: 'Public Key',
     width: 120,
-    accessor: (record) => PublicKey.from(record.publicKey).truncate(),
+    Cell: ({ value }: any) => <div className={mx('font-mono', textLink)}>{value.truncate()}</div>,
+    accessor: (record) => PublicKey.from(record.publicKey),
   },
-  {
-    Header: 'Pub Key Name',
-    accessor: (record) => humanize(record.publicKey),
-  },
+  // TODO(burdon): When would we be able to see the private key?
   {
     Header: 'Private Key',
     accessor: (record) => record.privateKey && PublicKey.from(record.privateKey).truncate(),

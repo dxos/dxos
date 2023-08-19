@@ -84,7 +84,17 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-intent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-ipfs/package.json",
           "jsonpath": "$.version"
         },
         {

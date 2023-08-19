@@ -114,7 +114,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             icon: (props) => <Plus {...props} />,
             properties: {
               testId: 'spacePlugin.createDocument',
-              disposition: 'toolbar', // TODO(burdon): Both places.
+              disposition: 'toolbar',
             },
             intent: [
               {

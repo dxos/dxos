@@ -76,7 +76,13 @@
       "path": "../plugins/plugin-graph"
     },
     {
+      "path": "../plugins/plugin-grid"
+    },
+    {
       "path": "../plugins/plugin-intent"
+    },
+    {
+      "path": "../plugins/plugin-ipfs"
     },
     {
       "path": "../plugins/plugin-kanban"

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Main } from '@dxos/aurora';
@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/client';
 import { TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePluginContext } from '@dxos/react-surface';
 
-export const TemplateMain = ({ data: object }: { data: TypedObject }) => {
+export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePluginContext();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.current;

@@ -9,8 +9,9 @@ export default [
     'en-US': {
       [CHESS_PLUGIN]: {
         'plugin name': 'Chess',
-        'create object label': 'Create game',
-        'delete object label': 'Delete',
+        'game title placeholder': 'New game',
+        'create game label': 'Create game',
+        'delete game label': 'Delete',
       },
     },
   },

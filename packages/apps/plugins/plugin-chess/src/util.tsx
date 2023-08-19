@@ -19,7 +19,7 @@ export const objectToGraphNode = (
 ): Graph.Node<TypedObject> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? 'New game',
+    label: object.title ?? ['game title placeholder', { ns: CHESS_PLUGIN }],
     icon: (props) => <ShieldChevron {...props} />,
     data: object,
     properties: {
@@ -29,7 +29,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'delete',
-    label: ['delete object label', { ns: CHESS_PLUGIN }],
+    label: ['delete game label', { ns: CHESS_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,

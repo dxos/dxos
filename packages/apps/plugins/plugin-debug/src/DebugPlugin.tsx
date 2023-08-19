@@ -73,7 +73,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             id: nodeId,
             label: 'Debug',
             icon: (props: IconProps) => <Hammer {...props} />,
-            data: { id: nodeId },
+            data: { id: nodeId, space: parent.data },
           });
         },
       },

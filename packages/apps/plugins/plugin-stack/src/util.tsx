@@ -23,14 +23,14 @@ export const isStack = <T extends StackObject = GenericStackObject>(data: unknow
 
 export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
-export const stackToGraphNode = (parent: Graph.Node<Space>, obj: Stack, index: string): Graph.Node => {
+export const stackToGraphNode = (parent: Graph.Node<Space>, object: Stack, index: string): Graph.Node => {
   const [child] = parent.add({
-    id: obj.id,
-    label: obj.title ?? 'New stack', // TODO(burdon): Translation.
+    id: object.id,
+    label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
     icon: (props: IconProps) => <Article {...props} />,
-    data: obj,
+    data: object,
     properties: {
-      index: get(obj, 'meta.index', index),
+      index: get(object, 'meta.index', index),
     },
   });
 
@@ -40,7 +40,7 @@ export const stackToGraphNode = (parent: Graph.Node<Space>, obj: Stack, index: s
     icon: (props: IconProps) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
-      data: { spaceKey: parent.data?.key.toHex(), objectId: obj.id },
+      data: { spaceKey: parent.data?.key.toHex(), objectId: object.id },
     },
   });
 

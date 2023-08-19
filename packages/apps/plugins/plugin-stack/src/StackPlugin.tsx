@@ -37,6 +37,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
+        // TODO(burdon): Remove?
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
           stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
         }
