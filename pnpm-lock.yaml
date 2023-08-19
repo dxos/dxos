@@ -1007,7 +1007,6 @@ importers:
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
-      '@tanstack/react-table': ^8.9.3
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -1020,7 +1019,6 @@ importers:
       '@braneframe/plugin-graph': link:../plugin-graph
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
-      '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
@@ -5639,6 +5637,35 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+
+  packages/ui/aurora-grid:
+    specifiers:
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/aurora-types': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@tanstack/react-table': ^8.9.3
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chromatic: ^6.17.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    dependencies:
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/aurora-types': link:../aurora-types
+      '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/ui/aurora-theme:
     specifiers:
