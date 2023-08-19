@@ -4,14 +4,22 @@
 
 import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
+
+type FeedConfig = {
+  feedKey: string;
+  writable: boolean;
+};
 
 export type ReplicationTestSpec = {
   agents: number;
@@ -23,7 +31,7 @@ export type ReplicationTestSpec = {
   targetSwarmTimeout: number;
   fullSwarmTimeout: number;
 
-  feedsPerAgent: number;
+  feedsPerSwarm: number;
   feedLoadInterval: number;
   feedLoadChunkSize: number;
 
@@ -36,6 +44,7 @@ export type ReplicationAgentConfig = {
   agentIdx: number;
   signalUrl: string;
   swarmTopicIds: string[];
+  feeds: Map<string, FeedConfig[]>;
 };
 
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
@@ -45,11 +54,36 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
-    return range(spec.agents).map((agentIdx) => ({
-      agentIdx,
-      signalUrl: signal.url(),
-      swarmTopicIds,
-    }));
+
+    const feeds = new Map<number, Map<string, FeedConfig[]>>();
+    range(spec.agents).forEach(agentIdx => {
+      feeds.set(agentIdx, new Map(swarmTopicIds.map(id => [id, []])));
+    });
+
+    const addFeedConfig = (agentIdx: number, swarmTopicId: string) => {
+      const feedKey = PublicKey.random().toHex();
+      for (const [currentAgentIdx, agentFeeds] of feeds.entries()) {
+        agentFeeds.get(swarmTopicId)!.push({ feedKey, writable: currentAgentIdx === agentIdx });
+      }
+    };
+
+    // Add spec.feedsPerSwarm feeds for each agent to each swarm.
+    range(spec.agents).forEach(agentIdx => {
+      swarmTopicIds.forEach(swarmTopicId => {
+        range(spec.feedsPerSwarm).forEach(() => {
+          addFeedConfig(agentIdx, swarmTopicId);
+        });
+      });
+    });
+
+    return range(spec.agents).map((agentIdx) => {
+      return {
+        agentIdx,
+        signalUrl: signal.url(),
+        swarmTopicIds,
+        feeds: feeds.get(agentIdx)!,
+      }
+    });
   }
 
   async run(env: AgentEnv<ReplicationTestSpec, ReplicationAgentConfig>): Promise<void> {
@@ -62,6 +96,13 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       agentIdx,
       runnerAgentIdx: config.agentIdx,
       agentId: env.params.agentId.substring(0, 8),
+    });
+
+    // Feeds.
+    const storage = createStorage({ type: StorageType.RAM });
+    const keyring = new Keyring(storage.createDirectory('keyring'));
+    const feedStore = new FeedStore({
+      factory: new FeedFactory({ root: storage.createDirectory('feeds'), signer: keyring }),
     });
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({

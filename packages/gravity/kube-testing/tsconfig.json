@@ -28,6 +28,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/feed-store"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -50,6 +53,9 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
+    },
+    {
+      "path": "../../core/halo/keyring"
     },
     {
       "path": "../../core/mesh/messaging"
