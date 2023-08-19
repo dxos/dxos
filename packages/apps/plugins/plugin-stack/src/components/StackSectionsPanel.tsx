@@ -12,6 +12,7 @@ import { File as FileProto } from '@braneframe/types';
 import { List, useTranslation } from '@dxos/aurora';
 import { arrayMove } from '@dxos/util';
 
+import { defaultFileTypes } from '../hooks';
 import { stackState } from '../stores';
 import { GenericStackObject, getSectionModels, STACK_PLUGIN, StackSectionModel, StackSections } from '../types';
 import { FileUpload } from './FileUpload';
@@ -142,8 +143,7 @@ export const StackSectionsPanel: FC<{
       </div>
       <FileUpload
         classNames='p-2'
-        // TODO(burdon): Update.
-        fileTypes={['png', 'pdf']}
+        fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
         onUpload={(file: FileProto) => {
           setSectionModels(onAdd(file, sectionModels.length));
         }}

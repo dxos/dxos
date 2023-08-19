@@ -7,6 +7,12 @@ import { useMemo } from 'react';
 
 import { useConfig } from '@dxos/react-client';
 
+export const defaultFileTypes = {
+  images: ['png', 'jpg', 'jpeg'],
+  media: ['mp3', 'mp4', 'mov', 'avi'],
+  text: ['pdf', 'txt', 'md'],
+};
+
 /**
  * IPFS
  * To install IPFS locally: `brew install ipfs`

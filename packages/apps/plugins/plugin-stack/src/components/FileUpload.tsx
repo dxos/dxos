@@ -19,11 +19,9 @@ export const FileUpload: FC<{
 }> = ({ classNames, fileTypes, onUpload }) => {
   const ipfsClient = useIpfsClient();
   const handleUpdate = async (file: File) => {
-    // TODO(burdon): Create and return object; add to stack.
     const info = await ipfsClient?.add(file);
     if (info) {
-      const filename = file.name;
-      console.log(file);
+      const filename = file.name.split('.')[0];
       onUpload(new FileProto({ type: file.type, title: filename, filename, cid: info.path }));
     }
   };
