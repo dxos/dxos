@@ -7,11 +7,9 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/react-client/invitations';
-import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { SpaceMemberListImpl } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
-import { alice } from '../../testing/fixtures/identities';
 import { inviteWithState } from '../../testing/fixtures/invitations';
 import { SpacePanelImpl } from './SpacePanel';
 import { SpacePanelImplProps } from './SpacePanelProps';
@@ -25,29 +23,13 @@ const noOpProps: SpacePanelImplProps = {
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
-const SpacePanel = (args: Partial<SpacePanelImplProps>) => (
-  <StorybookDialog>
-    <SpacePanelImpl {...noOpProps} {...args} />
-  </StorybookDialog>
-);
-
 export default {
-  component: SpacePanel,
+  component: SpacePanelImpl,
 };
 
-export const SpaceManager = {
-  decorators: [ClientDecorator()],
-  args: { activeView: 'space manager' },
-};
-
-export const SpaceInvitationManager = {
-  decorators: [ClientDecorator()],
-  args: { activeView: 'space invitation manager' },
-};
-
-export const PureSpaceManager = () => {
+export const SpaceManager = () => {
   return (
-    <StorybookDialog>
+    <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
         {...noOpProps}
         activeView='space manager'
@@ -55,8 +37,48 @@ export const PureSpaceManager = () => {
           return (
             <SpaceManagerImpl
               {...props}
-              invitations={[inviteWithState(Invitation.State.CONNECTING)]}
-              SpaceMemberList={(props) => <SpaceMemberListImpl members={[alice]} />}
+              invitations={[]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceManagerWithInvites = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[inviteWithState(Invitation.State.INIT)]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceInvitationDetail = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space invitation manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
             />
           );
         }}

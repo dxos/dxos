@@ -12,6 +12,7 @@ import { ClientDecorator } from '@dxos/react-client/testing';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
+import { IdentityActionChooserImpl } from './steps';
 
 faker.seed(1234);
 
@@ -28,20 +29,38 @@ const noOpProps: IdentityPanelImplProps = {
   },
 };
 
-const IdentityPanel = (args: Partial<IdentityPanelImplProps>) => (
-  <StorybookDialog>
-    <IdentityPanelImpl {...noOpProps} {...args} />
-  </StorybookDialog>
-);
-
 export default {
-  component: IdentityPanel,
+  title: 'Panels/Identity',
 };
 
-export const IdentityActionChooser = {
-  decorators: [ClientDecorator()],
-  args: { activeView: 'identity action chooser' },
+export const IdentityActionChooser = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <IdentityPanelImpl
+        {...noOpProps}
+        activeView='identity action chooser'
+        IdentityActionChooser={IdentityActionChooserImpl}
+      />
+    </StorybookDialog>
+  );
 };
+
+export const DeviceInvitationManager = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <IdentityPanelImpl
+        {...noOpProps}
+        activeView='device invitation manager'
+        IdentityActionChooser={IdentityActionChooserImpl}
+      />
+    </StorybookDialog>
+  );
+};
+
+// export const IdentityActionChooser = {
+//   decorators: [ClientDecorator()],
+//   args: { activeView: 'identity action chooser' },
+// };
 
 // export const DeviceManager = {
 //   decorators: [ClientDecorator()],

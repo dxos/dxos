@@ -9,16 +9,19 @@ import type { Identity } from '@dxos/react-client/halo';
 import { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { IdentityEvent } from './identityMachine';
+import { InvitationManagerProps } from '../../steps';
 
 export type IdentityPanelImplProps = {
   titleId: string;
-  activeView: string;
-  send: (event: SingleOrArray<Event<IdentityEvent>>) => void;
-  createInvitationUrl: (invitationCode: string) => string;
+  activeView: 'device manager' | 'device invitation manager' | 'identity action chooser';
   identity: Identity;
+  createInvitationUrl: (invitationCode: string) => string;
+  send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;
   doneActionParent?: Parameters<typeof cloneElement>[0];
   invitationUrl?: string;
+  IdentityActionChooser?: React.FC<IdentityPanelStepProps>;
+  InvitationManager?: React.FC<InvitationManagerProps>;
 } & Partial<InvitationStatus>;
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;

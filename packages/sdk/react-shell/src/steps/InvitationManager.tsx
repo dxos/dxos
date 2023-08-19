@@ -14,7 +14,7 @@ import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewPr
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
-type InvitationManagerProps = StepProps &
+export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
     invitationUrl?: string;
   };
@@ -138,7 +138,7 @@ export const InvitationManager = ({
         <PanelAction
           aria-label={t('back label')}
           disabled={!active}
-          onClick={() => send({ type: 'deselectInvitation' })}
+          onClick={() => send?.({ type: 'deselectInvitation' })}
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction>

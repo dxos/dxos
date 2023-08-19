@@ -34,7 +34,15 @@ const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps
   );
 };
 
-export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: IdentityPanelImplProps) => {
+export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
+  const {
+    identity,
+    titleId,
+    activeView,
+    IdentityActionChooser: IdentityActionChooserComponent = IdentityActionChooser,
+    InvitationManager: InvitationManagerComponent = InvitationManager,
+    ...rest
+  } = props;
   const { t } = useTranslation('os');
   const title = useMemo(() => {
     switch (activeView) {
@@ -51,13 +59,13 @@ export const IdentityPanelImpl = ({ identity, titleId, activeView, ...props }: I
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooser active={activeView === 'identity action chooser'} {...props} />
+            <IdentityActionChooserComponent active={activeView === 'identity action chooser'} {...rest} />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
-            <InvitationManager
+            <InvitationManagerComponent
               active={activeView === 'device invitation manager'}
-              {...props}
-              invitationUrl={props.createInvitationUrl(props.invitationCode!)}
+              {...rest}
+              invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
           {/* <Viewport.View id='managing profile'></Viewport.View> */}
@@ -110,7 +118,7 @@ export const IdentityPanel = ({
       // case identityState.matches('signingOut'):
       //   return 'identity exit';
       default:
-        return 'never';
+        return 'identity action chooser';
     }
   }, [identityState]);
 
@@ -121,7 +129,7 @@ export const IdentityPanel = ({
     send: identitySend,
     titleId,
     createInvitationUrl,
-  };
+  } satisfies IdentityPanelImplProps;
 
   return identityState.context.invitation ? (
     <IdentityPanelWithInvitationImpl {...implProps} invitation={identityState.context.invitation} />
