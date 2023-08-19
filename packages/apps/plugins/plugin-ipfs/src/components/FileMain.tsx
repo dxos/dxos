@@ -20,11 +20,11 @@ const getIpfsUrl = (config: Config, cid: string) => {
 
 const isImage = (filename: string) => {
   const ext = filename.split('.').at(-1)?.toLowerCase();
-  console.log(':::', ext);
   return imageTypes.findIndex((value) => value === ext) !== -1;
 };
 
-export const FileMain: FC<{ data: { object: TypedObject } }> = ({ data: { object } }) => {
+export const FileMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+  console.log('::::', object);
   const config = useConfig();
   if (!object.cid) {
     return null;
@@ -40,7 +40,8 @@ export const FileMain: FC<{ data: { object: TypedObject } }> = ({ data: { object
   );
 };
 
-export const FileSection: FC<{ data: { object: TypedObject } }> = ({ data: { object } }) => {
+export const FileSection: FC<{ data: TypedObject }> = ({ data: object }) => {
+  console.log('::::', object);
   const config = useConfig();
   if (!object.cid) {
     return null;

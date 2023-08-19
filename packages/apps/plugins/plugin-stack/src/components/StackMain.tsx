@@ -8,7 +8,6 @@ import React, { FC, useCallback } from 'react';
 import { useIntent } from '@braneframe/plugin-intent';
 import { Main, Input, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
 import { blockSeparator, chromeSurface, getSize, mx, surfaceElevation } from '@dxos/aurora-theme';
-import { Space } from '@dxos/client/echo';
 
 import { stackState } from '../stores';
 import {
@@ -21,14 +20,7 @@ import {
 } from '../types';
 import { StackSectionsPanel } from './StackSectionsPanel';
 
-export const StackMain: FC<{ data: { space: Space; object: StackModel & StackProperties } }> = ({
-  data: { space, object },
-}) => {
-  const stack = object as StackModel & StackProperties;
-  return <StackMainImpl stack={stack} />;
-};
-
-const StackMainImpl: FC<{ stack: StackModel & StackProperties }> = ({ stack }) => {
+export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: stack }) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const { sendIntent } = useIntent();
   const handleAdd = useCallback(
