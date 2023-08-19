@@ -12,9 +12,15 @@ import {
   RowData,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { useMemo } from 'react';
+import React, { FC, PropsWithChildren, useMemo, createContext } from 'react';
 
 import { chromeSurface, mx } from '@dxos/aurora-theme';
+
+type GridContextType<TData> = {
+  columns: ColumnDef<TData>[];
+};
+
+const GridContext = createContext<GridContextType<any> | undefined>(undefined);
 
 type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
 type CellValueOrFunction<TData, TValue, TResult> = TResult | ((params: ValueFunctionParams<TData, TValue>) => TResult);
@@ -48,8 +54,18 @@ export type GridColumn<TData extends RowData> = /* Pick<ColumnDef<T>, 'cell'> & 
   };
 };
 
+// TODO(burdon): Remove.
 export type GridSlots = {
+  root?: {
+    className?: string;
+  };
   header?: {
+    className?: string;
+  };
+  footer?: {
+    className?: string;
+  };
+  row?: {
     className?: string;
   };
   cell?: {
@@ -61,27 +77,31 @@ export type GridSlots = {
 };
 
 // TODO(burdon): Should this be a separate model or just & to properties?
-export type GridSelectionModel<TKey> = {
-  selected: TKey[];
+type GridSelection = {
+  selected: string | string[];
   multiSelect?: boolean;
-  onSelected?: (selection: TKey[]) => void;
+  onSelected?: (selection: string | string[]) => void;
 };
 
-export type GridProps<TData extends RowData, TKey> = {
-  id: ((data: TData) => TKey) | string;
+export type GridProps<TData extends RowData> = PropsWithChildren & {
+  id: ((data: TData) => string) | string;
   columns: GridColumn<TData>[];
   data?: TData[];
-  selectionModel?: GridSelectionModel<TKey>;
   slots?: GridSlots;
-};
+  Footer?: FC<{ data: TData[]; selected: string[] }>;
+} & GridSelection;
 
-export const Grid = <TData extends RowData, TKey>({
+export const Grid = <TData extends RowData>({
+  children,
   id,
   columns,
   data = [],
   slots,
-  selectionModel,
-}: GridProps<TData, TKey>) => {
+  selected,
+  multiSelect,
+  onSelected,
+  Footer,
+}: GridProps<TData>) => {
   const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
   const getColumn = (id: string) => columns.find((column) => column.key === id)!;
   const getColumnStyle = (id: string) => {
@@ -89,7 +109,7 @@ export const Grid = <TData extends RowData, TKey>({
     return column.width ? { width: column.width } : {};
   };
 
-  const tableColumns = useMemo(
+  const tableColumns = useMemo<ColumnDef<TData>[]>(
     () =>
       columns.map(({ key, getValue, cell }) => {
         const column: ColumnDef<TData> = {
@@ -111,71 +131,90 @@ export const Grid = <TData extends RowData, TKey>({
   });
 
   // TODO(burdon): Key cursor up/down.
-  const selected = new Set(selectionModel?.selected);
-  const handleSelect = (data: TData) => {
-    if (selectionModel) {
-      const id = getId(data);
-      if (selected.has(id)) {
-        selected.delete(id);
-      } else {
-        if (!selectionModel.multiSelect) {
-          selected.clear();
+  const _selected = new Set(selected);
+  const handleSelect = onSelected
+    ? (data: TData) => {
+        const id = getId(data);
+        if (_selected.has(id)) {
+          _selected.delete(id);
+        } else {
+          if (!multiSelect) {
+            _selected.clear();
+          }
+          _selected.add(id);
         }
-        selected.add(id);
-      }
 
-      selectionModel.onSelected?.(Array.from(selected.values()));
-    }
-  };
+        onSelected?.(Array.from(_selected.values()));
+      }
+    : undefined;
 
   return (
-    <div className='flex grow overflow-auto px-4'>
-      <table className='table-fixed w-full'>
-        <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th
-                    key={header.id}
-                    style={getColumnStyle(header.id)}
-                    className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            const id = getId(row.original);
-            return (
-              <tr
-                key={row.id}
-                onClick={() => handleSelect(row.original)}
-                className={mx(selectionModel && 'cursor-pointer', selected.has(id) && slots?.selected?.className)}
-              >
-                {row.getVisibleCells().map((cell) => {
+    <div className={mx('flex grow overflow-auto', chromeSurface, slots?.root?.className)}>
+      <GridContext.Provider value={{ columns: tableColumns }}>
+        <table className='table-fixed w-full'>
+          <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {/* TODO(burdon): Left-margin. */}
+                <th style={{ width: 16 }} />
+                {headerGroup.headers.map((header) => {
                   return (
-                    <td
-                      key={cell.id}
-                      className={mx(
-                        'truncate',
-                        getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
-                        slots?.cell?.className,
-                      )}
+                    <th
+                      key={header.id}
+                      style={getColumnStyle(header.id)}
+                      className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                      z{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
                   );
                 })}
+                {/* TODO(burdon): Right-margin. */}
+                <th style={{ width: 16 }} />
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const id = getId(row.original);
+              return (
+                <tr
+                  key={row.id}
+                  onClick={() => handleSelect?.(row.original)}
+                  className={mx(
+                    slots?.row?.className,
+                    onSelected && 'cursor-pointer',
+                    _selected.has(id) && slots?.selected?.className,
+                  )}
+                >
+                  <td />
+                  {row.getVisibleCells().map((cell) => {
+                    return (
+                      <td
+                        key={cell.id}
+                        className={mx(
+                          'truncate',
+                          getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
+                          slots?.cell?.className,
+                        )}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
+                  <td />
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot className={mx('sticky bottom-0 z-10', chromeSurface, slots?.footer?.className)}>
+            <th />
+            <th>
+              <td colSpan={columns.length}>{children}</td>
+            </th>
+            <th />
+          </tfoot>
+        </table>
+      </GridContext.Provider>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 {
   "name": "@dxos/aurora-grid",
   "version": "0.1.55",
-  "description": "Simplge table.",
+  "description": "Table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -19,8 +19,10 @@
     "chromatic": "chromatic --only-changed --project-token=\"44ade288043a\" --storybook-build-dir out/aurora --exit-zero-on-changes"
   },
   "dependencies": {
+    "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@tanstack/react-table": "^8.9.3"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
+import { ColumnDef } from '@tanstack/react-table';
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -22,7 +23,9 @@ type Item = {
   value?: number;
 };
 
-const columns: GridColumn<Item>[] = [
+const columns: ColumnDef<Item>[] = [];
+
+const columnss: GridColumn<Item>[] = [
   {
     key: 'key',
     width: 100,
@@ -52,7 +55,7 @@ const columns: GridColumn<Item>[] = [
 ];
 
 const Test = () => {
-  const [selected, setSelected] = useState<PublicKey>();
+  const [selected, setSelected] = useState<string[]>([]);
   const [items] = useState<Item[]>(() =>
     range(num).map(() => ({
       key: PublicKey.random(),
@@ -61,25 +64,26 @@ const Test = () => {
     })),
   );
 
+  // TODO(burdon): Focus/navigation (space to toggle).
   // TODO(burdon): Editable.
+  // TODO(burdon): Sort/filter.
   // TODO(burdon): Create simple specialized table for devtools (auto detect keys, links, etc.)
 
   return (
-    <div className='flex flex-col w-full h-full bg-white'>
-      <Grid<Item, PublicKey>
-        id={(item: Item) => item.key}
+    <div className='flex grow overflow-hidden'>
+      <Grid<Item>
+        id={(item: Item) => item.key.toHex()}
         columns={columns}
         data={items}
-        selectionModel={{
-          selected: selected ? [selected] : [],
-          multiSelect: true,
-          onSelected: (selection) => setSelected(selection[0]),
-        }}
-        slots={{
-          header: { className: 'p-1 text-left font-thin' },
-          cell: { className: 'p-1' },
-          selected: { className: 'bg-green-100' },
-        }}
+        multiSelect={false}
+        selected={selected}
+        onSelected={(selection) => setSelected(selection)}
+        // slots={{
+        //   header: { className: 'p-1 text-left font-thin' },
+        //   cell: { className: 'p-1' },
+        //   selected: { className: 'bg-green-100' },
+        //   footer: { className: 'p-1 text-left font-thin' },
+        // }}
       />
     </div>
   );

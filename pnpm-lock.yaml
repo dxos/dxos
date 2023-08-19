@@ -5640,8 +5640,10 @@ importers:
 
   packages/ui/aurora-grid:
     specifiers:
+      '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
+      '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
       '@tanstack/react-table': ^8.9.3
@@ -5653,8 +5655,10 @@ importers:
       vite: ^4.3.9
       vite-plugin-turbosnap: ^1.0.2
     dependencies:
+      '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/aurora-types': link:../aurora-types
+      '@dxos/util': link:../../common/util
       '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@faker-js/faker': 8.0.2

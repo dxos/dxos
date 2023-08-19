@@ -17,6 +17,12 @@
   ],
   "references": [
     {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../aurora"
+    },
+    {
       "path": "../aurora-theme"
     },
     {
