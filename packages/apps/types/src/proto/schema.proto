@@ -21,10 +21,12 @@ message Meta {
 message File {
   option (object) = true;
 
-  string name = 1;
-  string filename = 2;
-  string timestamp = 3;
-  string cid = 4;
+  string type = 1;
+  string timestamp = 2;
+  string title = 3;
+  string filename = 4;
+
+  string cid = 10;
 }
 
 message Document {

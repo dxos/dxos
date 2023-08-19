@@ -23,8 +23,8 @@ export const FileUpload: FC<{
     const info = await ipfsClient?.add(file);
     if (info) {
       const filename = file.name;
-      const f = new FileProto({ name: filename, filename, cid: info.path });
-      onUpload(f);
+      console.log(file);
+      onUpload(new FileProto({ type: file.type, title: filename, filename, cid: info.path }));
     }
   };
 

@@ -133,13 +133,6 @@ export const StackSectionsPanel: FC<{
           );
         })}
       </SortableContext>
-      <FileUpload
-        classNames='p-2'
-        fileTypes={['png']}
-        onUpload={(file: FileProto) => {
-          setSectionModels(onAdd(file, sectionModels.length));
-        }}
-      />
       <div role='none' ref={useDroppableNodeRef}>
         {sectionModels.length < 1 && (
           <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
@@ -147,6 +140,14 @@ export const StackSectionsPanel: FC<{
           </p>
         )}
       </div>
+      <FileUpload
+        classNames='p-2'
+        // TODO(burdon): Update.
+        fileTypes={['png', 'pdf']}
+        onUpload={(file: FileProto) => {
+          setSectionModels(onAdd(file, sectionModels.length));
+        }}
+      />
     </List>
   );
 };
