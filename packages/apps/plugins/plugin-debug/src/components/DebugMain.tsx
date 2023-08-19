@@ -13,7 +13,7 @@ import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { baseSurface, fixedFullLayout, getSize } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
+import { Space } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -22,7 +22,7 @@ import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
+export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
   const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
@@ -31,7 +31,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
+    const data = await client.diagnostics({ truncate: true });
     setData(data);
   };
   useEffect(() => {

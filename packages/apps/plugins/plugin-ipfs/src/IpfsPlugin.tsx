@@ -34,17 +34,17 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         },
       },
       component: (data, role) => {
-        if (!(data && typeof data === 'object' && 'object' in data && isFile(data.object))) {
+        if (!data || typeof data !== 'object') {
           return null;
         }
 
         switch (role) {
           case 'main': {
-            return FileMain;
+            return isFile(data) ? FileMain : null;
           }
 
           case 'section': {
-            return FileSection;
+            return isFile(data) ? FileSection : null;
           }
         }
 

@@ -12,6 +12,7 @@ import { File as FileProto } from '@braneframe/types';
 import { List, useTranslation } from '@dxos/aurora';
 import { arrayMove } from '@dxos/util';
 
+import { defaultFileTypes } from '../hooks';
 import { stackState } from '../stores';
 import { GenericStackObject, getSectionModels, STACK_PLUGIN, StackSectionModel, StackSections } from '../types';
 import { FileUpload } from './FileUpload';
@@ -133,13 +134,6 @@ export const StackSectionsPanel: FC<{
           );
         })}
       </SortableContext>
-      <FileUpload
-        classNames='p-2'
-        fileTypes={['png']}
-        onUpload={(file: FileProto) => {
-          setSectionModels(onAdd(file, sectionModels.length));
-        }}
-      />
       <div role='none' ref={useDroppableNodeRef}>
         {sectionModels.length < 1 && (
           <p className='text-center mlb-1 plb-4 border border-dashed border-neutral-500/50 rounded'>
@@ -147,6 +141,13 @@ export const StackSectionsPanel: FC<{
           </p>
         )}
       </div>
+      <FileUpload
+        classNames='p-2'
+        fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+        onUpload={(file: FileProto) => {
+          setSectionModels(onAdd(file, sectionModels.length));
+        }}
+      />
     </List>
   );
 };

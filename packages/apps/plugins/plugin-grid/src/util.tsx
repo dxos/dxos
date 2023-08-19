@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ShieldChevron, Trash } from '@phosphor-icons/react';
+import { Table, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { Graph } from '@braneframe/plugin-graph';
+import { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Space, TypedObject } from '@dxos/client/echo';
 
-import { CHESS_PLUGIN } from './types';
+import { GRID_PLUGIN } from './types';
 
 export const objectToGraphNode = (
   parent: Graph.Node<Space>,
@@ -19,8 +19,8 @@ export const objectToGraphNode = (
 ): Graph.Node<TypedObject> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? ['game title placeholder', { ns: CHESS_PLUGIN }],
-    icon: (props) => <ShieldChevron {...props} />,
+    label: object.title ?? ['object placeholder', { ns: GRID_PLUGIN }],
+    icon: (props) => <Table {...props} />,
     data: object,
     properties: {
       index: get(object, 'meta.index', index),
@@ -29,7 +29,7 @@ export const objectToGraphNode = (
 
   child.addAction({
     id: 'delete',
-    label: ['delete game label', { ns: CHESS_PLUGIN }],
+    label: ['delete object label', { ns: GRID_PLUGIN }],
     icon: (props) => <Trash {...props} />,
     intent: {
       action: SpaceAction.REMOVE_OBJECT,
