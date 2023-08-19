@@ -18,17 +18,23 @@ export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';
 }
 
-export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) => {
-  const disabled = !active;
-  const { t } = useTranslation('os');
-  const [inputValue, setInputValue] = useState('');
-  const client = useClient();
-  const [validationMessage, setValidationMessage] = useState('');
+export type IdentityInputProps = IdentityCreatorProps;
+
+export type IdentityInputImplProps = IdentityCreatorProps & {
+  onDisplayNameConfirm?: (displayName: string) => void;
+  validationMessage?: string;
+};
+
+export const IdentityInput = (props: IdentityInputProps) => {
+  const { send, method } = props;
   const isRecover = method === 'recover identity';
-  const handleNext = () => {
-    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: inputValue }).then(
+  const client = useClient();
+  const { t } = useTranslation('os');
+  const [validationMessage, setValidationMessage] = useState('');
+  const createIdentity = (displayName: string) => {
+    void client.halo.createIdentity({ [isRecover ? 'seedphrase' : 'displayName']: displayName }).then(
       (identity) => {
-        send({ type: 'selectIdentity' as const, identity });
+        send?.({ type: 'selectIdentity' as const, identity });
       },
       (error) => {
         log.catch(error);
@@ -36,6 +42,16 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
       },
     );
   };
+  return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
+};
+
+// TODO(zhenyasav): impl shouldn't need send() 
+export const IdentityInputImpl = (props: IdentityInputImplProps) => {
+  const { method, send, active, onDisplayNameConfirm, validationMessage } = props;
+  const disabled = !active;
+  const { t } = useTranslation('os');
+  const [inputValue, setInputValue] = useState('');
+  const isRecover = method === 'recover identity';
   return (
     <>
       <Input
@@ -50,10 +66,10 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
           root: { className: 'm-0' },
           input: {
             'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
+            onKeyUp: ({ key }) => key === 'Enter' && onDisplayNameConfirm?.(inputValue),
           } as ComponentPropsWithoutRef<'input'>,
         }}
-        {...(validationMessage.length && { validationValence: 'error', validationMessage })}
+        {...(validationMessage?.length && { validationValence: 'error', validationMessage })}
         data-testid='identity-input'
       />
       <div role='none' className='grow' />
@@ -62,7 +78,7 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
           aria-label={t('continue label')}
           disabled={disabled}
           classNames='order-2'
-          onClick={handleNext}
+          onClick={() => onDisplayNameConfirm?.(inputValue)}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
           <CaretRight weight='light' className={getSize(6)} />
@@ -70,7 +86,7 @@ export const IdentityInput = ({ method, send, active }: IdentityCreatorProps) =>
         <PanelAction
           aria-label={t('back label')}
           disabled={disabled}
-          onClick={() => send({ type: 'deselectAuthMethod' })}
+          onClick={() => send?.({ type: 'deselectAuthMethod' })}
           classNames='flex items-center gap-2 pis-2 pie-4'
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >

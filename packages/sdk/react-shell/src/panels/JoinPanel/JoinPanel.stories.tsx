@@ -5,11 +5,10 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { ClientDecorator } from '@dxos/react-client/testing';
-
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { JoinPanelImpl } from './JoinPanel';
 import { JoinPanelImplProps } from './JoinPanelProps';
+import { IdentityInputImpl } from './steps';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
@@ -20,7 +19,7 @@ const noOpProps: JoinPanelImplProps = {
 };
 
 const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
-  <StorybookDialog>
+  <StorybookDialog inOverlayLayout>
     <JoinPanelImpl {...noOpProps} {...args} />
   </StorybookDialog>
 );
@@ -29,86 +28,90 @@ export default {
   component: JoinDialog,
 };
 
-export const AdditionMethodChooser = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'addition method chooser',
-  },
+export const AdditionMethodChooser = () => {
+  return <JoinDialog activeView='addition method chooser' IdentityInput={IdentityInputImpl} />;
 };
 
-export const CreateIdentityInput = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'create identity input',
-  },
-};
+// export const AdditionMethodChooser = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'addition method chooser',
+//   },
+// };
 
-export const RecoverIdentityInput = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'recover identity input',
-  },
-};
+// export const CreateIdentityInput = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'create identity input',
+//   },
+// };
 
-export const HaloInvitationInput = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'halo invitation input',
-  },
-};
+// export const RecoverIdentityInput = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'recover identity input',
+//   },
+// };
 
-export const HaloInvitationRescuer = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'halo invitation rescuer',
-  },
-};
+// export const HaloInvitationInput = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'halo invitation input',
+//   },
+// };
 
-export const HaloInvitationAuthenticator = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'halo invitation authenticator',
-  },
-};
+// export const HaloInvitationRescuer = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'halo invitation rescuer',
+//   },
+// };
 
-export const HaloInvitationAccepted = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'halo invitation accepted',
-  },
-};
+// export const HaloInvitationAuthenticator = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'halo invitation authenticator',
+//   },
+// };
 
-export const IdentityAdded = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'identity added',
-  },
-};
+// export const HaloInvitationAccepted = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'halo invitation accepted',
+//   },
+// };
 
-export const SpaceInvitationInput = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'space invitation input',
-  },
-};
+// export const IdentityAdded = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'identity added',
+//   },
+// };
 
-export const SpaceInvitationRescuer = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'space invitation rescuer',
-  },
-};
+// export const SpaceInvitationInput = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'space invitation input',
+//   },
+// };
 
-export const SpaceInvitationAuthenticator = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'space invitation authenticator',
-  },
-};
+// export const SpaceInvitationRescuer = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'space invitation rescuer',
+//   },
+// };
 
-export const SpaceInvitationAccepted = {
-  decorators: [ClientDecorator()],
-  args: {
-    activeView: 'space invitation accepted',
-  },
-};
+// export const SpaceInvitationAuthenticator = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'space invitation authenticator',
+//   },
+// };
+
+// export const SpaceInvitationAccepted = {
+//   decorators: [ClientDecorator()],
+//   args: {
+//     activeView: 'space invitation accepted',
+//   },
+// };

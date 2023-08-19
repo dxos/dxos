@@ -10,6 +10,7 @@ import { type AuthenticatingInvitationObservable, InvitationResult } from '@dxos
 
 import { StepProps } from '../../steps';
 import { JoinSend } from './joinMachine';
+import { IdentityInputProps } from './steps';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
@@ -53,6 +54,7 @@ export type JoinPanelImplProps = Pick<
   onSpaceInvitationCancel?: () => Promise<void> | undefined;
   onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  IdentityInput?: React.FC<IdentityInputProps>;
 };
 
 export interface IdentityAction {

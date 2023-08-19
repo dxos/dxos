@@ -5,7 +5,7 @@
 import React from 'react';
 
 import '@dxosTheme';
-// import * as JoinPanels from './JoinPanel/JoinPanel.stories';
+import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
 
@@ -34,9 +34,9 @@ const StoryRow = ({ components }: { components: React.FC[] }) => {
 export const AllPanels = (props: any) => {
   return (
     <>
-      <StoryRow components={getComponents(SpacePanels)} />
       <StoryRow components={getComponents(IdentityPanels)} />
-      {/* <StoryRow components={getComponents(JoinPanels)} /> */}
+      <StoryRow components={getComponents(JoinPanels)} />
+      <StoryRow components={getComponents(SpacePanels)} />
     </>
   );
 };
