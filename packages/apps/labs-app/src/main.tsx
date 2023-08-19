@@ -16,6 +16,7 @@ import { ErrorPlugin } from '@braneframe/plugin-error';
 import { FilesPlugin } from '@braneframe/plugin-files';
 import { GithubPlugin } from '@braneframe/plugin-github';
 import { GraphPlugin } from '@braneframe/plugin-graph';
+import { GridPlugin } from '@braneframe/plugin-grid';
 import { IntentPlugin } from '@braneframe/plugin-intent';
 import { IpfsPlugin } from '@braneframe/plugin-ipfs';
 import { KanbanPlugin } from '@braneframe/plugin-kanban';
@@ -69,14 +70,16 @@ createRoot(document.getElementById('root')!).render(
         SplitViewPlugin(),
         SpacePlugin(),
 
+        // Composer
         MarkdownPlugin(),
         StackPlugin(),
         GithubPlugin(),
         FilesPlugin(),
-        IpfsPlugin(),
 
         // Labs
         DebugPlugin(),
+        GridPlugin(),
+        IpfsPlugin(),
         TemplatePlugin(),
         DrawingPlugin(),
         KanbanPlugin(),
