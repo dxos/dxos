@@ -4,7 +4,7 @@
 
 import { FC, PropsWithChildren } from 'react';
 
-export type FunctionComponentProps = PropsWithChildren<{
+export type ComponentProps = PropsWithChildren<{
   data: any;
   role?: string;
 }>;
@@ -15,8 +15,8 @@ export type PluginProvides<TProvides> = TProvides & {
     data: unknown,
     role?: string,
     props?: Partial<P>,
-  ) => FC<FunctionComponentProps> | undefined | null | false | 0;
-  components?: Record<string, FC<FunctionComponentProps>> & { default?: FC<FunctionComponentProps> };
+  ) => FC<ComponentProps> | undefined | null | false | 0;
+  components?: Record<string, FC<ComponentProps>> & { default?: FC };
 };
 
 export type Plugin<TProvides = {}> = {

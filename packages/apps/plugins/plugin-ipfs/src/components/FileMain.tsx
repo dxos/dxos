@@ -12,7 +12,7 @@ import { Config, useConfig } from '@dxos/react-client';
 
 import { FilePreview } from './FilePreview';
 
-export const imageTypes = ['jpg', 'png', 'gif'];
+export const fileTypes = ['jpg', 'png', 'gif', 'pdf'];
 
 const getIpfsUrl = (config: Config, cid: string) => {
   return urlJoin(config.values.runtime!.services!.ipfs!.gateway!, cid);
@@ -20,11 +20,10 @@ const getIpfsUrl = (config: Config, cid: string) => {
 
 const isImage = (filename: string) => {
   const ext = filename.split('.').at(-1)?.toLowerCase();
-  return imageTypes.findIndex((value) => value === ext) !== -1;
+  return fileTypes.findIndex((value) => value === ext) !== -1;
 };
 
 export const FileMain: FC<{ data: TypedObject }> = ({ data: object }) => {
-  console.log('::::', object);
   const config = useConfig();
   if (!object.cid) {
     return null;
@@ -41,7 +40,6 @@ export const FileMain: FC<{ data: TypedObject }> = ({ data: object }) => {
 };
 
 export const FileSection: FC<{ data: TypedObject }> = ({ data: object }) => {
-  console.log('::::', object);
   const config = useConfig();
   if (!object.cid) {
     return null;

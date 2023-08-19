@@ -71,9 +71,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
         switch (role) {
           case 'main': {
-            if (isObject(data)) {
-              return GridMain;
-            }
+            return isObject(data) ? GridMain : null;
           }
         }
 
