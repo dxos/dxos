@@ -3,6 +3,7 @@
 //
 
 export * from './avatar';
+export * from './breadcrumb';
 export * from './button';
 export * from './dialog';
 export * from './dropdown-menu';
