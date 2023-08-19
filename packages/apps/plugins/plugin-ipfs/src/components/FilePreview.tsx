@@ -5,16 +5,15 @@
 import React, { FC } from 'react';
 
 export type FilePreviewProps = {
+  type: string;
   url: string;
-  image?: boolean;
 };
 
 /**
  * File/content preview iframe.
  */
-export const FilePreview: FC<FilePreviewProps> = ({ url, image }) => {
-  // TODO(burdon): Auto-detect image?
-  if (!image) {
+export const FilePreview: FC<FilePreviewProps> = ({ type, url }) => {
+  if (!type.startsWith('image')) {
     return <iframe className='w-full h-full overflow-auto' src={url} />;
   }
 

@@ -11,13 +11,14 @@ import { PublicKey } from '@dxos/client';
 import { TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePluginContext } from '@dxos/react-surface';
 
-export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
+// TODO(burdon): Select type and generate columns from props.
+
+export const GridMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const { plugins } = usePluginContext();
   const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
   const space = spacePlugin?.provides?.space.current;
 
   return (
-    // TODO(burdon): Boilerplate.
     <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
       <pre className='m-4 p-2 ring'>
         <span>{space?.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>

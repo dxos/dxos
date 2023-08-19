@@ -66,7 +66,7 @@ export const markdownPlugins = (plugins: Plugin[]): MarkdownPlugin[] => {
 export const documentToGraphNode = (parent: Graph.Node<Space>, document: Document, index: string): Graph.Node => {
   const [child] = parent.add({
     id: document.id,
-    label: document.title ?? 'New document',
+    label: document.title ?? ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
     icon: (props) =>
       document.content?.kind === TextKind.PLAIN ? <ArticleMedium {...props} /> : <Article {...props} />,
     data: document,
