@@ -677,6 +677,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
@@ -701,6 +702,7 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client

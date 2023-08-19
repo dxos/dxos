@@ -60,27 +60,35 @@ export type GridSlots = {
   };
 };
 
+// TODO(burdon): Should this be a separate model or just & to properties?
 export type GridSelectionModel<TKey> = {
   selected: TKey[];
-  multiple?: boolean;
+  multiSelect?: boolean;
   onSelected?: (selection: TKey[]) => void;
 };
 
 export type GridProps<TData extends RowData, TKey> = {
-  key?: string;
+  id: ((data: TData) => TKey) | string;
   columns: GridColumn<TData>[];
   data?: TData[];
-  slots?: GridSlots;
   selectionModel?: GridSelectionModel<TKey>;
+  slots?: GridSlots;
 };
 
 export const Grid = <TData extends RowData, TKey>({
-  key = 'id',
+  id,
   columns,
   data = [],
   slots,
   selectionModel,
 }: GridProps<TData, TKey>) => {
+  const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
+  const getColumn = (id: string) => columns.find((column) => column.key === id)!;
+  const getColumnStyle = (id: string) => {
+    const column = getColumn(id);
+    return column.width ? { width: column.width } : {};
+  };
+
   const tableColumns = useMemo(
     () =>
       columns.map(({ key, getValue, cell }) => {
@@ -102,22 +110,15 @@ export const Grid = <TData extends RowData, TKey>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const getColumn = (id: string) => columns.find((column) => column.key === id)!;
-  const getColumnStyle = (id: string) => {
-    const column = getColumn(id);
-    return column.width ? { width: column.width } : {};
-  };
-
   // TODO(burdon): Key cursor up/down.
   const selected = new Set(selectionModel?.selected);
-  const getId = (item: TData) => (item as any)[key];
-  const handleSelect = (item: TData) => {
+  const handleSelect = (data: TData) => {
     if (selectionModel) {
-      const id = getId(item);
+      const id = getId(data);
       if (selected.has(id)) {
         selected.delete(id);
       } else {
-        if (!selectionModel.multiple) {
+        if (!selectionModel.multiSelect) {
           selected.clear();
         }
         selected.add(id);
@@ -126,9 +127,6 @@ export const Grid = <TData extends RowData, TKey>({
       selectionModel.onSelected?.(Array.from(selected.values()));
     }
   };
-
-  // TODO(burdon): Editable.
-  // TODO(burdon): Create simple specialized table for devtools (auto detect keys, links, etc.)
 
   return (
     <div className='flex grow overflow-auto px-4'>
@@ -157,7 +155,7 @@ export const Grid = <TData extends RowData, TKey>({
               <tr
                 key={row.id}
                 onClick={() => handleSelect(row.original)}
-                className={mx('cursor-pointer', selected.has(id) && slots?.selected?.className)}
+                className={mx(selectionModel && 'cursor-pointer', selected.has(id) && slots?.selected?.className)}
               >
                 {row.getVisibleCells().map((cell) => {
                   return (
