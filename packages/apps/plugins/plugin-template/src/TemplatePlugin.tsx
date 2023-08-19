@@ -72,9 +72,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
         switch (role) {
           case 'main': {
-            if (isObject(data)) {
-              return TemplateMain;
-            }
+            return isObject(data) ? TemplateMain : null;
           }
         }
 

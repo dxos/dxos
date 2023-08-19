@@ -21,11 +21,11 @@ export const objectToGraphNode = (
 ): Graph.Node<TypedObject> => {
   const [child] = parent.add({
     id: object.id,
-    label: object.title ?? 'New object', // TODO(burdon): Translation.
+    label: object.title ?? ['object title placeholder', { ns: TEMPLATE_PLUGIN }],
     icon: (props) => <Asterisk {...props} />,
     data: object,
     properties: {
-      index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
+      index: get(object, 'meta.index', index),
     },
   });
 

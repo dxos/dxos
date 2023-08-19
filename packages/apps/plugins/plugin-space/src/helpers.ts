@@ -7,7 +7,7 @@ import { getIndices } from '@tldraw/indices';
 import { Graph } from '@braneframe/plugin-graph';
 import { UnsubscribeCallback } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import { Query, SpaceProxy, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
+import { Query, Space, SpaceState, subscribe, TypedObject } from '@dxos/react-client/echo';
 import { defaultMap } from '@dxos/util';
 
 export { getIndices } from '@tldraw/indices';
@@ -23,13 +23,13 @@ export class GraphNodeAdapter<T extends TypedObject> {
   ) {}
 
   clear() {
+    this._queries.clear();
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.clear();
-    this._queries.clear();
     this._previousObjects.clear();
   }
 
-  createNodes(space: SpaceProxy, parent: Graph.Node) {
+  createNodes(space: Space, parent: Graph.Node) {
     if (space.state.get() !== SpaceState.READY) {
       return;
     }
