@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import urlJoin from 'url-join';
 
 import { Main } from '@dxos/aurora';
@@ -35,6 +35,7 @@ export const FileMain: FC<{ data: TypedObject }> = ({ data: file }) => {
 
 export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
   const config = useConfig();
+  const [height] = useState<number>(400);
   if (!file.cid) {
     return null;
   }
@@ -42,7 +43,7 @@ export const FileSection: FC<{ data: TypedObject }> = ({ data: file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <div className='p-2 h-[300px]'>
+    <div style={{ height }} className='p-2'>
       <FilePreview type={file.type} url={url} />
     </div>
   );

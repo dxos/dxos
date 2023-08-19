@@ -37,7 +37,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
           parent.addAction({
             id: `${CHESS_PLUGIN}/create`,
-            label: ['create object label', { ns: CHESS_PLUGIN }],
+            label: ['create game label', { ns: CHESS_PLUGIN }],
             icon: (props) => <Plus {...props} />,
             intent: [
               {

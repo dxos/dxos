@@ -77,7 +77,7 @@ export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing }) => {
   // Zoom to fit.
   // TODO(burdon): Update height within range.
   const { ref: containerRef, width } = useResizeDetector();
-  const [height, _setHeight] = useState<number>(300);
+  const [height] = useState<number>(400);
   const [ready, setReady] = useState(false);
   useEffect(() => {
     editor?.updateViewportScreenBounds();
