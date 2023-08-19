@@ -55,15 +55,32 @@ export type GridSlots = {
   cell?: {
     className?: string;
   };
+  selected?: {
+    className?: string;
+  };
 };
 
-export type GridProps<TData extends RowData> = {
+export type GridSelectionModel<TKey> = {
+  selected: TKey[];
+  multiple?: boolean;
+  onSelected?: (selection: TKey[]) => void;
+};
+
+export type GridProps<TData extends RowData, TKey> = {
+  key?: string;
   columns: GridColumn<TData>[];
   data?: TData[];
   slots?: GridSlots;
+  selectionModel?: GridSelectionModel<TKey>;
 };
 
-export const Grid = <TData extends RowData>({ columns, data = [], slots }: GridProps<TData>) => {
+export const Grid = <TData extends RowData, TKey>({
+  key = 'id',
+  columns,
+  data = [],
+  slots,
+  selectionModel,
+}: GridProps<TData, TKey>) => {
   const tableColumns = useMemo(
     () =>
       columns.map(({ key, getValue, cell }) => {
@@ -91,9 +108,25 @@ export const Grid = <TData extends RowData>({ columns, data = [], slots }: GridP
     return column.width ? { width: column.width } : {};
   };
 
-  // TODO(burdon): Custom Cell renderer.
-  // TODO(burdon): Aurora styles?
-  // TODO(burdon): Optionally scroll horizontally.
+  // TODO(burdon): Key cursor up/down.
+  const selected = new Set(selectionModel?.selected);
+  const getId = (item: TData) => (item as any)[key];
+  const handleSelect = (item: TData) => {
+    if (selectionModel) {
+      const id = getId(item);
+      if (selected.has(id)) {
+        selected.delete(id);
+      } else {
+        if (!selectionModel.multiple) {
+          selected.clear();
+        }
+        selected.add(id);
+      }
+
+      selectionModel.onSelected?.(Array.from(selected.values()));
+    }
+  };
+
   // TODO(burdon): Editable.
   // TODO(burdon): Create simple specialized table for devtools (auto detect keys, links, etc.)
 
@@ -118,24 +151,31 @@ export const Grid = <TData extends RowData>({ columns, data = [], slots }: GridP
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => {
-                return (
-                  <td
-                    key={cell.id}
-                    className={mx(
-                      'truncate',
-                      getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
-                      slots?.cell?.className,
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+          {table.getRowModel().rows.map((row) => {
+            const id = getId(row.original);
+            return (
+              <tr
+                key={row.id}
+                onClick={() => handleSelect(row.original)}
+                className={mx('cursor-pointer', selected.has(id) && slots?.selected?.className)}
+              >
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <td
+                      key={cell.id}
+                      className={mx(
+                        'truncate',
+                        getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
+                        slots?.cell?.className,
+                      )}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

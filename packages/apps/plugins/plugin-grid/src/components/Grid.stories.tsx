@@ -52,6 +52,7 @@ const columns: GridColumn<Item>[] = [
 ];
 
 const Test = () => {
+  const [selected, setSelected] = useState<PublicKey>();
   const [items] = useState<Item[]>(() =>
     range(num).map(() => ({
       id: PublicKey.random(),
@@ -68,6 +69,11 @@ const Test = () => {
         slots={{
           header: { className: 'p-1 text-left font-thin' },
           cell: { className: 'p-1' },
+          selected: { className: 'bg-green-100' },
+        }}
+        selectionModel={{
+          selected: selected ? [selected] : [],
+          onSelected: (selection) => setSelected(selection[0]),
         }}
       />
     </div>
