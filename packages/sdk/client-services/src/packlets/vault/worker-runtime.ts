@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
@@ -57,7 +58,7 @@ export class WorkerRuntime {
         transportFactory: this._transportFactory,
       });
 
-      await this._clientServices.open();
+      await this._clientServices.open(new Context());
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {

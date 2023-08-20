@@ -26,10 +26,13 @@ const getCellValue = <TData, TValue, TResult>(
   return value;
 };
 
-// TODO(burdon): Why wrap this rather than providing helpers?
-// https://tanstack.com/table/v8/docs/guide/column-defs
+/**
+ * Simplifies the ColumnDef definition.
+ * https://tanstack.com/table/v8/docs/guide/column-defs
+ */
+// TODO(burdon): Consider alternative to use ColumnDef directly with helpers.
 export type GridColumn<TData extends RowData, TValue = any> = {
-  key: string;
+  id: string;
   value?: (params: TData) => any;
   width?: number;
   header?: {
@@ -76,9 +79,10 @@ export type GridSlots = {
 };
 
 type GridSelection = {
+  selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle'; // TODO(burdon): ???
+  // Uncontrolled if undefined.
   selected?: string | string[];
-  multiSelect?: boolean;
-  onSelected?: (selection: string | string[] | undefined) => void;
+  onSelectedChange?: (selection: string | string[] | undefined) => void;
 };
 
 export type GridProps<TData extends RowData> = {
@@ -94,13 +98,32 @@ export const Grid = <TData extends RowData>({
   data = [],
   slots,
   selected,
-  multiSelect,
-  onSelected,
+  onSelectedChange,
 }: GridProps<TData>) => {
   const [focus, setFocus] = useState<string>();
+  const selectionSet = new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []);
+  const handleSelect = onSelectedChange
+    ? (id: string) => {
+        onSelectedChange(id);
+        // if (selectedSet.has(id)) {
+        //   selectedSet.delete(id);
+        // } else {
+        //   if (!multiSelect) {
+        //     selectedSet.clear();
+        //   }
+        //   selectedSet.add(id);
+        // }
+
+        // if (multiSelect) {
+        //   onSelected(Array.from(selectedSet.values()));
+        // } else {
+        //   onSelected(selectedSet.values().next().value);
+        // }
+      }
+    : undefined;
 
   const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
-  const getColumn = (id: string) => columns.find((column) => column.key === id)!;
+  const getColumn = (id: string) => columns.find((column) => column.id === id)!;
   const getColumnStyle = (id: string) => {
     const column = getColumn(id);
     return column.width ? { width: column.width } : {};
@@ -108,10 +131,10 @@ export const Grid = <TData extends RowData>({
 
   const tableColumns = useMemo<ColumnDef<TData>[]>(
     () =>
-      columns.map(({ key, value, header, cell, footer }) => {
+      columns.map(({ id, value, header, cell, footer }) => {
         return stripKeys({
-          id: key,
-          accessorFn: (data: TData) => (value ? value(data) : (data as any)[key]),
+          id,
+          accessorFn: value ? (data: TData) => value(data) : (data: TData) => (data as any)[id],
           header: header?.label,
           cell: cell?.render
             ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
@@ -128,26 +151,8 @@ export const Grid = <TData extends RowData>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const selectedSet = new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []);
-  const handleSelect = onSelected
-    ? (id: string) => {
-        if (selectedSet.has(id)) {
-          selectedSet.delete(id);
-        } else {
-          if (!multiSelect) {
-            selectedSet.clear();
-          }
-          selectedSet.add(id);
-        }
-
-        if (multiSelect) {
-          onSelected(Array.from(selectedSet.values()));
-        } else {
-          onSelected(selectedSet.values().next().value);
-        }
-      }
-    : undefined;
-
+  // TODO(burdon): Use radix ScrollArea.
+  // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
     <div className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
@@ -180,9 +185,9 @@ export const Grid = <TData extends RowData>({
                 role='button'
                 className={mx(
                   'group',
-                  onSelected && 'cursor-pointer',
+                  onSelectedChange && 'cursor-pointer',
                   slots?.row?.className,
-                  selectedSet.has(id) && slots?.selected?.className,
+                  selectionSet.has(id) && slots?.selected?.className,
                   focus === id && slots?.focus?.className,
                 )}
               >

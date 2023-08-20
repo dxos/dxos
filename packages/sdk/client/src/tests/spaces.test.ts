@@ -10,6 +10,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -46,7 +47,7 @@ describe('Spaces', () => {
     // testBuilder.storage = createStorage({ type: StorageType.WEBFS });
 
     const host = testBuilder.createClientServicesHost();
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();

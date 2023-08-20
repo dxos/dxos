@@ -168,7 +168,7 @@ const SpacesPanel: FC = () => {
         id='key'
         columns={cols}
         data={spaces}
-        onSelected={(selection) => {
+        onSelectedChange={(selection) => {
           console.log(':::', selection);
         }}
         slots={defaultGridSlots}

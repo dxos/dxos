@@ -3,7 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
-import React, { useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
@@ -11,7 +11,7 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Grid, GridColumn } from './Grid';
+import { Grid, GridColumn, GridProps } from './Grid';
 import {
   createCheckColumn,
   createNumberColumn,
@@ -29,9 +29,20 @@ type Item = {
   complete?: boolean;
 };
 
+faker.seed(999);
+const createItems = (count: number) =>
+  range(count).map(() => ({
+    key: PublicKey.random(),
+    name: faker.lorem.sentence(),
+    value: faker.number.int({ min: 0, max: 10_000 }),
+    started: faker.date.recent(),
+    complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
+  }));
+
 const columns: GridColumn<Item>[] = [
   createKeyColumn('key'),
   createTextColumn('name', {
+    // TODO(burdon): Doesn't get updated when data changes.
     footer: {
       render: ({ data }) => `${data.length} rows`,
     },
@@ -60,23 +71,8 @@ const columns: GridColumn<Item>[] = [
   }),
 ];
 
-faker.seed(999);
-
-const Test = ({ count = 100 }) => {
+const Test: FC<{ items?: Item[]; selection?: GridProps<Item>['selection'] }> = ({ items, selection }) => {
   const [selected, setSelected] = useState<string>();
-  const [items] = useState<Item[]>(() =>
-    range(count).map(() => ({
-      key: PublicKey.random(),
-      name: faker.lorem.sentence(),
-      value: faker.number.int({ min: 0, max: 10_000 }),
-      started: faker.date.recent(),
-      complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
-    })),
-  );
-
-  // TODO(burdon): Editable.
-  // TODO(burdon): Sort/filter.
-  // TODO(burdon): Scroll to selection.
 
   return (
     <div className='flex grow overflow-hidden'>
@@ -84,9 +80,9 @@ const Test = ({ count = 100 }) => {
         id={(item: Item) => item.key.toHex()}
         columns={columns}
         data={items}
-        multiSelect={false}
+        selection={selection}
         selected={selected}
-        onSelected={(selection) => setSelected(selection as string)}
+        onSelectedChange={(selection) => setSelected(selection as string)}
         slots={defaultGridSlots}
       />
     </div>
@@ -109,6 +105,39 @@ export default {
   },
 };
 
+// TODO(burdon): Editable.
+// TODO(burdon): Sort/filter.
+// TODO(burdon): Scroll to selection.
+// TODO(burdon): Selection.
+
 export const Default = {
-  render: () => <Test />,
+  render: () => {
+    return <Test items={createItems(10)} />;
+  },
+};
+
+export const Empty = {
+  render: () => {
+    return <Test />;
+  },
+};
+
+export const Scrolling = {
+  render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(40));
+    useEffect(() => {
+      const t = setInterval(() => {
+        setItems((items) => {
+          if (items.length > 50) {
+            clearInterval(t);
+          }
+
+          return [...items, ...createItems(1)];
+        });
+      }, 500);
+      return () => clearInterval(t);
+    }, []);
+
+    return <Test items={items} />;
+  },
 };

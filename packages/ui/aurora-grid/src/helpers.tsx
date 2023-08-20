@@ -15,29 +15,29 @@ import { PublicKey } from '@dxos/keys';
 
 import { GridColumn, GridSlots } from './Grid';
 
-// TODO(burdon): Create builder (with default styles).
+// TODO(burdon): Create builder (with default styles; e.g., padding, font-size).
 
 export const createColumn = <TData extends RowData, TValue>(
-  key: string,
+  id: string,
   ...props: (Partial<GridColumn<TData, TValue>> | undefined)[]
-): GridColumn<TData, TValue> => defaultsDeep({ key }, ...props);
+): GridColumn<TData, TValue> => defaultsDeep({ id }, ...props);
 
 export const createTextColumn = <TData extends RowData>(
-  key: string,
+  id: string,
   props?: Partial<GridColumn<TData, string>>,
-): GridColumn<TData, string> => createColumn(key, props);
+): GridColumn<TData, string> => createColumn(id, props);
 
-type DateOptions = {
+type DateFormatOptions = {
   format?: string;
   relative?: boolean;
 };
 
 export const createDateColumn = <TData extends RowData>(
-  key: string,
-  options?: DateOptions, // TODO(burdon): Make optional?
+  id: string,
+  options?: DateFormatOptions, // TODO(burdon): Make optional? Multi method defs?
   props?: Partial<GridColumn<TData, Date>>,
 ): GridColumn<TData, Date> =>
-  createColumn(key, props, {
+  createColumn(id, props, {
     cell: {
       render: ({ value }) =>
         options?.format
@@ -50,10 +50,10 @@ export const createDateColumn = <TData extends RowData>(
   });
 
 export const createNumberColumn = <TData extends RowData>(
-  key: string,
+  id: string,
   props?: Partial<GridColumn<TData, number>>,
 ): GridColumn<TData, number> =>
-  createColumn(key, props, {
+  createColumn(id, props, {
     header: {
       className: 'font-mono text-right',
     },
@@ -63,11 +63,12 @@ export const createNumberColumn = <TData extends RowData>(
     },
   });
 
+// TODO(burdon): Make tooltip optional for all columns?
 export const createKeyColumn = <TData extends RowData>(
-  key: string,
+  id: string,
   props?: Partial<GridColumn<TData, PublicKey>>,
 ): GridColumn<TData, PublicKey> =>
-  createColumn(key, props, {
+  createColumn(id, props, {
     width: 86,
     cell: {
       render: ({ value }) => (
@@ -75,6 +76,7 @@ export const createKeyColumn = <TData extends RowData>(
           <Tooltip.Provider>
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
+                {/* TODO(burdon): Style. */}
                 <span className='font-mono font-thin text-green-500'>{value.truncate()}</span>
               </Tooltip.Trigger>
               <Tooltip.Content side='right'>
@@ -94,10 +96,10 @@ export const createKeyColumn = <TData extends RowData>(
   });
 
 export const createCheckColumn = <TData extends RowData>(
-  key: string,
+  id: string,
   props?: Partial<GridColumn<TData, boolean>>,
 ): GridColumn<TData, boolean> =>
-  createColumn(key, props, {
+  createColumn(id, props, {
     width: 24,
     cell: {
       render: ({ value }) =>
