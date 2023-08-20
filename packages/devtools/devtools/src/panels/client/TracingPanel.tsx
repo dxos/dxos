@@ -88,10 +88,17 @@ const columns: TableColumn<Resource>[] = [
   {
     Header: 'Name',
     width: 80,
-    accessor: row => `${row.className}#${row.instanceId}`,
+    accessor: row => `${sanitizeClassName(row.className)}#${row.instanceId}`,
   }
 ];
 
+const SANITIZE_REGEX = /[^_](\d+)$/;
+
+const sanitizeClassName = (className: string) => {
+  const m = className.match(SANITIZE_REGEX);
+  if(!m) return className
+  else return className.slice(0, - m[1].length);
+}
 
 const buildFlameGraph = (state: State, rootId: number): any => {
   const span = state.spans.get(rootId)
@@ -103,7 +110,7 @@ const buildFlameGraph = (state: State, rootId: number): any => {
 
   const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
 
-  const name = resource ? `${resource.className}#${resource.instanceId}.${span.methodName}` : span.methodName;
+  const name = resource ? `${sanitizeClassName(resource.className)}#${resource.instanceId}.${span.methodName}` : span.methodName;
 
   return {
     name,
