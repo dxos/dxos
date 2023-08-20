@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "dxos/error.proto";
+
+package dxos.tracing;
+
+enum TraceLevel {
+  DISABLED = 0;
+  PRODUCTION = 10;
+  DEVELOPMENT = 20;
+  DEBUG = 30;
+}
+
+message Resource {
+  int32 id = 1;
+  string class_name = 2;
+  int32 instance_id = 3;
+
+  google.protobuf.Struct info = 4;
+  repeated ResourceLink links = 5;
+}
+
+message ResourceLink {
+  int32 from = 1;
+  int32 to = 2;
+  google.protobuf.Struct attributes = 4;
+}
+
+message Span {
+  int32 id = 1;
+  optional int32 parent_id = 2;
+  optional int32 resource_id = 3;
+  string method_name = 4;
+
+  // TODO(dmaretskyi): Figure out proper sub-millisecond timestamp type.
+  string start_ts = 5;
+  optional string end_ts = 6;
+
+  optional dxos.error.Error error = 11;
+}
+
+message StreamTraceEvent {
+  message ResourceAdded {
+    Resource resource = 1;
+  }
+
+  message ResourceRemoved {
+    int32 id = 1;
+  }
+
+  message SpanAdded {
+    Span span = 1;
+  }
+
+  repeated ResourceAdded resource_added = 1;
+  repeated ResourceRemoved resource_removed = 2;
+  repeated SpanAdded span_added = 3;
+}
+
+service TracingService {
+  rpc StreamTrace(google.protobuf.Empty) returns (stream StreamTraceEvent);
+}
