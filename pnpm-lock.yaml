@@ -5653,6 +5653,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
+      date-fns: ^2.29.3
       lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -5664,6 +5665,7 @@ importers:
       '@dxos/aurora-types': link:../aurora-types
       '@dxos/util': link:../../common/util
       '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+      date-fns: 2.29.3
       lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@faker-js/faker': 8.0.2

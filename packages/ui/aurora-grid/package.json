@@ -24,6 +24,7 @@
     "@dxos/aurora-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tanstack/react-table": "^8.9.3",
+    "date-fns": "^2.29.3",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

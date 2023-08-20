@@ -5,7 +5,7 @@
 import { Cell, ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
 import React, { ReactNode, useMemo, useState } from 'react';
 
-import { chromeSurface, mx } from '@dxos/aurora-theme';
+import { mx } from '@dxos/aurora-theme';
 import { stripKeys } from '@dxos/util';
 
 type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
@@ -50,24 +50,27 @@ export type GridColumnConstructor<TData extends RowData, TValue> = (...props: an
 // TODO(burdon): Remove nested classNames? Add to theme?
 export type GridSlots = {
   root?: {
-    className?: string;
+    className?: string | string[];
   };
   header?: {
-    className?: string;
+    className?: string | string[];
   };
   footer?: {
-    className?: string;
+    className?: string | string[];
   };
   row?: {
-    className?: string;
+    className?: string | string[];
   };
   cell?: {
-    className?: string;
+    className?: string | string[];
   };
   focus?: {
-    className?: string;
+    className?: string | string[];
   };
   selected?: {
+    className?: string | string[];
+  };
+  margin?: {
     className?: string;
   };
 };
@@ -146,12 +149,12 @@ export const Grid = <TData extends RowData>({
     : undefined;
 
   return (
-    <div className={mx('__flex grow overflow-auto', chromeSurface, slots?.root?.className)}>
+    <div className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
-        <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
+        <thead className={mx('sticky top-0 z-10', slots?.header?.className)}>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              <th style={{ width: 16 }} />
+              <th className={slots?.margin?.className} />
               {headerGroup.headers.map((header) => {
                 return (
                   <th
@@ -163,7 +166,7 @@ export const Grid = <TData extends RowData>({
                   </th>
                 );
               })}
-              <th style={{ width: 16 }} />
+              <th className={slots?.margin?.className} />
             </tr>
           ))}
         </thead>
@@ -189,9 +192,7 @@ export const Grid = <TData extends RowData>({
                     className='focus:outline-none'
                     onFocus={() => setFocus(id)}
                     onBlur={() => setFocus(undefined)}
-                  >
-                    &nbsp;
-                  </button>
+                  />
                 </td>
                 {row.getVisibleCells().map((cell) => {
                   return (
@@ -212,10 +213,10 @@ export const Grid = <TData extends RowData>({
             );
           })}
         </tbody>
-        <tfoot className={mx('sticky bottom-0 z-10', chromeSurface, slots?.footer?.className)}>
+        <tfoot className={mx('sticky bottom-0 z-10', slots?.footer?.className)}>
           {table.getFooterGroups().map((footerGroup) => (
             <tr key={footerGroup.id}>
-              <th style={{ width: 16 }} />
+              <th />
               {footerGroup.headers.map((header) => {
                 return (
                   <th key={header.id} className={mx(slots?.footer?.className)}>
@@ -223,7 +224,7 @@ export const Grid = <TData extends RowData>({
                   </th>
                 );
               })}
-              <th style={{ width: 16 }} />
+              <th />
             </tr>
           ))}
         </tfoot>

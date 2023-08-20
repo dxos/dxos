@@ -12,12 +12,20 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Grid, GridColumn } from './Grid';
-import { createCheckColumn, createNumberColumn, createKeyColumn, createTextColumn, defaultGridSlots } from './helpers';
+import {
+  createCheckColumn,
+  createNumberColumn,
+  createKeyColumn,
+  createTextColumn,
+  defaultGridSlots,
+  createDateColumn,
+} from './helpers';
 
 type Item = {
   key: PublicKey;
   name: string;
   value?: number;
+  started?: Date;
   complete?: boolean;
 };
 
@@ -28,15 +36,26 @@ const columns: GridColumn<Item>[] = [
       render: ({ data }) => `${data.length} rows`,
     },
   }),
-  createCheckColumn('complete', {
-    header: {
-      label: '',
+  createDateColumn(
+    'started',
+    // { format: 'HH:mm:ss' },
+    { relative: true },
+    {
+      width: 120,
+      cell: {
+        className: 'text-xs',
+      },
     },
-  }),
+  ),
   createNumberColumn('value', {
     width: 80,
     cell: {
-      className: ({ value }) => mx('font-mono font-thin text-right', (value ?? 0) < 1000 && 'text-red-500'),
+      className: ({ value }) => mx('font-mono font-thin text-right', value < 1000 && 'text-red-500'),
+    },
+  }),
+  createCheckColumn('complete', {
+    header: {
+      label: '',
     },
   }),
 ];
@@ -50,6 +69,7 @@ const Test = ({ count = 100 }) => {
       key: PublicKey.random(),
       name: faker.lorem.sentence(),
       value: faker.number.int({ min: 0, max: 10_000 }),
+      started: faker.date.recent(),
       complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
     })),
   );
