@@ -3,7 +3,6 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { Check, X } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -13,9 +12,7 @@ import { range } from '@dxos/util';
 import '@dxosTheme';
 
 import { Grid, GridColumn } from './Grid';
-
-const num = 100;
-faker.seed(999);
+import { createCheckColumn, createNumberColumn, createKeyColumn, createTextColumn, defaultGridSlots } from './helpers';
 
 type Item = {
   key: PublicKey;
@@ -24,58 +21,32 @@ type Item = {
   complete?: boolean;
 };
 
-// TODO(burdon): Helpers would provide type-safety.
-
-const createKey = (key: string): GridColumn<Item, PublicKey> => ({
-  key,
-  width: 86,
-  cell: {
-    value: ({ key }) => key.truncate(),
-    className: 'font-mono font-thin text-green-500',
-  },
-});
-
-const createIcon = (key: string): GridColumn<Item, boolean> => ({
-  key,
-  width: 24,
-  header: {
-    label: '',
-  },
-  cell: {
-    render: ({ value }) =>
-      value ? <Check className='text-green-700' /> : !value ? <X className='text-red-700' /> : null,
-  },
-});
-
 const columns: GridColumn<Item>[] = [
-  createKey('key'),
-  {
-    key: 'name',
+  createKeyColumn('key'),
+  createTextColumn('name', {
     footer: {
-      render: ({ data }) => <span>{data.length} rows</span>,
-      span: 3,
+      render: ({ data }) => `${data.length} rows`,
     },
-  },
-  createIcon('complete'),
-  {
-    key: 'value',
-    width: 80,
+  }),
+  createCheckColumn('complete', {
     header: {
-      className: 'text-right',
+      label: '',
     },
+  }),
+  createNumberColumn('value', {
+    width: 80,
     cell: {
-      value: ({ value }) => value?.toLocaleString(),
-      className: ({ value }) => {
-        return mx('font-mono font-thin text-right', (value ?? 0) < 1000 && 'text-red-500');
-      },
+      className: ({ value }) => mx('font-mono font-thin text-right', (value ?? 0) < 1000 && 'text-red-500'),
     },
-  },
+  }),
 ];
 
-const Test = () => {
+faker.seed(999);
+
+const Test = ({ count = 100 }) => {
   const [selected, setSelected] = useState<string>();
   const [items] = useState<Item[]>(() =>
-    range(num).map(() => ({
+    range(count).map(() => ({
       key: PublicKey.random(),
       name: faker.lorem.sentence(),
       value: faker.number.int({ min: 0, max: 10_000 }),
@@ -85,7 +56,7 @@ const Test = () => {
 
   // TODO(burdon): Editable.
   // TODO(burdon): Sort/filter.
-  // TODO(burdon): Create simple specialized table for devtools (auto detect keys, links, etc.)
+  // TODO(burdon): Scroll to selection.
 
   return (
     <div className='flex grow overflow-hidden'>
@@ -96,14 +67,7 @@ const Test = () => {
         multiSelect={false}
         selected={selected}
         onSelected={(selection) => setSelected(selection as string)}
-        slots={{
-          header: { className: 'p-1 text-left font-thin' },
-          footer: { className: 'p-1 text-left font-thin' },
-          cell: { className: 'p-1' },
-          row: { className: 'cursor-pointer hover:bg-gray-100' },
-          focus: { className: 'ring-1 ring-green-700' },
-          selected: { className: '!bg-green-100' },
-        }}
+        slots={defaultGridSlots}
       />
     </div>
   );

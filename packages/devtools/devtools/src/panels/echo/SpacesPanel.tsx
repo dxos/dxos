@@ -6,10 +6,19 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@dxos/aurora';
+import {
+  Grid,
+  GridColumn,
+  createCheckColumn,
+  createColumn,
+  createNumberColumn,
+  createKeyColumn,
+  createTextColumn,
+  defaultGridSlots,
+} from '@dxos/aurora-grid';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
-import { Table, TableColumn } from '@dxos/mosaic';
+import { TableColumn } from '@dxos/mosaic';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
@@ -80,9 +89,7 @@ const SpacesPanel: FC = () => {
           ) : (
             <X className={mx('text-red-500', getSize(5))} />
           )}
-          <Button variant='ghost' onClick={() => handleToggleOpen(key)}>
-            {value ? 'Close' : 'Open'}
-          </Button>
+          <button onClick={() => handleToggleOpen(key)}>{value ? 'Close' : 'Open'}</button>
         </div>
       ),
       accessor: 'isOpen',
@@ -117,9 +124,55 @@ const SpacesPanel: FC = () => {
     },
   ];
 
+  const cols: GridColumn<Space>[] = [
+    createKeyColumn('key'),
+    createTextColumn('name', {
+      value: (space) => space.properties.name,
+    }),
+    createNumberColumn('objects', {
+      value: (space) => space.db.query().objects.length,
+      width: 60,
+    }),
+    createNumberColumn('startup', {
+      value: (space) => {
+        const { open, ready } = space.internal.data.metrics ?? {};
+        return open && ready && ready.getTime() - open.getTime();
+      },
+      width: 80,
+    }),
+    createCheckColumn('isOpen', {
+      header: {
+        label: 'open',
+      },
+    }),
+    // TODO(burdon): Util for button?
+    createColumn('action', {
+      value: (space) => space.isOpen,
+      width: 100,
+      header: {
+        label: '', // TODO(burdon): placeholder.
+      },
+      cell: {
+        render: ({ value }) => <button>{value ? 'Close' : 'Open'}</button>,
+        className: 'text-right',
+      },
+    }),
+  ];
+
   return (
     <PanelContainer className='overflow-auto'>
-      <Table compact slots={{ cell: { className: 'items-center' } }} columns={columns} data={spaces} />
+      {/* <Table compact slots={{ cell: { className: 'items-center' } }} columns={columns} data={spaces} /> */}
+
+      {/* TODO(burdon): Support non-controlled. */}
+      <Grid<Space>
+        id='key'
+        columns={cols}
+        data={spaces}
+        onSelected={(selection) => {
+          console.log(':::', selection);
+        }}
+        slots={defaultGridSlots}
+      />
     </PanelContainer>
   );
 };

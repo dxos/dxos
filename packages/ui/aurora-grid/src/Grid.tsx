@@ -3,7 +3,7 @@
 //
 
 import { Cell, ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
-import React, { FC, ReactNode, useMemo, useState } from 'react';
+import React, { ReactNode, useMemo, useState } from 'react';
 
 import { chromeSurface, mx } from '@dxos/aurora-theme';
 import { stripKeys } from '@dxos/util';
@@ -26,26 +26,28 @@ const getCellValue = <TData, TValue, TResult>(
   return value;
 };
 
+// TODO(burdon): Why wrap this rather than providing helpers?
 // https://tanstack.com/table/v8/docs/guide/column-defs
 export type GridColumn<TData extends RowData, TValue = any> = {
   key: string;
+  value?: (params: TData) => any;
   width?: number;
   header?: {
     label?: string;
     className?: string;
   };
   cell?: {
-    value?: (params: TData) => any;
-    className?: CellValueOrFunction<TData, any, string>;
     render?: ({ row, value }: { row: TData; value: TValue }) => ReactNode;
+    className?: CellValueOrFunction<TData, any, string>;
   };
   footer?: {
     render?: ({ data }: { data: TData[] }) => ReactNode;
-    span?: number;
   };
 };
 
-// TODO(burdon): Remove.
+export type GridColumnConstructor<TData extends RowData, TValue> = (...props: any[]) => GridColumn<TData, TValue>;
+
+// TODO(burdon): Remove nested classNames? Add to theme?
 export type GridSlots = {
   root?: {
     className?: string;
@@ -70,9 +72,8 @@ export type GridSlots = {
   };
 };
 
-// TODO(burdon): Should this be a separate model or just & to properties?
 type GridSelection = {
-  selected: string | string[] | undefined;
+  selected?: string | string[];
   multiSelect?: boolean;
   onSelected?: (selection: string | string[] | undefined) => void;
 };
@@ -82,7 +83,6 @@ export type GridProps<TData extends RowData> = {
   columns: GridColumn<TData>[];
   data?: TData[];
   slots?: GridSlots;
-  Footer?: FC<{ data: TData[]; selected: string[] }>;
 } & GridSelection;
 
 export const Grid = <TData extends RowData>({
@@ -93,7 +93,6 @@ export const Grid = <TData extends RowData>({
   selected,
   multiSelect,
   onSelected,
-  Footer,
 }: GridProps<TData>) => {
   const [focus, setFocus] = useState<string>();
 
@@ -106,10 +105,10 @@ export const Grid = <TData extends RowData>({
 
   const tableColumns = useMemo<ColumnDef<TData>[]>(
     () =>
-      columns.map(({ key, header, cell, footer }) => {
+      columns.map(({ key, value, header, cell, footer }) => {
         return stripKeys({
           id: key,
-          accessorFn: (data: TData) => (cell?.value ? cell?.value(data) : (data as any)[key]),
+          accessorFn: (data: TData) => (value ? value(data) : (data as any)[key]),
           header: header?.label,
           cell: cell?.render
             ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
@@ -146,10 +145,8 @@ export const Grid = <TData extends RowData>({
       }
     : undefined;
 
-  // TODO(burdon): Focus on click.
-
   return (
-    <div className={mx('flex grow overflow-auto', chromeSurface, slots?.root?.className)}>
+    <div className={mx('__flex grow overflow-auto', chromeSurface, slots?.root?.className)}>
       <table className='table-fixed w-full'>
         <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -177,6 +174,7 @@ export const Grid = <TData extends RowData>({
               <tr
                 key={row.id}
                 onClick={() => handleSelect?.(id)}
+                role='button'
                 className={mx(
                   'group',
                   onSelected && 'cursor-pointer',

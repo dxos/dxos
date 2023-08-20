@@ -3209,6 +3209,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
@@ -3258,6 +3259,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
@@ -5647,9 +5649,11 @@ importers:
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
       '@tanstack/react-table': ^8.9.3
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       chromatic: ^6.17.0
+      lodash.defaultsdeep: ^4.6.1
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: ^4.3.9
@@ -5660,9 +5664,11 @@ importers:
       '@dxos/aurora-types': link:../aurora-types
       '@dxos/util': link:../../common/util
       '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+      lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@faker-js/faker': 8.0.2
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       chromatic: 6.17.0

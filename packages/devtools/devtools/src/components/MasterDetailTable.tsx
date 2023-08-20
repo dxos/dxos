@@ -16,7 +16,7 @@ export type MasterTableProps<T extends {}> = {
   compact?: boolean;
 };
 
-export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact = true }: MasterTableProps<T>) => {
+export const MasterDetailTable = <T extends {}>({ columns, data, slots }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
   const tableSlots = defaultsdeep({}, slots, {
     root: { className: 'grow' },
@@ -27,14 +27,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact 
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Table<T>
-          compact={compact}
-          columns={columns}
-          data={data}
-          slots={tableSlots}
-          selected={selected}
-          onSelect={setSelected}
-        />
+        <Table<T> compact columns={columns} data={data} slots={tableSlots} selected={selected} onSelect={setSelected} />
       </div>
 
       <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>

@@ -23,12 +23,14 @@
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@tanstack/react-table": "^8.9.3"
+    "@tanstack/react-table": "^8.9.3",
+    "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
     "@dxos/aurora-theme": "workspace:*",
     "@faker-js/faker": "^8.0.2",
     "@phosphor-icons/react": "^2.0.5",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "chromatic": "^6.17.0",

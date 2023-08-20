@@ -54,7 +54,7 @@ const CredentialsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable columns={columns} data={credentials} />;{/* <JsonView data={credentials} /> */}
+      <MasterDetailTable<Credential> columns={columns} data={credentials} />
     </PanelContainer>
   );
 };

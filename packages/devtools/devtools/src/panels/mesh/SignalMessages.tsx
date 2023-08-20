@@ -194,7 +194,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
       </Toolbar.Root>
 
       <div className='flex grow overflow-hidden'>
-        {view ? <MasterDetailTable columns={view.columns as any} data={filteredMessages} /> : null}
+        {view ? <MasterDetailTable<SignalResponse> columns={view.columns as any} data={filteredMessages} /> : null}
       </div>
     </div>
   );
