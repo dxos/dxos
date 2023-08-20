@@ -24,42 +24,39 @@ type Item = {
   complete?: boolean;
 };
 
-// TODO(burdon): CheckIcon helper.
 // TODO(burdon): Helpers would provide type-safety.
 
+const createKey = (key: string): GridColumn<Item, PublicKey> => ({
+  key,
+  width: 86,
+  cell: {
+    value: ({ key }) => key.truncate(),
+    className: 'font-mono font-thin text-green-500',
+  },
+});
+
+const createIcon = (key: string): GridColumn<Item, boolean> => ({
+  key,
+  width: 24,
+  header: {
+    label: '',
+  },
+  cell: {
+    render: ({ value }) =>
+      value ? <Check className='text-green-700' /> : !value ? <X className='text-red-700' /> : null,
+  },
+});
+
 const columns: GridColumn<Item>[] = [
+  createKey('key'),
   {
-    key: 'key',
-    width: 100,
-    header: {
-      label: 'ID',
-    },
-    cell: {
-      value: ({ key }) => key.truncate(),
-      className: 'font-mono font-thin text-green-500',
-    },
+    key: 'name',
     footer: {
       render: ({ data }) => <span>{data.length} rows</span>,
       span: 3,
     },
   },
-  {
-    key: 'name',
-    cell: {
-      render: ({ value }) => <span className='truncate'>{value}</span>,
-    },
-  },
-  {
-    key: 'complete',
-    width: 32,
-    header: {
-      label: '',
-    },
-    cell: {
-      render: ({ value }) =>
-        value === true ? <Check className='text-green-700' /> : value === false ? <X className='text-red-700' /> : null,
-    },
-  },
+  createIcon('complete'),
   {
     key: 'value',
     width: 80,
@@ -67,8 +64,9 @@ const columns: GridColumn<Item>[] = [
       className: 'text-right',
     },
     cell: {
+      value: ({ value }) => value?.toLocaleString(),
       className: ({ value }) => {
-        return mx('font-mono font-thin text-right', (value ?? 0) < 300 && 'text-red-500');
+        return mx('font-mono font-thin text-right', (value ?? 0) < 1000 && 'text-red-500');
       },
     },
   },
@@ -80,7 +78,7 @@ const Test = () => {
     range(num).map(() => ({
       key: PublicKey.random(),
       name: faker.lorem.sentence(),
-      value: faker.number.int({ min: 0, max: 1000 }),
+      value: faker.number.int({ min: 0, max: 10_000 }),
       complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
     })),
   );

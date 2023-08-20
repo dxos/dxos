@@ -27,7 +27,7 @@ const getCellValue = <TData, TValue, TResult>(
 };
 
 // https://tanstack.com/table/v8/docs/guide/column-defs
-export type GridColumn<TData extends RowData> = /* Pick<ColumnDef<T>, 'cell'> & */ {
+export type GridColumn<TData extends RowData, TValue = any> = {
   key: string;
   width?: number;
   header?: {
@@ -37,7 +37,7 @@ export type GridColumn<TData extends RowData> = /* Pick<ColumnDef<T>, 'cell'> & 
   cell?: {
     value?: (params: TData) => any;
     className?: CellValueOrFunction<TData, any, string>;
-    render?: ({ row, value }: { row: TData; value: any }) => ReactNode;
+    render?: ({ row, value }: { row: TData; value: TValue }) => ReactNode;
   };
   footer?: {
     render?: ({ data }: { data: TData[] }) => ReactNode;
