@@ -14,6 +14,7 @@ import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
+import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
@@ -31,6 +32,7 @@ import { SystemServiceImpl } from '../system';
 import { createDiagnostics } from './diagnostics';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
@@ -65,11 +67,13 @@ export type InitializeOptions = {
 /**
  * Remote service implementation.
  */
+@Trace.resource()
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
+  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -80,7 +84,10 @@ export class ClientServicesHost {
   private _callbacks?: ClientServicesHostCallbacks;
 
   private _serviceContext!: ServiceContext;
+
+  @Trace.info()
   private _opening = false;
+  @Trace.info()
   private _open = false;
 
   constructor({
@@ -108,7 +115,7 @@ export class ClientServicesHost {
           if (!this._opening) {
             void this.open();
           }
-        },
+        }, 
         onRelease: () => this.close(),
       });
     }
@@ -136,6 +143,7 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
+      TracingService: this._tracingService,
     });
   }
 
@@ -200,7 +208,8 @@ export class ClientServicesHost {
   }
 
   @synchronized
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     if (this._open) {
       return;
     }
@@ -224,7 +233,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._modelFactory,
-    );
+    ); 
 
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
@@ -252,6 +261,7 @@ export class ClientServicesHost {
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
       LoggingService: this._loggingService,
+      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
@@ -261,7 +271,7 @@ export class ClientServicesHost {
       }),
     });
 
-    await this._serviceContext.open();
+    await this._serviceContext.open(ctx);
     this._opening = false;
     this._open = true;
     this._statusUpdate.emit();
@@ -271,6 +281,7 @@ export class ClientServicesHost {
   }
 
   @synchronized
+  @Trace.span()
   async close() {
     if (!this._open) {
       return;

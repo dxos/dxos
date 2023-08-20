@@ -17,6 +17,7 @@ import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 
 //
@@ -38,6 +39,8 @@ export type ClientServices = {
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;
+
+  TracingService: TracingService;
 };
 
 /**
@@ -70,6 +73,8 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
+
+  TracingService: schema.getService('dxos.tracing.TracingService'),
 });
 
 export type IframeServiceBundle = {

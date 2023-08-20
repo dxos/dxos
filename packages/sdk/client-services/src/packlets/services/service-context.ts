@@ -21,6 +21,7 @@ import { SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { STORAGE_VERSION, trace } from '@dxos/protocols';
+import { trace as Trace } from '@dxos/tracing';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -35,11 +36,13 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, SigningContext } from '../spaces';
+import { Context } from '@dxos/context';
 
 /**
  * Shared backend for all client services.
  */
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
+@Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();
   public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
@@ -121,7 +124,8 @@ export class ServiceContext {
     );
   }
 
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     await this._checkStorageVersion();
 
     log('opening...');
