@@ -23,6 +23,7 @@ import {
   SpacesPanel,
   StoragePanel,
   SwarmPanel,
+  TracingPanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -55,6 +56,10 @@ export const useRoutes = () => {
             {
               path: '/client/diagnostics',
               element: <DiagnosticsPanel />,
+            },
+            {
+              path: '/client/tracing',
+              element: <TracingPanel />,
             },
           ],
         },

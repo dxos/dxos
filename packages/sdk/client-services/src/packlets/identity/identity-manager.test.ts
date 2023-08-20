@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -64,7 +65,7 @@ describe('identity/identity-manager', () => {
 
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
-    await identityManager.open();
+    await identityManager.open(new Context());
     afterTest(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
@@ -75,13 +76,13 @@ describe('identity/identity-manager', () => {
     const storage = createStorage({ type: StorageType.RAM });
 
     const peer1 = await setupPeer({ storage });
-    await peer1.identityManager.open();
+    await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
     await peer1.identityManager.close();
     await peer1.feedStore.close();
 
     const peer2 = await setupPeer({ storage });
-    await peer2.identityManager.open();
+    await peer2.identityManager.open(new Context());
 
     expect(peer2.identityManager.identity).to.exist;
     expect(peer2.identityManager.identity!.identityKey).to.deep.eq(identity1.identityKey);

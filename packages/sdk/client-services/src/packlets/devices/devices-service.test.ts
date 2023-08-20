@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { DevicesService, Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
@@ -18,7 +19,7 @@ describe('DevicesService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     devicesService = new DevicesServiceImpl(serviceContext.identityManager);
   });
 

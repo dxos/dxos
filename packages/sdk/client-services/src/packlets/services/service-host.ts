@@ -5,6 +5,7 @@
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
@@ -17,6 +18,7 @@ import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
+import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -65,11 +67,13 @@ export type InitializeOptions = {
 /**
  * Remote service implementation.
  */
+@Trace.resource()
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
+  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -80,7 +84,11 @@ export class ClientServicesHost {
   private _callbacks?: ClientServicesHostCallbacks;
 
   private _serviceContext!: ServiceContext;
+
+  @Trace.info()
   private _opening = false;
+
+  @Trace.info()
   private _open = false;
 
   constructor({
@@ -106,7 +114,7 @@ export class ClientServicesHost {
         lockKey,
         onAcquire: () => {
           if (!this._opening) {
-            void this.open();
+            void this.open(new Context());
           }
         },
         onRelease: () => this.close(),
@@ -136,6 +144,7 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
+      TracingService: this._tracingService,
     });
   }
 
@@ -200,7 +209,8 @@ export class ClientServicesHost {
   }
 
   @synchronized
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     if (this._open) {
       return;
     }
@@ -252,6 +262,7 @@ export class ClientServicesHost {
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
       LoggingService: this._loggingService,
+      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
@@ -261,7 +272,7 @@ export class ClientServicesHost {
       }),
     });
 
-    await this._serviceContext.open();
+    await this._serviceContext.open(ctx);
     this._opening = false;
     this._open = true;
     this._statusUpdate.emit();
@@ -271,6 +282,7 @@ export class ClientServicesHost {
   }
 
   @synchronized
+  @Trace.span()
   async close() {
     if (!this._open) {
       return;
