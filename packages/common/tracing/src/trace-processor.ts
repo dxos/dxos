@@ -19,7 +19,7 @@ export type TraceSpanParams = {
 
 export type ResourceEntry = {
   data: Resource;
-  instance: any;
+  instance: WeakRef<any>;
 }
 
 export type TraceSubscription = {
@@ -27,15 +27,21 @@ export type TraceSubscription = {
   dirtySpans: Set<number>
 }
 
+
+const MAX_RESOURCE_RECORDS = 500;
+const MAX_SPAN_RECORDS = 1_000;
+
 export class TraceProcessor {
   resources = new Map<number, ResourceEntry>();
-  spans = new Map<number, Span>();
   resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
+  resourceIdList: number[] = [];
+
+  spans = new Map<number, Span>();
+  spanIdList: number[] = [];
+
   subscriptions: Set<TraceSubscription> = new Set();
 
-  constructor() {
-
-  }
+  constructor() { }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
@@ -47,10 +53,14 @@ export class TraceProcessor {
         info: this.getResourceInfo(params.instance),
         links: [],
       },
-      instance: params.instance,
+      instance: new WeakRef(params.instance),
     };
     this.resources.set(id, entry);
     this.resourceInstanceIndex.set(params.instance, entry);
+    this.resourceIdList.push(id);
+    if (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
+      this._clearResources()
+    }
     this._markResourceDirty(id);
   }
 
@@ -94,6 +104,10 @@ export class TraceProcessor {
   _flushSpan(runtimeSpan: TracingSpan) {
     const span = runtimeSpan.serialize();
     this.spans.set(span.id, span);
+    this.spanIdList.push(span.id);
+    if (this.spanIdList.length > MAX_SPAN_RECORDS) {
+      this._clearSpans()
+    }
     this._markSpanDirty(span.id);
   }
 
@@ -106,6 +120,21 @@ export class TraceProcessor {
   private _markSpanDirty(id: number) {
     for (const subscription of this.subscriptions) {
       subscription.dirtySpans.add(id);
+    }
+  }
+
+  private _clearResources() {
+    // TODO(dmaretskyi): Use FinalizationRegistry to delete finalized resources first.
+    while (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
+      const id = this.resourceIdList.shift()!;
+      this.resources.delete(id);
+    }
+  }
+
+  private _clearSpans() {
+    while (this.spanIdList.length > MAX_SPAN_RECORDS) {
+      const id = this.spanIdList.shift()!;
+      this.spans.delete(id);
     }
   }
 }
