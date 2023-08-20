@@ -8,6 +8,7 @@ import { rmSync } from 'node:fs';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
@@ -30,7 +31,7 @@ describe('ClientServicesHost', () => {
 
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -49,7 +50,7 @@ describe('ClientServicesHost', () => {
 
   test('write and query credentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -86,7 +87,7 @@ describe('ClientServicesHost', () => {
 
   test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -117,7 +118,7 @@ describe('ClientServicesHost', () => {
     });
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
 
       await host.services.IdentityService?.createIdentity({});
 
@@ -129,7 +130,7 @@ describe('ClientServicesHost', () => {
 
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
       const trigger = new Trigger<Identity>();
 
       const stream = host.services.IdentityService?.queryIdentity();

@@ -5,6 +5,7 @@
 import expect from 'expect';
 import { promisify } from 'node:util';
 
+import { Context } from '@dxos/context';
 import { createCredential, CredentialGenerator } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
@@ -21,7 +22,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
 
-    await space.open();
+    await space.open(new Context());
     expect(space.isOpen).toBeTruthy();
     afterTest(() => space.close());
 
@@ -49,7 +50,7 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey);
 
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
@@ -70,7 +71,7 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, undefined, true);
 
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
       afterTest(() => space.close());
 
@@ -128,7 +129,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space1 = await agent.createSpace();
 
-    await space1.open();
+    await space1.open(new Context());
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -149,7 +150,7 @@ describe('space/space', () => {
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
-    await space2.open();
+    await space2.open(new Context());
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();
@@ -171,7 +172,7 @@ describe('space/space', () => {
 
     let objectCount: number;
     {
-      await space.open();
+      await space.open(new Context());
       afterTest(() => space.close());
       expect(space.isOpen).toBeTruthy();
 
@@ -192,7 +193,7 @@ describe('space/space', () => {
 
     // Re-open.
     {
-      await space.open();
+      await space.open(new Context());
       expect(space.isOpen).toBeTruthy();
 
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
@@ -215,7 +216,7 @@ describe('space/space', () => {
     const agent = await builder.createPeer();
     const space1 = await agent.createSpace();
 
-    await space1.open();
+    await space1.open(new Context());
     expect(space1.isOpen).toBeTruthy();
     afterTest(() => space1.close());
 
@@ -255,7 +256,7 @@ describe('space/space', () => {
     // Re-open.
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
-    await space2.open();
+    await space2.open(new Context());
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
     await space2.initializeDataPipeline();
     await space2.dataPipeline.ensureEpochInitialized();
