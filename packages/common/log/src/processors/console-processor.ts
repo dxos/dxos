@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
-import { defaultMap } from '@dxos/util';
+import { defaultMap, getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, LogProcessor, shouldLog } from '../context';
@@ -51,14 +51,6 @@ export type FormatParts = {
 
 export type Formatter = (config: LogConfig, parts: FormatParts) => (string | undefined)[];
 
-const instanceContexts = new WeakMap<
-  any,
-  {
-    nextId: number;
-    instanceIds: WeakMap<any, number>;
-  }
->();
-
 export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context, error, scope }) => {
   const column = config.options?.formatter?.column;
 
@@ -67,20 +59,8 @@ export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, messag
   let instance;
   if (scope) {
     const prototype = Object.getPrototypeOf(scope);
-    const instanceCtx = defaultMap(instanceContexts as any, prototype, () => ({
-      nextId: 0,
-      instanceIds: new WeakMap(),
-    }));
-
-    let id = instanceCtx.instanceIds.get(scope);
-    if (id === undefined) {
-      id = instanceCtx.nextId++;
-      instanceCtx.instanceIds.set(scope, id);
-    }
-
-    instance = `${prototype.constructor.name}#${id}`;
-
-    instance = chalk.magentaBright(instance);
+    const id = getPrototypeSpecificInstanceId(scope);
+    instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
   }
 
   return [

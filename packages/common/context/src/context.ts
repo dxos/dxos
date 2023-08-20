@@ -11,6 +11,8 @@ export type DisposeCallback = () => void | Promise<void>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
+  attributes?: Record<string, any>;
+  parent?: Context;
 };
 
 /**
@@ -24,6 +26,9 @@ export class Context {
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
   private _disposePromise?: Promise<void>;
+  private _parent: Context | null = null;
+
+  private _attributes: Record<string, any>;
 
   constructor({
     onError = (error) => {
@@ -32,8 +37,14 @@ export class Context {
       // Will generate an unhandled rejection.
       throw error;
     },
+    attributes = {},
+    parent
   }: CreateContextParams = {}) {
     this._onError = onError;
+    this._attributes = attributes;
+    if (parent !== undefined) {
+      this._parent = parent;
+    }
   }
 
   get disposed() {
@@ -105,7 +116,7 @@ export class Context {
     }
     this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => {}));
+    return (this._disposePromise = Promise.all(promises).then(() => { }));
   }
 
   /**
@@ -128,7 +139,7 @@ export class Context {
     }
   }
 
-  derive({ onError }: CreateContextParams = {}): Context {
+  derive({ onError, attributes }: CreateContextParams = {}): Context {
     const newCtx = new Context({
       onError: async (error) => {
         if (!onError) {
@@ -141,9 +152,20 @@ export class Context {
           }
         }
       },
+      attributes,
     });
     const clearDispose = this.onDispose(() => newCtx.dispose());
     newCtx.onDispose(clearDispose);
     return newCtx;
+  }
+
+  getAttribute(key: string): any {
+    if (key in this._attributes) {
+      return this._attributes[key];
+    }
+    if (this._parent !== null) {
+      return this._parent.getAttribute(key);
+    }
+    return undefined;
   }
 }

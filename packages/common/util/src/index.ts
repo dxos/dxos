@@ -21,3 +21,4 @@ export * from './sort';
 export * from './tracer';
 export * from './types';
 export * from './uint8array';
+export * from './instance-id';

@@ -19,14 +19,11 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "zen-observable": "^0.10.0",
-    "zen-push": "^0.3.1"
+    "@dxos/util": "workspace:*"
   },
-  "devDependencies": {
-    "@types/zen-observable": "^0.8.3"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }
