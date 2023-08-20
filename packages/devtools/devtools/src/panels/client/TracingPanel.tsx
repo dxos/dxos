@@ -85,6 +85,11 @@ const columns: TableColumn<Resource>[] = [
     Header: 'Name',
     width: 80,
     accessor: row => `${sanitizeClassName(row.className)}#${row.instanceId}`,
+  },
+  {
+    Header: 'Info',
+    width: 120,
+    accessor: row => JSON.stringify(row.info),
   }
 ];
 
