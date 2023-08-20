@@ -95,7 +95,8 @@ export const createKeyColumn = <TData extends RowData>(
     },
   });
 
-export const createCheckColumn = <TData extends RowData>(
+// TODO(burdon): Option for icons.
+export const createBooleanColumn = <TData extends RowData>(
   id: string,
   props?: Partial<GridColumn<TData, boolean>>,
 ): GridColumn<TData, boolean> =>
@@ -116,5 +117,5 @@ export const defaultGridSlots: GridSlots = {
   row: { className: 'cursor-pointer hover:bg-zinc-100' },
   focus: { className: 'ring-1 ring-teal-500 ring-inset' },
   selected: { className: '!bg-teal-100' },
-  margin: { className: 'w-[16px]' },
+  margin: { style: { width: 8 } },
 };

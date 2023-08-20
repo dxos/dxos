@@ -2,14 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Check } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
 import { Toolbar } from '@dxos/aurora';
-import { getSize, mx } from '@dxos/aurora-theme';
-import { Table, TableColumn } from '@dxos/mosaic';
+import {
+  createBooleanColumn,
+  createColumn,
+  createKeyColumn,
+  createNumberColumn,
+  createTextColumn,
+  defaultGridSlots,
+  Grid,
+  GridColumn,
+} from '@dxos/aurora-grid';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-async';
@@ -20,7 +27,6 @@ import { ComplexSet, humanize } from '@dxos/util';
 import { DetailsTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../hooks';
-import { textLink } from '../../styles';
 
 const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -111,81 +117,27 @@ export type PipelineTableRow = {
   total?: number;
 };
 
-const columns: TableColumn<PipelineTableRow>[] = [
-  {
-    Header: 'FeedKey',
-    width: 80,
-    Cell: ({ value, row }: any) => {
-      const setContext = useDevtoolsDispatch();
-      const navigate = useNavigate();
-      const onClick = () => {
-        setContext((ctx) => ({ ...ctx, feedKey: row.original.feedKey }));
-        navigate('/echo/feeds');
-      };
-
-      return (
-        <a className={mx('font-mono', textLink)} onClick={onClick}>
-          {value}
-        </a>
-      );
-    },
-    accessor: (block) => {
-      const feedKey = block.feedKey;
-      return feedKey.truncate();
-    },
-  },
-  {
-    Header: 'Type',
-    width: 80,
-    accessor: 'type',
-  },
-  {
-    Header: 'Gen',
-    width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
-    accessor: 'genesis',
-  },
-  {
-    Header: 'Own',
-    width: 40,
-    Cell: ({ value }: any) => (value ? <Check className={mx('text-green-500', getSize(5))} /> : null),
-    accessor: 'own',
-  },
-  {
-    Header: 'Progress',
-    width: 80,
-    accessor: (block) => {
-      const percent =
-        (((block.processed ?? 0) - (block.start ?? 0)) / ((block.target ?? 0) - (block.start ?? 0))) * 100;
-      if (isNaN(percent)) {
-        return '';
-      } else {
+const columns: GridColumn<PipelineTableRow>[] = [
+  createKeyColumn('feedKey'),
+  createTextColumn('type'),
+  createBooleanColumn('own', { width: 40 }),
+  createBooleanColumn('genesis', { width: 40, header: { label: 'gen' } }),
+  createNumberColumn('start'),
+  createNumberColumn('target'),
+  createNumberColumn('processed'),
+  createNumberColumn('total'),
+  createColumn('progress', {
+    value: (row) => {
+      const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
+      if (!isNaN(percent)) {
         return `${Math.min(percent, 100).toFixed(0)}%`;
       }
     },
-  },
-  {
-    Header: 'Start',
-    width: 80,
-    accessor: 'start',
-  },
-  {
-    Header: 'Processed',
-    width: 80,
-    accessor: 'processed',
-  },
-  {
-    Header: 'Target',
-    width: 80,
-    accessor: 'target',
-  },
-  {
-    Header: 'Total',
-    width: 80,
-    accessor: 'total',
-  },
+  }),
 ];
 
+// TODO(burdon): Separate file.
+// TODO(burdon): Split panels into directories.
 const PipelineTable = ({
   state,
   metadata,
@@ -255,7 +207,22 @@ const PipelineTable = ({
     ),
   ];
 
-  return <Table compact columns={columns} data={data} />;
+  const navigate = useNavigate();
+  const setContext = useDevtoolsDispatch();
+  const handleSelect = (feedKey: PublicKey) => {
+    setContext((ctx) => ({ ...ctx, feedKey }));
+    navigate('/echo/feeds');
+  };
+
+  return (
+    <Grid<PipelineTableRow>
+      id='feedKey'
+      slots={defaultGridSlots}
+      columns={columns}
+      data={data}
+      onSelect={(selected) => handleSelect(PublicKey.from(selected))}
+    />
+  );
 };
 
 export default SpaceInfoPanel;

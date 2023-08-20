@@ -3,7 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
-import React, { FC, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
@@ -11,9 +11,9 @@ import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Grid, GridColumn, GridProps } from './Grid';
+import { Grid, GridColumn } from './Grid';
 import {
-  createCheckColumn,
+  createBooleanColumn,
   createNumberColumn,
   createKeyColumn,
   createTextColumn,
@@ -39,7 +39,7 @@ const createItems = (count: number) =>
     complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
   }));
 
-const columns: GridColumn<Item>[] = [
+const itemColumns: GridColumn<Item>[] = [
   createKeyColumn('key'),
   createTextColumn('name', {
     // TODO(burdon): Doesn't get updated when data changes.
@@ -64,30 +64,12 @@ const columns: GridColumn<Item>[] = [
       className: ({ value }) => mx('font-mono font-thin text-right', value < 1000 && 'text-red-500'),
     },
   }),
-  createCheckColumn('complete', {
+  createBooleanColumn('complete', {
     header: {
       label: '',
     },
   }),
 ];
-
-const Test: FC<{ items?: Item[]; selection?: GridProps<Item>['selection'] }> = ({ items, selection }) => {
-  const [selected, setSelected] = useState<string>();
-
-  return (
-    <div className='flex grow overflow-hidden'>
-      <Grid<Item>
-        id={(item: Item) => item.key.toHex()}
-        columns={columns}
-        data={items}
-        selection={selection}
-        selected={selected}
-        onSelectedChange={(selection) => setSelected(selection as string)}
-        slots={defaultGridSlots}
-      />
-    </div>
-  );
-};
 
 export default {
   component: Grid,
@@ -108,21 +90,79 @@ export default {
 // TODO(burdon): Editable.
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Scroll to selection.
-// TODO(burdon): Selection.
+// TODO(burdon): No footer.
 
-export const Default = {
+const itemAccessor = (item: Item) => item.key.toHex();
+
+export const Controlled = {
   render: () => {
-    return <Test items={createItems(10)} />;
+    const items = useMemo(() => createItems(10), []);
+    const [selected, setSelected] = useState<string>();
+
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item>
+          id={itemAccessor}
+          columns={itemColumns}
+          data={items}
+          selection='single'
+          selected={selected}
+          onSelect={setSelected}
+          slots={defaultGridSlots}
+          footer
+        />
+      </div>
+    );
   },
 };
 
-export const Empty = {
+export const SingleSelect = {
   render: () => {
-    return <Test />;
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> id={itemAccessor} columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} footer />
+      </div>
+    );
+  },
+};
+
+export const SingleColumn = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> id={itemAccessor} columns={[itemColumns[0]]} data={createItems(10)} slots={defaultGridSlots} />
+      </div>
+    );
+  },
+};
+
+export const MultiSelect = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item>
+          id={itemAccessor}
+          columns={itemColumns}
+          data={createItems(20)}
+          selection='multiple-toggle'
+          slots={defaultGridSlots}
+        />
+      </div>
+    );
   },
 };
 
 export const Scrolling = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> id={itemAccessor} columns={itemColumns} data={createItems(50)} slots={defaultGridSlots} />
+      </div>
+    );
+  },
+};
+
+export const Dynamic = {
   render: () => {
     const [items, setItems] = useState<Item[]>(createItems(40));
     useEffect(() => {
@@ -138,6 +178,20 @@ export const Scrolling = {
       return () => clearInterval(t);
     }, []);
 
-    return <Test items={items} />;
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> id={itemAccessor} columns={itemColumns} data={items} slots={defaultGridSlots} />
+      </div>
+    );
+  },
+};
+
+export const Empty = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> id={itemAccessor} columns={itemColumns} slots={defaultGridSlots} />
+      </div>
+    );
   },
 };

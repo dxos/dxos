@@ -2235,6 +2235,26 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
 
+  packages/common/tracing:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+    dependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/context': link:../context
+      '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
+      '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../util
+
   packages/common/typings:
     specifiers: {}
 
@@ -2410,6 +2430,7 @@ importers:
       '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       crc-32: ^1.2.2
@@ -2445,6 +2466,7 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
+      '@dxos/tracing': link:../../../common/tracing
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
       crc-32: 1.2.2
@@ -3246,6 +3268,7 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-flame-graph: ^1.4.0
       react-json-tree: ^0.18.0
       react-router-dom: ^6.4.0
       react-syntax-highlighter: ^15.5.0
@@ -3287,6 +3310,7 @@ importers:
       lodash.defaultsdeep: 4.6.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-flame-graph: 1.4.0_biqbaboplfbrettd7655fr4n2y
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
@@ -5075,6 +5099,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -5089,6 +5114,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -5134,6 +5160,7 @@ importers:
       '@dxos/teleport-extension-object-sync': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
       '@types/readable-stream': ^2.3.9
     dependencies:
@@ -5167,6 +5194,7 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../core/mesh/teleport-extension-object-sync
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/tracing': link:../../common/tracing
       '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
@@ -5388,6 +5416,7 @@ importers:
       '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/echo-signals': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
@@ -5422,6 +5451,7 @@ importers:
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
@@ -25411,6 +25441,12 @@ packages:
   /flatted/3.2.7:
     resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
 
+  /flow-bin/0.118.0:
+    resolution: {integrity: sha512-jlbUu0XkbpXeXhan5xyTqVK1jmEKNxE8hpzznI3TThHTr76GiFwK0iRzhDo4KNy+S9h/KxHaqVhTP86vA6wHCg==}
+    engines: {node: '>=0.10.0'}
+    hasBin: true
+    dev: false
+
   /flow-parser/0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
     engines: {node: '>=0.4.0'}
@@ -30836,6 +30872,10 @@ packages:
     dev: false
     patched: true
 
+  /memoize-one/3.1.1:
+    resolution: {integrity: sha512-YqVh744GsMlZu6xkhGslPSqSurOv6P+kLN2J3ysBZfagLcL5FdRK/0UpgLoL8hwjjEvvAVkjJZyFP+1T6p1vgA==}
+    dev: false
+
   /memoize-one/6.0.0:
     resolution: {integrity: sha512-rkpe71W0N0c0Xz6QD0eJETuWAJGnJ9afsl1srmwPrI+yBCkge5EycXXbYRyvL29zZVUWQCY7InPRCv3GDXuZNw==}
     dev: false
@@ -34709,6 +34749,20 @@ packages:
       react-is: 18.1.0
     dev: true
 
+  /react-flame-graph/1.4.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-DaCK9ZX+xK0mNca72kUE5cu6T8hGe/KLsefQWf+eT9sVt+0WP1dVxZCGD8Svfn2KrZB9Mv011Intg/yG2YWSxA==}
+    engines: {node: '>8.0.0'}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0
+      react-dom: ^15.0.0 || ^16.0.0
+    dependencies:
+      flow-bin: 0.118.0
+      memoize-one: 3.1.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-window: 1.8.9_biqbaboplfbrettd7655fr4n2y
+    dev: false
+
   /react-i18next/11.18.6_vfm63zmruocgezzfl2v26zlzpy:
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
     peerDependencies:
@@ -35040,6 +35094,19 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-motion: 0.5.2_biqbaboplfbrettd7655fr4n2y
+    dev: false
+
+  /react-window/1.8.9_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-+Eqx/fj1Aa5WnhRfj9dJg4VYATGwIUP2ItwItiJ6zboKWA6EX3lYDAXfGF2hyNqplEprhbtjbipiADEcwQ823Q==}
+    engines: {node: '>8.0.0'}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      '@babel/runtime': 7.21.0
+      memoize-one: 3.1.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react/18.2.0:

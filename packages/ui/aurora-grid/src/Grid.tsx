@@ -3,7 +3,7 @@
 //
 
 import { Cell, ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
-import React, { ReactNode, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 import { stripKeys } from '@dxos/util';
@@ -50,6 +50,19 @@ export type GridColumn<TData extends RowData, TValue = any> = {
 
 export type GridColumnConstructor<TData extends RowData, TValue> = (...props: any[]) => GridColumn<TData, TValue>;
 
+const mapColumns = <TData extends RowData>(columns: GridColumn<TData>[], data: TData[]): ColumnDef<TData>[] =>
+  columns.map(({ id, value, header, cell, footer }) => {
+    return stripKeys({
+      id,
+      accessorFn: value ? (data: TData) => value(data) : (data: TData) => (data as any)[id],
+      header: header?.label,
+      cell: cell?.render
+        ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
+        : undefined,
+      footer: footer?.render ? () => footer.render!({ data }) : undefined,
+    } satisfies ColumnDef<TData>);
+  });
+
 // TODO(burdon): Remove nested classNames? Add to theme?
 export type GridSlots = {
   root?: {
@@ -74,77 +87,112 @@ export type GridSlots = {
     className?: string | string[];
   };
   margin?: {
-    className?: string;
+    style?: {
+      width?: number;
+    };
   };
 };
 
 type GridSelection = {
-  selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle'; // TODO(burdon): ???
-  // Uncontrolled if undefined.
+  selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle';
   selected?: string | string[];
+  onSelect?: (id: string) => void; // Controlled.
   onSelectedChange?: (selection: string | string[] | undefined) => void;
+};
+
+/**
+ * Update the selection based on the mode.
+ */
+export const updateSelection = (selected: Set<string>, id: string, selection: GridSelection['selection']) => {
+  switch (selection) {
+    case 'single': {
+      selected.clear();
+      selected.add(id);
+      break;
+    }
+    case 'single-toggle': {
+      if (selected.has(id)) {
+        selected.delete(id);
+      } else {
+        selected.clear();
+        selected.add(id);
+      }
+      break;
+    }
+    case 'multiple': {
+      selected.add(id);
+      break;
+    }
+    case 'multiple-toggle': {
+      if (selected.has(id)) {
+        selected.delete(id);
+      } else {
+        selected.add(id);
+      }
+      break;
+    }
+  }
+
+  return selection;
 };
 
 export type GridProps<TData extends RowData> = {
   id: ((data: TData) => string) | string;
-  columns: GridColumn<TData>[];
+  columns?: GridColumn<TData>[];
   data?: TData[];
   slots?: GridSlots;
+  header?: boolean;
+  footer?: boolean;
 } & GridSelection;
 
 export const Grid = <TData extends RowData>({
   id,
-  columns,
+  columns = [],
   data = [],
   slots,
+  selection = 'single',
   selected,
+  onSelect,
   onSelectedChange,
+  header = true,
+  footer = false,
 }: GridProps<TData>) => {
   const [focus, setFocus] = useState<string>();
-  const selectionSet = new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []);
-  const handleSelect = onSelectedChange
-    ? (id: string) => {
-        onSelectedChange(id);
-        // if (selectedSet.has(id)) {
-        //   selectedSet.delete(id);
-        // } else {
-        //   if (!multiSelect) {
-        //     selectedSet.clear();
-        //   }
-        //   selectedSet.add(id);
-        // }
+  const [selectionSet, setSelectionSet] = useState(new Set<string>());
+  useEffect(() => {
+    setSelectionSet(new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []));
+  }, [selection, selected]);
 
-        // if (multiSelect) {
-        //   onSelected(Array.from(selectedSet.values()));
-        // } else {
-        //   onSelected(selectedSet.values().next().value);
-        // }
-      }
-    : undefined;
+  const handleSelect = (id: string) => {
+    if (onSelect) {
+      // Controlled.
+      onSelect?.(id);
+    } else {
+      // Uncontrolled.
+      setSelectionSet((selectionSet) => {
+        updateSelection(selectionSet, id, selection);
+        if (onSelectedChange) {
+          if (selection === 'single' || selection === 'single-toggle') {
+            onSelectedChange(selectionSet.size === 0 ? undefined : selectionSet.values().next().value);
+          } else {
+            onSelectedChange(Array.from(selectionSet));
+          }
+        }
+
+        return new Set(selectionSet);
+      });
+    }
+  };
 
   const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
   const getColumn = (id: string) => columns.find((column) => column.id === id)!;
   const getColumnStyle = (id: string) => {
     const column = getColumn(id);
+    // TODO(burdon): Clash with react-table width management?
     return column.width ? { width: column.width } : {};
   };
 
-  const tableColumns = useMemo<ColumnDef<TData>[]>(
-    () =>
-      columns.map(({ id, value, header, cell, footer }) => {
-        return stripKeys({
-          id,
-          accessorFn: value ? (data: TData) => value(data) : (data: TData) => (data as any)[id],
-          header: header?.label,
-          cell: cell?.render
-            ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
-            : undefined,
-          footer: footer?.render ? () => footer.render!({ data }) : undefined,
-        } satisfies ColumnDef<TData>);
-      }),
-    [columns],
-  );
-
+  const tableColumns = useMemo(() => mapColumns(columns, data), [columns]);
   const table = useReactTable({
     data,
     columns: tableColumns,
@@ -156,25 +204,34 @@ export const Grid = <TData extends RowData>({
   return (
     <div className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
-        <thead className={mx('sticky top-0 z-10', slots?.header?.className)}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              <th className={slots?.margin?.className} />
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th
-                    key={header.id}
-                    style={getColumnStyle(header.id)}
-                    className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                );
-              })}
-              <th className={slots?.margin?.className} />
-            </tr>
-          ))}
-        </thead>
+        {/* TODO(burdon): Must have header group for widths. */}
+        {header && (
+          <thead className={mx('sticky top-0 z-10', slots?.header?.className)}>
+            {table.getHeaderGroups().map((headerGroup) => {
+              // Need additional column if all columns have fixed width.
+              const flex = columns?.map((column) => column.width).filter(Boolean).length === columns?.length;
+
+              return (
+                <tr key={headerGroup.id}>
+                  <th style={{ width: slots?.margin?.style?.width }} />
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <th
+                        key={header.id}
+                        style={getColumnStyle(header.id)}
+                        className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    );
+                  })}
+                  {flex && <th />}
+                  <th style={{ width: slots?.margin?.style?.width }} />
+                </tr>
+              );
+            })}
+          </thead>
+        )}
         <tbody>
           {table.getRowModel().rows.map((row) => {
             const id = getId(row.original);
@@ -185,13 +242,13 @@ export const Grid = <TData extends RowData>({
                 role='button'
                 className={mx(
                   'group',
-                  onSelectedChange && 'cursor-pointer',
                   slots?.row?.className,
                   selectionSet.has(id) && slots?.selected?.className,
                   focus === id && slots?.focus?.className,
                 )}
               >
                 <td>
+                  {/* Dummy button for focus. */}
                   <button
                     style={{ width: 1 }}
                     className='focus:outline-none'
@@ -218,21 +275,23 @@ export const Grid = <TData extends RowData>({
             );
           })}
         </tbody>
-        <tfoot className={mx('sticky bottom-0 z-10', slots?.footer?.className)}>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              <th />
-              {footerGroup.headers.map((header) => {
-                return (
-                  <th key={header.id} className={mx(slots?.footer?.className)}>
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
-                  </th>
-                );
-              })}
-              <th />
-            </tr>
-          ))}
-        </tfoot>
+        {footer && (
+          <tfoot className={mx('sticky bottom-0 z-10', slots?.footer?.className)}>
+            {table.getFooterGroups().map((footerGroup) => (
+              <tr key={footerGroup.id}>
+                <th />
+                {footerGroup.headers.map((header) => {
+                  return (
+                    <th key={header.id} className={mx(slots?.footer?.className)}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                    </th>
+                  );
+                })}
+                <th />
+              </tr>
+            ))}
+          </tfoot>
+        )}
       </table>
     </div>
   );
