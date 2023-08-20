@@ -55,7 +55,9 @@ export class TraceSender implements TracingService {
           }
         }
 
-        next(event);
+        if(event.resourceAdded!.length > 0 || event.resourceRemoved!.length > 0 || event.spanAdded!.length > 0) {
+          next(event);
+        }
       }
 
       flushEvents(null, null);
