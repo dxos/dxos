@@ -13,6 +13,7 @@ import {
   SpacesService,
   SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { Context } from '@dxos/context';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
@@ -50,8 +51,8 @@ export interface ClientServicesProvider {
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
 
-  open(): Promise<void>;
-  close(): Promise<void>;
+  open(ctx: Context): Promise<void>;
+  close(ctx: Context): Promise<void>;
 }
 
 /**

@@ -11,6 +11,7 @@ import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 import { DevicesServiceImpl } from './devices-service';
+import { Context } from '@dxos/context';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;
@@ -18,7 +19,7 @@ describe('DevicesService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     devicesService = new DevicesServiceImpl(serviceContext.identityManager);
   });
 

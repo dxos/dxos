@@ -109,7 +109,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open();
+    await identity.open(new Context());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -179,7 +179,7 @@ export class IdentityManager {
     };
     const identity = await this._constructIdentity(identityRecord);
 
-    await identity.open();
+    await identity.open(new Context());
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
     await this._identity.ready();

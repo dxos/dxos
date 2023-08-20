@@ -28,6 +28,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { createDefaultModelFactory } from '../services';
 import { Identity } from './identity';
+import { Context } from '@dxos/context';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
@@ -106,8 +107,8 @@ describe('identity/identity', () => {
       space,
     });
 
-    await identity.open();
-    afterTest(() => identity.close());
+    await identity.open(new Context());
+    afterTest(() => identity.close(new Context()));
 
     //
     // Identity genesis
@@ -219,8 +220,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
 
       //
       // Identity genesis
@@ -310,8 +311,8 @@ describe('identity/identity', () => {
         space,
       }));
 
-      await identity.open();
-      afterTest(() => identity.close());
+      await identity.open(new Context());
+      afterTest(() => identity.close(new Context()));
     }
 
     //

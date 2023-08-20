@@ -10,6 +10,7 @@ import { ClientServicesProvider, ClientServicesProxy, ShellRuntime } from '@dxos
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
+import { Context } from '@dxos/context';
 
 const cssLogStyle = 'color:#C026D3;font-weight:bold';
 
@@ -78,7 +79,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled && port) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     if (shellClientProxy) {
@@ -157,7 +158,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port: shellPort }));
-      void shellClientProxy.open();
+      void shellClientProxy.open(new Context());
     }
 
     const { IFrameProxyRuntime } = await import('@dxos/client-services');

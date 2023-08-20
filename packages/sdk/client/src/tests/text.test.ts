@@ -15,6 +15,7 @@ import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { Client } from '../client';
 import { joinCommonSpace, TestBuilder } from '../testing';
+import { Context } from '@dxos/context';
 
 // log.config({ filter: 'text.test:debug,error' });
 
@@ -68,7 +69,7 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 
     // TODO(wittjosiah): Too many steps to creat client.
     const services = testBuilder.createClientServicesHost();
-    await services.open();
+    await services.open(new Context());
     const [client, server] = testBuilder.createClientServer(services);
     void server.open();
     await client.initialize();

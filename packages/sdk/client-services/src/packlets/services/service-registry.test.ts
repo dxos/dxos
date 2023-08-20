@@ -16,6 +16,7 @@ import { describe, test } from '@dxos/test';
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
 import { ServiceRegistry } from './service-registry';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 
@@ -31,7 +32,7 @@ describe('service registry', () => {
   test('builds a service registry', async () => {
     const remoteSource = 'https://remote.source';
     const serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SystemService: new SystemServiceImpl({

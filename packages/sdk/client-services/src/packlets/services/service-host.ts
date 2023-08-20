@@ -113,7 +113,7 @@ export class ClientServicesHost {
         lockKey,
         onAcquire: () => {
           if (!this._opening) {
-            void this.open();
+            void this.open(new Context());
           }
         }, 
         onRelease: () => this.close(),

@@ -5099,6 +5099,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -5113,6 +5114,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -5414,6 +5416,7 @@ importers:
       '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/echo-signals': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
@@ -5448,6 +5451,7 @@ importers:
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log

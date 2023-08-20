@@ -141,6 +141,7 @@ export class Context {
 
   derive({ onError, attributes }: CreateContextParams = {}): Context {
     const newCtx = new Context({
+      // TODO(dmaretskyi): Optimize to not require allocating a new closure for every context.
       onError: async (error) => {
         if (!onError) {
           this.raise(error);

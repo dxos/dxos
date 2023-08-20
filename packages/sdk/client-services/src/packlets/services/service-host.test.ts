@@ -17,6 +17,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
+import { Context } from '@dxos/context';
 
 chai.use(chaiAsPromised);
 
@@ -30,7 +31,7 @@ describe('ClientServicesHost', () => {
 
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -49,7 +50,7 @@ describe('ClientServicesHost', () => {
 
   test('write and query credentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -86,7 +87,7 @@ describe('ClientServicesHost', () => {
 
   test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
@@ -117,7 +118,7 @@ describe('ClientServicesHost', () => {
     });
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
 
       await host.services.IdentityService?.createIdentity({});
 
@@ -129,7 +130,7 @@ describe('ClientServicesHost', () => {
 
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
-      await host.open();
+      await host.open(new Context());
       const trigger = new Trigger<Identity>();
 
       const stream = host.services.IdentityService?.queryIdentity();

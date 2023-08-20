@@ -21,6 +21,7 @@ import { Client } from '../client';
 import { SpaceState } from '../echo';
 import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { Context } from '@dxos/context';
 
 describe('Spaces', () => {
   test('creates a space', async () => {
@@ -46,7 +47,7 @@ describe('Spaces', () => {
     // testBuilder.storage = createStorage({ type: StorageType.WEBFS });
 
     const host = testBuilder.createClientServicesHost();
-    await host.open();
+    await host.open(new Context());
     afterTest(() => host.close());
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();

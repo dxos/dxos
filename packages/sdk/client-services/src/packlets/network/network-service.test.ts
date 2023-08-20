@@ -11,6 +11,7 @@ import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 import { NetworkServiceImpl } from './network-service';
+import { Context } from '@dxos/context';
 
 describe('NetworkService', () => {
   let serviceContext: ServiceContext;
@@ -18,7 +19,7 @@ describe('NetworkService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     networkService = new NetworkServiceImpl(serviceContext.networkManager, serviceContext.signalManager);
   });
 

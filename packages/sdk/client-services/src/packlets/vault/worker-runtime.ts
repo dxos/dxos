@@ -12,6 +12,7 @@ import { MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
+import { Context } from '@dxos/context';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {
@@ -57,7 +58,7 @@ export class WorkerRuntime {
         transportFactory: this._transportFactory,
       });
 
-      await this._clientServices.open();
+      await this._clientServices.open(new Context());
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {

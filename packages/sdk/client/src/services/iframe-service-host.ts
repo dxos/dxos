@@ -19,6 +19,7 @@ import { Provider } from '@dxos/util';
 
 import { IFrameController } from './iframe-controller';
 import { ShellController } from './shell-controller';
+import { Context } from '@dxos/context';
 
 export type IFrameClientServicesHostOptions = {
   host: ClientServicesProvider;
@@ -75,7 +76,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
-    await this._host.open();
+    await this._host.open(new Context());
 
     // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
     //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
@@ -152,6 +153,6 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   async close() {
     await this._shellController.close();
     await this._iframeController.close();
-    await this._host.close();
+    await this._host.close(new Context());
   }
 }

@@ -13,6 +13,7 @@ import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 import { SpacesServiceImpl } from './spaces-service';
+import { Context } from '@dxos/context';
 
 chai.use(chaiAsPromised);
 
@@ -22,7 +23,7 @@ describe('SpacesService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     spacesService = new SpacesServiceImpl(
       serviceContext.identityManager,
       serviceContext.spaceManager,

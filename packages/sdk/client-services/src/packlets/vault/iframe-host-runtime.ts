@@ -14,6 +14,7 @@ import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 import { ShellRuntimeImpl } from './shell-runtime';
+import { Context } from '@dxos/context';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 
@@ -108,7 +109,7 @@ export class IFrameHostRuntime {
         ...middleware,
       });
 
-      await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);
+      await Promise.all([this._clientServices.open(new Context()), this._clientRpc.open(), this._shellRuntime?.open()]);
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {

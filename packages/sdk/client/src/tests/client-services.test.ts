@@ -16,6 +16,7 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Client } from '../client';
 import { SpaceProxy } from '../echo/space-proxy';
 import { syncItems, TestBuilder } from '../testing';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -38,7 +39,7 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
 
     const peer = testBuilder.createClientServicesHost();
-    await peer.open();
+    await peer.open(new Context());
     afterTest(() => peer.close());
 
     const [client, server] = testBuilder.createClientServer(peer);
@@ -55,7 +56,7 @@ describe('Client services', () => {
 
     {
       const peer1 = testBuilder.createClientServicesHost();
-      await peer1.open();
+      await peer1.open(new Context());
       afterTest(() => peer1.close());
 
       {
@@ -86,7 +87,7 @@ describe('Client services', () => {
 
     {
       const peer2 = testBuilder.createClientServicesHost();
-      await peer2.open();
+      await peer2.open(new Context());
       afterTest(() => peer2.close());
 
       {
@@ -110,8 +111,8 @@ describe('Client services', () => {
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
 
-    await peer1.open();
-    await peer2.open();
+    await peer1.open(new Context());
+    await peer2.open(new Context());
 
     const [client1, server1] = testBuilder.createClientServer(peer1);
     const [client2, server2] = testBuilder.createClientServer(peer2);
@@ -156,8 +157,8 @@ describe('Client services', () => {
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
 
-    await peer1.open();
-    await peer2.open();
+    await peer1.open(new Context());
+    await peer2.open(new Context());
 
     const [client1, server1] = testBuilder.createClientServer(peer1);
     const [client2, server2] = testBuilder.createClientServer(peer2);

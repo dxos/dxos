@@ -15,6 +15,7 @@ import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, parseAddress, removeSocketFile } from '../util';
+import { Context } from '@dxos/context';
 
 /**
  * Manager of daemon processes started with Forever.
@@ -132,7 +133,7 @@ export class ForeverDaemon implements Daemon {
         // Check if agent is initialized.
         {
           const services = fromAgent({ profile });
-          await services.open();
+          await services.open(new Context());
 
           const trigger = new Trigger();
           const stream = services.services.SystemService!.queryStatus({});
@@ -143,7 +144,7 @@ export class ForeverDaemon implements Daemon {
           await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
 
           stream.close();
-          await services.close();
+          await services.close(new Context());
         }
         return await this._getProcess(profile);
       } catch (err) {

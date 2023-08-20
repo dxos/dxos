@@ -54,10 +54,6 @@ const TracingPanel = () => {
     setSelectedFlameIndex(idx => Math.min(roots.length - 1, idx + 1));
   }
 
-  if(flameGraph === undefined) {
-    return
-  }
-
   return (
     <PanelContainer>
       <div className="h-1/2 overflow-auto">
@@ -69,11 +65,11 @@ const TracingPanel = () => {
           <div className="flex-1 text-center">{selectedFlameIndex + 1} / {roots.length}</div>
           <ArrowRight className="cursor-pointer" onClick={selectNext} />
         </div>
-        <FlameGraph
+        {flameGraph && <FlameGraph
           data={flameGraph}
           height={200}
           width={400}
-        />
+        />}
       </div>
     </PanelContainer>
   );

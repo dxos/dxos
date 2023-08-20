@@ -35,6 +35,7 @@ import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
 import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -241,7 +242,7 @@ export class Client {
     const mesh = new MeshProxy(this._services, this._instanceId);
     this._runtime = new ClientRuntime({ echo, halo, mesh });
 
-    await this._services.open();
+    await this._services.open(new Context());
 
     // TODO(burdon): Remove?
     // TODO(dmaretskyi): Refactor devtools init.
@@ -294,7 +295,7 @@ export class Client {
 
     this._statusTimeout && clearTimeout(this._statusTimeout);
     this._statusStream!.close();
-    await this.services.close();
+    await this.services.close(new Context());
 
     this._initialized = false;
   }

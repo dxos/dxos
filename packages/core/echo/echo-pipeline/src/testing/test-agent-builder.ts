@@ -22,6 +22,7 @@ import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
+import { Context } from '@dxos/context';
 
 export type NetworkManagerProvider = () => NetworkManager;
 
@@ -198,7 +199,7 @@ export class TestAgent {
     space.setControlFeed(controlFeed);
     space.setDataFeed(dataFeed);
 
-    await space.open();
+    await space.open(new Context());
 
     this._spaces.set(spaceKey, space);
     return space;
