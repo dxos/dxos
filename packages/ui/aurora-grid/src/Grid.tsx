@@ -2,25 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Cell,
-  CellContext,
-  ColumnDef,
-  ColumnDefTemplate,
-  flexRender,
-  getCoreRowModel,
-  RowData,
-  useReactTable,
-} from '@tanstack/react-table';
-import React, { FC, PropsWithChildren, useMemo, createContext } from 'react';
+import { Cell, ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
+import React, { FC, ReactNode, useMemo, useState } from 'react';
 
 import { chromeSurface, mx } from '@dxos/aurora-theme';
-
-type GridContextType<TData> = {
-  columns: ColumnDef<TData>[];
-};
-
-const GridContext = createContext<GridContextType<any> | undefined>(undefined);
+import { stripKeys } from '@dxos/util';
 
 type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
 type CellValueOrFunction<TData, TValue, TResult> = TResult | ((params: ValueFunctionParams<TData, TValue>) => TResult);
@@ -44,13 +30,18 @@ const getCellValue = <TData, TValue, TResult>(
 export type GridColumn<TData extends RowData> = /* Pick<ColumnDef<T>, 'cell'> & */ {
   key: string;
   width?: number;
-  getValue?: (params: TData) => any;
   header?: {
+    label?: string;
     className?: string;
   };
   cell?: {
+    value?: (params: TData) => any;
     className?: CellValueOrFunction<TData, any, string>;
-    render?: ColumnDefTemplate<CellContext<TData, any>>;
+    render?: ({ row, value }: { row: TData; value: any }) => ReactNode;
+  };
+  footer?: {
+    render?: ({ data }: { data: TData[] }) => ReactNode;
+    span?: number;
   };
 };
 
@@ -71,6 +62,9 @@ export type GridSlots = {
   cell?: {
     className?: string;
   };
+  focus?: {
+    className?: string;
+  };
   selected?: {
     className?: string;
   };
@@ -78,12 +72,12 @@ export type GridSlots = {
 
 // TODO(burdon): Should this be a separate model or just & to properties?
 type GridSelection = {
-  selected: string | string[];
+  selected: string | string[] | undefined;
   multiSelect?: boolean;
-  onSelected?: (selection: string | string[]) => void;
+  onSelected?: (selection: string | string[] | undefined) => void;
 };
 
-export type GridProps<TData extends RowData> = PropsWithChildren & {
+export type GridProps<TData extends RowData> = {
   id: ((data: TData) => string) | string;
   columns: GridColumn<TData>[];
   data?: TData[];
@@ -92,7 +86,6 @@ export type GridProps<TData extends RowData> = PropsWithChildren & {
 } & GridSelection;
 
 export const Grid = <TData extends RowData>({
-  children,
   id,
   columns,
   data = [],
@@ -102,6 +95,8 @@ export const Grid = <TData extends RowData>({
   onSelected,
   Footer,
 }: GridProps<TData>) => {
+  const [focus, setFocus] = useState<string>();
+
   const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
   const getColumn = (id: string) => columns.find((column) => column.key === id)!;
   const getColumnStyle = (id: string) => {
@@ -111,15 +106,16 @@ export const Grid = <TData extends RowData>({
 
   const tableColumns = useMemo<ColumnDef<TData>[]>(
     () =>
-      columns.map(({ key, getValue, cell }) => {
-        const column: ColumnDef<TData> = {
+      columns.map(({ key, header, cell, footer }) => {
+        return stripKeys({
           id: key,
-          accessorFn: (data: TData) => (getValue ? getValue(data) : (data as any)[key]),
-        };
-        if (cell?.render) {
-          column.cell = cell.render;
-        }
-        return column;
+          accessorFn: (data: TData) => (cell?.value ? cell?.value(data) : (data as any)[key]),
+          header: header?.label,
+          cell: cell?.render
+            ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
+            : undefined,
+          footer: footer?.render ? () => footer.render!({ data }) : undefined,
+        } satisfies ColumnDef<TData>);
       }),
     [columns],
   );
@@ -130,91 +126,110 @@ export const Grid = <TData extends RowData>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // TODO(burdon): Key cursor up/down.
-  const _selected = new Set(selected);
+  const selectedSet = new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []);
   const handleSelect = onSelected
-    ? (data: TData) => {
-        const id = getId(data);
-        if (_selected.has(id)) {
-          _selected.delete(id);
+    ? (id: string) => {
+        if (selectedSet.has(id)) {
+          selectedSet.delete(id);
         } else {
           if (!multiSelect) {
-            _selected.clear();
+            selectedSet.clear();
           }
-          _selected.add(id);
+          selectedSet.add(id);
         }
 
-        onSelected?.(Array.from(_selected.values()));
+        if (multiSelect) {
+          onSelected(Array.from(selectedSet.values()));
+        } else {
+          onSelected(selectedSet.values().next().value);
+        }
       }
     : undefined;
 
+  // TODO(burdon): Focus on click.
+
   return (
     <div className={mx('flex grow overflow-auto', chromeSurface, slots?.root?.className)}>
-      <GridContext.Provider value={{ columns: tableColumns }}>
-        <table className='table-fixed w-full'>
-          <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {/* TODO(burdon): Left-margin. */}
-                <th style={{ width: 16 }} />
-                {headerGroup.headers.map((header) => {
+      <table className='table-fixed w-full'>
+        <thead className={mx('sticky top-0 z-10', chromeSurface, slots?.header?.className)}>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              <th style={{ width: 16 }} />
+              {headerGroup.headers.map((header) => {
+                return (
+                  <th
+                    key={header.id}
+                    style={getColumnStyle(header.id)}
+                    className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                  >
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                );
+              })}
+              <th style={{ width: 16 }} />
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row) => {
+            const id = getId(row.original);
+            return (
+              <tr
+                key={row.id}
+                onClick={() => handleSelect?.(id)}
+                className={mx(
+                  'group',
+                  onSelected && 'cursor-pointer',
+                  slots?.row?.className,
+                  selectedSet.has(id) && slots?.selected?.className,
+                  focus === id && slots?.focus?.className,
+                )}
+              >
+                <td>
+                  <button
+                    style={{ width: 1 }}
+                    className='focus:outline-none'
+                    onFocus={() => setFocus(id)}
+                    onBlur={() => setFocus(undefined)}
+                  >
+                    &nbsp;
+                  </button>
+                </td>
+                {row.getVisibleCells().map((cell) => {
                   return (
-                    <th
-                      key={header.id}
-                      style={getColumnStyle(header.id)}
-                      className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                    <td
+                      key={cell.id}
+                      className={mx(
+                        'truncate',
+                        getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
+                        slots?.cell?.className,
+                      )}
                     >
-                      z{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
                   );
                 })}
-                {/* TODO(burdon): Right-margin. */}
-                <th style={{ width: 16 }} />
+                <td />
               </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => {
-              const id = getId(row.original);
-              return (
-                <tr
-                  key={row.id}
-                  onClick={() => handleSelect?.(row.original)}
-                  className={mx(
-                    slots?.row?.className,
-                    onSelected && 'cursor-pointer',
-                    _selected.has(id) && slots?.selected?.className,
-                  )}
-                >
-                  <td />
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td
-                        key={cell.id}
-                        className={mx(
-                          'truncate',
-                          getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
-                          slots?.cell?.className,
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
-                  <td />
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot className={mx('sticky bottom-0 z-10', chromeSurface, slots?.footer?.className)}>
-            <th />
-            <th>
-              <td colSpan={columns.length}>{children}</td>
-            </th>
-            <th />
-          </tfoot>
-        </table>
-      </GridContext.Provider>
+            );
+          })}
+        </tbody>
+        <tfoot className={mx('sticky bottom-0 z-10', chromeSurface, slots?.footer?.className)}>
+          {table.getFooterGroups().map((footerGroup) => (
+            <tr key={footerGroup.id}>
+              <th style={{ width: 16 }} />
+              {footerGroup.headers.map((header) => {
+                return (
+                  <th key={header.id} className={mx(slots?.footer?.className)}>
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                  </th>
+                );
+              })}
+              <th style={{ width: 16 }} />
+            </tr>
+          ))}
+        </tfoot>
+      </table>
     </div>
   );
 };

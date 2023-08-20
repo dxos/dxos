@@ -3,7 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { ColumnDef } from '@tanstack/react-table';
+import { Check, X } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -21,23 +21,43 @@ type Item = {
   key: PublicKey;
   name: string;
   value?: number;
+  complete?: boolean;
 };
 
-const columns: ColumnDef<Item>[] = [];
+// TODO(burdon): CheckIcon helper.
+// TODO(burdon): Helpers would provide type-safety.
 
-const columnss: GridColumn<Item>[] = [
+const columns: GridColumn<Item>[] = [
   {
     key: 'key',
     width: 100,
-    getValue: ({ key }) => key.truncate(),
+    header: {
+      label: 'ID',
+    },
     cell: {
+      value: ({ key }) => key.truncate(),
       className: 'font-mono font-thin text-green-500',
+    },
+    footer: {
+      render: ({ data }) => <span>{data.length} rows</span>,
+      span: 3,
     },
   },
   {
     key: 'name',
     cell: {
-      render: (props) => <span className='truncate'>{props.row.original.name}</span>,
+      render: ({ value }) => <span className='truncate'>{value}</span>,
+    },
+  },
+  {
+    key: 'complete',
+    width: 32,
+    header: {
+      label: '',
+    },
+    cell: {
+      render: ({ value }) =>
+        value === true ? <Check className='text-green-700' /> : value === false ? <X className='text-red-700' /> : null,
     },
   },
   {
@@ -55,16 +75,16 @@ const columnss: GridColumn<Item>[] = [
 ];
 
 const Test = () => {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string>();
   const [items] = useState<Item[]>(() =>
     range(num).map(() => ({
       key: PublicKey.random(),
       name: faker.lorem.sentence(),
       value: faker.number.int({ min: 0, max: 1000 }),
+      complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
     })),
   );
 
-  // TODO(burdon): Focus/navigation (space to toggle).
   // TODO(burdon): Editable.
   // TODO(burdon): Sort/filter.
   // TODO(burdon): Create simple specialized table for devtools (auto detect keys, links, etc.)
@@ -77,13 +97,15 @@ const Test = () => {
         data={items}
         multiSelect={false}
         selected={selected}
-        onSelected={(selection) => setSelected(selection)}
-        // slots={{
-        //   header: { className: 'p-1 text-left font-thin' },
-        //   cell: { className: 'p-1' },
-        //   selected: { className: 'bg-green-100' },
-        //   footer: { className: 'p-1 text-left font-thin' },
-        // }}
+        onSelected={(selection) => setSelected(selection as string)}
+        slots={{
+          header: { className: 'p-1 text-left font-thin' },
+          footer: { className: 'p-1 text-left font-thin' },
+          cell: { className: 'p-1' },
+          row: { className: 'cursor-pointer hover:bg-gray-100' },
+          focus: { className: 'ring-1 ring-green-700' },
+          selected: { className: '!bg-green-100' },
+        }}
       />
     </div>
   );
