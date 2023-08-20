@@ -16,6 +16,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",

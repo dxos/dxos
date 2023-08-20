@@ -4,6 +4,7 @@ import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import type { AddLinkOptions } from "./api";
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from "./symbols";
 import { Resource, Span } from "@dxos/protocols/proto/dxos/tracing";
+import { TraceSender } from "./trace-sender";
 
 export type TraceResourceConstructorParams = {
   constructor: { new(...args: any[]): {} };
@@ -21,25 +22,23 @@ export type ResourceEntry = {
   instance: any;
 }
 
+export type TraceSubscription = {
+  dirtyResources: Set<number>
+  dirtySpans: Set<number>
+}
+
 export class TraceProcessor {
-  private _resources = new Map<number, ResourceEntry>();
-  private _spans = new Map<number, Span>();
-  private _resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
+  resources = new Map<number, ResourceEntry>();
+  spans = new Map<number, Span>();
+  resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
+  subscriptions: Set<TraceSubscription> = new Set();
 
   constructor() {
 
   }
 
-  get resources(): Resource[] {
-    return Array.from(this._resources.values()).map(entry => entry.data);
-  }
-
-  get spans(): Span[] {
-    return Array.from(this._spans.values()).map(span => span);
-  }
-
   traceResourceConstructor(params: TraceResourceConstructorParams) {
-    const id = this._resources.size;
+    const id = this.resources.size;
     const entry: ResourceEntry = {
       data: {
         id,
@@ -50,8 +49,9 @@ export class TraceProcessor {
       },
       instance: params.instance,
     };
-    this._resources.set(id, entry);
-    this._resourceInstanceIndex.set(params.instance, entry);
+    this.resources.set(id, entry);
+    this.resourceInstanceIndex.set(params.instance, entry);
+    this._markResourceDirty(id);
   }
 
   getResourceInfo(instance: any): Record<string, any> {
@@ -80,8 +80,12 @@ export class TraceProcessor {
   }
 
   getResourceId(instance: any): number | null {
-    const entry = this._resourceInstanceIndex.get(instance);
+    const entry = this.resourceInstanceIndex.get(instance);
     return entry ? entry.data.id : null;
+  }
+
+  createTraceSender() {
+    return new TraceSender(this);
   }
 
   /**
@@ -89,7 +93,20 @@ export class TraceProcessor {
    */
   _flushSpan(runtimeSpan: TracingSpan) {
     const span = runtimeSpan.serialize();
-    this._spans.set(span.id, span);
+    this.spans.set(span.id, span);
+    this._markSpanDirty(span.id);
+  }
+
+  private _markResourceDirty(id: number) {
+    for (const subscription of this.subscriptions) {
+      subscription.dirtyResources.add(id);
+    }
+  }
+
+  private _markSpanDirty(id: number) {
+    for (const subscription of this.subscriptions) {
+      subscription.dirtySpans.add(id);
+    }
   }
 }
 

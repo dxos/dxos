@@ -2239,6 +2239,7 @@ importers:
 
   packages/common/tracing:
     specifiers:
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/invariant': workspace:*
@@ -2247,6 +2248,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
     dependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/invariant': link:../invariant
