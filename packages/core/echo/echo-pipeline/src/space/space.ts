@@ -13,6 +13,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
+import { trace } from '@dxos/tracing';
 
 import { SnapshotManager } from '../db-host';
 import { MetadataStore } from '../metadata';
@@ -20,6 +21,7 @@ import { PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { DataPipeline } from './data-pipeline';
 import { SpaceProtocol } from './space-protocol';
+import { Context } from '@dxos/context';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;
@@ -48,6 +50,7 @@ export type CreatePipelineParams = {
  */
 // TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
+@trace.resource()
 export class Space {
   private readonly _addFeedLock = new Lock();
 
@@ -204,7 +207,8 @@ export class Space {
   //   return this._dataPipeline?.getFeeds();
   // }
   @synchronized
-  async open() {
+  @trace.span()
+  async open(ctx: Context) {
     log('opening...');
     if (this._isOpen) {
       return;

@@ -24,6 +24,8 @@ import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitati
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
+import { trace } from '@dxos/tracing';
+import { Context } from '@dxos/context';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -35,6 +37,7 @@ export type IdentityParams = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
+@trace.resource()
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
@@ -76,13 +79,15 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  async open() {
+  @trace.span()
+  async open(ctx: Context) {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
-    await this.space.open();
+    await this.space.open(ctx);
   }
 
-  async close() {
+  @trace.span()
+  async close(ctx: Context) {
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);

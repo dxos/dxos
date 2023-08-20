@@ -133,9 +133,9 @@ export class ServiceContext {
     await this.signalManager.open();
     await this.networkManager.open();
     await this.spaceManager.open();
-    await this.identityManager.open();
+    await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
-      await this._initialize();
+      await this._initialize(ctx);
     }
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
@@ -159,7 +159,7 @@ export class ServiceContext {
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
 
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
@@ -172,7 +172,7 @@ export class ServiceContext {
   private async _acceptIdentity(params: JoinIdentityParams) {
     const identity = await this.identityManager.acceptIdentity(params);
 
-    await this._initialize();
+    await this._initialize(new Context());
     return identity;
   }
 
@@ -185,7 +185,8 @@ export class ServiceContext {
   }
 
   // Called when identity is created.
-  private async _initialize() {
+  @Trace.span()
+  private async _initialize(ctx: Context) {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {

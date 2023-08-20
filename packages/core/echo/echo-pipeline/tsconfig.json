@@ -52,6 +52,9 @@
       "path": "../../../common/timeframe"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/typings"
     },
     {

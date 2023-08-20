@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace as Trace } from '@dxos/tracing';
 import { trace } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -19,6 +20,7 @@ import { deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
+import { Context } from '@dxos/context';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceMetadata;
@@ -46,6 +48,7 @@ export type CreateIdentityOptions = {
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
+@Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
@@ -64,7 +67,8 @@ export class IdentityManager {
     return this._identity;
   }
 
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
     await this._metadataStore.load();
@@ -73,7 +77,7 @@ export class IdentityManager {
     log('identity record', { identityRecord });
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
-      await this._identity.open();
+      await this._identity.open(ctx);
       await this._identity.ready();
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
@@ -85,7 +89,7 @@ export class IdentityManager {
   }
 
   async close() {
-    await this._identity?.close();
+    await this._identity?.close(new Context());
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
