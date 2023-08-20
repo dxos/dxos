@@ -22,6 +22,7 @@
     "@dxos/aurora": "workspace:*",
     "@dxos/aurora-theme": "workspace:*",
     "@dxos/aurora-types": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tanstack/react-table": "^8.9.3",
     "date-fns": "^2.29.3",

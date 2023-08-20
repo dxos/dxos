@@ -5675,6 +5675,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/aurora-types': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
       '@phosphor-icons/react': ^2.0.5
@@ -5693,6 +5694,7 @@ importers:
       '@dxos/aurora': link:../aurora
       '@dxos/aurora-theme': link:../aurora-theme
       '@dxos/aurora-types': link:../aurora-types
+      '@dxos/invariant': link:../../common/invariant
       '@dxos/util': link:../../common/util
       '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
       date-fns: 2.29.3

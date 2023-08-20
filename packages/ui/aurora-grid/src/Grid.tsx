@@ -2,45 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Cell, ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
+import { Cell, ColumnDef, flexRender, getCoreRowModel, Row, RowData, useReactTable } from '@tanstack/react-table';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
+import { invariant } from '@dxos/invariant';
 import { stripKeys } from '@dxos/util';
 
-type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
-type CellValueOrFunction<TData, TValue, TResult> = TResult | ((params: ValueFunctionParams<TData, TValue>) => TResult);
-
-const getCellValue = <TData, TValue, TResult>(
-  cell: Cell<TData, TValue>,
-  value: CellValueOrFunction<TData, TValue, TResult> | undefined,
-) => {
-  if (typeof value === 'function') {
-    const f = value as (cell: ValueFunctionParams<TData, TValue>) => TValue;
-    return f({
-      data: cell.getContext().row.original,
-      value: cell.getValue(),
-    });
-  }
-
-  return value;
-};
+type CellParams<TData extends RowData, TValue = any> = { row: TData; value: TValue };
 
 /**
- * Simplifies the ColumnDef definition.
+ * Simplified ColumnDef definition.
  * https://tanstack.com/table/v8/docs/guide/column-defs
  */
 // TODO(burdon): Consider alternative to use ColumnDef directly with helpers.
 export type GridColumn<TData extends RowData, TValue = any> = {
   id: string;
-  value?: (params: TData) => any;
+  // TODO(burdon): Allow key to be object? (object equivalence semantics?)
+  key?: (params: CellParams<TData, TValue>) => string;
+  accessor?: string | ((params: TData) => any);
   width?: number;
   header?: {
     label?: string;
     className?: string;
   };
   cell?: {
-    render?: ({ row, value }: { row: TData; value: TValue }) => ReactNode;
+    render?: (params: CellParams<TData, TValue>) => ReactNode;
     className?: CellValueOrFunction<TData, any, string>;
   };
   footer?: {
@@ -51,10 +38,11 @@ export type GridColumn<TData extends RowData, TValue = any> = {
 export type GridColumnConstructor<TData extends RowData, TValue> = (...props: any[]) => GridColumn<TData, TValue>;
 
 const mapColumns = <TData extends RowData>(columns: GridColumn<TData>[], data: TData[]): ColumnDef<TData>[] =>
-  columns.map(({ id, value, header, cell, footer }) => {
+  columns.map(({ id, accessor, header, cell, footer }) => {
     return stripKeys({
       id,
-      accessorFn: value ? (data: TData) => value(data) : (data: TData) => (data as any)[id],
+      accessorKey: typeof accessor === 'string' ? accessor : id,
+      accessorFn: typeof accessor === 'function' ? accessor : undefined,
       header: header?.label,
       cell: cell?.render
         ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
@@ -62,6 +50,24 @@ const mapColumns = <TData extends RowData>(columns: GridColumn<TData>[], data: T
       footer: footer?.render ? () => footer.render!({ data }) : undefined,
     } satisfies ColumnDef<TData>);
   });
+
+type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
+type CellValueOrFunction<TData, TValue, TResult> = TResult | ((params: ValueFunctionParams<TData, TValue>) => TResult);
+
+const getCellValue = <TData, TValue, TResult>(
+  cell: Cell<TData, TValue>,
+  value: CellValueOrFunction<TData, TValue, TResult> | undefined,
+) => {
+  if (typeof value === 'function') {
+    const fn = value as (cell: ValueFunctionParams<TData, TValue>) => TValue;
+    return fn({
+      data: cell.getContext().row.original,
+      value: cell.getValue(),
+    });
+  }
+
+  return value;
+};
 
 // TODO(burdon): Remove nested classNames? Add to theme?
 export type GridSlots = {
@@ -137,7 +143,6 @@ export const updateSelection = (selected: Set<string>, id: string, selection: Gr
 };
 
 export type GridProps<TData extends RowData> = {
-  id: ((data: TData) => string) | string;
   columns?: GridColumn<TData>[];
   data?: TData[];
   slots?: GridSlots;
@@ -146,7 +151,6 @@ export type GridProps<TData extends RowData> = {
 } & GridSelection;
 
 export const Grid = <TData extends RowData>({
-  id,
   columns = [],
   data = [],
   slots,
@@ -157,6 +161,12 @@ export const Grid = <TData extends RowData>({
   header = true,
   footer = false,
 }: GridProps<TData>) => {
+  const keyColumn = columns.find((column) => column.key);
+  invariant(keyColumn?.key, 'Missing key column.');
+  const getRowId = (row: Row<TData>) => {
+    return keyColumn!.key!({ row: row.original, value: row.getValue(keyColumn!.id) });
+  };
+
   const [focus, setFocus] = useState<string>();
   const [selectionSet, setSelectionSet] = useState(new Set<string>());
   useEffect(() => {
@@ -184,7 +194,6 @@ export const Grid = <TData extends RowData>({
     }
   };
 
-  const getId = typeof id === 'function' ? id : (data: TData) => (data as any)[id];
   const getColumn = (id: string) => columns.find((column) => column.id === id)!;
   const getColumnStyle = (id: string) => {
     const column = getColumn(id);
@@ -234,7 +243,7 @@ export const Grid = <TData extends RowData>({
         )}
         <tbody>
           {table.getRowModel().rows.map((row) => {
-            const id = getId(row.original);
+            const id = getRowId(row);
             return (
               <tr
                 key={row.id}

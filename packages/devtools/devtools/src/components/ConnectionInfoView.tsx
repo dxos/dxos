@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Table, TableColumn } from '@dxos/mosaic';
+import { createNumberColumn, createTextColumn, Grid, GridColumn } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { DetailsTable } from './DetailsTable';
@@ -19,26 +19,10 @@ export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
     return null;
   }
 
-  const columns: TableColumn<ConnectionInfo.StreamStats>[] = [
-    {
-      Header: 'Sent',
-      align: 'right',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.toLocaleString()}</span>,
-      width: 60,
-      accessor: 'bytesSent',
-    },
-    {
-      Header: 'Received',
-      align: 'right',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value?.toLocaleString()}</span>,
-      width: 60,
-      accessor: 'bytesReceived',
-    },
-    {
-      Header: 'Tag',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value}</span>,
-      accessor: 'tag',
-    },
+  const columns: GridColumn<ConnectionInfo.StreamStats>[] = [
+    createNumberColumn('bytesSent'),
+    createNumberColumn('bytesReceived'),
+    createTextColumn('tag'),
   ];
 
   return (
@@ -53,7 +37,7 @@ export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
         }}
       />
 
-      <Table compact columns={columns} data={connection.streams ?? []} />
+      <Grid<ConnectionInfo.StreamStats> id='id' columns={columns} data={connection.streams ?? []} />
     </div>
   );
 };

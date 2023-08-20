@@ -22,7 +22,7 @@ import {
 } from './helpers';
 
 type Item = {
-  key: PublicKey;
+  publicKey: PublicKey;
   name: string;
   value?: number;
   started?: Date;
@@ -32,7 +32,7 @@ type Item = {
 faker.seed(999);
 const createItems = (count: number) =>
   range(count).map(() => ({
-    key: PublicKey.random(),
+    publicKey: PublicKey.random(),
     name: faker.lorem.sentence(),
     value: faker.number.int({ min: 0, max: 10_000 }),
     started: faker.date.recent(),
@@ -40,10 +40,14 @@ const createItems = (count: number) =>
   }));
 
 const itemColumns: GridColumn<Item>[] = [
-  createKeyColumn('key'),
+  createKeyColumn('key', {
+    accessor: 'publicKey',
+    key: ({ value }) => value.toHex(),
+  }),
   createTextColumn('name', {
-    // TODO(burdon): Doesn't get updated when data changes.
+    accessor: (item) => item.name,
     footer: {
+      // TODO(burdon): Doesn't get updated when data changes.
       render: ({ data }) => `${data.length} rows`,
     },
   }),
@@ -92,8 +96,6 @@ export default {
 // TODO(burdon): Scroll to selection.
 // TODO(burdon): No footer.
 
-const itemAccessor = (item: Item) => item.key.toHex();
-
 export const Controlled = {
   render: () => {
     const items = useMemo(() => createItems(10), []);
@@ -102,7 +104,6 @@ export const Controlled = {
     return (
       <div className='flex grow overflow-hidden'>
         <Grid<Item>
-          id={itemAccessor}
           columns={itemColumns}
           data={items}
           selection='single'
@@ -120,7 +121,7 @@ export const SingleSelect = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> id={itemAccessor} columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} footer />
+        <Grid<Item> columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} footer />
       </div>
     );
   },
@@ -130,7 +131,7 @@ export const SingleColumn = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> id={itemAccessor} columns={[itemColumns[0]]} data={createItems(10)} slots={defaultGridSlots} />
+        <Grid<Item> columns={[itemColumns[0]]} data={createItems(10)} slots={defaultGridSlots} />
       </div>
     );
   },
@@ -140,13 +141,7 @@ export const MultiSelect = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item>
-          id={itemAccessor}
-          columns={itemColumns}
-          data={createItems(20)}
-          selection='multiple-toggle'
-          slots={defaultGridSlots}
-        />
+        <Grid<Item> columns={itemColumns} data={createItems(20)} selection='multiple-toggle' slots={defaultGridSlots} />
       </div>
     );
   },
@@ -156,7 +151,7 @@ export const Scrolling = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> id={itemAccessor} columns={itemColumns} data={createItems(50)} slots={defaultGridSlots} />
+        <Grid<Item> columns={itemColumns} data={createItems(50)} slots={defaultGridSlots} footer />
       </div>
     );
   },
@@ -180,7 +175,7 @@ export const Dynamic = {
 
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> id={itemAccessor} columns={itemColumns} data={items} slots={defaultGridSlots} />
+        <Grid<Item> columns={itemColumns} data={items} slots={defaultGridSlots} footer />
       </div>
     );
   },
@@ -190,7 +185,7 @@ export const Empty = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> id={itemAccessor} columns={itemColumns} slots={defaultGridSlots} />
+        <Grid<Item> columns={itemColumns} slots={defaultGridSlots} />
       </div>
     );
   },

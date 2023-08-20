@@ -5,12 +5,13 @@
 import defaultsdeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
-import { TableColumn, Table, TableSlots } from '@dxos/mosaic';
+import { defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { TableSlots } from '@dxos/mosaic';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: TableColumn<T>[];
+  columns: GridColumn<T>[];
   data: T[];
   slots?: TableSlots;
   compact?: boolean;
@@ -24,10 +25,17 @@ export const MasterDetailTable = <T extends {}>({ columns, data, slots }: Master
     cell: { className: 'cursor-pointer' },
   });
 
+  // TODO(burdon): id accessor.
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Table<T> compact columns={columns} data={data} slots={tableSlots} selected={selected} onSelect={setSelected} />
+        <Grid<T>
+          id={'key'}
+          columns={columns}
+          data={data}
+          slots={defaultGridSlots}
+          onSelect={(selected) => data.find((item) => !!item)}
+        />
       </div>
 
       <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>
