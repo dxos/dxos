@@ -8,13 +8,29 @@ import { describe, test } from '@dxos/test';
 
 import { createServiceContext, syncItemsLocal } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
+import { createTestItemMutation } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { genesisMutation } from '@dxos/echo-db'
+import { DocumentModel } from '@dxos/document-model';
+import { range } from '@dxos/util';
 
 describe('services/ServiceContext', () => {
-  test('existing space is synchronized on device invitations', async () => {
+  test.only('existing space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = createServiceContext({ signalContext: networkContext });
     await device1.createIdentity();
     const space1 = await device1.dataSpaceManager!.createSpace();
+
+
+    const itemId = PublicKey.random().toHex();
+    space1.dataPipeline.databaseHost!.getWriteStream()?.write({
+      batch: genesisMutation(itemId, DocumentModel.meta.type),
+    });
+
+    let counter = 0;
+
+    for(const _ in range(100)) {
+
 
     const device2 = createServiceContext({ signalContext: networkContext });
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
