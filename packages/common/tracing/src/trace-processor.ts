@@ -1,32 +1,36 @@
-import { Context } from "@dxos/context";
-import { getPrototypeSpecificInstanceId } from "@dxos/util";
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Context } from '@dxos/context';
 import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import type { AddLinkOptions } from "./api";
-import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from "./symbols";
-import { Resource, Span } from "@dxos/protocols/proto/dxos/tracing";
-import { TraceSender } from "./trace-sender";
+import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
+import { getPrototypeSpecificInstanceId } from '@dxos/util';
+
+import type { AddLinkOptions } from './api';
+import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
+import { TraceSender } from './trace-sender';
 
 export type TraceResourceConstructorParams = {
-  constructor: { new(...args: any[]): {} };
+  constructor: { new (...args: any[]): {} };
   instance: any;
-}
+};
 
 export type TraceSpanParams = {
   instance: any;
   methodName: string;
-  parentCtx: Context | null
-}
+  parentCtx: Context | null;
+};
 
 export type ResourceEntry = {
   data: Resource;
   instance: WeakRef<any>;
-}
+};
 
 export type TraceSubscription = {
-  dirtyResources: Set<number>
-  dirtySpans: Set<number>
-}
-
+  dirtyResources: Set<number>;
+  dirtySpans: Set<number>;
+};
 
 const MAX_RESOURCE_RECORDS = 500;
 const MAX_SPAN_RECORDS = 1_000;
@@ -40,8 +44,6 @@ export class TraceProcessor {
   spanIdList: number[] = [];
 
   subscriptions: Set<TraceSubscription> = new Set();
-
-  constructor() { }
 
   traceResourceConstructor(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
@@ -59,7 +61,7 @@ export class TraceProcessor {
     this.resourceInstanceIndex.set(params.instance, entry);
     this.resourceIdList.push(id);
     if (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
-      this._clearResources()
+      this._clearResources();
     }
     this._markResourceDirty(id);
   }
@@ -68,7 +70,7 @@ export class TraceProcessor {
     const res: Record<string, any> = {};
     const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
 
-    for (const [key, opts] of Object.entries(tracingContext.infoProperties)) {
+    for (const [key, _opts] of Object.entries(tracingContext.infoProperties)) {
       try {
         res[key] = typeof instance[key] === 'function' ? instance[key]() : instance[key];
       } catch (err: any) {
@@ -80,14 +82,12 @@ export class TraceProcessor {
   }
 
   traceSpan(params: TraceSpanParams): TracingSpan {
-    const span = new TracingSpan(this, params)
+    const span = new TracingSpan(this, params);
     this._flushSpan(span);
     return span;
   }
 
-  addLink(parent: any, child: any, opts: AddLinkOptions) {
-
-  }
+  addLink(parent: any, child: any, opts: AddLinkOptions) {}
 
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
@@ -106,7 +106,7 @@ export class TraceProcessor {
     this.spans.set(span.id, span);
     this.spanIdList.push(span.id);
     if (this.spanIdList.length > MAX_SPAN_RECORDS) {
-      this._clearSpans()
+      this._clearSpans();
     }
     this._markSpanDirty(span.id);
   }
@@ -140,7 +140,6 @@ export class TraceProcessor {
 }
 
 export class TracingSpan {
-
   static nextId = 0;
 
   readonly id: number;
@@ -163,7 +162,7 @@ export class TracingSpan {
       this._ctx = params.parentCtx.derive({
         attributes: {
           [TRACE_SPAN_ATTRIBUTE]: this.id,
-        }
+        },
       });
       const parentId = params.parentCtx.getAttribute(TRACE_SPAN_ATTRIBUTE);
       if (typeof parentId === 'number') {
@@ -196,7 +195,7 @@ export class TracingSpan {
       startTs: this.startTs.toFixed(3),
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
-    }
+    };
   }
 }
 
@@ -205,12 +204,12 @@ const serializeError = (err: unknown): SerializedError => {
     return {
       name: err.name,
       message: err.message,
-    }
+    };
   }
 
   return {
     message: String(err),
-  }
-}
+  };
+};
 
-export const TRACE_PROCESSOR: TraceProcessor = (globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor();
+export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());

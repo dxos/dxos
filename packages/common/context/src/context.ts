@@ -38,7 +38,7 @@ export class Context {
       throw error;
     },
     attributes = {},
-    parent
+    parent,
   }: CreateContextParams = {}) {
     this._onError = onError;
     this._attributes = attributes;
@@ -116,7 +116,7 @@ export class Context {
     }
     this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => { }));
+    return (this._disposePromise = Promise.all(promises).then(() => {}));
   }
 
   /**

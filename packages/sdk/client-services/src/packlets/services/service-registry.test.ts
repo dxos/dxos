@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { Event } from '@dxos/async';
 import { ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,7 +17,6 @@ import { describe, test } from '@dxos/test';
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
 import { ServiceRegistry } from './service-registry';
-import { Context } from '@dxos/context';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 

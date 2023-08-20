@@ -13,6 +13,7 @@ import {
 } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import type { DatabaseRouter, EchoSchema } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
@@ -35,7 +36,6 @@ import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
 import { DXOS_VERSION } from '../version';
 import { ClientRuntime } from './client-runtime';
-import { Context } from '@dxos/context';
 
 // TODO(burdon): Define package-specific errors.
 

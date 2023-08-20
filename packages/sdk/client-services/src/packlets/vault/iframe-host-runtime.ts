@@ -5,6 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, ShellRuntime } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
@@ -14,7 +15,6 @@ import { getAsyncValue, MaybePromise, Provider } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { ClientRpcServer, ClientRpcServerParams } from '../services/client-rpc-server';
 import { ShellRuntimeImpl } from './shell-runtime';
-import { Context } from '@dxos/context';
 
 const LOCK_KEY = 'DXOS_RESOURCE_LOCK';
 

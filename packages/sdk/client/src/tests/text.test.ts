@@ -6,6 +6,7 @@ import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
+import { Context } from '@dxos/context';
 import { Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,7 +16,6 @@ import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { Client } from '../client';
 import { joinCommonSpace, TestBuilder } from '../testing';
-import { Context } from '@dxos/context';
 
 // log.config({ filter: 'text.test:debug,error' });
 

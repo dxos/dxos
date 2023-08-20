@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import {
   DeviceStateMachine,
   CredentialSigner,
@@ -21,11 +22,10 @@ import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
-import { trace } from '@dxos/tracing';
-import { Context } from '@dxos/context';
 
 export type IdentityParams = {
   identityKey: PublicKey;

@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
@@ -12,7 +13,6 @@ import { MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
-import { Context } from '@dxos/context';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {

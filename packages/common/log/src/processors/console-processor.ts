@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
-import { defaultMap, getPrototypeSpecificInstanceId } from '@dxos/util';
+import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, LogProcessor, shouldLog } from '../context';

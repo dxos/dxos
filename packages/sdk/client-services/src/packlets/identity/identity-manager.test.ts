@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus, SnapshotStore } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -16,7 +17,6 @@ import { describe, test, afterTest } from '@dxos/test';
 
 import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
-import { Context } from '@dxos/context';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({

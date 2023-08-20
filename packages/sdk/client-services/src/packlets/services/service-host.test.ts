@@ -8,6 +8,7 @@ import { rmSync } from 'node:fs';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
@@ -17,7 +18,6 @@ import { afterTest, describe, test } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
-import { Context } from '@dxos/context';
 
 chai.use(chaiAsPromised);
 

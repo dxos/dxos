@@ -9,6 +9,7 @@ import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { tracer } from '@dxos/util';
@@ -16,7 +17,6 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
-import { Context } from '@dxos/context';
 
 interface Service {
   open(): Promise<void>;

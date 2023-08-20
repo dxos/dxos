@@ -10,6 +10,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -21,7 +22,6 @@ import { Client } from '../client';
 import { SpaceState } from '../echo';
 import { SpaceProxy } from '../echo/space-proxy';
 import { TestBuilder, testSpace, waitForSpace } from '../testing';
-import { Context } from '@dxos/context';
 
 describe('Spaces', () => {
   test('creates a space', async () => {

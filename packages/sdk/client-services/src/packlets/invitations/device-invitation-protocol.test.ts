@@ -5,12 +5,12 @@
 import { expect } from 'chai';
 
 import { asyncChain } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers, createServiceContext, performInvitation } from '../testing';
-import { Context } from '@dxos/context';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());

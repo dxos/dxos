@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -15,7 +16,6 @@ import { Daemon, ProcessInfo, StartOptions, StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, parseAddress, removeSocketFile } from '../util';
-import { Context } from '@dxos/context';
 
 /**
  * Manager of daemon processes started with Forever.

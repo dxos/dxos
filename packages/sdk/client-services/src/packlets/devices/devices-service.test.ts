@@ -5,13 +5,13 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { DevicesService, Device } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
 import { DevicesServiceImpl } from './devices-service';
-import { Context } from '@dxos/context';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;

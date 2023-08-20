@@ -5,6 +5,7 @@
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, ClientServices } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { DocumentModel } from '@dxos/document-model';
 import { DataServiceImpl } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
@@ -14,10 +15,10 @@ import { SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
-import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 import { TextModel } from '@dxos/text-model';
+import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -32,7 +33,6 @@ import { SystemServiceImpl } from '../system';
 import { createDiagnostics } from './diagnostics';
 import { ServiceContext } from './service-context';
 import { ServiceRegistry } from './service-registry';
-import { Context } from '@dxos/context';
 
 // TODO(burdon): Factor out to spaces.
 export const createDefaultModelFactory = () => {
@@ -87,6 +87,7 @@ export class ClientServicesHost {
 
   @Trace.info()
   private _opening = false;
+
   @Trace.info()
   private _open = false;
 
@@ -115,7 +116,7 @@ export class ClientServicesHost {
           if (!this._opening) {
             void this.open(new Context());
           }
-        }, 
+        },
         onRelease: () => this.close(),
       });
     }
@@ -233,7 +234,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._modelFactory,
-    ); 
+    );
 
     this._serviceRegistry.setServices({
       SystemService: this._systemService,

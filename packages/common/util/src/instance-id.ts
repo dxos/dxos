@@ -1,14 +1,18 @@
-import { defaultMap } from "./map";
+//
+// Copyright 2023 DXOS.org
+//
 
-const symbol = Symbol.for('dxos.instance-contexts')
+import { defaultMap } from './map';
 
-const instanceContexts = (globalThis as any)[symbol] ??= new WeakMap<
+const symbol = Symbol.for('dxos.instance-contexts');
+
+const instanceContexts = ((globalThis as any)[symbol] ??= new WeakMap<
   any,
   {
     nextId: number;
     instanceIds: WeakMap<any, number>;
   }
->();
+>());
 
 /**
  * Returns a unique instance id for a given object.
@@ -30,4 +34,4 @@ export const getPrototypeSpecificInstanceId = (instance: any): number => {
   }
 
   return id;
-}
+};

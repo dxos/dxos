@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   MetadataStore,
@@ -28,7 +29,6 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { createDefaultModelFactory } from '../services';
 import { Identity } from './identity';
-import { Context } from '@dxos/context';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });

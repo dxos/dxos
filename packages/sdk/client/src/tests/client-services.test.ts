@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,7 +17,6 @@ import { describe, test, afterTest } from '@dxos/test';
 import { Client } from '../client';
 import { SpaceProxy } from '../echo/space-proxy';
 import { syncItems, TestBuilder } from '../testing';
-import { Context } from '@dxos/context';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.

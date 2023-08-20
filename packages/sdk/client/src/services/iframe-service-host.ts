@@ -10,6 +10,7 @@ import {
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
@@ -19,7 +20,6 @@ import { Provider } from '@dxos/util';
 
 import { IFrameController } from './iframe-controller';
 import { ShellController } from './shell-controller';
-import { Context } from '@dxos/context';
 
 export type IFrameClientServicesHostOptions = {
   host: ClientServicesProvider;

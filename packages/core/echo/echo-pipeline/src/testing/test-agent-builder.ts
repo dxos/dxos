@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { DocumentModel } from '@dxos/document-model';
 import { FeedStore } from '@dxos/feed-store';
@@ -22,7 +23,6 @@ import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
-import { Context } from '@dxos/context';
 
 export type NetworkManagerProvider = () => NetworkManager;
 

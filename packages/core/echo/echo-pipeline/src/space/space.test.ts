@@ -5,12 +5,12 @@
 import expect from 'expect';
 import { promisify } from 'node:util';
 
+import { Context } from '@dxos/context';
 import { createCredential, CredentialGenerator } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { TestAgentBuilder, testLocalDatabase } from '../testing';
-import { Context } from '@dxos/context';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();

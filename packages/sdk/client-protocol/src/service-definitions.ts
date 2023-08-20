@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
 import { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import {
@@ -13,7 +14,6 @@ import {
   SpacesService,
   SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Context } from '@dxos/context';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';

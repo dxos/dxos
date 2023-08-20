@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
 import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
@@ -10,17 +11,16 @@ import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace as Trace } from '@dxos/tracing';
 import { trace } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { trace as Trace } from '@dxos/tracing';
 import { deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
-import { Context } from '@dxos/context';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceMetadata;
