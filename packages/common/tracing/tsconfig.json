@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../context"
     },
     {

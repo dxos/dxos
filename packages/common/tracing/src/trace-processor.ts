@@ -1,8 +1,9 @@
 import { Context } from "@dxos/context";
+import { getPrototypeSpecificInstanceId } from "@dxos/util";
+import { Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
 import type { AddLinkOptions } from "./api";
-import { Resource, Span, TraceError } from "./model";
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from "./symbols";
-import { defaultMap, getPrototypeSpecificInstanceId } from "@dxos/util";
+import { Resource, Span } from "@dxos/protocols/proto/dxos/tracing";
 
 export type TraceResourceConstructorParams = {
   constructor: { new(...args: any[]): {} };
@@ -102,7 +103,7 @@ export class TracingSpan {
   readonly resourceId: number | null = null;
   startTs: number;
   endTs: number | null = null;
-  error: TraceError | null = null;
+  error: SerializedError | null = null;
 
   private readonly _ctx: Context | null = null;
 
@@ -143,19 +144,20 @@ export class TracingSpan {
   serialize(): Span {
     return {
       id: this.id,
-      resourceId: this.resourceId,
+      resourceId: this.resourceId ?? undefined,
       methodName: this.methodName,
-      parentId: this.parentId,
-      startTs: this.startTs,
-      endTs: this.endTs,
-      error: this.error,
+      parentId: this.parentId ?? undefined,
+      startTs: this.startTs.toFixed(3),
+      endTs: this.endTs?.toFixed(3) ?? undefined,
+      error: this.error ?? undefined,
     }
   }
 }
 
-const serializeError = (err: unknown): TraceError => {
+const serializeError = (err: unknown): SerializedError => {
   if (err instanceof Error) {
     return {
+      name: err.name,
       message: err.message,
     }
   }
