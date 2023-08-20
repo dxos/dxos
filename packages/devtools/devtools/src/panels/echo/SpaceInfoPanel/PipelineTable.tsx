@@ -35,7 +35,7 @@ export type PipelineTableRow = {
 };
 
 const columns: GridColumn<PipelineTableRow>[] = [
-  createKeyColumn('feedKey'),
+  createKeyColumn('feedKey', { key: true }),
   createTextColumn('type'),
   createBooleanColumn('own', { width: 40 }),
   createBooleanColumn('genesis', { width: 40, header: { label: 'gen' } }),
@@ -44,7 +44,7 @@ const columns: GridColumn<PipelineTableRow>[] = [
   createNumberColumn('processed'),
   createNumberColumn('total'),
   createColumn('progress', {
-    value: (row) => {
+    accessor: (row) => {
       const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
       if (!isNaN(percent)) {
         return `${Math.min(percent, 100).toFixed(0)}%`;
@@ -131,7 +131,6 @@ export const PipelineTable = ({
 
   return (
     <Grid<PipelineTableRow>
-      id='feedKey'
       slots={defaultGridSlots}
       columns={columns}
       data={data}

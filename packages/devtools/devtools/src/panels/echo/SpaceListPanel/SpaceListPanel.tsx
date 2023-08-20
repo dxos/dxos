@@ -43,31 +43,29 @@ export const SpaceListPanel: FC = () => {
     }
   };
 
-  const cols: GridColumn<Space>[] = useMemo(
+  const columns: GridColumn<Space>[] = useMemo(
     () => [
-      createKeyColumn('key'),
+      createKeyColumn('key', { key: true }),
       createTextColumn('name', {
-        value: (space) => space.properties.name,
+        accessor: (space) => space.properties.name,
       }),
       createNumberColumn('objects', {
-        value: (space) => space.db.query().objects.length,
+        accessor: (space) => space.db.query().objects.length,
         width: 60,
       }),
       createNumberColumn('startup', {
-        value: (space) => {
+        accessor: (space) => {
           const { open, ready } = space.internal.data.metrics ?? {};
           return open && ready && ready.getTime() - open.getTime();
         },
         width: 80,
       }),
-      createBooleanColumn('isOpen', {
-        header: {
-          label: 'open',
-        },
+      createBooleanColumn('open', {
+        accessor: 'isOpen',
       }),
       // TODO(burdon): Util for button?
       createColumn('action', {
-        value: (space) => space.isOpen,
+        accessor: 'isOpen',
         width: 60,
         header: {
           label: '', // TODO(burdon): placeholder.
@@ -93,8 +91,7 @@ export const SpaceListPanel: FC = () => {
   return (
     <PanelContainer className='overflow-auto'>
       <Grid<Space>
-        id='key'
-        columns={cols}
+        columns={columns}
         data={spaces}
         onSelect={(selection) => {
           handleSelect(PublicKey.from(selection));

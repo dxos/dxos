@@ -6,8 +6,7 @@ import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlameGraph } from 'react-flame-graph';
 
-import { createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
-import { Table } from '@dxos/mosaic';
+import { createKeyColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
@@ -66,7 +65,11 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
-        <Table compact columns={columns} data={Array.from(state.current.resources.values())} />
+        <Grid<Resource>
+          columns={columns}
+          data={Array.from(state.current.resources.values())}
+          slots={defaultGridSlots}
+        />
       </div>
       <div>
         <div className='flex flex-row items-baseline justify-items-center m-2'>
@@ -83,8 +86,10 @@ export const TracingPanel = () => {
 };
 
 const columns: GridColumn<Resource>[] = [
-  createKeyColumn('id'),
-  createTextColumn('name', { value: (resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}` }),
+  createKeyColumn('id', { key: true }),
+  createTextColumn('name', {
+    accessor: (resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`,
+  }),
   createTextColumn('info'),
 ];
 

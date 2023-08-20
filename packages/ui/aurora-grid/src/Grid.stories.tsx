@@ -42,7 +42,7 @@ const createItems = (count: number) =>
 const itemColumns: GridColumn<Item>[] = [
   createKeyColumn('key', {
     accessor: 'publicKey',
-    key: ({ value }) => value.toHex(),
+    key: true,
   }),
   createTextColumn('name', {
     accessor: (item) => item.name,
@@ -151,7 +151,7 @@ export const Scrolling = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={createItems(50)} slots={defaultGridSlots} footer />
+        <Grid<Item> columns={itemColumns} data={createItems(200)} slots={defaultGridSlots} footer />
       </div>
     );
   },

@@ -14,14 +14,14 @@ import { useDevtoolsState } from '../../../hooks';
 
 const columns: GridColumn<SpaceMember>[] = [
   createKeyColumn('key', {
-    value: (member) => {
-      const identityKey = member.identity.identityKey;
-      return identityKey.truncate();
+    key: true,
+    accessor: (member) => {
+      return member.identity.identityKey;
     },
   }),
-  createTextColumn('name', { value: (member) => member.identity.profile?.displayName }),
+  createTextColumn('name', { accessor: (member) => member.identity.profile?.displayName }),
   createTextColumn('status', {
-    value: (member) => {
+    accessor: (member) => {
       switch (member.presence) {
         case SpaceMember.PresenceState.ONLINE:
           return 'online';

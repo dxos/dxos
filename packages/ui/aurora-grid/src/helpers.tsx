@@ -20,7 +20,7 @@ import { GridColumn, GridSlots } from './Grid';
 export const createColumn = <TData extends RowData, TValue>(
   id: string,
   ...props: (Partial<GridColumn<TData, TValue>> | undefined)[]
-): GridColumn<TData, TValue> => defaultsDeep({ id }, ...props);
+): GridColumn<TData, TValue> => defaultsDeep({ id }, ...props, { header: { label: id } });
 
 export const createTextColumn = <TData extends RowData>(
   id: string,
@@ -71,27 +71,33 @@ export const createKeyColumn = <TData extends RowData>(
   createColumn(id, props, {
     width: 86,
     cell: {
-      render: ({ value }) => (
-        <div className='group inline-flex gap-2 items-center'>
-          <Tooltip.Provider>
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                {/* TODO(burdon): Style. */}
-                <span className='font-mono font-thin text-green-500'>{value.truncate()}</span>
-              </Tooltip.Trigger>
-              <Tooltip.Content side='right'>
-                <Tooltip.Arrow />
-                <ClipboardText
-                  onClick={(ev) => {
-                    ev.stopPropagation(); // Prevent select row.
-                    void navigator.clipboard.writeText(value.toHex());
-                  }}
-                />
-              </Tooltip.Content>
-            </Tooltip.Root>
-          </Tooltip.Provider>
-        </div>
-      ),
+      render: ({ value }) => {
+        if (!value) {
+          return null;
+        }
+
+        return (
+          <div className='group inline-flex gap-2 items-center'>
+            <Tooltip.Provider>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  {/* TODO(burdon): Factor out styles. */}
+                  <span className='font-mono font-thin text-green-500'>{value.truncate()}</span>
+                </Tooltip.Trigger>
+                <Tooltip.Content side='right'>
+                  <Tooltip.Arrow />
+                  <ClipboardText
+                    onClick={(ev) => {
+                      ev.stopPropagation(); // Prevent select row.
+                      void navigator.clipboard.writeText(value.toHex());
+                    }}
+                  />
+                </Tooltip.Content>
+              </Tooltip.Root>
+            </Tooltip.Provider>
+          </div>
+        );
+      },
     },
   });
 

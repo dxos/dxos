@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { PublicKey } from '@dxos/keys';
 import { TypedObject, useQuery } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
@@ -30,9 +31,9 @@ const textFilter = (text?: string) => {
 };
 
 const columns: GridColumn<TypedObject>[] = [
-  createKeyColumn('id'),
-  createTextColumn('model', { value: (item) => item.toJSON()['@model'] }),
-  createTextColumn('type', { value: (item) => item.__typename }),
+  createKeyColumn('id', { accessor: (item) => PublicKey.from(item.id), key: true }),
+  createTextColumn('model', { accessor: (item) => item.toJSON()['@model'] }),
+  createTextColumn('type', { accessor: (item) => item.__typename }),
 ];
 
 export const ItemsPanel = () => {

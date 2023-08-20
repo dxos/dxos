@@ -18,8 +18,7 @@ type CellParams<TData extends RowData, TValue = any> = { row: TData; value: TVal
 // TODO(burdon): Consider alternative to use ColumnDef directly with helpers.
 export type GridColumn<TData extends RowData, TValue = any> = {
   id: string;
-  // TODO(burdon): Allow key to be object? (object equivalence semantics?)
-  key?: (params: CellParams<TData, TValue>) => string;
+  key?: boolean; // TODO(burdon): May not be unique key (see LoggingPanel).
   accessor?: string | ((params: TData) => any);
   width?: number;
   header?: {
@@ -99,17 +98,18 @@ export type GridSlots = {
   };
 };
 
-type GridSelection = {
+// TODO(burdon): Return object (not key).
+type GridSelection<TData extends RowData, TKey = any> = {
   selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle';
   selected?: string | string[];
-  onSelect?: (id: string) => void; // Controlled.
-  onSelectedChange?: (selection: string | string[] | undefined) => void;
+  onSelect?: (id: TKey, row: TData) => void; // Controlled.
+  onSelectedChange?: (selection: TKey | TKey[] | undefined) => void;
 };
 
 /**
  * Update the selection based on the mode.
  */
-export const updateSelection = (selected: Set<string>, id: string, selection: GridSelection['selection']) => {
+export const updateSelection = (selected: Set<string>, id: string, selection: GridSelection<any>['selection']) => {
   switch (selection) {
     case 'single': {
       selected.clear();
@@ -148,7 +148,7 @@ export type GridProps<TData extends RowData> = {
   slots?: GridSlots;
   header?: boolean;
   footer?: boolean;
-} & GridSelection;
+} & GridSelection<TData>;
 
 export const Grid = <TData extends RowData>({
   columns = [],
@@ -164,19 +164,21 @@ export const Grid = <TData extends RowData>({
   const keyColumn = columns.find((column) => column.key);
   invariant(keyColumn?.key, 'Missing key column.');
   const getRowId = (row: Row<TData>) => {
-    return keyColumn!.key!({ row: row.original, value: row.getValue(keyColumn!.id) });
+    return row.getValue(keyColumn!.id);
   };
 
-  const [focus, setFocus] = useState<string>();
-  const [selectionSet, setSelectionSet] = useState(new Set<string>());
+  const [focus, setFocus] = useState<any>();
+  const [selectionSet, setSelectionSet] = useState(new Set<any>());
   useEffect(() => {
     setSelectionSet(new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []));
   }, [selection, selected]);
 
-  const handleSelect = (id: string) => {
+  const handleSelect = (id: any) => {
     if (onSelect) {
       // Controlled.
-      onSelect?.(id);
+      // TODO(burdon): Relies on object equality.
+      const row = table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
+      onSelect?.(id, row!.original!);
     } else {
       // Uncontrolled.
       setSelectionSet((selectionSet) => {

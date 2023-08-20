@@ -19,9 +19,9 @@ const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: 
 
 const columns: GridColumn<LogEntry>[] = [
   createNumberColumn('level', {
-    value: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
+    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
   }),
-  createTextColumn('file', { value: (entry) => `${entry.meta?.file}:${entry.meta?.line}` }),
+  createTextColumn('file', { accessor: (entry) => `${entry.meta?.file}:${entry.meta?.line}` }),
   createTextColumn('message'),
 ];
 
