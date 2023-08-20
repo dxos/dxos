@@ -32,86 +32,46 @@ export const AdditionMethodChooser = () => {
   return <JoinDialog activeView='addition method chooser' IdentityInput={IdentityInputImpl} />;
 };
 
-// export const AdditionMethodChooser = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'addition method chooser',
-//   },
-// };
+export const CreateIdentityInput = () => {
+  return <JoinDialog activeView='create identity input' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const CreateIdentityInput = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'create identity input',
-//   },
-// };
+export const RecoverIdentityInput = () => {
+  return <JoinDialog activeView='recover identity input' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const RecoverIdentityInput = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'recover identity input',
-//   },
-// };
+export const HaloInvitationInput = () => {
+  return <JoinDialog activeView='halo invitation input' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const HaloInvitationInput = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'halo invitation input',
-//   },
-// };
+export const HaloInvitationRescuer = () => {
+  return <JoinDialog activeView='halo invitation rescuer' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const HaloInvitationRescuer = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'halo invitation rescuer',
-//   },
-// };
+export const HaloInvitationAuthenticator = () => {
+  return <JoinDialog activeView='halo invitation authenticator' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const HaloInvitationAuthenticator = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'halo invitation authenticator',
-//   },
-// };
+export const HaloInvitationAccepted = () => {
+  return <JoinDialog activeView='halo invitation accepted' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const HaloInvitationAccepted = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'halo invitation accepted',
-//   },
-// };
+export const IdentityAdded = () => {
+  return <JoinDialog activeView='identity added' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const IdentityAdded = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'identity added',
-//   },
-// };
+export const SpaceInvitationInput = () => {
+  return <JoinDialog activeView='space invitation input' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const SpaceInvitationInput = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'space invitation input',
-//   },
-// };
+export const SpaceInvitationRescuer = () => {
+  return <JoinDialog activeView='space invitation rescuer' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const SpaceInvitationRescuer = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'space invitation rescuer',
-//   },
-// };
+export const SpaceInvitationAuthenticator = () => {
+  return <JoinDialog activeView='space invitation authenticator' IdentityInput={IdentityInputImpl} />;
+};
 
-// export const SpaceInvitationAuthenticator = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'space invitation authenticator',
-//   },
-// };
-
-// export const SpaceInvitationAccepted = {
-//   decorators: [ClientDecorator()],
-//   args: {
-//     activeView: 'space invitation accepted',
-//   },
-// };
+export const SpaceInvitationAccepted = () => {
+  return <JoinDialog activeView='space invitation accepted' IdentityInput={IdentityInputImpl} />;
+};

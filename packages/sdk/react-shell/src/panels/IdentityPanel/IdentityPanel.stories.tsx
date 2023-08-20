@@ -7,7 +7,6 @@ import { faker } from '@faker-js/faker';
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { ClientDecorator } from '@dxos/react-client/testing';
 
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { IdentityPanelImpl } from './IdentityPanel';

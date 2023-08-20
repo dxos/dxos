@@ -45,7 +45,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
   return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
 };
 
-// TODO(zhenyasav): impl shouldn't need send() 
+// TODO(zhenyasav): impl shouldn't need send()
 export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   const { method, send, active, onDisplayNameConfirm, validationMessage } = props;
   const disabled = !active;

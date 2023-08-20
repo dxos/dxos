@@ -5,8 +5,8 @@
 import React from 'react';
 
 import '@dxosTheme';
-import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
+import * as JoinPanels from './JoinPanel/JoinPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
 
 const getComponentNames = (module: any): string[] =>
@@ -21,25 +21,29 @@ const getComponents = (module: any): React.FC[] => {
 
 const StoryRow = ({ components }: { components: React.FC[] }) => {
   return (
-    <div className='flex flex-row'>
+    <tr style={{ whiteSpace: 'nowrap' }}>
       {components?.map((Comp) => (
-        <div className='' key={Comp.name}>
+        <td key={Comp.name}>
           <Comp />
-        </div>
+        </td>
       ))}
-    </div>
+    </tr>
   );
 };
 
 export const AllPanels = (props: any) => {
   return (
-    <>
-      <StoryRow components={getComponents(IdentityPanels)} />
-      <StoryRow components={getComponents(JoinPanels)} />
-      <StoryRow components={getComponents(SpacePanels)} />
-    </>
+    <table className='bg-body'>
+      <tbody>
+        <StoryRow components={getComponents(IdentityPanels)} />
+        <StoryRow components={getComponents(SpacePanels)} />
+        <StoryRow components={getComponents(JoinPanels)} />
+      </tbody>
+    </table>
   );
 };
+
+AllPanels.parameters = { layout: 'fullscreen' };
 
 export default {
   title: 'Panels/All',
