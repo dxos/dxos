@@ -9,14 +9,16 @@ import { TRACE_PROCESSOR } from './trace-processor';
 
 const resource =
   () =>
-  <T extends { new (...args: any[]): {} }>(constructor: T) => {
-    return class extends constructor {
-      constructor(...rest: any[]) {
-        super(...rest);
-        TRACE_PROCESSOR.traceResourceConstructor({ constructor, instance: this });
-      }
+    <T extends { new(...args: any[]): {} }>(constructor: T) => {
+      const klass = class extends constructor {
+        constructor(...rest: any[]) {
+          super(...rest);
+          TRACE_PROCESSOR.traceResourceConstructor({ constructor, instance: this });
+        }
+      };
+      Object.defineProperty(klass, 'name', { value: constructor.name });
+      return klass;
     };
-  };
 
 const info = () => (target: any, propertyKey: string, descriptor?: PropertyDescriptor) => {
   getTracingContext(target).infoProperties[propertyKey] = {};
