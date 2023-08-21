@@ -38,6 +38,7 @@ export class PublicKey implements Equatable {
     } else if (source instanceof ArrayBuffer) {
       return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
+      // TODO(burdon): Check length.
       return PublicKey.fromHex(source);
     } else if ((<any>source).asUint8Array) {
       return new PublicKey((<any>source).asUint8Array());
@@ -57,8 +58,12 @@ export class PublicKey implements Equatable {
     }
 
     try {
-      return PublicKey.from(source);
-    } catch (error: any) {
+      const key = PublicKey.from(source);
+      if (key.length !== PUBLIC_KEY_LENGTH && key.length !== SECRET_KEY_LENGTH) {
+        return undefined;
+      }
+      return key;
+    } catch (err: any) {
       return undefined;
     }
   }
@@ -81,7 +86,7 @@ export class PublicKey implements Equatable {
    */
   static random(): PublicKey {
     // TODO(burdon): Enable seed for debugging.
-    return PublicKey.from(randomBytes(32));
+    return PublicKey.from(randomBytes(PUBLIC_KEY_LENGTH));
   }
 
   static *randomSequence(): Generator<PublicKey> {
@@ -164,6 +169,10 @@ export class PublicKey implements Equatable {
 
   toJSON() {
     return this.toHex();
+  }
+
+  get length() {
+    return this._value.buffer.byteLength - 1;
   }
 
   toHex(): string {

@@ -145,7 +145,7 @@ export class DataSpace {
   private async _open() {
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
-    await this._inner.open();
+    await this._inner.open(new Context());
     this._state = SpaceState.CONTROL_ONLY;
     this.stateUpdate.emit();
     this.metrics = {};

@@ -5,7 +5,7 @@
 import { ClientServices } from '@dxos/client-protocol';
 import { Any, ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { parseMethodName, RpcPeer, RpcPeerOptions } from '@dxos/rpc';
+import { parseMethodName, RpcPeer, RpcPeerOptions, ServiceBundle } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
 import { ServiceRegistry } from './service-registry';
@@ -74,16 +74,16 @@ export class ClientRpcServer {
   private _getServiceHandler(serviceName: string) {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
-        Object.entries(this._serviceRegistry.descriptors).find(
+        Object.entries(this._serviceRegistry.descriptors as ServiceBundle<Record<string, any>>).find(
           ([key, descriptor]) => descriptor.name === serviceName,
         ) ?? raise(new Error(`Service not available: ${serviceName}`));
 
-      const service = this._serviceRegistry.services[key as keyof ClientServices];
+      const service = this._serviceRegistry.services[key as keyof ClientServices] as any;
       if (!service) {
         throw new Error(`Service not available: ${serviceName}`);
       }
 
-      this._handlerCache.set(serviceName, descriptor.createServer(service as any));
+      this._handlerCache.set(serviceName, descriptor.createServer(service));
     }
 
     return this._handlerCache.get(serviceName)!;

@@ -65,7 +65,13 @@ export const SplitView = () => {
         </div>
       )}
       <Main.Overlay />
-      <Surface name='main' />
+      <Main.Content asChild classNames='fixed inset-inline-0 block-start-0 z-[1] flex'>
+        <div role='none' aria-label={t('main header label')}>
+          <Surface name='heading' limit={1} />
+          <Surface name='presence' limit={1} />
+        </div>
+      </Main.Content>
+      <Surface name='main' role='main' />
       {/* TODO(burdon): Move dialog to settings-plugin. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>

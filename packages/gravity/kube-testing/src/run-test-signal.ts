@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,22 +10,18 @@ import { log } from '@dxos/log';
 import { SignalServerRunner } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-const PATH_TO_KUBE_REPO =
-  {
-    mykola: '/Users/mykola/Documents/dev/kube/',
-    dmaretskyi: '/Users/dmaretskyi/Projects/kube/',
-    nf: '/Users/nf/work/kube/',
-    egorgripasov: '/Users/egorgripasov/Projects/dxos/kube',
-  }[execSync('whoami').toString().trim()] ?? raise(new Error('Who are you?'));
+// TODO(burdon): Also require config for dxos root.
+const KUBE_REPO = process.env.KUBE_HOME ?? raise(new Error('KUBE_HOME environment variable not set.'));
+
 const BIN_PATH = './cmds/signal-test/main.go';
 
 {
-  if (!fs.existsSync(PATH_TO_KUBE_REPO)) {
-    throw new Error(`Kube repo not exists: ${PATH_TO_KUBE_REPO}`);
+  if (!fs.existsSync(KUBE_REPO)) {
+    throw new Error(`Kube repo does not exist: ${KUBE_REPO}`);
   }
 
-  if (!fs.existsSync(path.join(PATH_TO_KUBE_REPO, BIN_PATH))) {
-    throw new Error(`Bin not exists: ${path.join(PATH_TO_KUBE_REPO, BIN_PATH)}`);
+  if (!fs.existsSync(path.join(KUBE_REPO, BIN_PATH))) {
+    throw new Error(`Bin does not exist: ${path.join(KUBE_REPO, BIN_PATH)}`);
   }
 }
 
@@ -34,7 +29,6 @@ const ports = new Set<number>();
 
 export const runSignal = async (num: number, outFolder: string, signalArguments: string[]) => {
   let port = randomInt(10000, 20000);
-
   while (ports.has(port)) {
     log.warn(`port in use ${port}`);
     port = randomInt(10000, 20000);
@@ -46,7 +40,7 @@ export const runSignal = async (num: number, outFolder: string, signalArguments:
     port: randomInt(10000, 20000),
     binCommand: `go run ${BIN_PATH}`,
     signalArguments,
-    cwd: PATH_TO_KUBE_REPO,
+    cwd: KUBE_REPO,
     env: {
       GOLOG_FILE: `${outFolder}/signal-${num}.log`,
       GOLOG_OUTPUT: 'file',

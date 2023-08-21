@@ -60,7 +60,7 @@ export const createPeers = async (numPeers: number) => {
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
       const peer = createServiceContext({ signalContext });
-      await peer.open();
+      await peer.open(new Context());
       return peer;
     }),
   );

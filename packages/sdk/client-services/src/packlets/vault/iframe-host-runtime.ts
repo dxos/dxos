@@ -5,6 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, ShellRuntime } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, TransportFactory } from '@dxos/network-manager';
@@ -108,7 +109,7 @@ export class IFrameHostRuntime {
         ...middleware,
       });
 
-      await Promise.all([this._clientServices.open(), this._clientRpc.open(), this._shellRuntime?.open()]);
+      await Promise.all([this._clientServices.open(new Context()), this._clientRpc.open(), this._shellRuntime?.open()]);
       this._ready.wake(undefined);
       log('started');
     } catch (err: any) {
