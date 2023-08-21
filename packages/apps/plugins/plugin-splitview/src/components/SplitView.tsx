@@ -67,8 +67,8 @@ export const SplitView = () => {
       <Main.Overlay />
       <Main.Content asChild classNames='fixed inset-inline-0 block-start-0 z-[1] flex'>
         <div role='none' aria-label={t('main header label')}>
-          <Surface name='heading' limit={1} />
-          <Surface name='presence' limit={1} />
+          <Surface name='heading' role='heading' limit={1} />
+          <Surface name='presence' role='heading' limit={1} />
         </div>
       </Main.Content>
       <Surface name='main' role='main' />
