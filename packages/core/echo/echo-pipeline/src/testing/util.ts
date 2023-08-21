@@ -9,6 +9,7 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { DataMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoObject } from '@dxos/protocols/proto/dxos/echo/object';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DatabaseHost, DataServiceHost, DataServiceImpl, DataServiceSubscriptions } from '../db-host';
@@ -73,6 +74,36 @@ export const testLocalDatabase = async (create: DataPipeline, check: DataPipelin
 
   await asyncTimeout(
     check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check.itemManager.entities.has(objectId)),
+    2000,
+  );
+};
+
+export const deleteObject = async ({
+  create,
+  check = create,
+  objectId,
+}: {
+  create: DataPipeline;
+  check?: DataPipeline;
+  objectId: string;
+}) => {
+  await create.databaseHost!.getWriteStream()?.write({
+    batch: {
+      objects: [
+        {
+          objectId,
+          mutations: [
+            {
+              action: EchoObject.Mutation.Action.DELETE,
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  await asyncTimeout(
+    check.databaseHost!._itemDemuxer.mutation.waitForCondition(() => check.itemManager.entities.get(objectId)!.deleted),
     2000,
   );
 };
