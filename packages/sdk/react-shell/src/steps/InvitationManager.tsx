@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, Check, X } from '@phosphor-icons/react';
-import React, { cloneElement, PropsWithChildren, ReactNode, useMemo } from 'react';
+import { Check, X } from '@phosphor-icons/react';
+import React, { PropsWithChildren, ReactNode, useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useId, useTranslation } from '@dxos/aurora';
-import { chromeSurface, descriptionText, getSize, mx } from '@dxos/aurora-theme';
+import { useId, useTranslation, Button } from '@dxos/aurora';
+import { descriptionText, getSize, groupSurface, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { CopyButtonIconOnly, PanelAction, PanelActions, Viewport, ViewportViewProps } from '../components';
+import { PanelActions, Viewport, ViewportViewProps } from '../components';
+import { AuthCode } from '../components/AuthCode';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -20,10 +21,23 @@ export type InvitationManagerProps = StepProps &
   };
 
 const Emoji = ({ children }: PropsWithChildren<{}>) => {
+  const size = 12;
   return (
     <div role='none' className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-      <div role='none' className={mx(getSize(10), 'rounded border-2 border-current rotate-45 relative', chromeSurface)}>
-        <p className='text-2xl !leading-[2.2rem] absolute inset-0 -rotate-45 text-center'>{children}</p>
+      <div role='none' className={mx(getSize(size), 'rounded relative', groupSurface)}>
+        <svg viewBox={`0 0 ${size * 4} ${size * 4}`} width={size * 4} height={size * 4}>
+          <text
+            x='50%'
+            y='50%'
+            textAnchor='middle'
+            dominantBaseline='middle'
+            baselineShift={'-0.25rem'}
+            fontSize={'2.25rem'}
+          >
+            {children}
+          </text>
+        </svg>
+        {/* <span className='text-7xl absolute inset-0 text-center'>{children}</span> */}
       </div>
     </div>
   );
@@ -34,13 +48,13 @@ const InvitationManagerView = ({
   classNames: _classNames,
   emoji,
   ...props
-}: ViewportViewProps & { emoji: ReactNode }) => {
+}: ViewportViewProps & { emoji?: ReactNode }) => {
   return (
     <Viewport.View {...props} classNames='grow'>
-      <div role='none' className='is-full max-is-[12rem] mli-auto'>
-        <div role='none' className='aspect-square is-full bs-auto relative'>
+      <div role='none' className='is-full max-is-[14rem] mli-auto'>
+        <div role='none' className='aspect-square is-full bs-auto relative text-neutral-500'>
           {children}
-          <Emoji>{emoji}</Emoji>
+          {emoji && <Emoji>{emoji}</Emoji>}
         </div>
       </div>
     </Viewport.View>
@@ -62,17 +76,17 @@ export const InvitationManager = ({
   const statusValue = invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = toEmoji(id ?? '');
-  const doneAction = (
-    <PanelAction
-      aria-label={t('done label')}
-      onClick={onDone}
-      disabled={!active}
-      classNames='order-2'
-      data-testid='identity-panel-done'
-    >
-      <Check weight='light' className={getSize(6)} />
-    </PanelAction>
-  );
+  // const doneAction = (
+  //   <PanelAction
+  //     aria-label={t('done label')}
+  //     onClick={onDone}
+  //     disabled={!active}
+  //     classNames='order-2'
+  //     data-testid='identity-panel-done'
+  //   >
+  //     <Check weight='light' className={getSize(6)} />
+  //   </PanelAction>
+  // );
   const activeView = useMemo(() => {
     switch (true) {
       case statusValue === 5:
@@ -103,11 +117,14 @@ export const InvitationManager = ({
               {t('qr label')}
             </span>
           </InvitationManagerView>
-          <InvitationManagerView id='showing auth code' emoji={emoji}>
+          <InvitationManagerView id='showing auth code'>
             <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
-              <p className={mx(descriptionText, 'text-center')}>{t('auth code message')}</p>
-              <div role='none' className='bs-14' />
-              <p className='text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+              <AuthCode code={authCode} large className='text-white dark:text-white' divider={emoji} />
+            </div>
+            <div role='none' className='flex flex-col justify-around'>
+              <span className={mx(descriptionText, 'text-center mli-6 whitespace-normal')}>
+                {t('auth code message')}
+              </span>
             </div>
           </InvitationManagerView>
           <InvitationManagerView
@@ -124,7 +141,15 @@ export const InvitationManager = ({
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
       <PanelActions classNames='mbs-4'>
-        <CopyButtonIconOnly
+        <Button
+          classNames='is-full plb-3 mbs-2'
+          aria-label={t('back label')}
+          disabled={!active}
+          onClick={() => send?.({ type: 'deselectInvitation' })}
+        >
+          <span>Back</span>
+        </Button>
+        {/* <CopyButtonIconOnly
           variant='ghost'
           classNames='order-1 p-4'
           disabled={!active || activeView === 'showing final'}
@@ -133,15 +158,15 @@ export const InvitationManager = ({
             weight: 'light',
             className: getSize(6),
           }}
-        />
-        {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}
-        <PanelAction
+        /> */}
+        {/* {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction} */}
+        {/* <PanelAction
           aria-label={t('back label')}
           disabled={!active}
           onClick={() => send?.({ type: 'deselectInvitation' })}
         >
           <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
+        </PanelAction> */}
       </PanelActions>
     </>
   );
