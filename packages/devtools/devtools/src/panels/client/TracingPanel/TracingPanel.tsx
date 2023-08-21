@@ -92,7 +92,7 @@ const columns: GridColumn<Resource>[] = [
     accessor: (resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`,
     width: 240,
   }),
-  createTextColumn('info', { accessor: (resource) => JSON.stringify(resource.info) }),
+  createTextColumn('info', { accessor: (resource) => JSON.stringify(resource.info), cell: { className: 'font-mono' } }),
 ];
 
 const SANITIZE_REGEX = /[^_](\d+)$/;
@@ -113,7 +113,6 @@ const buildFlameGraph = (state: State, rootId: number): any => {
   }
 
   const childSpans = [...state.spans.values()].filter((s) => s.parentId === span.id);
-
   const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
   const name = resource
     ? `${sanitizeClassName(resource.className)}#${resource.instanceId}.${span.methodName}`
