@@ -41,7 +41,11 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
   mx(
     'absolute inset-0 border-2 border-slate-400 dark:border-slate-600',
     variant === 'circle' ? 'rounded-full' : 'rounded',
-    status === 'active' ? 'border-green-400' : status === 'error' ? 'border-red-500' : '',
+    status === 'active'
+      ? 'border-green-400 dark:border-green-400'
+      : status === 'error'
+      ? 'border-red-500 dark:border-red-500'
+      : '',
     animation === 'pulse' ? 'animate-halo-pulse' : '',
   );
 

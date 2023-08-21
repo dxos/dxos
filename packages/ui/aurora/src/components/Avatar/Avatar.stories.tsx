@@ -50,13 +50,24 @@ export default {
   component: StorybookAvatar,
 };
 
-export const Default = () => <StorybookAvatar />;
-export const Square = () => <StorybookAvatar variant='square' />;
+export const Default = () => (
+  <>
+    <StorybookAvatar description='Offline' />
+    <StorybookAvatar status='active' />
+  </>
+);
+
+export const Square = () => (
+  <>
+    <StorybookAvatar variant='square' description='Offline' />
+    <StorybookAvatar variant='square' status='active' />
+  </>
+) ;
 
 export const DefaultEmoji = () => (
   <>
     <StorybookAvatar fallbackText='🦄' fallbackValue='' status='active' animation='pulse' />
-    <StorybookAvatar fallbackText='🐒' fallbackValue='' animation='pulse'/>
+    <StorybookAvatar fallbackText='🐒' fallbackValue='' animation='pulse' />
     <StorybookAvatar fallbackText='🪲' fallbackValue='' />
   </>
 );
@@ -74,8 +85,12 @@ export const DefaultText = () => (
   </>
 );
 
-export const Inactive = () => <StorybookAvatar status='inactive' description='Inactive' />;
-export const InactiveSquare = () => <StorybookAvatar variant='square' status='inactive' description='Inactive' />;
-
 export const Error = () => <StorybookAvatar status='error' description='Errored' />;
-export const Pending = () => <StorybookAvatar description='Pending' animation='pulse' />;
+
+export const Pulse = () => (
+  <>
+    <StorybookAvatar description='Online' status='active' animation='pulse' />
+    <StorybookAvatar description='Offline' status='inactive' animation='pulse' />
+    <StorybookAvatar description='Error' status='error' animation='pulse' />
+  </>
+);
