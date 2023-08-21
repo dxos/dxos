@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createDateColumn, createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { createDateColumn, createKeyColumn, createTextColumn, DateFormat, GridColumn } from '@dxos/aurora-grid';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
@@ -16,7 +16,7 @@ const columns: GridColumn<Credential>[] = [
   createKeyColumn('id', { key: true }),
   createKeyColumn('issuer'),
   createTextColumn('subject', { accessor: (credential) => credential.subject.assertion['@type'] }),
-  createDateColumn('issued', { format: 'MM/dd HH:mm:ss O' }, { accessor: 'issuanceDate' }),
+  createDateColumn('issued', { format: DateFormat.DATE }, { accessor: 'issuanceDate' }),
 ];
 
 export const CredentialsPanel = () => {

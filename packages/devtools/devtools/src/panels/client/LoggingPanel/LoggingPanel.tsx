@@ -18,8 +18,10 @@ const MAX_LOGS = 2_000;
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
 const columns: GridColumn<LogEntry>[] = [
+  createNumberColumn('id', { key: true, hidden: true }),
   createNumberColumn('level', {
     accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
+    width: 100,
   }),
   createTextColumn('file', { accessor: (entry) => `${entry.meta?.file}:${entry.meta?.line}` }),
   createTextColumn('message'),
@@ -41,6 +43,7 @@ export const LoggingPanel = () => {
   const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
+  // TODO(burdon): Is this a single log entry?
   useEffect(() => {
     if (!logEntry.message) {
       return;

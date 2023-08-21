@@ -53,14 +53,8 @@ const itemColumns: GridColumn<Item>[] = [
   }),
   createDateColumn(
     'started',
-    // { format: 'HH:mm:ss' },
-    { relative: true },
-    {
-      width: 120,
-      cell: {
-        className: 'text-xs',
-      },
-    },
+    { format: 'MM/dd HH:mm:ss' },
+    // { relative: true },
   ),
   createNumberColumn('value', {
     width: 80,

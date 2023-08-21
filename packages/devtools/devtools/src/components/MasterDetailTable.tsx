@@ -19,14 +19,14 @@ export type MasterTableProps<T extends {}> = {
 // TODO(burdon): Slots (ref for LoggingPanel).
 export const MasterDetailTable = <T extends {}>({ columns, data, slots }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
-  const handleSelected = (selected: any, item: T) => {
-    setSelected(item);
+  const handleSelected = (selected: any, items: T | T[] | undefined) => {
+    setSelected(items as T);
   };
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Grid<T> columns={columns} data={data} slots={defaultGridSlots} onSelect={handleSelected} />
+        <Grid<T> columns={columns} data={data} onSelectedChange={handleSelected} slots={defaultGridSlots} />
       </div>
 
       <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>

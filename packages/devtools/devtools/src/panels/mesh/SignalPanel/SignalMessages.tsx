@@ -3,13 +3,11 @@
 //
 
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import { format } from 'date-fns';
 import React, { FC, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
+import { createDateColumn, createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
 import { getSize, mx } from '@dxos/aurora-theme';
-import { truncateKey } from '@dxos/debug';
-import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
@@ -18,62 +16,46 @@ import { humanize } from '@dxos/util';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
 
-export type View<T extends {}> = {
+export type View<T> = {
   id: string;
   title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: readonly TableColumn<T>[];
+  columns: GridColumn<T>[];
 };
 
-const views = [
+const views: View<SignalResponse>[] = [
   {
     id: 'swarm-event',
     title: 'SwarmEvent',
     filter: (response: SignalResponse) => {
       return !!response.swarmEvent;
     },
+
+    // TODO(burdon): Fixed width for date.
+    // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
+
     columns: [
-      {
-        Header: 'Received At',
-        width: 100,
-        accessor: (response: SignalResponse) => format(response.receivedAt, 'MM/dd HH:mm:ss'),
-      },
-      {
-        Header: 'TYPE',
-        width: 100,
-        accessor: (response: SignalResponse) => {
+      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }), // MM/dd HH:mm:ss
+      createTextColumn('type', {
+        accessor: (response) => {
           if (response.swarmEvent?.peerAvailable) {
             return 'Available';
           } else if (response.swarmEvent?.peerLeft) {
             return 'Left';
           }
         },
-      },
-      {
-        Header: 'Peer Key',
-        width: 100,
-        Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
-        accessor: (response: SignalResponse) =>
-          (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).truncate()) ||
-          (response.swarmEvent!.peerLeft && truncateKey(response.swarmEvent!.peerLeft.peer)),
-      },
-      // {
-      //   Header: 'Peer Name',
-      //   width: 180,
-      //   accessor: (response: SignalResponse) =>
-      //     (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
-      //     (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
-      // },
+        width: 80,
+      }),
+      createKeyColumn('peer', {
+        accessor: (response) =>
+          (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer)) ||
+          (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer)),
+      }),
       // TODO(burdon): Time delta since last message?
-      {
-        Header: 'Since',
-        width: 100,
-        accessor: (response: SignalResponse) =>
-          response.swarmEvent!.peerAvailable?.since
-            ? format(response.swarmEvent!.peerAvailable?.since, 'MM/dd HH:mm:ss')
-            : '',
-      },
+      createDateColumn('since', undefined, {
+        accessor: (response) => response.swarmEvent!.peerAvailable?.since,
+      }),
     ],
   },
   {
@@ -83,55 +65,32 @@ const views = [
       return !!response.message;
     },
     columns: [
-      {
-        Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
-      },
-      {
-        Header: 'Author',
-        accessor: (response: SignalResponse) => humanize(response.message!.author),
-      },
-      {
-        Header: 'Recipient',
-        accessor: (response: SignalResponse) => humanize(response.message!.recipient),
-      },
-      { Header: 'MessageID', accessor: (response: SignalResponse) => humanize(response.message?.payload.messageId) },
-      {
-        Header: 'Topic',
-        accessor: (response: SignalResponse) =>
+      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }),
+      createKeyColumn('author', { accessor: 'message.author' }),
+      createKeyColumn('recipient', { accessor: 'message.recipient' }),
+      createKeyColumn('message', { accessor: (response) => response.message?.payload.messageId }),
+      createKeyColumn('topic', {
+        accessor: (response) =>
           response.message!.payload?.payload?.topic && humanize(response.message!.payload?.payload?.topic),
-      },
-    ],
+      }),
+    ] as GridColumn<SignalResponse>[],
   },
   {
     id: 'ack',
-    title: 'Acknologment',
+    title: 'Acknowledgement',
     filter: (response: SignalResponse) => {
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     columns: [
-      {
-        Header: 'Received At',
-        accessor: (response: SignalResponse) => response.receivedAt.toJSON(),
-      },
-      {
-        Header: 'Author',
-        accessor: (response: SignalResponse) => humanize(response.message!.author),
-      },
-      {
-        Header: 'Recipient',
-        accessor: (response: SignalResponse) => humanize(response.message!.recipient),
-      },
-      {
-        Header: 'MessageID',
-        accessor: (response: SignalResponse) => humanize(response.message!.payload.messageId),
-      },
+      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }),
+      createKeyColumn('author', { accessor: 'message.author' }),
+      createKeyColumn('recipient', { accessor: 'message.recipient' }),
+      createKeyColumn('message', { accessor: (response) => response.message?.payload.messageId }),
     ],
   },
-] as const; // This is ok because getView below will fail typecheck if this array is misdefined.
+];
 
 export type ViewType = (typeof views)[number]['id'];
-
 const getView = (id: ViewType): View<SignalResponse> => views.find((type) => type.id === id)!;
 
 // TODO(burdon): Factor out.
@@ -194,7 +153,7 @@ export const SignalMessages = (props: SignalMessagesProps) => {
       </Toolbar.Root>
 
       <div className='flex grow overflow-hidden'>
-        {view && <MasterDetailTable<SignalResponse> columns={view.columns as any} data={filteredMessages} />}
+        {view && <MasterDetailTable<SignalResponse> columns={view.columns} data={filteredMessages} />}
       </div>
     </div>
   );

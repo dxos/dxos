@@ -6,10 +6,9 @@ import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { createColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
 import { Context } from '@dxos/context';
 import { SignalStatus } from '@dxos/messaging';
-import { Table } from '@dxos/mosaic';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -62,18 +61,17 @@ export const SignalStatusInfo = () => {
   }
 
   const columns: GridColumn<SignalStatus>[] = [
-    createTextColumn('host'),
+    createTextColumn('host', { key: true, cell: { className: 'font-mono' } }),
     createColumn('state', {
-      value: (status) => {
-        const state = states[status.state];
-        return state.label;
-      },
+      accessor: (status) => states[status.state].label,
+      width: 80,
       cell: {
         render: ({ value, row }) => <span style={{ color: states[row.state]?.color }}>{value}</span>,
       },
     }),
+    // TODO(burdon): Date.
     createColumn('connected', {
-      value: (status) => {
+      accessor: (status) => {
         return status.state === SignalState.CONNECTED
           ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
           : `Reconnecting ${formatDistance(status.lastStateChange.getTime() + status.reconnectIn, time.getTime(), {
@@ -86,7 +84,7 @@ export const SignalStatusInfo = () => {
 
   return (
     <div>
-      <Table compact columns={columns} data={status} />
+      <Grid<SignalStatus> columns={columns} data={status} slots={defaultGridSlots} />
     </div>
   );
 };

@@ -5,8 +5,9 @@
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlameGraph } from 'react-flame-graph';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { createKeyColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { createNumberColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
@@ -24,6 +25,7 @@ export const TracingPanel = () => {
     spans: new Map<number, Span>(),
   });
   const [, forceUpdate] = useState({});
+  const { ref: containerRef, width } = useResizeDetector();
 
   useEffect(() => {
     const stream = client.services.services.TracingService!.streamTrace();
@@ -50,15 +52,14 @@ export const TracingPanel = () => {
   }, []);
 
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
-
   const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined);
   const flameGraph = buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0);
 
-  const selectPrev = () => {
+  const handleBack = () => {
     setSelectedFlameIndex((idx) => Math.max(0, idx - 1));
   };
 
-  const selectNext = () => {
+  const handleForward = () => {
     setSelectedFlameIndex((idx) => Math.min(roots.length - 1, idx + 1));
   };
 
@@ -71,26 +72,27 @@ export const TracingPanel = () => {
           slots={defaultGridSlots}
         />
       </div>
-      <div>
-        <div className='flex flex-row items-baseline justify-items-center m-2'>
-          <ArrowLeft className='cursor-pointer' onClick={selectPrev} />
+      <div ref={containerRef} className='border-t'>
+        <div className='flex flex-row items-baseline justify-items-center p-2'>
+          <ArrowLeft className='cursor-pointer' onClick={handleBack} />
           <div className='flex-1 text-center'>
             {selectedFlameIndex + 1} / {roots.length}
           </div>
-          <ArrowRight className='cursor-pointer' onClick={selectNext} />
+          <ArrowRight className='cursor-pointer' onClick={handleForward} />
         </div>
-        {flameGraph && <FlameGraph data={flameGraph} height={200} width={400} />}
+        {flameGraph && <FlameGraph data={flameGraph} height={200} width={width} />}
       </div>
     </PanelContainer>
   );
 };
 
 const columns: GridColumn<Resource>[] = [
-  createKeyColumn('id', { key: true }),
+  createNumberColumn('id', { key: true, hidden: true }),
   createTextColumn('name', {
     accessor: (resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`,
+    width: 240,
   }),
-  createTextColumn('info'),
+  createTextColumn('info', { accessor: (resource) => JSON.stringify(resource.info) }),
 ];
 
 const SANITIZE_REGEX = /[^_](\d+)$/;

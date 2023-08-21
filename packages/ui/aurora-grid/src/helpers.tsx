@@ -10,7 +10,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { Tooltip } from '@dxos/aurora';
-import { chromeSurface, groupSurface } from '@dxos/aurora-theme';
+import { chromeSurface } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 
 import { GridColumn, GridSlots } from './Grid';
@@ -32,12 +32,19 @@ type DateFormatOptions = {
   relative?: boolean;
 };
 
+// TODO(burdon): Formats.
+export const DateFormat = {
+  DATE: 'MM/dd HH:mm:ss',
+  TIME: 'HH:mm:ss',
+};
+
 export const createDateColumn = <TData extends RowData>(
   id: string,
   options?: DateFormatOptions, // TODO(burdon): Make optional? Multi method defs?
   props?: Partial<GridColumn<TData, Date>>,
 ): GridColumn<TData, Date> =>
   createColumn(id, props, {
+    width: options?.format ? 140 : options?.relative ? 150 : 180,
     cell: {
       render: ({ value }) =>
         options?.format
@@ -45,7 +52,7 @@ export const createDateColumn = <TData extends RowData>(
           : options?.relative
           ? formatDistanceToNow(value, { addSuffix: true })
           : value.toISOString(),
-      className: 'font-mono',
+      className: 'font-mono font-thin text-xs',
     },
   });
 
@@ -114,13 +121,13 @@ export const createBooleanColumn = <TData extends RowData>(
     },
   });
 
-// TODO(burdon): Move to theme?
+// TODO(burdon): Move to theme? Compact mode (small font).
 export const defaultGridSlots: GridSlots = {
   root: { className: chromeSurface },
-  header: { className: [groupSurface, 'p-1 text-left font-thin opacity-90'] },
-  footer: { className: [groupSurface, 'p-1 text-left font-thin opacity-90'] },
+  header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
+  footer: { className: [chromeSurface, 'border-t p-1 text-left font-thin opacity-90'] },
   cell: { className: 'p-1' },
-  row: { className: 'cursor-pointer hover:bg-zinc-100' },
+  row: { className: 'cursor-pointer hover:bg-neutral-50' },
   focus: { className: 'ring-1 ring-teal-500 ring-inset' },
   selected: { className: '!bg-teal-100' },
   margin: { style: { width: 8 } },

@@ -2,26 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 
-import { createNumberColumn, createTextColumn, Grid, GridColumn } from '@dxos/aurora-grid';
+import { createNumberColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { DetailsTable } from './DetailsTable';
 
-export interface ConnectionInfoViewProps {
-  connection?: ConnectionInfo;
-}
-
-// TODO(burdon): Convert to table.
-export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
+export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connection }) => {
   if (!connection) {
     return null;
   }
 
   const columns: GridColumn<ConnectionInfo.StreamStats>[] = [
-    createNumberColumn('bytesSent'),
-    createNumberColumn('bytesReceived'),
+    createNumberColumn('id', { key: true, hidden: true }),
+    createNumberColumn('bytesSent', { width: 100, header: { label: 'sent' } }),
+    createNumberColumn('bytesReceived', { width: 100, header: { label: 'received' } }),
     createTextColumn('tag'),
   ];
 
@@ -37,7 +33,7 @@ export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
         }}
       />
 
-      <Grid<ConnectionInfo.StreamStats> id='id' columns={columns} data={connection.streams ?? []} />
+      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} slots={defaultGridSlots} />
     </div>
   );
 };

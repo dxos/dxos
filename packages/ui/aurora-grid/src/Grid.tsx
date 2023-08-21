@@ -19,8 +19,9 @@ type CellParams<TData extends RowData, TValue = any> = { row: TData; value: TVal
 export type GridColumn<TData extends RowData, TValue = any> = {
   id: string;
   key?: boolean; // TODO(burdon): May not be unique key (see LoggingPanel).
+  hidden?: boolean;
   accessor?: string | ((params: TData) => any);
-  width?: number;
+  width?: number; // TODO(burdon): size, maxSize property.
   header?: {
     label?: string;
     className?: string;
@@ -103,7 +104,7 @@ type GridSelection<TData extends RowData, TKey = any> = {
   selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle';
   selected?: string | string[];
   onSelect?: (id: TKey, row: TData) => void; // Controlled.
-  onSelectedChange?: (selection: TKey | TKey[] | undefined) => void;
+  onSelectedChange?: (selection: TKey | TKey[] | undefined, rows: TData | TData[] | undefined) => void;
 };
 
 /**
@@ -154,7 +155,7 @@ export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
   slots,
-  selection = 'single',
+  selection = 'single', // TODO(burdon): No select by default.
   selected,
   onSelect,
   onSelectedChange,
@@ -163,9 +164,9 @@ export const Grid = <TData extends RowData>({
 }: GridProps<TData>) => {
   const keyColumn = columns.find((column) => column.key);
   invariant(keyColumn?.key, 'Missing key column.');
-  const getRowId = (row: Row<TData>) => {
-    return row.getValue(keyColumn!.id);
-  };
+  // TODO(burdon): Depends on object equality.
+  const getRow = (id: any) => table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
+  const getRowId = (row: Row<TData>) => row.getValue(keyColumn!.id);
 
   const [focus, setFocus] = useState<any>();
   const [selectionSet, setSelectionSet] = useState(new Set<any>());
@@ -176,8 +177,7 @@ export const Grid = <TData extends RowData>({
   const handleSelect = (id: any) => {
     if (onSelect) {
       // Controlled.
-      // TODO(burdon): Relies on object equality.
-      const row = table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
+      const row = getRow(id);
       onSelect?.(id, row!.original!);
     } else {
       // Uncontrolled.
@@ -185,9 +185,14 @@ export const Grid = <TData extends RowData>({
         updateSelection(selectionSet, id, selection);
         if (onSelectedChange) {
           if (selection === 'single' || selection === 'single-toggle') {
-            onSelectedChange(selectionSet.size === 0 ? undefined : selectionSet.values().next().value);
+            const id = selectionSet.size === 0 ? undefined : selectionSet.values().next().value;
+            onSelectedChange(id, id ? getRow(id)!.original! : undefined);
           } else {
-            onSelectedChange(Array.from(selectionSet));
+            const ids = Array.from(selectionSet);
+            onSelectedChange(
+              ids,
+              ids.map((id) => getRow(id)!.original!),
+            );
           }
         }
 
@@ -225,17 +230,21 @@ export const Grid = <TData extends RowData>({
               return (
                 <tr key={headerGroup.id}>
                   <th style={{ width: slots?.margin?.style?.width }} />
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <th
-                        key={header.id}
-                        style={getColumnStyle(header.id)}
-                        className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
-                      >
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    );
-                  })}
+                  {headerGroup.headers
+                    .filter((header) => !getColumn(header.id).hidden)
+                    .map((header) => {
+                      return (
+                        <th
+                          key={header.id}
+                          style={getColumnStyle(header.id)}
+                          className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </th>
+                      );
+                    })}
                   {flex && <th />}
                   <th style={{ width: slots?.margin?.style?.width }} />
                 </tr>
@@ -267,20 +276,23 @@ export const Grid = <TData extends RowData>({
                     onBlur={() => setFocus(undefined)}
                   />
                 </td>
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <td
-                      key={cell.id}
-                      className={mx(
-                        'truncate',
-                        getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
-                        slots?.cell?.className,
-                      )}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
+                {row
+                  .getVisibleCells()
+                  .filter((cell) => !getColumn(cell.column.id).hidden)
+                  .map((cell) => {
+                    return (
+                      <td
+                        key={cell.id}
+                        className={mx(
+                          'truncate',
+                          getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
+                          slots?.cell?.className,
+                        )}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
                 <td />
               </tr>
             );
@@ -291,13 +303,15 @@ export const Grid = <TData extends RowData>({
             {table.getFooterGroups().map((footerGroup) => (
               <tr key={footerGroup.id}>
                 <th />
-                {footerGroup.headers.map((header) => {
-                  return (
-                    <th key={header.id} className={mx(slots?.footer?.className)}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
-                    </th>
-                  );
-                })}
+                {footerGroup.headers
+                  .filter((header) => !getColumn(header.id).hidden)
+                  .map((header) => {
+                    return (
+                      <th key={header.id} className={mx(slots?.footer?.className)}>
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                      </th>
+                    );
+                  })}
                 <th />
               </tr>
             ))}
