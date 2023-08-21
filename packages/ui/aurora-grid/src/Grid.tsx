@@ -3,13 +3,22 @@
 //
 
 import { Cell, ColumnDef, flexRender, getCoreRowModel, Row, RowData, useReactTable } from '@tanstack/react-table';
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 import { invariant } from '@dxos/invariant';
 import { stripKeys } from '@dxos/util';
 
-type CellParams<TData extends RowData, TValue = any> = { row: TData; value: TValue };
+// TODO(burdon): Size property.
+// TODO(burdon): Style builder.
+// TODO(burdon): Key equivalence (test for equals?)
+// TODO(burdon): Editable.
+// TODO(burdon): Sort/filter.
+// TODO(burdon): Scroll to selection; sticky bottom.
+// TODO(burdon): Drag-and-drop.
+// TODO(burdon): No header.
+// TODO(burdon): Virtual (e.g., log panel).
+// TODO(burdon): Resize.
 
 /**
  * Simplified ColumnDef definition.
@@ -19,35 +28,37 @@ type CellParams<TData extends RowData, TValue = any> = { row: TData; value: TVal
 export type GridColumn<TData extends RowData, TValue = any> = {
   id: string;
   key?: boolean; // TODO(burdon): May not be unique key (see LoggingPanel).
-  hidden?: boolean;
+  hidden?: boolean; // TODO(burdon): Check rt.
   accessor?: string | ((params: TData) => any);
   width?: number; // TODO(burdon): size, maxSize property.
   header?: {
-    label?: string;
+    label?: string; // TODO(burdon): Convert to render function | string.
+    render?: (params: { column: GridColumn<TData>; data: TData[] }) => ReactNode;
     className?: string;
   };
   cell?: {
-    render?: (params: CellParams<TData, TValue>) => ReactNode;
+    render?: (params: { column: GridColumn<TData>; data: TData[]; row: TData; value: TValue }) => ReactNode;
     className?: CellValueOrFunction<TData, any, string>;
   };
   footer?: {
-    render?: ({ data }: { data: TData[] }) => ReactNode;
+    render?: (params: { column: GridColumn<TData>; data: TData[] }) => ReactNode;
   };
 };
 
 export type GridColumnConstructor<TData extends RowData, TValue> = (...props: any[]) => GridColumn<TData, TValue>;
 
 const mapColumns = <TData extends RowData>(columns: GridColumn<TData>[], data: TData[]): ColumnDef<TData>[] =>
-  columns.map(({ id, accessor, header, cell, footer }) => {
+  columns.map((column) => {
+    const { id, accessor, header, cell, footer } = column;
     return stripKeys({
       id,
       accessorKey: typeof accessor === 'string' ? accessor : id,
       accessorFn: typeof accessor === 'function' ? accessor : undefined,
-      header: header?.label,
+      header: header?.render ? () => header.render!({ column, data }) : header?.label,
       cell: cell?.render
-        ? ({ row, cell: cellValue }) => cell.render!({ row: row.original, value: cellValue.getValue() })
+        ? ({ row, cell: cellValue }) => cell.render!({ column, data, row: row.original, value: cellValue.getValue() })
         : undefined,
-      footer: footer?.render ? () => footer.render!({ data }) : undefined,
+      footer: footer?.render ? () => footer.render!({ column, data }) : undefined,
     } satisfies ColumnDef<TData>);
   });
 
@@ -149,8 +160,12 @@ export type GridProps<TData extends RowData> = {
   slots?: GridSlots;
   header?: boolean;
   footer?: boolean;
+  pinToBottom?: boolean;
 } & GridSelection<TData>;
 
+/**
+ * Simple table.
+ */
 export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
@@ -159,8 +174,9 @@ export const Grid = <TData extends RowData>({
   selected,
   onSelect,
   onSelectedChange,
-  header = true,
-  footer = false,
+  header: showHeader = true,
+  footer: showFooter = false,
+  pinToBottom,
 }: GridProps<TData>) => {
   const keyColumn = columns.find((column) => column.key);
   invariant(keyColumn?.key, 'Missing key column.');
@@ -204,54 +220,82 @@ export const Grid = <TData extends RowData>({
   const getColumn = (id: string) => columns.find((column) => column.id === id)!;
   const getColumnStyle = (id: string) => {
     const column = getColumn(id);
-    // TODO(burdon): Clash with react-table width management?
+    // TODO(burdon): Clash with react-table width (size) management?
     return column.width ? { width: column.width } : {};
   };
 
-  const tableColumns = useMemo(() => mapColumns(columns, data), [columns]);
+  const tableColumns = useMemo(() => mapColumns(columns, data), [columns, data]);
   const table = useReactTable({
     data,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // Pin scrollbar to bottom.
+  // TODO(burdon): Causes scrollbar to be constantly visible.
+  //  https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  {
+    const [stickyScrolling, setStickyScrolling] = useState(true);
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!pinToBottom || !container) {
+        return;
+      }
+
+      const handler = () => {
+        const bottom = container.scrollHeight - container.scrollTop - container.clientHeight === 0;
+        setStickyScrolling(bottom);
+      };
+
+      container.addEventListener('scroll', handler);
+      return () => container.removeEventListener('scroll', handler);
+    }, []);
+
+    useEffect(() => {
+      if (!pinToBottom || !containerRef.current || !stickyScrolling) {
+        return;
+      }
+
+      containerRef.current?.scroll({ top: containerRef.current.scrollHeight });
+    }, [data]);
+  }
+
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
-    <div className={mx('grow overflow-auto', slots?.root?.className)}>
+    <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
         {/* TODO(burdon): Must have header group for widths. */}
-        {header && (
-          <thead className={mx('sticky top-0 z-10', slots?.header?.className)}>
-            {table.getHeaderGroups().map((headerGroup) => {
-              // Need additional column if all columns have fixed width.
-              const flex = columns?.map((column) => column.width).filter(Boolean).length === columns?.length;
+        <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
+          {table.getHeaderGroups().map((headerGroup) => {
+            // Need additional column if all columns have fixed width.
+            const flex = columns?.map((column) => column.width).filter(Boolean).length === columns?.length;
 
-              return (
-                <tr key={headerGroup.id}>
-                  <th style={{ width: slots?.margin?.style?.width }} />
-                  {headerGroup.headers
-                    .filter((header) => !getColumn(header.id).hidden)
-                    .map((header) => {
-                      return (
-                        <th
-                          key={header.id}
-                          style={getColumnStyle(header.id)}
-                          className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
-                      );
-                    })}
-                  {flex && <th />}
-                  <th style={{ width: slots?.margin?.style?.width }} />
-                </tr>
-              );
-            })}
-          </thead>
-        )}
+            return (
+              <tr key={headerGroup.id}>
+                <th style={{ width: slots?.margin?.style?.width }} />
+                {headerGroup.headers
+                  .filter((header) => !getColumn(header.id).hidden)
+                  .map((header) => {
+                    return (
+                      <th
+                        key={header.id}
+                        style={getColumnStyle(header.id)}
+                        className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                      >
+                        {!showHeader || header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    );
+                  })}
+                {flex && <th />}
+                <th style={{ width: slots?.margin?.style?.width }} />
+              </tr>
+            );
+          })}
+        </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => {
             const id = getRowId(row);
@@ -298,17 +342,17 @@ export const Grid = <TData extends RowData>({
             );
           })}
         </tbody>
-        {footer && (
+        {showFooter && (
           <tfoot className={mx('sticky bottom-0 z-10', slots?.footer?.className)}>
             {table.getFooterGroups().map((footerGroup) => (
               <tr key={footerGroup.id}>
                 <th />
                 {footerGroup.headers
-                  .filter((header) => !getColumn(header.id).hidden)
-                  .map((header) => {
+                  .filter((footer) => !getColumn(footer.id).hidden)
+                  .map((footer) => {
                     return (
-                      <th key={header.id} className={mx(slots?.footer?.className)}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                      <th key={footer.id} className={mx(slots?.footer?.className)}>
+                        {footer.isPlaceholder ? null : flexRender(footer.column.columnDef.footer, footer.getContext())}
                       </th>
                     );
                   })}

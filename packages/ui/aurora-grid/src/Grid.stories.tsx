@@ -47,14 +47,13 @@ const itemColumns: GridColumn<Item>[] = [
   createTextColumn('name', {
     accessor: (item) => item.name,
     footer: {
-      // TODO(burdon): Doesn't get updated when data changes.
       render: ({ data }) => `${data.length} rows`,
     },
   }),
   createDateColumn(
     'started',
-    { format: 'MM/dd HH:mm:ss' },
-    // { relative: true },
+    // { format: 'MM/dd HH:mm:ss' },
+    { relative: true },
   ),
   createNumberColumn('value', {
     width: 80,
@@ -85,11 +84,6 @@ export default {
   },
 };
 
-// TODO(burdon): Editable.
-// TODO(burdon): Sort/filter.
-// TODO(burdon): Scroll to selection.
-// TODO(burdon): No footer.
-
 export const Controlled = {
   render: () => {
     const items = useMemo(() => createItems(10), []);
@@ -116,6 +110,16 @@ export const SingleSelect = {
     return (
       <div className='flex grow overflow-hidden'>
         <Grid<Item> columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} footer />
+      </div>
+    );
+  },
+};
+
+export const NoHeader = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        <Grid<Item> columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} header={false} />
       </div>
     );
   },
@@ -153,11 +157,11 @@ export const Scrolling = {
 
 export const Dynamic = {
   render: () => {
-    const [items, setItems] = useState<Item[]>(createItems(40));
+    const [items, setItems] = useState<Item[]>(createItems(50));
     useEffect(() => {
       const t = setInterval(() => {
         setItems((items) => {
-          if (items.length > 50) {
+          if (items.length >= 200) {
             clearInterval(t);
           }
 
@@ -169,7 +173,7 @@ export const Dynamic = {
 
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={items} slots={defaultGridSlots} footer />
+        <Grid<Item> columns={itemColumns} data={items} slots={defaultGridSlots} pinToBottom footer />
       </div>
     );
   },

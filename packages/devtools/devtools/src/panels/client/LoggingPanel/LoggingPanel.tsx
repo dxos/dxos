@@ -35,46 +35,9 @@ export const LoggingPanel = () => {
     return null;
   }
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  // Filtering.
+  const inputRef = useRef<HTMLInputElement>(null);
   const [request, setRequest] = useState<QueryLogsRequest>({});
-  // TODO(wittjosiah): `useStream` probably doesn't make sense here.
-  const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-
-  // TODO(burdon): Is this a single log entry?
-  useEffect(() => {
-    if (!logEntry.message) {
-      return;
-    }
-
-    setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
-  }, [logEntry]);
-
-  // TODO(burdon): Add sticky scrolling to Grid.
-  const logsRef = useRef<HTMLDivElement | null>(null);
-  const [stickyScrolling, setStickyScrolling] = useState(true);
-  useEffect(() => {
-    if (!logsRef.current) {
-      return;
-    }
-
-    const container = logsRef.current;
-    const handler = () => {
-      setStickyScrolling(container.scrollHeight - container.scrollTop - container.clientHeight < 50);
-    };
-
-    container.addEventListener('scroll', handler);
-    return () => container.removeEventListener('scroll', handler);
-  }, []);
-
-  useEffect(() => {
-    if (!logsRef.current || !stickyScrolling) {
-      return;
-    }
-
-    logsRef.current.scrollTop = logsRef.current.scrollHeight;
-  }, [logs]);
-
   const handleQueryLogs = () => {
     const filtersString = inputRef.current?.value ?? '';
     if (!filtersString) {
@@ -84,6 +47,18 @@ export const LoggingPanel = () => {
 
     setRequest({ filters: parseFilter(filtersString) });
   };
+
+  // Logs.
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  // TODO(wittjosiah): `useStream` probably doesn't make sense here.
+  const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
+  useEffect(() => {
+    if (!logEntry.message) {
+      return;
+    }
+
+    setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
+  }, [logEntry]);
 
   return (
     <PanelContainer
