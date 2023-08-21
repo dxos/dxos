@@ -8,14 +8,16 @@ import path from 'node:path';
 import { asyncTimeout, latch } from '@dxos/async';
 import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
-import { deleteObject, testLocalDatabase } from '@dxos/echo-pipeline/testing';
+import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestBuilder, syncItemsLocal } from '../testing';
@@ -240,25 +242,49 @@ describe('DataSpaceManager', () => {
       // Create space and fill it with Items.
       const space = await peer.dataSpaceManager.createSpace();
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
-      const itemsNumber = 10;
+      const itemsNumber = 2;
       for (const _ of range(itemsNumber)) {
         await testLocalDatabase(space.dataPipeline);
       }
 
-      // Delete one item to check if it is not present after epoch.
-      const itemToDelete = Array.from(space.dataPipeline.itemManager.entities.values())[0];
-      expect(space.dataPipeline.itemManager.entities.has(itemToDelete.id)).to.be.true;
-      await deleteObject({ create: space.dataPipeline, objectId: itemToDelete.id });
+      // Create empty Epoch and check if it clears items.
+      {
+        const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(
+          (epoch) => epoch.subject.assertion.number === 1,
+        );
 
-      // Create epoch and check if it clears items.
-      const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(
-        (epoch) => epoch.subject.assertion.number === 1,
-      );
-      await space.createEpoch();
+        // Empty snapshot.
+        const snapshot: SpaceSnapshot = {
+          spaceKey: space.key.asUint8Array(),
+          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
+          database: {},
+        };
 
-      await processedFirstEpoch;
+        const snapshotCid = await peer.snapshotStore.saveSnapshot(snapshot);
 
-      // TODO(mykola): Finish test
+        const epoch: Epoch = {
+          previousId: space.dataPipeline.currentEpoch?.id,
+          timeframe: space.inner.dataPipeline.pipelineState!.timeframe,
+          number: (space.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
+          snapshotCid,
+        };
+
+        const receipt = await space.inner.controlPipeline.writer.write({
+          credential: {
+            credential: await peer.props.signingContext!.credentialSigner.createCredential({
+              subject: space.key,
+              assertion: {
+                '@type': 'dxos.halo.credentials.Epoch',
+                ...epoch,
+              },
+            }),
+          },
+        });
+        await space.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+        await processedFirstEpoch;
+      }
+
+      expect(Array.from(space.dataPipeline.itemManager.entities.keys()).length).to.equal(0);
     });
   });
 
