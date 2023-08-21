@@ -16,6 +16,8 @@ import { range } from '@dxos/util';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
 
+const REPLICATOR_EXTENSION_NAME = 'replicator';
+
 type FeedConfig = {
   feedKey: string;
   writable: boolean;
@@ -131,7 +133,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     // Swarms to join.
     const swarms = swarmTopicIds.map((swarmTopicId, swarmIdx) => {
       const swarmTopic = PublicKey.from(swarmTopicId);
-      return peer.createSwarm(swarmTopic, () => [{ name: 'replicator', extension: new ReplicatorExtension() }]);
+      return peer.createSwarm(swarmTopic, () => [{ name: REPLICATOR_EXTENSION_NAME, extension: new ReplicatorExtension() }]);
     });
 
     log.info('swarms created', { agentIdx });
@@ -262,10 +264,15 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feed of feedsArr) {
-            // TODO(egorgripasov): Start replication with each agent.
+            const connection = swarm.protocol.otherConnections.get({ remotePeerId: PublicKey.from(agentId), extension: REPLICATOR_EXTENSION_NAME }) as ReplicatorExtension;
+            await connection.addFeed(feed);
           }
         });
+
+        await env.syncBarrier(`feeds are added on ${testCounter}`);
       }
+
+      await sleep(10_000);
 
       // Leave all swarms.
       {

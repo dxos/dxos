@@ -25,6 +25,8 @@ export class TestWireProtocol {
   public readonly connected = new Event<PublicKey>();
   public readonly disconnected = new Event<PublicKey>();
 
+  public readonly otherConnections = new ComplexMap<{remotePeerId: PublicKey, extension: string }, TeleportExtension>(({ remotePeerId, extension }) => remotePeerId.toHex() + extension);
+
   constructor(public readonly peerId: PublicKey, private readonly _extensionFactory: TestTeleportExtensionFactory = () => []) {}
 
   readonly factory = createTeleportProtocolFactory(async (teleport) => {
@@ -48,8 +50,7 @@ export class TestWireProtocol {
     teleport.addExtension('test-stream', streamExtension);
 
     for (const { name, extension } of this._extensionFactory()) {
-      // TODO(egorgripasov): Store a common list of extensions in the protocol.
-      
+      this.otherConnections.set({ remotePeerId: teleport.remotePeerId, extension: name }, extension);
       teleport.addExtension(name, extension);
     }
   });
