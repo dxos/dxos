@@ -4,7 +4,7 @@
 
 import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,7 +44,7 @@ export type ReplicationAgentConfig = {
   agentIdx: number;
   signalUrl: string;
   swarmTopicIds: string[];
-  feeds: Map<string, FeedConfig[]>;
+  feeds: Record<string, FeedConfig[]>;
 };
 
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
@@ -81,14 +81,14 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         agentIdx,
         signalUrl: signal.url(),
         swarmTopicIds,
-        feeds: feeds.get(agentIdx)!,
+        feeds: Object.fromEntries(feeds.get(agentIdx)!.entries()),
       }
     });
   }
 
   async run(env: AgentEnv<ReplicationTestSpec, ReplicationAgentConfig>): Promise<void> {
     const { config, spec, agents } = env.params;
-    const { agentIdx, swarmTopicIds, signalUrl } = config;
+    const { agentIdx, swarmTopicIds, signalUrl, feeds: feedsSpec } = config;
 
     const numAgents = Object.keys(agents).length;
 
@@ -115,6 +115,18 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     log.info('peer created', { agentIdx });
 
     log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
+
+    const feeds = new Map<string, FeedWrapper<any>[]>
+
+    // Feeds.
+    for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
+      const feedsArr = [];
+      for (const feedConfig of feedConfigs) {
+        const feed = await feedStore.openFeed(PublicKey.from(feedConfig.feedKey), feedConfig.writable);
+        feedsArr.push(feed);
+      }
+      feeds.set(swarmTopicId, feedsArr);
+    }
 
     // Swarms to join.
     const swarms = swarmTopicIds.map((swarmTopicId, swarmIdx) => {
@@ -244,6 +256,17 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
       await sleep(10_000);
 
+      // Add feeds.
+      {
+        log.info('adding feeds', { agentIdx });
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
+          const feedsArr = feeds.get(swarm.topic.toString())!;
+          for (const feed of feedsArr) {
+            // TODO(egorgripasov): Start replication with each agent.
+          }
+        });
+      }
+
       // Leave all swarms.
       {
         log.info('closing all swarms');
@@ -256,17 +279,19 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       }
     };
 
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        await env.syncBarrier(`iteration-${testCounter}`);
-        await asyncTimeout(testRun(), spec.duration);
-        testCounter++;
-      },
-      spec.repeatInterval,
-    );
-    await sleep(spec.duration);
-    await ctx.dispose();
+    await testRun();
+
+    // scheduleTaskInterval(
+    //   ctx,
+    //   async () => {
+    //     await env.syncBarrier(`iteration-${testCounter}`);
+    //     await asyncTimeout(testRun(), spec.duration);
+    //     testCounter++;
+    //   },
+    //   spec.repeatInterval,
+    // );
+    // await sleep(spec.duration);
+    // await ctx.dispose();
 
     log.info('test completed', { agentIdx });
   }

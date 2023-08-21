@@ -48,6 +48,8 @@ export class TestWireProtocol {
     teleport.addExtension('test-stream', streamExtension);
 
     for (const { name, extension } of this._extensionFactory()) {
+      // TODO(egorgripasov): Store a common list of extensions in the protocol.
+      
       teleport.addExtension(name, extension);
     }
   });
