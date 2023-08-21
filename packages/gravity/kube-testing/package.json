@@ -21,6 +21,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/feed-store": "workspace:*",
