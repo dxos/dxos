@@ -8,7 +8,7 @@ import path from 'node:path';
 import { asyncTimeout, latch } from '@dxos/async';
 import { SpecificCredential, createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
-import { testLocalDatabase } from '@dxos/echo-pipeline/testing';
+import { deleteObject, testLocalDatabase } from '@dxos/echo-pipeline/testing';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -228,6 +228,37 @@ describe('DataSpaceManager', () => {
         await processedFirstEpoch;
         expect(epochs).to.deep.equal([epochsNumber]);
       }
+    });
+
+    test('Items are cleared before epoch applied', async () => {
+      const builder = new TestBuilder();
+      afterTest(async () => builder.destroy());
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.dataSpaceManager);
+
+      // Create space and fill it with Items.
+      const space = await peer.dataSpaceManager.createSpace();
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const itemsNumber = 10;
+      for (const _ of range(itemsNumber)) {
+        await testLocalDatabase(space.dataPipeline);
+      }
+
+      // Delete one item to check if it is not present after epoch.
+      const itemToDelete = Array.from(space.dataPipeline.itemManager.entities.values())[0];
+      expect(space.dataPipeline.itemManager.entities.has(itemToDelete.id)).to.be.true;
+      await deleteObject({ create: space.dataPipeline, objectId: itemToDelete.id });
+
+      // Create epoch and check if it clears items.
+      const processedFirstEpoch = space.dataPipeline.onNewEpoch.waitFor(
+        (epoch) => epoch.subject.assertion.number === 1,
+      );
+      await space.createEpoch();
+
+      await processedFirstEpoch;
+
+      // TODO(mykola): Finish test
     });
   });
 
