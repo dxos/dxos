@@ -28,6 +28,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
+import { safeInstanceof } from '@dxos/util';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
@@ -37,7 +38,6 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, SigningContext } from '../spaces';
-import { safeInstanceof } from '@dxos/util';
 
 /**
  * Shared backend for all client services.

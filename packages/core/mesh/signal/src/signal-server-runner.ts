@@ -199,15 +199,14 @@ export const runTestSignalServer = async ({
   return server;
 };
 
-
-function killProcessOnPort(port: number) {
+const killProcessOnPort = (port: number) => {
   try {
     const pid = execSync(`lsof -t -i:${port}`).toString().trim();
     if (pid) {
-      log.info(`killing process occupying signal port`, { port, pid });
+      log.info('killing process occupying signal port', { port, pid });
       process.kill(-Number(pid), 'SIGINT');
     }
   } catch (err) {
-    log.warn(`failed to kill process occupying signal port`, { port, err });
+    log.warn('failed to kill process occupying signal port', { port, err });
   }
-}
+};

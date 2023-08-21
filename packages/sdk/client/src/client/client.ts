@@ -30,7 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import { defaultKey, type EchoProxy } from '../echo';
+import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
@@ -229,7 +229,7 @@ export class Client {
     log.trace('dxos.sdk.client.open', trace.begin({ id: this._instanceId }));
 
     const { fromHost, fromIFrame } = await import('../services');
-    const { EchoProxy, createDefaultModelFactory } = await import('../echo');
+    const { EchoProxy, createDefaultModelFactory, defaultKey } = await import('../echo');
     const { HaloProxy } = await import('../halo');
     const { MeshProxy } = await import('../mesh');
 

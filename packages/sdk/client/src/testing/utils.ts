@@ -24,7 +24,7 @@ export const waitForSpace = async (
     const spaceTrigger = new Trigger<Space>();
     const sub = client.spaces.subscribe(() => {
       const space = client.getSpace(spaceKey);
-      if(space) {
+      if (space) {
         sub.unsubscribe();
         spaceTrigger.wake(space);
       }
