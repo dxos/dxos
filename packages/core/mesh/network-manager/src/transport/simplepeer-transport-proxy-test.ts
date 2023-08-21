@@ -11,8 +11,8 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
-import { WebRTCTransportProxy } from './webrtc-transport-proxy';
-import { WebRTCTransportService } from './webrtc-transport-service';
+import { WebRTCTransportProxy } from './simplepeer-transport-proxy';
+import { WebRTCTransportService } from './simplepeer-transport-service';
 
 describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({

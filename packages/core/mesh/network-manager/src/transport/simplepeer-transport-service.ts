@@ -19,7 +19,7 @@ import {
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 
-import { WebRTCTransport } from './webrtc-transport';
+import { SimplePeerTransport } from './simplepeer-transport';
 
 type TransportState = {
   transport: WebRTCTransport;
@@ -28,7 +28,9 @@ type TransportState = {
 };
 
 export class WebRTCTransportService implements BridgeService {
-  private readonly transports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
+  private readonly transports = new ComplexMap<PublicKey, { transport: SimplePeerTransport; stream: Duplex }>(
+    PublicKey.hash,
+  );
 
   // prettier-ignore
   constructor(
@@ -51,7 +53,7 @@ export class WebRTCTransportService implements BridgeService {
         },
       });
 
-      const transport = new WebRTCTransport({
+      const transport = new SimplePeerTransport({
         initiator: request.initiator,
         stream: duplex,
         webrtcConfig: this._webrtcConfig,

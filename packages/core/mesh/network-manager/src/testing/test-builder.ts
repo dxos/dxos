@@ -20,7 +20,7 @@ import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
   TransportFactory,
-  WebRTCTransport,
+  createWebRTCTransportFactory,
   WebRTCTransportProxyFactory,
   WebRTCTransportService,
 } from '../transport';
@@ -35,6 +35,7 @@ export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
 export type TestBuilderOptions = {
   signalHosts?: Runtime.Services.Signal[];
   bridge?: boolean;
+  webrtcLibrary?: string;
 };
 
 /**
@@ -54,7 +55,7 @@ export class TestBuilder {
   }
 
   createPeer(peerId: PublicKey = PublicKey.random()) {
-    return new TestPeer(this, peerId);
+    return new TestPeer(this, peerId, this.options.webrtcLibrary);
   }
 }
 
@@ -77,48 +78,24 @@ export class TestPeer {
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
 
-  constructor(private readonly testBuilder: TestBuilder, public readonly peerId: PublicKey) {
+  constructor(
+    private readonly testBuilder: TestBuilder,
+    public readonly peerId: PublicKey,
+    public readonly webrtcLibrary?: string,
+  ) {
     this._signalManager = this.testBuilder.createSignalManager();
-    this._networkManager = this.createNetworkManager();
+    this._networkManager = this.createNetworkManager(webrtcLibrary);
   }
 
   // TODO(burdon): Move to TestBuilder.
-  createNetworkManager() {
+  createNetworkManager(webrtcLibrary?: string) {
     let transportFactory: TransportFactory = MemoryTransportFactory;
 
     if (this.testBuilder.options.signalHosts) {
       if (this.testBuilder.options.bridge) {
-        // Simulates bridge to shared worker.
-        const [proxyPort, servicePort] = createLinkedPorts();
-
-        this._proxy = createProtoRpcPeer({
-          port: proxyPort,
-          requested: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
-
-        this._service = createProtoRpcPeer({
-          port: servicePort,
-          exposed: {
-            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-          },
-          handlers: { BridgeService: new WebRTCTransportService() },
-          noHandshake: true,
-          encodingOptions: {
-            preserveAny: true,
-          },
-        });
-
-        transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+        throw new Error('no longer implemented.');
       } else {
-        transportFactory = {
-          createTransport: (params) => new WebRTCTransport(params),
-        };
+        transportFactory = createWebRTCTransportFactory(undefined, webrtcLibrary);
       }
     }
 

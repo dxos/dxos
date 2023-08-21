@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { LibDataChannelTransport } from './libdatachannel-transport';
-import { WebRTCTransport } from './webrtc-transport';
+import { SimplePeerTransport } from './simplepeer-transport';
 
 describe.only('LibDataChannelTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
@@ -75,7 +75,7 @@ describe.only('LibDataChannelTransport', () => {
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
-    const connection2 = new WebRTCTransport({
+    const connection2 = new SimplePeerTransport({
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {

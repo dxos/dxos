@@ -7,12 +7,12 @@ import { Duplex } from 'stream';
 import { sleep, TestStream } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { WebRTCTransport } from './webrtc-transport';
+import { SimplePeerTransport } from './simplepeer-transport';
 
 describe('WebRTCTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const connection = new WebRTCTransport({
+    const connection = new SimplePeerTransport({
       initiator: true,
       stream: new Duplex(),
       sendSignal: async () => {},
@@ -27,7 +27,7 @@ describe('WebRTCTransport', () => {
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
-    const connection1 = new WebRTCTransport({
+    const connection1 = new SimplePeerTransport({
       initiator: true,
       stream: stream1,
       sendSignal: async (signal) => {
@@ -39,7 +39,7 @@ describe('WebRTCTransport', () => {
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
-    const connection2 = new WebRTCTransport({
+    const connection2 = new SimplePeerTransport({
       initiator: false,
       stream: stream2,
       sendSignal: async (signal) => {
