@@ -199,9 +199,8 @@ describe('Spaces', () => {
       for (const i of range(amount)) {
         const expando = new Expando({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
+        await space1.db.flush();
       }
-      // Wait to process all mutations.
-      await space1.db.flush();
       // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
