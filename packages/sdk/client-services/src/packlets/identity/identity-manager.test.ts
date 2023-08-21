@@ -91,6 +91,17 @@ describe('identity/identity-manager', () => {
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   });
 
+  test('update profile', async () => {
+    const { identityManager } = await setupPeer();
+    await identityManager.open();
+    afterTest(() => identityManager.close());
+
+    const identity = await identityManager.createIdentity();
+    expect(identity.profileDocument?.displayName).to.be.undefined;
+    await identityManager.updateProfile({ displayName: 'Example' });
+    expect(identity.profileDocument?.displayName).to.equal('Example');
+  });
+
   test('admit another device', async () => {
     const signalContext = new MemorySignalManagerContext();
 

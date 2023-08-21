@@ -23,8 +23,17 @@ describe('IdentityService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
+<<<<<<< Updated upstream
     await serviceContext.open(new Context());
     identityService = new IdentityServiceImpl(serviceContext);
+=======
+    await serviceContext.open();
+    identityService = new IdentityServiceImpl(
+      (params) => serviceContext.createIdentity(params),
+      serviceContext.identityManager,
+      serviceContext.keyring,
+    );
+>>>>>>> Stashed changes
   });
 
   afterEach(async () => {
@@ -54,6 +63,16 @@ describe('IdentityService', () => {
   });
 
   describe.skip('recoverIdentity', () => {});
+
+  describe('updateProfile', () => {
+    test('updates profile', async () => {
+      const identity = await identityService.createIdentity({});
+      expect(identity.profile?.displayName).to.be.undefined;
+
+      await identityService.updateProfile({ displayName: 'Example' });
+      expect(identity.profile?.displayName).to.equal('Example');
+    });
+  });
 
   describe('queryIdentity', () => {
     test('returns undefined if no identity is available', async () => {

@@ -239,7 +239,11 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
+      IdentityService: new IdentityServiceImpl(
+        (params) => this._serviceContext.createIdentity(params),
+        this._serviceContext.identityManager,
+        this._serviceContext.keyring,
+      ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
         this._serviceContext.getInvitationHandler(invitation),
