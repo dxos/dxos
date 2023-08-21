@@ -5,19 +5,16 @@
 import React, { useState } from 'react';
 
 import { defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
-import { TableSlots } from '@dxos/mosaic';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
   columns: GridColumn<T>[];
   data: T[];
-  slots?: TableSlots;
   compact?: boolean;
 };
 
-// TODO(burdon): Slots (ref for LoggingPanel).
-export const MasterDetailTable = <T extends {}>({ columns, data, slots }: MasterTableProps<T>) => {
+export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
   const handleSelected = (selected: any, items: T | T[] | undefined) => {
     setSelected(items as T);

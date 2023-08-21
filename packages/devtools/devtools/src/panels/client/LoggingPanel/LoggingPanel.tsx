@@ -35,9 +35,7 @@ export const LoggingPanel = () => {
     return null;
   }
 
-  const [stickyScrolling, setStickyScrolling] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const logsRef = useRef<HTMLDivElement | null>(null);
   const [request, setRequest] = useState<QueryLogsRequest>({});
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
   const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
@@ -52,6 +50,9 @@ export const LoggingPanel = () => {
     setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
   }, [logEntry]);
 
+  // TODO(burdon): Add sticky scrolling to Grid.
+  const logsRef = useRef<HTMLDivElement | null>(null);
+  const [stickyScrolling, setStickyScrolling] = useState(true);
   useEffect(() => {
     if (!logsRef.current) {
       return;
@@ -96,11 +97,7 @@ export const LoggingPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<LogEntry>
-        columns={columns}
-        data={logs}
-        slots={{ body: { className: 'max-h-screen', ref: logsRef } }}
-      />
+      <MasterDetailTable<LogEntry> columns={columns} data={logs} />
     </PanelContainer>
   );
 };
