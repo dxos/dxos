@@ -16,17 +16,14 @@ export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: Detail
   expand = false,
 }) => {
   return (
-    <div>
+    <div className='flex m-2 py-2 overflow-auto border bg-neutral-25'>
       <table className='table-fixed border-collapse'>
         <tbody>
           {Object.entries(object).map(([key, value]) => (
-            <tr key={key} className='align-baseline'>
-              <td className={mx('px-4 align-baseline text-sm text-gray-500 overflow-hidden', slots?.keys?.className)}>
-                {key}
-              </td>
-              {/* eslint-disable-next-line no-octal-escape */}
-              <td className='px-2 empty:after:content-["\00a0"]'>
-                <div className='font-mono overflow-x-scroll'>{value ?? ''}</div>
+            <tr key={key} className='align-baseline leading-6'>
+              <td className={mx('px-4 align-baseline text-gray-500 overflow-hidden', slots?.keys?.className)}>{key}</td>
+              <td>
+                <div className='font-mono overflow-x-scroll'>{value}</div>
               </td>
             </tr>
           ))}

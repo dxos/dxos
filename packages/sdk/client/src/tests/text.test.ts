@@ -6,6 +6,7 @@ import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
+import { Context } from '@dxos/context';
 import { Expando, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -68,7 +69,7 @@ class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
 
     // TODO(wittjosiah): Too many steps to creat client.
     const services = testBuilder.createClientServicesHost();
-    await services.open();
+    await services.open(new Context());
     const [client, server] = testBuilder.createClientServer(services);
     void server.open();
     await client.initialize();

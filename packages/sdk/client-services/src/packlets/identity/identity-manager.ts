@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
 import { MetadataStore, SpaceManager, SwarmIdentity } from '@dxos/echo-pipeline';
 import { FeedStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,6 +16,7 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { IdentityRecord, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { trace as Trace } from '@dxos/tracing';
 import { deferFunction } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
@@ -47,6 +48,7 @@ export type CreateIdentityOptions = {
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
+@Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
@@ -65,7 +67,8 @@ export class IdentityManager {
     return this._identity;
   }
 
-  async open() {
+  @Trace.span()
+  async open(ctx: Context) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
     await this._metadataStore.load();
@@ -74,7 +77,7 @@ export class IdentityManager {
     log('identity record', { identityRecord });
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
-      await this._identity.open();
+      await this._identity.open(ctx);
       await this._identity.ready();
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
@@ -86,7 +89,7 @@ export class IdentityManager {
   }
 
   async close() {
-    await this._identity?.close();
+    await this._identity?.close(new Context());
   }
 
   async createIdentity({ displayName }: CreateIdentityOptions = {}) {
@@ -106,7 +109,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open();
+    await identity.open(new Context());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -176,7 +179,7 @@ export class IdentityManager {
     };
     const identity = await this._constructIdentity(identityRecord);
 
-    await identity.open();
+    await identity.open(new Context());
     this._identity = identity;
     await this._metadataStore.setIdentityRecord(identityRecord);
     await this._identity.ready();

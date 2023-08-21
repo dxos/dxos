@@ -10,7 +10,7 @@ import { cwd } from 'process';
 import { BaseCommand } from '../../base-command';
 import { exec } from '../../util/exec';
 
-export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
+export const APP_TEMPLATES = ['hello', 'bare'];
 
 // TODO(zhenyasav): factor this out into @dxos/fs or something (along with 'exists' from plate?)
 const isDirEmpty = async (dirpath: string) => {
@@ -51,7 +51,6 @@ export default class Create extends BaseCommand<typeof Create> {
     const { default: bare, isDxosMonorepoSync } = await import('@dxos/bare-template');
     const { default: hello } = await import('@dxos/hello-template');
     const { exists } = await import('@dxos/plate');
-    const { default: tasks } = await import('@dxos/tasks-template');
 
     const { name } = this.args;
     const { template, interactive, verbose } = this.flags;
@@ -79,14 +78,13 @@ export default class Create extends BaseCommand<typeof Create> {
     }
 
     this.log('Creating app...');
-    const plates = {
-      tasks,
+    const templates = {
       bare,
       hello,
     };
 
     const monorepo = isDxosMonorepoSync();
-    const result = await plates[template as keyof typeof plates].execute({
+    const result = await templates[template as keyof typeof templates].execute({
       outputDirectory,
       interactive,
       verbose,

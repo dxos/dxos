@@ -6,18 +6,17 @@ import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import React, { FC, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Toolbar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { truncateKey } from '@dxos/debug';
 import { TableColumn } from '@dxos/mosaic';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { Searchbar, Select } from '@dxos/react-appkit';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { humanize } from '@dxos/util';
 
-import { MasterDetailTable, Toolbar } from '../../components';
+import { MasterDetailTable, Searchbar, Select } from '../../components';
 
 export type View<T extends {}> = {
   id: string;
@@ -59,13 +58,13 @@ const views = [
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).truncate()) ||
           (response.swarmEvent!.peerLeft && truncateKey(response.swarmEvent!.peerLeft.peer)),
       },
-      {
-        Header: 'Peer Name',
-        width: 180,
-        accessor: (response: SignalResponse) =>
-          (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
-          (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
-      },
+      // {
+      //   Header: 'Peer Name',
+      //   width: 180,
+      //   accessor: (response: SignalResponse) =>
+      //     (response.swarmEvent!.peerAvailable && humanize(response.swarmEvent!.peerAvailable.peer)) ||
+      //     (response.swarmEvent!.peerLeft && humanize(response.swarmEvent!.peerLeft.peer)),
+      // },
       // TODO(burdon): Time delta since last message?
       {
         Header: 'Since',
@@ -140,14 +139,18 @@ const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: ()
   connection,
   onToggleConnection,
 }) => (
-  <Button title='Toggle connection state.' classNames='mli-2 p-0 px-2 items-center' onClick={onToggleConnection}>
+  <Toolbar.Button
+    title='Toggle connection state.'
+    classNames='mli-2 p-0 px-2 items-center'
+    onClick={onToggleConnection}
+  >
     {connection === ConnectionState.ONLINE ? (
       <WifiHigh className={getSize(6)} />
     ) : (
       <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
     )}
     <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
-  </Button>
+  </Toolbar.Button>
 );
 
 export type SignalMessagesProps = {
@@ -180,19 +183,17 @@ export const SignalMessages = (props: SignalMessagesProps) => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <Toolbar>
-        <Select className='mr-2' defaultValue={viewType} onValueChange={(s) => setViewType(s as ViewType)}>
-          {views.map(({ id, title }) => (
-            <Select.Item value={id} key={id}>
-              {title}
-            </Select.Item>
-          ))}
-        </Select>
+      <Toolbar.Root>
+        <Select
+          items={views.map(({ id, title }) => ({ value: id, label: title }))}
+          value={viewType}
+          onValueChange={(type) => setViewType(type as ViewType)}
+        />
         <Searchbar onSearch={setSearch} />
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
-      </Toolbar>
+      </Toolbar.Root>
 
-      <div className='flex flex-1 overflow-hidden'>
+      <div className='flex grow overflow-hidden'>
         {view ? <MasterDetailTable columns={view.columns as any} data={filteredMessages} /> : null}
       </div>
     </div>
@@ -204,8 +205,10 @@ const getFilteredData = (messages: SignalResponse[], view?: View<SignalResponse>
     if (!match) {
       return true;
     }
+
     return JSON.stringify(object).includes(match);
   };
+
   return view
     ? messages.filter(view.filter).filter(view.subFilter ? view.subFilter(searchText) : defaultSubFilter(searchText))
     : messages;

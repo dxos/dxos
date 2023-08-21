@@ -13,9 +13,16 @@ import { SplitView, SplitViewMainContentEmpty } from './components';
 import translations from './translations';
 import { SPLITVIEW_PLUGIN, SplitViewAction, SplitViewProvides } from './types';
 
-export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
+export type SplitViewPluginConfig = Partial<{
+  enableComplementarySidebar: boolean;
+}>;
+
+export const SplitViewPlugin = ({
+  enableComplementarySidebar,
+}: SplitViewPluginConfig = {}): PluginDefinition<SplitViewProvides> => {
   const state = deepSignal({
     sidebarOpen: true,
+    complementarySidebarOpen: enableComplementarySidebar ? false : null,
     dialogContent: 'never',
     dialogOpen: false,
   });
@@ -30,24 +37,21 @@ export const SplitViewPlugin = (): PluginDefinition<SplitViewProvides> => {
       ),
       components: { SplitView, SplitViewMainContentEmpty },
       graph: {
-        actions: (parent) => {
+        nodes: (parent) => {
           if (parent.id !== 'root') {
-            return [];
+            return;
           }
 
-          return [
-            {
-              id: 'close-sidebar',
-              index: 'a1',
-              label: ['close sidebar label', { ns: 'os' }],
-              icon: (props) => <ArrowLineLeft {...props} />,
-              intent: {
-                plugin: SPLITVIEW_PLUGIN,
-                action: SplitViewAction.TOGGLE_SIDEBAR,
-                data: { state: false },
-              },
+          parent.addAction({
+            id: 'close-sidebar',
+            label: ['close sidebar label', { ns: 'os' }],
+            icon: (props) => <ArrowLineLeft {...props} />,
+            intent: {
+              plugin: SPLITVIEW_PLUGIN,
+              action: SplitViewAction.TOGGLE_SIDEBAR,
+              data: { state: false },
             },
-          ];
+          });
         },
       },
       intent: {

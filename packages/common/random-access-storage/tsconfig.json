@@ -27,6 +27,9 @@
       "path": "../debug"
     },
     {
+      "path": "../invariant"
+    },
+    {
       "path": "../log"
     },
     {

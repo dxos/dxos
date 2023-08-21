@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [SPLITVIEW_PLUGIN]: {
         'first run message': 'Choose a document or create one to get started',
+        'main header label': 'Main header',
       },
     },
   },

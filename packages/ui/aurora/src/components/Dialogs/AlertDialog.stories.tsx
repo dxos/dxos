@@ -6,13 +6,14 @@ import '@dxosTheme';
 import React from 'react';
 
 import { Button } from '../Buttons';
+import { Toolbar } from '../Toolbar';
 import { AlertDialog } from './AlertDialog';
 
 type StorybookAlertDialogProps = Partial<{
   title: string;
   description: string;
   body: string;
-  cancelTrigger: string;
+  cancelTrigger: string; // TODO(burdon): Why trigger?
   actionTrigger: string;
   openTrigger: string;
 }>;
@@ -34,13 +35,16 @@ const StorybookAlertDialog = ({
         <AlertDialog.Content>
           <AlertDialog.Title>{title}</AlertDialog.Title>
           <AlertDialog.Description>{description}</AlertDialog.Description>
-          <p className='mbs-2 mbe-4'>{body}</p>
-          <AlertDialog.Cancel asChild>
-            <Button>{cancelTrigger}</Button>
-          </AlertDialog.Cancel>
-          <AlertDialog.Action asChild>
-            <Button variant='primary'>{actionTrigger}</Button>
-          </AlertDialog.Action>
+          <p className='mbs-2 mbe-8'>{body}</p>
+          <Toolbar.Root>
+            <div className='grow' />
+            <AlertDialog.Cancel asChild>
+              <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action asChild>
+              <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
+            </AlertDialog.Action>
+          </Toolbar.Root>
         </AlertDialog.Content>
       </AlertDialog.Overlay>
     </AlertDialog.Root>

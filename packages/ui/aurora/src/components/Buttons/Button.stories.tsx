@@ -6,6 +6,8 @@ import '@dxosTheme';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { PropsWithChildren } from 'react';
 
+import { chromeSurface, groupSurface, mx, surfaceElevation } from '@dxos/aurora-theme';
+
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 import { Button, ButtonGroup, ButtonProps } from './Button';
@@ -16,7 +18,7 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <div role='group' className='flex flex-col gap-4 mbe-4'>
+    <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4')}>
       <ElevationProvider elevation='base'>
         <div className='flex gap-4'>{children}</div>
         <DensityProvider density='fine'>
@@ -24,8 +26,26 @@ const Container = ({ children }: PropsWithChildren<{}>) => (
         </DensityProvider>
       </ElevationProvider>
     </div>
-    <div role='group' className='flex flex-col gap-4'>
+    <div
+      role='group'
+      className={mx('flex flex-col gap-4 mbe-4 p-4 rounded-lg', groupSurface, surfaceElevation({ elevation: 'group' }))}
+    >
       <ElevationProvider elevation='group'>
+        <div className='flex gap-4'>{children}</div>
+        <DensityProvider density='fine'>
+          <div className='flex gap-4'>{children}</div>
+        </DensityProvider>
+      </ElevationProvider>
+    </div>
+    <div
+      role='group'
+      className={mx(
+        'flex flex-col gap-4 mbe-4 p-4 rounded-lg',
+        chromeSurface,
+        surfaceElevation({ elevation: 'chrome' }),
+      )}
+    >
+      <ElevationProvider elevation='chrome'>
         <div className='flex gap-4'>{children}</div>
         <DensityProvider density='fine'>
           <div className='flex gap-4'>{children}</div>

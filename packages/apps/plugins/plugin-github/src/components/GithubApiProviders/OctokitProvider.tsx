@@ -22,6 +22,7 @@ export const OctokitContext: Context<OctokitContextValue> = createContext<Octoki
   octokit: null,
 });
 
+// TODO(burdon): github.com/settings/pat
 const GhPatKey = 'com.github.pat';
 
 export const useOctokitContext = () => useContext(OctokitContext);

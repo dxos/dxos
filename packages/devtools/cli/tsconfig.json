@@ -30,9 +30,6 @@
       "path": "../../apps/templates/hello-template"
     },
     {
-      "path": "../../apps/templates/tasks-template"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -40,6 +37,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"

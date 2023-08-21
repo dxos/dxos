@@ -62,7 +62,7 @@ const resolveComponents = (plugins: Plugin[], props: SurfaceProps, context: Surf
   } else {
     const components = plugins
       .map((plugin) => {
-        const Component = plugin.provides.component?.(props.data, props.role);
+        const Component = plugin.provides.component?.(data, role);
         return (
           Component && (
             <Component key={plugin.meta.id} {...{ data, role }}>

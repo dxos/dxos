@@ -14,8 +14,9 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { PanelContainer, Toolbar } from '../../components';
+import { PanelContainer } from '../../components';
 import { useDevtoolsDispatch } from '../../hooks';
+import { textLink } from '../../styles';
 
 const SpacesPanel: FC = () => {
   const spaces = useSpaces({ all: true });
@@ -52,7 +53,7 @@ const SpacesPanel: FC = () => {
           values: { key },
         },
       }: any) => (
-        <div className='font-mono text-blue-500 cursor-pointer' onClick={() => handleSelect(key)}>
+        <div className={mx('font-mono', textLink)} onClick={() => handleSelect(key)}>
           {value.truncate()}
         </div>
       ),
@@ -117,8 +118,8 @@ const SpacesPanel: FC = () => {
   ];
 
   return (
-    <PanelContainer className='overflow-auto' toolbar={<Toolbar></Toolbar>}>
-      <Table compact slots={{ cell: { className: 'items-center ' } }} columns={columns} data={spaces} />;
+    <PanelContainer className='overflow-auto'>
+      <Table compact slots={{ cell: { className: 'items-center' } }} columns={columns} data={spaces} />
     </PanelContainer>
   );
 };

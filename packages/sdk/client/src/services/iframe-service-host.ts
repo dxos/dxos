@@ -10,6 +10,7 @@ import {
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { AppContextRequest, LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
@@ -30,6 +31,7 @@ export type IFrameClientServicesHostOptions = {
 
 export class IFrameClientServicesHost implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
+  public readonly invalidatedInvitationCode = new Event<string>();
   private _iframeController!: IFrameController;
   private _shellController!: ShellController;
   private readonly _host: ClientServicesProvider;
@@ -74,7 +76,7 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
-    await this._host.open();
+    await this._host.open(new Context());
 
     // NOTE: Using query params invalidates the service worker cache & requires a custom worker.
     //   https://developer.chrome.com/docs/workbox/modules/workbox-build/#generatesw
@@ -124,7 +126,12 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
         }
       },
     });
-    this._shellController = new ShellController(this._iframeController, this.joinedSpace);
+
+    this._shellController = new ShellController(
+      this._iframeController,
+      this.joinedSpace,
+      this.invalidatedInvitationCode,
+    );
     await this._shellController.open();
 
     // TODO(wittjosiah): Allow path/params for invitations to be customizable.
@@ -146,6 +153,6 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   async close() {
     await this._shellController.close();
     await this._iframeController.close();
-    await this._host.close();
+    await this._host.close(new Context());
   }
 }

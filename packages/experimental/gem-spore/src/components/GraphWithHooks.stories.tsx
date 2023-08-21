@@ -18,7 +18,7 @@ import {
   linkerRenderer,
 } from '../graph';
 import { convertTreeToGraph, createTree, styles, TestGraphModel, TestNode } from '../testing';
-import { defaultGraphStyles, defaultMarkerStyles } from './styles';
+import { defaultGraphStyles, defaultStyles } from './styles';
 
 export default {
   title: 'gem-spore/hooks',
@@ -184,7 +184,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 
   return (
     <svg ref={context.ref}>
-      <defs ref={markersRef} className={defaultMarkerStyles} />
+      <defs ref={markersRef} className={defaultStyles.markers} />
       <g ref={grid.ref} className={defaultGridStyles} />
       <g ref={zoom.ref} className={clsx(defaultGraphStyles, styles.linker)}>
         <g ref={graphRef} />

@@ -5,14 +5,17 @@
 import type { Faker } from '@faker-js/faker';
 
 import { Document } from '@braneframe/types';
-import { SpaceProxy, Text } from '@dxos/client/echo';
+import { Space, Text } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 export class Generator {
   private _faker?: Faker;
 
-  constructor(private readonly _space: SpaceProxy) {}
+  constructor(private readonly _space: Space) {
+    invariant(this._space);
+  }
 
   async initialize() {
     // TODO(burdon): Async import Generator instead?
@@ -27,8 +30,8 @@ export class Generator {
       case Document.type.name: {
         // TODO(burdon): Factor out generators.
         const title = this._faker!.lorem.sentence();
-        const content = range(this._faker!.datatype.number({ min: 2, max: 8 }))
-          .map(() => this._faker!.lorem.sentences(this._faker!.datatype.number({ min: 2, max: 16 })))
+        const content = range(this._faker!.number.int({ min: 2, max: 8 }))
+          .map(() => this._faker!.lorem.sentences(this._faker!.number.int({ min: 2, max: 16 })))
           .join('\n\n');
 
         this._space.db.add(new Document({ title, content: new Text(content) }));
@@ -38,7 +41,6 @@ export class Generator {
   }
 
   updateObject(type = Document.type.name) {
-    log('update', { type });
     switch (type) {
       case Document.type.name: {
         const { objects } = this._space.db.query(Document.filter());
@@ -47,7 +49,7 @@ export class Generator {
           const object = this._faker!.helpers.arrayElement(objects);
           const text = object.content.text;
           // TODO(burdon): Insert, update, or delete.
-          const idx = text.lastIndexOf(' ', this._faker!.datatype.number({ min: 0, max: text.length }));
+          const idx = text.lastIndexOf(' ', this._faker!.number.int({ min: 0, max: text.length }));
           if (idx !== -1) {
             object.content.model?.insert(' ' + this._faker!.lorem.word(), idx);
           } else {

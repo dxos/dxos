@@ -14,7 +14,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "run-tests": "node -r ts-node/register ./src/main.ts"
+    "run-tests": "SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -23,6 +23,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",

@@ -4,9 +4,10 @@
 
 import { Check } from '@phosphor-icons/react';
 import React, { FC, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { MulticastObservable } from '@dxos/async';
-import { Button } from '@dxos/aurora';
+import { Toolbar } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Table, TableColumn } from '@dxos/mosaic';
 import { Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,10 +17,10 @@ import { PublicKey } from '@dxos/react-client';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet, humanize } from '@dxos/util';
 
-import { DetailsTable, PanelContainer, Toolbar } from '../../components';
+import { DetailsTable, PanelContainer } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../hooks';
-import { useNavigate } from 'react-router-dom';
+import { textLink } from '../../styles';
 
 const SpaceInfoPanel: FC = () => {
   const { space } = useDevtoolsState();
@@ -83,14 +84,15 @@ const SpaceInfoPanel: FC = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
-          <Button onClick={toggleActive}>{space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}</Button>
-        </Toolbar>
+          <Toolbar.Button onClick={toggleActive}>
+            {space?.state.get() === SpaceState.INACTIVE ? 'Open' : 'Close'}
+          </Toolbar.Button>
+        </Toolbar.Root>
       }
-      className='overflow-auto'
     >
-      <div className='flex flex-col flex-1 overflow-auto divide-y space-y-2'>
+      <div className='flex flex-col'>
         {object && <DetailsTable object={object} />}
         <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
       </div>
@@ -117,15 +119,19 @@ const columns: TableColumn<PipelineTableRow>[] = [
       const setContext = useDevtoolsDispatch();
       const navigate = useNavigate();
       const onClick = () => {
-        setContext(ctx => ({ ...ctx, feedKey: row.original.feedKey }));
+        setContext((ctx) => ({ ...ctx, feedKey: row.original.feedKey }));
         navigate('/echo/feeds');
-      }
+      };
 
-      return <a className='font-mono text-blue-800 cursor-pointer' onClick={onClick}>{value}</a>
+      return (
+        <a className={mx('font-mono', textLink)} onClick={onClick}>
+          {value}
+        </a>
+      );
     },
     accessor: (block) => {
       const feedKey = block.feedKey;
-      return `${feedKey.truncate()}`;
+      return feedKey.truncate();
     },
   },
   {

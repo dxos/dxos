@@ -2,28 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Rows } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Button } from '@dxos/aurora';
+import { Toolbar } from '@dxos/aurora';
+import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { TableColumn } from '@dxos/mosaic';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector, Toolbar } from '../../components';
+import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../components';
 import { SpaceSelector } from '../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../hooks';
+import { textLink } from '../../styles';
 
 const columns: TableColumn<SubscribeToFeedBlocksResponse.Block>[] = [
   {
     Header: 'FeedKey',
-    width: 120,
-    Cell: ({ value }: any) => <div className='font-mono'>{value}</div>,
-    accessor: (block) => {
-      const feedKey = block.feedKey;
-      return feedKey.truncate();
-    },
+    width: 80,
+    Cell: ({ value }: any) => <div className={mx('font-mono', textLink)}>{value.truncate()}</div>,
+    accessor: 'feedKey',
   },
   {
     Header: 'Sequence',
@@ -59,10 +57,10 @@ const FeedsPanel = () => {
   }, [key]);
 
   useEffect(() => {
-    if(feedKey && feedKeys.length > 0 && !feedKeys.find(feed => feed.equals(feedKey))) {
+    if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
       handleSelect(feedKeys[0]);
     }
-  }, [JSON.stringify(feedKeys), feedKey])
+  }, [JSON.stringify(feedKeys), feedKey]);
 
   const handleSelect = (feedKey?: PublicKey) => {
     setContext((state) => ({ ...state, feedKey }));
@@ -85,19 +83,18 @@ const FeedsPanel = () => {
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
+        <Toolbar.Root>
           <SpaceSelector />
           <PublicKeySelector
-            Icon={Rows}
-            placeholder={'Select feed'}
+            placeholder='Select feed'
             getLabel={getLabel}
             keys={feedKeys}
             value={key}
             onChange={handleSelect}
           />
 
-          <Button onClick={handleRefresh}>Refresh</Button>
-        </Toolbar>
+          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+        </Toolbar.Root>
       }
     >
       <BitfieldDisplay value={meta?.downloaded ?? new Uint8Array()} length={meta?.length ?? 0} />

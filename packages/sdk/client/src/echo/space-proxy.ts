@@ -2,17 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
 import isEqualWith from 'lodash.isequalwith';
-import invariant from 'tiny-invariant';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import { ClientServicesProvider, LOAD_PROPERTIES_TIMEOUT, Space, SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
-import { DatabaseRouter, TypedObject, EchoDatabase, setStateFromSnapshot } from '@dxos/echo-schema';
+import { DatabaseRouter, EchoDatabase, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
 import { ApiError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { decodeError } from '@dxos/protocols';
@@ -378,5 +377,5 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
     return false;
   }
 
-  return !isEqual(prev, next);
+  return !isEqualWith(prev, next, loadashEqualityFn);
 };

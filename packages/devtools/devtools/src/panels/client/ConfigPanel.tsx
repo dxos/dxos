@@ -4,25 +4,23 @@
 
 import React from 'react';
 
-// import { Config } from '@dxos/protocols/proto/dxos/config';
-import { useAsyncEffect } from '@dxos/react-async';
-import { useClientServices, useConfig } from '@dxos/react-client';
+import { Toolbar } from '@dxos/aurora';
+import { useConfig } from '@dxos/react-client';
 
 import { JsonView, PanelContainer } from '../../components';
+import { VaultSelector } from '../../containers';
 
 const ConfigPanel = () => {
   const config = useConfig();
-  const services = useClientServices();
-  // const [config, setConfig] = useState<Config>({});
-  useAsyncEffect(async () => {
-    if (services) {
-      // const config = await services.SystemService.getConfig();
-      // setConfig(config);
-    }
-  }, [services]);
 
   return (
-    <PanelContainer>
+    <PanelContainer
+      toolbar={
+        <Toolbar.Root>
+          <VaultSelector />
+        </Toolbar.Root>
+      }
+    >
       <JsonView data={config.values} />
     </PanelContainer>
   );

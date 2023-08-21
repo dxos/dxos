@@ -7,6 +7,7 @@ import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import {
   avatarTheme,
+  breadcrumbTheme,
   buttonTheme,
   dialogTheme,
   dropdownMenuTheme,
@@ -17,8 +18,10 @@ import {
   messageTheme,
   popoverTheme,
   scrollAreaTheme,
+  selectTheme,
   separatorTheme,
   toastTheme,
+  toolbarTheme,
   tooltipTheme,
   tagTheme,
 } from './components';
@@ -27,6 +30,7 @@ export const auroraTheme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
 
   avatar: avatarTheme,
+  breadcrumb: breadcrumbTheme,
   button: buttonTheme,
   dialog: dialogTheme,
   dropdownMenu: dropdownMenuTheme,
@@ -36,10 +40,12 @@ export const auroraTheme: Theme<Record<string, any>> = {
   main: mainTheme,
   message: messageTheme,
   popover: popoverTheme,
+  select: selectTheme,
   scrollArea: scrollAreaTheme,
   separator: separatorTheme,
   tag: tagTheme,
   toast: toastTheme,
+  toolbar: toolbarTheme,
   tooltip: tooltipTheme,
 };
 

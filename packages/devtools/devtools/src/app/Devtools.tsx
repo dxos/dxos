@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { DensityProvider } from '@dxos/aurora';
-import { appkitTranslations, useTelemetry, ThemeProvider } from '@dxos/react-appkit';
+import { DensityProvider, ThemeMode, ThemeProvider } from '@dxos/aurora';
+import { auroraTheme, bindTheme, toolbarRoot } from '@dxos/aurora-theme';
+import { useTelemetry } from '@dxos/react-appkit';
 import { ClientServices, Client, ClientContext } from '@dxos/react-client';
 
 import { ErrorBoundary } from '../components';
@@ -21,7 +23,9 @@ const Telemetry = ({ namespace }: { namespace: string }) => {
   return null;
 };
 
-// Entry point that does not have opinion on Client, so it can be reused in extension.
+/**
+ * Entrypoint for app and extension (no direct dependency on Client).
+ */
 export const Devtools = ({
   context,
   namespace = telemetryNamespace,
@@ -29,14 +33,22 @@ export const Devtools = ({
   context?: { client: Client; services?: ClientServices };
   namespace?: string;
 }) => {
-  // const fallback = <Fallback message='Loading...' />;
-  const fallback = null;
+  const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   if (!context) {
-    return fallback;
+    return null;
   }
 
+  const devtoolsTx = bindTheme({
+    ...auroraTheme,
+    toolbar: {
+      root: (props, ...etc) => {
+        return toolbarRoot(props, 'p-2', ...etc);
+      },
+    },
+  });
+
   return (
-    <ThemeProvider appNs='devtools' resourceExtensions={[appkitTranslations]} fallback={fallback}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
           <ClientContext.Provider value={context}>

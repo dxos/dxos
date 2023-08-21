@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Download } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import { Clipboard, Download } from '@phosphor-icons/react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Button, Input } from '@dxos/aurora';
+import { Input, Toolbar } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useFileDownload } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
-import { JsonView, PanelContainer, Toolbar } from '../../components';
+import { JsonView, PanelContainer } from '../../components';
 
 const DiagnosticsPanel = () => {
   const client = useClient();
@@ -52,26 +52,46 @@ const DiagnosticsPanel = () => {
     );
   };
 
+  const info = useMemo<string[] | undefined>(() => {
+    if ((window as any).chrome) {
+      return ['chrome://inspect/#workers'];
+    }
+  }, []);
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+  };
+
   return (
     <PanelContainer
       toolbar={
-        <Toolbar>
-          <Button onClick={handleRefresh}>Refresh</Button>
-          <Button onClick={handleDownload}>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={handleDownload}>
             <Download className={getSize(5)} />
             <span className='m-2'>Download</span>
-          </Button>
-          <Button onClick={handleResetMetrics}>Reset metrics</Button>
+          </Toolbar.Button>
+          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
           <Input.Root>
-            <div role='none' className='flex space-x-2 bg-red-100 items-center'>
-              <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
-              <Input.Label>Record metrics!</Input.Label>
-            </div>
+            <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
+            <Input.Label>Record metrics</Input.Label>
           </Input.Root>
-        </Toolbar>
+        </Toolbar.Root>
+      }
+      footer={
+        info && (
+          <div className='flex p-2 items-center text-sm font-mono gap-2'>
+            {info.map((text, i) => (
+              <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
+                <Clipboard />
+                {text}
+              </div>
+            ))}
+          </div>
+        )
       }
     >
-      <JsonView data={data} level={5} />
+      <JsonView data={data} />
     </PanelContainer>
   );
 };

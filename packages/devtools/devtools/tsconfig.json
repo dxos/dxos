@@ -6,7 +6,12 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist/types"
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test",
+      "@dxos/typings",
+      "node"
+    ]
   },
   "include": [
     "src"
@@ -20,6 +25,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -47,6 +55,12 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../experimental/gem-spore"
     },
     {
       "path": "../../experimental/gem-spore"

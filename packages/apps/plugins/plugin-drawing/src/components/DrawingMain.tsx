@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
-import { fullSurface, mx } from '@dxos/aurora-theme';
+import { fixedFullLayout, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -17,70 +17,22 @@ import { useDrawingModel } from '../hooks';
 
 export type DrawingMainParams = {
   readonly?: boolean;
-  data: {
-    object: DrawingType;
-  };
+  data: DrawingType;
 };
 
-export const DrawingSection: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = true }) => {
+export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
   const { store } = useDrawingModel(drawing.data);
   const { themeMode } = useThemeContext();
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
-      editor.setReadOnly(readonly);
       editor.setDarkMode(themeMode === 'dark');
+
+      // TODO(burdon): Config.
+      editor.setSnapMode(true);
+      editor.setGridMode(true);
     }
-  }, [editor, readonly, themeMode]);
-
-  // Zoom to fit.
-  // TODO(burdon): Update height within range.
-  const { ref: containerRef, width } = useResizeDetector();
-  const [height, _setHeight] = useState<number>(300);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    editor?.updateViewportScreenBounds();
-  }, [editor, width]);
-  useEffect(() => {
-    const update = (animate = false) => {
-      const bounds = editor?.allShapesCommonBounds;
-      if (bounds && width && bounds.width && bounds.height) {
-        const zoom = Math.min(1, Math.min(width / bounds.width, height / bounds.height) * 0.8);
-        const center = {
-          x: bounds.x + bounds.width / 2,
-          y: bounds.y + bounds.height / 2,
-        };
-
-        editor.stopCameraAnimation();
-        const { width: pw, height: ph } = editor.viewportPageBounds;
-        editor.animateCamera(pw / 2 - center.x, ph / 2 - center.y, zoom, animate ? { duration: 250 } : undefined);
-        setReady(true);
-      }
-    };
-
-    update(false);
-    const f = debounce<boolean>(update, 100);
-    const subscription = store.listen(() => f(true), { scope: 'document' });
-    return () => subscription();
-  }, [editor, width]);
-
-  return (
-    <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
-      <Tldraw autoFocus store={store} hideUi={readonly} onMount={setEditor} />
-    </div>
-  );
-};
-
-export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, readonly = false }) => {
-  const { store } = useDrawingModel(drawing.data);
-  const { themeMode } = useThemeContext();
-  const [editor, setEditor] = useState<Editor>();
-  useEffect(() => {
-    if (editor) {
-      editor.setReadOnly(readonly);
-      editor.setDarkMode(themeMode === 'dark');
-    }
-  }, [editor, readonly, themeMode]);
+  }, [editor, themeMode]);
 
   // Tool events.
   const handleUiEvent = (name: string, data: any) => {
@@ -93,7 +45,7 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, 
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
-    <Main.Content classNames={fullSurface}>
+    <Main.Content classNames={fixedFullLayout}>
       <div
         className={mx(
           'h-full',
@@ -105,8 +57,56 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: { object: drawing }, 
           '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
         )}
       >
-        <Tldraw autoFocus store={store} hideUi={readonly} onUiEvent={handleUiEvent} onMount={setEditor} />
+        <Tldraw autoFocus store={store} onUiEvent={handleUiEvent} onMount={setEditor} />
       </div>
     </Main.Content>
+  );
+};
+
+export const DrawingSection: FC<DrawingMainParams> = ({ data: drawing }) => {
+  const { store } = useDrawingModel(drawing.data);
+  const { themeMode } = useThemeContext();
+  const [editor, setEditor] = useState<Editor>();
+  useEffect(() => {
+    if (editor) {
+      editor.setReadOnly(true);
+      editor.setDarkMode(themeMode === 'dark');
+    }
+  }, [editor, themeMode]);
+
+  // Zoom to fit.
+  // TODO(burdon): Update height within range.
+  const { ref: containerRef, width } = useResizeDetector();
+  const [height] = useState<number>(400);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    editor?.updateViewportScreenBounds();
+  }, [editor, width]);
+  useEffect(() => {
+    const zoomToFit = (animate = true) => {
+      const commonBounds = editor?.allShapesCommonBounds;
+      if (editor && width && commonBounds?.width && commonBounds?.height) {
+        const padding = 40;
+        const zoom = Math.min(1, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+        const center = {
+          x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+          y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+        };
+
+        editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
+        setReady(true);
+      }
+    };
+
+    const onUpdate = debounce(zoomToFit, 200);
+    const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
+    zoomToFit(false);
+    return () => subscription();
+  }, [editor, width]);
+
+  return (
+    <div ref={containerRef} style={{ height, visibility: ready ? 'visible' : 'hidden' }}>
+      <Tldraw store={store} hideUi={true} onMount={setEditor} />
+    </div>
   );
 };

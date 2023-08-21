@@ -8,14 +8,15 @@ import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { GraphNode, getActions, useGraph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useSidebar, useTranslation } from '@dxos/aurora';
+import { Graph } from '@braneframe/plugin-graph';
+import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { TREE_VIEW_PLUGIN } from '../types';
+import { sortActions } from '../util';
 import { TreeView } from './TreeView';
 
-type SortableBranchTreeItemProps = { node: GraphNode } & Pick<SortableProps, 'rearranging'>;
+type SortableBranchTreeItemProps = { node: Graph.Node } & Pick<SortableProps, 'rearranging'>;
 
 export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   node,
@@ -37,21 +38,20 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   );
 };
 
-type BranchTreeItemProps = { node: GraphNode } & SortableProps;
+type BranchTreeItemProps = { node: Graph.Node } & SortableProps;
 
 export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   BranchTreeItemProps
 >(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
-  // todo(thure): Handle `sortable`
+  // TODO(thure): Handle `sortable`
 
-  const { invokeAction } = useGraph();
-  const [primaryAction, ...actions] = getActions(node);
+  const [primaryAction, ...actions] = sortActions(node.actions);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   const hasActiveDocument = false;
-  const disabled = node.attributes?.disabled;
-  const error = node.attributes?.error;
-  const { sidebarOpen } = useSidebar();
+  const disabled = node.properties?.disabled;
+  const error = node.properties?.error;
+  const { navigationSidebarOpen } = useSidebars();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
@@ -81,7 +81,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
           disabled={disabled}
           classNames={['grow flex', disabled && staticDisabled]}
           {...(disabled && { 'aria-disabled': true })}
-          {...(!sidebarOpen && { tabIndex: -1 })}
+          {...(!navigationSidebarOpen && { tabIndex: -1 })}
         >
           <OpenTriggerIcon
             weight='fill'
@@ -138,7 +138,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                   <Button
                     variant='ghost'
                     classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                    {...(!sidebarOpen && { tabIndex: -1 })}
+                    {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
                   </Button>
@@ -150,17 +150,17 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                     <DropdownMenu.Item
                       key={action.id}
                       onClick={(event) => {
-                        if (action.disabled) {
+                        if (action.properties.disabled) {
                           return;
                         }
                         event.stopPropagation();
                         // todo(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
                         suppressNextTooltip.current = true;
                         setOptionsMenuOpen(false);
-                        void invokeAction(action);
+                        void action.invoke();
                       }}
                       classNames='gap-2'
-                      disabled={action.disabled}
+                      disabled={action.properties.disabled}
                     >
                       {action.icon && <action.icon className={getSize(4)} />}
                       <span>{Array.isArray(action.label) ? t(...action.label) : action.label}</span>
@@ -187,14 +187,12 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.stopPropagation();
-                    void invokeAction(primaryAction);
+                    void primaryAction.invoke();
                   }
                 }}
-                onClick={() => {
-                  void invokeAction(primaryAction);
-                }}
-                {...(primaryAction.testId && { 'data-testid': primaryAction.testId })}
-                {...(!sidebarOpen && { tabIndex: -1 })}
+                onClick={() => primaryAction.invoke()}
+                {...(primaryAction.properties.testId && { 'data-testid': primaryAction.properties.testId })}
+                {...(!navigationSidebarOpen && { tabIndex: -1 })}
               >
                 <span className='sr-only'>
                   {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
@@ -210,7 +208,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={Object.values(node.pluginChildren ?? {}).flat() as GraphNode[]} parent={node} />
+        <TreeView items={Object.values(node.children).flat() as Graph.Node[]} parent={node} />
       </TreeItem.Body>
     </TreeItem.Root>
   );

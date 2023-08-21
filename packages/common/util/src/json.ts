@@ -72,3 +72,22 @@ export const jsonify = (value: any, depth = 0, visitedObjects = new WeakSet<any>
     return value;
   }
 };
+
+export type JsonKeyOptions = {
+  truncate?: boolean;
+  humanize?: boolean;
+};
+
+export const jsonKeyReplacer =
+  (options: JsonKeyOptions = {}) =>
+  (key: string, value: any) => {
+    if (typeof value === 'string') {
+      const key = PublicKey.fromHex(value);
+      if (key.toHex() === value) {
+        // TODO(burdon): Remove humanize.
+        return options.humanize ? humanize(key) : options.truncate ? key.truncate() : key.toHex();
+      }
+    }
+
+    return value;
+  };

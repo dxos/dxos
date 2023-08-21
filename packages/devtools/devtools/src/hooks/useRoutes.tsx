@@ -16,13 +16,15 @@ import {
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
+  MetadataPanel,
+  NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
   SpacesPanel,
   StoragePanel,
   SwarmPanel,
+  TracingPanel,
 } from '../panels';
-import MetadataPanel from '../panels/echo/MetadataPanel';
 
 export const namespace = 'devtools';
 
@@ -37,10 +39,6 @@ export const useRoutes = () => {
       element: <RootContainer />,
       children: [
         {
-          path: '/diagnostics',
-          element: <DiagnosticsPanel />,
-        },
-        {
           path: '/client',
           children: [
             {
@@ -54,6 +52,14 @@ export const useRoutes = () => {
             {
               path: '/client/logs',
               element: <LoggingPanel />,
+            },
+            {
+              path: '/client/diagnostics',
+              element: <DiagnosticsPanel />,
+            },
+            {
+              path: '/client/tracing',
+              element: <TracingPanel />,
             },
           ],
         },
@@ -107,12 +113,16 @@ export const useRoutes = () => {
           path: '/mesh',
           children: [
             {
+              path: '/mesh/signal',
+              element: <SignalPanel />,
+            },
+            {
               path: '/mesh/swarm',
               element: <SwarmPanel />,
             },
             {
-              path: '/mesh/signal',
-              element: <SignalPanel />,
+              path: '/mesh/network',
+              element: <NetworkPanel />,
             },
           ],
         },

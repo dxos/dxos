@@ -4,17 +4,24 @@
 
 import React from 'react';
 
+import { Toolbar } from '@dxos/aurora';
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
 
 import { JsonView, PanelContainer } from '../../components';
+import { VaultSelector } from '../../containers';
 
-// TODO(burdon): Implement table.
 const IdentityPanel = () => {
   const identity = useIdentity();
   const devices = useDevices();
 
   return (
-    <PanelContainer>
+    <PanelContainer
+      toolbar={
+        <Toolbar.Root>
+          <VaultSelector />
+        </Toolbar.Root>
+      }
+    >
       <JsonView data={{ ...identity, devices }} />
     </PanelContainer>
   );

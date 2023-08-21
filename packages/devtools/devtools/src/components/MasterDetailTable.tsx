@@ -19,12 +19,13 @@ export type MasterTableProps<T extends {}> = {
 export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact = true }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T>();
   const tableSlots = defaultsdeep({}, slots, {
+    root: { className: 'grow' },
     selected: { className: 'bg-slate-200' },
     cell: { className: 'cursor-pointer' },
   });
 
   return (
-    <div className='flex flex-1 overflow-hidden divide-x'>
+    <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
         <Table<T>
           compact={compact}

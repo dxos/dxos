@@ -3,13 +3,14 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import assert from 'node:assert';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer } from '@dxos/websocket-rpc';
@@ -44,7 +45,7 @@ export class Agent {
   private _services: Service[] = [];
 
   constructor(private readonly _options: AgentOptions) {
-    assert(this._options);
+    invariant(this._options);
     this._plugins = (this._options.plugins?.filter(Boolean) as Plugin[]) ?? [];
     if (this._options.metrics) {
       tracer.start();
@@ -52,12 +53,12 @@ export class Agent {
   }
 
   async start() {
-    assert(!this._clientServices);
+    invariant(!this._clientServices);
     log('starting...');
 
     // Create client services.
     this._clientServices = await fromHost(this._options.config, { lockKey: lockFilePath(this._options.profile) });
-    await this._clientServices.open();
+    await this._clientServices.open(new Context());
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
@@ -115,7 +116,7 @@ export class Agent {
 
     // Close client and services.
     await this._client?.destroy();
-    await this._clientServices?.close();
+    await this._clientServices?.close(new Context());
     this._client = undefined;
     this._clientServices = undefined;
 

@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
-
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import {
   DeviceStateMachine,
   CredentialSigner,
@@ -17,11 +16,13 @@ import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
@@ -36,6 +37,7 @@ export type IdentityParams = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
+@trace.resource()
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
@@ -77,13 +79,15 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  async open() {
+  @trace.span()
+  async open(ctx: Context) {
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
-    await this.space.open();
+    await this.space.open(ctx);
   }
 
-  async close() {
+  @trace.span()
+  async close(ctx: Context) {
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);

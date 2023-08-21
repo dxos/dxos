@@ -12,8 +12,8 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
-import { baseSurface, fullSurface, getSize } from '@dxos/aurora-theme';
-import { SpaceProxy } from '@dxos/client/echo';
+import { baseSurface, fixedFullLayout, getSize } from '@dxos/aurora-theme';
+import { Space } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -22,7 +22,7 @@ import { Generator } from '../testing';
 
 export const DEFAULT_PERIOD = 500;
 
-export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space } }) => {
+export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) => {
   const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
@@ -31,7 +31,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   const config = useConfig();
   const [data, setData] = useState<any>({});
   const handleRefresh = async () => {
-    const data = await client.diagnostics({ humanize: false, truncate: true });
+    const data = await client.diagnostics({ truncate: true });
     setData(data);
   };
   useEffect(() => {
@@ -83,21 +83,24 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
   };
 
   return (
-    <Main.Content classNames={[fullSurface, baseSurface]}>
+    <Main.Content classNames={[fixedFullLayout, baseSurface]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>
           <Button onClick={handleUpdateObject}>Update</Button>
-          <Input.Root>
-            <Input.TextInput
-              title={t('mutation period')}
-              autoComplete='off'
-              classNames='w-[100px] text-right'
-              placeholder='Mutation period'
-              value={mutationInterval}
-              onChange={({ target: { value } }) => setMutationInterval(value)}
-            />
-          </Input.Root>
+          <div>
+            <Input.Root>
+              <Input.TextInput
+                title={t('mutation period')}
+                autoComplete='off'
+                size={6}
+                classNames='w-[100px] text-right'
+                placeholder='Mutation period'
+                value={mutationInterval}
+                onChange={({ target: { value } }) => setMutationInterval(value)}
+              />
+            </Input.Root>
+          </div>
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
@@ -112,7 +115,7 @@ export const DebugMain: FC<{ data: { space: SpaceProxy } }> = ({ data: { space }
 
       <div className='flex flex-col grow px-2 overflow-hidden'>
         <div className='flex grow overflow-auto text-sm'>
-          <SyntaxHighlighter language='json' style={style}>
+          <SyntaxHighlighter language='json' style={style} className='w-full'>
             {JSON.stringify(data, replacer, 2)}
           </SyntaxHighlighter>
         </div>

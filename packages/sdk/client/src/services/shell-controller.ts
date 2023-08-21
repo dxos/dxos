@@ -37,6 +37,7 @@ export class ShellController {
   constructor(
     private readonly _iframeController: IFrameController,
     private readonly _joinedSpace: Event<PublicKey>,
+    private readonly _invalidatedInvitationCode: Event<string>,
     private readonly _channel = DEFAULT_SHELL_CHANNEL
   ) {
     this._handleKeyDown = this._handleKeyDown.bind(this);
@@ -70,6 +71,9 @@ export class ShellController {
       }
       spaceKey && this._joinedSpace.emit(spaceKey);
     });
+    this.contextUpdate.on(({ invalidatedInvitationCode }) => {
+      invalidatedInvitationCode && this._invalidatedInvitationCode.emit(invalidatedInvitationCode);
+    });
 
     window.addEventListener('keydown', this._handleKeyDown);
 
@@ -86,7 +90,9 @@ export class ShellController {
         AppService: {
           setContext: async (request) => {
             log('set context', request);
-            this._display = request.display;
+            if (request.display) {
+              this._display = request.display;
+            }
             this.contextUpdate.emit(request);
           },
         },
