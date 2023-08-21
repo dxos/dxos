@@ -198,8 +198,14 @@ export class IdentityManager {
    */
   async updateProfile(params: ProfileDocument) {
     invariant(this._identity, 'Identity not initialized.');
-    const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey);
-    const credential = await generator.createProfileCredential(params);
+    // TODO(wittjosiah): Use CredentialGenerator.
+    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+      subject: this._identity.identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityProfile',
+        profile: params,
+      },
+    });
     await this._identity.controlPipeline.writer.write({ credential: { credential } });
   }
 

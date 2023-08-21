@@ -93,7 +93,7 @@ describe('identity/identity-manager', () => {
 
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
-    await identityManager.open();
+    await identityManager.open(new Context());
     afterTest(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();

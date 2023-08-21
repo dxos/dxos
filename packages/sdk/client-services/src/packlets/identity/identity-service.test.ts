@@ -23,17 +23,12 @@ describe('IdentityService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-<<<<<<< Updated upstream
     await serviceContext.open(new Context());
-    identityService = new IdentityServiceImpl(serviceContext);
-=======
-    await serviceContext.open();
     identityService = new IdentityServiceImpl(
       (params) => serviceContext.createIdentity(params),
       serviceContext.identityManager,
       serviceContext.keyring,
     );
->>>>>>> Stashed changes
   });
 
   afterEach(async () => {
