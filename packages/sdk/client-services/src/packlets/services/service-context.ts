@@ -37,11 +37,14 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, SigningContext } from '../spaces';
+import { safeInstanceof } from '@dxos/util';
 
 /**
  * Shared backend for all client services.
  */
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
+// TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
+@safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();
