@@ -30,9 +30,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode, jsonKeyReplacer, JsonKeyOptions, MaybePromise } from '@dxos/util';
 
-import type { Diagnostics, DiagnosticOptions, Monitor } from '../diagnostics';
 import { defaultKey, type EchoProxy } from '../echo';
-import type { EchoProxy } from '../echo';
 import type { HaloProxy } from '../halo';
 import type { MeshProxy } from '../mesh';
 import type { PropertiesProps } from '../proto';
