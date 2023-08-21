@@ -118,14 +118,15 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
 
-    const feeds = new Map<string, FeedWrapper<any>[]>
+    const feeds = new Map<string, { writable: boolean, feed: FeedWrapper<any>}[]>
 
     // Feeds.
     for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
       const feedsArr = [];
       for (const feedConfig of feedConfigs) {
-        const feed = await feedStore.openFeed(PublicKey.from(feedConfig.feedKey), feedConfig.writable);
-        feedsArr.push(feed);
+        // TODO(egorgripasov): It turned out we need a corresponding pivate keys to write to a feed.
+        const feed = await feedStore.openFeed(PublicKey.from(feedConfig.feedKey), { writable: feedConfig.writable });
+        feedsArr.push({ feed, writable: feedConfig.writable });
       }
       feeds.set(swarmTopicId, feedsArr);
     }
@@ -256,23 +257,51 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await env.syncBarrier(`swarms are ready on ${testCounter}`);
       }
 
-      await sleep(10_000);
+      await sleep(5_000);
 
       // Add feeds.
       {
         log.info('adding feeds', { agentIdx });
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
-          for (const feed of feedsArr) {
+          for (const feedObj of feedsArr) {
             const connection = swarm.protocol.otherConnections.get({ remotePeerId: PublicKey.from(agentId), extension: REPLICATOR_EXTENSION_NAME }) as ReplicatorExtension;
-            await connection.addFeed(feed);
+            await connection.addFeed(feedObj.feed);
           }
         });
 
         await env.syncBarrier(`feeds are added on ${testCounter}`);
       }
 
-      await sleep(10_000);
+      await sleep(5_000);
+
+      // Write to wratable feeds in all swarms.
+      {
+        log.info('writing to writable feeds', { agentIdx });
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
+          const feedsArr = feeds.get(swarm.topic.toString())!;
+          for (const feedObj of feedsArr) {
+            if (feedObj.writable) {
+              await feedObj.feed.append(Buffer.from(`data from ${agentId}`));
+            }
+          }
+        });
+
+        await env.syncBarrier(`feeds are written on ${testCounter}`);
+      }
+
+      await sleep(5_000);
+
+      // Check length of all feeds.
+      {
+        log.info('checking feeds length', { agentIdx });
+        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
+          const feedsArr = feeds.get(swarm.topic.toString())!;
+          for (const feedObj of feedsArr) {
+            console.log('FEED LENGTH', feedObj.feed.length);
+          }
+        });
+      }
 
       // Leave all swarms.
       {
