@@ -58,11 +58,11 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         outExtension: { '.js': extension },
         format,
         write: true,
-        splitting: format === 'esm',
+        splitting: true,
         sourcemap: options.sourcemap,
         metafile: options.metafile,
         bundle: options.bundle,
-        watch: options.watch,
+        // watch: options.watch,
         alias: options.alias,
         platform,
         // https://esbuild.github.io/api/#log-override
