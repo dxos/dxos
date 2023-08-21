@@ -3,11 +3,11 @@
 //
 import React from 'react';
 
-import { useTranslation } from '@dxos/aurora';
-import { mx } from '@dxos/aurora-theme';
-import { Avatar } from '@dxos/react-appkit';
+import { useTranslation, ListItem, Avatar, useJdenticonHref } from '@dxos/aurora';
+import { chromeSurface, mx } from '@dxos/aurora-theme';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Identity } from '@dxos/react-client/halo';
+import { humanize } from '@dxos/util';
 
 export const IdentityListItem = ({
   identity,
@@ -19,18 +19,28 @@ export const IdentityListItem = ({
   onClick?: () => void;
 }) => {
   const { t } = useTranslation('os');
+  const fallbackValue = identity.identityKey.toHex();
+  const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
+  const displayName = identity.profile?.displayName ?? humanize(identity.identityKey);
   return (
-    <li
-      className={mx('flex gap-2 items-center', onClick && 'cursor-pointer')}
+    <ListItem.Root
+      classNames={mx('rounded p-2 flex gap-2 items-center', chromeSurface, onClick && 'cursor-pointer')}
       onClick={() => onClick?.()}
       data-testid='identity-list-item'
     >
-      <Avatar
+      <ListItem.Heading classNames='sr-only'></ListItem.Heading>
+      <Avatar.Root status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}>
+        <Avatar.Frame>
+          <Avatar.Fallback href={jdenticon} />
+        </Avatar.Frame>
+      </Avatar.Root>
+      <span className='text-sm truncate'>{displayName}</span>
+      {/* <Avatar
         {...{
           variant: 'circle',
           size: 9,
           fallbackValue: identity.identityKey.toHex(),
-          label: <p className='text-sm truncate'>{identity.profile?.displayName ?? identity.identityKey.truncate()}</p>,
+          label: <p className='text-sm truncate'>{displayName}</p>,
           ...(presence === SpaceMember.PresenceState.OFFLINE && {
             status: 'inactive',
             description: (
@@ -45,7 +55,7 @@ export const IdentityListItem = ({
           ...(presence === SpaceMember.PresenceState.ONLINE && { status: 'active' }),
           slots: { labels: { className: 'block shrink overflow-hidden' }, root: { classNames: 'shrink-0' } },
         }}
-      />
-    </li>
+      /> */}
+    </ListItem.Root>
   );
 };

@@ -19,11 +19,16 @@ const getComponents = (module: any): React.FC[] => {
   return components;
 };
 
+const camelCaseToSpacedName = (camelCase: string) => {
+  return camelCase.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+};
+
 const StoryRow = ({ components }: { components: React.FC[] }) => {
   return (
     <tr style={{ whiteSpace: 'nowrap' }}>
       {components?.map((Comp) => (
         <td key={Comp.name}>
+          <div className='bg-zinc-500 text-zinc-200 p-3 text-sm text-center'>{camelCaseToSpacedName(Comp.name)}</div>
           <Comp />
         </td>
       ))}

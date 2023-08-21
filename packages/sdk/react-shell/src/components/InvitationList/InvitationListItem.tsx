@@ -4,14 +4,13 @@
 import { ProhibitInset, X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ListItem, useTranslation } from '@dxos/aurora';
+import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
 import { chromeSurface, getSize } from '@dxos/aurora-theme';
 import { CancellableInvitationObservable, InvitationStatus, useInvitationStatus } from '@dxos/react-client/invitations';
 
-import { invitationStatusValue } from '../../util';
+import { invitationStatusValue, toEmoji } from '../../util';
 import { CopyButtonIconOnly } from '../Clipboard';
 import { SharedInvitationListProps } from './InvitationListProps';
-import { InvitationStatusAvatar } from './InvitationStatusAvatar';
 
 export interface InvitationListItemProps extends SharedInvitationListProps {
   invitation: CancellableInvitationObservable;
@@ -46,13 +45,18 @@ export const InvitationListItemImpl = ({
   const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
-
+  const invitationId = invitation?.get().invitationId;
   return (
     <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>
-      <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} />
+      {/* <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} /> */}
+      <Avatar.Root status='pending'>
+        <Avatar.Frame>
+          <Avatar.Fallback text={toEmoji(invitationId)} />
+        </Avatar.Frame>
+      </Avatar.Root>
       {showShare && invitationUrl ? (
         <>
           <Button

@@ -6,10 +6,12 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { SpaceMemberListImpl } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
+import { InvitationManager, InvitationManagerProps } from '../../steps';
 import { inviteWithState } from '../../testing/fixtures/invitations';
 import { SpacePanelImpl } from './SpacePanel';
 import { SpacePanelImplProps } from './SpacePanelProps';
@@ -67,7 +69,182 @@ export const SpaceManagerWithInvites = () => {
   );
 };
 
-export const SpaceInvitationDetail = () => {
+export const SpaceManagerWithMoreInvites = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[
+                inviteWithState(Invitation.State.INIT),
+                inviteWithState(Invitation.State.CONNECTING),
+                inviteWithState(Invitation.State.CONNECTED),
+              ]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceManagerWithEvenMoreInvites = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[
+                inviteWithState(Invitation.State.INIT),
+                inviteWithState(Invitation.State.ERROR),
+                inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
+                inviteWithState(Invitation.State.AUTHENTICATING),
+                inviteWithState(Invitation.State.SUCCESS),
+                inviteWithState(Invitation.State.TIMEOUT),
+              ]}
+              SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceManagerWithMember = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[]}
+              SpaceMemberList={(props) => (
+                <SpaceMemberListImpl
+                  {...props}
+                  members={[
+                    {
+                      presence: SpaceMember.PresenceState.ONLINE,
+                      identity: {
+                        identityKey: PublicKey.random(),
+                      },
+                    },
+                  ]}
+                />
+              )}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceManagerWithMembers = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[]}
+              SpaceMemberList={(props) => (
+                <SpaceMemberListImpl
+                  {...props}
+                  members={[
+                    {
+                      presence: SpaceMember.PresenceState.ONLINE,
+                      identity: {
+                        identityKey: PublicKey.random(),
+                        profile: {
+                          displayName: 'John Doe',
+                        },
+                      },
+                    },
+                  ]}
+                />
+              )}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+export const SpaceManagerWithMoreMembers = () => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <SpacePanelImpl
+        {...noOpProps}
+        activeView='space manager'
+        SpaceManager={(props) => {
+          return (
+            <SpaceManagerImpl
+              {...props}
+              invitations={[
+                inviteWithState(Invitation.State.SUCCESS),
+                inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
+                inviteWithState(Invitation.State.AUTHENTICATING),
+              ]}
+              SpaceMemberList={(props) => (
+                <SpaceMemberListImpl
+                  {...props}
+                  members={[
+                    {
+                      presence: SpaceMember.PresenceState.ONLINE,
+                      identity: {
+                        identityKey: PublicKey.random(),
+                        profile: {
+                          displayName: 'John Doe',
+                        },
+                      },
+                    },
+                    {
+                      presence: SpaceMember.PresenceState.OFFLINE,
+                      identity: {
+                        identityKey: PublicKey.random(),
+                        profile: {
+                          displayName: 'Alice Wong',
+                        },
+                      },
+                    },
+                    {
+                      presence: SpaceMember.PresenceState.OFFLINE,
+                      identity: {
+                        identityKey: PublicKey.random(),
+                        profile: {
+                          displayName: 'Steel Nickels',
+                        },
+                      },
+                    },
+                  ]}
+                />
+              )}
+            />
+          );
+        }}
+      />
+    </StorybookDialog>
+  );
+};
+
+const SpaceInvitationManagerState = (extraprops?: Partial<InvitationManagerProps>) => {
   return (
     <StorybookDialog inOverlayLayout>
       <SpacePanelImpl
@@ -82,7 +259,31 @@ export const SpaceInvitationDetail = () => {
             />
           );
         }}
+        InvitationManager={(props) => <InvitationManager {...props} {...extraprops} />}
       />
     </StorybookDialog>
   );
 };
+
+export const SpaceInvitationManagerInit = () => SpaceInvitationManagerState({ status: Invitation.State.INIT, id: '0' });
+
+export const SpaceInvitationManagerConnecting = () =>
+  SpaceInvitationManagerState({ status: Invitation.State.CONNECTING, id: '1' });
+
+export const SpaceInvitationManagerConnected = () =>
+  SpaceInvitationManagerState({ status: Invitation.State.CONNECTED, id: '2' });
+
+export const SpaceInvitationManagerReadyForAuthentication = () =>
+  SpaceInvitationManagerState({ status: Invitation.State.READY_FOR_AUTHENTICATION, authCode: '123451', id: '3' });
+
+export const SpaceInvitationManagerAuthenticating = () =>
+  SpaceInvitationManagerState({ status: Invitation.State.AUTHENTICATING, id: '4' });
+
+export const SpaceInvitationManagerSuccess = () => SpaceInvitationManagerState({ status: Invitation.State.SUCCESS });
+
+export const SpaceInvitationManagerError = () => SpaceInvitationManagerState({ status: Invitation.State.ERROR });
+
+export const SpaceInvitationManagerTimeout = () => SpaceInvitationManagerState({ status: Invitation.State.TIMEOUT });
+
+export const SpaceInvitationManagerCancelled = () =>
+  SpaceInvitationManagerState({ status: Invitation.State.CANCELLED });
