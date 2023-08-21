@@ -206,7 +206,8 @@ export class IdentityManager {
         profile: params,
       },
     });
-    await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {

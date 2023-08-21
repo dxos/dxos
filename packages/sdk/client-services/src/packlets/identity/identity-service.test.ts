@@ -64,8 +64,8 @@ describe('IdentityService', () => {
       const identity = await identityService.createIdentity({});
       expect(identity.profile?.displayName).to.be.undefined;
 
-      await identityService.updateProfile({ displayName: 'Example' });
-      expect(identity.profile?.displayName).to.equal('Example');
+      const updatedIdentity = await identityService.updateProfile({ displayName: 'Example' });
+      expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });
   });
 
