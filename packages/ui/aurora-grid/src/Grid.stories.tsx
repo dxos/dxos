@@ -3,6 +3,7 @@
 //
 
 import { faker } from '@faker-js/faker';
+import { createColumnHelper } from '@tanstack/react-table';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -38,6 +39,11 @@ const createItems = (count: number) =>
     started: faker.date.recent(),
     complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
   }));
+
+const helper = createColumnHelper<Item>();
+helper.display({
+  id: 'xxx',
+});
 
 const itemColumns: GridColumn<Item>[] = [
   createKeyColumn('key', {
