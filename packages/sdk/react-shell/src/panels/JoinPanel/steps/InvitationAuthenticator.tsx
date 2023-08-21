@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { ChangeEvent, useState } from 'react';
 
 import { Input, useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
+import { PanelActions, PanelStepHeading } from '../../../components';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 import { JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -43,37 +42,39 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <Input.Root
-        {...(failed && {
-          validationValence: 'error',
-        })}
-      >
-        <Input.Label asChild>
-          <PanelStepHeading>{t('auth code input label')}</PanelStepHeading>
-        </Input.Label>
-        <Input.PinInput
-          {...{
-            disabled,
-            length: pinLength,
-            onChange,
-            inputMode: 'numeric',
-            autoComplete: 'off',
-            pattern: '\\d*',
-            'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
-            'data-prevent-ios-autofocus': true,
-            'data-testid': `${invitationType}-auth-code-input`,
-            'data-1p-ignore': true,
-          }}
-        />
-        {failed && (
-          <Input.DescriptionAndValidation classNames='text-center'>
-            <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        )}
-      </Input.Root>
-      <div role='none' className='grow' />
+      <div role='none' className='grow flex flex-col justify-center'>
+        <Input.Root
+          {...(failed && {
+            validationValence: 'error',
+          })}
+        >
+          <Input.Label asChild>
+            <PanelStepHeading>{t('auth code input label')}</PanelStepHeading>
+          </Input.Label>
+          <Input.PinInput
+            {...{
+              disabled,
+              length: pinLength,
+              onChange,
+              inputMode: 'numeric',
+              autoComplete: 'off',
+              pattern: '\\d*',
+              'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
+              'data-prevent-ios-autofocus': true,
+              'data-testid': `${invitationType}-auth-code-input`,
+              'data-1p-ignore': true,
+            }}
+          />
+          {failed && (
+            <Input.DescriptionAndValidation classNames='text-center'>
+              <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
+            </Input.DescriptionAndValidation>
+          )}
+        </Input.Root>
+      </div>
       <PanelActions>
-        <PanelAction
+        <LargeButton variant='primary'>Continue</LargeButton>
+        {/* <PanelAction
           aria-label={t('next label')}
           disabled={disabled}
           classNames='order-2'
@@ -90,7 +91,7 @@ export const InvitationAuthenticator = ({
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
+        </PanelAction> */}
       </PanelActions>
     </>
   );

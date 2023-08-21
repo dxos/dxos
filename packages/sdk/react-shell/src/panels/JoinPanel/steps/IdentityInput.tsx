@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { ComponentPropsWithoutRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Input } from '@dxos/react-appkit';
 import { useClient } from '@dxos/react-client';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
+import { PanelActions, PanelStepHeading } from '../../../components';
+import { LargeButton } from '../../../components/Panel/LargeButton';
+import { LargeInput } from '../../../components/Panel/LargeInput';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
@@ -54,7 +53,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   const isRecover = method === 'recover identity';
   return (
     <>
-      <Input
+      {/* <Input
         disabled={disabled}
         label={
           <PanelStepHeading>
@@ -71,10 +70,25 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
         }}
         {...(validationMessage?.length && { validationValence: 'error', validationMessage })}
         data-testid='identity-input'
-      />
-      <div role='none' className='grow' />
-      <PanelActions>
-        <PanelAction
+      /> */}
+      <div role='none' className='grow flex flex-col justify-center'>
+        <LargeInput
+          {...{ validationMessage }}
+          label={
+            <PanelStepHeading>
+              {t(isRecover ? 'recover identity input label' : 'new identity input label')}
+            </PanelStepHeading>
+          }
+          disabled={disabled}
+          data-testid='identity-input'
+          placeholder={isRecover ? 'Type your recovery phrase' : 'Type a display name'}
+          onChange={({ target: { value } }) => setInputValue(value)}
+        />
+      </div>
+      <PanelActions classNames='flex flex-col'>
+        <LargeButton variant='ghost'>Back</LargeButton>
+        <LargeButton variant='primary'>Continue</LargeButton>
+        {/* <PanelAction
           aria-label={t('continue label')}
           disabled={disabled}
           classNames='order-2'
@@ -91,7 +105,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction>
+        </PanelAction> */}
       </PanelActions>
     </>
   );

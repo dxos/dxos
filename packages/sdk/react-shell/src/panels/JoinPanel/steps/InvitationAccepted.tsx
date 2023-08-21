@@ -10,6 +10,7 @@ import { getSize } from '@dxos/aurora-theme';
 
 import { PanelAction, PanelActions } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
@@ -24,21 +25,23 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { t } = useTranslation('os');
 
   const doneAction = (
-    <PanelAction
-      aria-label={t('done label')}
-      onClick={onDone}
-      disabled={disabled}
-      data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
-      data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
-    >
-      <Check weight='light' className={getSize(6)} />
-    </PanelAction>
+    // <PanelAction
+    //   aria-label={t('done label')}
+    //   onClick={onDone}
+    //   disabled={disabled}
+    //   data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
+    //   data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
+    // >
+    //   <Check weight='light' className={getSize(6)} />
+    // </PanelAction>
+    <LargeButton variant='primary'>Continue</LargeButton>
   );
 
   return (
     <>
-      <p className='text-center text-sm font-system-normal'>{t('welcome message')}</p>
-      <div role='none' className='grow' />
+      <div role='none' className='grow flex flex-col justify-center'>
+        <p className='text-center text-sm font-system-normal'>{t('welcome message')}</p>
+      </div>
       <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions>
     </>
   );

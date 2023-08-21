@@ -18,6 +18,7 @@ import {
   SpaceMemberListProps,
 } from '../../../components';
 import { SpacePanelStepProps } from '../SpacePanelProps';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];
@@ -106,16 +107,15 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
       <PanelActions>
-        <Button
+        <LargeButton
           variant='primary'
           disabled={!active}
-          classNames='is-full flex gap-2 plb-3 mbs-2'
           onClick={onCreateInvitationClick}
           data-testid='spaces-panel.create-invitation'
         >
           <span>{t('create space invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
-        </Button>
+        </LargeButton>
       </PanelActions>
     </>
   );

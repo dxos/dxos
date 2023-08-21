@@ -12,6 +12,8 @@ import { Input } from '@dxos/react-appkit';
 
 import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
 import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
+import { LargeInput } from '../../../components/Panel/LargeInput';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
@@ -67,7 +69,7 @@ export const InvitationInput = ({
 
   return (
     <>
-      <Input
+      {/* <Input
         disabled={disabled}
         label={<PanelStepHeading>{t('invitation input label')}</PanelStepHeading>}
         value={inputValue}
@@ -80,10 +82,18 @@ export const InvitationInput = ({
             onKeyUp: ({ key }) => key === 'Enter' && handleNext(),
           } as ComponentPropsWithoutRef<'input'>,
         }}
-      />
-      <div role='none' className='grow' />
-      <PanelActions>
-        <PanelAction
+      /> */}
+
+      <div role='none' className='grow flex flex-col justify-center'>
+        <LargeInput
+          label={<PanelStepHeading>{t('invitation input label')}</PanelStepHeading>}
+          placeholder='Type an invitation code'
+        />
+      </div>
+      <PanelActions classNames='flex flex-col'>
+        <LargeButton variant='ghost'>Back</LargeButton>
+        <LargeButton variant='primary'>Continue</LargeButton>
+        {/* <PanelAction
           aria-label={t('continue label')}
           disabled={disabled}
           classNames='order-2'
@@ -107,7 +117,7 @@ export const InvitationInput = ({
           cloneElement(doneActionParent, {}, exitAction)
         ) : (
           exitAction
-        )}
+        )} */}
       </PanelActions>
     </>
   );

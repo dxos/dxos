@@ -12,6 +12,7 @@ import type { Identity } from '@dxos/react-client/halo';
 
 import { PanelAction, PanelStepHeading } from '../../../components';
 import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 
 export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;
@@ -59,7 +60,8 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
         )
       ) : (
         <div className='flex gap-2'>
-          <Button
+          <LargeButton variant='primary'>Continue</LargeButton>
+          {/* <Button
             disabled={disabled || !addedIdentity}
             classNames='grow flex items-center gap-2 pli-2 order-2'
             onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
@@ -76,7 +78,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
           >
             <CaretLeft weight='bold' className={getSize(4)} />
             <span>{t('deselect identity label')}</span>
-          </Button>
+          </Button> */}
         </div>
       )}
     </>

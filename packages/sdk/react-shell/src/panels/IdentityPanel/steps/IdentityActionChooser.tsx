@@ -50,11 +50,11 @@ export const IdentityActionChooserImpl = ({
 }: IdentityActionChooserImplProps) => {
   const { t } = useTranslation('os');
 
-  const doneAction = (
-    <PanelAction aria-label={t('done label')} onClick={onDone} disabled={!active} data-testid='identity-panel-done'>
-      <Check weight='light' className={getSize(6)} />
-    </PanelAction>
-  );
+  // const doneAction = (
+  //   <PanelAction aria-label={t('done label')} onClick={onDone} disabled={!active} data-testid='identity-panel-done'>
+  //     <Check weight='light' className={getSize(6)} />
+  //   </PanelAction>
+  // );
   return (
     <div role='none' className='grow flex flex-col gap-1'>
       <DensityProvider density='coarse'>
@@ -91,7 +91,7 @@ export const IdentityActionChooserImpl = ({
           </Button>
         </div>
       </DensityProvider>
-      <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions>
+      {/* <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions> */}
     </div>
   );
 };

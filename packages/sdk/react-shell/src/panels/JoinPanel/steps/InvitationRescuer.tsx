@@ -10,6 +10,7 @@ import { descriptionText, getSize } from '@dxos/aurora-theme';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
+import { LargeButton } from '../../../components/Panel/LargeButton';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationConnectorProps extends JoinStepProps {
@@ -79,16 +80,22 @@ export const InvitationRescuer = (props: InvitationConnectorProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div role='none' className='grow' />
+          <div role='none' className='grow flex flex-col justify-center'>
+            <PanelStepHeading className={descriptionText}>There was a problem joining the space</PanelStepHeading>
+          </div>
           <PanelActions>
-            <PanelAction
+            <LargeButton>
+              {/* <ArrowsClockwise weight='light' className={getSize(6)} /> */}
+              <span>Reset</span>
+            </LargeButton>
+            {/* <PanelAction
               aria-label={t('reset label')}
               disabled={!active}
               onClick={() => send({ type: `reset${Kind}Invitation` })}
               data-testid='invitation-rescuer-blank-reset'
             >
-              <ArrowsClockwise weight='light' className={getSize(6)} />
-            </PanelAction>
+
+            </PanelAction> */}
           </PanelActions>
         </>
       ) : (

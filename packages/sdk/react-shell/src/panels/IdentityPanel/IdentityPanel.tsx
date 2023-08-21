@@ -11,6 +11,7 @@ import type { CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { humanize } from '@dxos/util';
 
 import { Viewport, PanelHeading } from '../../components';
+import { CloseButton } from '../../components/Panel/CloseButton';
 import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
@@ -21,7 +22,7 @@ const viewStyles = 'pbs-1 pbe-3 pli-3';
 const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps) => {
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <PanelHeading titleId={titleId} title={title}>
+    <PanelHeading titleId={titleId} title={title} corner={<CloseButton />}>
       <Avatar.Root size={12} variant='circle'>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
