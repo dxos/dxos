@@ -34,7 +34,7 @@ export const IdentityListItem = ({
           <Avatar.Fallback href={jdenticon} />
         </Avatar.Frame>
       </Avatar.Root>
-      <span className='text-sm truncate'>{displayName}</span>
+      <span className='text-sm truncate pli-2'>{displayName}</span>
       {/* <Avatar
         {...{
           variant: 'circle',

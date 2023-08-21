@@ -9,7 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 
-import { SpaceMemberListImpl } from '../../components';
+import { InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
+import { InvitationList } from '../../components/InvitationList/InvitationList';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, InvitationManagerProps } from '../../steps';
 import { inviteWithState } from '../../testing/fixtures/invitations';
@@ -105,12 +106,46 @@ export const SpaceManagerWithEvenMoreInvites = () => {
               {...props}
               invitations={[
                 inviteWithState(Invitation.State.INIT),
-                inviteWithState(Invitation.State.ERROR),
                 inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
                 inviteWithState(Invitation.State.AUTHENTICATING),
                 inviteWithState(Invitation.State.SUCCESS),
+                inviteWithState(Invitation.State.ERROR),
                 inviteWithState(Invitation.State.TIMEOUT),
+                inviteWithState(Invitation.State.CANCELLED),
               ]}
+              InvitationList={(props) => (
+                <InvitationList
+                  {...props}
+                  InvitationListItem={(props) => {
+                    const invitation = props.invitation.get();
+                    const {
+                      authMethod,
+                      invitationId: id,
+                      state,
+                      identityKey = PublicKey.random(),
+                      swarmKey,
+                      spaceKey = PublicKey.random(),
+                    } = invitation;
+                    return (
+                      <InvitationListItemImpl
+                        {...props}
+                        createInvitationUrl={(code) => code}
+                        invitationStatus={{
+                          status: state,
+                          authMethod,
+                          invitationCode: id,
+                          authCode: state === Invitation.State.READY_FOR_AUTHENTICATION ? '123414' : undefined,
+                          id,
+                          result: { identityKey, swarmKey, spaceKey },
+                          cancel: () => {},
+                          authenticate: async (authCode: string) => {},
+                          connect: () => {},
+                        }}
+                      />
+                    );
+                  }}
+                />
+              )}
               SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
             />
           );

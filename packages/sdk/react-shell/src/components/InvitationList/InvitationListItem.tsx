@@ -2,13 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 import { ProhibitInset, X } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React, { PropsWithChildren, useCallback } from 'react';
 
 import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
 import { chromeSurface, getSize } from '@dxos/aurora-theme';
-import { CancellableInvitationObservable, InvitationStatus, useInvitationStatus } from '@dxos/react-client/invitations';
+import {
+  CancellableInvitationObservable,
+  Invitation,
+  InvitationStatus,
+  useInvitationStatus,
+} from '@dxos/react-client/invitations';
+import { humanize } from '@dxos/util';
 
-import { invitationStatusValue, toEmoji } from '../../util';
+import { toEmoji } from '../../util';
+import { AuthCode } from '../AuthCode';
 import { CopyButtonIconOnly } from '../Clipboard';
 import { SharedInvitationListProps } from './InvitationListProps';
 
@@ -27,6 +34,11 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
+const Label = (props: PropsWithChildren<{ className?: string }>) => {
+  const { className, children } = props;
+  return <span className={`pli-2 ${className}`}>{children}</span>;
+};
+
 export const InvitationListItemImpl = ({
   invitation,
   invitationStatus,
@@ -36,23 +48,49 @@ export const InvitationListItemImpl = ({
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
   const { cancel, status, haltedAt, invitationCode, authCode } = invitationStatus;
-  const statusValue = invitationStatusValue.get(status) ?? 0;
 
-  const isCancellable = statusValue < 5 && statusValue >= 0;
-  const showShare = statusValue < 3 && statusValue >= 0;
-  const showAuthCode = statusValue === 3;
+  const isCancellable = !(
+    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(status) >= 0
+  );
+
+  const showShare =
+    [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(status) >= 0;
+
+  const showAuthCode = status === Invitation.State.READY_FOR_AUTHENTICATION;
 
   const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
   const invitationUrl = invitationCode && createInvitationUrl(invitationCode);
   const invitationId = invitation?.get().invitationId;
+
+  const avatarAnimation = [
+    Invitation.State.INIT,
+    Invitation.State.CONNECTING,
+    Invitation.State.CONNECTED,
+    Invitation.State.READY_FOR_AUTHENTICATION,
+    Invitation.State.AUTHENTICATING,
+  ].includes(status);
+
+  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(status);
+
+  const avatarGreen = [
+    Invitation.State.CONNECTED,
+    Invitation.State.READY_FOR_AUTHENTICATION,
+    Invitation.State.AUTHENTICATING,
+    Invitation.State.SUCCESS,
+  ].includes(status);
+
+  console.log({ avatarError, status });
+
   return (
     <ListItem.Root id={invitationCode} classNames={['rounded p-2 flex gap-2 items-center', chromeSurface]}>
       <ListItem.Heading classNames='sr-only'>
         {t('invitation heading') /* todo(thure): Make this more accessible. */}
       </ListItem.Heading>
-      {/* <InvitationStatusAvatar {...{ status, haltedAt, size: 8, invitationId: invitation?.get().invitationId }} /> */}
-      <Avatar.Root status='pending'>
+      <Avatar.Root
+        animation={avatarAnimation ? 'pulse' : 'none'}
+        status={avatarError ? 'error' : avatarGreen ? 'active' : 'inactive'}
+      >
         <Avatar.Frame>
           <Avatar.Fallback text={toEmoji(invitationId)} />
         </Avatar.Frame>
@@ -70,9 +108,19 @@ export const InvitationListItemImpl = ({
           <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
-        <p className='grow text-xl text-center text-success-500 dark:text-success-300 font-mono'>{authCode}</p>
+        <AuthCode className='grow' code={authCode} />
+      ) : status === Invitation.State.CONNECTING ? (
+        <span className='pli-2 grow text-neutral-500'>Connecting...</span>
+      ) : status === Invitation.State.AUTHENTICATING ? (
+        <span className='pli-2 grow text-neutral-500'>Authenticating...</span>
+      ) : status === Invitation.State.ERROR || status === Invitation.State.TIMEOUT ? (
+        <span className='pli-2 grow text-neutral-500'>Failed</span>
+      ) : status === Invitation.State.CANCELLED ? (
+        <span className='pli-2 grow text-neutral-500'>Cancelled</span>
+      ) : status === Invitation.State.SUCCESS ? (
+        <span className='pli-2 grow truncate'>User joined</span>
       ) : (
-        <span role='none' className='grow' />
+        <span className='grow'> </span>
       )}
       {isCancellable ? (
         <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>

@@ -21,9 +21,9 @@ import { useId } from '@dxos/react-hooks';
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';
 
-export type AvatarVariant = 'square' | 'circle';
-export type AvatarStatus = 'active' | 'inactive' | 'error';
-export type AvatarAnimation = 'pulse' | 'none';
+type AvatarVariant = 'square' | 'circle';
+type AvatarStatus = 'active' | 'inactive' | 'error' | 'warning';
+type AvatarAnimation = 'pulse' | 'none';
 
 export type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
 
@@ -252,7 +252,7 @@ export { useJdenticonHref, useAvatarContext, getJdenticonHref };
 export type {
   AvatarStatus,
   AvatarVariant,
-  AvatarRootProps,
+  AvatarAnimation,
   AvatarFrameProps,
   AvatarImageProps,
   AvatarFallbackProps,

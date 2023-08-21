@@ -2,21 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, UserPlus } from '@phosphor-icons/react';
-import React, { cloneElement, useCallback } from 'react';
+import { UserPlus } from '@phosphor-icons/react';
+import React, { useCallback } from 'react';
 
 import { Button, ScrollArea, useTranslation } from '@dxos/aurora';
-import { descriptionText, getSize, mx } from '@dxos/aurora-theme';
+import { getSize } from '@dxos/aurora-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { InvitationList, PanelAction, PanelActions, SpaceMemberList, SpaceMemberListProps } from '../../../components';
+import {
+  InvitationList,
+  InvitationListProps,
+  PanelActions,
+  SpaceMemberList,
+  SpaceMemberListProps,
+} from '../../../components';
 import { SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];
   SpaceMemberList?: React.FC<SpaceMemberListProps>;
   onCreateInvitationClick?: (e: React.MouseEvent) => void;
+  InvitationList?: React.FC<InvitationListProps>;
 };
 
 export type SpaceManagerProps = SpaceManagerImplProps & {};
@@ -58,10 +65,9 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     createInvitationUrl,
     send,
     onCreateInvitationClick,
-    doneActionParent,
-    onDone,
     invitations,
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
+    InvitationList: InvitationListComponent = InvitationList,
   } = props;
   const { t } = useTranslation('os');
 
@@ -76,21 +82,23 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   //     <Check weight='light' className={getSize(6)} />
   //   </PanelAction>
   // );
+  const visibleInvitations = invitations; // || invitations?.filter(
+  //   (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
+  // );
 
   return (
     <>
       <ScrollArea.Root classNames='grow shrink basis-28 -mli-2'>
         <ScrollArea.Viewport classNames='is-full pli-2'>
-          {/* <h3 className={mx(descriptionText, 'text-center mlb-2')}>{t('space invitation list heading')}</h3> */}
-          <InvitationList
-            className='mb-2'
-            send={send}
-            invitations={invitations ?? []}
-            onClickRemove={(invitation) => invitation.cancel()}
-            createInvitationUrl={createInvitationUrl}
-          />
-
-          {/* <h3 className={mx(descriptionText, 'text-center mbs-4 mbe-2')}>{t('space member list heading')}</h3> */}
+          {!!visibleInvitations?.length && (
+            <InvitationListComponent
+              className='mb-2'
+              send={send}
+              invitations={visibleInvitations ?? []}
+              onClickRemove={(invitation) => invitation.cancel()}
+              createInvitationUrl={createInvitationUrl}
+            />
+          )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar orientation='vertical'>
