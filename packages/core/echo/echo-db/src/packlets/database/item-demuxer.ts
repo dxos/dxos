@@ -21,6 +21,7 @@ export type EchoProcessor = (message: IEchoStream) => void;
  */
 export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
+  readonly snapshot = new Event<EchoSnapshot>();
 
   constructor(private readonly _itemManager: ItemManager, private readonly _modelFactory: ModelFactory) {}
 
@@ -96,6 +97,7 @@ export class ItemDemuxer {
       });
       obj.resetToSnapshot(item);
     }
+    this.snapshot.emit(snapshot);
   }
 }
 

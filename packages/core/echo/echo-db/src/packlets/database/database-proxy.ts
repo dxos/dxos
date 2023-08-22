@@ -97,6 +97,10 @@ export class DatabaseProxy {
           objectCount: msg.batch.objects?.length ?? 0,
         });
 
+        if (msg.action === EchoEvent.DatabaseAction.RESET) {
+          this._itemManager.clear();
+        }
+
         const objectsUpdated: Item[] = [];
         this._processMessage(msg.batch, objectsUpdated);
 

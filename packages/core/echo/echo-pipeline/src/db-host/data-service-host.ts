@@ -54,8 +54,15 @@ export class DataServiceHost {
         },
       });
 
-      // subscribe to mutations
+      // Subscribe to clear events on Epoch processing.
+      this._itemDemuxer.snapshot.on(ctx, (snapshot) => {
+        next({
+          action: EchoEvent.DatabaseAction.RESET,
+          batch: { objects: snapshot.items },
+        });
+      });
 
+      // subscribe to mutations
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
         invariant(!(meta as any).clientTag, 'Unexpected client tag in mutation message');
