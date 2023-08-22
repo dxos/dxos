@@ -17,6 +17,8 @@ export const FilePreview: FC<FilePreviewProps> = ({ type, url }) => {
     return <iframe className='w-full h-full overflow-auto' src={url} />;
   }
 
+  // TODO(burdon): Use Radix AspectRatio?
+  // https://www.radix-ui.com/primitives/docs/components/aspect-ratio
   const styles = [
     'margin: 0',
     'height: 100vh',
