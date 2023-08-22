@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { randomBytes } from 'node:crypto';
+
 import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -37,6 +39,7 @@ export type ReplicationTestSpec = {
   feedsPerSwarm: number;
   feedLoadInterval: number;
   feedLoadChunkSize: number;
+  feedLoadDuration: number;
 
   repeatInterval: number;
 
@@ -240,6 +243,18 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       );
     };
 
+    const loadFeed = async (context: Context, feed: FeedWrapper<any>, options: { feedLoadInterval: number, feedLoadChunkSize: number }) => {
+      const { feedLoadInterval, feedLoadChunkSize } = options;
+
+      scheduleTaskInterval(
+        context,
+        async () => {
+          await feed.append(randomBytes(feedLoadChunkSize));
+        },
+        feedLoadInterval,
+      )
+    }
+
     const ctx = new Context();
     let testCounter = 0;
 
@@ -272,9 +287,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       {
         log.info('adding feeds', { agentIdx });
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
+          const connection = swarm.protocol.otherConnections.get({ remotePeerId: PublicKey.from(agentId), extension: REPLICATOR_EXTENSION_NAME }) as ReplicatorExtension;
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
-            const connection = swarm.protocol.otherConnections.get({ remotePeerId: PublicKey.from(agentId), extension: REPLICATOR_EXTENSION_NAME }) as ReplicatorExtension;
             await connection.addFeed(feedObj.feed);
           }
         });
@@ -284,21 +299,28 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
       await sleep(5_000);
 
-      // Write to wratable feeds in all swarms.
+      // Write to writable feeds in all swarms.
       {
+        const subctx = context.derive({
+          onError: (err) => {
+            log.info('write to writable feeds error', { iterationId: testCounter, err });
+          },
+        });
+
         log.info('writing to writable feeds', { agentIdx });
+        const loadPromises: Promise<void>[] = [];
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
             if (feedObj.writable) {
-              for (let i = 0; i < 10; i++) {
-                await feedObj.feed.append(Buffer.from(`data from ${agentId}`));
-              }
+              loadPromises.push(loadFeed(context, feedObj.feed, { feedLoadInterval: 1, feedLoadChunkSize: 100 }));
             }
           }
         });
 
-        await sleep(15_000);
+        await sleep(spec.feedLoadDuration);
+        await subctx.dispose();
+
         await env.syncBarrier(`feeds are written on ${testCounter}`);
       }
 
@@ -310,7 +332,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
-            console.log('FEED LENGTH', feedObj.feed.length);
+            log.info('feed length', { agentIdx, feedLength: feedObj.feed.length, writable: feedObj.writable, feedKey: feedObj.feed.key.toString() });
           }
         });
       }

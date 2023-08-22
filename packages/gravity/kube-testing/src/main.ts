@@ -103,6 +103,7 @@ const plans: { [key: string]: () => any } = {
       feedsPerSwarm: 1,
       feedLoadInterval: 1,
       feedLoadChunkSize: 1_000,
+      feedLoadDuration: 10_000,
     },
     options: {
       staggerAgents: 1000,
