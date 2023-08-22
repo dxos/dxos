@@ -66,7 +66,7 @@ export class ColumnBuilder<TData extends RowData> {
   createDate(options: BaseColumnOptions & DateColumnOptions = {}): Partial<ColumnDef<TData, Date>> {
     return stripUndefinedValues({
       ...options,
-      size: options?.size ?? 180, // TODO(burdon): Depends on format.
+      size: options?.size ?? 220, // TODO(burdon): Depends on format.
       cell: (cell: CellContext<TData, Date>) => {
         const value = cell.getValue();
         const str = options?.format

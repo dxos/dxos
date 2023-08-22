@@ -17,20 +17,26 @@ const MAX_LOGS = 2_000;
 
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
-// TODO(burdon): Timestamp.
-const { helper } = createColumnBuilder<LogEntry>();
+const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
+
+const { helper, builder } = createColumnBuilder<LogEntry>();
 const columns: GridColumnDef<LogEntry, any>[] = [
-  // helper.accessor('id', {}), // TODO(burdon): Add id.
-  helper.accessor((entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0], {
-    id: 'level',
-    size: 40,
-  }),
-  helper.accessor((entry) => `${entry.meta?.file}:${entry.meta?.line}`, { id: 'file' }),
+  helper.accessor('timestamp', builder.createDate()),
+  helper.accessor(
+    (entry) =>
+      Object.entries(levels)
+        .find(([, level]) => level === entry.level)?.[0]
+        .toUpperCase(),
+    {
+      id: 'level',
+      size: 60,
+    },
+  ),
+  helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, { id: 'file', size: 160 }),
   helper.accessor('message', {}),
 ];
 
 // TODO(wittjosiah): Virtualization.
-// TODO(wittjosiah): Sticky auto-scrolling.
 export const LoggingPanel = () => {
   const services = useClientServices();
   if (!services) {
@@ -38,22 +44,23 @@ export const LoggingPanel = () => {
   }
 
   // Filtering.
+  // TODO(burdon): Store in context.
   const inputRef = useRef<HTMLInputElement>(null);
-  const [request, setRequest] = useState<QueryLogsRequest>({});
+  const [query, setQuery] = useState<QueryLogsRequest>({});
   const handleQueryLogs = () => {
     const filtersString = inputRef.current?.value ?? '';
     if (!filtersString) {
-      setRequest({});
+      setQuery({});
       return;
     }
 
-    setRequest({ filters: parseFilter(filtersString) });
+    setQuery({ filters: parseFilter(filtersString) });
   };
 
   // Logs.
-  const [logs, setLogs] = useState<LogEntry[]>([]);
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
-  const logEntry = useStream(() => services.LoggingService.queryLogs(request), defaultEntry, [request]);
+  const logEntry = useStream(() => services.LoggingService.queryLogs(query), defaultEntry, [query]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   useEffect(() => {
     if (!logEntry.message) {
       return;
@@ -69,12 +76,12 @@ export const LoggingPanel = () => {
           <Input.Root>
             <Input.TextInput ref={inputRef} placeholder='Filter (e.g., "info", "client:debug")' />
           </Input.Root>
-          <Toolbar.Button onClick={handleQueryLogs}>Refresh</Toolbar.Button>
+          <Toolbar.Button onClick={handleQueryLogs}>Update</Toolbar.Button>
           <Toolbar.Button onClick={() => setLogs([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<LogEntry> columns={columns} data={logs} />
+      <MasterDetailTable<LogEntry> columns={columns} data={logs} pinToBottom />
     </PanelContainer>
   );
 };

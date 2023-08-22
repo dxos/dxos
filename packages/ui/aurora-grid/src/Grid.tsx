@@ -196,6 +196,7 @@ export const Grid = <TData extends RowData>({
         return;
       }
 
+      // TODO(burdon): Set when scrolled to bottom and unset when manually scrolled away.
       const handler = () => {
         const bottom = container.scrollHeight - container.scrollTop - container.clientHeight === 0;
         setStickyScrolling(bottom);

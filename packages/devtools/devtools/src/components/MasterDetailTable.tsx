@@ -11,10 +11,10 @@ import { JsonView } from './JsonView';
 export type MasterTableProps<T extends {}> = {
   columns: GridColumnDef<T>[];
   data: T[];
-  compact?: boolean;
+  pinToBottom?: boolean;
 };
 
-export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTableProps<T>) => {
+export const MasterDetailTable = <T extends {}>({ columns, data, pinToBottom }: MasterTableProps<T>) => {
   const [selected, setSelected] = useState<T[]>();
 
   return (
@@ -26,6 +26,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTablePr
           selected={selected}
           onSelectedChange={setSelected}
           slots={defaultGridSlots}
+          pinToBottom={pinToBottom}
         />
       </div>
 

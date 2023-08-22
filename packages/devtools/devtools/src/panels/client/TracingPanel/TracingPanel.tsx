@@ -24,28 +24,23 @@ export const TracingPanel = () => {
     resources: new Map<number, Resource>(),
     spans: new Map<number, Span>(),
   });
-  const [, forceUpdate] = useState({});
   const { ref: containerRef, width } = useResizeDetector();
-
+  const [, forceUpdate] = useState({});
   useEffect(() => {
     const stream = client.services.services.TracingService!.streamTrace();
-    stream.subscribe(
-      (data) => {
-        for (const event of data.resourceAdded ?? []) {
-          state.current.resources.set(event.resource.id, event.resource);
-        }
-        for (const event of data.resourceRemoved ?? []) {
-          state.current.resources.delete(event.id);
-        }
-        for (const event of data.spanAdded ?? []) {
-          state.current.spans.set(event.span.id, event.span);
-        }
-        forceUpdate({});
-      },
-      (error) => {
-        console.error(error);
-      },
-    );
+    stream.subscribe((data) => {
+      for (const event of data.resourceAdded ?? []) {
+        state.current.resources.set(event.resource.id, event.resource);
+      }
+      for (const event of data.resourceRemoved ?? []) {
+        state.current.resources.delete(event.id);
+      }
+      for (const event of data.spanAdded ?? []) {
+        state.current.spans.set(event.span.id, event.span);
+      }
+      forceUpdate({});
+    });
+
     return () => {
       stream.close();
     };
