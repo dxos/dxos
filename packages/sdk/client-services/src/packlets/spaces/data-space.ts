@@ -55,6 +55,12 @@ export type DataSpaceParams = {
   cache?: SpaceCache;
 };
 
+/**
+ * Delete feed blocks after an epoch is created.
+ */
+// TODO(dmaretskyi): Disabled till better times https://github.com/dxos/dxos/issues/3949.
+const ENABLE_FEED_PURGE = false;
+
 @trackLeaks('open', 'close')
 export class DataSpace {
   private _ctx = new Context();
@@ -323,10 +329,16 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-    for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
-      const indexBeforeEpoch = epoch.timeframe.get(feed.key);
-      if (indexBeforeEpoch) {
-        await feed.clear(0, indexBeforeEpoch + 1);
+
+    // Clear feed blocks before epoch.
+    if(ENABLE_FEED_PURGE) {
+      for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
+        const indexBeforeEpoch = epoch.timeframe.get(feed.key);
+        if (indexBeforeEpoch === undefined) {
+          continue;
+        }
+
+        await feed.safeClear(0, indexBeforeEpoch + 1);
       }
     }
   }
