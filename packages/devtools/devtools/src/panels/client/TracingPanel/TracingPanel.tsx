@@ -106,6 +106,7 @@ const buildFlameGraph = (state: State, rootId: number): any => {
     return undefined;
   }
 
+  // TODO(burdon): Sort resources by names.
   const childSpans = [...state.spans.values()].filter((s) => s.parentId === span.id);
   const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
   const name = resource

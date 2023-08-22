@@ -27,7 +27,13 @@ export const FileMain: FC<{ data: TypedObject }> = ({ data: file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>
+    <Main.Content
+      classNames={[
+        'flex flex-col min-bs-[calc(100dvh-2.5rem)] h-screen overflow-hidden',
+        fixedFullLayout,
+        coarseBlockPaddingStart,
+      ]}
+    >
       <FilePreview type={file.type} url={url} />
     </Main.Content>
   );

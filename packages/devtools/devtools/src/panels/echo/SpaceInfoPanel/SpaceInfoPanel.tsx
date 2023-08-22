@@ -60,7 +60,7 @@ export const SpaceInfoPanel: FC = () => {
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
       mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
       controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
-      dataProgress: dataProgress && `${dataProgress * 100}%`,
+      dataProgress: dataProgress && `${(dataProgress * 100).toFixed(2)}%`,
       startupTime: startupTime && `${startupTime}ms`,
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };

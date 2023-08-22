@@ -36,7 +36,7 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
   };
 };
 
-export const SignalStatusInfo = () => {
+export const SignalStatusTable = () => {
   const devtoolsHost = useDevtools();
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
   const status = servers!.map(getSignalStatus);
@@ -62,7 +62,7 @@ export const SignalStatusInfo = () => {
 
   const { helper } = createColumnBuilder<SignalStatus>();
   const columns: GridColumnDef<SignalStatus, any>[] = [
-    helper.accessor('host', {}),
+    helper.accessor('host', { cell: (props) => <span className='font-mono'>{props.getValue()}</span> }),
     helper.accessor((status) => states[status.state].label, {
       id: 'status',
       size: 80,
