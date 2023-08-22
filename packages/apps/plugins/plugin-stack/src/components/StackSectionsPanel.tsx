@@ -10,6 +10,7 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDnd, useDragEnd, useDragOver, useDragStart } from '@braneframe/plugin-dnd';
 import { File as FileProto } from '@braneframe/types';
 import { List, useTranslation } from '@dxos/aurora';
+import { textBlockWidth } from '@dxos/aurora-theme';
 import { arrayMove } from '@dxos/util';
 
 import { defaultFileTypes } from '../hooks';
@@ -121,7 +122,7 @@ export const StackSectionsPanel: FC<{
   );
 
   return (
-    <List variant='ordered' itemSizes='many' classNames='pli-2'>
+    <List variant='ordered' itemSizes='many' classNames={[textBlockWidth, 'pli-2']}>
       <SortableContext items={sectionModels} strategy={verticalListSortingStrategy}>
         {sectionModels.map((sectionModel, start) => {
           return (
