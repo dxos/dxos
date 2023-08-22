@@ -83,6 +83,7 @@ export class ItemDemuxer {
   }
 
   restoreFromSnapshot(snapshot: EchoSnapshot) {
+    this._itemManager.clear();
     const { items = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);

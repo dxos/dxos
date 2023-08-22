@@ -337,8 +337,6 @@ export class DataPipeline implements CredentialProcessor {
     if (epoch.snapshotCid) {
       const snapshot = await this._params.snapshotManager.load(ctx, epoch.snapshotCid);
 
-      // TODO(dmaretskyi): Clearing old items + events.
-      this.itemManager.clear();
       this.databaseHost!._itemDemuxer.restoreFromSnapshot(snapshot.database);
     }
 
