@@ -15,6 +15,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
+import { SerializedLogEntry, getReader } from '../analysys';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
@@ -23,6 +24,28 @@ const REPLICATOR_EXTENSION_NAME = 'replicator';
 type FeedConfig = {
   feedKey: string;
   writable: boolean;
+};
+
+type FeedEntry = {
+  agentIdx: number;
+  swarmIdx: number;
+  feedLength: number;
+  byteLength: number;
+  writable: boolean;
+  feedKey: string;
+};
+
+type FeedReplicaStats = {
+  feedLength: number;
+  byteLength: number;
+  replicationSpeed?: string;
+};
+
+type FeedStats = {
+  feedKey: string;
+  feedLength: number;
+  byteLength: number;
+  replicas: FeedReplicaStats[];
 };
 
 export type ReplicationTestSpec = {
@@ -302,10 +325,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           }
         });
 
+        await sleep(5_000);
+
         await env.syncBarrier(`feeds are added on ${testCounter}`);
       }
-
-      await sleep(5_000);
 
       // Write to writable feeds in all swarms.
       {
@@ -332,9 +355,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         });
 
         await sleep(spec.feedLoadDuration);
-        await subctx.dispose();
-
         await env.syncBarrier(`feeds are written on ${testCounter}`);
+
+        await subctx.dispose();
       }
 
       // Check length of all feeds.
@@ -343,8 +366,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
-            log.info('feed length', {
+            log.trace('dxos.test.feed-stats', {
               agentIdx,
+              swarmIdx,
               feedLength: feedObj.feed.length,
               byteLength: feedObj.feed.byteLength,
               writable: feedObj.writable,
@@ -388,5 +412,65 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
   async finish(params: TestParams<ReplicationTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
     log.info('finished shutdown');
+
+    // Map<agentIdx, Map<swarmId, FeedStats>>
+    const feeds = new Map<number, Map<number, FeedEntry[]>>();
+
+    range(params.spec.agents).forEach((agentIdx) => {
+      feeds.set(agentIdx, new Map(range(params.spec.swarmsPerAgent).map((idx) => [idx, []])));
+    });
+
+    const reader = getReader(results);
+
+    reader.forEach((entry: SerializedLogEntry<any>) => {
+      switch (entry.message) {
+        case 'dxos.test.feed-stats': {
+          const feedStats = entry.context as FeedEntry;
+          const agentFeeds = feeds.get(entry.context.agentIdx)!;
+          const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
+          swarmFeeds.push(feedStats);
+          break;
+        }
+      }
+    });
+
+    const stats: FeedStats[] = [];
+    feeds.forEach((agentFeeds, agentIdx) => {
+      agentFeeds.forEach((swarmFeeds, swarmIdx) => {
+        swarmFeeds.forEach((feedStats) => {
+          if (feedStats.writable) {
+            const replicas: FeedReplicaStats[] = [];
+            // Check feeds from other agents from this swarm.
+            feeds.forEach((otherAgentFeeds, otherAgentIdx) => {
+              if (otherAgentIdx !== agentIdx) {
+                const otherSwarmFeeds = otherAgentFeeds.get(swarmIdx)!;
+                const otherFeedStats = otherSwarmFeeds.find(
+                  (otherFeedStats) => otherFeedStats.feedKey === feedStats.feedKey,
+                );
+                if (otherFeedStats) {
+                  replicas.push({
+                    feedLength: otherFeedStats.feedLength,
+                    byteLength: otherFeedStats.byteLength,
+                    replicationSpeed: `${(
+                      otherFeedStats.byteLength /
+                      (params.spec.feedLoadDuration / 1000) /
+                      1_000_000
+                    ).toFixed(2)} MB/s`,
+                  });
+                }
+              }
+            });
+            stats.push({
+              feedKey: feedStats.feedKey,
+              feedLength: feedStats.feedLength,
+              byteLength: feedStats.byteLength,
+              replicas,
+            });
+          }
+        });
+      });
+    });
+
+    log.info('replication stats', { stats });
   }
 }
