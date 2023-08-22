@@ -321,7 +321,12 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
             if (feedObj.writable) {
-              loadPromises.push(loadFeed(context, feedObj.feed, { feedLoadInterval: 1, feedLoadChunkSize: 100 }));
+              loadPromises.push(
+                loadFeed(context, feedObj.feed, {
+                  feedLoadInterval: spec.feedLoadInterval,
+                  feedLoadChunkSize: spec.feedLoadChunkSize,
+                }),
+              );
             }
           }
         });
@@ -343,6 +348,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
             log.info('feed length', {
               agentIdx,
               feedLength: feedObj.feed.length,
+              byteLength: feedObj.feed.byteLength,
               writable: feedObj.writable,
               feedKey: feedObj.feed.key.toString(),
             });
