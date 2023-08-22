@@ -84,8 +84,13 @@ export const TracingPanel = () => {
 const { helper, builder } = createColumnBuilder<Resource>();
 const columns: GridColumnDef<Resource, any>[] = [
   helper.accessor('id', builder.createNumber({ meta: { hidden: true } })),
-  helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, { id: 'name' }),
-  helper.accessor((resource) => JSON.stringify(resource.info), { id: 'info' }),
+  helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, {
+    id: 'name',
+    size: 200,
+  }),
+  helper.accessor('info', {
+    cell: (cell) => <div className='font-mono'>{JSON.stringify(cell.getValue())}</div>,
+  }),
 ];
 
 const SANITIZE_REGEX = /[^_](\d+)$/;

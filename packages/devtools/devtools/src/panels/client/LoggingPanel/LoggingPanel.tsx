@@ -19,6 +19,14 @@ const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: 
 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 
+const colors: { [index: number]: string } = {
+  [LogLevel.TRACE]: 'text-gray-700',
+  [LogLevel.DEBUG]: 'text-green-700',
+  [LogLevel.INFO]: 'text-blue-700',
+  [LogLevel.WARN]: 'text-orange-700',
+  [LogLevel.ERROR]: 'text-red-700',
+};
+
 const { helper, builder } = createColumnBuilder<LogEntry>();
 const columns: GridColumnDef<LogEntry, any>[] = [
   helper.accessor('timestamp', builder.createDate()),
@@ -30,6 +38,7 @@ const columns: GridColumnDef<LogEntry, any>[] = [
     {
       id: 'level',
       size: 60,
+      cell: (cell) => <div className={colors[cell.row.original.level]}>{cell.getValue()}</div>,
     },
   ),
   helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, { id: 'file', size: 160 }),
