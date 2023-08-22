@@ -225,7 +225,6 @@ export const Grid = <TData extends RowData>({
   return (
     <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
-        {/* TODO(burdon): Must have header group for widths. */}
         <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
           {table.getHeaderGroups().map((headerGroup) => {
             return (
