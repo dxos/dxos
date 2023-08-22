@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FlameGraph } from 'react-flame-graph';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
@@ -61,11 +61,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
-        <Grid<Resource>
-          columns={columns}
-          data={Array.from(state.current.resources.values())}
-          slots={defaultGridSlots}
-        />
+        <Grid<Resource> columns={columns} data={Array.from(state.current.resources.values())} />
       </div>
       <div ref={containerRef} className='border-t'>
         <div className='flex flex-row items-baseline justify-items-center p-2'>
