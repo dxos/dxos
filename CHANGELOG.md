@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.1.56](https://github.com/dxos/dxos/compare/v0.1.55...v0.1.56) (2023-08-22)
+
+
+### Features
+
+* Add backpressure to webrtc-proxy transport ([#3893](https://github.com/dxos/dxos/issues/3893)) ([ec96785](https://github.com/dxos/dxos/commit/ec967856d45f10328cfd05ed34031762052b075f))
+* Aurora grid/table component ([#3928](https://github.com/dxos/dxos/issues/3928)) ([3cf2471](https://github.com/dxos/dxos/commit/3cf24710c6611d21830da81e95c0fda1d84d8a42))
+* Aurora Playground and Select component ([#3847](https://github.com/dxos/dxos/issues/3847)) ([28af2e2](https://github.com/dxos/dxos/commit/28af2e243a9d0ac3d7a4d719ffbba73529975a44))
+* **aurora,plugin-splitview:** Two sidebars ([#3879](https://github.com/dxos/dxos/issues/3879)) ([d4dc79c](https://github.com/dxos/dxos/commit/d4dc79c4b721f6ffbc7776c3a0d559cf7cd4be50))
+* **aurora:** `AvatarGroup` ([#3919](https://github.com/dxos/dxos/issues/3919)) ([27f12b6](https://github.com/dxos/dxos/commit/27f12b65a6b72e85087a632f8ff104a824c9cc8f))
+* **aurora:** `Breadcrumb` ([#3925](https://github.com/dxos/dxos/issues/3925)) ([738e1fa](https://github.com/dxos/dxos/commit/738e1fa49fbd3ffbf1c137ce45a06ac7f49df26e))
+* **aurora:** `Toolbar` ([#3878](https://github.com/dxos/dxos/issues/3878)) ([b25ef1c](https://github.com/dxos/dxos/commit/b25ef1c6af60ac521ba937b5c6a5d1c4fb30c73f))
+* **client:** add default space ([#3860](https://github.com/dxos/dxos/issues/3860)) ([538bda2](https://github.com/dxos/dxos/commit/538bda20e43f15e5adf3e78155c71a74859eb334))
+* **client:** update halo profile ([#3933](https://github.com/dxos/dxos/issues/3933)) ([a63ce79](https://github.com/dxos/dxos/commit/a63ce79e0789b0e6c223a837429dcc2f6a34f605))
+* Grid plugin ([#3926](https://github.com/dxos/dxos/issues/3926)) ([82d95f1](https://github.com/dxos/dxos/commit/82d95f1049e7153295e5db5f39e0f4e20b58be6d))
+* Grid styles. ([#3946](https://github.com/dxos/dxos/issues/3946)) ([01afb72](https://github.com/dxos/dxos/commit/01afb72f0fba90776d86515f2c84d60c2babe848))
+* **invariant:** Add @dxos/invariant package ([#3881](https://github.com/dxos/dxos/issues/3881)) ([bf228a7](https://github.com/dxos/dxos/commit/bf228a73765ad5e6909d35201fb45427d468ffb3))
+* Migrate devtools to aurora ([#3856](https://github.com/dxos/dxos/issues/3856)) ([4b42f23](https://github.com/dxos/dxos/commit/4b42f233ffdd2c8150efbc0b2f78b3fe9a5152cc))
+* **network-manager:** Add connection limiter ([#3836](https://github.com/dxos/dxos/issues/3836)) ([1034c86](https://github.com/dxos/dxos/commit/1034c865fbd9871da4e06f75dc4c81955e400032))
+* Peer graph ([#3884](https://github.com/dxos/dxos/issues/3884)) ([83e9b8a](https://github.com/dxos/dxos/commit/83e9b8aa1baf68776974bc1698fa59f39f079f64))
+* **plugin-splitview:** Add `heading` and `presence` surfaces under a “main header” ([#3918](https://github.com/dxos/dxos/issues/3918)) ([67ce440](https://github.com/dxos/dxos/commit/67ce44097d51c65d2837e3c5c2084fb2b2c0c284))
+* **plugins:** Main area increment ([#3942](https://github.com/dxos/dxos/issues/3942)) ([50c104c](https://github.com/dxos/dxos/commit/50c104c3b9187a2a7ab14065cc1808e8d4ae302a))
+* Settings plugin ([#3804](https://github.com/dxos/dxos/issues/3804)) ([167f01e](https://github.com/dxos/dxos/commit/167f01e8a67cf7500fb4f77b829031eba33b19be))
+* **testbench:** Add connection metreics ([#3894](https://github.com/dxos/dxos/issues/3894)) ([09ca29d](https://github.com/dxos/dxos/commit/09ca29de1a0294c937378964bad7f1451dc9e083))
+* Tracing ([#3930](https://github.com/dxos/dxos/issues/3930)) ([d9d1c3e](https://github.com/dxos/dxos/commit/d9d1c3e0a0afcaf5358f027c9435f745d682bfea))
+* Upload file to stack ([#3858](https://github.com/dxos/dxos/issues/3858)) ([a25bb93](https://github.com/dxos/dxos/commit/a25bb9389b4a9494618c4e5329c06ed0bfea0578))
+
+
+### Bug Fixes
+
+* **aurora:** `AvatarGroup` story ([#3940](https://github.com/dxos/dxos/issues/3940)) ([ad054df](https://github.com/dxos/dxos/commit/ad054dfe792b108025814fb74c1dbea124df087a))
+* **aurora:** Button and checkbox layout rules. ([#3875](https://github.com/dxos/dxos/issues/3875)) ([9a77006](https://github.com/dxos/dxos/commit/9a7700662c1a90e305fe3705cbe32d5d29deb78e))
+* **aurora:** Polish ([#3917](https://github.com/dxos/dxos/issues/3917)) ([48c2ad7](https://github.com/dxos/dxos/commit/48c2ad7e74b0ac026d71f9e8cb8ad53d216ac3cb))
+* Basic test rig ([#3915](https://github.com/dxos/dxos/issues/3915)) ([5ff23aa](https://github.com/dxos/dxos/commit/5ff23aaf3a9731a35b47b590094ee689a7e4d3c1))
+* **composer-app:** Double scrollbar bug ([#3855](https://github.com/dxos/dxos/issues/3855)) ([d0c207f](https://github.com/dxos/dxos/commit/d0c207fdc163cab428db8ba105135604b3e10954))
+* Data corruption on epoch creation ([#3950](https://github.com/dxos/dxos/issues/3950)) ([c19b7cd](https://github.com/dxos/dxos/commit/c19b7cde8a0bb86f67ae2109dad0503bb3b2c65b))
+* diagnostics info ([#3903](https://github.com/dxos/dxos/issues/3903)) ([22b76d7](https://github.com/dxos/dxos/commit/22b76d79d3aa94bb13ad8e857f03609f5fb95b85))
+* Fix diagnostics ([#3850](https://github.com/dxos/dxos/issues/3850)) ([10ba5db](https://github.com/dxos/dxos/commit/10ba5db7cc86b73798b9ed93536c327bcc9dbc22))
+* JSON tree view ([#3908](https://github.com/dxos/dxos/issues/3908)) ([5c924bd](https://github.com/dxos/dxos/commit/5c924bde7f183289157de3a476cd829af4b38e3b))
+* microsecond timing ([#3843](https://github.com/dxos/dxos/issues/3843)) ([70d0df5](https://github.com/dxos/dxos/commit/70d0df52437612e68dc42302313a6121245295c0))
+* move diagnostics to client services ([#3898](https://github.com/dxos/dxos/issues/3898)) ([1b4b163](https://github.com/dxos/dxos/commit/1b4b163f6a1defea24bf6f1686c6276c6969ca9d))
+* **react-shell:** Clear invalidated invitation codes from URL search parameters ([#3900](https://github.com/dxos/dxos/issues/3900)) ([b3438d9](https://github.com/dxos/dxos/commit/b3438d9e1196e09560007c176b25860e579a73a5))
+* **react-shell:** Improvements ([#3888](https://github.com/dxos/dxos/issues/3888)) ([c676981](https://github.com/dxos/dxos/commit/c676981ca3b55a2a3e161c9aa9e303a7c3289182))
+* **react-shell:** Refs and layout ([#3870](https://github.com/dxos/dxos/issues/3870)) ([e47dfd1](https://github.com/dxos/dxos/commit/e47dfd18d23947b5babbfdf5feb9bae0cdbc79a7))
+* Remove all react-appkit component deps from devtools. ([#3857](https://github.com/dxos/dxos/issues/3857)) ([43bb5f7](https://github.com/dxos/dxos/commit/43bb5f700d568f99b7831ea4c11fec59981ac23e))
+
 ## [0.1.55](https://github.com/dxos/dxos/compare/v0.1.54...v0.1.55) (2023-08-10)
 
 
