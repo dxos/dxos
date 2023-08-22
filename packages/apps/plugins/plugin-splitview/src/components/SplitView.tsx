@@ -41,11 +41,7 @@ export const SplitView = () => {
       >
         <div role='none' aria-label={t('main header label')}>
           <DensityProvider density='fine'>
-            <Button
-              onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-              variant='ghost'
-              classNames='mis-1 mie-2'
-            >
+            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
               <span className='sr-only'>{t('open navigation sidebar label')}</span>
               <MenuIcon weight='light' className={getSize(4)} />
             </Button>
