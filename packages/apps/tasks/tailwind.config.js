@@ -1,1 +1,12 @@
-// file left intentionally blank for tailwind detection
+//
+// Copyright 2023 DXOS.org
+//
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};

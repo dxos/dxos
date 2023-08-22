@@ -3,25 +3,13 @@
     "esModuleInterop": true,
     "jsx": "react",
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "dist",
+    "lib": ["DOM", "ESNext"],
+    "outDir": "out/tasks",
     "skipLibCheck": true,
-    "types": [
-      "node",
-      "vite-plugin-pwa/client"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "vite.config.ts"
-  ],
+  "include": ["src"],
+  "exclude": ["node_modules", "out", "vite.config.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"
