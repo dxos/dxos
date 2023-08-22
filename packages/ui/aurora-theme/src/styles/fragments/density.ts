@@ -4,12 +4,13 @@
 
 import { Density } from '@dxos/aurora-types';
 
-export const coarseBlockSize = 'min-bs-[40px]';
+export const coarseBlockSize = 'min-bs-[2.5rem]';
+export const coarseBlockPaddingStart = 'pbs-[2.5rem]';
 export const coarseTextPadding = 'pli-3';
 export const coarseButtonPadding = 'pli-4';
 export const coarseDimensions = `${coarseBlockSize} ${coarseTextPadding}`;
 export const coarseButtonDimensions = `${coarseBlockSize} ${coarseButtonPadding}`;
-export const fineBlockSize = 'min-bs-[40px] pointer-fine:min-bs-[32px]';
+export const fineBlockSize = 'min-bs-[2.5rem] pointer-fine:min-bs-[2rem]';
 export const fineTextPadding = 'pli-2';
 export const fineButtonPadding = 'pli-2.5';
 export const fineDimensions = `${fineBlockSize} ${fineTextPadding}`;

@@ -15,5 +15,5 @@ export const EditorMainEmbedded = ({
   data: { composer: ComposerModel; properties: MarkdownProperties; view: 'embedded' };
   role?: string;
 }) => {
-  return <EditorMain model={composer} properties={properties} layout='embedded' />;
+  return <EditorMain model={composer} properties={properties} layout='embedded' editorRefCb={() => {}} />;
 };

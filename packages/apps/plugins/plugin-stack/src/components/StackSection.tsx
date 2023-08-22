@@ -10,7 +10,7 @@ import React, { FC, forwardRef } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { List, ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { fineButtonDimensions, focusRing, getSize, mx, paperSurface, surfaceElevation } from '@dxos/aurora-theme';
+import { fineButtonDimensions, focusRing, getSize, mx, inputSurface, surfaceElevation } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { STACK_PLUGIN, StackSectionModel } from '../types';
@@ -40,7 +40,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           id={section.object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
-            paperSurface,
+            inputSurface,
             'grow rounded mlb-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
