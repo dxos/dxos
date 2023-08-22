@@ -9,7 +9,7 @@ import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeItemHeading, TreeViewContainer } from './components';
+import { Fallback, TreeItemMainHeading, TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
@@ -84,7 +84,7 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
             }
           case 'heading':
             if (!!data && typeof data === 'object' && 'label' in data && 'parent' in data) {
-              return TreeItemHeading;
+              return TreeItemMainHeading;
             } else {
               return null;
             }

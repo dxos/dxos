@@ -7,12 +7,12 @@ import React from 'react';
 import { Graph } from '@braneframe/plugin-graph';
 import { List } from '@dxos/aurora';
 
-import { LeafTreeItem } from './LeafTreeItem';
+import { NavTreeItem } from './NavTree';
 
 export const TreeItemDragOverlay = ({ data }: { data: Graph.Node }) => {
   return (
     <List variant='unordered'>
-      <LeafTreeItem node={data} isOverlay />
+      <NavTreeItem node={data} level={2} isOverlay />
     </List>
   );
 };

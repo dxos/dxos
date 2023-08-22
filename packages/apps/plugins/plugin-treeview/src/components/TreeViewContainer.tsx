@@ -23,7 +23,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { TREE_VIEW_PLUGIN } from '../types';
-import { BranchTreeItem } from './BranchTreeItem';
+import { NavTreeItem } from './NavTree';
 
 export const TreeViewContainer = () => {
   const { graph } = useGraph();
@@ -80,7 +80,7 @@ export const TreeViewContainer = () => {
           )}
           <Tree.Root role='none' classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth'>
             {branches.map((branch) => (
-              <BranchTreeItem key={branch.id} node={branch} level={0} />
+              <NavTreeItem key={branch.id} node={branch} level={0} />
             ))}
           </Tree.Root>
         </div>
