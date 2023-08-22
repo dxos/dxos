@@ -19,7 +19,15 @@ import { Space, SpaceProxy } from '@dxos/react-client/echo';
 import { PluginDefinition, findPlugin } from '@dxos/react-surface';
 
 import { backupSpace } from './backup';
-import { DialogRenameSpace, DialogRestoreSpace, EmptySpace, EmptyTree, SpaceMain, SpaceMainEmpty } from './components';
+import {
+  DialogRenameSpace,
+  DialogRestoreSpace,
+  EmptySpace,
+  EmptyTree,
+  SpaceMain,
+  SpaceMainEmpty,
+  SpacePresence,
+} from './components';
 import translations from './translations';
 import { SPACE_PLUGIN, SPACE_PLUGIN_SHORT_ID, SpaceAction, SpacePluginProvides, SpaceState } from './types';
 import { getSpaceId, isSpace, spaceToGraphNode } from './util';
@@ -126,6 +134,8 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             } else {
               return null;
             }
+          case 'presence':
+            return SpacePresence;
           default:
             return null;
         }
