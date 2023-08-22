@@ -37,9 +37,7 @@ export const ChessMain = ({ data: object }: { data: Game }) => {
   }
 
   return (
-    <Main.Content
-      classNames={['flex flex-col grow min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}
-    >
+    <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>
       <div className='flex grow justify-center items-center md:m-8'>
         <div className='flex md:min-w-[600px] md:min-h-[600px]'>
           <Chessboard model={model} onUpdate={handleUpdate} />

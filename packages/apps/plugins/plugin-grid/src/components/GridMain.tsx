@@ -19,9 +19,7 @@ export const GridMain: FC<{ data: TypedObject }> = ({ data: object }) => {
   const space = spacePlugin?.provides?.space.current;
 
   return (
-    <Main.Content
-      classNames={['flex flex-col grow min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}
-    >
+    <Main.Content classNames={['flex flex-col min-bs-[calc(100dvh-2.5rem)] overflow-hidden', coarseBlockPaddingStart]}>
       <pre className='m-4 p-2 ring'>
         <span>{space?.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>
       </pre>
