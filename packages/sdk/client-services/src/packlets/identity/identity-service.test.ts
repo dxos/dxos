@@ -24,7 +24,11 @@ describe('IdentityService', () => {
   beforeEach(async () => {
     serviceContext = createServiceContext();
     await serviceContext.open(new Context());
-    identityService = new IdentityServiceImpl(serviceContext);
+    identityService = new IdentityServiceImpl(
+      (options) => serviceContext.createIdentity(options),
+      serviceContext.identityManager,
+      serviceContext.keyring,
+    );
   });
 
   afterEach(async () => {
@@ -54,6 +58,16 @@ describe('IdentityService', () => {
   });
 
   describe.skip('recoverIdentity', () => {});
+
+  describe('updateProfile', () => {
+    test('updates profile', async () => {
+      const identity = await identityService.createIdentity({});
+      expect(identity.profile?.displayName).to.be.undefined;
+
+      const updatedIdentity = await identityService.updateProfile({ displayName: 'Example' });
+      expect(updatedIdentity.profile?.displayName).to.equal('Example');
+    });
+  });
 
   describe('queryIdentity', () => {
     test('returns undefined if no identity is available', async () => {
