@@ -21,6 +21,10 @@ export const safeInstanceof =
     target.prototype[instanceTag] = tag;
 
     Object.defineProperty(target.prototype, Symbol.hasInstance, {
-      value: (instance: any) => instance[instanceTag] === tag,
+      value: (instance: any) => instance?.[instanceTag] === tag,
+    });
+
+    Object.defineProperty(target, Symbol.hasInstance, {
+      value: (instance: any) => instance?.[instanceTag] === tag,
     });
   };

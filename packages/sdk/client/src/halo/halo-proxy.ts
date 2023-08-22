@@ -40,6 +40,7 @@ export class HaloProxy implements Halo {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
+    private readonly _onIdentityCreated: (identity: Identity) => Promise<void>,
     /**
      * @internal
      */
@@ -165,6 +166,7 @@ export class HaloProxy implements Halo {
   async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(profile);
+    await this._onIdentityCreated(identity);
     this._identityChanged.emit(identity);
     return identity;
   }
@@ -172,6 +174,13 @@ export class HaloProxy implements Halo {
   async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
+    this._identityChanged.emit(identity);
+    return identity;
+  }
+
+  async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
     this._identityChanged.emit(identity);
     return identity;
   }
