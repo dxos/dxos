@@ -264,6 +264,7 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async start() {
+    invariant(!this._isStarted, 'Pipeline is already started.')
     log('starting...');
     await this._initIterator();
     await this._feedSetIterator!.open();
@@ -353,6 +354,7 @@ export class Pipeline implements PipelineAccessor {
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
       }
 
+      // Will be canceled when the iterator gets closed.
       const { done, value } = await iterable.next();
       if (!done) {
         const block = value ?? failUndefined();

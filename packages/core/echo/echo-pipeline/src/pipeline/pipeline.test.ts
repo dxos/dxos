@@ -6,7 +6,7 @@ import expect from 'expect';
 import * as fc from 'fast-check';
 import { inspect } from 'util';
 
-import { asyncTimeout } from '@dxos/async';
+import { Event, asyncTimeout, sleep } from '@dxos/async';
 import { FeedStore, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -109,6 +109,42 @@ describe('pipeline/Pipeline', () => {
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
   });
 
+  test('cursor change while polling', async () => {
+    const pipeline = new Pipeline();
+    afterTest(() => pipeline.stop());
+
+    const builder = new TestFeedBuilder();
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+    await pipeline.addFeed(feed);
+
+    for (const _ of range(20)) {
+      await feed.appendWithReceipt(TEST_MESSAGE);
+    }
+    await feed.clear(0, 10)
+
+    const processedSequenceNumbers: number[] = [];
+    const expectedSequenceNumbers = range(20).slice(10);
+    const processedEvent = new Event()
+    setTimeout(async () => {
+      for await (const block of pipeline.consume()) {
+        processedSequenceNumbers.push(block.seq);
+        processedEvent.emit();
+      }
+    })
+
+    await pipeline.start();
+    await sleep(1000);
+
+    await pipeline.pause();
+    await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
+    await pipeline.unpause();
+
+    await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
+    expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
+  })
+
   test
     .skip('stress', async () => {
       const builder = new TestFeedBuilder();
@@ -123,7 +159,7 @@ describe('pipeline/Pipeline', () => {
         public messages: FeedMessageBlock[] = [];
         public writePromise: Promise<any> = Promise.resolve();
 
-        constructor(public id: string, public feedStore: FeedStore<FeedMessage>) {}
+        constructor(public id: string, public feedStore: FeedStore<FeedMessage>) { }
 
         async open() {
           const key = await builder.keyring.createKey();
@@ -174,7 +210,7 @@ describe('pipeline/Pipeline', () => {
       };
 
       class WriteCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(public agent: string, public count: number) {}
+        constructor(public agent: string, public count: number) { }
 
         check = () => true;
 
@@ -254,7 +290,7 @@ describe('pipeline/Pipeline', () => {
       }
 
       class RestartCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(public agent: string) {}
+        constructor(public agent: string) { }
 
         check = () => true;
 
