@@ -4,10 +4,11 @@
 
 import React, { HTMLAttributes, RefCallback } from 'react';
 
+import { useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 
@@ -25,6 +26,7 @@ export const EditorMain = ({
   onChange?: MarkdownComposerProps['onChange'];
   editorRefCb: RefCallback<MarkdownComposerRef>;
 }) => {
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
 
   return (
@@ -50,6 +52,7 @@ export const EditorMain = ({
               '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
               '& .cm-line': { paddingInline: '1.5rem' },
             },
+            placeholder: t('editor placeholder'),
           },
         }}
       />
