@@ -12,7 +12,7 @@ import { Document } from '@braneframe/types';
 import { EchoDatabase, Text } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-import { stripKeys } from '@dxos/util';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { Contact, Event, Message, Organization, Note, Project, Task } from '../proto';
 import { cities } from './data';
@@ -268,7 +268,7 @@ export const createNote = () => {
 // TODO(burdon): Use constructors above.
 export const createMessage = (from?: Contact, resolver?: string, recent = 14) => {
   return new Message({
-    source: stripKeys({
+    source: stripUndefinedValues({
       // TODO(burdon): Strip keys in TypedObject constructor.
       resolver,
       guid: PublicKey.random().toHex(),
