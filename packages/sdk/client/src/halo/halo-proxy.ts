@@ -178,6 +178,13 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
+  async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
+    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
+    this._identityChanged.emit(identity);
+    return identity;
+  }
+
   /**
    * Get Halo credentials for the current user.
    */
