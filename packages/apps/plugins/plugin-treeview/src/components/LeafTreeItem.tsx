@@ -8,7 +8,6 @@ import { Circle, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
-import { Graph } from '@braneframe/plugin-graph';
 import {
   Button,
   DropdownMenu,
@@ -23,13 +22,14 @@ import {
 import { auroraTx, staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../TreeViewContext';
-import { TREE_VIEW_PLUGIN } from '../types';
+import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../types';
 import { sortActions } from '../util';
 
-type SortableLeafTreeItemProps = { node: Graph.Node } & Pick<SortableProps, 'rearranging'>;
+type SortableLeafTreeItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
 export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   node,
+  level,
   rearranging,
 }: SortableLeafTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -39,6 +39,7 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   return (
     <LeafTreeItem
       node={node}
+      level={level}
       draggableAttributes={attributes}
       draggableListeners={listeners}
       rearranging={rearranging}
@@ -48,12 +49,12 @@ export const SortableLeafTreeItem: FC<SortableLeafTreeItemProps> = ({
   );
 };
 
-type LeafTreeItemProps = { node: Graph.Node } & SortableProps;
+type LeafTreeItemProps = SharedTreeItemProps & SortableProps;
 
 export const LeafTreeItem: ForwardRefExoticComponent<LeafTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   LeafTreeItemProps
->(({ node, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging, isOverlay }, forwardedRef) => {
   // TODO(thure): Handle `sortable`
 
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();

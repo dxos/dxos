@@ -12,14 +12,15 @@ import { Graph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
 
-import { TREE_VIEW_PLUGIN } from '../types';
+import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../types';
 import { sortActions } from '../util';
 import { TreeView } from './TreeView';
 
-type SortableBranchTreeItemProps = { node: Graph.Node } & Pick<SortableProps, 'rearranging'>;
+type SortableBranchTreeItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
 export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   node,
+  level,
   rearranging,
 }: SortableBranchTreeItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -29,6 +30,7 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   return (
     <BranchTreeItem
       node={node}
+      level={level}
       draggableAttributes={attributes}
       draggableListeners={listeners}
       rearranging={rearranging}
@@ -38,12 +40,12 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   );
 };
 
-type BranchTreeItemProps = { node: Graph.Node } & SortableProps;
+type BranchTreeItemProps = SharedTreeItemProps & SortableProps;
 
 export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
   BranchTreeItemProps
->(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   // TODO(thure): Handle `sortable`
 
   const [primaryAction, ...actions] = sortActions(node.actions);
@@ -208,7 +210,7 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
         )}
       </div>
       <TreeItem.Body>
-        <TreeView items={Object.values(node.children).flat() as Graph.Node[]} parent={node} />
+        <TreeView items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />
       </TreeItem.Body>
     </TreeItem.Root>
   );
