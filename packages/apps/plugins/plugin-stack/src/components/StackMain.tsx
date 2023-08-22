@@ -7,7 +7,7 @@ import React, { FC, useCallback } from 'react';
 
 import { useIntent } from '@braneframe/plugin-intent';
 import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/aurora';
-import { chromeSurface, getSize, surfaceElevation } from '@dxos/aurora-theme';
+import { chromeSurface, coarseBlockPaddingStart, getSize, surfaceElevation } from '@dxos/aurora-theme';
 
 import { stackState } from '../stores';
 import {
@@ -33,7 +33,7 @@ export const StackMain: FC<{ data: StackModel & StackProperties }> = ({ data: st
   );
 
   return (
-    <Main.Content bounce>
+    <Main.Content bounce classNames={coarseBlockPaddingStart}>
       <StackSectionsPanel sections={stack.sections} id={stack.id} onAdd={handleAdd} />
 
       <div role='none' className='flex gap-4 justify-center items-center pbe-4'>

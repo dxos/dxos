@@ -12,7 +12,7 @@ import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
-import { fixedFullLayout, getSize } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
 import { useClient, useConfig } from '@dxos/react-client';
 import { arrayToBuffer } from '@dxos/util';
@@ -83,7 +83,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   };
 
   return (
-    <Main.Content classNames={fixedFullLayout}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
           <Button onClick={handleCreateObject}>Create</Button>

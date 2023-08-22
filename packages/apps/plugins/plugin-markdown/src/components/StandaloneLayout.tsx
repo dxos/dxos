@@ -6,6 +6,7 @@ import React, { MutableRefObject, PropsWithChildren } from 'react';
 
 import { Main } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposerRef } from '@dxos/aurora-composer';
+import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
 
 import { MarkdownProperties } from '../types';
 
@@ -18,7 +19,7 @@ export const StandaloneLayout = ({
   editorRef?: MutableRefObject<MarkdownComposerRef>;
 }>) => {
   return (
-    <Main.Content bounce>
+    <Main.Content bounce classNames={coarseBlockPaddingStart}>
       <div role='none' className='mli-auto max-is-[60rem] min-bs-[calc(100dvh-2.5rem)] flex flex-col'>
         {children}
       </div>

@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 
 import { Thread as ThreadType } from '@braneframe/types';
 import { Main } from '@dxos/aurora';
-import { fixedFullLayout } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
@@ -57,7 +57,7 @@ export const ThreadMain: FC<{ data: ThreadType }> = ({ data: thread }) => {
   };
 
   return (
-    <Main.Content classNames={fixedFullLayout}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <ThreadChannel identityKey={identityKey} thread={thread} onAddMessage={handleAddMessage} />
     </Main.Content>
   );
