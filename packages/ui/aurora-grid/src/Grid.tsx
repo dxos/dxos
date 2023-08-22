@@ -15,6 +15,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
+import { defaultGridSlots } from './helpers';
+
 export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
 // TODO(burdon): Editable.
@@ -121,7 +123,7 @@ export type GridProps<TData extends RowData> = {
 export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
-  slots,
+  slots = defaultGridSlots,
   select,
   selected,
   onSelectedChange,

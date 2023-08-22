@@ -5,7 +5,7 @@
 import React, { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Grid, GridColumnDef, defaultGridSlots, createColumnBuilder } from '@dxos/aurora-grid';
+import { Grid, GridColumnDef, createColumnBuilder } from '@dxos/aurora-grid';
 import { PublicKey } from '@dxos/keys';
 import { Space, useSpaces } from '@dxos/react-client/echo';
 
@@ -68,7 +68,7 @@ export const SpaceListPanel: FC = () => {
 
   return (
     <PanelContainer className='overflow-auto'>
-      <Grid<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} slots={defaultGridSlots} />
+      <Grid<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} />
     </PanelContainer>
   );
 };
