@@ -41,9 +41,7 @@ export type MuxerStats = {
 };
 
 const STATS_INTERVAL = 1_000;
-
 const MAX_SAFE_FRAME_SIZE = 1_000_000;
-
 const SYSTEM_CHANNEL_ID = 0;
 
 type Channel = {
@@ -116,7 +114,6 @@ export class Muxer {
       await this._handleCommand(Command.decode(msg));
     });
 
-    // TODO(burdon): Diff to get rate.
     scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
   }
 
@@ -398,17 +395,11 @@ export class Muxer {
       return;
     }
 
-    // Detect stale.
-    const now = Date.now();
-    if (this._lastStats && now - this._lastStats.timestamp > STATS_INTERVAL * 2) {
-      this._lastStats = undefined;
-      this._lastChannelStats.clear();
-    }
-
     const bytesSent = this._balancer.bytesSent;
     const bytesReceived = this._balancer.bytesReceived;
 
-    const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1000 : 0;
+    const now = Date.now();
+    const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1_000 : 0;
     const calculateThroughput = (current: Channel['stats'], last: Channel['stats'] | undefined) =>
       last
         ? {
