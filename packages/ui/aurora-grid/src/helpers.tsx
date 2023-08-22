@@ -26,6 +26,7 @@ export const createColumnBuilder = <TData extends RowData>() => ({
  */
 // TODO(burdon): Add accessor options and spread.
 type BaseColumnOptions = {
+  meta?: any;
   header?: string;
   size?: number;
 };
@@ -51,7 +52,7 @@ type IconColumnOptions = BaseColumnOptions & {};
 export class ColumnBuilder<TData extends RowData> {
   createNumber(options: NumberColumnOptions = {}): Partial<ColumnDef<TData, number>> {
     return stripUndefinedValues({
-      size: options?.size ?? 120,
+      ...options,
       header: (column) => {
         return <div className='text-right'>{options?.header ?? column.header.id}</div>;
       },
@@ -64,8 +65,8 @@ export class ColumnBuilder<TData extends RowData> {
 
   createDate(options: BaseColumnOptions & DateColumnOptions = {}): Partial<ColumnDef<TData, Date>> {
     return stripUndefinedValues({
+      ...options,
       size: options?.size ?? 180, // TODO(burdon): Depends on format.
-      header: options?.header,
       cell: (cell: CellContext<TData, Date>) => {
         const value = cell.getValue();
         const str = options?.format
@@ -80,6 +81,7 @@ export class ColumnBuilder<TData extends RowData> {
 
   createKey(options: KeyColumnOptions = {}): Partial<ColumnDef<TData, PublicKey>> {
     return stripUndefinedValues({
+      ...options,
       size: options?.size ?? 100,
       cell: (cell: CellContext<TData, PublicKey>) => {
         const value = cell.getValue();
@@ -118,8 +120,8 @@ export class ColumnBuilder<TData extends RowData> {
   // TODO(burdon): Options.
   createIcon(options: IconColumnOptions = {}): Partial<ColumnDef<TData, boolean>> {
     return stripUndefinedValues({
+      ...options,
       size: options?.size ?? 40,
-      header: options?.header,
       cell: (cell: CellContext<TData, boolean>) => {
         const value = cell.getValue();
         if (value) {

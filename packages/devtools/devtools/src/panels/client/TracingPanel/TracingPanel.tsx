@@ -88,7 +88,7 @@ export const TracingPanel = () => {
 
 const { helper, builder } = createColumnBuilder<Resource>();
 const columns: GridColumnDef<Resource, any>[] = [
-  helper.accessor('id', builder.createNumber({ size: 40 })),
+  helper.accessor('id', builder.createNumber({ meta: { hidden: true } })),
   helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, { id: 'name' }),
   helper.accessor((resource) => JSON.stringify(resource.info), { id: 'info' }),
 ];
