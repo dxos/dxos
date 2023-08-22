@@ -4788,7 +4788,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/context': workspace:*
-      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-pipeline': workspace:*
       '@dxos/feed-store': workspace:*
@@ -4820,7 +4819,6 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/context': link:../../common/context
-      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
       '@dxos/feed-store': link:../../common/feed-store

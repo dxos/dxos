@@ -4,12 +4,13 @@
 
 import expect from 'expect';
 
-import { verifySignature } from '@dxos/crypto';
+import { verifySignature, subtleCrypto } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
 import { Keyring } from './keyring';
+import { generateKeyPair } from './testing';
 
 describe('Keyring', () => {
   test('sign & verify', async () => {
@@ -84,6 +85,14 @@ describe('Keyring', () => {
       await keyring.createKey();
     }
     expect(emittedCount).toBe(count);
+  });
+
+  test('import key', async () => {
+    const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
+
+    const keyPair = await generateKeyPair();
+    const key = await keyring._importKeyPair(keyPair.privateKey, keyPair.publicKey);
+    expect(keyPair.publicKeyHex).toEqual(key.toHex());
   });
 
   test('delete key', () => {});

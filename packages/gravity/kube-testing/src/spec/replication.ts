@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
+import { Keyring, TestKeyPair, generateKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
@@ -17,7 +17,6 @@ import { range } from '@dxos/util';
 
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
-import { generateKeyPair, TestKeyPair } from '../util';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 
