@@ -25,7 +25,7 @@ describe('IdentityService', () => {
     serviceContext = createServiceContext();
     await serviceContext.open(new Context());
     identityService = new IdentityServiceImpl(
-      (params) => serviceContext.createIdentity(params),
+      (options) => serviceContext.createIdentity(options),
       serviceContext.identityManager,
       serviceContext.keyring,
     );

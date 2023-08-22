@@ -55,9 +55,9 @@ export class IdentityServiceImpl implements IdentityService {
     };
   }
 
-  async updateProfile(request: ProfileDocument): Promise<Identity> {
+  async updateProfile(profile: ProfileDocument): Promise<Identity> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
-    await this._identityManager.updateProfile(request);
+    await this._identityManager.updateProfile(profile);
     return this._getIdentity()!;
   }
 
