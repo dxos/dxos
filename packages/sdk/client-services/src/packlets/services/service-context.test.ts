@@ -10,12 +10,16 @@ import { createServiceContext, syncItemsLocal } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
 import { createTestItemMutation } from '@dxos/protocols';
 import { PublicKey } from '@dxos/keys';
-import { genesisMutation } from '@dxos/echo-db'
-import { DocumentModel } from '@dxos/document-model';
+import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db'
+import { DocumentModel, DocumentModelState, MutationBuilder } from '@dxos/document-model';
 import { range } from '@dxos/util';
+import { WriteReceipt } from '@dxos/feed-store';
+import { Timeframe } from '@dxos/timeframe';
+import { log } from '@dxos/log';
+import { expect } from 'chai';
 
 describe('services/ServiceContext', () => {
-  test.only('existing space is synchronized on device invitations', async () => {
+  test('existing space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = createServiceContext({ signalContext: networkContext });
     await device1.createIdentity();
@@ -29,7 +33,21 @@ describe('services/ServiceContext', () => {
 
     let counter = 0;
 
-    for(const _ in range(100)) {
+    for (const _ in range(5)) {
+      let receipts: WriteReceipt[] = [];
+      for (const _ in range(50)) {
+        receipts.push(await space1.dataPipeline.databaseHost!.getWriteStream()!.write({
+          batch: createModelMutation(itemId, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('counter', ++counter).build()))
+        }));
+      }
+
+      await space1.dataPipeline.pipelineState!.waitUntilTimeframe(Timeframe.merge(
+        ...receipts.map(receipt => new Timeframe([[receipt.feedKey, receipt.seq]]))
+      ))
+
+      await space1.createEpoch()
+      log.info('epoch', { number: space1.dataPipeline.currentEpoch?.subject.assertion.number })
+    }
 
 
     const device2 = createServiceContext({ signalContext: networkContext });
@@ -37,6 +55,22 @@ describe('services/ServiceContext', () => {
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
+
+    log.info('peer 2', {
+      currentEpoch: space2!.dataPipeline.currentEpoch?.subject.assertion.number,
+      appliedEpoch: space2!.dataPipeline.appliedEpoch?.subject.assertion.number,
+    })
+
+    await space2?.dataPipeline.onNewEpoch.waitForCondition(() =>
+      space2!.dataPipeline.appliedEpoch?.subject.assertion.number === space1.dataPipeline.currentEpoch?.subject.assertion.number
+    )
+
+    expect(space2!.dataPipeline.currentEpoch!.subject.assertion.number).to.equal(space1.dataPipeline.currentEpoch!.subject.assertion.number);
+    expect(space2!.dataPipeline.appliedEpoch!.subject.assertion.number).to.equal(space1.dataPipeline.appliedEpoch!.subject.assertion.number);
+
+    const item2 = space2!.dataPipeline.itemManager.entities.get(itemId);
+    expect((item2!.state as DocumentModelState).data.counter).to.equal(counter);
+
     await syncItemsLocal(space1.dataPipeline, space2!.dataPipeline);
   });
 
