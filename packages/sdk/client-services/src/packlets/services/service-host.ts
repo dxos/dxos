@@ -179,7 +179,7 @@ export class ClientServicesHost {
    */
   initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
-    log.info('initializing...');
+    log('initializing...');
 
     if (config) {
       invariant(!this._config, 'config already set');
@@ -205,7 +205,7 @@ export class ClientServicesHost {
       signalManager,
     });
 
-    log.info('initialized');
+    log('initialized');
   }
 
   @synchronized
@@ -224,7 +224,7 @@ export class ClientServicesHost {
     invariant(this._networkManager, 'network manager not set');
 
     this._opening = true;
-    log.info('opening...', { lockKey: this._resourceLock?.lockKey });
+    log('opening...', { lockKey: this._resourceLock?.lockKey });
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
@@ -239,7 +239,11 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
-      IdentityService: new IdentityServiceImpl(this._serviceContext),
+      IdentityService: new IdentityServiceImpl(
+        (params) => this._serviceContext.createIdentity(params),
+        this._serviceContext.identityManager,
+        this._serviceContext.keyring,
+      ),
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
         this._serviceContext.getInvitationHandler(invitation),
@@ -277,7 +281,7 @@ export class ClientServicesHost {
     this._open = true;
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log.info('opened', { deviceKey });
+    log('opened', { deviceKey });
     log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
@@ -289,13 +293,13 @@ export class ClientServicesHost {
     }
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log.info('closing...', { deviceKey });
+    log('closing...', { deviceKey });
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
     this._open = false;
     this._statusUpdate.emit();
-    log.info('closed', { deviceKey });
+    log('closed', { deviceKey });
   }
 
   async reset() {
