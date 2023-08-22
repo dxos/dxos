@@ -5,8 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { LayoutRequest, ShellDisplay, ShellLayout, ShellRuntime, useClient } from '@dxos/react-client';
-import { useSpace, useSpaces } from '@dxos/react-client/echo';
+import { LayoutRequest, ShellDisplay, ShellLayout, ShellRuntime } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';
@@ -19,8 +19,6 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
     spaceKey: runtime.spaceKey,
   });
 
-  const client = useClient();
-  const spaces = useSpaces({ all: true });
   const space = useSpace(spaceKey);
 
   useEffect(() => {
@@ -49,10 +47,6 @@ export const Shell = ({ runtime, origin }: { runtime: ShellRuntime; origin: stri
           onDone={() => {
             void runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout(ShellLayout.DEFAULT);
-            // TODO(wittjosiah): Support this first-class inside client?
-            if (spaces.length === 0) {
-              void client.createSpace();
-            }
           }}
         />
       );
