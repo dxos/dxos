@@ -136,10 +136,10 @@ export class ColumnBuilder<TData extends RowData> {
   }
 }
 
-// TODO(burdon): Compact mode.
 // TODO(burdon): Integrate with aurora theme (direct dependency -- see aurora-composer, tailwind.ts).
 //  See Link.tsx const { tx } = useThemeContext();
 //  Reuse button fragments for hoverColors, selected, primary, etc.
+// TODO(burdon): Compact mode (smaller than density fine).
 export const defaultGridSlots: GridSlots = {
   root: { className: chromeSurface },
   header: { className: [chromeSurface, 'border-b p-1 text-left font-thin opacity-90'] },
