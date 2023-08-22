@@ -16,10 +16,10 @@ const { helper, builder } = createColumnBuilder<Credential>();
 const columns: GridColumnDef<Credential, any>[] = [
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  helper.accessor('id', builder.createKeyCell()),
-  helper.accessor('issuer', builder.createKeyCell()),
+  helper.accessor('id', builder.createKey()),
+  helper.accessor('issuer', builder.createKey()),
   helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type' }),
-  helper.accessor('issuanceDate', builder.createDateCell({ header: 'issued' })),
+  helper.accessor('issuanceDate', builder.createDate({ header: 'issued' })),
 ];
 
 export const CredentialsPanel = () => {

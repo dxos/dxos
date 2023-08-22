@@ -37,16 +37,16 @@ export const SwarmPanel = () => {
   const { helper, builder } = createColumnBuilder<SwarmConnection>();
   const columns: GridColumnDef<SwarmConnection, any>[] = [
     helper.accessor('rowId', {}),
-    helper.accessor('id', builder.createKeyCell({ header: 'swarm', tooltip: true })),
-    helper.accessor('topic', builder.createKeyCell({ tooltip: true })),
-    helper.accessor('isActive', builder.createIconCell({ header: 'active' })),
+    helper.accessor('id', builder.createKey({ header: 'swarm', tooltip: true })),
+    helper.accessor('topic', builder.createKey({ tooltip: true })),
+    helper.accessor('isActive', builder.createIcon({ header: 'active' })),
     helper.accessor((connection) => connection.connection?.sessionId, {
       id: 'session',
-      ...builder.createKeyCell({ tooltip: true }),
+      ...builder.createKey({ tooltip: true }),
     }),
     helper.accessor((connection) => connection.connection?.remotePeerId, {
       id: 'remote peer',
-      ...builder.createKeyCell({ tooltip: true }),
+      ...builder.createKey({ tooltip: true }),
     }),
     helper.accessor((connection) => connection.connection?.state, {
       id: 'state',
@@ -57,7 +57,7 @@ export const SwarmPanel = () => {
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
         <Grid<SwarmConnection>
-          columnDefs={columns}
+          columns={columns}
           data={items}
           onSelectedChange={handleSelect}
           slots={defaultGridSlots}

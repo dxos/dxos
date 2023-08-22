@@ -27,14 +27,14 @@ export type PipelineTableRow = {
 
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
 const columns: GridColumnDef<PipelineTableRow, any>[] = [
-  helper.accessor('feedKey', builder.createKeyCell()),
-  helper.accessor('type', { size: 40 }),
-  helper.accessor('own', builder.createIconCell()),
-  helper.accessor('genesis', builder.createIconCell({ header: 'gen' })),
-  helper.accessor('start', builder.createNumberCell()),
-  helper.accessor('target', builder.createNumberCell()),
-  helper.accessor('processed', builder.createNumberCell()),
-  helper.accessor('total', builder.createNumberCell()),
+  helper.accessor('feedKey', builder.createKey()),
+  helper.accessor('type', { size: 60 }),
+  helper.accessor('own', builder.createIcon()),
+  helper.accessor('genesis', builder.createIcon({ header: 'gen' })),
+  helper.accessor('start', builder.createNumber()),
+  helper.accessor('target', builder.createNumber()),
+  helper.accessor('processed', builder.createNumber()),
+  helper.accessor('total', builder.createNumber()),
   helper.accessor(
     (row) => {
       const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
@@ -125,7 +125,7 @@ export const PipelineTable = ({
   return (
     <Grid<PipelineTableRow>
       slots={defaultGridSlots}
-      columnDefs={columns}
+      columns={columns}
       data={data}
       onSelect={(selected) => handleSelect(PublicKey.from(selected))}
     />

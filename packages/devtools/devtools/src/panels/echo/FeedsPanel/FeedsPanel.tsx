@@ -16,8 +16,8 @@ import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../..
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
 const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
-  helper.accessor('feedKey', builder.createKeyCell({ header: 'key' })),
-  helper.accessor('seq', builder.createNumberCell()),
+  helper.accessor('feedKey', builder.createKey({ header: 'key' })),
+  helper.accessor('seq', builder.createNumber()),
 ];
 
 export const FeedsPanel = () => {

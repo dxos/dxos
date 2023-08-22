@@ -67,7 +67,7 @@ export const TracingPanel = () => {
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
         <Grid<Resource>
-          columnDefs={columns}
+          columns={columns}
           data={Array.from(state.current.resources.values())}
           slots={defaultGridSlots}
         />
@@ -88,7 +88,7 @@ export const TracingPanel = () => {
 
 const { helper, builder } = createColumnBuilder<Resource>();
 const columns: GridColumnDef<Resource, any>[] = [
-  helper.accessor('id', builder.createNumberCell()),
+  helper.accessor('id', builder.createNumber()),
   helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, { id: 'name' }),
   helper.accessor((resource) => JSON.stringify(resource.info), { id: 'info' }),
 ];

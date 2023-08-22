@@ -84,7 +84,7 @@ export const SignalStatusInfo = () => {
 
   return (
     <div>
-      <Grid<SignalStatus> columnDefs={columns} data={status} slots={defaultGridSlots} />
+      <Grid<SignalStatus> columns={columns} data={status} slots={defaultGridSlots} />
     </div>
   );
 };

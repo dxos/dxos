@@ -23,7 +23,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTablePr
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Grid<T> columnDefs={columns} data={data} onSelectedChange={handleSelected} slots={defaultGridSlots} />
+        <Grid<T> columns={columns} data={data} onSelectedChange={handleSelected} slots={defaultGridSlots} />
       </div>
 
       <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>

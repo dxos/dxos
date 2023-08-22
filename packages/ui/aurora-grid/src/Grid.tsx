@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Cell, ColumnDef, flexRender, getCoreRowModel, Row, RowData, useReactTable } from '@tanstack/react-table';
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { stripKeys } from '@dxos/util';
 
 export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
@@ -20,66 +19,6 @@ export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<T
 // TODO(burdon): No header.
 // TODO(burdon): Virtual (e.g., log panel).
 // TODO(burdon): Resize.
-
-/**
- * Simplified ColumnDef definition.
- * https://tanstack.com/table/v8/docs/guide/column-defs
- */
-// TODO(burdon): Consider alternative to use ColumnDef directly with helpers.
-export type GridColumn<TData extends RowData, TValue = any> = {
-  id: string;
-  key?: boolean; // TODO(burdon): May not be unique key (see LoggingPanel).
-  hidden?: boolean; // TODO(burdon): Check rt.
-  accessor?: string | ((params: TData) => any);
-  width?: number; // TODO(burdon): size, maxSize property.
-  header?: {
-    label?: string; // TODO(burdon): Convert to render function | string.
-    render?: (params: { column: GridColumn<TData>; data: TData[] }) => ReactNode;
-    className?: string;
-  };
-  cell?: {
-    render?: (params: { column: GridColumn<TData>; data: TData[]; row: TData; value: TValue }) => ReactNode;
-    className?: CellValueOrFunction<TData, any, string>;
-  };
-  footer?: {
-    render?: (params: { column: GridColumn<TData>; data: TData[] }) => ReactNode;
-  };
-};
-
-export type GridColumnConstructor<TData extends RowData, TValue> = (...props: any[]) => GridColumn<TData, TValue>;
-
-const mapColumns = <TData extends RowData>(columns: GridColumn<TData>[], data: TData[]): ColumnDef<TData>[] =>
-  columns.map((column) => {
-    const { id, accessor, header, cell, footer } = column;
-    return stripKeys({
-      id,
-      accessorKey: typeof accessor === 'string' ? accessor : id,
-      accessorFn: typeof accessor === 'function' ? accessor : undefined,
-      header: header?.render ? () => header.render!({ column, data }) : header?.label,
-      cell: cell?.render
-        ? ({ row, cell: cellValue }) => cell.render!({ column, data, row: row.original, value: cellValue.getValue() })
-        : undefined,
-      footer: footer?.render ? () => footer.render!({ column, data }) : undefined,
-    } satisfies ColumnDef<TData>);
-  });
-
-type ValueFunctionParams<TData, TValue> = { data: TData; value: TValue };
-type CellValueOrFunction<TData, TValue, TResult> = TResult | ((params: ValueFunctionParams<TData, TValue>) => TResult);
-
-const getCellValue = <TData, TValue, TResult>(
-  cell: Cell<TData, TValue>,
-  value: CellValueOrFunction<TData, TValue, TResult> | undefined,
-) => {
-  if (typeof value === 'function') {
-    const fn = value as (cell: ValueFunctionParams<TData, TValue>) => TValue;
-    return fn({
-      data: cell.getContext().row.original,
-      value: cell.getValue(),
-    });
-  }
-
-  return value;
-};
 
 // TODO(burdon): Remove nested classNames? Add to theme?
 export type GridSlots = {
@@ -156,8 +95,7 @@ export const updateSelection = (selected: Set<string>, id: string, selection: Gr
 };
 
 export type GridProps<TData extends RowData> = {
-  columnDefs?: GridColumnDef<TData>[];
-  columns?: GridColumn<TData>[];
+  columns?: GridColumnDef<TData>[];
   data?: TData[];
   slots?: GridSlots;
   header?: boolean;
@@ -169,7 +107,6 @@ export type GridProps<TData extends RowData> = {
  * Simple table.
  */
 export const Grid = <TData extends RowData>({
-  columnDefs,
   columns = [],
   data = [],
   slots,
@@ -181,11 +118,11 @@ export const Grid = <TData extends RowData>({
   footer: showFooter = false,
   pinToBottom,
 }: GridProps<TData>) => {
-  const keyColumn = columns.find((column) => column.key);
+  // const keyColumn = columns.find((column) => column.key);
   // invariant(keyColumn?.key, 'Missing key column.');
   // TODO(burdon): Depends on object equality.
-  const getRow = (id: any) => table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
-  const getRowId = (row: Row<TData>) => row.getValue(keyColumn!.id);
+  // const getRow = (id: any) => table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
+  // const getRowId = (row: Row<TData>) => row.getValue(keyColumn!.id);
 
   const [focus, setFocus] = useState<any>();
   const [selectionSet, setSelectionSet] = useState(new Set<any>());
@@ -194,6 +131,7 @@ export const Grid = <TData extends RowData>({
   }, [selection, selected]);
 
   const handleSelect = (id: any) => {
+    /*
     if (onSelect) {
       // Controlled.
       const row = getRow(id);
@@ -218,19 +156,12 @@ export const Grid = <TData extends RowData>({
         return new Set(selectionSet);
       });
     }
+    */
   };
 
-  const getColumn = (id: string) => columns.find((column) => column.id === id)!;
-  const getColumnStyle = (id: string) => {
-    const column = getColumn(id);
-    // TODO(burdon): Clash with react-table width (size) management?
-    return column.width ? { width: column.width } : {};
-  };
-
-  const tableColumns = useMemo(() => mapColumns(columns, data), [columns, data]);
   const table = useReactTable({
     data,
-    columns: columnDefs ?? tableColumns,
+    columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -273,7 +204,7 @@ export const Grid = <TData extends RowData>({
         <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
           {table.getHeaderGroups().map((headerGroup) => {
             // Need additional column if all columns have fixed width.
-            const flex = columns?.map((column) => column.width).filter(Boolean).length === columns?.length;
+            const flex = columns?.map((column) => column.size).filter(Boolean).length === columns?.length;
 
             return (
               <tr key={headerGroup.id}>

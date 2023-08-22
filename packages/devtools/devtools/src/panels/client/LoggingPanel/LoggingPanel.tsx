@@ -17,10 +17,14 @@ const MAX_LOGS = 2_000;
 
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
+// TODO(burdon): Timestamp.
 const { helper } = createColumnBuilder<LogEntry>();
 const columns: GridColumnDef<LogEntry, any>[] = [
   // helper.accessor('id', {}), // TODO(burdon): Add id.
-  helper.accessor((entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0], { id: 'level ' }),
+  helper.accessor((entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0], {
+    id: 'level',
+    size: 40,
+  }),
   helper.accessor((entry) => `${entry.meta?.file}:${entry.meta?.line}`, { id: 'file' }),
   helper.accessor('message', {}),
 ];

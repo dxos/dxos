@@ -15,11 +15,11 @@ const { helper, builder } = createColumnBuilder<KeyRecord>();
 const columns: GridColumnDef<KeyRecord, any>[] = [
   helper.accessor((record) => PublicKey.from(record.publicKey), {
     id: 'public',
-    ...builder.createKeyCell({ header: 'public key' }),
+    ...builder.createKey({ header: 'public key' }),
   }),
   helper.accessor((record) => record.privateKey && PublicKey.from(record.privateKey), {
     id: 'private',
-    ...builder.createKeyCell({ header: 'private key' }),
+    ...builder.createKey({ header: 'private key' }),
   }),
 ];
 

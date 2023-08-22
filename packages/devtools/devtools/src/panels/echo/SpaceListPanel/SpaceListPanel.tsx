@@ -37,11 +37,11 @@ export const SpaceListPanel: FC = () => {
   // TODO(burdon): Get builder from hook.
   const { helper, builder } = createColumnBuilder<Space>();
   const columns: GridColumnDef<Space, any>[] = [
-    helper.accessor('key', builder.createKeyCell({ tooltip: true })),
+    helper.accessor('key', builder.createKey({ tooltip: true })),
     helper.accessor((space) => space.properties.name, { id: 'name' }),
     helper.accessor((space) => space.db.objects.length, {
       id: 'objects',
-      ...builder.createNumberCell(),
+      ...builder.createNumber(),
     }),
     helper.accessor(
       (space) => {
@@ -50,16 +50,16 @@ export const SpaceListPanel: FC = () => {
       },
       {
         id: 'startup',
-        ...builder.createNumberCell(),
+        ...builder.createNumber(),
       },
     ),
-    helper.accessor('isOpen', { header: 'open', ...builder.createIconCell() }),
+    helper.accessor('isOpen', { header: 'open', ...builder.createIcon() }),
   ];
 
   return (
     <PanelContainer className='overflow-auto'>
       <Grid<Space>
-        columnDefs={columns}
+        columns={columns}
         data={spaces}
         onSelect={(selection) => {
           handleSelect(PublicKey.from(selection));

@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { createNumberColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { DetailsTable } from './DetailsTable';
@@ -14,11 +14,12 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
     return null;
   }
 
-  const columns: GridColumn<ConnectionInfo.StreamStats>[] = [
-    createNumberColumn('id', { key: true, hidden: true }),
-    createNumberColumn('bytesSent', { width: 100, header: { label: 'sent' } }),
-    createNumberColumn('bytesReceived', { width: 100, header: { label: 'received' } }),
-    createTextColumn('tag'),
+  const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
+  const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
+    helper.accessor('id', {}),
+    helper.accessor('bytesSent', builder.createNumber({ header: 'sent', size: 100 })),
+    helper.accessor('bytesReceived', builder.createNumber({ header: 'received', size: 100 })),
+    helper.accessor('tag', {}),
   ];
 
   return (
