@@ -3,6 +3,7 @@
 //
 
 import { WorkerRuntime } from '@dxos/client-services';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
@@ -27,9 +28,9 @@ const workerRuntime = new WorkerRuntime(async () => {
 });
 
 // Allow to access host from console.
-(globalThis as any).__DXOS__ = {
+mountDevtoolsHooks({
   host: workerRuntime.host,
-};
+});
 
 const start = Date.now();
 void workerRuntime.start().then(

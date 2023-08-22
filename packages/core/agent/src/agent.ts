@@ -8,6 +8,7 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
+import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -66,7 +67,7 @@ export class Agent {
     await this._client.initialize();
 
     // Global hook for debuggers.
-    ((globalThis as any).__DXOS__ ??= {}).host = (this._clientServices as any)._host;
+    mountDevtoolsHooks({ host: (this._clientServices as any)._host });
 
     //
     // Unix socket (accessed via CLI).
@@ -120,7 +121,7 @@ export class Agent {
     this._client = undefined;
     this._clientServices = undefined;
 
-    ((globalThis as any).__DXOS__ ??= {}).host = undefined;
+    unmountDevtoolsHooks();
     log('stopped');
   }
 }
