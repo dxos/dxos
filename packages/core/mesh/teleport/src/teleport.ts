@@ -84,14 +84,19 @@ export class Teleport {
       });
     }
 
+    // let last: MuxerStats | undefined;
     this._muxer.statsUpdated.on((stats) => {
       log.trace('dxos.mesh.teleport.stats', {
         localPeerId,
         remotePeerId,
         bytesSent: stats.bytesSent,
+        bytesSentRate: stats.bytesSentRate,
         bytesReceived: stats.bytesReceived,
+        bytesReceivedRate: stats.bytesReceivedRate,
         channels: stats.channels,
       });
+
+      // last = stats;
     });
   }
 

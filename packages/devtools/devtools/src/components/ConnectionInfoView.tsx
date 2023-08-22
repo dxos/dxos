@@ -16,9 +16,10 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
 
   const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
   const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
-    helper.accessor('id', {}),
-    helper.accessor('bytesSent', builder.createNumber({ header: 'sent', size: 100 })),
-    helper.accessor('bytesReceived', builder.createNumber({ header: 'received', size: 100 })),
+    helper.accessor('bytesSent', builder.createNumber({ header: 'sent' })),
+    helper.accessor('bytesReceived', builder.createNumber({ header: 'received' })),
+    helper.accessor('bytesSentRate', builder.createNumber({ header: 'sent b/s' })),
+    helper.accessor('bytesReceivedRate', builder.createNumber({ header: 'received b/s' })),
     helper.accessor('tag', {}),
   ];
 

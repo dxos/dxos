@@ -6,7 +6,7 @@ import React, { FC, useState } from 'react';
 import urlJoin from 'url-join';
 
 import { Main } from '@dxos/aurora';
-import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/aurora-theme';
 import { TypedObject } from '@dxos/client/echo';
 import { Config, useConfig } from '@dxos/react-client';
 
@@ -27,13 +27,7 @@ export const FileMain: FC<{ data: TypedObject }> = ({ data: file }) => {
   const url = getIpfsUrl(config, file.cid);
 
   return (
-    <Main.Content
-      classNames={[
-        'flex flex-col min-bs-[calc(100dvh-2.5rem)] h-screen overflow-hidden',
-        fixedFullLayout,
-        coarseBlockPaddingStart,
-      ]}
-    >
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <FilePreview type={file.type} url={url} />
     </Main.Content>
   );

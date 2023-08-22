@@ -40,6 +40,8 @@ export const SpaceInfoPanel: FC = () => {
     const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
     const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
     const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+
+    const controlProgress = Math.min(currentControlMessages / targetControlMessages, 1);
     const dataProgress = Math.min(
       Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages) || 1),
       1,
@@ -48,6 +50,7 @@ export const SpaceInfoPanel: FC = () => {
     const { open, ready } = space?.internal.data?.metrics ?? {};
     const startupTime = open && ready && ready.getTime() - open.getTime();
 
+    // TODO(burdon): Factor out numbers, units, formatting, etc. to DetailsTable. Builder.
     return {
       id: metadata.key.truncate(),
       name: space.properties.name ?? humanize(metadata?.key),
@@ -56,12 +59,12 @@ export const SpaceInfoPanel: FC = () => {
         currentEpochNumber === appliedEpochNumber
           ? currentEpochNumber
           : `${currentEpochNumber} (${appliedEpochNumber})`,
-      epochStashedMutations: pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0,
+      epochStashedMutations: pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages().toLocaleString() ?? 0,
       currentEpochTime: pipeline?.currentEpoch?.issuanceDate?.toISOString(),
-      mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
-      controlProgress: `${(Math.min(currentControlMessages / targetControlMessages, 1) * 100).toFixed(0)}%`,
-      dataProgress: dataProgress && `${(dataProgress * 100).toFixed(2)}%`,
-      startupTime: startupTime && `${startupTime}ms`,
+      mutationsAfterEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe).toLocaleString(),
+      controlProgress: `${(controlProgress * 100).toFixed(1)}%`,
+      dataProgress: `${(dataProgress * 100).toFixed(1)}%`,
+      startupTime: startupTime && `${startupTime.toLocaleString()}ms`,
       // ...Object.fromEntries(Object.entries(space?.internal.data?.metrics ?? {}).map(([key, value]) => [`metrics.${key}`, value?.toISOString()])),
     };
   }, [metadata, pipelineState, space]);

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { sentenceCase } from 'change-case';
 import React, { FC } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
@@ -21,7 +22,9 @@ export const DetailsTable: FC<{ object: { [index: string]: any }; slots?: Detail
         <tbody>
           {Object.entries(object).map(([key, value]) => (
             <tr key={key} className='align-baseline leading-6'>
-              <td className={mx('px-4 align-baseline text-gray-500 overflow-hidden', slots?.keys?.className)}>{key}</td>
+              <td className={mx('px-4 align-baseline text-gray-500 overflow-hidden', slots?.keys?.className)}>
+                {sentenceCase(key)}
+              </td>
               <td>
                 <div className='font-mono overflow-x-scroll'>{value}</div>
               </td>

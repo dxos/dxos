@@ -67,15 +67,16 @@ export const DiagnosticsPanel = () => {
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={handleRefresh}>Refresh</Toolbar.Button>
-          <Toolbar.Button onClick={handleDownload}>
-            <Download className={getSize(5)} />
-            <span className='m-2'>Download</span>
-          </Toolbar.Button>
-          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
           <Input.Root>
             <Input.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
             <Input.Label>Record metrics</Input.Label>
           </Input.Root>
+          <div className='grow' />
+          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
+          <Toolbar.Button onClick={handleDownload}>
+            <Download className={getSize(5)} />
+            <span className='m-2'>Download</span>
+          </Toolbar.Button>
         </Toolbar.Root>
       }
       footer={
