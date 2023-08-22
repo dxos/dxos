@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLineLeft } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal/react';
 import React, { PropsWithChildren } from 'react';
 
@@ -36,24 +35,6 @@ export const SplitViewPlugin = ({
         <SplitViewContext.Provider value={state}>{props.children}</SplitViewContext.Provider>
       ),
       components: { SplitView, SplitViewMainContentEmpty },
-      graph: {
-        nodes: (parent) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
-          parent.addAction({
-            id: 'close-sidebar',
-            label: ['close sidebar label', { ns: 'os' }],
-            icon: (props) => <ArrowLineLeft {...props} />,
-            intent: {
-              plugin: SPLITVIEW_PLUGIN,
-              action: SplitViewAction.TOGGLE_SIDEBAR,
-              data: { state: false },
-            },
-          });
-        },
-      },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {

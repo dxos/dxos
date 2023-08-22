@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { HTMLAttributes, RefCallback } from 'react';
 
 import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
@@ -17,19 +17,20 @@ export const EditorMain = ({
   properties,
   layout,
   onChange,
+  editorRefCb,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   onChange?: MarkdownComposerProps['onChange'];
+  editorRefCb: RefCallback<MarkdownComposerRef>;
 }) => {
-  const editorRef = useRef<MarkdownComposerRef>(null);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
 
   return (
-    <Root properties={properties} model={model} editorRef={editorRef}>
+    <Root properties={properties} model={model}>
       <MarkdownComposer
-        ref={editorRef}
+        ref={editorRefCb}
         model={model}
         onChange={onChange}
         slots={{

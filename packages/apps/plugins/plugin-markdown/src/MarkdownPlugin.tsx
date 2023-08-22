@@ -5,17 +5,19 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React, { FC } from 'react';
+import React, { FC, MutableRefObject, RefCallback } from 'react';
 
+import { Graph } from '@braneframe/plugin-graph';
 import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
 import { Document as DocumentType, Document } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps, useTextModel } from '@dxos/aurora-composer';
+import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
 import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
+import { StandaloneMenu } from './components/StandaloneMenu';
 import translations from './translations';
 import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
 import {
@@ -36,6 +38,12 @@ export const isDocument = (data: unknown): data is Document =>
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
+    current: { editor: null },
+  };
+  const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
+    pluginMutableRef.current = { ...nextRef };
+  };
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
   const EditorMainStandalone = ({
@@ -50,6 +58,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={properties}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorRefCb={pluginRefCallback}
       />
     );
   };
@@ -80,8 +89,28 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         properties={data}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorRefCb={pluginRefCallback}
       />
     );
+  };
+
+  const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
+    const identity = useIdentity();
+    const { plugins } = usePluginContext();
+    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const space = spacePlugin?.provides.space.current;
+
+    const textModel = useTextModel({
+      identity,
+      space,
+      text: data.data?.content,
+    });
+
+    if (!textModel) {
+      return null;
+    }
+
+    return <StandaloneMenu properties={data.data} model={textModel} editorRef={pluginMutableRef} />;
   };
 
   return {
@@ -187,6 +216,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               isMarkdownProperties(data.properties)
             ) {
               return MarkdownMainEmpty;
+            }
+            break;
+          }
+
+          case 'heading': {
+            if ('data' in data && isDocument(data.data)) {
+              return StandaloneMainMenu;
             }
             break;
           }

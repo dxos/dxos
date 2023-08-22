@@ -4,7 +4,6 @@
 
 import type { DeepSignal } from 'deepsignal';
 
-import type { GraphProvides } from '@braneframe/plugin-graph';
 import type { IntentProvides } from '@braneframe/plugin-intent';
 import type { TranslationsProvides } from '@braneframe/plugin-theme';
 
@@ -22,8 +21,7 @@ export type SplitViewContextValue = DeepSignal<{
   dialogOpen: boolean;
 }>;
 
-export type SplitViewProvides = GraphProvides &
-  TranslationsProvides &
+export type SplitViewProvides = TranslationsProvides &
   IntentProvides & {
     splitView: SplitViewContextValue;
   };
