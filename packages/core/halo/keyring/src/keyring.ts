@@ -145,10 +145,10 @@ export class Keyring implements Signer {
       privateKeyData,
       {
         name: 'ECDSA',
-        namedCurve: 'P-256'
+        namedCurve: 'P-256',
       },
       true,
-      ['sign']
+      ['sign'],
     );
 
     const importedPublicKey = await subtleCrypto.importKey(
@@ -156,15 +156,15 @@ export class Keyring implements Signer {
       publicKeyData,
       {
         name: 'ECDSA',
-        namedCurve: 'P-256'
+        namedCurve: 'P-256',
       },
       true,
-      ['verify']
+      ['verify'],
     );
 
     const keyPair: CryptoKeyPair = {
       publicKey: importedPublicKey,
-      privateKey: importedPrivateKey
+      privateKey: importedPrivateKey,
     };
 
     await this._setKey(keyPair);

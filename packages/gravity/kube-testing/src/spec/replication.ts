@@ -15,8 +15,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
 
-import { TestBuilder as SignalTestBuilder } from '../test-builder';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
+import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 
@@ -64,8 +64,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     const feeds = new Map<number, Map<string, FeedConfig[]>>();
     const feedKeys: TestKeyPair[] = [];
 
-    range(spec.agents).forEach(agentIdx => {
-      feeds.set(agentIdx, new Map(swarmTopicIds.map(id => [id, []])));
+    range(spec.agents).forEach((agentIdx) => {
+      feeds.set(agentIdx, new Map(swarmTopicIds.map((id) => [id, []])));
     });
 
     const addFeedConfig = async (agentIdx: number, swarmTopicId: string) => {
@@ -77,8 +77,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     };
 
     // Add spec.feedsPerSwarm feeds for each agent to each swarm.
-    range(spec.agents).forEach(async agentIdx => {
-      swarmTopicIds.forEach(async swarmTopicId => {
+    range(spec.agents).forEach(async (agentIdx) => {
+      swarmTopicIds.forEach(async (swarmTopicId) => {
         range(spec.feedsPerSwarm).forEach(async () => {
           await addFeedConfig(agentIdx, swarmTopicId);
         });
@@ -92,7 +92,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         swarmTopicIds,
         feeds: Object.fromEntries(feeds.get(agentIdx)!.entries()),
         feedKeys,
-      }
+      };
     });
   }
 
@@ -126,14 +126,14 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
 
-    const feeds = new Map<string, { writable: boolean, feed: FeedWrapper<any>}[]>
+    const feeds = new Map<string, { writable: boolean; feed: FeedWrapper<any> }[]>();
 
     // Feeds.
     for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
       const feedsArr = [];
       for (const feedConfig of feedConfigs) {
         // Import key pairs to keyring.
-        const keyPairExported = feedKeys.find(k => k.publicKeyHex === feedConfig.feedKey)!;
+        const keyPairExported = feedKeys.find((k) => k.publicKeyHex === feedConfig.feedKey)!;
         const feedKey = await keyring._importKeyPair(keyPairExported.privateKey, keyPairExported.publicKey);
 
         const feed = await feedStore.openFeed(feedKey, { writable: feedConfig.writable });
@@ -145,7 +145,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     // Swarms to join.
     const swarms = swarmTopicIds.map((swarmTopicId, swarmIdx) => {
       const swarmTopic = PublicKey.from(swarmTopicId);
-      return peer.createSwarm(swarmTopic, () => [{ name: REPLICATOR_EXTENSION_NAME, extension: new ReplicatorExtension().setOptions({ upload: true }) }]);
+      return peer.createSwarm(swarmTopic, () => [
+        { name: REPLICATOR_EXTENSION_NAME, extension: new ReplicatorExtension().setOptions({ upload: true }) },
+      ]);
     });
 
     log.info('swarms created', { agentIdx });
@@ -242,7 +244,11 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       );
     };
 
-    const loadFeed = async (context: Context, feed: FeedWrapper<any>, options: { feedLoadInterval: number, feedLoadChunkSize: number }) => {
+    const loadFeed = async (
+      context: Context,
+      feed: FeedWrapper<any>,
+      options: { feedLoadInterval: number; feedLoadChunkSize: number },
+    ) => {
       const { feedLoadInterval, feedLoadChunkSize } = options;
 
       scheduleTaskInterval(
@@ -251,11 +257,11 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           await feed.append(randomBytes(feedLoadChunkSize));
         },
         feedLoadInterval,
-      )
-    }
+      );
+    };
 
     const ctx = new Context();
-    let testCounter = 0;
+    const testCounter = 0;
 
     const testRun = async () => {
       const context = ctx.derive({
@@ -286,7 +292,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       {
         log.info('adding feeds', { agentIdx });
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          const connection = swarm.protocol.otherConnections.get({ remotePeerId: PublicKey.from(agentId), extension: REPLICATOR_EXTENSION_NAME }) as ReplicatorExtension;
+          const connection = swarm.protocol.otherConnections.get({
+            remotePeerId: PublicKey.from(agentId),
+            extension: REPLICATOR_EXTENSION_NAME,
+          }) as ReplicatorExtension;
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
             await connection.addFeed(feedObj.feed);
@@ -331,7 +340,12 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
-            log.info('feed length', { agentIdx, feedLength: feedObj.feed.length, writable: feedObj.writable, feedKey: feedObj.feed.key.toString() });
+            log.info('feed length', {
+              agentIdx,
+              feedLength: feedObj.feed.length,
+              writable: feedObj.writable,
+              feedKey: feedObj.feed.key.toString(),
+            });
           }
         });
       }

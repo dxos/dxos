@@ -29,11 +29,13 @@ export const generateKeyPair = async (): Promise<TestKeyPair> => {
 
   // Convert the public key to hex format
   const publicKeyBuffer = new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey));
-  const publicKeyHex = Array.from(publicKeyBuffer).map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const publicKeyHex = Array.from(publicKeyBuffer)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 
   return {
     privateKey: privateKeyExported,
     publicKey: publicKeyExported,
     publicKeyHex,
   };
-}
+};

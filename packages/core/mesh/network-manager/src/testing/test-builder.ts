@@ -176,7 +176,11 @@ export class TestPeer {
 export class TestSwarmConnection {
   protocol: TestWireProtocol;
 
-  constructor(readonly peer: TestPeer, readonly topic: PublicKey, readonly extensionFactory: TestTeleportExtensionFactory) {
+  constructor(
+    readonly peer: TestPeer,
+    readonly topic: PublicKey,
+    readonly extensionFactory: TestTeleportExtensionFactory,
+  ) {
     // TODO(burdon): Configure plugins.
     // TODO(burdon): Prevent reuse?
     this.protocol = new TestWireProtocol(this.peer.peerId, this.extensionFactory);

@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { verifySignature, subtleCrypto } from '@dxos/crypto';
+import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';

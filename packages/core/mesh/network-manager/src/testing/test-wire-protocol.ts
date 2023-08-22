@@ -25,9 +25,14 @@ export class TestWireProtocol {
   public readonly connected = new Event<PublicKey>();
   public readonly disconnected = new Event<PublicKey>();
 
-  public readonly otherConnections = new ComplexMap<{remotePeerId: PublicKey, extension: string }, TeleportExtension>(({ remotePeerId, extension }) => remotePeerId.toHex() + extension);
+  public readonly otherConnections = new ComplexMap<{ remotePeerId: PublicKey; extension: string }, TeleportExtension>(
+    ({ remotePeerId, extension }) => remotePeerId.toHex() + extension,
+  );
 
-  constructor(public readonly peerId: PublicKey, private readonly _extensionFactory: TestTeleportExtensionFactory = () => []) {}
+  constructor(
+    public readonly peerId: PublicKey,
+    private readonly _extensionFactory: TestTeleportExtensionFactory = () => [],
+  ) {}
 
   readonly factory = createTeleportProtocolFactory(async (teleport) => {
     log('create', { remotePeerId: teleport.remotePeerId });
