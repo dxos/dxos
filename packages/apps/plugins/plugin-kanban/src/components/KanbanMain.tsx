@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
 import { Input, Main, useTranslation } from '@dxos/aurora';
-import { baseSurface, blockSeparator, fixedFullLayout, mx } from '@dxos/aurora-theme';
+import { blockSeparator, coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
 import { findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { KANBAN_PLUGIN, type KanbanModel } from '../types';
@@ -39,7 +39,7 @@ export const KanbanMain: FC<{ data: KanbanType }> = ({ data: object }) => {
   };
 
   return (
-    <Main.Content classNames={[fixedFullLayout, baseSurface]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div>
         <Input.Root>
           <Input.Label srOnly>{t('kanban title label')}</Input.Label>

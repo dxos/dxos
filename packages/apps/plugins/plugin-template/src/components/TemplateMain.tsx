@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { SpacePluginProvides } from '@braneframe/plugin-space';
 import { Main } from '@dxos/aurora';
-import { baseSurface, mx } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/client';
 import { TypedObject } from '@dxos/client/echo';
 import { findPlugin, usePluginContext } from '@dxos/react-surface';
@@ -18,7 +18,7 @@ export const TemplateMain: FC<{ data: TypedObject }> = ({ data: object }) => {
 
   return (
     // TODO(burdon): Boilerplate.
-    <Main.Content classNames={mx('flex flex-col grow min-bs-[100vh] overflow-hidden', baseSurface)}>
+    <Main.Content classNames={coarseBlockPaddingStart}>
       <pre className='m-4 p-2 ring'>
         <span>{space?.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>
       </pre>

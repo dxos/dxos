@@ -233,7 +233,7 @@ const EmbeddedLayoutImpl = () => {
         </div>
         {space && document ? (
           editorViewState === 'preview' ? (
-            <Main.Content classNames='min-bs-[100vh] flex flex-col p-0.5'>
+            <Main.Content classNames='min-bs-[100dvh] flex flex-col p-0.5'>
               <GfmPreview
                 markdown={document.content?.toString() ?? ''}
                 {...(docGhId && { owner: docGhId.owner, repo: docGhId.repo })}
