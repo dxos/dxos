@@ -252,8 +252,8 @@ export class Client {
     // TODO(burdon): Remove?
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
-      const { createDevtoolsRpcServer } = await import('../devtools');
-      await createDevtoolsRpcServer(this, this._services);
+      const { mountDevtoolsHooks } = await import('../devtools');
+      mountDevtoolsHooks({ client: this });
     }
 
     const trigger = new Trigger<Error | undefined>();

@@ -614,6 +614,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/aurora-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/aurora-theme/package.json",
           "jsonpath": "$.version"
         },

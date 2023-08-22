@@ -9,7 +9,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Drawing as DrawingType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { Main, useThemeContext } from '@dxos/aurora';
-import { fixedFullLayout, mx } from '@dxos/aurora-theme';
+import { coarseBlockPaddingStart, fixedInsetFlexLayout, mx } from '@dxos/aurora-theme';
 
 import '@tldraw/tldraw/tldraw.css';
 
@@ -45,7 +45,7 @@ export const DrawingMain: FC<DrawingMainParams> = ({ data: drawing }) => {
   // TODO(burdon): Customize by using hooks directly: https://tldraw.dev/docs/editor
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
-    <Main.Content classNames={fixedFullLayout}>
+    <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div
         className={mx(
           'h-full',
