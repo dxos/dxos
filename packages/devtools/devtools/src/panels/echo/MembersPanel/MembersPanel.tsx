@@ -14,7 +14,7 @@ import { useDevtoolsState } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SpaceMember>();
 const columns: GridColumnDef<SpaceMember, any>[] = [
-  helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.createKey() }),
+  helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.createKey({ tooltip: true }) }),
   helper.accessor((member) => member.identity.profile?.displayName, { id: 'name' }),
   helper.accessor(
     (member) => {

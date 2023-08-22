@@ -18,9 +18,12 @@ import { GridSlots } from './Grid';
 // TODO(burdon): Combine?
 export const createColumnBuilder = <TData extends RowData>() => ({
   helper: createColumnHelper<TData>(),
-  builder: new ColumnPropsBuilder<TData>(),
+  builder: new ColumnBuilder<TData>(),
 });
 
+/**
+ * NOTE: Can use `meta` for custom properties.
+ */
 // TODO(burdon): Add accessor options and spread.
 type BaseColumnOptions = {
   header?: string;
@@ -40,9 +43,12 @@ type DateColumnOptions = BaseColumnOptions & {
 
 type IconColumnOptions = BaseColumnOptions & {};
 
+/**
+ * Util to create column definitions.
+ */
 // TODO(burdon): Configure styles and base options (e.g., slots for tooltip).
 // TODO(burdon): Helper to add classname? Extend def/slot, etc? (e.g., monospace).
-export class ColumnPropsBuilder<TData extends RowData> {
+export class ColumnBuilder<TData extends RowData> {
   createNumber(options: NumberColumnOptions = {}): Partial<ColumnDef<TData, number>> {
     return stripUndefinedValues({
       size: options?.size ?? 120,
@@ -58,15 +64,16 @@ export class ColumnPropsBuilder<TData extends RowData> {
 
   createDate(options: BaseColumnOptions & DateColumnOptions = {}): Partial<ColumnDef<TData, Date>> {
     return stripUndefinedValues({
-      size: options?.size ?? 160,
+      size: options?.size ?? 180, // TODO(burdon): Depends on format.
       header: options?.header,
       cell: (cell: CellContext<TData, Date>) => {
         const value = cell.getValue();
-        return options?.format
+        const str = options?.format
           ? format(value, options.format)
           : options?.relative
           ? formatDistanceToNow(value, { addSuffix: true })
           : value.toISOString();
+        return <div className='font-mono'>{str}</div>;
       },
     });
   }
@@ -81,16 +88,16 @@ export class ColumnPropsBuilder<TData extends RowData> {
         }
 
         // TODO(burdon): Factor out styles.
-        const Span = <span className='font-mono font-thin text-green-500'>{value.truncate()}</span>;
+        const element = <div className='font-mono font-thin text-green-500'>{value.truncate()}</div>;
         if (!options.tooltip) {
-          return Span;
+          return element;
         }
 
         return (
           <div className='group inline-flex gap-2 items-center'>
             <Tooltip.Provider>
               <Tooltip.Root>
-                <Tooltip.Trigger asChild>{Span}</Tooltip.Trigger>
+                <Tooltip.Trigger asChild>{element}</Tooltip.Trigger>
                 <Tooltip.Content side='right'>
                   <Tooltip.Arrow />
                   <ClipboardText

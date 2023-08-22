@@ -16,8 +16,8 @@ const { helper, builder } = createColumnBuilder<Credential>();
 const columns: GridColumnDef<Credential, any>[] = [
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  helper.accessor('id', builder.createKey()),
-  helper.accessor('issuer', builder.createKey()),
+  helper.accessor('id', builder.createKey({ tooltip: true })),
+  helper.accessor('issuer', builder.createKey({ tooltip: true })),
   helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type' }),
   helper.accessor('issuanceDate', builder.createDate({ header: 'issued' })),
 ];

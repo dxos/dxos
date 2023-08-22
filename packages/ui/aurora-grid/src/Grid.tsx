@@ -2,21 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ColumnDef, flexRender, getCoreRowModel, RowData, useReactTable } from '@tanstack/react-table';
+import {
+  ColumnDef,
+  Row,
+  RowData,
+  RowSelectionState,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
 export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
-// TODO(burdon): Size property.
-// TODO(burdon): Style builder.
-// TODO(burdon): Key equivalence (test for equals?)
 // TODO(burdon): Editable.
 // TODO(burdon): Sort/filter.
 // TODO(burdon): Scroll to selection; sticky bottom.
 // TODO(burdon): Drag-and-drop.
-// TODO(burdon): No header.
 // TODO(burdon): Virtual (e.g., log panel).
 // TODO(burdon): Resize.
 
@@ -50,48 +54,55 @@ export type GridSlots = {
   };
 };
 
-// TODO(burdon): Return object (not key).
-type GridSelection<TData extends RowData, TKey = any> = {
-  selection?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle';
-  selected?: string | string[];
-  onSelect?: (id: TKey, row: TData) => void; // Controlled.
-  onSelectedChange?: (selection: TKey | TKey[] | undefined, rows: TData | TData[] | undefined) => void;
+type GridSelection<TData extends RowData> = {
+  // Controlled if undefined (by default).
+  select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;
+  selected?: TData | TData[];
+  onSelectedChange?: (rows: TData | TData[] | undefined) => void;
 };
 
 /**
- * Update the selection based on the mode.
+ * Util to update the selection based on the mode.
  */
-export const updateSelection = (selected: Set<string>, id: string, selection: GridSelection<any>['selection']) => {
+export const updateSelection = (
+  selectionState: RowSelectionState,
+  id: string,
+  selection: GridSelection<any>['select'],
+): RowSelectionState => {
   switch (selection) {
     case 'single': {
-      selected.clear();
-      selected.add(id);
-      break;
+      return {
+        [id]: true,
+      };
     }
     case 'single-toggle': {
-      if (selected.has(id)) {
-        selected.delete(id);
-      } else {
-        selected.clear();
-        selected.add(id);
-      }
-      break;
+      return selectionState[id]
+        ? {}
+        : {
+            [id]: true,
+          };
     }
     case 'multiple': {
-      selected.add(id);
-      break;
+      return {
+        [id]: true,
+        ...selectionState,
+      };
     }
     case 'multiple-toggle': {
-      if (selected.has(id)) {
-        selected.delete(id);
+      if (selectionState[id]) {
+        const newSelectionState = { ...selectionState };
+        delete newSelectionState[id];
+        return newSelectionState;
       } else {
-        selected.add(id);
+        return {
+          [id]: true,
+          ...selectionState,
+        };
       }
-      break;
     }
   }
 
-  return selection;
+  return selectionState;
 };
 
 export type GridProps<TData extends RowData> = {
@@ -110,60 +121,70 @@ export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
   slots,
-  selection = 'single', // TODO(burdon): No select by default.
+  select,
   selected,
-  onSelect,
   onSelectedChange,
   header: showHeader = true,
   footer: showFooter = false,
   pinToBottom,
 }: GridProps<TData>) => {
-  // const keyColumn = columns.find((column) => column.key);
-  // invariant(keyColumn?.key, 'Missing key column.');
-  // TODO(burdon): Depends on object equality.
-  // const getRow = (id: any) => table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
-  // const getRowId = (row: Row<TData>) => row.getValue(keyColumn!.id);
+  // https://tanstack.com/table/v8/docs/api/features/row-selection
+  const [selectionState, setSelectionState] = useState<RowSelectionState>({});
+  const [focus, setFocus] = useState<string>();
 
-  const [focus, setFocus] = useState<any>();
-  const [selectionSet, setSelectionSet] = useState(new Set<any>());
-  useEffect(() => {
-    setSelectionSet(new Set<string>(Array.isArray(selected) ? selected : selected ? [selected] : []));
-  }, [selection, selected]);
-
-  const handleSelect = (id: any) => {
-    /*
-    if (onSelect) {
-      // Controlled.
-      const row = getRow(id);
-      onSelect?.(id, row!.original!);
-    } else {
-      // Uncontrolled.
-      setSelectionSet((selectionSet) => {
-        updateSelection(selectionSet, id, selection);
-        if (onSelectedChange) {
-          if (selection === 'single' || selection === 'single-toggle') {
-            const id = selectionSet.size === 0 ? undefined : selectionSet.values().next().value;
-            onSelectedChange(id, id ? getRow(id)!.original! : undefined);
-          } else {
-            const ids = Array.from(selectionSet);
-            onSelectedChange(
-              ids,
-              ids.map((id) => getRow(id)!.original!),
-            );
-          }
-        }
-
-        return new Set(selectionSet);
-      });
-    }
-    */
-  };
-
+  // https://tanstack.com/table/v8/docs/api/core/table
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    state: {
+      rowSelection: selectionState,
+    },
+    enableRowSelection: select === 'single' || select === 'single-toggle',
+    enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
+    onRowSelectionChange: (rows) => {
+      console.log('onRowSelectionChange', rows);
+    },
+    // debugTable: true, // TODO(burdon): Research perf for us.
   });
+
+  // Update controlled selection.
+  useEffect(() => {
+    if (Array.isArray(selected)) {
+      setSelectionState(
+        selected.reduce((selectionState: RowSelectionState, selected) => {
+          const row = table.getRowModel().rows.find((row) => row.original === selected);
+          if (row) {
+            selectionState[row.id] = true;
+          }
+          return selectionState;
+        }, {}),
+      );
+    } else {
+      const row = selected && table.getRowModel().rows.find((row) => row.original === selected);
+      if (row) {
+        setSelectionState({ [row.id]: true });
+      } else {
+        setSelectionState({});
+      }
+    }
+  }, [select, selected]);
+
+  const handleSelect = (row: Row<TData>) => {
+    setSelectionState((selectionState: RowSelectionState) => {
+      const newSelectionState = updateSelection(selectionState, row.id, select);
+      if (onSelectedChange) {
+        const rows: TData[] = Object.keys(newSelectionState).map((id) => table.getRowModel().rowsById[id].original);
+        if (select === 'single' || select === 'single-toggle') {
+          onSelectedChange(rows?.[0]);
+        } else {
+          onSelectedChange(rows);
+        }
+      }
+
+      return newSelectionState;
+    });
+  };
 
   // Pin scrollbar to bottom.
   // TODO(burdon): Causes scrollbar to be constantly visible.
@@ -195,6 +216,8 @@ export const Grid = <TData extends RowData>({
     }, [data]);
   }
 
+  // TODO(burdon): Use meta prop for visibility.
+
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
   return (
@@ -204,7 +227,8 @@ export const Grid = <TData extends RowData>({
         <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
           {table.getHeaderGroups().map((headerGroup) => {
             // Need additional column if all columns have fixed width.
-            const flex = columns?.map((column) => column.size).filter(Boolean).length === columns?.length;
+            // TODO(burdon): Size will be computed.
+            const addFlex = columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
             return (
               <tr key={headerGroup.id}>
@@ -215,8 +239,8 @@ export const Grid = <TData extends RowData>({
                     return (
                       <th
                         key={header.id}
-                        style={{ width: header.getSize() }}
-                        className={mx(slots?.cell?.className /*, getColumn(header.id).header?.className */)}
+                        style={{ width: header.column.columnDef.size }}
+                        className={mx(slots?.cell?.className)}
                       >
                         {!showHeader || header.isPlaceholder
                           ? null
@@ -224,7 +248,7 @@ export const Grid = <TData extends RowData>({
                       </th>
                     );
                   })}
-                {flex && <th />}
+                {addFlex && <th />}
                 <th style={{ width: slots?.margin?.style?.width }} />
               </tr>
             );
@@ -232,17 +256,16 @@ export const Grid = <TData extends RowData>({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => {
-            // const id = getRowId(row);
             return (
               <tr
                 key={row.id}
-                // onClick={() => handleSelect?.(id)}
+                onClick={() => handleSelect(row)}
                 role='button'
                 className={mx(
                   'group',
                   slots?.row?.className,
-                  // selectionSet.has(id) && slots?.selected?.className,
-                  // focus === id && slots?.focus?.className,
+                  selectionState[row.id] && slots?.selected?.className,
+                  focus === row.id && slots?.focus?.className,
                 )}
               >
                 <td>
@@ -250,7 +273,7 @@ export const Grid = <TData extends RowData>({
                   <button
                     style={{ width: 1 }}
                     className='focus:outline-none'
-                    // onFocus={() => setFocus(id)}
+                    onFocus={() => setFocus(row.id)}
                     onBlur={() => setFocus(undefined)}
                   />
                 </td>
@@ -259,14 +282,7 @@ export const Grid = <TData extends RowData>({
                   // .filter((cell) => !getColumn(cell.column.id).hidden)
                   .map((cell) => {
                     return (
-                      <td
-                        key={cell.id}
-                        className={mx(
-                          'truncate',
-                          // getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
-                          slots?.cell?.className,
-                        )}
-                      >
+                      <td key={cell.id} className={mx('truncate', slots?.cell?.className)}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     );

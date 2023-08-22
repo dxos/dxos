@@ -16,7 +16,7 @@ import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../..
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
 const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
-  helper.accessor('feedKey', builder.createKey({ header: 'key' })),
+  helper.accessor('feedKey', builder.createKey({ header: 'key', tooltip: true })),
   helper.accessor('seq', builder.createNumber()),
 ];
 

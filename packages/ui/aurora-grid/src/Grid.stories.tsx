@@ -59,7 +59,7 @@ export default {
 export const Controlled = {
   render: () => {
     const items = useMemo(() => createItems(10), []);
-    const [selected, setSelected] = useState<string>();
+    const [selected, setSelected] = useState<Item | Item[]>();
 
     return (
       <div className='flex grow overflow-hidden'>
@@ -67,9 +67,9 @@ export const Controlled = {
         <Grid<Item>
           columns={columns}
           data={items}
-          selection='single'
+          select='single'
           selected={selected}
-          onSelect={setSelected}
+          onSelectedChange={setSelected}
           slots={defaultGridSlots}
           footer
         />
@@ -86,8 +86,25 @@ export const SingleSelect = {
         <Grid<Item>
           columns={columns}
           data={createItems(10)}
+          select='single-toggle'
           slots={defaultGridSlots}
           footer
+        />
+      </div>
+    );
+  },
+};
+
+export const MultiSelect = {
+  render: () => {
+    return (
+      <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columns={columns}
+          data={createItems(20)}
+          select='multiple-toggle'
+          slots={defaultGridSlots}
         />
       </div>
     );
@@ -118,22 +135,6 @@ export const SingleColumn = {
         <Grid<Item>
           columns={[columns[0]]}
           data={createItems(10)}
-          slots={defaultGridSlots}
-        />
-      </div>
-    );
-  },
-};
-
-export const MultiSelect = {
-  render: () => {
-    return (
-      <div className='flex grow overflow-hidden'>
-        {/* prettier-ignore */}
-        <Grid<Item>
-          columns={columns}
-          data={createItems(20)}
-          selection='multiple-toggle'
           slots={defaultGridSlots}
         />
       </div>

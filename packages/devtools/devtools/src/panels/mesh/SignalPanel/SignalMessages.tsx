@@ -51,7 +51,7 @@ const views: View<SignalResponse>[] = [
         (response) =>
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer)) ||
           (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer)),
-        { id: 'peer', ...builder.createKey() },
+        { id: 'peer', ...builder.createKey({ tooltip: true }) },
       ),
       // TODO(burdon): Time delta since last message?
       helper.accessor((response) => response.swarmEvent!.peerAvailable?.since, {
@@ -70,16 +70,16 @@ const views: View<SignalResponse>[] = [
       helper.accessor('receivedAt', builder.createDate({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
         id: 'recipient',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.payload.messageId, { id: 'message' }),
       helper.accessor((response) => response.message!.payload?.payload?.topic, {
         id: 'topic',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
     ],
   },
@@ -93,15 +93,15 @@ const views: View<SignalResponse>[] = [
       helper.accessor('receivedAt', builder.createDate({ header: 'received' })),
       helper.accessor((response) => response.message!.author as unknown as PublicKey, {
         id: 'author',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
         id: 'recipient',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
       helper.accessor((response) => response.message!.payload.messageId, {
         id: 'message',
-        ...builder.createKey(),
+        ...builder.createKey({ tooltip: true }),
       }),
     ],
   },

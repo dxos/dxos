@@ -17,11 +17,8 @@ export const SpaceListPanel: FC = () => {
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
 
-  const handleSelect = (spaceKey: PublicKey) => {
-    setState((state) => ({
-      ...state,
-      space: spaces.find((space) => space.key.equals(spaceKey))!,
-    }));
+  const handleSelect = (selection: Space | Space[] | undefined) => {
+    setState((state) => ({ ...state, space: selection as Space }));
     navigate('/echo/space');
   };
 
@@ -50,22 +47,28 @@ export const SpaceListPanel: FC = () => {
       },
       {
         id: 'startup',
-        ...builder.createNumber(),
+        ...builder.createNumber({ size: 80 }),
       },
     ),
     helper.accessor('isOpen', { header: 'open', ...builder.createIcon() }),
+    helper.display({
+      id: 'open',
+      cell: (context) => (
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleToggleOpen(context.row.original.key);
+          }}
+        >
+          {context.row.original.isOpen ? 'Close' : 'Open'}
+        </button>
+      ),
+    }),
   ];
 
   return (
     <PanelContainer className='overflow-auto'>
-      <Grid<Space>
-        columns={columns}
-        data={spaces}
-        onSelect={(selection) => {
-          handleSelect(PublicKey.from(selection));
-        }}
-        slots={defaultGridSlots}
-      />
+      <Grid<Space> columns={columns} data={spaces} onSelectedChange={handleSelect} slots={defaultGridSlots} />
     </PanelContainer>
   );
 };

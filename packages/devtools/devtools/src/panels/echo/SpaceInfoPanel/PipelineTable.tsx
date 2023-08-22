@@ -27,7 +27,7 @@ export type PipelineTableRow = {
 
 const { helper, builder } = createColumnBuilder<PipelineTableRow>();
 const columns: GridColumnDef<PipelineTableRow, any>[] = [
-  helper.accessor('feedKey', builder.createKey()),
+  helper.accessor('feedKey', builder.createKey({ tooltip: true })),
   helper.accessor('type', { size: 60 }),
   helper.accessor('own', builder.createIcon()),
   helper.accessor('genesis', builder.createIcon({ header: 'gen' })),
@@ -42,7 +42,7 @@ const columns: GridColumnDef<PipelineTableRow, any>[] = [
         return `${Math.min(percent, 100).toFixed(0)}%`;
       }
     },
-    { id: 'progress' },
+    { id: 'progress' }, // TODO(burdon): Align right.
   ),
 ];
 
@@ -117,17 +117,12 @@ export const PipelineTable = ({
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (feedKey: PublicKey) => {
-    setContext((ctx) => ({ ...ctx, feedKey }));
+  const handleSelect = (selected: PipelineTableRow | PipelineTableRow[] | undefined) => {
+    setContext((ctx) => ({ ...ctx, item: (selected as PipelineTableRow)?.feedKey }));
     navigate('/echo/feeds');
   };
 
   return (
-    <Grid<PipelineTableRow>
-      slots={defaultGridSlots}
-      columns={columns}
-      data={data}
-      onSelect={(selected) => handleSelect(PublicKey.from(selected))}
-    />
+    <Grid<PipelineTableRow> slots={defaultGridSlots} columns={columns} data={data} onSelectedChange={handleSelect} />
   );
 };
