@@ -5,7 +5,7 @@
 import { ComponentFunction } from '@dxos/aurora-types/src';
 
 import { mx } from '../../util';
-import { baseSurface, bounceLayout } from '../fragments';
+import { bounceLayout, fixedSurface } from '../fragments';
 
 export type MainStyleProps = Partial<{
   isLg: boolean;
@@ -31,7 +31,7 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (
       ? 'inline-end-0'
       : '-inline-end-[100vw] sm:-inline-end-[270px]',
     side === 'inline-start' ? 'border-ie' : 'border-is',
-    baseSurface,
+    fixedSurface,
     ...etc,
   );
 
