@@ -97,7 +97,7 @@ export class EchoProxy implements Echo {
           spaceProxy = new SpaceProxy(this._serviceProvider, this._modelFactory, space, this.dbRouter);
 
           // Propagate space state updates to the space list observable.
-          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesChanged.emit(this._spaces.get()));
+          spaceProxy._stateUpdate.on(this._ctx, () => this._spacesChanged.emit([...this._spaces.get()]));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
@@ -113,7 +113,7 @@ export class EchoProxy implements Echo {
 
       gotInitialUpdate.wake();
       if (emitUpdate) {
-        this._spacesChanged.emit(newSpaces);
+        this._spacesChanged.emit([...newSpaces]);
       }
     });
     this._ctx.onDispose(() => spacesStream.close());

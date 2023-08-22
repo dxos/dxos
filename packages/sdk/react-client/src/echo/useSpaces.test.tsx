@@ -19,12 +19,28 @@ describe('useSpaces', () => {
     const client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createIdentity();
-    await client.createSpace();
     // TODO(wittjosiah): Factor out.
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
     );
     const { result } = renderHook(() => useSpaces(), { wrapper });
+    expect(result.current.length).to.eq(1);
+  });
+
+  test('updates when new spaces are created', async () => {
+    const client = new Client({ services: fromHost() });
+    await client.initialize();
+    await client.halo.createIdentity();
+    // TODO(wittjosiah): Factor out.
+    const wrapper = ({ children }: any) => (
+      <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
+    );
+    const { result, rerender } = renderHook(() => useSpaces(), { wrapper });
+    expect(result.current.length).to.eq(1);
+    await act(async () => {
+      await client.createSpace();
+    });
+    rerender();
     expect(result.current.length).to.eq(2);
   });
 });
