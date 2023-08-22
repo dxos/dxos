@@ -15,6 +15,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
 
+import { defaultGridSlots } from './helpers';
+
 export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
 // TODO(burdon): Editable.
@@ -121,7 +123,7 @@ export type GridProps<TData extends RowData> = {
 export const Grid = <TData extends RowData>({
   columns = [],
   data = [],
-  slots,
+  slots = defaultGridSlots,
   select,
   selected,
   onSelectedChange,
@@ -223,7 +225,6 @@ export const Grid = <TData extends RowData>({
   return (
     <div ref={containerRef} className={mx('grow overflow-auto', slots?.root?.className)}>
       <table className='table-fixed w-full'>
-        {/* TODO(burdon): Must have header group for widths. */}
         <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
           {table.getHeaderGroups().map((headerGroup) => {
             return (

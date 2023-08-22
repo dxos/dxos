@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { Grid, GridColumnDef } from '@dxos/aurora-grid';
 
 import { JsonView } from './JsonView';
 
@@ -25,7 +25,6 @@ export const MasterDetailTable = <T extends {}>({ columns, data, pinToBottom }: 
           data={data}
           selected={selected}
           onSelectedChange={setSelected}
-          slots={defaultGridSlots}
           pinToBottom={pinToBottom}
         />
       </div>

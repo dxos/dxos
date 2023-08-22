@@ -5,7 +5,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey } from '@dxos/react-client';
@@ -122,7 +122,5 @@ export const PipelineTable = ({
     navigate('/echo/feeds');
   };
 
-  return (
-    <Grid<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} slots={defaultGridSlots} />
-  );
+  return <Grid<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} />;
 };
