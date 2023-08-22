@@ -9,7 +9,7 @@ import { GraphPluginProvides } from '@braneframe/plugin-graph';
 import { Plugin, PluginDefinition, Surface, findPlugin, usePluginContext } from '@dxos/react-surface';
 
 import { TreeViewContext, useTreeView } from './TreeViewContext';
-import { Fallback, TreeViewContainer } from './components';
+import { Fallback, TreeItemHeading, TreeViewContainer } from './components';
 import { TreeItemDragOverlay } from './components/TreeItemDragOverlay';
 import translations from './translations';
 import { TREE_VIEW_PLUGIN, TreeViewAction, TreeViewContextValue, TreeViewPluginProvides } from './types';
@@ -55,6 +55,8 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
                 surfaces={{
                   sidebar: { component: 'dxos.org/plugin/treeview/TreeView' },
                   main: { fallback: Fallback, data: treeView.activeNode.data },
+                  heading: { data: treeView.activeNode /* (thure): Intentionally the node. */ },
+                  presence: { data: treeView.activeNode.data },
                 }}
               />
             );
@@ -77,6 +79,12 @@ export const TreeViewPlugin = (): PluginDefinition<TreeViewPluginProvides> => {
           case 'dragoverlay':
             if (!!data && typeof data === 'object' && 'id' in data && 'label' in data) {
               return TreeItemDragOverlay;
+            } else {
+              return null;
+            }
+          case 'heading':
+            if (!!data && typeof data === 'object' && 'label' in data && 'parent' in data) {
+              return TreeItemHeading;
             } else {
               return null;
             }

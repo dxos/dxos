@@ -72,7 +72,7 @@ export class MetadataStore {
       log('loaded', { size: dataSize, checksum });
 
       if (fileLength < dataSize + 8) {
-        throw new DataCorruptionError('Metadata size is smaller than expected.');
+        throw new DataCorruptionError('Metadata size is smaller than expected.', { fileLength, dataSize });
       }
 
       const data = await file.read(8, dataSize);

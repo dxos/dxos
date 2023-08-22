@@ -28,6 +28,7 @@ import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
+import { safeInstanceof } from '@dxos/util';
 
 import { CreateIdentityOptions, IdentityManager, JoinIdentityParams } from '../identity';
 import {
@@ -42,6 +43,8 @@ import { DataSpaceManager, SigningContext } from '../spaces';
  * Shared backend for all client services.
  */
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
+// TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
+@safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
 export class ServiceContext {
   public readonly initialized = new Trigger();

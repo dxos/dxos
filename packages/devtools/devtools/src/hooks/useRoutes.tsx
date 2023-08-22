@@ -20,7 +20,7 @@ import {
   NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
-  SpacesPanel,
+  SpaceListPanel,
   StoragePanel,
   SwarmPanel,
   TracingPanel,
@@ -85,7 +85,7 @@ export const useRoutes = () => {
           children: [
             {
               path: '/echo/spaces',
-              element: <SpacesPanel />,
+              element: <SpaceListPanel />,
             },
             {
               path: '/echo/space',

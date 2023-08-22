@@ -15,6 +15,8 @@ export const breadcrumbList: ComponentFunction<breadcrumbStyleProps> = (_props, 
 
 export const breadcrumbListItem: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('contents', ...etc);
 
+export const breadcrumbCurrent: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx(...etc);
+
 export const breadcrumbSeparator: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) =>
   mx('opacity-50', ...etc);
 
@@ -22,5 +24,6 @@ export const breadcrumbTheme: Theme<breadcrumbStyleProps> = {
   root: breadcrumbRoot,
   list: breadcrumbList,
   listItem: breadcrumbListItem,
+  current: breadcrumbCurrent,
   separator: breadcrumbSeparator,
 };

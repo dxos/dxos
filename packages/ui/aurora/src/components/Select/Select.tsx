@@ -137,6 +137,7 @@ const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, cl
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', 'option', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      {/* TODO(burdon): Make optional; and shift left to align value with closed state. */}
       <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {}, classNames)}>
         <Check weight='bold' />
       </SelectPrimitive.ItemIndicator>
