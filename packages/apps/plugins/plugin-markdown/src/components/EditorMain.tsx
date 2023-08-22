@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLAttributes, useRef } from 'react';
+import React, { HTMLAttributes, RefCallback } from 'react';
 
+import { useTranslation } from '@dxos/aurora';
 import { ComposerModel, MarkdownComposer, MarkdownComposerProps, MarkdownComposerRef } from '@dxos/aurora-composer';
 import { focusRing, mx } from '@dxos/aurora-theme';
 
-import { MarkdownProperties } from '../types';
+import { MARKDOWN_PLUGIN, MarkdownProperties } from '../types';
 import { EmbeddedLayout } from './EmbeddedLayout';
 import { StandaloneLayout } from './StandaloneLayout';
 
@@ -17,19 +18,21 @@ export const EditorMain = ({
   properties,
   layout,
   onChange,
+  editorRefCb,
 }: {
   model: ComposerModel;
   properties: MarkdownProperties;
   layout: 'standalone' | 'embedded';
   onChange?: MarkdownComposerProps['onChange'];
+  editorRefCb: RefCallback<MarkdownComposerRef>;
 }) => {
-  const editorRef = useRef<MarkdownComposerRef>(null);
+  const { t } = useTranslation(MARKDOWN_PLUGIN);
   const Root = layout === 'embedded' ? EmbeddedLayout : StandaloneLayout;
 
   return (
-    <Root properties={properties} model={model} editorRef={editorRef}>
+    <Root properties={properties} model={model}>
       <MarkdownComposer
-        ref={editorRef}
+        ref={editorRefCb}
         model={model}
         onChange={onChange}
         slots={{
@@ -47,8 +50,9 @@ export const EditorMain = ({
                 inlineSize: '100%',
               },
               '& .cm-content': { flex: '1 0 auto', inlineSize: '100%', paddingBlock: '1rem' },
-              '& .cm-line': { paddingInline: '1.5rem' },
+              '& .cm-line': { paddingInline: '1rem' },
             },
+            placeholder: t('editor placeholder'),
           },
         }}
       />

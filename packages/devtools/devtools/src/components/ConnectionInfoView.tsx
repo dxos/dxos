@@ -2,43 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 
-import { Table, TableColumn } from '@dxos/mosaic';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { DetailsTable } from './DetailsTable';
 
-export interface ConnectionInfoViewProps {
-  connection?: ConnectionInfo;
-}
-
-// TODO(burdon): Convert to table.
-export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
+export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connection }) => {
   if (!connection) {
     return null;
   }
 
-  const columns: TableColumn<ConnectionInfo.StreamStats>[] = [
-    {
-      Header: 'Sent',
-      align: 'right',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value.toLocaleString()}</span>,
-      width: 60,
-      accessor: 'bytesSent',
-    },
-    {
-      Header: 'Received',
-      align: 'right',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value?.toLocaleString()}</span>,
-      width: 60,
-      accessor: 'bytesReceived',
-    },
-    {
-      Header: 'Tag',
-      Cell: ({ value }: any) => <span className='font-mono text-sm'>{value}</span>,
-      accessor: 'tag',
-    },
+  const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
+  const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
+    helper.accessor('id', {}),
+    helper.accessor('bytesSent', builder.createNumber({ header: 'sent', size: 100 })),
+    helper.accessor('bytesReceived', builder.createNumber({ header: 'received', size: 100 })),
+    helper.accessor('tag', {}),
   ];
 
   return (
@@ -53,7 +34,7 @@ export const ConnectionInfoView = ({ connection }: ConnectionInfoViewProps) => {
         }}
       />
 
-      <Table compact columns={columns} data={connection.streams ?? []} />
+      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} />
     </div>
   );
 };

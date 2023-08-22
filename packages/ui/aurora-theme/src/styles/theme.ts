@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import get from 'lodash.get';
 
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
