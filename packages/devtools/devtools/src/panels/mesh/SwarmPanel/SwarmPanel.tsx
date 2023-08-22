@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
@@ -56,12 +56,7 @@ export const SwarmPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
-        <Grid<SwarmConnection>
-          columns={columns}
-          data={items}
-          onSelectedChange={handleSelect}
-          slots={defaultGridSlots}
-        />
+        <Grid<SwarmConnection> columns={columns} data={items} onSelectedChange={handleSelect} />
       </div>
       <div className='h-1/2 overflow-auto'>{connection && <ConnectionInfoView connection={connection} />}</div>
     </PanelContainer>

@@ -4,7 +4,7 @@
 
 import React, { FC } from 'react';
 
-import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
+import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
 import { DetailsTable } from './DetailsTable';
@@ -34,7 +34,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} slots={defaultGridSlots} />
+      <Grid<ConnectionInfo.StreamStats> columns={columns} data={connection.streams ?? []} />
     </div>
   );
 };
