@@ -24,6 +24,7 @@ export default [
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
         'upload file message': 'Drag file here or click to browse',
+        'presence label': 'Members viewing this item',
       },
     },
   },
