@@ -4,7 +4,6 @@
 
 import { trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
-import { timed } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';

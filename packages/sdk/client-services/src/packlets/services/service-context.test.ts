@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+
+import { DocumentModel, DocumentModelState, MutationBuilder } from '@dxos/document-model';
+import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db';
+import { WriteReceipt } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test } from '@dxos/test';
+import { Timeframe } from '@dxos/timeframe';
+import { range } from '@dxos/util';
 
 import { createServiceContext, syncItemsLocal } from '../testing';
 import { performInvitation } from '../testing/invitation-utils';
-import { createTestItemMutation } from '@dxos/protocols';
-import { PublicKey } from '@dxos/keys';
-import { createModelMutation, encodeModelMutation, genesisMutation } from '@dxos/echo-db'
-import { DocumentModel, DocumentModelState, MutationBuilder } from '@dxos/document-model';
-import { range } from '@dxos/util';
-import { WriteReceipt } from '@dxos/feed-store';
-import { Timeframe } from '@dxos/timeframe';
-import { log } from '@dxos/log';
-import { expect } from 'chai';
 
 describe('services/ServiceContext', () => {
   test('existing space is synchronized on device invitations', async () => {
@@ -25,30 +25,33 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
     const space1 = await device1.dataSpaceManager!.createSpace();
 
-
     const itemId = PublicKey.random().toHex();
-    space1.dataPipeline.databaseHost!.getWriteStream()?.write({
+    await space1.dataPipeline.databaseHost!.getWriteStream()?.write({
       batch: genesisMutation(itemId, DocumentModel.meta.type),
     });
 
     let counter = 0;
 
     for (const _ in range(5)) {
-      let receipts: WriteReceipt[] = [];
+      const receipts: WriteReceipt[] = [];
       for (const _ in range(50)) {
-        receipts.push(await space1.dataPipeline.databaseHost!.getWriteStream()!.write({
-          batch: createModelMutation(itemId, encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('counter', ++counter).build()))
-        }));
+        receipts.push(
+          await space1.dataPipeline.databaseHost!.getWriteStream()!.write({
+            batch: createModelMutation(
+              itemId,
+              encodeModelMutation(DocumentModel.meta, new MutationBuilder().set('counter', ++counter).build()),
+            ),
+          }),
+        );
       }
 
-      await space1.dataPipeline.pipelineState!.waitUntilTimeframe(Timeframe.merge(
-        ...receipts.map(receipt => new Timeframe([[receipt.feedKey, receipt.seq]]))
-      ))
+      await space1.dataPipeline.pipelineState!.waitUntilTimeframe(
+        Timeframe.merge(...receipts.map((receipt) => new Timeframe([[receipt.feedKey, receipt.seq]]))),
+      );
 
-      await space1.createEpoch()
-      log.info('epoch', { number: space1.dataPipeline.currentEpoch?.subject.assertion.number })
+      await space1.createEpoch();
+      log.info('epoch', { number: space1.dataPipeline.currentEpoch?.subject.assertion.number });
     }
-
 
     const device2 = createServiceContext({ signalContext: networkContext });
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
@@ -59,14 +62,20 @@ describe('services/ServiceContext', () => {
     log.info('peer 2', {
       currentEpoch: space2!.dataPipeline.currentEpoch?.subject.assertion.number,
       appliedEpoch: space2!.dataPipeline.appliedEpoch?.subject.assertion.number,
-    })
+    });
 
-    await space2?.dataPipeline.onNewEpoch.waitForCondition(() =>
-      space2!.dataPipeline.appliedEpoch?.subject.assertion.number === space1.dataPipeline.currentEpoch?.subject.assertion.number
-    )
+    await space2?.dataPipeline.onNewEpoch.waitForCondition(
+      () =>
+        space2!.dataPipeline.appliedEpoch?.subject.assertion.number ===
+        space1.dataPipeline.currentEpoch?.subject.assertion.number,
+    );
 
-    expect(space2!.dataPipeline.currentEpoch!.subject.assertion.number).to.equal(space1.dataPipeline.currentEpoch!.subject.assertion.number);
-    expect(space2!.dataPipeline.appliedEpoch!.subject.assertion.number).to.equal(space1.dataPipeline.appliedEpoch!.subject.assertion.number);
+    expect(space2!.dataPipeline.currentEpoch!.subject.assertion.number).to.equal(
+      space1.dataPipeline.currentEpoch!.subject.assertion.number,
+    );
+    expect(space2!.dataPipeline.appliedEpoch!.subject.assertion.number).to.equal(
+      space1.dataPipeline.appliedEpoch!.subject.assertion.number,
+    );
 
     const item2 = space2!.dataPipeline.itemManager.entities.get(itemId);
     expect((item2!.state as DocumentModelState).data.counter).to.equal(counter);

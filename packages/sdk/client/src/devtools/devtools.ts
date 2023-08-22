@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
+import { type Space } from '@dxos/client-protocol';
 import type { ClientServicesHost, DataSpace } from '@dxos/client-services';
+import { DocumentModel, DocumentModelState } from '@dxos/document-model';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { Client } from '../client';
-import { PublicKey } from '@dxos/keys';
-import { DocumentModel, DocumentModelState } from '@dxos/document-model';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -27,11 +27,10 @@ export interface DevtoolsHook {
   openClientRpcServer: () => Promise<boolean>;
 }
 
-
 export type MountOptions = {
   client?: Client;
   host?: ClientServicesHost;
-}
+};
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   let server: RpcPeer;
@@ -43,7 +42,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     openClientRpcServer: async () => {
       if (!client) {
-        log.error(`Client not available`);
+        log.error('Client not available');
         return false;
       }
 
@@ -72,41 +71,45 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   if (client) {
     hook.spaces = createAccessor({
       getAll: () => client.spaces.get(),
-      getByKey: (key) => client.spaces.get().find(space => space.key.equals(key)),
-      getSearchMap: () => new Map(client.spaces.get().flatMap(space => [
-        [space.key.toHex(), space],
-        [space.properties.name, space],
-      ])),
+      getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
+      getSearchMap: () =>
+        new Map(
+          client.spaces.get().flatMap((space) => [
+            [space.key.toHex(), space],
+            [space.properties.name, space],
+          ]),
+        ),
     });
   }
   if (host) {
     hook.spaces = createAccessor({
       getAll: () => Array.from(host.context.dataSpaceManager?.spaces.values() ?? []),
       getByKey: (key) => host.context.dataSpaceManager?.spaces.get(key),
-      getSearchMap: () => new Map(Array.from(host.context.dataSpaceManager?.spaces.values() ?? []).flatMap(space => [
-        [space.key.toHex(), space],
-        [getSpaceName(space), space],
-      ])),
+      getSearchMap: () =>
+        new Map(
+          Array.from(host.context.dataSpaceManager?.spaces.values() ?? []).flatMap((space) => [
+            [space.key.toHex(), space],
+            [getSpaceName(space), space],
+          ]),
+        ),
     });
 
     hook.feeds = createAccessor({
       getAll: () => Array.from(host.context.feedStore?.feeds.values() ?? []),
-      getByKey: (key) => host.context.feedStore?.feeds.find(feed => feed.key.equals(key)),
-      getSearchMap: () => new Map(Array.from(host.context.feedStore?.feeds.values() ?? []).flatMap(feed => [
-        [feed.key.toHex(), feed],
-      ])),
+      getByKey: (key) => host.context.feedStore?.feeds.find((feed) => feed.key.equals(key)),
+      getSearchMap: () =>
+        new Map(Array.from(host.context.feedStore?.feeds.values() ?? []).flatMap((feed) => [[feed.key.toHex(), feed]])),
     });
   }
 
-
   ((globalThis as any).__DXOS__ as DevtoolsHook) = hook;
   ((globalThis as any).dxos as DevtoolsHook) = hook;
-}
+};
 
 export const unmountDevtoolsHooks = () => {
   delete (globalThis as any).__DXOS__;
   delete (globalThis as any).dxos;
-}
+};
 
 const getSpaceName = (space: DataSpace): string => {
   try {
@@ -123,21 +126,21 @@ const getSpaceName = (space: DataSpace): string => {
   } catch {
     return '';
   }
-}
-
+};
 
 type AccessorOptions<T> = {
   getAll?: () => T[];
   getByKey?: (key: PublicKey) => T | undefined;
   getSearchMap?: () => Map<string, T>;
-}
+};
 
 type Accessor<T> = {
   (keyOrSearch: PublicKey | string): T | undefined;
   (): T[];
-}
+};
 
-const createAccessor = <T>({ getByKey, getSearchMap, getAll }: AccessorOptions<T>): Accessor<T> =>
+const createAccessor =
+  <T>({ getByKey, getSearchMap, getAll }: AccessorOptions<T>): Accessor<T> =>
   (keyOrSearch?: PublicKey | string) => {
     if (typeof keyOrSearch === 'undefined') {
       return getAll?.() ?? [];
@@ -160,8 +163,7 @@ const createAccessor = <T>({ getByKey, getSearchMap, getAll }: AccessorOptions<T
       }
     }
     return undefined;
-  }
-
+  };
 
 const port: RpcPort = {
   send: async (message) =>

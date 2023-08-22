@@ -122,17 +122,17 @@ describe('pipeline/Pipeline', () => {
     for (const _ of range(20)) {
       await feed.appendWithReceipt(TEST_MESSAGE);
     }
-    await feed.clear(0, 10)
+    await feed.clear(0, 10);
 
     const processedSequenceNumbers: number[] = [];
     const expectedSequenceNumbers = range(20).slice(10);
-    const processedEvent = new Event()
+    const processedEvent = new Event();
     setTimeout(async () => {
       for await (const block of pipeline.consume()) {
         processedSequenceNumbers.push(block.seq);
         processedEvent.emit();
       }
-    })
+    });
 
     await pipeline.start();
     await sleep(1000);
@@ -143,7 +143,7 @@ describe('pipeline/Pipeline', () => {
 
     await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
-  })
+  });
 
   test
     .skip('stress', async () => {
@@ -159,7 +159,7 @@ describe('pipeline/Pipeline', () => {
         public messages: FeedMessageBlock[] = [];
         public writePromise: Promise<any> = Promise.resolve();
 
-        constructor(public id: string, public feedStore: FeedStore<FeedMessage>) { }
+        constructor(public id: string, public feedStore: FeedStore<FeedMessage>) {}
 
         async open() {
           const key = await builder.keyring.createKey();
@@ -210,7 +210,7 @@ describe('pipeline/Pipeline', () => {
       };
 
       class WriteCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(public agent: string, public count: number) { }
+        constructor(public agent: string, public count: number) {}
 
         check = () => true;
 
@@ -290,7 +290,7 @@ describe('pipeline/Pipeline', () => {
       }
 
       class RestartCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(public agent: string) { }
+        constructor(public agent: string) {}
 
         check = () => true;
 

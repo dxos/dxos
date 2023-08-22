@@ -8,6 +8,7 @@ import * as http from 'node:http';
 import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
+import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -17,7 +18,6 @@ import { WebsocketRpcServer } from '@dxos/websocket-rpc';
 
 import { Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
-import { mountDevtoolsHooks, unmountDevtoolsHooks } from '@dxos/client/devtools';
 
 interface Service {
   open(): Promise<void>;

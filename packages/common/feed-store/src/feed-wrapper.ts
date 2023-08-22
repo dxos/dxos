@@ -181,21 +181,29 @@ export class FeedWrapper<T extends {}> {
     const checkBegin = to;
     const checkEnd = Math.min(checkBegin + CHECK_MESSAGES, this.length);
 
-    const messagesBefore = await Promise.all(rangeFromTo(checkBegin, checkEnd).map(idx => this.get(idx, {
-      valueEncoding: { decode: (x: Uint8Array) => x }
-    })))
+    const messagesBefore = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
 
     await this.clear(from, to);
 
-    const messagesAfter = await Promise.all(rangeFromTo(checkBegin, checkEnd).map(idx => this.get(idx, {
-      valueEncoding: { decode: (x: Uint8Array) => x }
-    })))
+    const messagesAfter = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
 
     for (let i = 0; i < messagesBefore.length; i++) {
       const before = arrayToBuffer(messagesBefore[i]);
       const after = arrayToBuffer(messagesAfter[i]);
-      if(!before.equals(after)) {
-        throw new Error(`Feed corruption on clear. There has likely been a data loss.`)
+      if (!before.equals(after)) {
+        throw new Error('Feed corruption on clear. There has likely been a data loss.');
       }
     }
   }

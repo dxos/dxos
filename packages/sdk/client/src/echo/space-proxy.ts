@@ -10,7 +10,6 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { loadashEqualityFn, todo } from '@dxos/debug';
 import { DatabaseProxy, ItemManager } from '@dxos/echo-db';
 import { DatabaseRouter, EchoDatabase, setStateFromSnapshot, TypedObject } from '@dxos/echo-schema';
-import { ApiError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -251,7 +250,7 @@ export class SpaceProxy implements Space {
         try {
           await waitForSpaceMeta.wait({ timeout: LOAD_PROPERTIES_TIMEOUT });
         } catch {
-          log.warn('Space properties not found in time.', { space: this.key, timeout: LOAD_PROPERTIES_TIMEOUT })
+          log.warn('Space properties not found in time.', { space: this.key, timeout: LOAD_PROPERTIES_TIMEOUT });
         } finally {
           subscription();
         }

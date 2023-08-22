@@ -3,13 +3,13 @@
 //
 
 import { WorkerRuntime } from '@dxos/client-services';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { Config, Defaults, Dynamics, Envs, Local } from '@dxos/config';
 import { log } from '@dxos/log';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { namespace } from './util';
-import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
 // TODO(burdon): Make configurable (NOTE: levels lower than info affect performance).
 const LOG_FILTER = 'info';

@@ -331,7 +331,7 @@ export class DataSpace {
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     // Clear feed blocks before epoch.
-    if(ENABLE_FEED_PURGE) {
+    if (ENABLE_FEED_PURGE) {
       for (const feed of this.inner.dataPipeline.pipelineState?.feeds ?? []) {
         const indexBeforeEpoch = epoch.timeframe.get(feed.key);
         if (indexBeforeEpoch === undefined) {

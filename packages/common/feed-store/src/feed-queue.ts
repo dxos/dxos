@@ -132,10 +132,10 @@ export class FeedQueue<T extends {}> {
     });
 
     this._feedConsumer.on('error', (err: Error) => {
-      if(err) {
+      if (err) {
         onError(err);
       }
-    })
+    });
 
     // Called when queue is closed. Throws exception if waiting for `pop`.
     this._feedConsumer.once('close', () => {
@@ -144,19 +144,19 @@ export class FeedQueue<T extends {}> {
 
     // Pipe readable stream into writable consumer.
     feedStream.pipe(this._feedConsumer, (err) => {
-      if(err) {
+      if (err) {
         onError(err);
       }
       onClose();
     });
 
     const onError = (err: Error) => {
-      if(err.message === 'Writable stream closed prematurely') {
+      if (err.message === 'Writable stream closed prematurely') {
         return;
       }
 
       log.catch(err, { feedKey: this._feed.key });
-    }
+    };
 
     log('opened');
   }

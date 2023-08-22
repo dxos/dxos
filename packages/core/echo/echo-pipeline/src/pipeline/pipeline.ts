@@ -264,7 +264,7 @@ export class Pipeline implements PipelineAccessor {
 
   @synchronized
   async start() {
-    invariant(!this._isStarted, 'Pipeline is already started.')
+    invariant(!this._isStarted, 'Pipeline is already started.');
     log('starting...');
     await this._initIterator();
     await this._feedSetIterator!.open();
