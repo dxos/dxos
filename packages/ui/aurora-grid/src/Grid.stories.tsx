@@ -3,24 +3,15 @@
 //
 
 import { faker } from '@faker-js/faker';
-import { createColumnHelper } from '@tanstack/react-table';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { mx } from '@dxos/aurora-theme';
 import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
 import '@dxosTheme';
 
-import { Grid, GridColumn } from './Grid';
-import {
-  createBooleanColumn,
-  createNumberColumn,
-  createKeyColumn,
-  createTextColumn,
-  defaultGridSlots,
-  createDateColumn,
-} from './helpers';
+import { Grid, GridColumnDef } from './Grid';
+import { defaultGridSlots, createColumnBuilder } from './helpers';
 
 type Item = {
   publicKey: PublicKey;
@@ -40,38 +31,13 @@ const createItems = (count: number) =>
     complete: faker.datatype.boolean() ? true : faker.datatype.boolean() ? false : undefined,
   }));
 
-const helper = createColumnHelper<Item>();
-helper.display({
-  id: 'xxx',
-});
-
-const itemColumns: GridColumn<Item>[] = [
-  createKeyColumn('key', {
-    accessor: 'publicKey',
-    key: true,
-  }),
-  createTextColumn('name', {
-    accessor: (item) => item.name,
-    footer: {
-      render: ({ data }) => `${data.length} rows`,
-    },
-  }),
-  createDateColumn(
-    'started',
-    // { format: 'MM/dd HH:mm:ss' },
-    { relative: true },
-  ),
-  createNumberColumn('value', {
-    width: 80,
-    cell: {
-      className: ({ value }) => mx('font-mono font-thin text-right', value < 1000 && 'text-red-500'),
-    },
-  }),
-  createBooleanColumn('complete', {
-    header: {
-      label: '',
-    },
-  }),
+const { helper, builder } = createColumnBuilder<Item>();
+const columns: GridColumnDef<Item, any>[] = [
+  helper.accessor((item) => item.publicKey, { id: 'key', ...builder.createKeyCell({ tooltip: true }) }),
+  helper.accessor('name', { footer: (props) => props.table.getRowModel().rows.length }),
+  helper.accessor('started', builder.createDateCell({ relative: true })),
+  helper.accessor('value', builder.createNumberCell()),
+  helper.accessor('complete', builder.createIconCell({ header: '' })),
 ];
 
 export default {
@@ -97,8 +63,9 @@ export const Controlled = {
 
     return (
       <div className='flex grow overflow-hidden'>
+        {/* prettier-ignore */}
         <Grid<Item>
-          columns={itemColumns}
+          columnDefs={columns}
           data={items}
           selection='single'
           selected={selected}
@@ -115,7 +82,13 @@ export const SingleSelect = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} footer />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          data={createItems(10)}
+          slots={defaultGridSlots}
+          footer
+        />
       </div>
     );
   },
@@ -125,7 +98,13 @@ export const NoHeader = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={createItems(10)} slots={defaultGridSlots} header={false} />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          data={createItems(10)}
+          slots={defaultGridSlots}
+          header={false}
+        />
       </div>
     );
   },
@@ -135,7 +114,12 @@ export const SingleColumn = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={[itemColumns[0]]} data={createItems(10)} slots={defaultGridSlots} />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={[columns[0]]}
+          data={createItems(10)}
+          slots={defaultGridSlots}
+        />
       </div>
     );
   },
@@ -145,7 +129,13 @@ export const MultiSelect = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={createItems(20)} selection='multiple-toggle' slots={defaultGridSlots} />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          data={createItems(20)}
+          selection='multiple-toggle'
+          slots={defaultGridSlots}
+        />
       </div>
     );
   },
@@ -155,7 +145,13 @@ export const Scrolling = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={createItems(200)} slots={defaultGridSlots} footer />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          data={createItems(200)}
+          slots={defaultGridSlots}
+          footer
+        />
       </div>
     );
   },
@@ -179,7 +175,14 @@ export const Dynamic = {
 
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} data={items} slots={defaultGridSlots} pinToBottom footer />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          data={items}
+          slots={defaultGridSlots}
+          pinToBottom
+          footer
+        />
       </div>
     );
   },
@@ -189,7 +192,11 @@ export const Empty = {
   render: () => {
     return (
       <div className='flex grow overflow-hidden'>
-        <Grid<Item> columns={itemColumns} slots={defaultGridSlots} />
+        {/* prettier-ignore */}
+        <Grid<Item>
+          columnDefs={columns}
+          slots={defaultGridSlots}
+        />
       </div>
     );
   },

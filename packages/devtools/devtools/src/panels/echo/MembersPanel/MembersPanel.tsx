@@ -5,23 +5,19 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-const columns: GridColumn<SpaceMember>[] = [
-  createKeyColumn('key', {
-    key: true,
-    accessor: (member) => {
-      return member.identity.identityKey;
-    },
-  }),
-  createTextColumn('name', { accessor: (member) => member.identity.profile?.displayName }),
-  createTextColumn('status', {
-    accessor: (member) => {
+const { helper, builder } = createColumnBuilder<SpaceMember>();
+const columns: GridColumnDef<SpaceMember, any>[] = [
+  helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.createKeyCell() }),
+  helper.accessor((member) => member.identity.profile?.displayName, { id: 'name' }),
+  helper.accessor(
+    (member) => {
       switch (member.presence) {
         case SpaceMember.PresenceState.ONLINE:
           return 'online';
@@ -29,7 +25,8 @@ const columns: GridColumn<SpaceMember>[] = [
           return 'offline';
       }
     },
-  }),
+    { id: 'status' },
+  ),
 ];
 
 export const MembersPanel = () => {

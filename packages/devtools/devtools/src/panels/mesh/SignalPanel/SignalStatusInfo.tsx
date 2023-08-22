@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { createColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Context } from '@dxos/context';
 import { SignalStatus } from '@dxos/messaging';
 import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
@@ -60,31 +60,31 @@ export const SignalStatusInfo = () => {
     return null;
   }
 
-  const columns: GridColumn<SignalStatus>[] = [
-    createTextColumn('host', { key: true, cell: { className: 'font-mono' } }),
-    createColumn('state', {
-      accessor: (status) => states[status.state].label,
-      width: 80,
-      cell: {
-        render: ({ value, row }) => <span style={{ color: states[row.state]?.color }}>{value}</span>,
-      },
+  const { helper } = createColumnBuilder<SignalStatus>();
+  const columns: GridColumnDef<SignalStatus, any>[] = [
+    helper.accessor('host', {}),
+    helper.accessor((status) => states[status.state].label, {
+      id: 'status',
+      size: 80,
+      cell: (cell) => <span style={{ color: states[cell.row.original.state]?.color }}>{cell.getValue()}</span>,
     }),
-    // TODO(burdon): Date.
-    createColumn('connected', {
-      accessor: (status) => {
+    // TODO(burdon): Date format helper.
+    helper.accessor(
+      (status) => {
         return status.state === SignalState.CONNECTED
           ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
           : `Reconnecting ${formatDistance(status.lastStateChange.getTime() + status.reconnectIn, time.getTime(), {
               addSuffix: true,
             })}`;
       },
-    }),
-    createTextColumn('error'),
+      { id: 'connected' },
+    ),
+    helper.accessor('error', {}),
   ];
 
   return (
     <div>
-      <Grid<SignalStatus> columns={columns} data={status} slots={defaultGridSlots} />
+      <Grid<SignalStatus> columnDefs={columns} data={status} slots={defaultGridSlots} />
     </div>
   );
 };

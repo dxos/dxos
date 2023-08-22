@@ -4,22 +4,22 @@
 
 import React from 'react';
 
-import { createKeyColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { MasterDetailTable } from '../../../components';
 
-const columns: GridColumn<KeyRecord>[] = [
-  createKeyColumn('publicKey', {
-    accessor: (record) => PublicKey.from(record.publicKey),
-    key: true,
-    header: { label: 'public key' },
+const { helper, builder } = createColumnBuilder<KeyRecord>();
+const columns: GridColumnDef<KeyRecord, any>[] = [
+  helper.accessor((record) => PublicKey.from(record.publicKey), {
+    id: 'public',
+    ...builder.createKeyCell({ header: 'public key' }),
   }),
-  createKeyColumn('privateKey', {
-    accessor: (record) => record.privateKey && PublicKey.from(record.privateKey),
-    header: { label: 'private key' },
+  helper.accessor((record) => record.privateKey && PublicKey.from(record.privateKey), {
+    id: 'private',
+    ...builder.createKeyCell({ header: 'private key' }),
   }),
 ];
 

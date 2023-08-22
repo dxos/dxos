@@ -6,8 +6,9 @@ import { Cell, ColumnDef, flexRender, getCoreRowModel, Row, RowData, useReactTab
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import { mx } from '@dxos/aurora-theme';
-import { invariant } from '@dxos/invariant';
 import { stripKeys } from '@dxos/util';
+
+export type GridColumnDef<TData extends RowData, TValue = unknown> = ColumnDef<TData, TValue>;
 
 // TODO(burdon): Size property.
 // TODO(burdon): Style builder.
@@ -155,6 +156,7 @@ export const updateSelection = (selected: Set<string>, id: string, selection: Gr
 };
 
 export type GridProps<TData extends RowData> = {
+  columnDefs?: GridColumnDef<TData>[];
   columns?: GridColumn<TData>[];
   data?: TData[];
   slots?: GridSlots;
@@ -167,6 +169,7 @@ export type GridProps<TData extends RowData> = {
  * Simple table.
  */
 export const Grid = <TData extends RowData>({
+  columnDefs,
   columns = [],
   data = [],
   slots,
@@ -179,7 +182,7 @@ export const Grid = <TData extends RowData>({
   pinToBottom,
 }: GridProps<TData>) => {
   const keyColumn = columns.find((column) => column.key);
-  invariant(keyColumn?.key, 'Missing key column.');
+  // invariant(keyColumn?.key, 'Missing key column.');
   // TODO(burdon): Depends on object equality.
   const getRow = (id: any) => table.getRowModel().rows.find((row) => row.getValue(keyColumn!.id) === id);
   const getRowId = (row: Row<TData>) => row.getValue(keyColumn!.id);
@@ -227,7 +230,7 @@ export const Grid = <TData extends RowData>({
   const tableColumns = useMemo(() => mapColumns(columns, data), [columns, data]);
   const table = useReactTable({
     data,
-    columns: tableColumns,
+    columns: columnDefs ?? tableColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -276,13 +279,13 @@ export const Grid = <TData extends RowData>({
               <tr key={headerGroup.id}>
                 <th style={{ width: slots?.margin?.style?.width }} />
                 {headerGroup.headers
-                  .filter((header) => !getColumn(header.id).hidden)
+                  // .filter((header) => !getColumn(header.id).hidden)
                   .map((header) => {
                     return (
                       <th
                         key={header.id}
-                        style={getColumnStyle(header.id)}
-                        className={mx(slots?.cell?.className, getColumn(header.id).header?.className)}
+                        style={{ width: header.getSize() }}
+                        className={mx(slots?.cell?.className /*, getColumn(header.id).header?.className */)}
                       >
                         {!showHeader || header.isPlaceholder
                           ? null
@@ -298,17 +301,17 @@ export const Grid = <TData extends RowData>({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => {
-            const id = getRowId(row);
+            // const id = getRowId(row);
             return (
               <tr
                 key={row.id}
-                onClick={() => handleSelect?.(id)}
+                // onClick={() => handleSelect?.(id)}
                 role='button'
                 className={mx(
                   'group',
                   slots?.row?.className,
-                  selectionSet.has(id) && slots?.selected?.className,
-                  focus === id && slots?.focus?.className,
+                  // selectionSet.has(id) && slots?.selected?.className,
+                  // focus === id && slots?.focus?.className,
                 )}
               >
                 <td>
@@ -316,20 +319,20 @@ export const Grid = <TData extends RowData>({
                   <button
                     style={{ width: 1 }}
                     className='focus:outline-none'
-                    onFocus={() => setFocus(id)}
+                    // onFocus={() => setFocus(id)}
                     onBlur={() => setFocus(undefined)}
                   />
                 </td>
                 {row
                   .getVisibleCells()
-                  .filter((cell) => !getColumn(cell.column.id).hidden)
+                  // .filter((cell) => !getColumn(cell.column.id).hidden)
                   .map((cell) => {
                     return (
                       <td
                         key={cell.id}
                         className={mx(
                           'truncate',
-                          getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
+                          // getCellValue<TData, any, string>(cell, getColumn(cell.column.id).cell?.className),
                           slots?.cell?.className,
                         )}
                       >
@@ -348,7 +351,7 @@ export const Grid = <TData extends RowData>({
               <tr key={footerGroup.id}>
                 <th />
                 {footerGroup.headers
-                  .filter((footer) => !getColumn(footer.id).hidden)
+                  // .filter((footer) => !getColumn(footer.id).hidden)
                   .map((footer) => {
                     return (
                       <th key={footer.id} className={mx(slots?.footer?.className)}>

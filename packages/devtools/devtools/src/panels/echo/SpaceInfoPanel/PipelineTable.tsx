@@ -5,16 +5,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import {
-  createBooleanColumn,
-  createColumn,
-  createKeyColumn,
-  createNumberColumn,
-  createTextColumn,
-  defaultGridSlots,
-  Grid,
-  GridColumn,
-} from '@dxos/aurora-grid';
+import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey } from '@dxos/react-client';
@@ -34,23 +25,25 @@ export type PipelineTableRow = {
   total?: number;
 };
 
-const columns: GridColumn<PipelineTableRow>[] = [
-  createKeyColumn('feedKey', { key: true }),
-  createTextColumn('type'),
-  createBooleanColumn('own', { width: 40 }),
-  createBooleanColumn('genesis', { width: 40, header: { label: 'gen' } }),
-  createNumberColumn('start'),
-  createNumberColumn('target'),
-  createNumberColumn('processed'),
-  createNumberColumn('total'),
-  createColumn('progress', {
-    accessor: (row) => {
+const { helper, builder } = createColumnBuilder<PipelineTableRow>();
+const columns: GridColumnDef<PipelineTableRow, any>[] = [
+  helper.accessor('feedKey', builder.createKeyCell()),
+  helper.accessor('type', { size: 40 }),
+  helper.accessor('own', builder.createIconCell()),
+  helper.accessor('genesis', builder.createIconCell({ header: 'gen' })),
+  helper.accessor('start', builder.createNumberCell()),
+  helper.accessor('target', builder.createNumberCell()),
+  helper.accessor('processed', builder.createNumberCell()),
+  helper.accessor('total', builder.createNumberCell()),
+  helper.accessor(
+    (row) => {
       const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
       if (!isNaN(percent)) {
         return `${Math.min(percent, 100).toFixed(0)}%`;
       }
     },
-  }),
+    { id: 'progress' },
+  ),
 ];
 
 export const PipelineTable = ({
@@ -132,7 +125,7 @@ export const PipelineTable = ({
   return (
     <Grid<PipelineTableRow>
       slots={defaultGridSlots}
-      columns={columns}
+      columnDefs={columns}
       data={data}
       onSelect={(selected) => handleSelect(PublicKey.from(selected))}
     />

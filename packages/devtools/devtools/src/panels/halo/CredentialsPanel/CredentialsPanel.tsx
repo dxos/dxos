@@ -5,18 +5,21 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createDateColumn, createKeyColumn, createTextColumn, DateFormat, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState, useCredentials } from '../../../hooks';
 
-const columns: GridColumn<Credential>[] = [
-  createKeyColumn('id', { key: true }),
-  createKeyColumn('issuer'),
-  createTextColumn('subject', { accessor: (credential) => credential.subject.assertion['@type'] }),
-  createDateColumn('issued', { format: DateFormat.DATE }, { accessor: 'issuanceDate' }),
+const { helper, builder } = createColumnBuilder<Credential>();
+const columns: GridColumnDef<Credential, any>[] = [
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  helper.accessor('id', builder.createKeyCell()),
+  helper.accessor('issuer', builder.createKeyCell()),
+  helper.accessor((credential) => credential.subject.assertion['@type'], { id: 'type' }),
+  helper.accessor('issuanceDate', builder.createDateCell({ header: 'issued' })),
 ];
 
 export const CredentialsPanel = () => {

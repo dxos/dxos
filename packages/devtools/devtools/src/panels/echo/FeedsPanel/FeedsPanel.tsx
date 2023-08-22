@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createKeyColumn, createNumberColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { PublicKey } from '@dxos/keys';
 import { SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -14,9 +14,10 @@ import { BitfieldDisplay, MasterDetailTable, PanelContainer, PublicKeySelector }
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
-const columns: GridColumn<SubscribeToFeedBlocksResponse.Block>[] = [
-  createKeyColumn('feedKey'),
-  createNumberColumn('seq', { key: true }),
+const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
+const columns: GridColumnDef<SubscribeToFeedBlocksResponse.Block, any>[] = [
+  helper.accessor('feedKey', builder.createKeyCell({ header: 'key' })),
+  helper.accessor('seq', builder.createNumberCell()),
 ];
 
 export const FeedsPanel = () => {

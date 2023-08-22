@@ -6,13 +6,12 @@ import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { FC, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
-import { createDateColumn, createKeyColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { humanize } from '@dxos/util';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
 
@@ -21,9 +20,10 @@ export type View<T> = {
   title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: GridColumn<T>[];
+  columns: GridColumnDef<T, any>[];
 };
 
+const { helper, builder } = createColumnBuilder<SignalResponse>();
 const views: View<SignalResponse>[] = [
   {
     id: 'swarm-event',
@@ -36,25 +36,27 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     columns: [
-      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }), // MM/dd HH:mm:ss
-      createTextColumn('type', {
-        accessor: (response) => {
+      helper.accessor('receivedAt', builder.createDateCell({ header: 'received' })),
+      helper.accessor(
+        (response) => {
           if (response.swarmEvent?.peerAvailable) {
             return 'Available';
           } else if (response.swarmEvent?.peerLeft) {
             return 'Left';
           }
         },
-        width: 80,
-      }),
-      createKeyColumn('peer', {
-        accessor: (response) =>
+        { id: 'response', size: 80 },
+      ),
+      helper.accessor(
+        (response) =>
           (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer)) ||
           (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer)),
-      }),
+        { id: 'peer', ...builder.createKeyCell() },
+      ),
       // TODO(burdon): Time delta since last message?
-      createDateColumn('since', undefined, {
-        accessor: (response) => response.swarmEvent!.peerAvailable?.since,
+      helper.accessor((response) => response.swarmEvent!.peerAvailable?.since, {
+        id: 'since',
+        ...builder.createDateCell(),
       }),
     ],
   },
@@ -65,15 +67,21 @@ const views: View<SignalResponse>[] = [
       return !!response.message;
     },
     columns: [
-      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }),
-      createKeyColumn('author', { accessor: 'message.author' }),
-      createKeyColumn('recipient', { accessor: 'message.recipient' }),
-      createKeyColumn('message', { accessor: (response) => response.message?.payload.messageId }),
-      createKeyColumn('topic', {
-        accessor: (response) =>
-          response.message!.payload?.payload?.topic && humanize(response.message!.payload?.payload?.topic),
+      helper.accessor('receivedAt', builder.createDateCell({ header: 'received' })),
+      helper.accessor((response) => response.message!.author as unknown as PublicKey, {
+        id: 'author',
+        ...builder.createKeyCell(),
       }),
-    ] as GridColumn<SignalResponse>[],
+      helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
+        id: 'recipient',
+        ...builder.createKeyCell(),
+      }),
+      helper.accessor((response) => response.message!.payload.messageId, { id: 'message' }),
+      helper.accessor((response) => response.message!.payload?.payload?.topic, {
+        id: 'topic',
+        ...builder.createKeyCell(),
+      }),
+    ],
   },
   {
     id: 'ack',
@@ -82,10 +90,19 @@ const views: View<SignalResponse>[] = [
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     columns: [
-      createDateColumn('received', undefined, { accessor: 'receivedAt', key: true }),
-      createKeyColumn('author', { accessor: 'message.author' }),
-      createKeyColumn('recipient', { accessor: 'message.recipient' }),
-      createKeyColumn('message', { accessor: (response) => response.message?.payload.messageId }),
+      helper.accessor('receivedAt', builder.createDateCell({ header: 'received' })),
+      helper.accessor((response) => response.message!.author as unknown as PublicKey, {
+        id: 'author',
+        ...builder.createKeyCell(),
+      }),
+      helper.accessor((response) => response.message!.recipient as unknown as PublicKey, {
+        id: 'recipient',
+        ...builder.createKeyCell(),
+      }),
+      helper.accessor((response) => response.message!.payload.messageId, {
+        id: 'message',
+        ...builder.createKeyCell(),
+      }),
     ],
   },
 ];

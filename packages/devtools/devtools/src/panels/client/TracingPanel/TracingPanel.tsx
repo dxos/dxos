@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FlameGraph } from 'react-flame-graph';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { createNumberColumn, createTextColumn, defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { Resource, Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 
@@ -67,7 +67,7 @@ export const TracingPanel = () => {
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
         <Grid<Resource>
-          columns={columns}
+          columnDefs={columns}
           data={Array.from(state.current.resources.values())}
           slots={defaultGridSlots}
         />
@@ -86,13 +86,11 @@ export const TracingPanel = () => {
   );
 };
 
-const columns: GridColumn<Resource>[] = [
-  createNumberColumn('id', { key: true, hidden: true }),
-  createTextColumn('name', {
-    accessor: (resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`,
-    width: 240,
-  }),
-  createTextColumn('info', { accessor: (resource) => JSON.stringify(resource.info), cell: { className: 'font-mono' } }),
+const { helper, builder } = createColumnBuilder<Resource>();
+const columns: GridColumnDef<Resource, any>[] = [
+  helper.accessor('id', builder.createNumberCell()),
+  helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, { id: 'name' }),
+  helper.accessor((resource) => JSON.stringify(resource.info), { id: 'info' }),
 ];
 
 const SANITIZE_REGEX = /[^_](\d+)$/;

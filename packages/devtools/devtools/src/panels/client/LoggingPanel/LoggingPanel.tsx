@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/aurora';
-import { createNumberColumn, createTextColumn, GridColumn } from '@dxos/aurora-grid';
+import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
 import { levels, parseFilter } from '@dxos/log';
 import { LogEntry, LogLevel, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClientServices } from '@dxos/react-client';
@@ -17,14 +17,12 @@ const MAX_LOGS = 2_000;
 
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
-const columns: GridColumn<LogEntry>[] = [
-  createNumberColumn('id', { key: true, hidden: true }),
-  createNumberColumn('level', {
-    accessor: (entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0],
-    width: 100,
-  }),
-  createTextColumn('file', { accessor: (entry) => `${entry.meta?.file}:${entry.meta?.line}` }),
-  createTextColumn('message'),
+const { helper } = createColumnBuilder<LogEntry>();
+const columns: GridColumnDef<LogEntry, any>[] = [
+  // helper.accessor('id', {}), // TODO(burdon): Add id.
+  helper.accessor((entry) => Object.entries(levels).find(([, level]) => level === entry.level)?.[0], { id: 'level ' }),
+  helper.accessor((entry) => `${entry.meta?.file}:${entry.meta?.line}`, { id: 'file' }),
+  helper.accessor('message', {}),
 ];
 
 // TODO(wittjosiah): Virtualization.

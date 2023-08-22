@@ -4,12 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { defaultGridSlots, Grid, GridColumn } from '@dxos/aurora-grid';
+import { defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: GridColumn<T>[];
+  columns: GridColumnDef<T>[];
   data: T[];
   compact?: boolean;
 };
@@ -23,7 +23,7 @@ export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTablePr
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Grid<T> columns={columns} data={data} onSelectedChange={handleSelected} slots={defaultGridSlots} />
+        <Grid<T> columnDefs={columns} data={data} onSelectedChange={handleSelected} slots={defaultGridSlots} />
       </div>
 
       <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>

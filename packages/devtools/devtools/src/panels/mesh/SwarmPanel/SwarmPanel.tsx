@@ -4,15 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  createBooleanColumn,
-  createKeyColumn,
-  createNumberColumn,
-  createTextColumn,
-  defaultGridSlots,
-  Grid,
-  GridColumn,
-} from '@dxos/aurora-grid';
+import { createColumnBuilder, defaultGridSlots, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo, SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
@@ -42,21 +34,30 @@ export const SwarmPanel = () => {
     }, []) ?? [];
 
   // TODO(burdon): Add peers/connect/disconnect/error info.
-  const columns: GridColumn<SwarmConnection>[] = [
-    createNumberColumn('rowId', { key: true, hidden: true, header: { label: '' } }),
-    createKeyColumn('swarm', { accessor: 'id' }),
-    createKeyColumn('topic', { accessor: 'topic' }),
-    createBooleanColumn('active', { accessor: 'isActive', width: 60 }),
-    createKeyColumn('session', { accessor: (connection) => connection.connection?.sessionId }),
-    createKeyColumn('peer', { accessor: (connection) => connection.connection?.remotePeerId }),
-    createTextColumn('state', { accessor: (connection) => connection.connection?.state }),
+  const { helper, builder } = createColumnBuilder<SwarmConnection>();
+  const columns: GridColumnDef<SwarmConnection, any>[] = [
+    helper.accessor('rowId', {}),
+    helper.accessor('id', builder.createKeyCell({ header: 'swarm', tooltip: true })),
+    helper.accessor('topic', builder.createKeyCell({ tooltip: true })),
+    helper.accessor('isActive', builder.createIconCell({ header: 'active' })),
+    helper.accessor((connection) => connection.connection?.sessionId, {
+      id: 'session',
+      ...builder.createKeyCell({ tooltip: true }),
+    }),
+    helper.accessor((connection) => connection.connection?.remotePeerId, {
+      id: 'remote peer',
+      ...builder.createKeyCell({ tooltip: true }),
+    }),
+    helper.accessor((connection) => connection.connection?.state, {
+      id: 'state',
+    }),
   ];
 
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
         <Grid<SwarmConnection>
-          columns={columns}
+          columnDefs={columns}
           data={items}
           onSelectedChange={handleSelect}
           slots={defaultGridSlots}
