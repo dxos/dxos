@@ -20,9 +20,10 @@ import {
   NetworkPanel,
   SignalPanel,
   SpaceInfoPanel,
-  SpacesPanel,
+  SpaceListPanel,
   StoragePanel,
   SwarmPanel,
+  TracingPanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -56,6 +57,10 @@ export const useRoutes = () => {
               path: '/client/diagnostics',
               element: <DiagnosticsPanel />,
             },
+            {
+              path: '/client/tracing',
+              element: <TracingPanel />,
+            },
           ],
         },
         {
@@ -80,7 +85,7 @@ export const useRoutes = () => {
           children: [
             {
               path: '/echo/spaces',
-              element: <SpacesPanel />,
+              element: <SpaceListPanel />,
             },
             {
               path: '/echo/space',

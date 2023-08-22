@@ -5,5 +5,6 @@
 export * from './BranchTreeItem';
 export * from './Fallback';
 export * from './LeafTreeItem';
+export * from './TreeItemHeading';
 export * from './TreeView';
 export * from './TreeViewContainer';

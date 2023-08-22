@@ -7,7 +7,7 @@ import * as pb from 'protobufjs';
 import { DocumentModel } from '@dxos/document-model';
 import { invariant } from '@dxos/invariant';
 import { TextModel } from '@dxos/text-model';
-import { stripKeys } from '@dxos/util';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { TypeFilter } from './query';
 
@@ -68,7 +68,7 @@ export class EchoSchemaType {
 
   createFilter(opts?: any): TypeFilter<any> {
     return {
-      ...stripKeys(opts),
+      ...stripUndefinedValues(opts),
       '@type': this.name,
     };
   }

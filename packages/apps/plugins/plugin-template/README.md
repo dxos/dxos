@@ -1,6 +1,6 @@
 # @braneframe/plugin-template
 
-Surface plugin for Stack entities.
+Plugin template.
 
 ## DXOS Resources
 

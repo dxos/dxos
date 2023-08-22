@@ -9,6 +9,7 @@ import { dirname } from 'node:path';
 
 import { Config, Client, PublicKey } from '@dxos/client';
 import { ClientServices, ClientServicesProvider, fromHost } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { tracer } from '@dxos/util';
@@ -58,7 +59,7 @@ export class Agent {
 
     // Create client services.
     this._clientServices = await fromHost(this._options.config, { lockKey: lockFilePath(this._options.profile) });
-    await this._clientServices.open();
+    await this._clientServices.open(new Context());
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
@@ -116,7 +117,7 @@ export class Agent {
 
     // Close client and services.
     await this._client?.destroy();
-    await this._clientServices?.close();
+    await this._clientServices?.close(new Context());
     this._client = undefined;
     this._clientServices = undefined;
 

@@ -509,7 +509,9 @@ importers:
       '@braneframe/plugin-files': workspace:*
       '@braneframe/plugin-github': workspace:*
       '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-grid': workspace:*
       '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-ipfs': workspace:*
       '@braneframe/plugin-kanban': workspace:*
       '@braneframe/plugin-markdown': workspace:*
       '@braneframe/plugin-pwa': workspace:*
@@ -552,7 +554,9 @@ importers:
       '@braneframe/plugin-files': link:../plugins/plugin-files
       '@braneframe/plugin-github': link:../plugins/plugin-github
       '@braneframe/plugin-graph': link:../plugins/plugin-graph
+      '@braneframe/plugin-grid': link:../plugins/plugin-grid
       '@braneframe/plugin-intent': link:../plugins/plugin-intent
+      '@braneframe/plugin-ipfs': link:../plugins/plugin-ipfs
       '@braneframe/plugin-kanban': link:../plugins/plugin-kanban
       '@braneframe/plugin-markdown': link:../plugins/plugin-markdown
       '@braneframe/plugin-pwa': link:../plugins/plugin-pwa
@@ -673,6 +677,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
       '@dxos/echo-schema': workspace:*
+      '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
@@ -697,6 +702,7 @@ importers:
       '@braneframe/plugin-space': link:../plugin-space
       '@dxos/client': link:../../../sdk/client
       '@dxos/echo-schema': link:../../../core/echo/echo-schema
+      '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
@@ -853,6 +859,7 @@ importers:
       '@dxos/aurora-theme': workspace:*
       '@dxos/react-surface': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -863,6 +870,7 @@ importers:
       vite: ^4.3.9
     dependencies:
       '@dxos/async': link:../../../common/async
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
       deepsignal: 1.3.4_react@18.2.0
       localforage: 1.10.0
@@ -952,10 +960,12 @@ importers:
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -965,6 +975,7 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
       lodash.set: 4.3.2
     devDependencies:
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -973,7 +984,55 @@ importers:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
       '@tldraw/indices': 2.0.0-alpha.14
+      '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-grid:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
+      '@dxos/client': link:../../../sdk/client
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@dxos/util': link:../../../common/util
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       react: 18.2.0
@@ -993,6 +1052,55 @@ importers:
       '@dxos/react-surface': link:../../../sdk/react-surface
       '@types/react': 18.0.21
       react: 18.2.0
+      vite: 4.3.9
+
+  packages/apps/plugins/plugin-ipfs:
+    specifiers:
+      '@braneframe/plugin-client': workspace:*
+      '@braneframe/plugin-graph': workspace:*
+      '@braneframe/plugin-intent': workspace:*
+      '@braneframe/plugin-space': workspace:*
+      '@braneframe/plugin-theme': workspace:*
+      '@braneframe/plugin-treeview': workspace:*
+      '@braneframe/types': workspace:*
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-surface': workspace:*
+      '@phosphor-icons/react': ^2.0.5
+      '@types/lodash.get': ^4.4.7
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
+      lodash.get: ^4.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      url-join: ^5.0.0
+      vite: ^4.3.9
+    dependencies:
+      '@braneframe/plugin-graph': link:../plugin-graph
+      '@braneframe/plugin-space': link:../plugin-space
+      '@braneframe/types': link:../../types
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
+      deepsignal: 1.3.4_react@18.2.0
+      lodash.get: 4.4.2
+      url-join: 5.0.0
+    devDependencies:
+      '@braneframe/plugin-client': link:../plugin-client
+      '@braneframe/plugin-intent': link:../plugin-intent
+      '@braneframe/plugin-theme': link:../plugin-theme
+      '@braneframe/plugin-treeview': link:../plugin-treeview
+      '@dxos/aurora': link:../../../ui/aurora
+      '@dxos/aurora-theme': link:../../../ui/aurora-theme
+      '@dxos/react-surface': link:../../../sdk/react-surface
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.get': 4.4.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       vite: 4.3.9
 
   packages/apps/plugins/plugin-kanban:
@@ -1073,10 +1181,11 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-composer': workspace:*
       '@dxos/aurora-theme': workspace:*
-      '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
       '@phosphor-icons/react': ^2.0.5
+      '@preact/signals-react': ^1.3.3
       '@types/lodash.get': ^4.4.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -1091,8 +1200,9 @@ importers:
       '@braneframe/types': link:../../types
       '@dxos/async': link:../../../common/async
       '@dxos/aurora-composer': link:../../../ui/aurora-composer
-      '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
+      '@preact/signals-react': 1.3.4_react@18.2.0
       deepsignal: 1.3.4_react@18.2.0
       lodash.get: 4.4.2
     devDependencies:
@@ -1152,10 +1262,11 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
-      '@preact/signals-core': ^1.3.1
+      '@preact/signals-react': ^1.3.3
       '@tldraw/indices': 2.0.0-alpha.14
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      deepsignal: ^1.3.3
       jszip: ^3.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -1173,8 +1284,9 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
-      '@preact/signals-core': 1.3.1
+      '@preact/signals-react': 1.3.4_react@18.2.0
       '@tldraw/indices': 2.0.0-alpha.14
+      deepsignal: 1.3.4_react@18.2.0
       jszip: 3.10.1
       react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
       react-is: 18.2.0
@@ -1245,6 +1357,7 @@ importers:
       '@dxos/aurora': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/util': workspace:*
       '@phosphor-icons/react': ^2.0.5
@@ -1252,9 +1365,13 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       deepsignal: ^1.3.3
+      ipfs-http-client: ~56.0.1
       lodash.get: ^4.4.2
+      node-fetch: ^2.6.0
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-drag-drop-files: ^2.3.8
+      react-is: ^18.2.0
       vite: ^4.3.9
     dependencies:
       '@braneframe/plugin-graph': link:../plugin-graph
@@ -1263,9 +1380,14 @@ importers:
       '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
       '@dnd-kit/utilities': 3.2.0_react@18.2.0
       '@dxos/client': link:../../../sdk/client
+      '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/util': link:../../../common/util
       deepsignal: 1.3.4_react@18.2.0
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
       lodash.get: 4.4.2
+      node-fetch: 2.6.7
+      react-drag-drop-files: 2.3.8_7i5myeigehqah43i5u7wbekgba
+      react-is: 18.2.0
     devDependencies:
       '@braneframe/plugin-dnd': link:../plugin-dnd
       '@braneframe/plugin-intent': link:../plugin-intent
@@ -2115,6 +2237,26 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/util': link:../util
 
+  packages/common/tracing:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/context': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/node-std': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+    dependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/context': link:../context
+      '@dxos/debug': link:../debug
+      '@dxos/invariant': link:../invariant
+      '@dxos/log': link:../log
+      '@dxos/node-std': link:../node-std
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../util
+
   packages/common/typings:
     specifiers: {}
 
@@ -2290,6 +2432,7 @@ importers:
       '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/typings': workspace:*
       '@dxos/util': workspace:*
       crc-32: ^1.2.2
@@ -2325,6 +2468,7 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator': link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../../common/timeframe
+      '@dxos/tracing': link:../../../common/tracing
       '@dxos/typings': link:../../../common/typings
       '@dxos/util': link:../../../common/util
       crc-32: 1.2.2
@@ -3089,15 +3233,16 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/aurora': workspace:*
+      '@dxos/aurora-grid': workspace:*
       '@dxos/aurora-theme': workspace:*
       '@dxos/config': workspace:*
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/gem-core': workspace:*
       '@dxos/gem-spore': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
-      '@dxos/mosaic': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -3124,7 +3269,9 @@ importers:
       postcss: ^8.4.21
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-flame-graph: ^1.4.0
       react-json-tree: ^0.18.0
+      react-resize-detector: ^7.1.2
       react-router-dom: ^6.4.0
       react-syntax-highlighter: ^15.5.0
       react-vis: ^1.11.12
@@ -3137,14 +3284,15 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/aurora': link:../../ui/aurora
+      '@dxos/aurora-grid': link:../../ui/aurora-grid
       '@dxos/aurora-theme': link:../../ui/aurora-theme
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': link:../../experimental/gem-core
       '@dxos/gem-spore': link:../../experimental/gem-spore
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
-      '@dxos/mosaic': link:../../experimental/mosaic
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../../ui/react-appkit
@@ -3163,7 +3311,9 @@ importers:
       lodash.defaultsdeep: 4.6.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-flame-graph: 1.4.0_biqbaboplfbrettd7655fr4n2y
       react-json-tree: 0.18.0_iapumuv4e6jcjznwuxpf4tt22e
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       react-syntax-highlighter: 15.5.0_react@18.2.0
       react-vis: 1.11.12_biqbaboplfbrettd7655fr4n2y
@@ -4951,6 +5101,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/document-model': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-schema': workspace:*
@@ -4965,6 +5116,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/document-model': link:../../core/echo/document-model
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/echo-schema': link:../../core/echo/echo-schema
@@ -5010,6 +5162,7 @@ importers:
       '@dxos/teleport-extension-object-sync': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/tracing': workspace:*
       '@dxos/util': workspace:*
       '@types/readable-stream': ^2.3.9
     dependencies:
@@ -5043,6 +5196,7 @@ importers:
       '@dxos/teleport-extension-object-sync': link:../../core/mesh/teleport-extension-object-sync
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/tracing': link:../../common/tracing
       '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
@@ -5264,6 +5418,7 @@ importers:
       '@dxos/client-protocol': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/context': workspace:*
       '@dxos/echo-signals': workspace:*
       '@dxos/invariant': workspace:*
       '@dxos/log': workspace:*
@@ -5298,6 +5453,7 @@ importers:
       '@dxos/client-protocol': link:../client-protocol
       '@dxos/client-services': link:../client-services
       '@dxos/config': link:../config
+      '@dxos/context': link:../../common/context
       '@dxos/echo-signals': link:../../core/echo/echo-signals
       '@dxos/invariant': link:../../common/invariant
       '@dxos/log': link:../../common/log
@@ -5515,6 +5671,47 @@ importers:
       '@types/react-dom': 18.0.6
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+
+  packages/ui/aurora-grid:
+    specifiers:
+      '@dxos/aurora': workspace:*
+      '@dxos/aurora-theme': workspace:*
+      '@dxos/aurora-types': workspace:*
+      '@dxos/invariant': workspace:*
+      '@dxos/util': workspace:*
+      '@faker-js/faker': ^8.0.2
+      '@phosphor-icons/react': ^2.0.5
+      '@tanstack/react-table': ^8.9.3
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      chromatic: ^6.17.0
+      date-fns: ^2.29.3
+      lodash.defaultsdeep: ^4.6.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^4.3.9
+      vite-plugin-turbosnap: ^1.0.2
+    dependencies:
+      '@dxos/aurora': link:../aurora
+      '@dxos/aurora-theme': link:../aurora-theme
+      '@dxos/aurora-types': link:../aurora-types
+      '@dxos/invariant': link:../../common/invariant
+      '@dxos/util': link:../../common/util
+      '@tanstack/react-table': 8.9.3_biqbaboplfbrettd7655fr4n2y
+      date-fns: 2.29.3
+      lodash.defaultsdeep: 4.6.1
+    devDependencies:
+      '@faker-js/faker': 8.0.2
+      '@phosphor-icons/react': 2.0.5_biqbaboplfbrettd7655fr4n2y
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      chromatic: 6.17.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      vite: 4.3.9
+      vite-plugin-turbosnap: 1.0.2
 
   packages/ui/aurora-theme:
     specifiers:
@@ -15840,6 +16037,23 @@ packages:
       tailwindcss: 3.3.2
     dev: true
 
+  /@tanstack/react-table/8.9.3_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Ng9rdm3JPoSCi6cVZvANsYnF+UoGVRxflMb270tVj0+LjeT/ZtZ9ckxF6oLPLcKesza6VKBqtdF9mQ+vaz24Aw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
+    dependencies:
+      '@tanstack/table-core': 8.9.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@tanstack/table-core/8.9.3:
+    resolution: {integrity: sha512-NpHZBoHTfqyJk0m/s/+CSuAiwtebhYK90mDuf5eylTvgViNOujiaOaxNDxJkQQAsVvHWZftUGAx1EfO1rkKtLg==}
+    engines: {node: '>=12'}
+    dev: false
+
   /@tensorflow/tfjs-backend-cpu/3.21.0_aipmo6igpprgzt4umpaa3m6sn4:
     resolution: {integrity: sha512-88S21UAdzyK0CsLUrH17GPTD+26E85OP9CqmLZslaWjWUmBkeTQ5Zqyp6iK+gELnLxPx6q7JsNEeFuPv4254lQ==}
     engines: {yarn: '>= 1.3.2'}
@@ -25231,6 +25445,12 @@ packages:
   /flatted/3.2.7:
     resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
 
+  /flow-bin/0.118.0:
+    resolution: {integrity: sha512-jlbUu0XkbpXeXhan5xyTqVK1jmEKNxE8hpzznI3TThHTr76GiFwK0iRzhDo4KNy+S9h/KxHaqVhTP86vA6wHCg==}
+    engines: {node: '>=0.10.0'}
+    hasBin: true
+    dev: false
+
   /flow-parser/0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
     engines: {node: '>=0.4.0'}
@@ -27172,6 +27392,7 @@ packages:
 
   /ipfs-core-types/0.10.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-GNid2lRBjR5qgScCglgk7w9Hk3TZAwPHQXxOLQx72wgyc0jF2U5NXRoKW0GRvX8NPbHmsrFszForIqxd23I1Gw==}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       '@ipld/dag-pb': 2.1.18
       interface-datastore: 6.1.1
@@ -27185,6 +27406,7 @@ packages:
 
   /ipfs-core-utils/0.14.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-aBkewVhgAj3NWXPwu6imj0wADGiGVZmJzqKzODOJsibDjkx6FGdMv8kvvqtLnK8LS/dvSk9yk32IDtuDyYoV7Q==}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       any-signal: 3.0.1
       blob-to-it: 1.0.4
@@ -27214,6 +27436,7 @@ packages:
   /ipfs-http-client/56.0.3_node-fetch@2.6.7:
     resolution: {integrity: sha512-E3L5ylVl6BjyRUsNehvfuRBYp1hj8vQ8in4zskVPMNzXs6JiCFUbif5a6BtcAlSK4xPQyJCeLNNAWLUeFQTLNA==}
     engines: {node: '>=15.0.0', npm: '>=3.0.0'}
+    deprecated: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
     dependencies:
       '@ipld/dag-cbor': 7.0.3
       '@ipld/dag-json': 8.0.11
@@ -30652,6 +30875,10 @@ packages:
       safe-buffer: 5.2.1
     dev: false
     patched: true
+
+  /memoize-one/3.1.1:
+    resolution: {integrity: sha512-YqVh744GsMlZu6xkhGslPSqSurOv6P+kLN2J3ysBZfagLcL5FdRK/0UpgLoL8hwjjEvvAVkjJZyFP+1T6p1vgA==}
+    dev: false
 
   /memoize-one/6.0.0:
     resolution: {integrity: sha512-rkpe71W0N0c0Xz6QD0eJETuWAJGnJ9afsl1srmwPrI+yBCkge5EycXXbYRyvL29zZVUWQCY7InPRCv3GDXuZNw==}
@@ -34526,6 +34753,20 @@ packages:
       react-is: 18.1.0
     dev: true
 
+  /react-flame-graph/1.4.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-DaCK9ZX+xK0mNca72kUE5cu6T8hGe/KLsefQWf+eT9sVt+0WP1dVxZCGD8Svfn2KrZB9Mv011Intg/yG2YWSxA==}
+    engines: {node: '>8.0.0'}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0
+      react-dom: ^15.0.0 || ^16.0.0
+    dependencies:
+      flow-bin: 0.118.0
+      memoize-one: 3.1.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-window: 1.8.9_biqbaboplfbrettd7655fr4n2y
+    dev: false
+
   /react-i18next/11.18.6_vfm63zmruocgezzfl2v26zlzpy:
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
     peerDependencies:
@@ -34857,6 +35098,19 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-motion: 0.5.2_biqbaboplfbrettd7655fr4n2y
+    dev: false
+
+  /react-window/1.8.9_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-+Eqx/fj1Aa5WnhRfj9dJg4VYATGwIUP2ItwItiJ6zboKWA6EX3lYDAXfGF2hyNqplEprhbtjbipiADEcwQ823Q==}
+    engines: {node: '>8.0.0'}
+    peerDependencies:
+      react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      '@babel/runtime': 7.21.0
+      memoize-one: 3.1.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react/18.2.0:

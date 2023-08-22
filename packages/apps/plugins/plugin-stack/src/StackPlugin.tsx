@@ -37,6 +37,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
+        // TODO(burdon): Remove?
         if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.choosers)) {
           stackState.choosers.push(...((plugin as Plugin<StackProvides>).provides.stack.choosers ?? []));
         }
@@ -48,40 +49,36 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
-          return adapter.createNodes(parent.data, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
+          const space = parent.data;
 
-          return [
-            {
-              id: `${STACK_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${STACK_PLUGIN}/create`,
+            label: ['create stack label', { ns: STACK_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            intent: [
+              {
+                plugin: STACK_PLUGIN,
+                action: StackAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: parent.data.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+            properties: {
               testId: 'stackPlugin.createStack',
-              label: ['create stack label', { ns: STACK_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              intent: [
-                {
-                  plugin: STACK_PLUGIN,
-                  action: StackAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
             },
-          ];
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       component: (data, role) => {
@@ -91,7 +88,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
         switch (role) {
           case 'main':
-            if ('object' in data && isStack(data.object)) {
+            if (isStack(data)) {
               return StackMain;
             } else {
               return null;
@@ -105,9 +102,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           default:
             return null;
         }
-      },
-      components: {
-        StackMain,
       },
       intent: {
         resolver: (intent) => {

@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -132,7 +133,7 @@ export class ForeverDaemon implements Daemon {
         // Check if agent is initialized.
         {
           const services = fromAgent({ profile });
-          await services.open();
+          await services.open(new Context());
 
           const trigger = new Trigger();
           const stream = services.services.SystemService!.queryStatus({});
@@ -143,7 +144,7 @@ export class ForeverDaemon implements Daemon {
           await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT);
 
           stream.close();
-          await services.close();
+          await services.close(new Context());
         }
         return await this._getProcess(profile);
       } catch (err) {

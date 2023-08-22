@@ -21,8 +21,8 @@ import {
   ListItemProps as ListPrimitiveItemProps,
   ListItemScopedProps,
   LIST_NAME,
-  useListContext,
   LIST_ITEM_NAME,
+  useListContext,
   useListItemContext,
 } from '@dxos/react-list';
 

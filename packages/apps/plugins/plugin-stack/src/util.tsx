@@ -6,7 +6,7 @@ import { Article, IconProps, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { GraphNode } from '@braneframe/plugin-graph';
+import type { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Stack } from '@braneframe/types';
 import { EchoObject, Space } from '@dxos/client/echo';
@@ -23,25 +23,26 @@ export const isStack = <T extends StackObject = GenericStackObject>(data: unknow
 
 export const isStackProperties = (data: unknown): data is StackProperties => data instanceof EchoObject;
 
-export const stackToGraphNode = (parent: GraphNode<Space>, obj: Stack, index: string): GraphNode => ({
-  id: obj.id,
-  index: get(obj, 'meta.index', index),
-  label: obj.title ?? 'New stack', // TODO(burdon): Translation.
-  icon: (props: IconProps) => <Article {...props} />,
-  data: obj,
-  parent,
-  pluginActions: {
-    [STACK_PLUGIN]: [
-      {
-        id: 'delete',
-        index: 'a1',
-        label: ['delete stack label', { ns: STACK_PLUGIN }],
-        icon: (props: IconProps) => <Trash {...props} />,
-        intent: {
-          action: SpaceAction.REMOVE_OBJECT,
-          data: { spaceKey: parent.data?.key.toHex(), objectId: obj.id },
-        },
-      },
-    ],
-  },
-});
+export const stackToGraphNode = (parent: Graph.Node<Space>, object: Stack, index: string): Graph.Node => {
+  const [child] = parent.add({
+    id: object.id,
+    label: object.title ?? ['stack title placeholder', { ns: STACK_PLUGIN }],
+    icon: (props: IconProps) => <Article {...props} />,
+    data: object,
+    properties: {
+      index: get(object, 'meta.index', index),
+    },
+  });
+
+  child.addAction({
+    id: 'delete',
+    label: ['delete stack label', { ns: STACK_PLUGIN }],
+    icon: (props: IconProps) => <Trash {...props} />,
+    intent: {
+      action: SpaceAction.REMOVE_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: object.id },
+    },
+  });
+
+  return child;
+};

@@ -38,14 +38,14 @@ export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Parti
 /**
  * Remove keys with undefined values.
  */
-export const stripKeys = (obj: any): any => {
+export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T): T => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
       const value = obj[key];
       if (value === undefined) {
         delete obj[key];
       } else if (value !== null && typeof value === 'object') {
-        stripKeys(value); // TODO(burdon): Test recursion.
+        stripUndefinedValues(value); // TODO(burdon): Test recursion.
       }
     });
   }

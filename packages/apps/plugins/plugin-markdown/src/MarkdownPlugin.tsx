@@ -5,22 +5,19 @@
 import { ArticleMedium, Plus } from '@phosphor-icons/react';
 import { deepSignal } from 'deepsignal';
 import get from 'lodash.get';
-import React from 'react';
+import React, { FC, MutableRefObject, RefCallback } from 'react';
 
-import { GraphNodeAdapter, SpaceAction } from '@braneframe/plugin-space';
+import { Graph } from '@braneframe/plugin-graph';
+import { GraphNodeAdapter, SpaceAction, SpacePluginProvides } from '@braneframe/plugin-space';
 import { TreeViewAction } from '@braneframe/plugin-treeview';
-import { Document as DocumentType } from '@braneframe/types';
-import { ComposerModel, MarkdownComposerProps } from '@dxos/aurora-composer';
-import { SpaceProxy } from '@dxos/client/echo';
-import { PluginDefinition } from '@dxos/react-surface';
+import { Document as DocumentType, Document } from '@braneframe/types';
+import { ComposerModel, MarkdownComposerProps, MarkdownComposerRef, useTextModel } from '@dxos/aurora-composer';
+import { SpaceProxy, isTypedObject } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { PluginDefinition, findPlugin, usePluginContext } from '@dxos/react-surface';
 
-import {
-  MarkdownMain,
-  MarkdownMainEmbedded,
-  MarkdownMainEmpty,
-  MarkdownSection,
-  SpaceMarkdownChooser,
-} from './components';
+import { EditorMain, EditorMainEmbedded, EditorSection, MarkdownMainEmpty, SpaceMarkdownChooser } from './components';
+import { StandaloneMenu } from './components/StandaloneMenu';
 import translations from './translations';
 import { MARKDOWN_PLUGIN, MarkdownAction, MarkdownPluginProvides, MarkdownProperties } from './types';
 import {
@@ -36,24 +33,84 @@ import {
 // https://github.com/luisherranz/deepsignal/issues/36
 (globalThis as any)[DocumentType.name] = DocumentType;
 
+export const isDocument = (data: unknown): data is Document =>
+  isTypedObject(data) && Document.type.name === data.__typename;
+
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const state = deepSignal<{ onChange: NonNullable<MarkdownComposerProps['onChange']>[] }>({ onChange: [] });
+  const pluginMutableRef: MutableRefObject<MarkdownComposerRef> = {
+    current: { editor: null },
+  };
+  const pluginRefCallback: RefCallback<MarkdownComposerRef> = (nextRef: MarkdownComposerRef) => {
+    pluginMutableRef.current = { ...nextRef };
+  };
   const adapter = new GraphNodeAdapter(DocumentType.filter(), documentToGraphNode);
 
-  const MarkdownMainStandalone = ({
+  const EditorMainStandalone = ({
     data: { composer, properties },
   }: {
     data: { composer: ComposerModel; properties: MarkdownProperties };
     role?: string;
   }) => {
     return (
-      <MarkdownMain
+      <EditorMain
         model={composer}
         properties={properties}
         layout='standalone'
         onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorRefCb={pluginRefCallback}
       />
     );
+  };
+
+  const MarkdownMain: FC<{ data: Document }> = ({ data }) => {
+    const identity = useIdentity();
+    const { plugins } = usePluginContext();
+    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const space = spacePlugin?.provides.space.current;
+
+    const textModel = useTextModel({
+      identity,
+      space,
+      text: data?.content,
+    });
+
+    if (!textModel) {
+      return null;
+    }
+
+    if (!space?.db.getObjectById(data.id)) {
+      return <MarkdownMainEmpty data={{ composer: { content: () => null }, properties: data }} />;
+    }
+
+    return (
+      <EditorMain
+        model={textModel}
+        properties={data}
+        layout='standalone'
+        onChange={(text) => state.onChange.forEach((onChange) => onChange(text))}
+        editorRefCb={pluginRefCallback}
+      />
+    );
+  };
+
+  const StandaloneMainMenu: FC<{ data: Graph.Node<Document> }> = ({ data }) => {
+    const identity = useIdentity();
+    const { plugins } = usePluginContext();
+    const spacePlugin = findPlugin<SpacePluginProvides>(plugins, 'dxos.org/plugin/space');
+    const space = spacePlugin?.provides.space.current;
+
+    const textModel = useTextModel({
+      identity,
+      space,
+      text: data.data?.content,
+    });
+
+    if (!textModel) {
+      return null;
+    }
+
+    return <StandaloneMenu properties={data.data} model={textModel} editorRef={pluginMutableRef} />;
   };
 
   return {
@@ -73,42 +130,37 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     provides: {
       translations,
       graph: {
-        nodes: (parent, emit) => {
+        nodes: (parent) => {
           if (!(parent.data instanceof SpaceProxy)) {
-            return [];
+            return;
           }
 
           const space = parent.data;
-          return adapter.createNodes(space, parent, emit);
-        },
-        actions: (parent) => {
-          if (!(parent.data instanceof SpaceProxy)) {
-            return [];
-          }
 
-          return [
-            {
-              id: `${MARKDOWN_PLUGIN}/create`,
-              index: 'a1',
+          parent.addAction({
+            id: `${MARKDOWN_PLUGIN}/create`,
+            label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+            icon: (props) => <Plus {...props} />,
+            properties: {
               testId: 'spacePlugin.createDocument',
-              label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-              icon: (props) => <Plus {...props} />,
-              disposition: 'toolbar', // TODO(burdon): Both places.
-              intent: [
-                {
-                  plugin: MARKDOWN_PLUGIN,
-                  action: MarkdownAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { spaceKey: parent.data.key.toHex() },
-                },
-                {
-                  action: TreeViewAction.ACTIVATE,
-                },
-              ],
+              disposition: 'toolbar',
             },
-          ];
+            intent: [
+              {
+                plugin: MARKDOWN_PLUGIN,
+                action: MarkdownAction.CREATE,
+              },
+              {
+                action: SpaceAction.ADD_OBJECT,
+                data: { spaceKey: space.key.toHex() },
+              },
+              {
+                action: TreeViewAction.ACTIVATE,
+              },
+            ],
+          });
+
+          return adapter.createNodes(space, parent);
         },
       },
       stack: {
@@ -140,18 +192,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         }
 
         // TODO(burdon): Document.
+        // TODO(wittjosiah): Expose all through `components` as well?
+        // TODO(wittjosiah): Improve the naming of surface components.
         switch (role) {
           case 'main': {
-            if (
+            if (isDocument(data)) {
+              return MarkdownMain;
+            } else if (
               'composer' in data &&
               isMarkdown(data.composer) &&
               'properties' in data &&
               isMarkdownProperties(data.properties)
             ) {
               if ('view' in data && data.view === 'embedded') {
-                return MarkdownMainEmbedded;
+                return EditorMainEmbedded;
               } else {
-                return MarkdownMainStandalone;
+                return EditorMainStandalone;
               }
             } else if (
               'composer' in data &&
@@ -164,9 +220,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             break;
           }
 
+          case 'heading': {
+            if ('data' in data && isDocument(data.data)) {
+              return StandaloneMainMenu;
+            }
+            break;
+          }
+
           case 'section': {
-            if (isMarkdown(get(data, 'object.content', {}))) {
-              return MarkdownSection;
+            if (isMarkdown(get(data, 'content', {}))) {
+              return EditorSection;
             }
             break;
           }

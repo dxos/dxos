@@ -4,7 +4,7 @@
 
 import { DocumentModel } from '@dxos/document-model';
 import { TextModel } from '@dxos/text-model';
-import { stripKeys } from '@dxos/util';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { EchoDatabase } from './database';
 import { base } from './defs';
@@ -33,7 +33,7 @@ export class Serializer {
     const { objects } = database.query();
     const data = {
       objects: objects.map((object) => {
-        return stripKeys({
+        return stripUndefinedValues({
           ...object[base].toJSON(), // TODO(burdon): Not working unless schema.
         });
       }),
