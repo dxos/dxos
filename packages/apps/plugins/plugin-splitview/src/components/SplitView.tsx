@@ -14,7 +14,7 @@ import { SPLITVIEW_PLUGIN } from '../types';
 
 export const SplitView = () => {
   const context = useSplitView();
-  const { sidebarOpen, complementarySidebarOpen, dialogOpen, dialogContent } = context;
+  const { complementarySidebarOpen, dialogOpen, dialogContent } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
