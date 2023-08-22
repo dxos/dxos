@@ -337,8 +337,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         await env.syncBarrier(`feeds are written on ${testCounter}`);
       }
 
-      await sleep(5_000);
-
       // Check length of all feeds.
       {
         log.info('checking feeds length', { agentIdx });
@@ -355,6 +353,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           }
         });
       }
+
+      await sleep(5_000);
 
       // Leave all swarms.
       {
