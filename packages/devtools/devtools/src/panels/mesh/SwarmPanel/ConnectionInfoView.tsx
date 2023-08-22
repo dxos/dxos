@@ -7,21 +7,22 @@ import React, { FC } from 'react';
 import { createColumnBuilder, Grid, GridColumnDef } from '@dxos/aurora-grid';
 import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 
-import { DetailsTable } from './DetailsTable';
+import { DetailsTable } from '../../../components';
 
+const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
+const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
+  helper.accessor('bytesSent', builder.createNumber({ header: 'sent' })),
+  helper.accessor('bytesReceived', builder.createNumber({ header: 'received' })),
+  helper.accessor('bytesSentRate', builder.createNumber({ header: 'sent b/s' })),
+  helper.accessor('bytesReceivedRate', builder.createNumber({ header: 'received b/s' })),
+  helper.accessor('tag', {}),
+];
+
+// TODO(burdon): Stream results.
 export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connection }) => {
   if (!connection) {
     return null;
   }
-
-  const { helper, builder } = createColumnBuilder<ConnectionInfo.StreamStats>();
-  const columns: GridColumnDef<ConnectionInfo.StreamStats, any>[] = [
-    helper.accessor('bytesSent', builder.createNumber({ header: 'sent' })),
-    helper.accessor('bytesReceived', builder.createNumber({ header: 'received' })),
-    helper.accessor('bytesSentRate', builder.createNumber({ header: 'sent b/s' })),
-    helper.accessor('bytesReceivedRate', builder.createNumber({ header: 'received b/s' })),
-    helper.accessor('tag', {}),
-  ];
 
   return (
     <div>

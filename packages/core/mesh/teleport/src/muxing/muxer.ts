@@ -409,10 +409,13 @@ export class Muxer {
     const bytesReceived = this._balancer.bytesReceived;
 
     const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1000 : 0;
-    const calculateThroughput = (last?: Channel['stats'], current: Channel['stats']) => last ? ({
-      bytesSentRate: interval ? (current.bytesSent - last.bytesSent) / interval : undefined,
-      bytesReceivedRate: interval ? (current.bytesReceived - last.bytesReceived) / interval : undefined,
-    }) : {};
+    const calculateThroughput = (current: Channel['stats'], last: Channel['stats'] | undefined) =>
+      last
+        ? {
+            bytesSentRate: interval ? (current.bytesSent - last.bytesSent) / interval : undefined,
+            bytesReceivedRate: interval ? (current.bytesReceived - last.bytesReceived) / interval : undefined,
+          }
+        : {};
 
     this._lastStats = {
       timestamp: now,
@@ -423,7 +426,7 @@ export class Muxer {
           contentType: channel.contentType,
           bytesSent: channel.stats.bytesSent,
           bytesReceived: channel.stats.bytesReceived,
-          ...calculateThroughput(this._lastChannelStats.get(channel.id), channel.stats),
+          ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
         };
 
         this._lastChannelStats.set(channel.id, stats);
@@ -431,7 +434,7 @@ export class Muxer {
       }),
       bytesSent,
       bytesReceived,
-      ...(calculateThroughput(this._lastStats, { bytesSent, bytesReceived }) : {}),
+      ...calculateThroughput({ bytesSent, bytesReceived }, this._lastStats),
     };
 
     this.statsUpdated.emit(this._lastStats);
