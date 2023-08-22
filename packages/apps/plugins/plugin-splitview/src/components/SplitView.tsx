@@ -46,6 +46,7 @@ export const SplitView = () => {
               <MenuIcon weight='light' className={getSize(4)} />
             </Button>
             <Surface name='heading' role='heading' limit={2} />
+            <div role='none' className='grow' />
             <Surface name='presence' role='presence' limit={1} />
             {complementarySidebarOpen !== null && (
               <Button
