@@ -267,7 +267,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       );
     };
 
-    const loadFeed = async (
+    const loadFeed = (
       context: Context,
       feed: FeedWrapper<any>,
       options: { feedLoadInterval: number; feedLoadChunkSize: number },
@@ -339,25 +339,22 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         });
 
         log.info('writing to writable feeds', { agentIdx });
-        const loadPromises: Promise<void>[] = [];
         await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
           const feedsArr = feeds.get(swarm.topic.toString())!;
           for (const feedObj of feedsArr) {
             if (feedObj.writable) {
-              loadPromises.push(
-                loadFeed(context, feedObj.feed, {
-                  feedLoadInterval: spec.feedLoadInterval,
-                  feedLoadChunkSize: spec.feedLoadChunkSize,
-                }),
-              );
+              loadFeed(context, feedObj.feed, {
+                feedLoadInterval: spec.feedLoadInterval,
+                feedLoadChunkSize: spec.feedLoadChunkSize,
+              });
             }
           }
         });
 
         await sleep(spec.feedLoadDuration);
-        await env.syncBarrier(`feeds are written on ${testCounter}`);
-
         await subctx.dispose();
+
+        await env.syncBarrier(`feeds are written on ${testCounter}`);
       }
 
       // Check length of all feeds.
@@ -428,7 +425,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           const feedStats = entry.context as FeedEntry;
           const agentFeeds = feeds.get(entry.context.agentIdx)!;
           const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
-          swarmFeeds.push(feedStats);
+          // TODO(egorgripasov): For some reason we receive duplicated log entries from reader.
+          if (!swarmFeeds.find((feed) => feed.feedKey === feedStats.feedKey)) {
+            swarmFeeds.push(feedStats);
+          }
           break;
         }
       }

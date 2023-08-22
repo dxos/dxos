@@ -88,11 +88,11 @@ const plans: { [key: string]: () => any } = {
   replication: () => ({
     plan: new ReplicationTestPlan(),
     spec: {
-      agents: 2,
+      agents: 3,
       swarmsPerAgent: 1,
       duration: 60_000,
 
-      transport: 'webrtc-proxy',
+      transport: 'webrtc',
 
       targetSwarmTimeout: 10_000,
       fullSwarmTimeout: 60_000,
