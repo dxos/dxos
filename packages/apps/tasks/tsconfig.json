@@ -1,15 +1,12 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react",
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
     "outDir": "out/tasks",
-    "skipLibCheck": true,
     "types": ["node"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "out", "vite.config.ts"],
+  "exclude": ["vite.config.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"
