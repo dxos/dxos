@@ -4,6 +4,7 @@
 
 export * from './arrow';
 export * from './density';
+export * from './dimensions';
 export * from './disabled';
 export * from './elevation';
 export * from './focus';

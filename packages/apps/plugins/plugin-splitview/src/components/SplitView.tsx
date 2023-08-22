@@ -6,7 +6,7 @@ import { Chats, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
-import { coarseBlockSize, getSize } from '@dxos/aurora-theme';
+import { coarseBlockSize, fixedSurface, getSize } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -37,7 +37,7 @@ export const SplitView = () => {
       <Main.Overlay />
       <Main.Content
         asChild
-        classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize]}
+        classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
       >
         <div role='none' aria-label={t('main header label')}>
           <DensityProvider density='fine'>
