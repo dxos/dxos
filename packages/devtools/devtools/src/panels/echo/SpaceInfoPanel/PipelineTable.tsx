@@ -117,12 +117,12 @@ export const PipelineTable = ({
 
   const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: PipelineTableRow | PipelineTableRow[] | undefined) => {
-    setContext((ctx) => ({ ...ctx, item: (selected as PipelineTableRow)?.feedKey }));
+  const handleSelect = (selected: PipelineTableRow[] | undefined) => {
+    setContext((ctx) => ({ ...ctx, item: selected?.[0] }));
     navigate('/echo/feeds');
   };
 
   return (
-    <Grid<PipelineTableRow> slots={defaultGridSlots} columns={columns} data={data} onSelectedChange={handleSelect} />
+    <Grid<PipelineTableRow> columns={columns} data={data} onSelectedChange={handleSelect} slots={defaultGridSlots} />
   );
 };

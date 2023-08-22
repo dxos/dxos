@@ -17,8 +17,8 @@ export const SpaceListPanel: FC = () => {
   const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
 
-  const handleSelect = (selection: Space | Space[] | undefined) => {
-    setState((state) => ({ ...state, space: selection as Space }));
+  const handleSelect = (selection: Space[] | undefined) => {
+    setState((state) => ({ ...state, space: selection?.[0] }));
     navigate('/echo/space');
   };
 

@@ -59,7 +59,7 @@ export default {
 export const Controlled = {
   render: () => {
     const items = useMemo(() => createItems(10), []);
-    const [selected, setSelected] = useState<Item | Item[]>();
+    const [selected, setSelected] = useState<Item[]>();
 
     return (
       <div className='flex grow overflow-hidden'>
@@ -67,7 +67,6 @@ export const Controlled = {
         <Grid<Item>
           columns={columns}
           data={items}
-          select='single'
           selected={selected}
           onSelectedChange={setSelected}
           slots={defaultGridSlots}

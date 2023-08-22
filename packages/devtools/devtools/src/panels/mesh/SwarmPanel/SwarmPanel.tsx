@@ -16,8 +16,8 @@ export const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
   const { data: swarms = [] } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
   const [connection, setConnection] = useState<ConnectionInfo>();
-  const handleSelect = (selected: SwarmConnection | SwarmConnection[] | undefined) => {
-    setConnection((selected as SwarmConnection)?.connection);
+  const handleSelect = (selected: SwarmConnection[] | undefined) => {
+    setConnection(selected?.[0].connection);
   };
 
   let i = 0;
@@ -36,7 +36,7 @@ export const SwarmPanel = () => {
   // TODO(burdon): Add peers/connect/disconnect/error info.
   const { helper, builder } = createColumnBuilder<SwarmConnection>();
   const columns: GridColumnDef<SwarmConnection, any>[] = [
-    helper.accessor('rowId', { size: 40, header: '' }),
+    helper.accessor('rowId', { meta: { hidden: true } }),
     helper.accessor('id', builder.createKey({ header: 'swarm', tooltip: true })),
     helper.accessor('topic', builder.createKey({ tooltip: true })),
     helper.accessor('isActive', builder.createIcon({ header: 'active' })),

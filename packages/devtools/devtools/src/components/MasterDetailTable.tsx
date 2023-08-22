@@ -15,15 +15,21 @@ export type MasterTableProps<T extends {}> = {
 };
 
 export const MasterDetailTable = <T extends {}>({ columns, data }: MasterTableProps<T>) => {
-  const [selected, setSelected] = useState<T | T[]>();
+  const [selected, setSelected] = useState<T[]>();
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Grid<T> columns={columns} data={data} onSelectedChange={setSelected} slots={defaultGridSlots} />
+        <Grid<T>
+          columns={columns}
+          data={data}
+          selected={selected}
+          onSelectedChange={setSelected}
+          slots={defaultGridSlots}
+        />
       </div>
 
-      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>
+      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected?.[0]} />}</div>
     </div>
   );
 };

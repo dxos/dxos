@@ -146,6 +146,6 @@ export const defaultGridSlots: GridSlots = {
   cell: { className: 'p-1' },
   row: { className: 'cursor-pointer hover:bg-neutral-50' },
   focus: { className: 'ring-1 ring-teal-500 ring-inset' },
-  selected: { className: '!bg-teal-100' },
+  selected: { className: '!bg-green-100' },
   margin: { style: { width: 8 } },
 };

@@ -54,11 +54,12 @@ export type GridSlots = {
   };
 };
 
+// TODO(burdon): Provide id mapper.
 type GridSelection<TData extends RowData> = {
   // Controlled if undefined (by default).
   select?: 'single' | 'single-toggle' | 'multiple' | 'multiple-toggle' | undefined;
-  selected?: TData | TData[];
-  onSelectedChange?: (rows: TData | TData[] | undefined) => void;
+  selected?: TData[];
+  onSelectedChange?: (selected: TData[] | undefined) => void;
 };
 
 /**
@@ -128,10 +129,24 @@ export const Grid = <TData extends RowData>({
   footer: showFooter = false,
   pinToBottom,
 }: GridProps<TData>) => {
-  // https://tanstack.com/table/v8/docs/api/features/row-selection
-  const [selectionState, setSelectionState] = useState<RowSelectionState>({});
   const [focus, setFocus] = useState<string>();
 
+  // Update controlled selection.
+  // https://tanstack.com/table/v8/docs/api/features/row-selection
+  const [selectionState, setSelectionState] = useState<RowSelectionState>({});
+  useEffect(() => {
+    setSelectionState(
+      selected?.reduce((selectionState: RowSelectionState, selected) => {
+        const row = table.getRowModel().rows.find((row) => row.original === selected);
+        if (row) {
+          selectionState[row.id] = true;
+        }
+        return selectionState;
+      }, {}) ?? {},
+    );
+  }, [select, selected]);
+
+  // Update table model.
   // https://tanstack.com/table/v8/docs/api/core/table
   const table = useReactTable({
     data,
@@ -140,50 +155,33 @@ export const Grid = <TData extends RowData>({
     state: {
       rowSelection: selectionState,
     },
+    defaultColumn: {
+      size: undefined,
+    },
     enableRowSelection: select === 'single' || select === 'single-toggle',
     enableMultiRowSelection: select === 'multiple' || select === 'multiple-toggle',
     onRowSelectionChange: (rows) => {
-      console.log('onRowSelectionChange', rows);
+      setSelectionState(rows);
     },
     // debugTable: true, // TODO(burdon): Research perf for us.
   });
 
-  // Update controlled selection.
-  useEffect(() => {
-    if (Array.isArray(selected)) {
-      setSelectionState(
-        selected.reduce((selectionState: RowSelectionState, selected) => {
-          const row = table.getRowModel().rows.find((row) => row.original === selected);
-          if (row) {
-            selectionState[row.id] = true;
-          }
-          return selectionState;
-        }, {}),
-      );
-    } else {
-      const row = selected && table.getRowModel().rows.find((row) => row.original === selected);
-      if (row) {
-        setSelectionState({ [row.id]: true });
-      } else {
-        setSelectionState({});
-      }
-    }
-  }, [select, selected]);
-
   const handleSelect = (row: Row<TData>) => {
-    setSelectionState((selectionState: RowSelectionState) => {
-      const newSelectionState = updateSelection(selectionState, row.id, select);
-      if (onSelectedChange) {
-        const rows: TData[] = Object.keys(newSelectionState).map((id) => table.getRowModel().rowsById[id].original);
-        if (select === 'single' || select === 'single-toggle') {
-          onSelectedChange(rows?.[0]);
-        } else {
+    if (select) {
+      // Uncontrolled.
+      setSelectionState((selectionState: RowSelectionState) => {
+        const newSelectionState = updateSelection(selectionState, row.id, select);
+        if (onSelectedChange) {
+          const rows: TData[] = Object.keys(newSelectionState).map((id) => table.getRowModel().rowsById[id].original);
           onSelectedChange(rows);
         }
-      }
 
-      return newSelectionState;
-    });
+        return newSelectionState;
+      });
+    } else {
+      // Controlled.
+      onSelectedChange?.([row.original]);
+    }
   };
 
   // Pin scrollbar to bottom.
@@ -216,7 +214,8 @@ export const Grid = <TData extends RowData>({
     }, [data]);
   }
 
-  // TODO(burdon): Use meta prop for visibility.
+  // Create additional expansion column if all columns have fixed width.
+  const addFlex = columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
   // TODO(burdon): Use radix ScrollArea.
   // https://www.radix-ui.com/primitives/docs/components/scroll-area
@@ -226,15 +225,11 @@ export const Grid = <TData extends RowData>({
         {/* TODO(burdon): Must have header group for widths. */}
         <thead className={mx(showHeader ? ['sticky top-0 z-10', slots?.header?.className] : 'collapse')}>
           {table.getHeaderGroups().map((headerGroup) => {
-            // Need additional column if all columns have fixed width.
-            // TODO(burdon): Size will be computed.
-            const addFlex = columns.map((column) => column.size).filter(Boolean).length === columns?.length;
-
             return (
               <tr key={headerGroup.id}>
                 <th style={{ width: slots?.margin?.style?.width }} />
                 {headerGroup.headers
-                  // .filter((header) => !getColumn(header.id).hidden)
+                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
                   .map((header) => {
                     return (
                       <th
@@ -279,7 +274,7 @@ export const Grid = <TData extends RowData>({
                 </td>
                 {row
                   .getVisibleCells()
-                  // .filter((cell) => !getColumn(cell.column.id).hidden)
+                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
                   .map((cell) => {
                     return (
                       <td key={cell.id} className={mx('truncate', slots?.cell?.className)}>
@@ -287,6 +282,7 @@ export const Grid = <TData extends RowData>({
                       </td>
                     );
                   })}
+                {addFlex && <td />}
                 <td />
               </tr>
             );
@@ -298,7 +294,7 @@ export const Grid = <TData extends RowData>({
               <tr key={footerGroup.id}>
                 <th />
                 {footerGroup.headers
-                  // .filter((footer) => !getColumn(footer.id).hidden)
+                  .filter((cell) => !(cell.column.columnDef.meta as any)?.hidden)
                   .map((footer) => {
                     return (
                       <th key={footer.id} className={mx(slots?.footer?.className)}>
@@ -306,6 +302,7 @@ export const Grid = <TData extends RowData>({
                       </th>
                     );
                   })}
+                {addFlex && <th />}
                 <th />
               </tr>
             ))}
