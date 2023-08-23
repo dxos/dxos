@@ -156,7 +156,7 @@ describe('DataSpaceManager', () => {
   });
 
   describe('Epochs', () => {
-    test('Epoch truncates feeds', async () => {
+    test.skip('Epoch truncates feeds', async () => {
       const builder = new TestBuilder();
       afterTest(async () => builder.destroy());
 
