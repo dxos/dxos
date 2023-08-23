@@ -4942,7 +4942,9 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-pipeline': workspace:*
+      '@dxos/feed-store': workspace:*
       '@dxos/invariant': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -4951,6 +4953,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/teleport-extension-replicator': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
@@ -4970,7 +4973,9 @@ importers:
       '@dxos/context': link:../../common/context
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-pipeline': link:../../core/echo/echo-pipeline
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/invariant': link:../../common/invariant
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -4979,6 +4984,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/signal': link:../../core/mesh/signal
+      '@dxos/teleport-extension-replicator': link:../../core/mesh/teleport-extension-replicator
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       '@faker-js/faker': 8.0.2
