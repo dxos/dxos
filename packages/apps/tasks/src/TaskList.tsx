@@ -13,7 +13,7 @@ import { Task } from './proto';
 
 export const TaskList = () => {
   useIdentity({ login: true });
-  const [space] = useSpaces(); // What should the pattern be for find-or-create a space?
+  const [space] = useSpaces();
   const shell = useShell();
   const tasks = useQuery<Task>(space, Task.filter());
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -22,6 +22,9 @@ export const TaskList = () => {
 
   const handleNewTask = () => {
     if (newTaskTitle === '') {
+      return;
+    }
+    if (!space) {
       return;
     }
 
@@ -92,7 +95,7 @@ export const TaskList = () => {
                     className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400'
                     onClick={(e) => {
                       e.stopPropagation();
-                      space.db.remove(task);
+                      space && space.db.remove(task);
                     }}
                   >
                     Delete
