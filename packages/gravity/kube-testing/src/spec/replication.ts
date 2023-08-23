@@ -370,6 +370,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     await testRun();
 
+    // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
     // scheduleTaskInterval(
     //   ctx,
     //   async () => {
