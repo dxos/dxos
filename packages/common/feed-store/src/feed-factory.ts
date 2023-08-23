@@ -26,6 +26,7 @@ export type FeedOptions = HypercoreOptions & {
    * NOTE: Remember to call the callback.
    * @param peer Always null in hypercore@9.12.0.
    */
+  // TODO(burdon): onWrite?
   onwrite?: (index: number, data: any, peer: null, cb: (err: Error | null) => void) => void;
 };
 
