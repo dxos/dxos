@@ -13,16 +13,16 @@ import { Graph } from '@braneframe/plugin-graph';
 import { Tree } from '@dxos/aurora';
 import { Surface } from '@dxos/react-surface';
 
-import { sortByIndex } from '../util';
-import { BranchTreeItem, SortableBranchTreeItem } from './BranchTreeItem';
-import { LeafTreeItem, SortableLeafTreeItem } from './LeafTreeItem';
+import { sortByIndex } from '../../util';
+import { SortableTreeViewItem, NavTreeItem } from './NavTreeItem';
 
 export type TreeViewProps = {
+  level: number;
   items?: Graph.Node[];
-  parent?: string | Graph.Node;
+  parent?: string | Graph.Node | null;
 };
 
-const TreeViewSortableImpl = ({ parent, items }: { parent: Graph.Node; items: Graph.Node[] }) => {
+const TreeViewSortableImpl = ({ parent, items, level }: { parent: Graph.Node; items: Graph.Node[]; level: number }) => {
   // todo(thure): `observer` does not trigger updates when node indices are updated.
   const itemsInOrder = items.sort(sortByIndex);
   const draggableIds = itemsInOrder.map(({ id }) => `treeitem:${id}`);
@@ -83,36 +83,29 @@ const TreeViewSortableImpl = ({ parent, items }: { parent: Graph.Node; items: Gr
 
   return (
     <SortableContext items={draggableIds} strategy={verticalListSortingStrategy}>
-      {itemsInOrder.map((item) =>
-        item.properties?.role === 'branch' || item.children.length ? (
-          <SortableBranchTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
-        ) : (
-          <SortableLeafTreeItem key={item.id} node={item} rearranging={overIsMember && activeId === item.id} />
-        ),
-      )}
+      {itemsInOrder.map((item) => (
+        <SortableTreeViewItem
+          key={item.id}
+          node={item}
+          level={level}
+          rearranging={overIsMember && activeId === item.id}
+        />
+      ))}
     </SortableContext>
   );
 };
 
-export const TreeView = (props: TreeViewProps) => {
-  const { items } = props;
+export const NavTree = (props: TreeViewProps) => {
+  const { items, level } = props;
   // TODO(wittjosiah): Without `Array.from` we get an infinite render loop.
   const visibleItems = items && Array.from(items).filter((item) => !item.properties?.hidden);
   return (
     <Tree.Branch>
       {visibleItems?.length ? (
         typeof props.parent === 'object' && props.parent?.properties.onChildrenRearrange ? (
-          <TreeViewSortableImpl items={visibleItems} parent={props.parent} />
+          <TreeViewSortableImpl items={visibleItems} parent={props.parent} level={level} />
         ) : (
-          visibleItems
-            .sort(sortByIndex)
-            .map((item) =>
-              item.properties?.role === 'branch' || item.children.length > 0 ? (
-                <BranchTreeItem key={item.id} node={item} />
-              ) : (
-                <LeafTreeItem key={item.id} node={item} />
-              ),
-            )
+          visibleItems.sort(sortByIndex).map((item) => <NavTreeItem key={item.id} node={item} level={level} />)
         )
       ) : (
         <Surface role='tree--empty' data={props.parent} />

@@ -178,7 +178,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             });
           });
 
-          parent.addAction(
+          groupNode.addAction(
             {
               id: 'create-space',
               label: ['create space label', { ns: 'os' }],

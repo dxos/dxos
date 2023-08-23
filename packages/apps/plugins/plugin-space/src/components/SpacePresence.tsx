@@ -17,7 +17,7 @@ export const SpacePresence = () => {
     <Tooltip.Root>
       <Tooltip.Trigger>
         <AvatarGroup.Root size={4} classNames='mie-5'>
-          <AvatarGroup.Label classNames='text-xs'>1</AvatarGroup.Label>
+          <AvatarGroup.Label classNames='text-xs font-system-semibold'>1</AvatarGroup.Label>
           <AvatarGroupItem.Root>
             <Avatar.Frame>
               <Avatar.Fallback href={fallbackHref} />
