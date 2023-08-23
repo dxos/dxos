@@ -15,7 +15,8 @@ import { useClient } from '../client';
  * @param [spaceKey] the key of the space to look for
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
-  const spaces = useSpaces();
+  // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
+  const spaces = useSpaces({ includeDefault: true });
   return spaceKey
     ? spaces.find((space) => space.key.equals(spaceKey))
     : spaces.find((space) => space.properties[defaultKey]);
@@ -26,6 +27,11 @@ export type UseSpacesParams = {
    * Return uninitialized spaces as well.
    */
   all?: boolean;
+
+  /**
+   * Return the default space in the list.
+   */
+  includeDefault?: boolean;
 };
 
 /**
@@ -34,10 +40,12 @@ export type UseSpacesParams = {
  * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
+export const useSpaces = ({ all = false, includeDefault = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
   const spaces = useMulticastObservable(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
-  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
+  return spaces
+    .filter((space) => all || space.state.get() === SpaceState.READY)
+    .filter((space) => includeDefault || !space.properties[defaultKey]);
 };

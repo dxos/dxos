@@ -23,7 +23,7 @@ describe('useSpaces', () => {
     const wrapper = ({ children }: any) => (
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
     );
-    const { result } = renderHook(() => useSpaces(), { wrapper });
+    const { result } = renderHook(() => useSpaces({ includeDefault: true }), { wrapper });
     expect(result.current.length).to.eq(1);
   });
 
@@ -36,12 +36,12 @@ describe('useSpaces', () => {
       <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>
     );
     const { result, rerender } = renderHook(() => useSpaces(), { wrapper });
-    expect(result.current.length).to.eq(1);
+    expect(result.current.length).to.eq(0);
     await act(async () => {
       await client.createSpace();
     });
     rerender();
-    expect(result.current.length).to.eq(2);
+    expect(result.current.length).to.eq(1);
   });
 });
 
