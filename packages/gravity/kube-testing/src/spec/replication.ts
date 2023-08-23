@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { sleep, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { Keyring, TestKeyPair, generateKeyPair } from '@dxos/keyring';
+import { Keyring, TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
@@ -110,7 +110,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     });
 
     const addFeedConfig = async (agentIdx: number, swarmTopicId: string) => {
-      const feedKey = await generateKeyPair();
+      const feedKey = await generateJWKKeyPair();
       feedKeys.push(feedKey);
       for (const [currentAgentIdx, agentFeeds] of feeds.entries()) {
         agentFeeds.get(swarmTopicId)!.push({ feedKey: feedKey.publicKeyHex, writable: currentAgentIdx === agentIdx });
@@ -175,7 +175,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       for (const feedConfig of feedConfigs) {
         // Import key pairs to keyring.
         const keyPairExported = feedKeys.find((k) => k.publicKeyHex === feedConfig.feedKey)!;
-        const feedKey = await keyring._importKeyPair(keyPairExported.privateKey, keyPairExported.publicKey);
+        const feedKey = await keyring.importKeyPair(
+          await parseJWKKeyPair(keyPairExported.privateKey, keyPairExported.publicKey),
+        );
 
         const feed = await feedStore.openFeed(feedKey, { writable: feedConfig.writable });
         feedsArr.push({ feed, writable: feedConfig.writable });
@@ -196,7 +198,12 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     const loadFeed = async (
       context: Context,
       feed: FeedWrapper<any>,
-      options: { feedAppendInterval: number; feedMessageSize: number, feedLoadDuration?: number; feedMessageCount?: number },
+      options: {
+        feedAppendInterval: number;
+        feedMessageSize: number;
+        feedLoadDuration?: number;
+        feedMessageCount?: number;
+      },
     ) => {
       const { feedAppendInterval, feedMessageSize, feedLoadDuration, feedMessageCount } = options;
 
@@ -314,7 +321,11 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         }
         await subctx.dispose();
 
-        log.trace('dxos.test.feed-load-time', { agentIdx, testCounter, feedLoadTime: Date.now() - timeBeforeLoadStarts });
+        log.trace('dxos.test.feed-load-time', {
+          agentIdx,
+          testCounter,
+          feedLoadTime: Date.now() - timeBeforeLoadStarts,
+        });
 
         await env.syncBarrier(`feeds are written on ${testCounter}`);
       }

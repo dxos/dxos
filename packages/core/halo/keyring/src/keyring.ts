@@ -136,39 +136,8 @@ export class Keyring implements Signer {
     return keys;
   }
 
-  /**
-   * A way to import a key pair (for testing purposes only).
-   */
-  async _importKeyPair(privateKeyData: JsonWebKey, publicKeyData: JsonWebKey): Promise<PublicKey> {
-    const importedPrivateKey = await subtleCrypto.importKey(
-      'jwk',
-      privateKeyData,
-      {
-        name: 'ECDSA',
-        namedCurve: 'P-256',
-      },
-      true,
-      ['sign'],
-    );
-
-    const importedPublicKey = await subtleCrypto.importKey(
-      'jwk',
-      publicKeyData,
-      {
-        name: 'ECDSA',
-        namedCurve: 'P-256',
-      },
-      true,
-      ['verify'],
-    );
-
-    const keyPair: CryptoKeyPair = {
-      publicKey: importedPublicKey,
-      privateKey: importedPrivateKey,
-    };
-
+  async importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey> {
     await this._setKey(keyPair);
-
     return keyPairToPublicKey(keyPair);
   }
 }

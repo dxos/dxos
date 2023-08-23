@@ -10,7 +10,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test } from '@dxos/test';
 
 import { Keyring } from './keyring';
-import { generateKeyPair } from './testing';
+import { generateJWKKeyPair, parseJWKKeyPair } from './testing';
 
 describe('Keyring', () => {
   test('sign & verify', async () => {
@@ -90,8 +90,8 @@ describe('Keyring', () => {
   test('import key', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
-    const keyPair = await generateKeyPair();
-    const key = await keyring._importKeyPair(keyPair.privateKey, keyPair.publicKey);
+    const keyPair = await generateJWKKeyPair();
+    const key = await keyring.importKeyPair(await parseJWKKeyPair(keyPair.privateKey, keyPair.publicKey));
     expect(keyPair.publicKeyHex).toEqual(key.toHex());
   });
 
