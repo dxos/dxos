@@ -17,3 +17,4 @@ export const hoverableFocusedControls = 'focus:[--controls-opacity:1]';
 export const staticHoverableControls = 'hover-hover:[--controls-opacity:1]';
 
 export const hoverableControlItem = 'opacity-[--controls-opacity]';
+export const hoverableOpenControlItem = 'hover-hover:data-[state=open]:[--controls-opacity:1]';

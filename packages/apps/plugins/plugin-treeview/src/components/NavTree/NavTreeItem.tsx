@@ -17,6 +17,7 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
+  hoverableOpenControlItem,
   mx,
 } from '@dxos/aurora-theme';
 
@@ -140,7 +141,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                 <Tooltip.Trigger asChild>
                   <Button
                     variant='ghost'
-                    classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem]}
+                    classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />
