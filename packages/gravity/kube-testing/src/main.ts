@@ -88,7 +88,7 @@ const plans: { [key: string]: () => any } = {
   replication: () => ({
     plan: new ReplicationTestPlan(),
     spec: {
-      agents: 3,
+      agents: 2,
       swarmsPerAgent: 1,
       duration: 60_000,
 
@@ -100,10 +100,11 @@ const plans: { [key: string]: () => any } = {
       signalArguments: ['globalsubserver'],
       repeatInterval: 5_000,
 
-      feedsPerSwarm: 30,
-      feedLoadInterval: 1,
-      feedLoadChunkSize: 100_000,
-      feedLoadDuration: 10_000,
+      feedsPerSwarm: 1,
+      feedAppendInterval: 0,
+      feedMessageSize: 500,
+      // feedLoadDuration: 10_000,
+      feedMessageCount: 10_000,
     },
     options: {
       staggerAgents: 1000,

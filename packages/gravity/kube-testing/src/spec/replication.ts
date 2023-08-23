@@ -34,6 +34,13 @@ type FeedEntry = {
   byteLength: number;
   writable: boolean;
   feedKey: string;
+  testCounter: number;
+};
+
+type FeedLoadTimeEntry = {
+  agentIdx: number;
+  testCounter: number;
+  feedLoadTime: number;
 };
 
 type FeedReplicaStats = {
@@ -60,9 +67,10 @@ export type ReplicationTestSpec = {
   fullSwarmTimeout: number;
 
   feedsPerSwarm: number;
-  feedLoadInterval: number;
-  feedLoadChunkSize: number;
-  feedLoadDuration: number;
+  feedAppendInterval: number;
+  feedMessageSize: number;
+  feedLoadDuration?: number;
+  feedMessageCount?: number;
 
   repeatInterval: number;
 
@@ -86,6 +94,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
   signalBuilder = new SignalTestBuilder();
 
   async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<ReplicationAgentConfig[]> {
+    if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
+      throw new Error('Only one of feedLoadDuration or feedMessageCount must be set');
+    }
+
     const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
@@ -138,7 +150,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     });
 
     // Feeds.
-    const storage = createStorage({ type: StorageType.RAM });
+    const storage = createStorage({ type: StorageType.NODE });
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const feedStore = new FeedStore({
       factory: new FeedFactory({ root: storage.createDirectory('feeds'), signer: keyring }),
@@ -181,20 +193,26 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     log.info('swarms created', { agentIdx });
 
-    const loadFeed = (
+    const loadFeed = async (
       context: Context,
       feed: FeedWrapper<any>,
-      options: { feedLoadInterval: number; feedLoadChunkSize: number },
+      options: { feedAppendInterval: number; feedMessageSize: number, feedLoadDuration?: number; feedMessageCount?: number },
     ) => {
-      const { feedLoadInterval, feedLoadChunkSize } = options;
+      const { feedAppendInterval, feedMessageSize, feedLoadDuration, feedMessageCount } = options;
 
-      scheduleTaskInterval(
-        context,
-        async () => {
-          await feed.append(randomBytes(feedLoadChunkSize));
-        },
-        feedLoadInterval,
-      );
+      if (feedLoadDuration) {
+        scheduleTaskInterval(
+          context,
+          async () => {
+            await feed.append(randomBytes(feedMessageSize));
+          },
+          feedAppendInterval,
+        );
+      } else {
+        for (let i = 0; i < feedMessageCount!; i++) {
+          await feed.append(randomBytes(feedMessageSize));
+        }
+      }
     };
 
     const ctx = new Context();
@@ -266,6 +284,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         });
 
         log.info('writing to writable feeds', { agentIdx });
+        const loadTasks: Promise<void>[] = [];
+
+        const timeBeforeLoadStarts = Date.now();
         await forEachSwarmAndAgent(
           env.params.agentId,
           Object.keys(env.params.agents),
@@ -274,17 +295,26 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
             const feedsArr = feeds.get(swarm.topic.toString())!;
             for (const feedObj of feedsArr) {
               if (feedObj.writable) {
-                loadFeed(context, feedObj.feed, {
-                  feedLoadInterval: spec.feedLoadInterval,
-                  feedLoadChunkSize: spec.feedLoadChunkSize,
+                const loadPromise = loadFeed(context, feedObj.feed, {
+                  feedMessageCount: spec.feedMessageCount,
+                  feedLoadDuration: spec.feedLoadDuration,
+                  feedAppendInterval: spec.feedAppendInterval,
+                  feedMessageSize: spec.feedMessageSize,
                 });
+                loadTasks.push(loadPromise);
               }
             }
           },
         );
 
-        await sleep(spec.feedLoadDuration);
+        await Promise.all(loadTasks);
+
+        if (spec.feedLoadDuration) {
+          await sleep(spec.feedLoadDuration);
+        }
         await subctx.dispose();
+
+        log.trace('dxos.test.feed-load-time', { agentIdx, testCounter, feedLoadTime: Date.now() - timeBeforeLoadStarts });
 
         await env.syncBarrier(`feeds are written on ${testCounter}`);
       }
@@ -306,6 +336,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
                 byteLength: feedObj.feed.byteLength,
                 writable: feedObj.writable,
                 feedKey: feedObj.feed.key.toString(),
+                testCounter,
               });
             }
           },
@@ -349,6 +380,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     // Map<agentIdx, Map<swarmId, FeedStats>>
     const feeds = new Map<number, Map<number, FeedEntry[]>>();
+    // Map<agentIdx, ms>
+    const feedLoadTimes = new Map<number, number>();
 
     range(params.spec.agents).forEach((agentIdx) => {
       feeds.set(agentIdx, new Map(range(params.spec.swarmsPerAgent).map((idx) => [idx, []])));
@@ -360,12 +393,25 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       switch (entry.message) {
         case 'dxos.test.feed-stats': {
           const feedStats = entry.context as FeedEntry;
+          // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
+          if (feedStats.testCounter > 0) {
+            break;
+          }
           const agentFeeds = feeds.get(entry.context.agentIdx)!;
           const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
           // TODO(egorgripasov): For some reason received logs entry are duplicated.
           if (!swarmFeeds.find((feed) => feed.feedKey === feedStats.feedKey)) {
             swarmFeeds.push(feedStats);
           }
+          break;
+        }
+        case 'dxos.test.feed-load-time': {
+          const feedLoadTime = entry.context as FeedLoadTimeEntry;
+          // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
+          if (feedLoadTime.testCounter > 0) {
+            break;
+          }
+          feedLoadTimes.set(feedLoadTime.agentIdx, feedLoadTime.feedLoadTime);
           break;
         }
       }
@@ -385,7 +431,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
                   (otherFeedStats) => otherFeedStats.feedKey === feedStats.feedKey,
                 );
                 if (otherFeedStats) {
-                  const bytesInSecond = otherFeedStats.byteLength / (params.spec.feedLoadDuration / 1000);
+                  const bytesInSecond = otherFeedStats.byteLength / (feedLoadTimes.get(agentIdx)! / 1000);
                   const e = Math.floor(Math.log(bytesInSecond) / Math.log(1024));
                   replicas.push({
                     feedLength: otherFeedStats.feedLength,
