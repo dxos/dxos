@@ -3,7 +3,7 @@
 //
 
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/aurora';
 import { createColumnBuilder, GridColumnDef } from '@dxos/aurora-grid';
@@ -11,6 +11,7 @@ import { getSize, mx } from '@dxos/aurora-theme';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
+import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
@@ -129,12 +130,22 @@ const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: ()
   </Toolbar.Button>
 );
 
-export type SignalMessagesProps = {
-  messages?: SignalResponse[];
-};
+export const SignalMessageTable = () => {
+  const devtoolsHost = useDevtools();
+  const [messages, setMessages] = useState<SignalResponse[]>([]);
+  useEffect(() => {
+    const signalOutput = devtoolsHost.subscribeToSignal();
+    const signalResponses: SignalResponse[] = [];
+    signalOutput.subscribe((response: SignalResponse) => {
+      signalResponses.push(response);
+      setMessages([...signalResponses]);
+    });
 
-export const SignalMessages = (props: SignalMessagesProps) => {
-  const { messages } = { messages: [], ...props };
+    return () => {
+      signalOutput.close();
+    };
+  }, []);
+
   const [viewType, setViewType] = useState<ViewType>('swarm-event');
   const [search, setSearch] = useState('');
   const view = viewType ? getView(viewType) : undefined;

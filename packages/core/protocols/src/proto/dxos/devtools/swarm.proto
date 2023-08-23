@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 import "dxos/keys.proto";
 
 package dxos.devtools.swarm;
@@ -20,9 +22,11 @@ message ConnectionInfo {
   message StreamStats {
     uint32 id = 1;
     string tag = 2;
+    optional string contentType = 5;
     uint32 bytesSent = 3;
     uint32 bytesReceived = 4;
-    optional string contentType = 5;
+    optional uint32 bytesSentRate = 6; // bytes per second.
+    optional uint32 bytesReceivedRate = 7;
   }
 
   string state = 1;

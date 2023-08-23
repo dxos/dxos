@@ -3,7 +3,7 @@
 //
 
 export * from './BitfieldDisplay';
-export * from './ConnectionInfoView';
+export * from './BooleanIcon';
 export * from './DetailsTable';
 export * from './ErrorBoundary';
 export * from './FeedGraph';
@@ -13,4 +13,3 @@ export * from './PanelContainer';
 export * from './PublicKeySelector';
 export * from './Searchbar';
 export * from './Select';
-export * from './SwarmDetails';
