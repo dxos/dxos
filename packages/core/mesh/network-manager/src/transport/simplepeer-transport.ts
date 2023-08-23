@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Transport, TransportFactory } from './transport';
+import { Transport } from './transport';
 import { wrtc } from './webrtc';
 
 export type WebRTCTransportParams = {
