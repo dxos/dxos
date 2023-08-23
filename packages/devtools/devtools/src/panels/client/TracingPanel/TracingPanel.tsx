@@ -77,9 +77,8 @@ export const TracingPanel = () => {
   );
 };
 
-const { helper, builder } = createColumnBuilder<Resource>();
+const { helper } = createColumnBuilder<Resource>();
 const columns: GridColumnDef<Resource, any>[] = [
-  helper.accessor('id', builder.createNumber({ meta: { hidden: true } })),
   helper.accessor((resource) => `${sanitizeClassName(resource.className)}#${resource.instanceId}`, {
     id: 'name',
     size: 200,
@@ -106,6 +105,7 @@ const buildFlameGraph = (state: State, rootId: number): any => {
     return undefined;
   }
 
+  // TODO(burdon): Sort resources by names.
   const childSpans = [...state.spans.values()].filter((s) => s.parentId === span.id);
   const resource = span.resourceId !== undefined ? state.resources.get(span.resourceId) : undefined;
   const name = resource

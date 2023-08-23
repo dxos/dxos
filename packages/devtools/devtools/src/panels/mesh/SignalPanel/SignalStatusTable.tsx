@@ -36,7 +36,7 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
   };
 };
 
-export const SignalStatusInfo = () => {
+export const SignalStatusTable = () => {
   const devtoolsHost = useDevtools();
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
   const status = servers!.map(getSignalStatus);
@@ -62,11 +62,17 @@ export const SignalStatusInfo = () => {
 
   const { helper } = createColumnBuilder<SignalStatus>();
   const columns: GridColumnDef<SignalStatus, any>[] = [
-    helper.accessor('host', {}),
+    helper.accessor((status) => new URL(status.host).origin, {
+      id: 'host',
+      cell: (props) => <span className='font-mono'>{props.getValue()}</span>,
+      size: 240,
+    }),
     helper.accessor((status) => states[status.state].label, {
       id: 'status',
-      size: 80,
-      cell: (cell) => <span style={{ color: states[cell.row.original.state]?.color }}>{cell.getValue()}</span>,
+      size: 120,
+      cell: (cell) => (
+        <span style={{ color: states[cell.row.original.state]?.color }}>{cell.getValue().toUpperCase()}</span>
+      ),
     }),
     // TODO(burdon): Date format helper.
     helper.accessor(
@@ -77,7 +83,7 @@ export const SignalStatusInfo = () => {
               addSuffix: true,
             })}`;
       },
-      { id: 'connected' },
+      { id: 'connected', size: 160 },
     ),
     helper.accessor('error', {}),
   ];
