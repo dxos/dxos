@@ -56,8 +56,8 @@ export const Default = () => (
   <div className='flex flex-row gap-4'>
     <StorybookAvatar description='Offline' />
     <StorybookAvatar status='active' />
-    <StorybookAvatar status='error' description='Error'/>
-    <StorybookAvatar status='warning' description='Warning'/>
+    <StorybookAvatar status='error' description='Error' />
+    <StorybookAvatar status='warning' description='Warning' />
   </div>
 );
 

@@ -17,9 +17,9 @@ export interface InvitationAcceptedProps extends JoinStepProps {
 }
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  const { active, Kind, doneActionParent, onDone } = props;
-
-  const disabled = !active;
+  // const { active, Kind, doneActionParent, onDone } = props;
+  const { doneActionParent } = props;
+  // const disabled = !active;
   const { t } = useTranslation('os');
 
   const doneAction = (

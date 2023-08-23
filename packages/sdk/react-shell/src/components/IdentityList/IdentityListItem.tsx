@@ -3,7 +3,7 @@
 //
 import React from 'react';
 
-import { useTranslation, ListItem, Avatar, useJdenticonHref } from '@dxos/aurora';
+import { ListItem, Avatar, useJdenticonHref } from '@dxos/aurora';
 import { chromeSurface, mx } from '@dxos/aurora-theme';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { Identity } from '@dxos/react-client/halo';
@@ -18,7 +18,7 @@ export const IdentityListItem = ({
   presence?: SpaceMember['presence'];
   onClick?: () => void;
 }) => {
-  const { t } = useTranslation('os');
+  // const { t } = useTranslation('os');
   const fallbackValue = identity.identityKey.toHex();
   const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
   const displayName = identity.profile?.displayName ?? humanize(identity.identityKey);

@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { X, Trash } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';

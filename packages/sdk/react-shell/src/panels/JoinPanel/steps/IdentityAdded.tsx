@@ -60,12 +60,16 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
         )
       ) : (
         <div className='flex gap-2'>
-          <LargeButton variant='primary'>Continue</LargeButton>
-          {/* <Button
+          <LargeButton
+            variant='primary'
             disabled={disabled || !addedIdentity}
-            classNames='grow flex items-center gap-2 pli-2 order-2'
             onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
+          >
+            Continue
+          </LargeButton>
+          {/* <Button
+            classNames='grow flex items-center gap-2 pli-2 order-2'
           >
             <CaretLeft weight='bold' className={mx(getSize(2), 'invisible')} />
             <span className='grow'>{t('continue label')}</span>

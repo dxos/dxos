@@ -86,23 +86,31 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
         />
       </div>
       <PanelActions classNames='flex flex-col'>
-        <LargeButton variant='ghost'>Back</LargeButton>
-        <LargeButton variant='primary'>Continue</LargeButton>
-        {/* <PanelAction
+        <LargeButton
+          variant='ghost'
+          aria-label={t('back label')}
+          disabled={disabled}
+          onClick={() => send?.({ type: 'deselectAuthMethod' })}
+          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
+        >
+          Back
+        </LargeButton>
+        <LargeButton
+          variant='primary'
           aria-label={t('continue label')}
           disabled={disabled}
-          classNames='order-2'
           onClick={() => onDisplayNameConfirm?.(inputValue)}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
+        >
+          Continue
+        </LargeButton>
+        {/* <PanelAction
+          classNames='order-2'
         >
           <CaretRight weight='light' className={getSize(6)} />
         </PanelAction>
         <PanelAction
-          aria-label={t('back label')}
-          disabled={disabled}
-          onClick={() => send?.({ type: 'deselectAuthMethod' })}
           classNames='flex items-center gap-2 pis-2 pie-4'
-          data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction> */}

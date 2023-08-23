@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SignOut } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
 
-import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
+import { PanelActions, PanelStepHeading } from '../../../components';
 import { LargeButton } from '../../../components/Panel/LargeButton';
 import { LargeInput } from '../../../components/Panel/LargeInput';
 import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
@@ -30,16 +28,17 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InvitationInput = ({
-  Kind,
-  active,
-  send,
-  unredeemedCode,
-  onExit,
-  exitActionParent,
-  onDone,
-  doneActionParent,
-}: InvitationInputProps) => {
+export const InvitationInput = (props: InvitationInputProps) => {
+  const {
+    Kind,
+    active,
+    send,
+    unredeemedCode,
+    //   onExit,
+    //   exitActionParent,
+    //   onDone,
+    //   doneActionParent,
+  } = props;
   const disabled = !active;
   const { t } = useTranslation('os');
 
@@ -49,11 +48,11 @@ export const InvitationInput = ({
     unredeemedCode && setInputValue(unredeemedCode ?? '');
   }, [unredeemedCode]);
 
-  // const handleNext = () =>
-  //   send({
-  //     type: `set${Kind}InvitationCode`,
-  //     code: invitationCodeFromUrl(inputValue),
-  //   });
+  const handleNext = () =>
+    send({
+      type: `set${Kind}InvitationCode`,
+      code: invitationCodeFromUrl(inputValue),
+    });
 
   // const exitAction = (
   //   <PanelAction
@@ -90,23 +89,31 @@ export const InvitationInput = ({
         />
       </div>
       <PanelActions classNames='flex flex-col'>
-        <LargeButton variant='ghost'>Back</LargeButton>
-        <LargeButton variant='primary'>Continue</LargeButton>
-        {/* <PanelAction
+        <LargeButton
+          variant='ghost'
+          aria-label={t('back label')}
+          disabled={disabled}
+          onClick={() => send({ type: 'deselectAuthMethod' })}
+          data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
+        >
+          Back
+        </LargeButton>
+        <LargeButton
+          variant='primary'
           aria-label={t('continue label')}
           disabled={disabled}
-          classNames='order-2'
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
+        >
+          Continue
+        </LargeButton>
+        {/* <PanelAction
+          classNames='order-2'
         >
           <CaretRight weight='light' className={getSize(6)} />
         </PanelAction>
         {Kind === 'Halo' ? (
           <PanelAction
-            aria-label={t('back label')}
-            disabled={disabled}
-            onClick={() => send({ type: 'deselectAuthMethod' })}
-            data-testid={`${Kind.toLowerCase()}-invitation-input-back`}
           >
             <CaretLeft weight='light' className={getSize(6)} />
           </PanelAction>

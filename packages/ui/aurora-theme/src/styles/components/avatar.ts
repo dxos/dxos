@@ -70,7 +70,6 @@ export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, sr
 export const avatarGroupDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
   mx(srOnly ? 'sr-only' : descriptionText, ...etc);
 
-
 export const avatarTheme: Theme<AvatarStyleProps> = {
   root: avatarRoot,
   label: avatarLabel,

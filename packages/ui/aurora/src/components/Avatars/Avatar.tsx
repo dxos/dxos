@@ -57,7 +57,8 @@ const AvatarRoot = ({
   return (
     <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup }}>
       {children}
-    </AvatarProvider> )
+    </AvatarProvider>
+  );
 };
 
 type AvatarFrameProps = ThemedClassName<AvatarRootPrimitiveProps>;
@@ -66,9 +67,9 @@ const strokeWidth = 2;
 const rx = 8;
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
-
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation } = useAvatarContext('AvatarFrame');
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation } =
+      useAvatarContext('AvatarFrame');
 
     const { tx } = useThemeContext();
     const imageSizeNumber = size === 'px' ? 1 : size * 4;
@@ -129,19 +130,19 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
                 rx={2}
               />
             </g>
-          //   <circle
-          //     className='avatarFrameFill fill-[var(--surface-bg)]'
-          //     cx={imageSizeNumber / 2}
-          //     cy={imageSizeNumber / 2}
-          //     r={imageSizeNumber / 2}
-          //   />
-          // ) : (
-          //   <rect
-          //     className='avatarFrameFill fill-[var(--surface-bg)]'
-          //     width={imageSizeNumber}
-          //     height={imageSizeNumber}
-          //     rx={rx}
-          //   />
+            //   <circle
+            //     className='avatarFrameFill fill-[var(--surface-bg)]'
+            //     cx={imageSizeNumber / 2}
+            //     cy={imageSizeNumber / 2}
+            //     r={imageSizeNumber / 2}
+            //   />
+            // ) : (
+            //   <rect
+            //     className='avatarFrameFill fill-[var(--surface-bg)]'
+            //     width={imageSizeNumber}
+            //     height={imageSizeNumber}
+            //     rx={rx}
+            //   />
           )}
           {children}
           {variant === 'circle' ? (
