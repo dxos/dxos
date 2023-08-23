@@ -10,7 +10,7 @@ export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
 };
 
-export const LargeButton = (props: LargeButtonProps) => {
+export const Action = (props: LargeButtonProps) => {
   const { children, classNames, isFull = true, ...rest } = props;
   return (
     <Button classNames={[isFull && 'is-full', 'flex gap-2 plb-3 mbs-2', classNames]} {...rest}>

@@ -13,11 +13,11 @@ import { CancellableInvitationObservable, Invitation, InvitationEncoder } from '
 import {
   InvitationList,
   InvitationListProps,
-  PanelActions,
+  Actions,
+  Action,
   SpaceMemberList,
   SpaceMemberListProps,
 } from '../../../components';
-import { LargeButton } from '../../../components/Panel/LargeButton';
 import { SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
@@ -74,18 +74,6 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   } = props;
   const { t } = useTranslation('os');
 
-  // const doneButton = (
-  //   <PanelAction
-  //     aria-label={t('done label')}
-  //     onClick={onDone}
-  //     disabled={!active}
-  //     classNames='order-1'
-  //     data-testid='identity-panel-done'
-  //   >
-  //     <Check weight='light' className={getSize(6)} />
-  //   </PanelAction>
-  // );
-
   const visibleInvitations = showInactiveInvitations
     ? invitations
     : invitations?.filter(
@@ -111,12 +99,12 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           <ScrollArea.Thumb />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
-      <PanelActions>
-        <LargeButton disabled={!active} onClick={onCreateInvitationClick} data-testid='spaces-panel.create-invitation'>
+      <Actions>
+        <Action disabled={!active} onClick={onCreateInvitationClick} data-testid='spaces-panel.create-invitation'>
           <span>{t('create space invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
-        </LargeButton>
-      </PanelActions>
+        </Action>
+      </Actions>
     </>
   );
 };

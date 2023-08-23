@@ -10,8 +10,7 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { humanize } from '@dxos/util';
 
-import { Viewport, PanelHeading } from '../../components';
-import { CloseButton } from '../../components/Panel/CloseButton';
+import { Viewport, Heading, CloseButton } from '../../components';
 import { InvitationManager } from '../../steps';
 import { IdentityPanelHeadingProps, IdentityPanelImplProps, IdentityPanelProps } from './IdentityPanelProps';
 import { useIdentityMachine } from './identityMachine';
@@ -19,10 +18,10 @@ import { IdentityActionChooser } from './steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 
-const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps) => {
+const IdentityHeading = ({ titleId, title, identity, onDone }: IdentityPanelHeadingProps) => {
   const fallbackHref = useJdenticonHref(identity.identityKey.toHex(), 12);
   return (
-    <PanelHeading titleId={titleId} title={title} corner={<CloseButton />}>
+    <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root size={12} variant='circle'>
         <Avatar.Frame classNames='block mbs-4 mbe-2 mli-auto chromatic-ignore'>
           <Avatar.Fallback href={fallbackHref} />
@@ -31,7 +30,7 @@ const IdentityHeading = ({ titleId, title, identity }: IdentityPanelHeadingProps
           {identity.profile?.displayName ?? humanize(identity.identityKey)}
         </Avatar.Label>
       </Avatar.Root>
-    </PanelHeading>
+    </Heading>
   );
 };
 

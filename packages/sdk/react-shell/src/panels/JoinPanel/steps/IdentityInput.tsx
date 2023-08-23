@@ -8,9 +8,7 @@ import { useTranslation } from '@dxos/aurora';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 
-import { PanelActions, PanelStepHeading } from '../../../components';
-import { LargeButton } from '../../../components/Panel/LargeButton';
-import { LargeInput } from '../../../components/Panel/LargeInput';
+import { Action, Actions, StepHeading, Input } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
@@ -53,31 +51,11 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   const isRecover = method === 'recover identity';
   return (
     <>
-      {/* <Input
-        disabled={disabled}
-        label={
-          <PanelStepHeading>
-            {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-          </PanelStepHeading>
-        }
-        onChange={({ target: { value } }) => setInputValue(value)}
-        slots={{
-          root: { className: 'm-0' },
-          input: {
-            'data-autofocus': isRecover ? 'recoveringIdentity' : 'creatingIdentity',
-            onKeyUp: ({ key }) => key === 'Enter' && onDisplayNameConfirm?.(inputValue),
-          } as ComponentPropsWithoutRef<'input'>,
-        }}
-        {...(validationMessage?.length && { validationValence: 'error', validationMessage })}
-        data-testid='identity-input'
-      /> */}
       <div role='none' className='grow flex flex-col justify-center'>
-        <LargeInput
+        <Input
           {...{ validationMessage }}
           label={
-            <PanelStepHeading>
-              {t(isRecover ? 'recover identity input label' : 'new identity input label')}
-            </PanelStepHeading>
+            <StepHeading>{t(isRecover ? 'recover identity input label' : 'new identity input label')}</StepHeading>
           }
           disabled={disabled}
           data-testid='identity-input'
@@ -85,36 +63,24 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
-      <PanelActions classNames='flex flex-col'>
-        <LargeButton
+      <Actions classNames='flex flex-col'>
+        <Action
           variant='ghost'
-          aria-label={t('back label')}
           disabled={disabled}
           onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          Back
-        </LargeButton>
-        <LargeButton
+          {t('back label')}
+        </Action>
+        <Action
           variant='primary'
-          aria-label={t('continue label')}
           disabled={disabled}
           onClick={() => onDisplayNameConfirm?.(inputValue)}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          Continue
-        </LargeButton>
-        {/* <PanelAction
-          classNames='order-2'
-        >
-          <CaretRight weight='light' className={getSize(6)} />
-        </PanelAction>
-        <PanelAction
-          classNames='flex items-center gap-2 pis-2 pie-4'
-        >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction> */}
-      </PanelActions>
+          {t('continue label')}
+        </Action>
+      </Actions>
     </>
   );
 };

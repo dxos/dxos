@@ -6,8 +6,7 @@ import React, { cloneElement } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 
-import { PanelActions } from '../../../components';
-import { LargeButton } from '../../../components/Panel/LargeButton';
+import { Actions, Action } from '../../../components';
 import { JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
@@ -17,22 +16,20 @@ export interface InvitationAcceptedProps extends JoinStepProps {
 }
 
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
-  // const { active, Kind, doneActionParent, onDone } = props;
-  const { doneActionParent } = props;
-  // const disabled = !active;
+  const { active, Kind, doneActionParent, onDone } = props;
+  const disabled = !active;
   const { t } = useTranslation('os');
 
   const doneAction = (
-    // <PanelAction
-    //   aria-label={t('done label')}
-    //   onClick={onDone}
-    //   disabled={disabled}
-    //   data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
-    //   data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
-    // >
-    //   <Check weight='light' className={getSize(6)} />
-    // </PanelAction>
-    <LargeButton variant='primary'>Continue</LargeButton>
+    <Action
+      variant='primary'
+      onClick={onDone}
+      disabled={disabled}
+      data-autofocus={`success${Kind}Invitation finishingJoining${Kind}`}
+      data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
+    >
+      {t('done label')}
+    </Action>
   );
 
   return (
@@ -40,7 +37,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
       <div role='none' className='grow flex flex-col justify-center'>
         <p className='text-center text-sm font-system-normal'>{t('welcome message')}</p>
       </div>
-      <PanelActions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</PanelActions>
+      <Actions>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</Actions>
     </>
   );
 };

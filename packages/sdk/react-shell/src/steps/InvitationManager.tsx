@@ -10,11 +10,11 @@ import { useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { PanelActions, Viewport, ViewportViewProps } from '../components';
+import { Actions, Viewport, ViewportViewProps } from '../components';
 import { AuthCode } from '../components/AuthCode';
+import { Action } from '../components/Panel/Action';
 import { Emoji, Centered } from '../components/Panel/Emoji';
 import { Label } from '../components/Panel/Label';
-import { LargeButton } from '../components/Panel/LargeButton';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -121,14 +121,10 @@ export const InvitationManager = ({
         </Viewport.Views>
       </Viewport.Root>
       {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
-      <PanelActions classNames='mbs-4'>
-        <LargeButton
-          aria-label={t('back label')}
-          disabled={!active}
-          onClick={() => send?.({ type: 'deselectInvitation' })}
-        >
+      <Actions classNames='mbs-4'>
+        <Action aria-label={t('back label')} disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
           <span>Back</span>
-        </LargeButton>
+        </Action>
         {/* <CopyButtonIconOnly
           variant='ghost'
           classNames='order-1 p-4'
@@ -147,7 +143,7 @@ export const InvitationManager = ({
         >
           <CaretLeft weight='light' className={getSize(6)} />
         </PanelAction> */}
-      </PanelActions>
+      </Actions>
     </>
   );
 };

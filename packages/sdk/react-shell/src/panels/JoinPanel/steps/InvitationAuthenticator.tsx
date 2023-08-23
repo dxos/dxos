@@ -6,9 +6,7 @@ import React, { ChangeEvent, useState } from 'react';
 
 import { Input, useTranslation } from '@dxos/aurora';
 
-import { PanelActions, PanelStepHeading } from '../../../components';
-import { Emoji } from '../../../components/Panel/Emoji';
-import { LargeButton } from '../../../components/Panel/LargeButton';
+import { Actions, Action, Emoji, StepHeading } from '../../../components';
 import { toEmoji } from '../../../util';
 import { JoinStepProps } from '../JoinPanelProps';
 
@@ -54,7 +52,7 @@ export const InvitationAuthenticator = ({
           })}
         >
           <Input.Label asChild>
-            <PanelStepHeading>{t('auth code input label')}</PanelStepHeading>
+            <StepHeading>{t('auth code input label')}</StepHeading>
           </Input.Label>
           <Input.PinInput
             {...{
@@ -77,31 +75,25 @@ export const InvitationAuthenticator = ({
           )}
         </Input.Root>
       </div>
-      <PanelActions>
-        <LargeButton
-          variant='primary'
-          disabled={disabled}
-          aria-label={t('next label')}
-          onClick={() => onInvitationAuthenticate?.(authCode)}
-          data-autofocus-pinlength={invitationType}
-          data-testid={`${invitationType}-invitation-authenticator-next`}
-        >
-          Continue
-        </LargeButton>
-        {/* <PanelAction
-          classNames='order-2'
-        >
-          <CaretRight weight='light' className={getSize(6)} />
-        </PanelAction>
-        <PanelAction
-          aria-label={t('cancel label')}
+      <Actions>
+        <Action
+          variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction> */}
-      </PanelActions>
+          {t('cancel label')}
+        </Action>
+        <Action
+          variant='primary'
+          disabled={disabled}
+          onClick={() => onInvitationAuthenticate?.(authCode)}
+          data-autofocus-pinlength={invitationType}
+          data-testid={`${invitationType}-invitation-authenticator-next`}
+        >
+          {t('next label')}
+        </Action>
+      </Actions>
     </>
   );
 };
