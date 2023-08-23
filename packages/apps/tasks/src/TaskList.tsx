@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { ShellLayout } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useShell } from '@dxos/react-shell';
 
@@ -13,7 +13,7 @@ import { Task } from './proto';
 
 export const TaskList = () => {
   useIdentity({ login: true });
-  const [space] = useSpaces();
+  const space = useSpace(); // What should the pattern be for find-or-create a space?
   const shell = useShell();
   const tasks = useQuery<Task>(space, Task.filter());
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -21,7 +21,7 @@ export const TaskList = () => {
   const [showDeleteTask, setShowDeleteTask] = useState<number | null>(null);
 
   const handleNewTask = () => {
-    if (newTaskTitle === '') {
+    if (!space || newTaskTitle === '') {
       return;
     }
     if (!space) {
@@ -95,7 +95,7 @@ export const TaskList = () => {
                     className='bg-white rounded ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400'
                     onClick={(e) => {
                       e.stopPropagation();
-                      space && space.db.remove(task);
+                      space?.db.remove(task);
                     }}
                   >
                     Delete
