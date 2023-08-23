@@ -78,7 +78,7 @@ export type ReplicationAgentConfig = {
 };
 
 /**
- * Replication test plan uses ReplicationExtension to measure replication speed by writing to feeds 
+ * Replication test plan uses ReplicationExtension to measure replication speed by writing to feeds
  * and measuring the time it takes for the data to be replicated to other agents. Real network stack
  * is used for this test, incl. Teleport & real WebRTC connections.
  */

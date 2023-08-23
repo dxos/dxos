@@ -88,7 +88,7 @@ const plans: { [key: string]: () => any } = {
   replication: () => ({
     plan: new ReplicationTestPlan(),
     spec: {
-      agents: 3,
+      agents: 2,
       swarmsPerAgent: 1,
       duration: 60_000,
 
@@ -102,7 +102,7 @@ const plans: { [key: string]: () => any } = {
 
       feedsPerSwarm: 1,
       feedLoadInterval: 1,
-      feedLoadChunkSize: 1_000_000,
+      feedLoadChunkSize: 100_000,
       feedLoadDuration: 10_000,
     },
     options: {
