@@ -5,7 +5,7 @@
 import util from 'node:util';
 import { Writable } from 'streamx';
 
-import { latch } from '@dxos/async';
+import { latch, Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
@@ -70,7 +70,10 @@ describe('Streams', () => {
     }
     await closed();
 
-    const close = util.promisify(core.close.bind(core));
-    await close();
+    // TODO(burdon): Create util for event traps.
+    const wait = new Trigger();
+    core.on('close', wait.wake);
+    core.close();
+    await wait.wait();
   });
 });

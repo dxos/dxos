@@ -19,7 +19,7 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "binary-parser": "^2.0.2",
-    "hypercore-crypto": "^2.3.0"
+    "hypercore-crypto": "^3.4.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",

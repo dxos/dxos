@@ -3,7 +3,7 @@
 //
 
 export { default as hypercore } from 'hypercore';
-export type { Hypercore, HypercoreOptions, HypercoreProperties, ReadStreamOptions } from 'hypercore';
+export type { Hypercore, HypercoreOptions, ReadStreamOptions } from 'hypercore';
 
 export * from './crypto';
 export * from './defaults';

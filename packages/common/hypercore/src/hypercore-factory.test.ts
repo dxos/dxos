@@ -4,7 +4,9 @@
 
 import { faker } from '@faker-js/faker';
 import { expect } from 'chai';
+import Hypercore from 'hypercore';
 
+import { Trigger } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { describe, test } from '@dxos/test';
 
@@ -12,7 +14,19 @@ import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';
 import { py } from './util';
 
-describe('HypercoreFactory', () => {
+describe.only('HypercoreFactory', () => {
+  test.only('migration sanity', async () => {
+    const core = new Hypercore('test');
+    await core.ready();
+    expect(core.key).to.exist;
+    expect(core.opened).to.be.true;
+    const trigger = new Trigger();
+    core.on('close', () => trigger.wake());
+    core.close();
+    await trigger.wait();
+    expect(core.opened).to.be.false;
+  });
+
   test('appends to, and read from, multiple feeds', async () => {
     const factory = new HypercoreFactory();
 

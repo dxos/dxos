@@ -20,7 +20,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "hypercore-crypto": "^2.3.0"
+    "hypercore-crypto": "^3.4.0"
   },
   "devDependencies": {
     "@types/crypto-js": "~4.0.2",

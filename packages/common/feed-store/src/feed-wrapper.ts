@@ -8,7 +8,7 @@ import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';
 import { inspectObject, StackTrace } from '@dxos/debug';
-import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
+import { Hypercore, ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,9 +44,9 @@ export class FeedWrapper<T extends {}> {
   toJSON() {
     return {
       feedKey: this._key,
-      length: this.properties.length,
-      opened: this.properties.opened,
-      closed: this.properties.closed,
+      length: this.length,
+      opened: this.opened,
+      closed: this.closed,
     };
   }
 
@@ -59,7 +59,7 @@ export class FeedWrapper<T extends {}> {
   }
 
   // TODO(burdon): Create proxy.
-  get properties(): HypercoreProperties {
+  get properties(): Hypercore {
     return this._hypercore;
   }
 

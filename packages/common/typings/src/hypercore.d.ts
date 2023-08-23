@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// https://github.com/RangerMauve/hyper-typings/blob/default/promises.ts
+
 /**
  * Hypercore Typescript Definitions version 9.12.0
  * NOTE: Must not clash with 'hypercore' package name.
@@ -12,9 +14,9 @@
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  */
 declare module 'hypercore' {
+  import { EventEmitter } from 'events';
   import type { ProtocolStream } from 'hypercore-protocol';
-  import type { Nanoresource, NanoresourceProperties } from 'nanoresource';
-  import type { RandomAccessStorageConstructor } from 'random-access-storage';
+  import type { RandomAccessStorage } from 'random-access-storage';
   import { Readable, Writable } from 'streamx';
 
   export type Callback<T> = (err: Error | null, result: T) => void;
@@ -141,10 +143,32 @@ declare module 'hypercore' {
     writable?: boolean;
   };
 
+  export interface HypercoreBitfield {
+    data: any; // sparse-bitfield package
+
+    total(start: number, end: number): number;
+
+    // TODO(dmaretskyi): More props.
+  }
+
   /**
-   * Shared property definitions for raw and wrapped objects.
+   * Raw hypercore feed.
+   * https://docs.holepunch.to/building-blocks/hypercore (v10)
    */
-  export interface HypercoreProperties extends NanoresourceProperties {
+  export class Hypercore<T> extends EventEmitter {
+    // https://docs.holepunch.to/building-blocks/hypercore#const-core-new-hypercore-storage-key-options
+    constructor(
+      type: string | ((filename: string) => RandomAccessStorage),
+      key?: Buffer | string,
+      options?: HypercoreOptions,
+    );
+
+    // Formerly from Nanoresource.
+    readonly opening: boolean;
+    readonly opened: boolean; // Once opened this stays true.
+    readonly closing: boolean;
+    readonly closed: boolean; // Cannot be re-opened after closed.
+
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedwritable
     readonly writable: boolean;
 
@@ -177,26 +201,17 @@ declare module 'hypercore' {
     bitfield?: HypercoreBitfield;
 
     readonly sparse: boolean;
-  }
 
-  export interface HypercoreBitfield {
-    data: any; // sparse-bitfield package
+    // TODO(burdon): Migration to v10
+    //  - https://github.com/holepunchto/hypercore/blob/main/index.js
+    //  - open removed.
+    //  - async now supprted.
 
-    total(start: number, end: number): number;
+    // Close feed.
+    async close(err?: Error);
 
-    // TODO(dmaretskyi): More props.
-  }
-
-  /**
-   * Raw hypercore feed.
-   * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
-   *
-   * Events: [`ready`, `error`, `download`, `upload`, `append`, `sync`, `close`]
-   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
-   */
-  export interface Hypercore<T = any> extends Nanoresource, HypercoreProperties {
     // Alias for open.
-    ready(cb: Callback<void>): void;
+    async ready(): Promise<void>;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedappenddata-callback
     append(data: T | T[], cb: Callback<number>): void;
@@ -257,19 +272,5 @@ declare module 'hypercore' {
     on(event: 'download', cb: (index: number, data: any) => void): void;
   }
 
-  export type HypercoreConstructor = (
-    storage: string | RandomAccessStorageConstructor,
-    key?: Buffer | string,
-    options?: HypercoreOptions,
-  ) => Hypercore;
-
-  // Default constructor.
-  // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-  export function hypercore<T = any>(
-    storage: string | RandomAccessStorageConstructor,
-    key?: Buffer | string,
-    options?: HypercoreOptions,
-  ): Hypercore<T>;
-
-  export default hypercore;
+  export default Hypercore;
 }

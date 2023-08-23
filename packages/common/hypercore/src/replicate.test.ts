@@ -28,8 +28,8 @@ describe('Replication', () => {
     // Open.
     {
       const [ready, done] = latch({ count: 2 });
-      core1.open(done);
-      core2.open(done);
+      core1.ready(done);
+      core2.ready(done);
       await ready();
     }
 
@@ -63,9 +63,10 @@ describe('Replication', () => {
     // Close.
     {
       const [closed, close] = latch({ count: 2 });
-      core1.close(close);
-      core1.close(close);
-
+      core1.on('close', close);
+      core2.on('close', close);
+      core1.close();
+      core2.close();
       await closed();
     }
 
@@ -84,8 +85,8 @@ describe('Replication', () => {
     // Open.
     {
       const [ready, done] = latch({ count: 2 });
-      core1.open(done);
-      core2.open(done);
+      core1.ready(done);
+      core2.ready(done);
       await ready();
     }
 
@@ -182,8 +183,8 @@ describe('Replication', () => {
     // Open.
     {
       const [ready, done] = latch({ count: 2 });
-      core1.open(done);
-      core2.open(done);
+      core1.ready(done);
+      core2.ready(done);
       await ready();
     }
 

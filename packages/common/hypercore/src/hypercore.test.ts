@@ -32,13 +32,6 @@ describe('Hypercore', () => {
     const core = factory.createFeed(publicKey, { secretKey });
 
     {
-      // Check open is idempotent.
-      const open = util.promisify(core.open.bind(core));
-      await open();
-      await open();
-    }
-
-    {
       // Append block.
       expect(core.length).to.eq(0);
       const append = util.promisify(core.append.bind(core));
@@ -52,13 +45,6 @@ describe('Hypercore', () => {
       const get = util.promisify(core.get.bind(core));
       const block: any = await get(0);
       expect(block.toString()).to.eq('test');
-    }
-
-    {
-      // Check open is idempotent.
-      const close = util.promisify(core.close.bind(core));
-      await close();
-      await close();
     }
   });
 

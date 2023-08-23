@@ -150,8 +150,8 @@ describe('ProtocolStream', () => {
     expect(core1.closed).to.be.false;
     expect(core2.closed).to.be.false;
 
-    core1.close(setFeedClosed);
-    core2.close(setFeedClosed);
+    core1.close();
+    core2.close();
     await feedsClosed();
 
     expect(core1.closed).to.be.true;

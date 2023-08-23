@@ -2,13 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import hypercore from 'hypercore';
-import type { Hypercore, HypercoreOptions } from 'hypercore';
+import Hypercore, { HypercoreOptions } from 'hypercore';
 
 import { invariant } from '@dxos/invariant';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
-
-import { py } from './util';
 
 /**
  * Creates feeds with default properties.
@@ -27,10 +24,11 @@ export class HypercoreFactory<T> {
    * NOTE: We have to use our `random-access-storage` implementation since the native ones
    * do not behave uniformly across platforms.
    */
+  // TODO(burdon): Make async (ready not open).
   createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
     const directory = this._root.createDirectory(publicKey.toString());
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
-    return hypercore(storage, publicKey, Object.assign({}, this._options, options));
+    return new Hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }
 
   /**
@@ -38,7 +36,8 @@ export class HypercoreFactory<T> {
    */
   async openFeed(publicKey: Buffer, options?: HypercoreOptions): Promise<Hypercore<T>> {
     const feed = this.createFeed(publicKey, options);
-    await py(feed, feed.open)(); // TODO(burdon): Sometimes strange bug if done inside function.
+
+    // await py(feed, feed.open)(); // TODO(burdon): Sometimes strange bug if done inside function.
     return feed;
   }
 }
