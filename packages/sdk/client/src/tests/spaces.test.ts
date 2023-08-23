@@ -6,13 +6,16 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Document } from '@braneframe/types';
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Expando } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { EchoSnapshot, SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
@@ -196,8 +199,8 @@ describe('Spaces', () => {
     const amount = 10;
     {
       // Create mutations and epoch.
-      for (const i of range(amount)) {
-        const expando = new Expando({ id: i.toString(), data: i.toString() });
+      for (const idx of range(amount)) {
+        const expando = new Expando({ id: idx.toString(), data: idx.toString() });
         space1.db.add(expando);
         await space1.db.flush();
       }
@@ -230,6 +233,85 @@ describe('Spaces', () => {
       // Wait to process new mutation on second peer.
       await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
       expect(feed2.has(amount + 1)).to.be.true;
+    }
+  });
+
+  test('epoch resets database', async () => {
+    const testBuilder = new TestBuilder();
+    const services = testBuilder.createLocal();
+    const client = new Client({ services });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const space = await client.createSpace();
+    await space.waitUntilReady();
+
+    const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
+    // Create Items.
+    const itemsNumber = 3;
+    const text = Array(itemsNumber)
+      .fill(0)
+      .map(() => PublicKey.random().toHex());
+    for (const idx of range(itemsNumber)) {
+      const expando = new Expando({ idx: idx.toString(), data: text[idx] });
+      space.db.add(expando);
+      await space.db.flush();
+    }
+    expect(space.db.objects.length).to.equal(itemsNumber + 1);
+
+    const writeEpochWithSnapshot = async (databaseSnapshot: EchoSnapshot) => {
+      const processedEpoch = dataSpace.dataPipeline.onNewEpoch.waitForCount(1);
+
+      // Empty snapshot.
+      const snapshot: SpaceSnapshot = {
+        spaceKey: space.key.asUint8Array(),
+        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
+        database: databaseSnapshot,
+      };
+
+      const snapshotCid = await services.host!.context.snapshotStore.saveSnapshot(snapshot);
+
+      const epoch: Epoch = {
+        previousId: dataSpace.dataPipeline.currentEpoch?.id,
+        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
+        number: (dataSpace.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
+        snapshotCid,
+      };
+
+      const receipt = await dataSpace.inner.controlPipeline.writer.write({
+        credential: {
+          credential: await services
+            .host!.context.identityManager.identity!.getIdentityCredentialSigner()
+            .createCredential({
+              subject: space.key,
+              assertion: {
+                '@type': 'dxos.halo.credentials.Epoch',
+                ...epoch,
+              },
+            }),
+        },
+      });
+      await dataSpace.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+      await processedEpoch;
+    };
+
+    const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
+
+    // Create empty Epoch and check if it clears items.
+    await writeEpochWithSnapshot({});
+
+    // Check if items are cleared.
+    expect(space.db.objects.length).to.equal(0);
+
+    // Reset database to previous state.
+    await writeEpochWithSnapshot(dataBaseState);
+
+    // Check if items are reset back.
+    expect(space.db.objects.length).to.equal(itemsNumber + 1);
+    await sleep(200);
+    for (const idx in range(itemsNumber)) {
+      expect(space.db.query({ idx: idx.toString() }).objects[0].data).to.equal(text[idx]);
     }
   });
 

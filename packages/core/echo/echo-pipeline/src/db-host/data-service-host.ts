@@ -62,7 +62,7 @@ export class DataServiceHost {
         });
       });
 
-      // subscribe to mutations
+      // Subscribe to mutations.
       this._itemDemuxer.mutation.on(ctx, (message) => {
         const { batch, meta } = message;
         invariant(!(meta as any).clientTag, 'Unexpected client tag in mutation message');

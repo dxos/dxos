@@ -200,6 +200,14 @@ export class EchoDatabase {
       }
     }
 
+    // Remove objects that are no longer in the database.
+    for (const [id, obj] of this._objects.entries()) {
+      if (!this._itemManager.entities.has(id)) {
+        obj[base]._itemUpdate();
+        this._objects.delete(id);
+      }
+    }
+
     // Dispatch update events.
     for (const item of changed) {
       const obj = this._objects.get(item.id);
