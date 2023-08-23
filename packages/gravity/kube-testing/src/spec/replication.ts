@@ -10,7 +10,7 @@ import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring, TestKeyPair, generateKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TestBuilder as NetworkManagerTestBuilder, TestSwarmConnection } from '@dxos/network-manager/testing';
+import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { range } from '@dxos/util';
@@ -18,6 +18,7 @@ import { range } from '@dxos/util';
 import { SerializedLogEntry, getReader } from '../analysys';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
+import { forEachSwarmAndAgent } from './util';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 
@@ -249,24 +250,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       });
     };
 
-    /**
-     * Iterate over all swarms and all agents.
-     */
-    // TODO(egorgripasov): Move to util.
-    const forEachSwarmAndAgent = async (
-      callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>,
-    ) => {
-      await Promise.all(
-        Object.keys(env.params.agents)
-          .filter((agentId) => agentId !== env.params.agentId)
-          .map(async (agentId) => {
-            for await (const [swarmIdx, swarm] of swarms.entries()) {
-              await callback(swarmIdx, swarm, agentId);
-            }
-          }),
-      );
-    };
-
     const loadFeed = (
       context: Context,
       feed: FeedWrapper<any>,
@@ -314,16 +297,21 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       // Add feeds.
       {
         log.info('adding feeds', { agentIdx });
-        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          const connection = swarm.protocol.otherConnections.get({
-            remotePeerId: PublicKey.from(agentId),
-            extension: REPLICATOR_EXTENSION_NAME,
-          }) as ReplicatorExtension;
-          const feedsArr = feeds.get(swarm.topic.toString())!;
-          for (const feedObj of feedsArr) {
-            await connection.addFeed(feedObj.feed);
-          }
-        });
+        await forEachSwarmAndAgent(
+          env.params.agentId,
+          Object.keys(env.params.agents),
+          swarms,
+          async (swarmIdx, swarm, agentId) => {
+            const connection = swarm.protocol.otherConnections.get({
+              remotePeerId: PublicKey.from(agentId),
+              extension: REPLICATOR_EXTENSION_NAME,
+            }) as ReplicatorExtension;
+            const feedsArr = feeds.get(swarm.topic.toString())!;
+            for (const feedObj of feedsArr) {
+              await connection.addFeed(feedObj.feed);
+            }
+          },
+        );
 
         await sleep(5_000);
 
@@ -339,17 +327,22 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         });
 
         log.info('writing to writable feeds', { agentIdx });
-        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          const feedsArr = feeds.get(swarm.topic.toString())!;
-          for (const feedObj of feedsArr) {
-            if (feedObj.writable) {
-              loadFeed(context, feedObj.feed, {
-                feedLoadInterval: spec.feedLoadInterval,
-                feedLoadChunkSize: spec.feedLoadChunkSize,
-              });
+        await forEachSwarmAndAgent(
+          env.params.agentId,
+          Object.keys(env.params.agents),
+          swarms,
+          async (swarmIdx, swarm, agentId) => {
+            const feedsArr = feeds.get(swarm.topic.toString())!;
+            for (const feedObj of feedsArr) {
+              if (feedObj.writable) {
+                loadFeed(context, feedObj.feed, {
+                  feedLoadInterval: spec.feedLoadInterval,
+                  feedLoadChunkSize: spec.feedLoadChunkSize,
+                });
+              }
             }
-          }
-        });
+          },
+        );
 
         await sleep(spec.feedLoadDuration);
         await subctx.dispose();
@@ -360,19 +353,24 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       // Check length of all feeds.
       {
         log.info('checking feeds length', { agentIdx });
-        await forEachSwarmAndAgent(async (swarmIdx, swarm, agentId) => {
-          const feedsArr = feeds.get(swarm.topic.toString())!;
-          for (const feedObj of feedsArr) {
-            log.trace('dxos.test.feed-stats', {
-              agentIdx,
-              swarmIdx,
-              feedLength: feedObj.feed.length,
-              byteLength: feedObj.feed.byteLength,
-              writable: feedObj.writable,
-              feedKey: feedObj.feed.key.toString(),
-            });
-          }
-        });
+        await forEachSwarmAndAgent(
+          env.params.agentId,
+          Object.keys(env.params.agents),
+          swarms,
+          async (swarmIdx, swarm, agentId) => {
+            const feedsArr = feeds.get(swarm.topic.toString())!;
+            for (const feedObj of feedsArr) {
+              log.trace('dxos.test.feed-stats', {
+                agentIdx,
+                swarmIdx,
+                feedLength: feedObj.feed.length,
+                byteLength: feedObj.feed.byteLength,
+                writable: feedObj.writable,
+                feedKey: feedObj.feed.key.toString(),
+              });
+            }
+          },
+        );
       }
 
       await sleep(5_000);
@@ -425,7 +423,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           const feedStats = entry.context as FeedEntry;
           const agentFeeds = feeds.get(entry.context.agentIdx)!;
           const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
-          // TODO(egorgripasov): For some reason we receive duplicated log entries from reader.
+          // TODO(egorgripasov): For some reason received logs entry are duplicated.
           if (!swarmFeeds.find((feed) => feed.feedKey === feedStats.feedKey)) {
             swarmFeeds.push(feedStats);
           }
