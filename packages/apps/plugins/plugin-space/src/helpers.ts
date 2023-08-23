@@ -41,6 +41,9 @@ export class GraphNodeAdapter<T extends TypedObject> {
     );
     this._previousObjects.set(parent.id, query.objects);
 
+    // TODO(burdon): Provided by graph?
+    const indices = getIndices(query.objects.length);
+
     // Subscribe to query.
     this._subscriptions.set(
       parent.id,
@@ -49,33 +52,34 @@ export class GraphNodeAdapter<T extends TypedObject> {
         const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
         this._previousObjects.set(parent.id, query.objects);
         removedObjects.forEach((object) => parent.remove(object.id));
-        query.objects.forEach((object, index) => this._adapter(parent, object, stackIndices[index]));
+        query.objects.forEach((object, index) => this._adapter(parent, object, indices[index]));
       }),
     );
 
-    // TODO(burdon): Provided by graph?
-    const stackIndices = getIndices(query.objects.length);
-
     // Subscribe to all objects.
     query.objects.forEach((object, index) => {
-      defaultMap(this._subscriptions, object.id, () =>
+      const id = `${parent.id}:${object.id}`;
+      this._subscriptions.set(id, () =>
         object[subscribe](() => {
           if (object.__deleted) {
-            this._subscriptions.get(object.id)?.();
-            this._subscriptions.delete(object.id);
+            this._subscriptions.get(id)?.();
+            this._subscriptions.delete(id);
           } else {
-            parent.add(this._adapter(parent, object, stackIndices[index]));
+            parent.add(this._adapter(parent, object, indices[index]));
           }
         }),
       );
 
-      this._adapter(parent, object, stackIndices[index]);
+      this._adapter(parent, object, indices[index]);
     });
 
     return () => {
-      // Don't clear the query here otherwise removals will not be detected.
-      this._subscriptions.forEach((unsubscribe) => unsubscribe());
-      this._subscriptions.clear();
+      Array.from(this._subscriptions.keys())
+        .filter((key) => key.startsWith(parent.id))
+        .forEach((key) => {
+          this._subscriptions.get(key)?.();
+          this._subscriptions.delete(key);
+        });
     };
   }
 }
