@@ -385,14 +385,12 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
                   (otherFeedStats) => otherFeedStats.feedKey === feedStats.feedKey,
                 );
                 if (otherFeedStats) {
+                  const bytesInSecond = otherFeedStats.byteLength / (params.spec.feedLoadDuration / 1000)
+                  const e = Math.floor(Math.log(bytesInSecond) / Math.log(1024));
                   replicas.push({
                     feedLength: otherFeedStats.feedLength,
                     byteLength: otherFeedStats.byteLength,
-                    replicationSpeed: `${(
-                      otherFeedStats.byteLength /
-                      (params.spec.feedLoadDuration / 1000) /
-                      1_000_000
-                    ).toFixed(2)} MB/s`,
+                    replicationSpeed: (bytesInSecond / Math.pow(1024, e)).toFixed(2) + ' ' + ' kMGTP'.charAt(e) + 'B/sec',
                   });
                 }
               }
