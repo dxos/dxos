@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './BranchTreeItem';
 export * from './Fallback';
-export * from './LeafTreeItem';
-export * from './TreeItemHeading';
-export * from './TreeView';
+export * from './TreeItemMainHeading';
+export * from './TreeItemDragOverlay';
 export * from './TreeViewContainer';
+export * from './NavTree';

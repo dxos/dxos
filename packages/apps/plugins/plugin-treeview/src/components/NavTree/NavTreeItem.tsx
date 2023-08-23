@@ -4,31 +4,36 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CaretDown, CaretRight, DotsThreeVertical, Placeholder } from '@phosphor-icons/react';
+import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
-import { staticDisabled, focusRing, getSize, mx } from '@dxos/aurora-theme';
+import { focusRing, getSize } from '@dxos/aurora-theme';
 
-import { TREE_VIEW_PLUGIN } from '../types';
-import { sortActions } from '../util';
-import { TreeView } from './TreeView';
+import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../../types';
+import { sortActions } from '../../util';
+import { CollapsibleHeading } from './CollapsibleHeading';
+import { NavTree } from './NavTree';
+import { NavigableHeading } from './NavigableHeading';
+import { levelPadding } from './style-fragments';
 
-type SortableBranchTreeItemProps = { node: Graph.Node } & Pick<SortableProps, 'rearranging'>;
+type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
-export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
+export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
   node,
+  level,
   rearranging,
-}: SortableBranchTreeItemProps) => {
+}: SortableBranchTreeViewItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: `treeitem:${node.id}`,
     data: { dragoverlay: node, treeitem: node },
   });
   return (
-    <BranchTreeItem
+    <NavTreeItem
       node={node}
+      level={level}
       draggableAttributes={attributes}
       draggableListeners={listeners}
       rearranging={rearranging}
@@ -38,72 +43,47 @@ export const SortableBranchTreeItem: FC<SortableBranchTreeItemProps> = ({
   );
 };
 
-type BranchTreeItemProps = { node: Graph.Node } & SortableProps;
+type TreeViewItemProps = SharedTreeItemProps & SortableProps;
 
-export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & RefAttributes<any>> = forwardRef<
+export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
   HTMLLIElement,
-  BranchTreeItemProps
->(({ node, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
-  // TODO(thure): Handle `sortable`
+  TreeViewItemProps
+>(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
+  const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
 
-  const [primaryAction, ...actions] = sortActions(node.actions);
+  const actions = sortActions(node.actions);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const hasActiveDocument = false;
-  const disabled = node.properties?.disabled;
-  const error = node.properties?.error;
   const { navigationSidebarOpen } = useSidebars();
 
   const suppressNextTooltip = useRef<boolean>(false);
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const [open, setOpen] = useState(true /* todo(thure): Open if node within is active */);
+  const [open, setOpen] = useState(level < 1);
+
+  const disabled = !!node.properties?.disabled;
 
   useEffect(() => {
     // todo(thure): Open if child within becomes active
   }, []);
 
-  const OpenTriggerIcon = open ? CaretDown : CaretRight;
-
   return (
     <TreeItem.Root
-      collapsible
+      collapsible={isBranch}
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1 rounded', focusRing, rearranging && 'invisible']}
+      classNames={['rounded block', focusRing, levelPadding(level), rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
       ref={forwardedRef}
     >
-      <div role='none' className='flex mis-1 items-start'>
-        <TreeItem.OpenTrigger
-          disabled={disabled}
-          classNames={['grow flex', disabled && staticDisabled]}
-          {...(disabled && { 'aria-disabled': true })}
-          {...(!navigationSidebarOpen && { tabIndex: -1 })}
-        >
-          <OpenTriggerIcon
-            weight='fill'
-            className={mx(
-              'shrink-0',
-              getSize(2),
-              hasActiveDocument && !open && 'text-primary-500 dark:text-primary-300',
-            )}
-          />
-          <TreeItem.Heading
-            data-testid='spacePlugin.spaceTreeItemHeading'
-            classNames={[
-              'grow min-is-0 truncate text-start pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
-              error && 'text-error-700 dark:text-error-300',
-              !disabled && 'cursor-pointer',
-              disabled && staticDisabled,
-            ]}
-            {...(disabled && { 'aria-disabled': true })}
-          >
-            {Array.isArray(node.label) ? t(...node.label) : node.label}
-          </TreeItem.Heading>
-        </TreeItem.OpenTrigger>
+      <div role='none' className='flex items-start pie-1'>
+        {isBranch ? (
+          <CollapsibleHeading open={open} node={node} level={level} />
+        ) : (
+          <NavigableHeading node={node} level={level} />
+        )}
         {actions.length > 0 && (
           <Tooltip.Root
             open={optionsTooltipOpen}
@@ -172,44 +152,12 @@ export const BranchTreeItem: ForwardRefExoticComponent<BranchTreeItemProps & Ref
             </DropdownMenu.Root>
           </Tooltip.Root>
         )}
-        {primaryAction && (
-          <Tooltip.Root>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-[31]'>
-                {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-            <Tooltip.Trigger asChild>
-              <Button
-                variant='ghost'
-                classNames='shrink-0 pli-2 pointer-fine:pli-1'
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.stopPropagation();
-                    void primaryAction.invoke();
-                  }
-                }}
-                onClick={() => primaryAction.invoke()}
-                {...(primaryAction.properties.testId && { 'data-testid': primaryAction.properties.testId })}
-                {...(!navigationSidebarOpen && { tabIndex: -1 })}
-              >
-                <span className='sr-only'>
-                  {Array.isArray(primaryAction.label) ? t(...primaryAction.label) : primaryAction.label}
-                </span>
-                {primaryAction.icon ? (
-                  <primaryAction.icon className={getSize(4)} />
-                ) : (
-                  <Placeholder className={getSize(4)} />
-                )}
-              </Button>
-            </Tooltip.Trigger>
-          </Tooltip.Root>
-        )}
       </div>
-      <TreeItem.Body>
-        <TreeView items={Object.values(node.children).flat() as Graph.Node[]} parent={node} />
-      </TreeItem.Body>
+      {isBranch && (
+        <TreeItem.Body>
+          <NavTree items={Object.values(node.children).flat() as Graph.Node[]} parent={node} level={level + 1} />
+        </TreeItem.Body>
+      )}
     </TreeItem.Root>
   );
 });

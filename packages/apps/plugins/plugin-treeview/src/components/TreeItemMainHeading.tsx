@@ -8,7 +8,7 @@ import { Breadcrumb, Button, useTranslation } from '@dxos/aurora';
 
 import { TREE_VIEW_PLUGIN } from '../types';
 
-export const TreeItemHeading = ({ data: node }: { data: Graph.Node }) => {
+export const TreeItemMainHeading = ({ data: node }: { data: Graph.Node }) => {
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
   return (
     <Breadcrumb.Root aria-label={t('breadcrumb label')} classNames='shrink min-is-0'>
