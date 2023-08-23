@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { describe, test, afterTest } from '@dxos/test';
 import { Timeframe } from '@dxos/timeframe';
-import { range } from '@dxos/util';
+import { getPrototypeSpecificInstanceId, range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState } from '../echo';
@@ -171,7 +171,7 @@ describe('Spaces', () => {
     await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
   });
 
-  // TODO(dmaretskyi): Started failing after I've disabled feed purging. Investigate why, if target timeframes are set correctly it should work regardless.
+  // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
   test.skip('peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
@@ -206,13 +206,19 @@ describe('Spaces', () => {
       await client1.services.services.SpacesService?.createEpoch({ spaceKey: space1.key });
     }
 
+    // log.break();
+    // log.info('epoch created', { feedToCheck: feedKey, length: feed1.length })
+
     await Promise.all(performInvitation({ host: space1, guest: client2 }));
 
     await waitForSpace(client2, space1.key, { ready: true });
     const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
 
+    // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
+
     // Check that second peer does not have mutations before epoch.
+    expect(feed1 !== feed2).to.eq(true)
     for (const i of range(feed1.length)) {
       expect(feed2.has(i)).to.be.false;
     }
