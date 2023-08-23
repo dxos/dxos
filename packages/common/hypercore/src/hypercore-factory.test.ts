@@ -17,9 +17,12 @@ import { py } from './util';
 describe.only('HypercoreFactory', () => {
   test.only('migration sanity', async () => {
     const core = new Hypercore('test');
+    expect(core.opened).to.be.false;
+
     await core.ready();
     expect(core.key).to.exist;
     expect(core.opened).to.be.true;
+
     const trigger = new Trigger();
     core.on('close', () => trigger.wake());
     core.close();
