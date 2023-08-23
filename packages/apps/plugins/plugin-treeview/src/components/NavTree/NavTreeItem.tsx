@@ -9,16 +9,17 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
-import { focusRing, getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { Button, DropdownMenu, Tooltip, TreeItem, useId, useSidebars, useTranslation } from '@dxos/aurora';
+import { focusRing, getSize, mx } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../../TreeViewContext';
-import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../../types';
+import { TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
 import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
 import { NavigableHeading } from './NavigableHeading';
 import { levelPadding } from './navtree-fragments';
+import { SharedTreeItemProps } from './props';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
@@ -51,6 +52,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   TreeViewItemProps
 >(({ node, level, draggableListeners, draggableAttributes, style, rearranging }, forwardedRef) => {
   const isBranch = node.properties?.role === 'branch' || node.children.length > 0;
+  const labelId = useId('navtree__item');
 
   const actions = sortActions(node.actions);
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
@@ -72,10 +74,16 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
 
   return (
     <TreeItem.Root
+      id={labelId}
       collapsible={isBranch}
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['rounded block', focusRing, active && groupSurface, rearranging && 'invisible']}
+      classNames={[
+        'rounded block',
+        focusRing,
+        active && 'bg-neutral-75 dark:bg-neutral-850',
+        rearranging && 'invisible',
+      ]}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
@@ -83,9 +91,9 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
     >
       <div role='none' className={mx(levelPadding(level), 'flex items-start')}>
         {isBranch ? (
-          <CollapsibleHeading open={open} node={node} level={level} />
+          <CollapsibleHeading {...{ open, node, level, active, id: labelId }} />
         ) : (
-          <NavigableHeading node={node} level={level} />
+          <NavigableHeading {...{ node, level, active, id: labelId }} />
         )}
         {actions.length > 0 && (
           <Tooltip.Root

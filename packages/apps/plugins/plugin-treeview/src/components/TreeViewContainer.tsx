@@ -81,7 +81,7 @@ export const TreeViewContainer = () => {
             </>
           )}
           <Tree.Root
-            role='none'
+            role='tree'
             classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth pbs-1 pbe-4 pli-1'
           >
             {branches.map((branch) => (

@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
 import { auroraTx, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
 
@@ -17,8 +16,9 @@ import {
   topLevelText,
   treeItemText,
 } from './navtree-fragments';
+import { SharedTreeItemHeadingProps } from './props';
 
-export const NavigableHeading = ({ node, level }: { node: Graph.Node; level: number }) => {
+export const NavigableHeading = ({ node, level, active }: SharedTreeItemHeadingProps) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
@@ -60,6 +60,7 @@ export const NavigableHeading = ({ node, level }: { node: Graph.Node; level: num
           error && valenceColorText('error'),
         )}
         {...(disabled && { disabled, 'aria-disabled': true })}
+        {...(active && { 'aria-current': 'page' })}
       >
         {node.icon && <node.icon className={mx(getSize(4), 'shrink-0')} />}
         <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>

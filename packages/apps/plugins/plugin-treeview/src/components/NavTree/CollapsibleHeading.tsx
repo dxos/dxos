@@ -5,7 +5,6 @@
 import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
 import { TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
 import { getSize, ghostButtonColors, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
 
@@ -18,8 +17,9 @@ import {
   topLevelText,
   treeItemText,
 } from './navtree-fragments';
+import { SharedTreeItemHeadingProps } from './props';
 
-export const CollapsibleHeading = ({ open, node, level }: { open: boolean; level: number; node: Graph.Node }) => {
+export const CollapsibleHeading = ({ open, node, level, active }: SharedTreeItemHeadingProps) => {
   const { navigationSidebarOpen } = useSidebars();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
 
@@ -37,6 +37,7 @@ export const CollapsibleHeading = ({ open, node, level }: { open: boolean; level
         'pli-1',
         topLevelHeadingColor(node.properties?.palette),
       ]}
+      {...(active && { 'aria-current': 'page' })}
     >
       {Array.isArray(node.label) ? t(...node.label) : node.label}
     </TreeItem.Heading>
@@ -51,6 +52,7 @@ export const CollapsibleHeading = ({ open, node, level }: { open: boolean; level
       <TreeItem.Heading
         data-testid='spacePlugin.spaceTreeItemHeading'
         classNames={[navTreeHeading, collapsibleSpacing, treeItemText, error && valenceColorText('error')]}
+        {...(active && { 'aria-current': 'page' })}
       >
         {Array.isArray(node.label) ? t(...node.label) : node.label}
       </TreeItem.Heading>
