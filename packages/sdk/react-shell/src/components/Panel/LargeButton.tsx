@@ -8,7 +8,7 @@ import { ButtonProps, Button } from '@dxos/aurora';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
-}
+};
 
 export const LargeButton = (props: LargeButtonProps) => {
   const { children, classNames, isFull = true, ...rest } = props;

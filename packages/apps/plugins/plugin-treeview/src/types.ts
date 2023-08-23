@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeepSignal } from 'deepsignal';
-
+import { Graph } from '@braneframe/plugin-graph';
 import { IntentProvides } from '@braneframe/plugin-intent';
 import { TranslationsProvides } from '@braneframe/plugin-theme';
 
@@ -14,12 +13,14 @@ export enum TreeViewAction {
   ACTIVATE = `${TREE_VIEW_ACTION}/activate`,
 }
 
-// TODO(wittjosiah): Derive graph nodes from selected.
-export type TreeViewContextValue = DeepSignal<{
-  active: string[];
-}>;
+export type TreeViewContextValue = {
+  active: string | undefined;
+  activeNode: Graph.Node | undefined;
+};
 
 export type TreeViewPluginProvides = IntentProvides &
   TranslationsProvides & {
     treeView: TreeViewContextValue;
   };
+
+export type SharedTreeItemProps = { node: Graph.Node; level: number };

@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, SignOut } from '@phosphor-icons/react';
-import React, { cloneElement, ComponentPropsWithoutRef, useEffect, useState } from 'react';
+import { SignOut } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { log } from '@dxos/log';
-import { Input } from '@dxos/react-appkit';
 
 import { PanelAction, PanelActions, PanelStepHeading } from '../../../components';
-import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
-import { LargeInput } from '../../../components/Panel/LargeInput';
 import { LargeButton } from '../../../components/Panel/LargeButton';
+import { LargeInput } from '../../../components/Panel/LargeInput';
+import { JoinPanelProps, JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';
@@ -50,22 +49,22 @@ export const InvitationInput = ({
     unredeemedCode && setInputValue(unredeemedCode ?? '');
   }, [unredeemedCode]);
 
-  const handleNext = () =>
-    send({
-      type: `set${Kind}InvitationCode`,
-      code: invitationCodeFromUrl(inputValue),
-    });
+  // const handleNext = () =>
+  //   send({
+  //     type: `set${Kind}InvitationCode`,
+  //     code: invitationCodeFromUrl(inputValue),
+  //   });
 
-  const exitAction = (
-    <PanelAction
-      aria-label={t('cancel label')}
-      disabled={disabled}
-      {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
-      data-testid='join-exit'
-    >
-      <SignOut mirrored weight='light' className={getSize(6)} />
-    </PanelAction>
-  );
+  // const exitAction = (
+  //   <PanelAction
+  //     aria-label={t('cancel label')}
+  //     disabled={disabled}
+  //     {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
+  //     data-testid='join-exit'
+  //   >
+  //     <SignOut mirrored weight='light' className={getSize(6)} />
+  //   </PanelAction>
+  // );
 
   return (
     <>

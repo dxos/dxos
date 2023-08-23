@@ -3,18 +3,18 @@
 //
 
 import { Check, X } from '@phosphor-icons/react';
-import React, { PropsWithChildren, ReactNode, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useId, useTranslation, Button, Avatar } from '@dxos/aurora';
+import { useId, useTranslation } from '@dxos/aurora';
 import { descriptionText, getSize, groupSurface, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { PanelActions, Viewport, ViewportViewProps } from '../components';
 import { AuthCode } from '../components/AuthCode';
+import { LargeButton } from '../components/Panel/LargeButton';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
-import { LargeButton } from '../components/Panel/LargeButton';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {

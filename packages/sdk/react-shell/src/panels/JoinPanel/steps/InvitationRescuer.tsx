@@ -84,18 +84,15 @@ export const InvitationRescuer = (props: InvitationConnectorProps) => {
             <PanelStepHeading className={descriptionText}>There was a problem joining the space</PanelStepHeading>
           </div>
           <PanelActions>
-            <LargeButton>
+            <LargeButton
+              disabled={!active}
+              aria-label={t('reset label')}
+              data-testid='invitation-rescuer-blank-reset'
+              onClick={() => send({ type: `reset${Kind}Invitation` })}
+            >
               {/* <ArrowsClockwise weight='light' className={getSize(6)} /> */}
               <span>Reset</span>
             </LargeButton>
-            {/* <PanelAction
-              aria-label={t('reset label')}
-              disabled={!active}
-              onClick={() => send({ type: `reset${Kind}Invitation` })}
-              data-testid='invitation-rescuer-blank-reset'
-            >
-
-            </PanelAction> */}
           </PanelActions>
         </>
       ) : (

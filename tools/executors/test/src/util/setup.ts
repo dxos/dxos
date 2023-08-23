@@ -3,7 +3,7 @@
 //
 
 export const runSetup = async ({ script, options = {} }: { script: string; options?: Record<string, any> }) => {
-  console.log('Running setup script.', { path: script, options });
+  // console.log('Running setup script.', { path: script, options });
   const before = Date.now();
 
   const { setup } = await import(script);

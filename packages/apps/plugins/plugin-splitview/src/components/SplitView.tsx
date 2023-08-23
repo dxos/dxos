@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Sidebar as SidebarIcon } from '@phosphor-icons/react';
+import { Chats, List as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { Button, Main, Dialog, useTranslation, DensityProvider } from '@dxos/aurora';
-import { fineBlockSize, getSize, mx } from '@dxos/aurora-theme';
+import { coarseBlockSize, fixedSurface, getSize } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { useSplitView } from '../SplitViewContext';
@@ -14,7 +14,7 @@ import { SPLITVIEW_PLUGIN } from '../types';
 
 export const SplitView = () => {
   const context = useSplitView();
-  const { sidebarOpen, complementarySidebarOpen, dialogOpen, dialogContent } = context;
+  const { complementarySidebarOpen, dialogOpen, dialogContent } = context;
   const { t } = useTranslation(SPLITVIEW_PLUGIN);
 
   return (
@@ -34,38 +34,33 @@ export const SplitView = () => {
           <Surface name='complementary-sidebar' />
         </Main.ComplementarySidebar>
       )}
-      <div
-        role='none'
-        className={mx(
-          'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-4 pointer-fine:p-1.5 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-start-0',
-          sidebarOpen && 'opacity-0 pointer-events-none',
-        )}
-      >
-        <Button
-          onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
-          classNames={mx(fineBlockSize, 'aspect-square p-0 shadow-none')}
-        >
-          <SidebarIcon weight='light' className={getSize(5)} />
-        </Button>
-      </div>
-      {complementarySidebarOpen !== null && (
-        <div
-          role='none'
-          className={mx(
-            'fixed z-[1] block-end-0 pointer-fine:block-end-auto pointer-fine:block-start-0 p-4 pointer-fine:p-1.5 transition-[inset-inline-start,opacity] ease-in-out duration-200 inline-end-0',
-            complementarySidebarOpen && 'opacity-0 pointer-events-none',
-          )}
-        >
-          <Button
-            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-            classNames={mx(fineBlockSize, 'aspect-square p-0 shadow-none')}
-          >
-            <SidebarIcon mirrored weight='light' className={getSize(5)} />
-          </Button>
-        </div>
-      )}
       <Main.Overlay />
-      <Surface name='main' />
+      <Main.Content
+        asChild
+        classNames={['fixed inset-inline-0 block-start-0 z-[1] flex gap-1 plb-1.5', coarseBlockSize, fixedSurface]}
+      >
+        <div role='none' aria-label={t('main header label')}>
+          <DensityProvider density='fine'>
+            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='mli-1'>
+              <span className='sr-only'>{t('open navigation sidebar label')}</span>
+              <MenuIcon weight='light' className={getSize(4)} />
+            </Button>
+            <Surface name='heading' role='heading' limit={2} />
+            <div role='none' className='grow' />
+            <Surface name='presence' role='presence' limit={1} />
+            {complementarySidebarOpen !== null && (
+              <Button
+                onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+                variant='ghost'
+              >
+                <span className='sr-only'>{t('open complementary sidebar label')}</span>
+                <Chats weight='light' className={getSize(4)} />
+              </Button>
+            )}
+          </DensityProvider>
+        </div>
+      </Main.Content>
+      <Surface name='main' role='main' />
       {/* TODO(burdon): Move dialog to settings-plugin. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <DensityProvider density='fine'>

@@ -1,6 +1,6 @@
-import React, {createElement, useEffect} from 'react';
-import {ThemeProvider} from '../src';
-import {auroraTx} from '@dxos/aurora-theme';
+import React, { createElement, useEffect } from 'react';
+import { ThemeProvider } from '../src';
+import { auroraTx } from '@dxos/aurora-theme';
 
 export const parameters = {
   actions: {argTypesRegex: "^on[A-Z].*"},
@@ -9,8 +9,7 @@ export const parameters = {
       color: /(background|color)$/i,
       date: /Date$/,
     },
-  },
-  // layout: 'fullscreen'
+  }
 }
 
 export const globalTypes = {

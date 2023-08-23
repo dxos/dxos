@@ -57,7 +57,8 @@ const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) =>
   </StorybookDialog>
 );
 
-export const DeviceInvitationManager = () => DeviceInvitationManagerWithState({ status: Invitation.State.INIT, id: '0' });
+export const DeviceInvitationManager = () =>
+  DeviceInvitationManagerWithState({ status: Invitation.State.INIT, id: '0' });
 
 export const DeviceInvitationManagerConnecting = () =>
   DeviceInvitationManagerWithState({
@@ -75,13 +76,13 @@ export const DeviceInvitationManagerReady = () =>
   DeviceInvitationManagerWithState({
     status: Invitation.State.READY_FOR_AUTHENTICATION,
     authCode: '123123',
-    id: '3'
+    id: '3',
   });
 
 export const DeviceInvitationManagerAuthenticating = () =>
   DeviceInvitationManagerWithState({
     status: Invitation.State.AUTHENTICATING,
-    id: '4'
+    id: '4',
   });
 
 export const DeviceInvitationManagerSuccess = () =>

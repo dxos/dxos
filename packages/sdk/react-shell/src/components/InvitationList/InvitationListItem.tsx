@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import { ProhibitInset, X } from '@phosphor-icons/react';
-import React, { PropsWithChildren, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
 import { chromeSurface, getSize } from '@dxos/aurora-theme';
@@ -12,7 +12,6 @@ import {
   InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import { humanize } from '@dxos/util';
 
 import { toEmoji } from '../../util';
 import { AuthCode } from '../AuthCode';
@@ -34,11 +33,6 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const Label = (props: PropsWithChildren<{ className?: string }>) => {
-  const { className, children } = props;
-  return <span className={`pli-2 ${className}`}>{children}</span>;
-};
-
 export const InvitationListItemImpl = ({
   invitation,
   invitationStatus,
@@ -47,7 +41,7 @@ export const InvitationListItemImpl = ({
   createInvitationUrl,
 }: InvitationListItemImplProps) => {
   const { t } = useTranslation('os');
-  const { cancel, status, haltedAt, invitationCode, authCode } = invitationStatus;
+  const { cancel, status, invitationCode, authCode } = invitationStatus;
 
   const isCancellable = !(
     [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(status) >= 0

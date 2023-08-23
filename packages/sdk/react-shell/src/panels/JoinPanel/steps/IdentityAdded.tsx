@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretLeft, CaretRight, Check } from '@phosphor-icons/react';
+import { Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
-import { Button, useTranslation } from '@dxos/aurora';
+import { useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import { Avatar } from '@dxos/react-appkit';
 import type { Identity } from '@dxos/react-client/halo';
 
 import { PanelAction, PanelStepHeading } from '../../../components';
-import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
 import { LargeButton } from '../../../components/Panel/LargeButton';
+import { JoinPanelMode, JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;

@@ -2,42 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import defaultsdeep from 'lodash.defaultsdeep';
 import React, { useState } from 'react';
 
-import { TableColumn, Table, TableSlots } from '@dxos/mosaic';
+import { Grid, GridColumnDef } from '@dxos/aurora-grid';
 
 import { JsonView } from './JsonView';
 
 export type MasterTableProps<T extends {}> = {
-  columns: TableColumn<T>[];
+  columns: GridColumnDef<T>[];
   data: T[];
-  slots?: TableSlots;
-  compact?: boolean;
+  pinToBottom?: boolean;
 };
 
-export const MasterDetailTable = <T extends {}>({ columns, data, slots, compact = true }: MasterTableProps<T>) => {
-  const [selected, setSelected] = useState<T>();
-  const tableSlots = defaultsdeep({}, slots, {
-    root: { className: 'grow' },
-    selected: { className: 'bg-slate-200' },
-    cell: { className: 'cursor-pointer' },
-  });
+export const MasterDetailTable = <T extends {}>({ columns, data, pinToBottom }: MasterTableProps<T>) => {
+  const [selected, setSelected] = useState<T[]>();
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
       <div className='flex w-1/2 overflow-hidden'>
-        <Table<T>
-          compact={compact}
+        <Grid<T>
           columns={columns}
           data={data}
-          slots={tableSlots}
           selected={selected}
-          onSelect={setSelected}
+          onSelectedChange={setSelected}
+          pinToBottom={pinToBottom}
         />
       </div>
 
-      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected} />}</div>
+      <div className='flex w-1/2 overflow-auto'>{selected && <JsonView data={selected?.[0]} />}</div>
     </div>
   );
 };

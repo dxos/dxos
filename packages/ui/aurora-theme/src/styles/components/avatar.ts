@@ -5,7 +5,7 @@
 import { ComponentFunction, Size, Theme } from '@dxos/aurora-types';
 
 import { mx } from '../../util';
-import { descriptionText, getSize } from '../fragments';
+import { descriptionText, getSize, getSizeHeight } from '../fragments';
 
 export type AvatarStyleProps = Partial<{
   size: Size;
@@ -13,10 +13,11 @@ export type AvatarStyleProps = Partial<{
   status: 'active' | 'inactive' | 'error' | 'warning';
   animation: 'pulse' | 'none';
   variant: 'circle' | 'square';
+  inGroup: boolean;
 }>;
 
-export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10 }, ...etc) =>
-  mx('relative inline-flex', getSize(size), ...etc);
+export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
+  mx('relative inline-flex', getSize(size), inGroup && '-mie-2', ...etc);
 
 export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
@@ -54,6 +55,22 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
 export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
   mx('fill-neutral-600 dark:fill-neutral-300');
 
+export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
+  mx('inline-flex items-center', ...etc);
+
+export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, srOnly }, ...etc) =>
+  mx(
+    srOnly
+      ? 'sr-only'
+      : 'rounded-full truncate text-sm leading-none plb-1 pli-2 relative z-[1] flex items-center justify-center',
+    size && getSizeHeight(size),
+    ...etc,
+  );
+
+export const avatarGroupDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
+  mx(srOnly ? 'sr-only' : descriptionText, ...etc);
+
+
 export const avatarTheme: Theme<AvatarStyleProps> = {
   root: avatarRoot,
   label: avatarLabel,
@@ -62,4 +79,7 @@ export const avatarTheme: Theme<AvatarStyleProps> = {
   frame: avatarFrame,
   ring: avatarRing,
   fallbackText: avatarFallbackText,
+  group: avatarGroup,
+  groupLabel: avatarGroupLabel,
+  groupDescription: avatarGroupDescription,
 };

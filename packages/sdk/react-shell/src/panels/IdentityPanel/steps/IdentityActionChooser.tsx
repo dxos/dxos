@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Check, Plus, Power, UserGear } from '@phosphor-icons/react';
-import React, { cloneElement, useCallback } from 'react';
+import { CaretRight, Plus, Power, UserGear } from '@phosphor-icons/react';
+import React, { useCallback } from 'react';
 
 import { Button, DensityProvider, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
@@ -11,7 +11,6 @@ import { useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { PanelAction, PanelActions } from '../../../components';
 import { IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;

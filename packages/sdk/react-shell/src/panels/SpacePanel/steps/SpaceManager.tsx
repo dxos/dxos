@@ -5,7 +5,7 @@
 import { UserPlus } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { Button, ScrollArea, useTranslation } from '@dxos/aurora';
+import { ScrollArea, useTranslation } from '@dxos/aurora';
 import { getSize } from '@dxos/aurora-theme';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -17,13 +17,13 @@ import {
   SpaceMemberList,
   SpaceMemberListProps,
 } from '../../../components';
-import { SpacePanelStepProps } from '../SpacePanelProps';
 import { LargeButton } from '../../../components/Panel/LargeButton';
+import { SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];
-  SpaceMemberList?: React.FC<SpaceMemberListProps>;
   onCreateInvitationClick?: (e: React.MouseEvent) => void;
+  SpaceMemberList?: React.FC<SpaceMemberListProps>;
   InvitationList?: React.FC<InvitationListProps>;
 };
 
@@ -83,9 +83,9 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   //     <Check weight='light' className={getSize(6)} />
   //   </PanelAction>
   // );
-  const visibleInvitations = invitations; //invitations?.filter(
-    // (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
-  // );
+  const visibleInvitations = invitations?.filter(
+    (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
+  );
 
   return (
     <>

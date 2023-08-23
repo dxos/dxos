@@ -6,26 +6,26 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import get from 'lodash.get';
-import React, { forwardRef } from 'react';
+import React, { FC, forwardRef } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { List, ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { fineButtonDimensions, focusRing, getSize, mx, paperSurface, surfaceElevation } from '@dxos/aurora-theme';
+import { fineButtonDimensions, focusRing, getSize, mx, inputSurface, surfaceElevation } from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { STACK_PLUGIN, StackSectionModel } from '../types';
 
-type StackSectionProps = {
-  onRemove?: () => void;
-  section: StackSectionModel;
-};
-
-export const StackSectionOverlay = ({ data }: { data: StackSectionModel }) => {
+export const StackSectionOverlay: FC<{ data: StackSectionModel }> = ({ data }) => {
   return (
     <List variant='ordered'>
       <StackSectionImpl section={data} isOverlay />
     </List>
   );
+};
+
+type StackSectionProps = {
+  onRemove?: () => void;
+  section: StackSectionModel;
 };
 
 const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionProps> & SortableProps>(
@@ -40,7 +40,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           id={section.object.id}
           classNames={[
             surfaceElevation({ elevation: 'group' }),
-            paperSurface,
+            inputSurface,
             'grow rounded mlb-2',
             '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
             isOverlay && 'hover-hover:[--controls-opacity:1]',
@@ -68,7 +68,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             />
           </div>
           <div role='none' className='flex-1'>
-            <Surface role='section' data={section} />
+            <Surface role='section' data={section.object} />
           </div>
           <Button
             variant='ghost'
@@ -84,7 +84,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
   },
 );
 
-export const StackSection = (props: ListScopedProps<StackSectionProps> & { rearranging?: boolean }) => {
+export const StackSection: FC<ListScopedProps<StackSectionProps> & { rearranging?: boolean }> = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props.section.id,
     data: { section: props.section, dragoverlay: props.section },

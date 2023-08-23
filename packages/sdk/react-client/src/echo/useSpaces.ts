@@ -3,7 +3,7 @@
 //
 
 import { PublicKeyLike } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState, defaultKey } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
@@ -16,7 +16,9 @@ import { useClient } from '../client';
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
   const spaces = useSpaces();
-  return spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined;
+  return spaceKey
+    ? spaces.find((space) => space.key.equals(spaceKey))
+    : spaces.find((space) => space.properties[defaultKey]);
 };
 
 export type UseSpacesParams = {

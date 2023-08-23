@@ -4,15 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { useTranslation } from '@dxos/aurora';
+import { useTranslation, List } from '@dxos/aurora';
 import { descriptionText, mx } from '@dxos/aurora-theme';
 import { PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
 
 import { IdentityListItem } from './IdentityListItem';
-
-import { List } from '@dxos/aurora';
 
 export interface SpaceMemberListImplProps {
   members: SpaceMember[];

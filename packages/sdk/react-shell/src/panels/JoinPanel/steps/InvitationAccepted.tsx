@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check } from '@phosphor-icons/react';
 import React, { cloneElement } from 'react';
 
 import { useTranslation } from '@dxos/aurora';
-import { getSize } from '@dxos/aurora-theme';
 
-import { PanelAction, PanelActions } from '../../../components';
-import { JoinStepProps } from '../JoinPanelProps';
+import { PanelActions } from '../../../components';
 import { LargeButton } from '../../../components/Panel/LargeButton';
+import { JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';

@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { NetworkService, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { afterEach, afterTest, beforeEach, describe, test } from '@dxos/test';
 
@@ -18,7 +19,7 @@ describe('NetworkService', () => {
 
   beforeEach(async () => {
     serviceContext = createServiceContext();
-    await serviceContext.open();
+    await serviceContext.open(new Context());
     networkService = new NetworkServiceImpl(serviceContext.networkManager, serviceContext.signalManager);
   });
 

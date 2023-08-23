@@ -21,10 +21,10 @@ export const UrlSyncPlugin = (): PluginDefinition => ({
           const handleNavigation = () => {
             treeView.active =
               // TODO(wittjosiah): Remove condition. This is here for backwards compatibility.
-              window.location.pathname === '/embedded' ? ['github/embedded'] : uriToActive(window.location.pathname);
+              window.location.pathname === '/embedded' ? 'github:embedded' : uriToActive(window.location.pathname);
           };
 
-          if (treeView.active.length === 0 && window.location.pathname.length > 1) {
+          if (!treeView.active && window.location.pathname.length > 1) {
             handleNavigation();
           }
 
