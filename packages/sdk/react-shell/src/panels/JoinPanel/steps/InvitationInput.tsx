@@ -70,7 +70,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onKeyUp={({ key }) => key === 'Enter' && handleNext()}
         />
       </div>
-      <Actions classNames='flex flex-col'>
+      <Actions>
         {Kind === 'Halo' ? (
           <Action
             variant='ghost'

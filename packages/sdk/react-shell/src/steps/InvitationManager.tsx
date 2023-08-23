@@ -10,11 +10,7 @@ import { useId, useTranslation } from '@dxos/aurora';
 import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
-import { Actions, Viewport, ViewportViewProps } from '../components';
-import { AuthCode } from '../components/AuthCode';
-import { Action } from '../components/Panel/Action';
-import { Emoji, Centered } from '../components/Panel/Emoji';
-import { Label } from '../components/Panel/Label';
+import { Actions, Action, AuthCode, Emoji, Centered, Label, Viewport, ViewportViewProps } from '../components';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
 
@@ -45,32 +41,12 @@ const InvitationManagerView = ({
   );
 };
 
-export const InvitationManager = ({
-  invitationUrl,
-  active,
-  send,
-  doneActionParent,
-  onDone,
-  status,
-  authCode,
-  id,
-}: InvitationManagerProps) => {
+export const InvitationManager = ({ invitationUrl, active, send, status, authCode, id }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
   const statusValue = invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = toEmoji(id ?? '');
-  // const doneAction = (
-  //   <PanelAction
-  //     aria-label={t('done label')}
-  //     onClick={onDone}
-  //     disabled={!active}
-  //     classNames='order-2'
-  //     data-testid='identity-panel-done'
-  //   >
-  //     <Check weight='light' className={getSize(6)} />
-  //   </PanelAction>
-  // );
   const activeView = useMemo(() => {
     switch (true) {
       case statusValue === 5:
@@ -120,29 +96,10 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      {/* <CopyButton classNames='flex' disabled={!active} value={invitationUrl ?? 'never'} /> */}
       <Actions classNames='mbs-4'>
-        <Action aria-label={t('back label')} disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
-          <span>Back</span>
+        <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
+          {t('back label')}
         </Action>
-        {/* <CopyButtonIconOnly
-          variant='ghost'
-          classNames='order-1 p-4'
-          disabled={!active || activeView === 'showing final'}
-          value={activeView === 'showing auth code' ? authCode! : invitationUrl ?? 'never'}
-          iconProps={{
-            weight: 'light',
-            className: getSize(6),
-          }}
-        /> */}
-        {/* {doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction} */}
-        {/* <PanelAction
-          aria-label={t('back label')}
-          disabled={!active}
-          onClick={() => send?.({ type: 'deselectInvitation' })}
-        >
-          <CaretLeft weight='light' className={getSize(6)} />
-        </PanelAction> */}
       </Actions>
     </>
   );

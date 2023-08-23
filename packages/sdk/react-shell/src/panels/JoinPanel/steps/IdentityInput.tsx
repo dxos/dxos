@@ -63,7 +63,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
-      <Actions classNames='flex flex-col'>
+      <Actions>
         <Action
           variant='ghost'
           disabled={disabled}
