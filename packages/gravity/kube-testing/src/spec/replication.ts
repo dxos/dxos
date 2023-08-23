@@ -23,17 +23,17 @@ import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 
 type FeedConfig = {
-  feedKey: string;
+  feedKey: string; // TODO(burdon): Why not PublicKey?
   writable: boolean;
 };
 
 type FeedEntry = {
-  agentIdx: number;
+  agentIdx: number; // TODO(burdon): Use key to index?
   swarmIdx: number;
   feedLength: number;
   byteLength: number;
   writable: boolean;
-  feedKey: string;
+  feedKey: string; // TODO(burdon): Key?
   testCounter: number;
 };
 
@@ -60,20 +60,15 @@ export type ReplicationTestSpec = {
   agents: number;
   swarmsPerAgent: number;
   duration: number;
-
   transport: 'webrtc' | 'webrtc-proxy';
-
   targetSwarmTimeout: number;
   fullSwarmTimeout: number;
-
   feedsPerSwarm: number;
   feedAppendInterval: number;
   feedMessageSize: number;
   feedLoadDuration?: number;
   feedMessageCount?: number;
-
   repeatInterval: number;
-
   signalArguments: string[];
 };
 
@@ -98,10 +93,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set');
     }
 
-    const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
-
     const feeds = new Map<number, Map<string, FeedConfig[]>>();
     const feedKeys: TestKeyPair[] = [];
 
@@ -109,6 +103,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       feeds.set(agentIdx, new Map(swarmTopicIds.map((id) => [id, []])));
     });
 
+    // TODO(burdon): Use FeedStore?
     const addFeedConfig = async (agentIdx: number, swarmTopicId: string) => {
       const feedKey = await generateJWKKeyPair();
       feedKeys.push(feedKey);
@@ -117,6 +112,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       }
     };
 
+    // TODO(burdon): Promise ignored (await).
     // Add spec.feedsPerSwarm feeds for each agent to each swarm.
     range(spec.agents).forEach(async (agentIdx) => {
       swarmTopicIds.forEach(async (swarmTopicId) => {
@@ -142,7 +138,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     const { agentIdx, swarmTopicIds, signalUrl, feeds: feedsSpec, feedKeys } = config;
 
     const numAgents = Object.keys(agents).length;
-
     log.info('run', {
       agentIdx,
       runnerAgentIdx: config.agentIdx,
@@ -167,9 +162,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
 
-    const feeds = new Map<string, { writable: boolean; feed: FeedWrapper<any> }[]>();
-
     // Feeds.
+    const feeds = new Map<string, { writable: boolean; feed: FeedWrapper<any> }[]>();
     for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
       const feedsArr = [];
       for (const feedConfig of feedConfigs) {
@@ -206,7 +200,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       },
     ) => {
       const { feedAppendInterval, feedMessageSize, feedLoadDuration, feedMessageCount } = options;
-
       if (feedLoadDuration) {
         scheduleTaskInterval(
           context,
@@ -238,7 +231,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       // How many connections established within the target duration.
       {
         log.info('joining all swarms', { agentIdx });
-
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
             await joinSwarm({
@@ -319,6 +311,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
         if (spec.feedLoadDuration) {
           await sleep(spec.feedLoadDuration);
         }
+
         await subctx.dispose();
 
         log.trace('dxos.test.feed-load-time', {
@@ -390,6 +383,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     await this.signalBuilder.destroy();
     log.info('finished shutdown');
 
+    // TODO(burdon): Create Agent typs (single map).
     // Map<agentIdx, Map<swarmId, FeedStats>>
     const feeds = new Map<number, Map<number, FeedEntry[]>>();
     // Map<agentIdx, ms>
@@ -400,7 +394,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     });
 
     const reader = getReader(results);
-
     reader.forEach((entry: SerializedLogEntry<any>) => {
       switch (entry.message) {
         case 'dxos.test.feed-stats': {
@@ -444,12 +437,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
                 );
                 if (otherFeedStats) {
                   const bytesInSecond = otherFeedStats.byteLength / (feedLoadTimes.get(agentIdx)! / 1000);
-                  const e = Math.floor(Math.log(bytesInSecond) / Math.log(1024));
                   replicas.push({
                     feedLength: otherFeedStats.feedLength,
                     byteLength: otherFeedStats.byteLength,
-                    replicationSpeed:
-                      (bytesInSecond / Math.pow(1024, e)).toFixed(2) + ' ' + ' kMGTP'.charAt(e) + 'B/sec',
+                    replicationSpeed: rateUnit(bytesInSecond),
                   });
                 }
               }
@@ -468,3 +459,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     log.info('replication stats', { stats });
   }
 }
+
+// TODO(burdon): Factor out.
+const rateUnit = (value: number) => {
+  const e = Math.floor(Math.log(value) / Math.log(1024));
+  return `${(value / Math.pow(1024, e)).toFixed(2)} ${'kMGTP'.charAt(e)}B/s`;
+};

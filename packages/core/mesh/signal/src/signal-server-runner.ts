@@ -61,17 +61,18 @@ export class SignalServerRunner {
   }
 
   public startProcess(): ChildProcessWithoutNullStreams {
+    if (this._cwd && !fs.existsSync(this._cwd)) {
+      throw new Error(`CWD not exists: ${this._cwd}`);
+    }
+
     log('starting', {
       binCommand: this._binCommand,
       signalArguments: this._signalArguments,
       cwd: this._cwd,
       port: this._port,
     });
-    if (this._cwd && !fs.existsSync(this._cwd)) {
-      throw new Error(`CWD not exists: ${this._cwd}`);
-    }
 
-    killProcessOnPort(this._port);
+    killProcessOnPort(this._port, true);
 
     const server = spawn(this._binCommand, [...this._signalArguments, '--port', this._port.toString()], {
       cwd: this._cwd,
@@ -80,7 +81,8 @@ export class SignalServerRunner {
         ...process.env,
         ...this._env,
       },
-      // force creation of process group to ensure all child processes are killed https://nodejs.org/api/child_process.html#optionsdetached
+      // Force creation of process group to ensure all child processes are killed.
+      // https://nodejs.org/api/child_process.html#optionsdetached
       detached: true,
     });
 
@@ -187,8 +189,8 @@ export const runTestSignalServer = async ({
   if (!['darwin', 'linux'].includes(OS)) {
     throw new Error(`Unsupported platform: ${OS}`);
   }
-  const binPath = `./signal-test-${OS}-${ARCH}`;
 
+  const binPath = `./signal-test-${OS}-${ARCH}`;
   const server = new SignalServerRunner({
     binCommand: binPath,
     signalArguments: [mode],
@@ -199,7 +201,7 @@ export const runTestSignalServer = async ({
   return server;
 };
 
-const killProcessOnPort = (port: number) => {
+const killProcessOnPort = (port: number, silent = false) => {
   try {
     const pid = execSync(`lsof -t -i:${port}`).toString().trim();
     if (pid) {
@@ -207,6 +209,8 @@ const killProcessOnPort = (port: number) => {
       process.kill(-Number(pid), 'SIGINT');
     }
   } catch (err) {
-    log.warn('failed to kill process occupying signal port', { port, err });
+    if (!silent) {
+      log.warn('failed to kill process occupying signal port', { port, err });
+    }
   }
 };

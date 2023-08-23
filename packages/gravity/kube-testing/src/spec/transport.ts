@@ -44,7 +44,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
   signalBuilder = new SignalTestBuilder();
 
   async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<TransportAgentConfig[]> {
-    const signal = await this.signalBuilder.createServer(0, outDir, spec.signalArguments);
+    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
     return range(spec.agents).map((agentIdx) => ({
