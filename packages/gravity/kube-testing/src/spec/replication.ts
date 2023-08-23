@@ -4,8 +4,8 @@
 
 import { randomBytes } from 'node:crypto';
 
-import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { sleep, scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring, TestKeyPair, generateKeyPair } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 import { SerializedLogEntry, getReader } from '../analysys';
 import { PlanResults, TestParams, TestPlan, AgentEnv } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
-import { forEachSwarmAndAgent } from './util';
+import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
 
@@ -77,6 +77,11 @@ export type ReplicationAgentConfig = {
   feedKeys: TestKeyPair[];
 };
 
+/**
+ * Replication test plan uses ReplicationExtension to measure replication speed by writing to feeds 
+ * and measuring the time it takes for the data to be replicated to other agents. Real network stack
+ * is used for this test, incl. Teleport & real WebRTC connections.
+ */
 export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
   signalBuilder = new SignalTestBuilder();
 
@@ -176,80 +181,6 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     log.info('swarms created', { agentIdx });
 
-    /**
-     * Join swarm and wait till all peers are connected.
-     */
-    // TODO(egorgripasov): Move to util.
-    const joinSwarm = async (context: Context, swarmIdx: number, swarm: any) => {
-      log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      await cancelWithContext(context, swarm.join());
-
-      log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-
-      await sleep(spec.targetSwarmTimeout);
-
-      log.info('number of connections within duration', {
-        agentIdx,
-        swarmIdx,
-        swarmTopic: swarm.topic,
-        connections: swarm.protocol.connections.size,
-        numAgents,
-      });
-
-      /**
-       * Wait till all peers are connected (with timeout).
-       */
-      const waitTillConnected = async () => {
-        await cancelWithContext(
-          context,
-          swarm.protocol.connected.waitForCondition(
-            () => swarm.protocol.connections.size === Object.keys(agents).length - 1,
-          ),
-        );
-        log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      };
-
-      asyncTimeout(waitTillConnected(), spec.fullSwarmTimeout).catch((error) => {
-        log.info('all peers not connected', {
-          agentIdx,
-          swarmIdx,
-          swarmTopic: swarm.topic,
-          connections: swarm.protocol.connections.size,
-          numAgents,
-        });
-      });
-    };
-
-    /**
-     * Leave swarm and wait till all peers are disconnected.
-     */
-    // TODO(egorgripasov): Move to util.
-    const leaveSwarm = async (context: Context, swarmIdx: number, swarm: any) => {
-      log.info('closing swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      await cancelWithContext(context, swarm.leave());
-      log.info('swarm closed', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-
-      /**
-       * Wait till all peers are disconnected (with timeout).
-       */
-      const waitTillDisconnected = async () => {
-        await cancelWithContext(
-          context,
-          swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
-        );
-        log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
-      };
-
-      asyncTimeout(waitTillDisconnected(), spec.fullSwarmTimeout).catch((error) => {
-        log.info('all peers not disconnected', {
-          agentIdx,
-          swarmIdx,
-          swarmTopic: swarm.topic,
-          connections: swarm.protocol.connections.size,
-        });
-      });
-    };
-
     const loadFeed = (
       context: Context,
       feed: FeedWrapper<any>,
@@ -285,7 +216,15 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
-            await joinSwarm(context, swarmIdx, swarm);
+            await joinSwarm({
+              context,
+              swarmIdx,
+              agentIdx,
+              numAgents,
+              targetSwarmTimeout: spec.targetSwarmTimeout,
+              fullSwarmTimeout: spec.fullSwarmTimeout,
+              swarm,
+            });
           }),
         );
 
@@ -381,7 +320,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
-            await leaveSwarm(context, swarmIdx, swarm);
+            await leaveSwarm({ context, swarmIdx, swarm, agentIdx, fullSwarmTimeout: spec.fullSwarmTimeout });
           }),
         );
       }
