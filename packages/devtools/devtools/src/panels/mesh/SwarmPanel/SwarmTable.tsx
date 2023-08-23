@@ -9,13 +9,14 @@ import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { humanize } from '@dxos/util';
 
-import { BooleanIcon } from './BooleanIcon';
+import { BooleanIcon } from '../../../components';
 
 export interface SwarmListProps {
   swarms: SwarmInfo[];
   onClick?: (id: PublicKey) => void;
 }
 
+// TODO(burdon): Convert to Grid.
 export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
   <div className='flex flex-col grow h-screen w-full'>
     <div className='inline-flex w-full border-b border-slate-400 border-solid'>

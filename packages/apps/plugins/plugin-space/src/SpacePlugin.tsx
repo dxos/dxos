@@ -157,6 +157,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
+            properties: { palette: 'blue' },
           });
 
           const client = clientPlugin.provides.client;
@@ -178,7 +179,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
             });
           });
 
-          parent.addAction(
+          groupNode.addAction(
             {
               id: 'create-space',
               label: ['create space label', { ns: 'os' }],
