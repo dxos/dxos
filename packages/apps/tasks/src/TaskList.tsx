@@ -107,7 +107,7 @@ export const TaskList = () => {
         )}
         <div className='flex items-center justify-between'>
           <input
-            className='mr-2 rounded shadow flex-grow'
+            className='mr-2 rounded shadow flex-grow py-2 px-4'
             type='text'
             value={newTaskTitle}
             onChange={(e) => {
