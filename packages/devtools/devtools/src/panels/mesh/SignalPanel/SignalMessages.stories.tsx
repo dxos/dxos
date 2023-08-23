@@ -5,13 +5,13 @@
 import React from 'react';
 
 import '@dxosTheme';
-import { SignalMessages } from './SignalMessages';
+import { SignalMessageTable } from './SignalMessageTable';
 
 export default {
-  component: SignalMessages,
+  component: SignalMessageTable,
   actions: { argTypesRegex: '^on.*' },
 };
 
 export const Normal = (props: any) => {
-  return <SignalMessages {...props} />;
+  return <SignalMessageTable {...props} />;
 };

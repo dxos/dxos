@@ -52,6 +52,7 @@ type IconColumnOptions = BaseColumnOptions & {};
 export class ColumnBuilder<TData extends RowData> {
   createNumber(options: NumberColumnOptions = {}): Partial<ColumnDef<TData, number>> {
     return stripUndefinedValues({
+      size: 100,
       ...options,
       header: (column) => {
         return <div className='text-right'>{options?.header ?? column.header.id}</div>;
