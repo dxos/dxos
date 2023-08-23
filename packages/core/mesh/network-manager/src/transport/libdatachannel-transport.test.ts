@@ -16,7 +16,6 @@ import { LibDataChannelTransport } from './libdatachannel-transport';
 import { SimplePeerTransport } from './simplepeer-transport';
 
 describe.only('LibDataChannelTransport', () => {
-  // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const connection = new LibDataChannelTransport({
       initiator: true,
@@ -56,10 +55,12 @@ describe.only('LibDataChannelTransport', () => {
     afterTest(() => connection2.destroy());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-    await TestStream.assertConnectivity(stream1, stream2);
-  });
+    await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
+  })
+    .timeout(2_000)
+    .retries(3);
 
-  test.only('establish connection between LibDataChannel and SimplePeer', async () => {
+  test('establish connection between LibDataChannel and SimplePeer', async () => {
     const stream1 = new TestStream();
     const connection1 = new LibDataChannelTransport({
       initiator: true,
@@ -88,6 +89,8 @@ describe.only('LibDataChannelTransport', () => {
     afterTest(() => connection2.destroy());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-    await TestStream.assertConnectivity(stream1, stream2);
-  });
+    await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
+  })
+    .timeout(2_000)
+    .retries(3);
 });

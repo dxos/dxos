@@ -93,10 +93,12 @@ export class LibDataChannelTransport implements Transport {
     this._channel.onerror = async (err) => {
       log.error('channel error', { err });
       await this._disconnectStreams();
+      this.closed.emit();
     };
     this._channel.onclose = async (err) => {
       log.error('channel error', { err });
       await this._disconnectStreams();
+      this.closed.emit();
     };
 
     const duplex = new Duplex({
@@ -131,6 +133,7 @@ export class LibDataChannelTransport implements Transport {
 
     dataChannel.onclose = () => {
       duplex.destroy();
+      this.closed.emit();
     };
     duplex.pipe(this.params.stream).pipe(duplex);
     this._stream = duplex;
@@ -171,6 +174,7 @@ export class LibDataChannelTransport implements Transport {
 
   async destroy(): Promise<void> {
     (await this._peer).close();
+    this.closed.emit();
   }
 
   private async _disconnectStreams() {
