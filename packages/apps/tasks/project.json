@@ -6,7 +6,7 @@
       "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/apps/tasks/src/main.ts",
-        "outputPath": "packages/apps/tasks/out/tasks",
+        "outputPath": "packages/apps/tasks/dist",
         "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "packages/apps/tasks/tsconfig.json"
       },

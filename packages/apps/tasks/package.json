@@ -11,7 +11,6 @@
     "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
   },
   "dependencies": {
-    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/vault": "workspace:*",
     "@dxos/react-client": "workspace:*",
