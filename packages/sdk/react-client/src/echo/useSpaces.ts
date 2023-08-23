@@ -16,7 +16,7 @@ import { useClient } from '../client';
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
   // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
-  const spaces = useSpaces();
+  const spaces = useSpaces({ includeDefault: true });
   return spaceKey
     ? spaces.find((space) => space.key.equals(spaceKey))
     : spaces.find((space) => space.properties[defaultKey]);
