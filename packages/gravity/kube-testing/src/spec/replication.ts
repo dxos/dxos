@@ -72,7 +72,7 @@ export type ReplicationTestSpec = {
   signalArguments: string[];
 };
 
-// Note: Must be serializable.
+// Note: must be serializable.
 export type ReplicationAgentConfig = {
   agentIdx: number;
   signalUrl: string;
@@ -91,7 +91,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
   async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<ReplicationAgentConfig[]> {
     if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
-      throw new Error('Only one of feedLoadDuration or feedMessageCount must be set');
+      throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
     }
 
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments);
@@ -150,6 +150,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
     // Feeds.
     // TODO(burdon): Config for storage type.
+    // TODO(burdon): Use @dxos/feed-store TestBuilder?
     const storage = createStorage({ type: StorageType.NODE });
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const feedStore = new FeedStore({
@@ -165,14 +166,13 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     await peer.open();
     log.info('peer created', { agentIdx });
 
-    log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
-
     // Feeds.
     const feedsBySwarm = new Map<string, { writable: boolean; feed: FeedWrapper<any> }[]>();
     for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
       const feedsArr = await Promise.all(
         feedConfigs.map(async (feedConfig) => {
           // Import key pairs to keyring.
+          // TODO(burdon): Can these just be created by the keyring?
           const keyPairExported = feedKeys.find((key) => key.publicKeyHex === feedConfig.feedKey)!;
           const feedKey = await keyring.importKeyPair(
             await parseJWKKeyPair(keyPairExported.privateKey, keyPairExported.publicKey),
@@ -187,13 +187,12 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     }
 
     // Swarms to join.
+    log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
     const swarms = swarmTopicIds.map((swarmTopicId) => {
       return peer.createSwarm(PublicKey.from(swarmTopicId), () => [
         { name: REPLICATOR_EXTENSION_NAME, extension: new ReplicatorExtension().setOptions({ upload: true }) },
       ]);
     });
-
-    log.info('swarms created', { agentIdx });
 
     const loadFeed = async (
       context: Context,
