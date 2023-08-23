@@ -26,6 +26,11 @@ export type UseSpacesParams = {
    * Return uninitialized spaces as well.
    */
   all?: boolean;
+
+  /**
+   * Return the default space in the list.
+   */
+  includeDefault?: boolean;
 };
 
 /**
@@ -34,10 +39,12 @@ export type UseSpacesParams = {
  * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
+export const useSpaces = ({ all = false, includeDefault = false }: UseSpacesParams = {}): Space[] => {
   const client = useClient();
   const spaces = useMulticastObservable(client.spaces);
 
   // TODO(dmaretskyi): Array reference equality.
-  return spaces.filter((space) => all || space.state.get() === SpaceState.READY);
+  return spaces
+    .filter((space) => all || space.state.get() === SpaceState.READY)
+    .filter((space) => includeDefault || !space.properties[defaultKey]);
 };
