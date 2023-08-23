@@ -172,7 +172,7 @@ export class PublicKey implements Equatable {
   }
 
   get length() {
-    return this._value.buffer.byteLength - 1;
+    return this._value.length;
   }
 
   toHex(): string {
