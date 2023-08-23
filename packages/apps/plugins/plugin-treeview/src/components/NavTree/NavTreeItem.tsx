@@ -10,7 +10,15 @@ import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEff
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
 import { Button, DropdownMenu, Tooltip, TreeItem, useId, useSidebars, useTranslation } from '@dxos/aurora';
-import { focusRing, getSize, mx } from '@dxos/aurora-theme';
+import {
+  focusRing,
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedKeyboardControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/aurora-theme';
 
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
@@ -80,6 +88,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
       classNames={[
         'rounded block',
+        hoverableFocusedKeyboardControls,
         focusRing,
         active && 'bg-neutral-75 dark:bg-neutral-850',
         rearranging && 'invisible',
@@ -89,7 +98,10 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       style={style}
       ref={forwardedRef}
     >
-      <div role='none' className={mx(levelPadding(level), 'flex items-start')}>
+      <div
+        role='none'
+        className={mx(levelPadding(level), hoverableControls, hoverableFocusedWithinControls, 'flex items-start')}
+      >
         {isBranch ? (
           <CollapsibleHeading {...{ open, node, level, active, id: labelId }} />
         ) : (
@@ -128,7 +140,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
                 <Tooltip.Trigger asChild>
                   <Button
                     variant='ghost'
-                    classNames='shrink-0 pli-2 pointer-fine:pli-1'
+                    classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem]}
                     {...(!navigationSidebarOpen && { tabIndex: -1 })}
                   >
                     <DotsThreeVertical className={getSize(4)} />

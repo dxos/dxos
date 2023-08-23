@@ -10,7 +10,19 @@ import React, { FC, forwardRef } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { List, ListItem, Button, useTranslation, DensityProvider, ListScopedProps } from '@dxos/aurora';
-import { fineButtonDimensions, focusRing, getSize, mx, inputSurface, surfaceElevation } from '@dxos/aurora-theme';
+import {
+  fineButtonDimensions,
+  focusRing,
+  getSize,
+  mx,
+  inputSurface,
+  surfaceElevation,
+  hoverableControls,
+  staticHoverableControls,
+  hoverableControlItem,
+  hoverableFocusedControls,
+  hoverableFocusedKeyboardControls,
+} from '@dxos/aurora-theme';
 import { Surface } from '@dxos/react-surface';
 
 import { STACK_PLUGIN, StackSectionModel } from '../types';
@@ -41,9 +53,9 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           classNames={[
             surfaceElevation({ elevation: 'group' }),
             inputSurface,
+            hoverableControls,
             'grow rounded mlb-2',
-            '[--controls-opacity:1] hover-hover:[--controls-opacity:.1] hover-hover:hover:[--controls-opacity:1]',
-            isOverlay && 'hover-hover:[--controls-opacity:1]',
+            isOverlay && staticHoverableControls,
             rearranging ? 'opacity-0' : section.isPreview ? 'opacity-50' : 'opacity-100',
           ]}
           ref={forwardedRef}
@@ -56,7 +68,8 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
             className={mx(
               fineButtonDimensions,
               focusRing,
-              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto focus-visible:[--controls-opacity:1]',
+              hoverableFocusedKeyboardControls,
+              'self-stretch flex items-center rounded-is justify-center bs-auto is-auto',
               isOverlay && 'text-primary-600 dark:text-primary-300',
             )}
             {...draggableAttributes}
@@ -64,7 +77,7 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           >
             <DotsSixVertical
               weight={isOverlay ? 'bold' : 'regular'}
-              className={mx(getSize(5), 'transition-opacity opacity-[--controls-opacity]')}
+              className={mx(getSize(5), hoverableControlItem, 'transition-opacity')}
             />
           </div>
           <div role='none' className='flex-1'>
@@ -72,11 +85,11 @@ const StackSectionImpl = forwardRef<HTMLLIElement, ListScopedProps<StackSectionP
           </div>
           <Button
             variant='ghost'
-            classNames='self-stretch justify-start rounded-is-none focus:[--controls-opacity:1]'
+            classNames={['self-stretch justify-start rounded-is-none', hoverableFocusedControls]}
             onClick={onRemove}
           >
             <span className='sr-only'>{t('remove section label')}</span>
-            <X className={mx(getSize(4), 'transition-opacity opacity-[--controls-opacity]')} />
+            <X className={mx(getSize(4), hoverableControlItem, 'transition-opacity')} />
           </Button>
         </ListItem.Root>
       </DensityProvider>
