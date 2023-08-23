@@ -46,7 +46,7 @@ type FeedLoadTimeEntry = {
 type FeedReplicaStats = {
   feedLength: number;
   byteLength: number;
-  replicationSpeed?: string;
+  replicationSpeed?: string; // TODO(burdon): Keep as number and format on demand.
 };
 
 type FeedStats = {
@@ -386,17 +386,15 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
   async finish(params: TestParams<ReplicationTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
-    log.info('finished shutdown');
 
-    // TODO(burdon): Create Agent typs (single map).
     // Map<agentIdx, Map<swarmId, FeedStats>>
-    const feeds = new Map<number, Map<number, FeedEntry[]>>();
+    const swarmsByAgent = new Map<number, Map<number, FeedEntry[]>>();
+    range(params.spec.agents).forEach((agentIdx) => {
+      swarmsByAgent.set(agentIdx, new Map(range(params.spec.swarmsPerAgent).map((idx) => [idx, []])));
+    });
+
     // Map<agentIdx, ms>
     const feedLoadTimes = new Map<number, number>();
-
-    range(params.spec.agents).forEach((agentIdx) => {
-      feeds.set(agentIdx, new Map(range(params.spec.swarmsPerAgent).map((idx) => [idx, []])));
-    });
 
     const reader = getReader(results);
     reader.forEach((entry: SerializedLogEntry<any>) => {
@@ -407,7 +405,8 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           if (feedStats.testCounter > 0) {
             break;
           }
-          const agentFeeds = feeds.get(entry.context.agentIdx)!;
+
+          const agentFeeds = swarmsByAgent.get(entry.context.agentIdx)!;
           const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
           // TODO(egorgripasov): For some reason received logs entry are duplicated.
           if (!swarmFeeds.find((feed) => feed.feedKey === feedStats.feedKey)) {
@@ -415,12 +414,14 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
           }
           break;
         }
+
         case 'dxos.test.feed-load-time': {
           const feedLoadTime = entry.context as FeedLoadTimeEntry;
           // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
           if (feedLoadTime.testCounter > 0) {
             break;
           }
+
           feedLoadTimes.set(feedLoadTime.agentIdx, feedLoadTime.feedLoadTime);
           break;
         }
@@ -428,18 +429,20 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     });
 
     const stats: FeedStats[] = [];
-    feeds.forEach((agentFeeds, agentIdx) => {
+    swarmsByAgent.forEach((agentFeeds, agentIdx) => {
       agentFeeds.forEach((swarmFeeds, swarmIdx) => {
         swarmFeeds.forEach((feedStats) => {
           if (feedStats.writable) {
             const replicas: FeedReplicaStats[] = [];
+
             // Check feeds from other agents from this swarm.
-            feeds.forEach((otherAgentFeeds, otherAgentIdx) => {
+            swarmsByAgent.forEach((otherAgentFeeds, otherAgentIdx) => {
               if (otherAgentIdx !== agentIdx) {
                 const otherSwarmFeeds = otherAgentFeeds.get(swarmIdx)!;
                 const otherFeedStats = otherSwarmFeeds.find(
                   (otherFeedStats) => otherFeedStats.feedKey === feedStats.feedKey,
                 );
+
                 if (otherFeedStats) {
                   const bytesInSecond = otherFeedStats.byteLength / (feedLoadTimes.get(agentIdx)! / 1000);
                   replicas.push({
@@ -450,6 +453,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
                 }
               }
             });
+
             stats.push({
               feedKey: feedStats.feedKey,
               feedLength: feedStats.feedLength,

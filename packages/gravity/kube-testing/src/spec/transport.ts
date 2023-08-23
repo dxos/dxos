@@ -282,13 +282,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
   async finish(params: TestParams<TransportTestSpec>, results: PlanResults): Promise<any> {
     await this.signalBuilder.destroy();
-    log.info('finished shutdown');
-
-    const reader = getReader(results);
 
     const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();
     const testStats = new Map<string, SerializedLogEntry<TestStatsLog>[]>();
 
+    const reader = getReader(results);
     reader.forEach((entry: SerializedLogEntry<any>) => {
       switch (entry.message) {
         case 'dxos.mesh.teleport.stats': {
