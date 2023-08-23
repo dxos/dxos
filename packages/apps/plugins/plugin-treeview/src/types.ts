@@ -22,5 +22,3 @@ export type TreeViewPluginProvides = IntentProvides &
   TranslationsProvides & {
     treeView: TreeViewContextValue;
   };
-
-export type SharedTreeItemProps = { node: Graph.Node; level: number };
