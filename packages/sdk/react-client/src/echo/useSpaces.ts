@@ -15,6 +15,7 @@ import { useClient } from '../client';
  * @param [spaceKey] the key of the space to look for
  */
 export const useSpace = (spaceKey?: PublicKeyLike) => {
+  // TODO(wittjosiah): This should return all spaces, but that is likely a breaking change.
   const spaces = useSpaces();
   return spaceKey
     ? spaces.find((space) => space.key.equals(spaceKey))
