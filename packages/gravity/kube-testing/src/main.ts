@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 
 import { runPlan } from './plan';
-import { EchoTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
+import { EchoTestPlan, ReplicationTestPlan, SignalTestPlan, TransportTestPlan } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
@@ -82,6 +82,33 @@ const plans: { [key: string]: () => any } = {
       randomSeed: PublicKey.random().toHex(),
       profile: true,
       // repeatAnalysis: `${DXOS_REPO}/packages/gravity/kube-testing/out/results/2023-07-11T17:12:40-5a291148/test.json`,
+    },
+  }),
+
+  replication: () => ({
+    plan: new ReplicationTestPlan(),
+    spec: {
+      agents: 2,
+      swarmsPerAgent: 1,
+      duration: 60_000,
+
+      transport: 'webrtc',
+
+      targetSwarmTimeout: 10_000,
+      fullSwarmTimeout: 60_000,
+
+      signalArguments: ['globalsubserver'],
+      repeatInterval: 5_000,
+
+      feedsPerSwarm: 1,
+      feedAppendInterval: 0,
+      feedMessageSize: 500,
+      // feedLoadDuration: 10_000,
+      feedMessageCount: 10_000,
+    },
+    options: {
+      staggerAgents: 1000,
+      randomSeed: PublicKey.random().toHex(),
     },
   }),
 };

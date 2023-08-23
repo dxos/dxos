@@ -141,6 +141,10 @@ export class FeedWrapper<T extends {}> {
     return this._hypercore.length;
   }
 
+  get byteLength() {
+    return this._hypercore.byteLength;
+  }
+
   on = this._binder.fn(this._hypercore.on);
   off = this._binder.fn(this._hypercore.off);
 
