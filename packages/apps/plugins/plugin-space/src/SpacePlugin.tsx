@@ -157,6 +157,7 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
           const [groupNode] = parent.add({
             id: getSpaceId('all-spaces'),
             label: ['plugin name', { ns: SPACE_PLUGIN }],
+            properties: { palette: 'blue' },
           });
 
           const client = clientPlugin.provides.client;
@@ -166,10 +167,10 @@ export const SpacePlugin = (): PluginDefinition<SpacePluginProvides> => {
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             subscriptions.clear();
-            const spaceIndices = getIndices(spaces.length);
+            const indices = getIndices(spaces.length);
             spaces.forEach((space, index) => {
               const handle = createSubscription(() => {
-                spaceToGraphNode(space, groupNode, spaceIndices[index]);
+                spaceToGraphNode(space, groupNode, indices[index]);
               });
               handle.update([space.properties]);
               subscriptions.add(handle.unsubscribe);

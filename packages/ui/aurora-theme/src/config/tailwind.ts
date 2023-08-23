@@ -27,7 +27,12 @@ export type PaletteConfig = {
 };
 
 const shadeNumbers: number[] = /* [...Array(19)].map((_, i) => 50 + i * 50); */ [
-  25, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925, 950, 975,
+  50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950,
+];
+
+const broadShadeNumbers: number[] = [
+  12, 25, 37, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925,
+  950, 975,
 ];
 
 const dtor = Math.PI / 180;
@@ -151,6 +156,7 @@ export const paletteConfigs: Record<string, PaletteConfig> = {
 
 export const configColors = Object.keys(paletteConfigs).reduce(
   (acc: Record<string, Record<string, string>>, palette) => {
+    const isBroad = palette === 'neutral' || palette === 'primary';
     const paletteConfig = paletteConfigs[palette] as PaletteConfig;
     const curve = curvePathFromPalette({
       ...paletteConfig,
@@ -172,7 +178,7 @@ export const configColors = Object.keys(paletteConfigs).reduce(
         return labToHex([l1 * k1 + l2 * k2, a1 * k1 + a2 * k2, b1 * k1 + b2 * k2]);
       }
     };
-    acc[palette] = shadeNumbers.reduce((acc: Record<string, string>, shadeNumber) => {
+    acc[palette] = (isBroad ? broadShadeNumbers : shadeNumbers).reduce((acc: Record<string, string>, shadeNumber) => {
       acc[`${shadeNumber}`] = renderCssValue(shadeNumber);
       return acc;
     }, {});

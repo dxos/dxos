@@ -4,15 +4,21 @@
 
 import React from 'react';
 
-import { Graph } from '@braneframe/plugin-graph';
 import { TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
-import { auroraTx, getSize, mx, staticDisabled, valenceColorText } from '@dxos/aurora-theme';
+import { auroraTx, getSize, mx, valenceColorText } from '@dxos/aurora-theme';
 
 import { useTreeView } from '../../TreeViewContext';
 import { TREE_VIEW_PLUGIN } from '../../types';
-import { navTreeHeading, topLevelHeadingColor, topLevelText, treeItemText } from './style-fragments';
+import {
+  topLevelHeadingHoverColor,
+  navTreeHeading,
+  topLevelHeadingColor,
+  topLevelText,
+  treeItemText,
+} from './navtree-fragments';
+import { SharedTreeItemHeadingProps } from './props';
 
-export const NavigableHeading = ({ node, level }: { node: Graph.Node; level: number }) => {
+export const NavigableHeading = ({ node, level, active }: SharedTreeItemHeadingProps) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
   const { t } = useTranslation(TREE_VIEW_PLUGIN);
@@ -45,24 +51,19 @@ export const NavigableHeading = ({ node, level }: { node: Graph.Node; level: num
         className={auroraTx(
           'button.root',
           'tree-item__heading--link',
-          { variant: 'ghost', density: 'fine' },
+          { variant: 'ghost', density: 'fine', disabled },
           'gap-1 justify-start',
           navTreeHeading,
           level < 1 ? 'pli-1.5' : 'pli-0',
-          disabled && staticDisabled,
+          level < 1 && topLevelHeadingColor(node.properties?.palette),
+          level < 1 && topLevelHeadingHoverColor(node.properties?.palette),
           error && valenceColorText('error'),
         )}
         {...(disabled && { disabled, 'aria-disabled': true })}
+        {...(active && { 'aria-current': 'page' })}
       >
         {node.icon && <node.icon className={mx(getSize(4), 'shrink-0')} />}
-        <span
-          className={mx(
-            navTreeHeading,
-            modified && 'italic',
-            level < 1 && topLevelHeadingColor(node.properties?.palette),
-            level < 1 ? topLevelText : treeItemText,
-          )}
-        >
+        <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
           {Array.isArray(node.label) ? t(...node.label) : node.label}
         </span>
       </button>
