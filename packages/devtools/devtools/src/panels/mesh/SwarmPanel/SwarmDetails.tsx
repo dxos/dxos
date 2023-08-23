@@ -15,6 +15,7 @@ interface SwarmDetailsProps {
   swarms: SwarmInfo[];
 }
 
+// TODO(burdon): Not used?
 export const SwarmDetails = ({ swarms }: SwarmDetailsProps) => {
   const [swarmId, setSwarmId] = useState<PublicKey | undefined>();
   const [sessionId, setSessionId] = useState<PublicKey | undefined>();
