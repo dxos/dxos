@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { ProhibitInset, X } from '@phosphor-icons/react';
+import { X, Trash } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
 import { Button, ListItem, useTranslation, Avatar } from '@dxos/aurora';
@@ -102,7 +102,9 @@ export const InvitationListItemImpl = ({
           <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
-        <AuthCode className='grow' code={authCode} />
+        <span className='flex grow'>
+          <AuthCode code={authCode} />
+        </span>
       ) : status === Invitation.State.CONNECTING ? (
         <span className='pli-2 grow text-neutral-500'>Connecting...</span>
       ) : status === Invitation.State.AUTHENTICATING ? (
@@ -119,12 +121,12 @@ export const InvitationListItemImpl = ({
       {isCancellable ? (
         <Button variant='ghost' classNames='flex gap-1' onClick={cancel} data-testid='cancel-invitation'>
           <span className='sr-only'>{t('cancel invitation label')}</span>
-          <ProhibitInset className={getSize(4)} weight='bold' />
+          <X className={getSize(5)} weight='bold' />
         </Button>
       ) : (
         <Button variant='ghost' classNames='flex gap-1' onClick={handleClickRemove} data-testid='remove-invitation'>
           <span className='sr-only'>{t('remove invitation label')}</span>
-          <X className={getSize(4)} weight='bold' />
+          <X className={getSize(5)} weight='bold' />
         </Button>
       )}
     </ListItem.Root>

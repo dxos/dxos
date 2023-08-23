@@ -2,26 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { HTMLProps, PropsWithChildren, ReactNode } from 'react';
+import React, { HTMLProps, PropsWithChildren } from 'react';
 
-export type AuthCodeProps = HTMLProps<HTMLDivElement> & {
+export type AuthCodeProps = HTMLProps<HTMLSpanElement> & {
   code?: string;
   large?: boolean;
-  divider?: ReactNode;
 };
-
 export const AuthCode = (props: PropsWithChildren<AuthCodeProps>) => {
-  const { code, className, divider, large } = props;
+  const { code, large, className } = props;
   const l = code?.length ?? 0;
+  const left = code?.slice(0, l / 2);
+  const right = code?.slice(l / 2);
   return (
-    <div
-      className={
-        `${large ? 'text-6xl' : 'text-2xl'} font-mono pli-2 flex ${large ? 'gap-4' : 'gap-2'} ` + (className ?? '')
-      }
-    >
-      <span>{code?.slice(0, l / 2)}</span>
-      {divider}
-      <span>{code?.slice(l / 2)}</span>
-    </div>
+    <span className={`${large ? 'text-6xl' : 'text-2xl'} font-mono pli-2.5 flex gap-1.5 rounded ${className ?? ''}`}>
+      <span>{left}</span>
+      <span>{right}</span>
+    </span>
   );
 };

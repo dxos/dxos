@@ -86,7 +86,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
         />
       </div>
       <PanelActions classNames='flex flex-col'>
-        <LargeButton>Back</LargeButton>
+        <LargeButton variant='ghost'>Back</LargeButton>
         <LargeButton variant='primary'>Continue</LargeButton>
         {/* <PanelAction
           aria-label={t('continue label')}

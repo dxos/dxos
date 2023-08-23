@@ -22,6 +22,7 @@ import { SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   invitations?: CancellableInvitationObservable[];
+  showInactiveInvitations?: boolean;
   onCreateInvitationClick?: (e: React.MouseEvent) => void;
   SpaceMemberList?: React.FC<SpaceMemberListProps>;
   InvitationList?: React.FC<InvitationListProps>;
@@ -67,6 +68,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     send,
     onCreateInvitationClick,
     invitations,
+    showInactiveInvitations,
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
     InvitationList: InvitationListComponent = InvitationList,
   } = props;
@@ -83,9 +85,12 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   //     <Check weight='light' className={getSize(6)} />
   //   </PanelAction>
   // );
-  const visibleInvitations = invitations?.filter(
-    (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
-  );
+
+  const visibleInvitations = showInactiveInvitations
+    ? invitations
+    : invitations?.filter(
+        (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
+      );
 
   return (
     <>
@@ -107,12 +112,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
       <PanelActions>
-        <LargeButton
-          variant='primary'
-          disabled={!active}
-          onClick={onCreateInvitationClick}
-          data-testid='spaces-panel.create-invitation'
-        >
+        <LargeButton disabled={!active} onClick={onCreateInvitationClick} data-testid='spaces-panel.create-invitation'>
           <span>{t('create space invitation label')}</span>
           <UserPlus className={getSize(4)} weight='bold' />
         </LargeButton>

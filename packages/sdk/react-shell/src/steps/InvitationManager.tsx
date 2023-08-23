@@ -7,11 +7,13 @@ import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useId, useTranslation } from '@dxos/aurora';
-import { descriptionText, getSize, groupSurface, mx } from '@dxos/aurora-theme';
+import { getSize, mx } from '@dxos/aurora-theme';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 
 import { PanelActions, Viewport, ViewportViewProps } from '../components';
 import { AuthCode } from '../components/AuthCode';
+import { Emoji, Centered } from '../components/Panel/Emoji';
+import { Label } from '../components/Panel/Label';
 import { LargeButton } from '../components/Panel/LargeButton';
 import { invitationStatusValue, toEmoji } from '../util';
 import { StepProps } from './StepProps';
@@ -20,33 +22,6 @@ export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
     invitationUrl?: string;
   };
-
-const Emoji = ({ text }: { text?: string }) => {
-  const size = 14;
-  return (
-    <div role='none' className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-      <div role='none' className={mx(getSize(size), 'rounded relative', groupSurface)}>
-        {/* <Avatar.Root size={size} variant='square'>
-          <Avatar.Frame>
-            <Avatar.Fallback text={text} />
-          </Avatar.Frame>
-        </Avatar.Root> */}
-        <svg viewBox={`0 0 ${size * 4} ${size * 4}`} width={size * 4} height={size * 4}>
-          <text
-            x='50%'
-            y='50%'
-            textAnchor='middle'
-            dominantBaseline='middle'
-            baselineShift={'-0.25rem'}
-            fontSize={'2.25rem'}
-          >
-            {text}
-          </text>
-        </svg>
-      </div>
-    </div>
-  );
-};
 
 const InvitationManagerView = ({
   children,
@@ -57,9 +32,13 @@ const InvitationManagerView = ({
   return (
     <Viewport.View {...props} classNames='grow'>
       <div role='none' className='is-full max-is-[14rem] mli-auto'>
-        <div role='none' className='aspect-square is-full bs-auto relative text-neutral-500 dark:text-neutral-500'>
+        <div role='none' className='aspect-square is-full bs-auto relative text-neutral-600 dark:text-neutral-500'>
           {children}
-          {emoji && <Emoji text={emoji} />}
+          {emoji && (
+            <Centered>
+              <Emoji text={emoji} />
+            </Centered>
+          )}
         </div>
       </div>
     </Viewport.View>
@@ -112,9 +91,9 @@ export const InvitationManager = ({
               rounding={100}
               backgroundColor='transparent'
               color='currentColor'
-              className={mx('is-full bs-full', showAuthCode && 'invisible')}
+              className={mx('is-full bs-full p-2', showAuthCode && 'invisible')}
               aria-labelledby={qrLabel}
-              errorCorrectionLevel='M'
+              errorCorrectionLevel='Q'
             >
               {invitationUrl ?? 'never'}
             </QR>
@@ -123,13 +102,11 @@ export const InvitationManager = ({
             </span>
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code'>
-            <div role='none' className='absolute inset-0 flex flex-col justify-around items-center'>
-              <AuthCode code={authCode} large className='text-black dark:text-white' divider={emoji} />
-            </div>
-            <div role='none' className='flex flex-col justify-around'>
-              <span className={mx(descriptionText, 'text-center mli-6 whitespace-normal')}>
-                {t('auth code message')}
-              </span>
+            <div role='none' className='absolute inset-0 flex flex-col justify-between items-center'>
+              <Label>{t('auth code message')}</Label>
+              <AuthCode code={authCode} large className='text-black dark:text-white' />
+              <Label>Be sure the other device is showing this symbol:</Label>
+              {emoji && <Emoji text={emoji} />}
             </div>
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>

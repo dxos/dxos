@@ -7,7 +7,9 @@ import React, { ChangeEvent, useState } from 'react';
 import { Input, useTranslation } from '@dxos/aurora';
 
 import { PanelActions, PanelStepHeading } from '../../../components';
+import { Emoji } from '../../../components/Panel/Emoji';
 import { LargeButton } from '../../../components/Panel/LargeButton';
+import { toEmoji } from '../../../util';
 import { JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -16,6 +18,7 @@ export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
   failed?: boolean;
   pending?: boolean;
+  invitationId?: string;
   onInvitationCancel?: () => Promise<void> | undefined;
   onInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
 }
@@ -25,6 +28,7 @@ export const InvitationAuthenticator = ({
   Kind,
   active,
   pending,
+  invitationId,
   onInvitationAuthenticate,
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
@@ -43,6 +47,7 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
+        {invitationId && <Emoji text={toEmoji(invitationId)} />}
         <Input.Root
           {...(failed && {
             validationValence: 'error',
@@ -73,14 +78,18 @@ export const InvitationAuthenticator = ({
         </Input.Root>
       </div>
       <PanelActions>
-        <LargeButton variant='primary'>Continue</LargeButton>
-        {/* <PanelAction
-          aria-label={t('next label')}
+        <LargeButton
+          variant='primary'
           disabled={disabled}
-          classNames='order-2'
+          aria-label={t('next label')}
           onClick={() => onInvitationAuthenticate?.(authCode)}
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
+        >
+          Continue
+        </LargeButton>
+        {/* <PanelAction
+          classNames='order-2'
         >
           <CaretRight weight='light' className={getSize(6)} />
         </PanelAction>
