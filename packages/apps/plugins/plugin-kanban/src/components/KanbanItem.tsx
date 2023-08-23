@@ -10,7 +10,7 @@ import React, { FC } from 'react';
 import type { Kanban as KanbanType } from '@braneframe/types';
 import { Button, useTranslation } from '@dxos/aurora';
 import { MarkdownComposer, useTextModel } from '@dxos/aurora-composer';
-import { getSize, mx, paperSurface } from '@dxos/aurora-theme';
+import { getSize, mx, inputSurface } from '@dxos/aurora-theme';
 
 import { KANBAN_PLUGIN } from '../types';
 
@@ -44,7 +44,7 @@ export const KanbanItemComponent: FC<{
       style={{ transform: CSS.Transform.toString(tx), transition }}
       className={mx('flex grow', isDragging && 'border border-neutral-300 dark:border-neutral-800 border-dashed')}
     >
-      <div className={mx('flex items-start grow p-1', paperSurface, isDragging && 'opacity-10')}>
+      <div className={mx('flex items-start grow p-1', inputSurface, isDragging && 'opacity-10')}>
         {/* TODO(burdon): Standardize height (and below); e.g., via toolbar. */}
         <button className='flex h-[40px] items-center' {...attributes} {...listeners}>
           <DotsSixVertical className={getSize(5)} />

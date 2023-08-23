@@ -119,6 +119,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
         ref={forwardedRef}
         aria-labelledby={headingId}
         {...(selectable && { role: 'option', 'aria-selected': !!selected })}
+        {...(open && { 'aria-expanded': true })}
       >
         {children}
       </Primitive.li>

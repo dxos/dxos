@@ -12,7 +12,7 @@ import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hy
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createBinder } from '@dxos/util';
+import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
 
 import { FeedWriter, WriteReceipt } from './feed-writer';
 
@@ -174,6 +174,43 @@ export class FeedWrapper<T extends {}> {
   setDownloading = this._binder.fn(this._hypercore.setDownloading);
   replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
   clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+
+  /**
+   * Clear and check for integrity.
+   */
+  async safeClear(from: number, to: number) {
+    invariant(from >= 0 && from < to && to <= this.length, 'Invalid range');
+
+    const CHECK_MESSAGES = 20;
+    const checkBegin = to;
+    const checkEnd = Math.min(checkBegin + CHECK_MESSAGES, this.length);
+
+    const messagesBefore = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
+
+    await this.clear(from, to);
+
+    const messagesAfter = await Promise.all(
+      rangeFromTo(checkBegin, checkEnd).map((idx) =>
+        this.get(idx, {
+          valueEncoding: { decode: (x: Uint8Array) => x },
+        }),
+      ),
+    );
+
+    for (let i = 0; i < messagesBefore.length; i++) {
+      const before = arrayToBuffer(messagesBefore[i]);
+      const after = arrayToBuffer(messagesAfter[i]);
+      if (!before.equals(after)) {
+        throw new Error('Feed corruption on clear. There has likely been a data loss.');
+      }
+    }
+  }
 }
 
 class BatchedReadStream extends Readable {

@@ -1,12 +1,14 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import get from 'lodash.get';
 
 import { ComponentFunction, Theme } from '@dxos/aurora-types';
 
 import {
   avatarTheme,
+  breadcrumbTheme,
   buttonTheme,
   dialogTheme,
   dropdownMenuTheme,
@@ -29,6 +31,7 @@ export const auroraTheme: Theme<Record<string, any>> = {
   themeName: () => 'aurora',
 
   avatar: avatarTheme,
+  breadcrumb: breadcrumbTheme,
   button: buttonTheme,
   dialog: dialogTheme,
   dropdownMenu: dropdownMenuTheme,

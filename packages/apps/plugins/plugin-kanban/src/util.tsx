@@ -6,9 +6,10 @@ import { Kanban, Trash } from '@phosphor-icons/react';
 import get from 'lodash.get';
 import React from 'react';
 
-import type { GraphNode } from '@braneframe/plugin-graph';
+import type { Graph } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
 import { Kanban as KanbanType } from '@braneframe/types';
+import { Space } from '@dxos/client/echo';
 
 import { KANBAN_PLUGIN, Location } from './types';
 
@@ -30,25 +31,30 @@ export const findLocation = (columns: KanbanType.Column[], id: string): Location
   }
 };
 
-export const objectToGraphNode = (parent: GraphNode, object: KanbanType, index: string): GraphNode => ({
-  id: object.id,
-  index: get(object, 'meta.index', index), // TODO(burdon): Data should not be on object?
-  label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
-  icon: (props) => <Kanban {...props} />,
-  data: object,
-  parent,
-  pluginActions: {
-    [KANBAN_PLUGIN]: [
-      {
-        id: 'delete', // TODO(burdon): Namespac@e.
-        index: 'a1',
-        label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
-        icon: (props) => <Trash {...props} />,
-        intent: {
-          action: SpaceAction.REMOVE_OBJECT,
-          data: { spaceKey: parent.data?.key.toHex(), objectId: object.id },
-        },
-      },
-    ],
-  },
-});
+export const objectToGraphNode = (
+  parent: Graph.Node<Space>,
+  object: KanbanType,
+  index: string,
+): Graph.Node<KanbanType> => {
+  const [child] = parent.add({
+    id: object.id,
+    label: object.title ?? ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
+    icon: (props) => <Kanban {...props} />,
+    data: object,
+    properties: {
+      index: get(object, 'meta.index', index),
+    },
+  });
+
+  child.addAction({
+    id: 'delete',
+    label: ['delete kanban label', { ns: KANBAN_PLUGIN }],
+    icon: (props) => <Trash {...props} />,
+    intent: {
+      action: SpaceAction.REMOVE_OBJECT,
+      data: { spaceKey: parent.data?.key.toHex(), objectId: object.id },
+    },
+  });
+
+  return child;
+};

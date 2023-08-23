@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { AppManager } from './app-manager';
 
-const perfomInviation = async (host: AppManager, guest: AppManager) => {
+const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   const invitationCode = await host.shell.createSpaceInvitation();
   const authCode = await host.shell.getAuthCode();
   await guest.joinSpace();
@@ -42,10 +42,10 @@ test.describe('Basic test', () => {
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
       await host.createDocument();
-      await perfomInviation(host, guest);
+      await perfomInvitation(host, guest);
 
-      await host.page.getByRole('link').last().click();
-      await host.waitForMarkdownTextbox();
+      await guest.page.getByRole('link').last().click();
+      await guest.waitForMarkdownTextbox();
       await waitForExpect(async () => {
         expect(await host.page.url()).to.include(await guest.page.url());
       });
@@ -61,7 +61,7 @@ test.describe('Basic test', () => {
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
       await host.createDocument();
-      await perfomInviation(host, guest);
+      await perfomInvitation(host, guest);
 
       await Promise.all([
         host.getDocumentLinks().nth(0).click(),
@@ -87,7 +87,7 @@ test.describe('Basic test', () => {
       await host.shell.createIdentity('host');
       await guest.shell.createIdentity('guest');
       await host.createDocument();
-      await perfomInviation(host, guest);
+      await perfomInvitation(host, guest);
 
       const parts = [
         'Lorem ipsum dolor sit amet,',

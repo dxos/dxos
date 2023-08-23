@@ -17,14 +17,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
   const nodeIds = new Set<string>();
 
   const isDebug = (data: unknown) =>
-    data &&
-    typeof data === 'object' &&
-    'node' in data &&
-    data.node &&
-    typeof data.node === 'object' &&
-    'id' in data.node &&
-    typeof data.node.id === 'string' &&
-    nodeIds.has(data.node.id);
+    data && typeof data === 'object' && 'id' in data && typeof data.id === 'string' && nodeIds.has(data.id);
 
   return {
     meta: {
@@ -54,43 +47,34 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         nodes: (parent) => {
-          // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
-          if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
-            return [];
-          }
-
-          const nodeId = parent.id + '-debug';
-          nodeIds.add(nodeId);
-
-          return [
-            {
-              id: nodeId,
-              index: 'a0', // TODO(burdon): Prevent drag? Dragging causes bug.
-              label: 'Debug',
-              icon: (props: IconProps) => <Hammer {...props} />,
-              data: { id: nodeId },
-              parent,
-            },
-          ];
-        },
-        actions: (parent) => {
-          if (parent.id !== 'root') {
-            return [];
-          }
-
-          return [
-            {
+          if (parent.id === 'root') {
+            parent.addAction({
               id: 'open-devtools',
-              index: 'z', // indices[2],
-              testId: 'spacePlugin.openDevtools',
               label: ['open devtools label', { ns: DEBUG_PLUGIN }],
               icon: (props) => <Hammer {...props} />,
               intent: {
                 plugin: DEBUG_PLUGIN,
                 action: 'debug-openDevtools',
               },
-            },
-          ];
+              properties: {
+                testId: 'spacePlugin.openDevtools',
+              },
+            });
+            return;
+            // TODO(burdon): Needs to trigger the graph plugin when settings are updated.
+          } else if (!(parent.data instanceof SpaceProxy) || !localStorage.getItem(DebugPanelKey)) {
+            return;
+          }
+
+          const nodeId = parent.id + '-debug';
+          nodeIds.add(nodeId);
+
+          parent.add({
+            id: nodeId,
+            label: 'Debug',
+            icon: (props: IconProps) => <Hammer {...props} />,
+            data: { id: nodeId, space: parent.data },
+          });
         },
       },
       intent: {
