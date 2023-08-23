@@ -24,7 +24,8 @@ export const IdentityListItem = ({
   const displayName = identity.profile?.displayName ?? humanize(identity.identityKey);
   return (
     <ListItem.Root
-      classNames={mx('rounded p-2 flex gap-2 items-center', chromeSurface, onClick && 'cursor-pointer')}
+      classNames={mx('rounded p-2 flex gap-2 items-center', onClick && 'cursor-pointer')}
+      // classNames={mx('rounded p-2 flex gap-2 items-center', chromeSurface, onClick && 'cursor-pointer')}
       onClick={() => onClick?.()}
       data-testid='identity-list-item'
     >
