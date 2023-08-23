@@ -83,8 +83,8 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   //     <Check weight='light' className={getSize(6)} />
   //   </PanelAction>
   // );
-  const visibleInvitations = invitations; // || invitations?.filter(
-  //   (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
+  const visibleInvitations = invitations; //invitations?.filter(
+    // (invitation) => ![Invitation.State.SUCCESS, Invitation.State.CANCELLED].includes(invitation.get().state),
   // );
 
   return (
