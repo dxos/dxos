@@ -68,17 +68,22 @@ export const TreeViewContainer = () => {
                         <GearSix className={mx(getSize(4), 'rotate-90')} />
                       </Button>
                     </Tooltip.Trigger>
-                    <Tooltip.Content>
-                      {t('settings dialog title', { ns: 'os' })}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
+                    <Tooltip.Portal>
+                      <Tooltip.Content classNames='z-[70]'>
+                        {t('settings dialog title', { ns: 'os' })}
+                        <Tooltip.Arrow />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
                   </Tooltip.Root>
                 </div>
               </Avatar.Root>
               <Separator orientation='horizontal' />
             </>
           )}
-          <Tree.Root role='none' classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth'>
+          <Tree.Root
+            role='none'
+            classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth pbs-1 pbe-4'
+          >
             {branches.map((branch) => (
               <NavTreeItem key={branch.id} node={branch} level={0} />
             ))}

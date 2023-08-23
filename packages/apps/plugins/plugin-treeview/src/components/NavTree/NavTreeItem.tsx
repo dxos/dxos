@@ -4,18 +4,20 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CaretDown, CaretRight, DotsThreeVertical } from '@phosphor-icons/react';
+import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { FC, forwardRef, ForwardRefExoticComponent, RefAttributes, useEffect, useRef, useState } from 'react';
 
 import { SortableProps } from '@braneframe/plugin-dnd';
 import { Graph } from '@braneframe/plugin-graph';
-import { Button, DropdownMenu, Tooltip, TreeItem, useMediaQuery, useSidebars, useTranslation } from '@dxos/aurora';
-import { staticDisabled, focusRing, getSize, mx, auroraTx, valenceColorText } from '@dxos/aurora-theme';
+import { Button, DropdownMenu, Tooltip, TreeItem, useSidebars, useTranslation } from '@dxos/aurora';
+import { focusRing, getSize } from '@dxos/aurora-theme';
 
-import { useTreeView } from '../../TreeViewContext';
 import { SharedTreeItemProps, TREE_VIEW_PLUGIN } from '../../types';
 import { sortActions } from '../../util';
+import { CollapsibleHeading } from './CollapsibleHeading';
 import { NavTree } from './NavTree';
+import { NavigableHeading } from './NavigableHeading';
+import { levelPadding } from './style-fragments';
 
 type SortableBranchTreeViewItemProps = SharedTreeItemProps & Pick<SortableProps, 'rearranging'>;
 
@@ -41,88 +43,6 @@ export const SortableTreeViewItem: FC<SortableBranchTreeViewItemProps> = ({
   );
 };
 
-const CollapsibleHeadingRoot = ({ open, node }: { open: boolean; node: Graph.Node }) => {
-  const { navigationSidebarOpen } = useSidebars();
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
-
-  const disabled = !!node.properties?.disabled;
-  const error = !!node.properties?.error;
-  const OpenTriggerIcon = open ? CaretDown : CaretRight;
-
-  return (
-    <TreeItem.OpenTrigger
-      disabled={disabled}
-      classNames={['grow flex-1', disabled && staticDisabled]}
-      {...(disabled && { 'aria-disabled': true })}
-      {...(!navigationSidebarOpen && { tabIndex: -1 })}
-    >
-      <OpenTriggerIcon weight='fill' className={mx('shrink-0', getSize(2))} />
-      <TreeItem.Heading
-        data-testid='spacePlugin.spaceTreeItemHeading'
-        classNames={[
-          'grow min-is-0 truncate text-start pis-1 pbs-2.5 pointer-fine:pbs-1.5 text-sm font-medium',
-          error && valenceColorText('error'),
-          disabled && staticDisabled,
-        ]}
-      >
-        {Array.isArray(node.label) ? t(...node.label) : node.label}
-      </TreeItem.Heading>
-    </TreeItem.OpenTrigger>
-  );
-};
-
-const NavigableHeadingRoot = ({ node }: { node: Graph.Node }) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { navigationSidebarOpen, closeNavigationSidebar } = useSidebars();
-  const { t } = useTranslation(TREE_VIEW_PLUGIN);
-  const treeView = useTreeView();
-
-  const disabled = !!node.properties?.disabled;
-  const error = !!node.properties?.error;
-  const modified = node.properties?.modified ?? false;
-
-  return (
-    <TreeItem.Heading
-      asChild
-      data-testid='spacePlugin.documentTreeItemHeading'
-      classNames={auroraTx(
-        'button.root',
-        'tree-item__heading--link',
-        { variant: 'ghost', density: 'fine' },
-        'grow min-is-0 text-base p-0 font-normal flex items-start gap-1 pointer-fine:min-height-6',
-        disabled && staticDisabled,
-        error && valenceColorText('error'),
-      )}
-      {...(disabled && { 'aria-disabled': true })}
-    >
-      <button
-        role='link'
-        {...(!navigationSidebarOpen && { tabIndex: -1 })}
-        data-itemid={node.id}
-        onKeyDown={(event) => {
-          if (event.key === ' ' || event.key === 'Enter') {
-            event.stopPropagation();
-            // TODO(wittjosiah): Intent.
-            treeView.active = node.id;
-            !isLg && closeNavigationSidebar();
-          }
-        }}
-        onClick={(event) => {
-          // TODO(wittjosiah): Intent.
-          treeView.active = node.id;
-          !isLg && closeNavigationSidebar();
-        }}
-        className='text-start flex gap-2 justify-start'
-      >
-        {node.icon && <node.icon className={mx(getSize(4), 'shrink-0 mbs-2')} />}
-        <p className={mx(modified && 'italic', 'flex-1 min-is-0 mbs-1 truncate')}>
-          {Array.isArray(node.label) ? t(...node.label) : node.label}
-        </p>
-      </button>
-    </TreeItem.Heading>
-  );
-};
-
 type TreeViewItemProps = SharedTreeItemProps & SortableProps;
 
 export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttributes<any>> = forwardRef<
@@ -139,7 +59,7 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
   const [optionsTooltipOpen, setOptionsTooltipOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
-  const [open, setOpen] = useState(true /* todo(thure): Open if node within is active */);
+  const [open, setOpen] = useState(level < 1);
 
   const disabled = !!node.properties?.disabled;
 
@@ -152,14 +72,18 @@ export const NavTreeItem: ForwardRefExoticComponent<TreeViewItemProps & RefAttri
       collapsible={isBranch}
       open={!disabled && open}
       onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}
-      classNames={['mbe-1 rounded', focusRing, rearranging && 'invisible']}
+      classNames={['rounded block', focusRing, levelPadding(level), rearranging && 'invisible']}
       {...draggableAttributes}
       {...draggableListeners}
       style={style}
       ref={forwardedRef}
     >
-      <div role='none' className='flex mis-1 items-start'>
-        {isBranch ? <CollapsibleHeadingRoot open={open} node={node} /> : <NavigableHeadingRoot node={node} />}
+      <div role='none' className='flex items-start pie-1'>
+        {isBranch ? (
+          <CollapsibleHeading open={open} node={node} level={level} />
+        ) : (
+          <NavigableHeading node={node} level={level} />
+        )}
         {actions.length > 0 && (
           <Tooltip.Root
             open={optionsTooltipOpen}
