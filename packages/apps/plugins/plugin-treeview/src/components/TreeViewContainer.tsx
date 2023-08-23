@@ -82,7 +82,7 @@ export const TreeViewContainer = () => {
           )}
           <Tree.Root
             role='none'
-            classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth pbs-1 pbe-4'
+            classNames='grow min-bs-0 overflow-y-auto overscroll-contain scroll-smooth pbs-1 pbe-4 pli-1'
           >
             {branches.map((branch) => (
               <NavTreeItem key={branch.id} node={branch} level={0} />
