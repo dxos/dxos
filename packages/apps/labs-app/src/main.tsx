@@ -31,11 +31,11 @@ import { ThreadPlugin } from '@braneframe/plugin-thread';
 import { TreeViewPlugin } from '@braneframe/plugin-treeview';
 import { UrlSyncPlugin } from '@braneframe/plugin-url-sync';
 import { SpaceProxy } from '@dxos/client/echo';
+import { fromHost } from '@dxos/client/services';
 import { Config, Defaults, Envs, Local } from '@dxos/config';
 import { EchoDatabase, TypedObject } from '@dxos/echo-schema';
 import { initializeAppTelemetry } from '@dxos/react-appkit/telemetry';
 import { PluginContextProvider } from '@dxos/react-surface';
-// import { fromHost } from '@dxos/react-client';
 
 // TODO(wittjosiah): This ensures that typed objects and SpaceProxy are not proxied by deepsignal. Remove.
 // https://github.com/luisherranz/deepsignal/issues/36
@@ -45,10 +45,13 @@ import { PluginContextProvider } from '@dxos/react-surface';
 
 void initializeAppTelemetry({ namespace: 'labs-app', config: new Config(Defaults()) });
 
+// TODO(burdon): Configure initial settings (e.g., show debug panel).
+const config = new Config(Envs(), Local(), Defaults());
 const clientOptions = {
-  config: new Config(Envs(), Local(), Defaults()),
+  config,
   // TODO(burdon): Configure local services in debug mode (e.g., for mobile testing).
-  // services: fromHost(), // TODO(burdon): Rename?
+  services: fromHost(config),
+  // services: fromIFrame(config, { vault: 'https://halo.dev.dxos.org/vault.html' }),
 };
 
 createRoot(document.getElementById('root')!).render(
@@ -57,7 +60,7 @@ createRoot(document.getElementById('root')!).render(
       plugins={[
         IntentPlugin(),
         ThemePlugin({ appName: 'Labs' }),
-        ClientPlugin(clientOptions),
+        ClientPlugin({ ...clientOptions, debugIdentity: true }),
         IntentPlugin(),
         DndPlugin(),
         // Outside of error boundary so that updates are not blocked by errors.

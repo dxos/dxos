@@ -17,31 +17,46 @@ import { wrtc } from './webrtc';
 
 export type WebRTCTransportParams = {
   initiator: boolean;
-  stream: NodeJS.ReadWriteStream;
+  // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection
   webrtcConfig?: any;
+  stream: NodeJS.ReadWriteStream;
+  // TODO(burdon): Rename onSignal.
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
+// TODO(burdon): Refs:
+//  https://webrtc.github.io/samples
+//  Simple peer discord.
+
 /**
- * Implements Transport for WebRTC. Uses simple-peer under the hood.
+ * Implements WebRTC transport using simple-peer (used by WebTorrent).
  */
 export class WebRTCTransport implements Transport {
+  private readonly _instanceId = PublicKey.random().toHex();
   private readonly _peer: SimplePeer;
-  private _closed = false;
 
+  private _closed = false;
   readonly closed = new Event();
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   constructor(private readonly params: WebRTCTransportParams) {
     log.trace('dxos.mesh.webrtc-transport.constructor', trace.begin({ id: this._instanceId }));
     log('created connection', params);
+
+    // https://www.npmjs.com/package/simple-peer#api
+    // NOTE: Set localStorage.debug = 'simple-peer*' to enable debug logging. (Or show verbose in Chrome).
+    // View throughput via: chrome://webrtc-internals (data-channel)
     this._peer = new SimplePeerConstructor({
+      channelName: this._instanceId,
       initiator: this.params.initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
       config: this.params.webrtcConfig,
+      // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel
+      channelConfig: {
+        protocol: 'dxos.mesh',
+      },
+      // Custom WebRTC implementation (for Node); otherwise get-browser-rtc.
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
     });
 
     this._peer.on('signal', async (data) => {

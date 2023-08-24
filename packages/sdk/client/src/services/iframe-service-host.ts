@@ -29,6 +29,9 @@ export type IFrameClientServicesHostOptions = {
   timeout?: number;
 };
 
+/**
+ * Proxy to host client service via iframe.
+ */
 export class IFrameClientServicesHost implements ClientServicesProvider {
   public readonly joinedSpace = new Event<PublicKey>();
   public readonly invalidatedInvitationCode = new Event<string>();

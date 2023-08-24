@@ -372,11 +372,15 @@ export class Pipeline implements PipelineAccessor {
 
   private _setFeedDownloadState(feed: FeedWrapper<FeedMessage>) {
     const timeframe = this._state._startTimeframe;
-    const seq = timeframe.get(feed.key) ?? 0;
+    const seq = timeframe.get(feed.key) ?? -1;
 
-    feed.undownload({ callback: () => log('undownload') });
-    feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
-      log('failed to download feed', { err });
+    feed.undownload({
+      callback: () => {
+        log.info('download', { feed: feed.key.truncate(), seq, length: feed.length });
+        feed.download({ start: seq + 1, linear: true }).catch((err: Error) => {
+          log.error('failed to download feed', err);
+        });
+      },
     });
   }
 

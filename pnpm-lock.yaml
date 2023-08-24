@@ -642,8 +642,10 @@ importers:
 
   packages/apps/plugins/plugin-client:
     specifiers:
+      '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-signals': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@types/react': ^18.0.21
@@ -652,8 +654,10 @@ importers:
       react-dom: ^18.2.0
       vite: ^4.3.9
     dependencies:
+      '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/echo-signals': link:../../../core/echo/echo-signals
+      '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
     devDependencies:
       '@dxos/react-surface': link:../../../sdk/react-surface
@@ -680,6 +684,7 @@ importers:
       '@dxos/invariant': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-surface': workspace:*
       '@dxos/text-model': workspace:*
@@ -705,6 +710,7 @@ importers:
       '@dxos/invariant': link:../../../common/invariant
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../../core/protocols
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/text-model': link:../../../core/echo/text-model
       '@dxos/util': link:../../../common/util
@@ -1837,6 +1843,8 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@faker-js/faker': ^8.0.2
+      '@types/lodash.defaultsdeep': ^4.6.6
+      lodash.defaultsdeep: ^4.6.1
       random-access-storage: ^3.0.0
       streamx: ^2.12.5
     dependencies:
@@ -1853,10 +1861,13 @@ importers:
       '@dxos/node-std': link:../node-std
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
+      lodash.defaultsdeep: 4.6.1
       random-access-storage: 3.0.0
       streamx: 2.12.5
     optionalDependencies:
       '@faker-js/faker': 8.0.2
+    devDependencies:
+      '@types/lodash.defaultsdeep': 4.6.7
 
   packages/common/hypercore:
     specifiers:

@@ -32,12 +32,14 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "lodash.defaultsdeep": "^4.6.1",
     "random-access-storage": "^3.0.0",
     "streamx": "^2.12.5"
   },
   "devDependencies": {
     "@dxos/keys": "workspace:*",
-    "@faker-js/faker": "^8.0.2"
+    "@faker-js/faker": "^8.0.2",
+    "@types/lodash.defaultsdeep": "^4.6.6"
   },
   "optionalDependencies": {
     "@faker-js/faker": "^8.0.2"

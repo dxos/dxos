@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Play, HandPalm } from '@phosphor-icons/react';
+import { ArrowClockwise, HandPalm, Play, Plus } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns';
 import React, { FC, useContext, useEffect, useMemo, useState } from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -14,7 +14,10 @@ import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light
 import { Button, DensityProvider, Input, Main, useThemeContext, useTranslation } from '@dxos/aurora';
 import { coarseBlockPaddingStart, fixedInsetFlexLayout, getSize } from '@dxos/aurora-theme';
 import { Space } from '@dxos/client/echo';
+import { InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient, useConfig } from '@dxos/react-client';
+import { useSpaceInvitation } from '@dxos/react-client/echo';
 import { arrayToBuffer } from '@dxos/util';
 
 import { DEBUG_PLUGIN, DebugContext } from '../props';
@@ -26,6 +29,9 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
   const { t } = useTranslation(DEBUG_PLUGIN);
   const { themeMode } = useThemeContext();
   const style = themeMode === 'dark' ? styleDark : styleLight;
+
+  const { connect, status } = useSpaceInvitation(space?.key);
+  // console.log('invitation', { status });
 
   const client = useClient();
   const config = useConfig();
@@ -46,7 +52,7 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     return generator;
   }, [space]);
 
-  // TODO(burdon): Note shared across spaces!
+  // TODO(burdon): Note: this is shared across spaces!
   const { running, start, stop } = useContext(DebugContext);
   const handleToggleRunning = () => {
     if (running) {
@@ -57,12 +63,22 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     }
   };
 
-  const handleCreateObject = async () => {
-    generator.createObject();
+  const handleCreateObject = async (createContent: boolean) => {
+    generator.createObject({ createContent });
   };
 
-  const handleUpdateObject = async () => {
-    generator.updateObject();
+  const handleCreateInvitation = () => {
+    const invitation = space.createInvitation({
+      type: Invitation.Type.MULTIUSE,
+      authMethod: Invitation.AuthMethod.NONE,
+    });
+
+    // TODO(burdon): Refactor.
+    // TODO(burdon): Unsubscribe?
+    connect(invitation);
+    const code = InvitationEncoder.encode(invitation.get());
+    const url = `${window.origin}?spaceInvitationCode=${code}`;
+    void navigator.clipboard.writeText(url);
   };
 
   const handleResetClient = async () => {
@@ -86,8 +102,9 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
     <Main.Content classNames={[fixedInsetFlexLayout, coarseBlockPaddingStart]}>
       <div className='flex shrink-0 p-2 space-x-2'>
         <DensityProvider density='fine'>
-          <Button onClick={handleCreateObject}>Create</Button>
-          <Button onClick={handleUpdateObject}>Update</Button>
+          <Button onClick={(event) => handleCreateObject(event.shiftKey)}>
+            <Plus className={getSize(5)} />
+          </Button>
           <div>
             <Input.Root>
               <Input.TextInput
@@ -104,10 +121,13 @@ export const DebugMain: FC<{ data: { space: Space } }> = ({ data: { space } }) =
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
-          <Button onClick={handleRefresh}>Refresh</Button>
+          <Button onClick={handleRefresh}>
+            <ArrowClockwise className={getSize(5)} />
+          </Button>
 
           <div className='grow' />
-          <Button onClick={handleOpenDevtools}>Open Devtools</Button>
+          <Button onClick={handleCreateInvitation}>Invite</Button>
+          <Button onClick={handleOpenDevtools}>Devtools</Button>
           <Button onClick={handleResetClient}>Reset client</Button>
           <Button onClick={handleCreateEpoch}>Create epoch</Button>
         </DensityProvider>

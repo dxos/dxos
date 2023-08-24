@@ -21,6 +21,7 @@ export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   bridgeService: BridgeService;
+  // TODO(burdon): Rename onSignal.
   sendSignal: (signal: Signal) => Promise<void>;
 };
 
@@ -29,11 +30,10 @@ export class WebRTCTransportProxy implements Transport {
   private readonly _ctx = new Context();
 
   readonly closed = new Event();
-  private _closed = false;
   readonly connected = new Event();
-
   readonly errors = new ErrorStream();
 
+  private _closed = false;
   private _serviceStream!: Stream<BridgeEvent>;
 
   // prettier-ignore

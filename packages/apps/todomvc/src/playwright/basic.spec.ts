@@ -9,6 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { FILTER } from '../constants';
 import { AppManager } from './app-manager';
 
+// TODO(burdon): ???
 enum Groceries {
   Eggs = 'eggs',
   Eggnog = 'eggnog',
@@ -26,7 +27,7 @@ test.describe('Basic test', () => {
 
     await host.init();
     // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //   https://github.com/microsoft/playwright/issues/2973
+    //  https://github.com/microsoft/playwright/issues/2973
     guest = browserName === 'chromium' ? new AppManager(browser) : host;
     if (browserName === 'chromium') {
       await guest.init();

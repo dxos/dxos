@@ -274,8 +274,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  // TODO(burdon): Make async.
-  close() {
+  async close() {
     if (this._isClosed) {
       return;
     }
@@ -283,7 +282,7 @@ export class Stream<T> {
     this._isClosed = true;
     this._producerCleanup?.();
     this._closeHandler?.(undefined);
-    void this._ctx.dispose();
+    await this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;

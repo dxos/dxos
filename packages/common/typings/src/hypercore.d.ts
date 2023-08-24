@@ -139,6 +139,7 @@ declare module 'hypercore' {
     valueEncoding?: ValueEncoding;
     crypto?: Crypto;
     writable?: boolean;
+    stats?: boolean;
   };
 
   /**

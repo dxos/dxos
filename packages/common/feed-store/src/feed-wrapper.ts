@@ -215,19 +215,16 @@ export class FeedWrapper<T extends {}> {
 
 class BatchedReadStream extends Readable {
   private readonly _feed: Hypercore<any>;
-  private readonly _batchSize: number;
+  private readonly _batch: number;
   private _cursor: number;
   private _reading = false;
 
   constructor(feed: Hypercore<any>, opts: ReadStreamOptions = {}) {
-    super({
-      objectMode: true,
-    });
-    this._feed = feed;
-
+    super({ objectMode: true });
     invariant(opts.live === true, 'Only live mode supported');
     invariant(opts.batch !== undefined && opts.batch > 1);
-    this._batchSize = opts.batch;
+    this._feed = feed;
+    this._batch = opts.batch;
     this._cursor = opts.start ?? 0;
   }
 
@@ -240,7 +237,7 @@ class BatchedReadStream extends Readable {
       return;
     }
 
-    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batchSize) === this._batchSize) {
+    if (this._feed.bitfield!.total(this._cursor, this._cursor + this._batch) === this._batch) {
       this._batchedRead(cb);
     } else {
       this._nonBatchedRead(cb);
@@ -261,7 +258,7 @@ class BatchedReadStream extends Readable {
   }
 
   private _batchedRead(cb: (err: Error | null) => void) {
-    this._feed.getBatch(this._cursor, this._cursor + this._batchSize, { wait: true }, (err, data) => {
+    this._feed.getBatch(this._cursor, this._cursor + this._batch, { wait: true }, (err, data) => {
       if (err) {
         cb(err);
       } else {

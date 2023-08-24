@@ -81,6 +81,8 @@ export class Peer {
   public advertizing = false;
 
   public initiating = false;
+
+  // TODO(burdon): Convert to map.
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,
