@@ -291,14 +291,23 @@ describe('Spaces', () => {
         },
       });
       await dataSpace.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-      await processedEpoch;
+      await asyncTimeout(processedEpoch, 1000);
     };
+
+    const getUpdatePromise = () =>
+      asyncTimeout(
+        Promise.all([space.internal.db.itemUpdate.waitForCount(1), space.db._updateEvent.waitForCount(1)]),
+        1000,
+      );
 
     const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
 
     // Create empty Epoch and check if it clears items.
     {
+      const update = getUpdatePromise();
+
       await writeEpochWithSnapshot({});
+      await update;
 
       expect(space.db.objects.length).to.equal(0);
       expect(item.__deleted).to.be.true;
@@ -316,16 +325,17 @@ describe('Spaces', () => {
 
     // Create Epoch and check if Item do not flickers.
     {
-      const update = space.internal.db.itemUpdate.waitForCount(1);
-      space.internal.db.itemUpdate.on(() => {
+      const update = getUpdatePromise();
+      const checkItem = () => {
         expect(item.__deleted).to.be.false;
         expect(item.text).to.equal(text);
-      });
+      };
+      space.internal.db.itemUpdate.on(() => checkItem());
+      space.db._updateEvent.on(() => checkItem());
 
       await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
       await update;
-      expect(item.__deleted).to.be.false;
-      expect(item.text).to.equal(text);
+      checkItem();
     }
   });
 
