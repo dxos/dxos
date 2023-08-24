@@ -221,6 +221,7 @@ export class ReplicatorExtension implements TeleportExtension {
       download: info.download,
       noise: false,
       encrypted: false,
+      maxRequests: 1024,
     });
 
     // Left for testing.
