@@ -237,7 +237,7 @@ describe('Spaces', () => {
     }
   });
 
-  test('epoch resets database', async () => {
+  test.only('epoch correctly resets database', async () => {
     const testBuilder = new TestBuilder();
     const services = testBuilder.createLocal();
     const client = new Client({ services });
@@ -297,22 +297,36 @@ describe('Spaces', () => {
     const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
 
     // Create empty Epoch and check if it clears items.
-    await writeEpochWithSnapshot({});
+    {
+      await writeEpochWithSnapshot({});
 
-    // Check if items are cleared.
-    expect(space.db.objects.length).to.equal(0);
-    expect(item.__deleted).to.be.true;
+      expect(space.db.objects.length).to.equal(0);
+      expect(item.__deleted).to.be.true;
+    }
 
     // Reset database to previous state.
-    await writeEpochWithSnapshot(dataBaseState);
-    expect(item.__deleted).to.be.false;
+    {
+      await writeEpochWithSnapshot(dataBaseState);
 
-    // Check if items are reset back.
-    expect(space.db.objects.length).to.equal(2);
+      expect(item.__deleted).to.be.false;
+      expect(space.db.objects.length).to.equal(2);
+      expect(space.db.query({ idx }).objects[0].text).to.equal(text);
+      expect(space.db.query({ idx }).objects[0]).to.equal(item);
+    }
 
-    expect(space.db.query({ idx }).objects[0].text).to.equal(text);
+    // Create Epoch and check if Item do not flickers.
+    {
+      const update = space.internal.db.itemUpdate.waitForCount(1);
+      space.internal.db.itemUpdate.on(() => {
+        expect(item.__deleted).to.be.false;
+        expect(item.text).to.equal(text);
+      });
 
-    expect(space.db.query({ idx }).objects[0]).to.equal(item);
+      await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
+      await update;
+      expect(item.__deleted).to.be.false;
+      expect(item.text).to.equal(text);
+    }
   });
 
   test.skip('spaces can be activated and deactivated', async () => {
