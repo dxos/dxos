@@ -6,6 +6,7 @@ import expect from 'expect';
 
 import { Event, sleep } from '@dxos/async';
 import { describe, test } from '@dxos/test';
+import { range } from '@dxos/util';
 
 import { createReplicatorPair, TestBuilder } from './testing';
 
@@ -101,6 +102,33 @@ describe('ReplicatorExtension', () => {
     replicator1.addFeed(feed2B);
 
     await Event.wrap(feed1B, 'download').waitForCondition(() => feed1B.length === 10);
+  });
+
+  test('sparse replication', async () => {
+    const builder = new TestBuilder();
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+
+    const { replicator1, replicator2 } = await createReplicatorPair();
+
+    replicator1.setOptions({ upload: true });
+    replicator2.setOptions({ upload: true });
+
+    const feed1 = await agent1.createWriteFeed(10);
+    const feed2 = await agent2.createReadFeed(feed1.key, { sparse: true });
+
+    replicator1.addFeed(feed1);
+    replicator2.addFeed(feed2);
+
+    void feed2.download({ start: 10, linear: true });
+
+    await sleep(50);
+
+    expect(range(10).every((idx) => feed2.has(idx))).toEqual(false);
+
+    void feed2.download({ start: 0, linear: true });
+
+    await Event.wrap(feed2, 'download').waitForCondition(() => range(10).every((idx) => feed2.has(idx)));
   });
 
   // TODO: not working yet.
