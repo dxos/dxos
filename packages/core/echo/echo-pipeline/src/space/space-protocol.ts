@@ -124,7 +124,7 @@ export class SpaceProtocol {
       peerId: this._swarmIdentity.peerKey,
       topic,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${topic}`,
+      label: `space swarm ${topic.truncate()}`,
     });
 
     log('started');
