@@ -13,6 +13,7 @@ import { useClient } from '@dxos/react-client';
 
 import { PanelContainer } from '../../../components';
 import type { FlameChartNodes } from 'flame-chart-js';
+import { isNotNullOrUndefined } from '@dxos/util';
 
 type State = {
   resources: Map<number, Resource>;
@@ -25,7 +26,10 @@ export const TracingPanel = () => {
     resources: new Map<number, Resource>(),
     spans: new Map<number, Span>(),
   });
+  const [selectedResource, setSelectedResource] = useState<number | undefined>(undefined);
   const { ref: containerRef, width } = useResizeDetector();
+
+
   const [, forceUpdate] = useState({});
   useEffect(() => {
     const stream = client.services.services.TracingService!.streamTrace();
@@ -48,7 +52,7 @@ export const TracingPanel = () => {
   }, []);
 
   const [selectedFlameIndex, setSelectedFlameIndex] = useState(0);
-  const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined);
+  const roots = [...state.current.spans.values()].filter((s) => s.parentId === undefined).filter((s) => selectedResource === undefined || s.resourceId === selectedResource);
   const flameGraph = buildFlameGraph(state.current, roots[Math.min(selectedFlameIndex, roots.length - 1)]?.id ?? 0);
 
   const handleBack = () => {
@@ -62,7 +66,12 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/2 overflow-auto'>
-        <Grid<Resource> columns={columns} data={Array.from(state.current.resources.values())} />
+        <Grid<Resource>
+          columns={columns}
+          data={Array.from(state.current.resources.values())}
+          select='single-toggle'
+          selected={selectedResource !== undefined ? [state.current.resources.get(selectedResource)].filter(isNotNullOrUndefined) : undefined}
+          onSelectedChange={resources => setSelectedResource(resources?.[0]?.id)} />
       </div>
       <div ref={containerRef} className='border-t h-1/2 flex flex-col'>
         <div className='flex flex-row items-baseline justify-items-center p-2'>
