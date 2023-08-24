@@ -31,7 +31,6 @@ export class EchoDatabase {
     cleanUpCallback();
   });
 
-
   /**
    * @internal
    */
